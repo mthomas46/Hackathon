@@ -1,42 +1,31 @@
 """End-to-end integration tests for complete system workflows."""
 
-import pytest
 import asyncio
-import tempfile
-import os
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
-from datetime import datetime, timezone
-from typing import Dict, Any, List
+from unittest.mock import AsyncMock, Mock
 
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.finding import Finding, FindingSeverity
-from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
-
-from ...domain.services.document_service import DocumentService
-from ...domain.services.analysis_service import AnalysisService
-from ...domain.services.finding_service import FindingService
-
-from ...application.services.analysis_application_service import AnalysisApplicationService
-from ...application.use_cases.perform_analysis_use_case import PerformAnalysisUseCase, PerformAnalysisCommand
-from ...application.use_cases.create_document_use_case import CreateDocumentUseCase
-from ...application.use_cases.get_document_use_case import GetDocumentUseCase
-from ...application.use_cases.get_findings_use_case import GetFindingsUseCase
+import pytest
 
 from ...application.cqrs.command_bus import CommandBus
 from ...application.cqrs.query_bus import QueryBus
+from ...application.handlers.command_handlers import CreateDocumentCommandHandler, PerformAnalysisCommandHandler
 from ...application.handlers.commands import CreateDocumentCommand, PerformAnalysisCommand
 from ...application.handlers.queries import GetDocumentQuery, GetFindingsQuery
-from ...application.handlers.command_handlers import CreateDocumentCommandHandler, PerformAnalysisCommandHandler
 from ...application.handlers.query_handlers import GetDocumentQueryHandler, GetFindingsQueryHandler
-
-from ...infrastructure.repositories.sqlite_document_repository import SQLiteDocumentRepository
+from ...application.services.analysis_application_service import AnalysisApplicationService
+from ...application.use_cases.create_document_use_case import CreateDocumentUseCase
+from ...application.use_cases.get_document_use_case import GetDocumentUseCase
+from ...application.use_cases.get_findings_use_case import GetFindingsUseCase
+from ...application.use_cases.perform_analysis_use_case import PerformAnalysisCommand, PerformAnalysisUseCase
+from ...domain.entities.analysis import Analysis, AnalysisStatus
+from ...domain.entities.document import Document, DocumentStatus
+from ...domain.services.analysis_service import AnalysisService
+from ...domain.services.document_service import DocumentService
+from ...domain.services.finding_service import FindingService
+from ...domain.value_objects.analysis_type import AnalysisType
+from ...domain.value_objects.confidence import Confidence
 from ...infrastructure.repositories.sqlite_analysis_repository import SQLiteAnalysisRepository
+from ...infrastructure.repositories.sqlite_document_repository import SQLiteDocumentRepository
 from ...infrastructure.repositories.sqlite_finding_repository import SQLiteFindingRepository
-
-from ...application.dto.request_dtos import CreateDocumentRequest, PerformAnalysisRequest
-from ...application.dto.response_dtos import DocumentResponse, AnalysisResultResponse
 
 
 class TestEndToEndWorkflowIntegration:
@@ -47,9 +36,9 @@ class TestEndToEndWorkflowIntegration:
         """Create complete system setup for end-to-end testing."""
         # Infrastructure layer
         repositories = {
-            'document': SQLiteDocumentRepository(':memory:'),
-            'analysis': SQLiteAnalysisRepository(':memory:'),
-            'finding': SQLiteFindingRepository(':memory:')
+            "document": SQLiteDocumentRepository(":memory:"),
+            "analysis": SQLiteAnalysisRepository(":memory:"),
+            "finding": SQLiteFindingRepository(":memory:"),
         }
 
         # Initialize repositories
@@ -58,17 +47,17 @@ class TestEndToEndWorkflowIntegration:
 
         # Domain layer
         domain_services = {
-            'document_service': DocumentService(repositories['document']),
-            'analysis_service': AnalysisService(repositories['analysis'], repositories['document']),
-            'finding_service': FindingService(repositories['finding'])
+            "document_service": DocumentService(repositories["document"]),
+            "analysis_service": AnalysisService(repositories["analysis"], repositories["document"]),
+            "finding_service": FindingService(repositories["finding"]),
         }
 
         # Application layer
         application_services = {
-            'logging_service': Mock(),
-            'caching_service': Mock(),
-            'monitoring_service': Mock(),
-            'transaction_service': Mock()
+            "logging_service": Mock(),
+            "caching_service": Mock(),
+            "monitoring_service": Mock(),
+            "transaction_service": Mock(),
         }
 
         # CQRS components
@@ -80,24 +69,22 @@ class TestEndToEndWorkflowIntegration:
 
         # Register command handlers
         command_handlers = {
-            'CreateDocumentCommand': CreateDocumentCommandHandler(
-                repositories['document'],
-                domain_services['document_service'],
-                event_bus
+            "CreateDocumentCommand": CreateDocumentCommandHandler(
+                repositories["document"], domain_services["document_service"], event_bus
             ),
-            'PerformAnalysisCommand': PerformAnalysisCommandHandler(
-                domain_services['analysis_service'],
-                repositories['document'],
-                repositories['analysis'],
-                repositories['finding'],
-                event_bus
-            )
+            "PerformAnalysisCommand": PerformAnalysisCommandHandler(
+                domain_services["analysis_service"],
+                repositories["document"],
+                repositories["analysis"],
+                repositories["finding"],
+                event_bus,
+            ),
         }
 
         # Register query handlers
         query_handlers = {
-            'GetDocumentQuery': GetDocumentQueryHandler(repositories['document']),
-            'GetFindingsQuery': GetFindingsQueryHandler(repositories['finding'])
+            "GetDocumentQuery": GetDocumentQueryHandler(repositories["document"]),
+            "GetFindingsQuery": GetFindingsQueryHandler(repositories["finding"]),
         }
 
         for command_type, handler in command_handlers.items():
@@ -108,38 +95,35 @@ class TestEndToEndWorkflowIntegration:
 
         # Application service
         app_service = AnalysisApplicationService(
-            domain_services=domain_services,
-            application_services=application_services
+            domain_services=domain_services, application_services=application_services
         )
 
         # Use cases
         use_cases = {
-            'create_document': CreateDocumentUseCase(
-                repositories['document'],
-                domain_services['document_service'],
-                event_bus
+            "create_document": CreateDocumentUseCase(
+                repositories["document"], domain_services["document_service"], event_bus
             ),
-            'perform_analysis': PerformAnalysisUseCase(
-                domain_services['analysis_service'],
-                domain_services['finding_service'],
-                repositories['document'],
-                repositories['analysis'],
-                repositories['finding'],
-                event_bus
+            "perform_analysis": PerformAnalysisUseCase(
+                domain_services["analysis_service"],
+                domain_services["finding_service"],
+                repositories["document"],
+                repositories["analysis"],
+                repositories["finding"],
+                event_bus,
             ),
-            'get_document': GetDocumentUseCase(repositories['document']),
-            'get_findings': GetFindingsUseCase(repositories['finding'])
+            "get_document": GetDocumentUseCase(repositories["document"]),
+            "get_findings": GetFindingsUseCase(repositories["finding"]),
         }
 
         yield {
-            'repositories': repositories,
-            'domain_services': domain_services,
-            'application_services': application_services,
-            'command_bus': command_bus,
-            'query_bus': query_bus,
-            'app_service': app_service,
-            'use_cases': use_cases,
-            'event_bus': event_bus
+            "repositories": repositories,
+            "domain_services": domain_services,
+            "application_services": application_services,
+            "command_bus": command_bus,
+            "query_bus": query_bus,
+            "app_service": app_service,
+            "use_cases": use_cases,
+            "event_bus": event_bus,
         }
 
         # Cleanup
@@ -148,62 +132,62 @@ class TestEndToEndWorkflowIntegration:
 
     @pytest.mark.asyncio
     async def test_complete_analysis_workflow_end_to_end(self, complete_system_setup):
-        """Test complete analysis workflow from document creation to findings retrieval."""
+        """Test complete analysis workflow from document creation to findings
+        retrieval."""
         setup = complete_system_setup
 
         # Step 1: Create document through application service
-        doc_result = await setup['app_service'].create_document({
-            'title': 'End-to-End Test Document',
-            'content': 'This document tests the complete analysis workflow from creation to findings.',
-            'repository_id': 'e2e-repo',
-            'author': 'e2e-author',
-            'version': '1.0.0'
-        })
+        doc_result = await setup["app_service"].create_document(
+            {
+                "title": "End-to-End Test Document",
+                "content": "This document tests the complete analysis workflow from creation to findings.",
+                "repository_id": "e2e-repo",
+                "author": "e2e-author",
+                "version": "1.0.0",
+            }
+        )
 
         assert doc_result.success is True
         document_id = doc_result.document.id.value
 
         # Step 2: Verify document was created and persisted
-        saved_doc = await setup['repositories']['document'].get_by_id(document_id)
+        saved_doc = await setup["repositories"]["document"].get_by_id(document_id)
         assert saved_doc is not None
-        assert saved_doc.title == 'End-to-End Test Document'
+        assert saved_doc.title == "End-to-End Test Document"
         assert saved_doc.status == DocumentStatus.ACTIVE
 
         # Step 3: Perform analysis through use case
         analysis_command = PerformAnalysisCommand(
-            document_id=document_id,
-            analysis_type='semantic_similarity',
-            priority='high',
-            timeout_seconds=60
+            document_id=document_id, analysis_type="semantic_similarity", priority="high", timeout_seconds=60
         )
 
-        analysis_result = await setup['use_cases']['perform_analysis'].execute(analysis_command)
+        analysis_result = await setup["use_cases"]["perform_analysis"].execute(analysis_command)
         assert analysis_result.success is True
         analysis_id = analysis_result.analysis.id.value
 
         # Step 4: Verify analysis was created and completed
-        saved_analysis = await setup['repositories']['analysis'].get_by_id(analysis_id)
+        saved_analysis = await setup["repositories"]["analysis"].get_by_id(analysis_id)
         assert saved_analysis is not None
         assert saved_analysis.document_id == document_id
         assert saved_analysis.analysis_type == AnalysisType.SEMANTIC_SIMILARITY
         assert saved_analysis.status == AnalysisStatus.COMPLETED
 
         # Step 5: Retrieve findings through query
-        findings_result = await setup['use_cases']['get_findings'].execute(analysis_id)
+        findings_result = await setup["use_cases"]["get_findings"].execute(analysis_id)
         assert findings_result.success is True
 
         # Step 6: Verify complete data consistency
         # Document exists
-        final_doc = await setup['repositories']['document'].get_by_id(document_id)
+        final_doc = await setup["repositories"]["document"].get_by_id(document_id)
         assert final_doc is not None
 
         # Analysis exists and links to document
-        final_analysis = await setup['repositories']['analysis'].get_by_id(analysis_id)
+        final_analysis = await setup["repositories"]["analysis"].get_by_id(analysis_id)
         assert final_analysis is not None
         assert final_analysis.document_id == document_id
 
         # Analysis is in document's analyses
-        doc_analyses = await setup['repositories']['analysis'].get_by_document_id(document_id)
+        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(document_id)
         assert len(doc_analyses) == 1
         assert doc_analyses[0].id.value == analysis_id
 
@@ -214,47 +198,44 @@ class TestEndToEndWorkflowIntegration:
 
         # Step 1: Create document via CQRS command
         create_command = CreateDocumentCommand(
-            title='CQRS End-to-End Test Document',
-            content='Testing complete CQRS workflow.',
-            repository_id='cqrs-repo',
-            author='cqrs-author'
+            title="CQRS End-to-End Test Document",
+            content="Testing complete CQRS workflow.",
+            repository_id="cqrs-repo",
+            author="cqrs-author",
         )
 
-        command_result = await setup['command_bus'].execute(create_command)
-        assert command_result['status'] == 'created'
-        document_id = command_result['document_id']
+        command_result = await setup["command_bus"].execute(create_command)
+        assert command_result["status"] == "created"
+        document_id = command_result["document_id"]
 
         # Step 2: Query document via CQRS query
         get_query = GetDocumentQuery(document_id=document_id)
-        query_result = await setup['query_bus'].execute(get_query)
+        query_result = await setup["query_bus"].execute(get_query)
 
-        assert query_result['document']['id'] == document_id
-        assert query_result['document']['title'] == 'CQRS End-to-End Test Document'
+        assert query_result["document"]["id"] == document_id
+        assert query_result["document"]["title"] == "CQRS End-to-End Test Document"
 
         # Step 3: Perform analysis via CQRS command
-        analysis_command = PerformAnalysisCommand(
-            document_id=document_id,
-            analysis_type='semantic_similarity'
-        )
+        analysis_command = PerformAnalysisCommand(document_id=document_id, analysis_type="semantic_similarity")
 
-        analysis_command_result = await setup['command_bus'].execute(analysis_command)
-        assert analysis_command_result['status'] == 'completed'
-        analysis_id = analysis_command_result['analysis_id']
+        analysis_command_result = await setup["command_bus"].execute(analysis_command)
+        assert analysis_command_result["status"] == "completed"
+        analysis_id = analysis_command_result["analysis_id"]
 
         # Step 4: Query findings via CQRS query
         findings_query = GetFindingsQuery(analysis_id=analysis_id)
-        findings_query_result = await setup['query_bus'].execute(findings_query)
+        findings_query_result = await setup["query_bus"].execute(findings_query)
 
-        assert 'findings' in findings_query_result
-        assert 'total_count' in findings_query_result
+        assert "findings" in findings_query_result
+        assert "total_count" in findings_query_result
 
         # Step 5: Verify end-to-end data consistency
         # Check document still exists
-        doc_check = await setup['repositories']['document'].get_by_id(document_id)
+        doc_check = await setup["repositories"]["document"].get_by_id(document_id)
         assert doc_check is not None
 
         # Check analysis exists and is linked
-        analysis_check = await setup['repositories']['analysis'].get_by_id(analysis_id)
+        analysis_check = await setup["repositories"]["analysis"].get_by_id(analysis_id)
         assert analysis_check is not None
         assert analysis_check.document_id == document_id
 
@@ -264,23 +245,24 @@ class TestEndToEndWorkflowIntegration:
         setup = complete_system_setup
 
         # Step 1: Create document
-        doc_result = await setup['app_service'].create_document({
-            'title': 'Multi-Analysis Test Document',
-            'content': 'Document for testing multiple analysis types.',
-            'repository_id': 'multi-repo',
-            'author': 'multi-author'
-        })
+        doc_result = await setup["app_service"].create_document(
+            {
+                "title": "Multi-Analysis Test Document",
+                "content": "Document for testing multiple analysis types.",
+                "repository_id": "multi-repo",
+                "author": "multi-author",
+            }
+        )
 
         document_id = doc_result.document.id.value
 
         # Step 2: Perform multiple analyses
-        analysis_types = ['semantic_similarity', 'code_quality', 'security_scan']
+        analysis_types = ["semantic_similarity", "code_quality", "security_scan"]
         analysis_results = []
 
         for analysis_type in analysis_types:
-            result = await setup['app_service'].perform_analysis_workflow(
-                document_id=document_id,
-                analysis_type=getattr(AnalysisType, analysis_type.upper())
+            result = await setup["app_service"].perform_analysis_workflow(
+                document_id=document_id, analysis_type=getattr(AnalysisType, analysis_type.upper())
             )
             analysis_results.append(result)
 
@@ -291,11 +273,11 @@ class TestEndToEndWorkflowIntegration:
 
         # Step 4: Verify data consistency
         # Document should exist
-        doc = await setup['repositories']['document'].get_by_id(document_id)
+        doc = await setup["repositories"]["document"].get_by_id(document_id)
         assert doc is not None
 
         # All analyses should exist and be linked to document
-        doc_analyses = await setup['repositories']['analysis'].get_by_document_id(document_id)
+        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(document_id)
         assert len(doc_analyses) == 3
 
         analysis_ids = [result.analysis.id.value for result in analysis_results]
@@ -306,7 +288,11 @@ class TestEndToEndWorkflowIntegration:
 
         # Each analysis should have the correct type
         for analysis in doc_analyses:
-            assert analysis.analysis_type in [AnalysisType.SEMANTIC_SIMILARITY, AnalysisType.CODE_QUALITY, AnalysisType.SECURITY_SCAN]
+            assert analysis.analysis_type in [
+                AnalysisType.SEMANTIC_SIMILARITY,
+                AnalysisType.CODE_QUALITY,
+                AnalysisType.SECURITY_SCAN,
+            ]
 
     @pytest.mark.asyncio
     async def test_concurrent_workflows_end_to_end(self, complete_system_setup):
@@ -316,19 +302,20 @@ class TestEndToEndWorkflowIntegration:
         async def complete_workflow(i: int):
             """Execute complete workflow for document i."""
             # Create document
-            doc_result = await setup['app_service'].create_document({
-                'title': f'Concurrent Test Document {i}',
-                'content': f'Content for concurrent workflow testing {i}.',
-                'repository_id': 'concurrent-repo',
-                'author': f'author-{i}'
-            })
+            doc_result = await setup["app_service"].create_document(
+                {
+                    "title": f"Concurrent Test Document {i}",
+                    "content": f"Content for concurrent workflow testing {i}.",
+                    "repository_id": "concurrent-repo",
+                    "author": f"author-{i}",
+                }
+            )
 
             document_id = doc_result.document.id.value
 
             # Perform analysis
-            analysis_result = await setup['app_service'].perform_analysis_workflow(
-                document_id=document_id,
-                analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+            analysis_result = await setup["app_service"].perform_analysis_workflow(
+                document_id=document_id, analysis_type=AnalysisType.SEMANTIC_SIMILARITY
             )
 
             return document_id, analysis_result.analysis.id.value
@@ -349,12 +336,12 @@ class TestEndToEndWorkflowIntegration:
             all_analysis_ids.append(analysis_id)
 
             # Verify each document exists
-            doc = await setup['repositories']['document'].get_by_id(document_id)
+            doc = await setup["repositories"]["document"].get_by_id(document_id)
             assert doc is not None
-            assert doc.title == f'Concurrent Test Document {all_document_ids.index(document_id)}'
+            assert doc.title == f"Concurrent Test Document {all_document_ids.index(document_id)}"
 
             # Verify each analysis exists and is linked
-            analysis = await setup['repositories']['analysis'].get_by_id(analysis_id)
+            analysis = await setup["repositories"]["analysis"].get_by_id(analysis_id)
             assert analysis is not None
             assert analysis.document_id == document_id
 
@@ -363,8 +350,8 @@ class TestEndToEndWorkflowIntegration:
         assert len(set(all_analysis_ids)) == num_workflows
 
         # Verify total counts
-        all_docs = await setup['repositories']['document'].get_all()
-        all_analyses = await setup['repositories']['analysis'].get_all()
+        all_docs = await setup["repositories"]["document"].get_all()
+        all_analyses = await setup["repositories"]["analysis"].get_all()
 
         assert len(all_docs) == num_workflows
         assert len(all_analyses) == num_workflows
@@ -378,9 +365,9 @@ class TestSystemIntegrationWithExternalServices:
         """Create system setup with mocked external services."""
         # Infrastructure
         repositories = {
-            'document': SQLiteDocumentRepository(':memory:'),
-            'analysis': SQLiteAnalysisRepository(':memory:'),
-            'finding': SQLiteFindingRepository(':memory:')
+            "document": SQLiteDocumentRepository(":memory:"),
+            "analysis": SQLiteAnalysisRepository(":memory:"),
+            "finding": SQLiteFindingRepository(":memory:"),
         }
 
         for repo in repositories.values():
@@ -388,37 +375,34 @@ class TestSystemIntegrationWithExternalServices:
 
         # Domain services
         domain_services = {
-            'document_service': DocumentService(repositories['document']),
-            'analysis_service': AnalysisService(repositories['analysis'], repositories['document']),
-            'finding_service': FindingService(repositories['finding'])
+            "document_service": DocumentService(repositories["document"]),
+            "analysis_service": AnalysisService(repositories["analysis"], repositories["document"]),
+            "finding_service": FindingService(repositories["finding"]),
         }
 
         # Mock external services
         mock_external_services = {
-            'semantic_analyzer': Mock(),
-            'sentiment_analyzer': Mock(),
-            'content_quality_scorer': Mock(),
-            'logging_service': Mock(),
-            'caching_service': Mock(),
-            'monitoring_service': Mock()
+            "semantic_analyzer": Mock(),
+            "sentiment_analyzer": Mock(),
+            "content_quality_scorer": Mock(),
+            "logging_service": Mock(),
+            "caching_service": Mock(),
+            "monitoring_service": Mock(),
         }
 
         # Setup mock responses
-        mock_external_services['semantic_analyzer'].analyze = AsyncMock(return_value={
-            'similarity_score': 0.85,
-            'matched_documents': ['doc-1', 'doc-2'],
-            'confidence': 0.9
-        })
+        mock_external_services["semantic_analyzer"].analyze = AsyncMock(
+            return_value={"similarity_score": 0.85, "matched_documents": ["doc-1", "doc-2"], "confidence": 0.9}
+        )
 
-        mock_external_services['sentiment_analyzer'].analyze = AsyncMock(return_value={
-            'sentiment': 'positive',
-            'confidence': 0.8
-        })
+        mock_external_services["sentiment_analyzer"].analyze = AsyncMock(
+            return_value={"sentiment": "positive", "confidence": 0.8}
+        )
 
         yield {
-            'repositories': repositories,
-            'domain_services': domain_services,
-            'external_services': mock_external_services
+            "repositories": repositories,
+            "domain_services": domain_services,
+            "external_services": mock_external_services,
         }
 
         # Cleanup
@@ -432,29 +416,26 @@ class TestSystemIntegrationWithExternalServices:
 
         # Create document
         doc = Document(
-            id='external-test-doc',
-            title='External Service Test Document',
-            content='Testing integration with external services.',
-            repository_id='external-repo',
-            author='external-author'
+            id="external-test-doc",
+            title="External Service Test Document",
+            content="Testing integration with external services.",
+            repository_id="external-repo",
+            author="external-author",
         )
 
-        await setup['repositories']['document'].save(doc)
+        await setup["repositories"]["document"].save(doc)
 
         # Perform analysis (which would use external services)
-        analysis = await setup['domain_services']['analysis_service'].start_analysis(
-            document_id='external-test-doc',
-            analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+        analysis = await setup["domain_services"]["analysis_service"].start_analysis(
+            document_id="external-test-doc", analysis_type=AnalysisType.SEMANTIC_SIMILARITY
         )
 
         # Complete analysis
-        results = {'external_service_result': 'success'}
+        results = {"external_service_result": "success"}
         confidence = Confidence(0.85)
 
-        completed_analysis = await setup['domain_services']['analysis_service'].complete_analysis(
-            analysis_id=analysis.id.value,
-            results=results,
-            confidence=confidence
+        completed_analysis = await setup["domain_services"]["analysis_service"].complete_analysis(
+            analysis_id=analysis.id.value, results=results, confidence=confidence
         )
 
         # Verify external service was called
@@ -470,23 +451,24 @@ class TestSystemIntegrationWithExternalServices:
         setup = system_with_mocked_externals
 
         # Mock cache operations
-        mock_cache = setup['external_services']['caching_service']
+        mock_cache = setup["external_services"]["caching_service"]
         mock_cache.get = AsyncMock(return_value=None)  # Cache miss
         mock_cache.set = AsyncMock()
 
         # Create application service with caching
         app_service = AnalysisApplicationService(
-            domain_services=setup['domain_services'],
-            application_services=setup['external_services']
+            domain_services=setup["domain_services"], application_services=setup["external_services"]
         )
 
         # Execute workflow that should use caching
-        doc_result = await app_service.create_document({
-            'title': 'Caching Test Document',
-            'content': 'Testing caching integration.',
-            'repository_id': 'cache-repo',
-            'author': 'cache-author'
-        })
+        doc_result = await app_service.create_document(
+            {
+                "title": "Caching Test Document",
+                "content": "Testing caching integration.",
+                "repository_id": "cache-repo",
+                "author": "cache-author",
+            }
+        )
 
         # In a real implementation, caching would be used for:
         # - Document retrieval
@@ -496,7 +478,7 @@ class TestSystemIntegrationWithExternalServices:
         assert doc_result.success is True
 
         # Verify caching service is available
-        assert 'caching_service' in app_service.application_services
+        assert "caching_service" in app_service.application_services
 
 
 class TestSystemPerformanceIntegration:
@@ -506,8 +488,8 @@ class TestSystemPerformanceIntegration:
     async def test_bulk_operations_performance_end_to_end(self):
         """Test bulk operations performance across all layers."""
         # Setup repositories
-        doc_repo = SQLiteDocumentRepository(':memory:')
-        analysis_repo = SQLiteAnalysisRepository(':memory:')
+        doc_repo = SQLiteDocumentRepository(":memory:")
+        analysis_repo = SQLiteAnalysisRepository(":memory:")
 
         await doc_repo.initialize()
         await analysis_repo.initialize()
@@ -517,24 +499,25 @@ class TestSystemPerformanceIntegration:
 
         # Measure document creation performance
         import time
+
         start_time = time.time()
 
         for i in range(num_operations):
             doc = Document(
-                id=f'bulk-doc-{i:03d}',
-                title=f'Bulk Performance Test Document {i}',
-                content=f'Content for bulk performance testing {i}.',
-                repository_id='bulk-repo',
-                author='bulk-author'
+                id=f"bulk-doc-{i:03d}",
+                title=f"Bulk Performance Test Document {i}",
+                content=f"Content for bulk performance testing {i}.",
+                repository_id="bulk-repo",
+                author="bulk-author",
             )
             await doc_repo.save(doc)
 
             # Create analysis for each document
             analysis = Analysis(
-                id=f'bulk-analysis-{i:03d}',
-                document_id=f'bulk-doc-{i:03d}',
+                id=f"bulk-analysis-{i:03d}",
+                document_id=f"bulk-doc-{i:03d}",
                 analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
-                status=AnalysisStatus.COMPLETED
+                status=AnalysisStatus.COMPLETED,
             )
             await analysis_repo.save(analysis)
 
@@ -558,18 +541,18 @@ class TestSystemPerformanceIntegration:
     async def test_concurrent_users_simulation(self):
         """Test system behavior under concurrent user load."""
         # Setup
-        doc_repo = SQLiteDocumentRepository(':memory:')
+        doc_repo = SQLiteDocumentRepository(":memory:")
         await doc_repo.initialize()
 
         async def simulate_user_workflow(user_id: int):
             """Simulate a complete user workflow."""
             # Create document
             doc = Document(
-                id=f'user-{user_id}-doc',
-                title=f'User {user_id} Document',
-                content=f'Content from user {user_id}.',
-                repository_id='user-repo',
-                author=f'user-{user_id}'
+                id=f"user-{user_id}-doc",
+                title=f"User {user_id} Document",
+                content=f"Content from user {user_id}.",
+                repository_id="user-repo",
+                author=f"user-{user_id}",
             )
             await doc_repo.save(doc)
 
@@ -577,7 +560,7 @@ class TestSystemPerformanceIntegration:
             await asyncio.sleep(0.01)
 
             # Retrieve document
-            retrieved = await doc_repo.get_by_id(f'user-{user_id}-doc')
+            retrieved = await doc_repo.get_by_id(f"user-{user_id}-doc")
             return retrieved is not None
 
         # Simulate concurrent users
@@ -598,28 +581,29 @@ class TestSystemPerformanceIntegration:
     @pytest.mark.asyncio
     async def test_memory_usage_under_load(self):
         """Test memory usage under load."""
-        import psutil
         import os
+
+        import psutil
 
         # Get initial memory usage
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
 
         # Setup
-        doc_repo = SQLiteDocumentRepository(':memory:')
+        doc_repo = SQLiteDocumentRepository(":memory:")
         await doc_repo.initialize()
 
         # Create many documents with large content
-        large_content = 'x' * 10000  # 10KB per document
+        large_content = "x" * 10000  # 10KB per document
         num_docs = 1000
 
         for i in range(num_docs):
             doc = Document(
-                id=f'memory-doc-{i:04d}',
-                title=f'Memory Test Document {i}',
+                id=f"memory-doc-{i:04d}",
+                title=f"Memory Test Document {i}",
                 content=large_content,
-                repository_id='memory-repo',
-                author='memory-author'
+                repository_id="memory-repo",
+                author="memory-author",
             )
             await doc_repo.save(doc)
 
@@ -646,23 +630,23 @@ class TestSystemResilienceIntegration:
         # This would test connection pooling and retry logic
         # For now, test with in-memory database which doesn't fail
 
-        doc_repo = SQLiteDocumentRepository(':memory:')
+        doc_repo = SQLiteDocumentRepository(":memory:")
         await doc_repo.initialize()
 
         # Simulate normal operation
         doc = Document(
-            id='resilience-test-doc',
-            title='Resilience Test Document',
-            content='Testing system resilience.',
-            repository_id='resilience-repo',
-            author='resilience-author'
+            id="resilience-test-doc",
+            title="Resilience Test Document",
+            content="Testing system resilience.",
+            repository_id="resilience-repo",
+            author="resilience-author",
         )
 
         await doc_repo.save(doc)
-        retrieved = await doc_repo.get_by_id('resilience-test-doc')
+        retrieved = await doc_repo.get_by_id("resilience-test-doc")
 
         assert retrieved is not None
-        assert retrieved.title == 'Resilience Test Document'
+        assert retrieved.title == "Resilience Test Document"
 
         await doc_repo.close()
 
@@ -671,43 +655,40 @@ class TestSystemResilienceIntegration:
         """Test system behavior when some components fail."""
         # Setup with some mocked failures
         repositories = {
-            'document': SQLiteDocumentRepository(':memory:'),
-            'analysis': SQLiteDocumentRepository(':memory:'),  # Wrong type to simulate failure
-            'finding': SQLiteDocumentRepository(':memory:')    # Wrong type to simulate failure
+            "document": SQLiteDocumentRepository(":memory:"),
+            "analysis": SQLiteDocumentRepository(":memory:"),  # Wrong type to simulate failure
+            "finding": SQLiteDocumentRepository(":memory:"),  # Wrong type to simulate failure
         }
 
-        await repositories['document'].initialize()
+        await repositories["document"].initialize()
 
         # This should still work for document operations
         doc = Document(
-            id='partial-failure-doc',
-            title='Partial Failure Test Document',
-            content='Testing partial system failure.',
-            repository_id='failure-repo',
-            author='failure-author'
+            id="partial-failure-doc",
+            title="Partial Failure Test Document",
+            content="Testing partial system failure.",
+            repository_id="failure-repo",
+            author="failure-author",
         )
 
-        await repositories['document'].save(doc)
-        retrieved = await repositories['document'].get_by_id('partial-failure-doc')
+        await repositories["document"].save(doc)
+        retrieved = await repositories["document"].get_by_id("partial-failure-doc")
 
         assert retrieved is not None
 
-        await repositories['document'].close()
+        await repositories["document"].close()
 
     @pytest.mark.asyncio
     async def test_system_recovery_after_errors(self):
         """Test system recovery after encountering errors."""
-        doc_repo = SQLiteDocumentRepository(':memory:')
+        doc_repo = SQLiteDocumentRepository(":memory:")
         await doc_repo.initialize()
 
         # Simulate error scenario
         try:
             # Try to save invalid document
             invalid_doc = Document(
-                id='',  # Invalid
-                title='Invalid Document',
-                content='Content',
-                repository_id='recovery-repo'
+                id="", title="Invalid Document", content="Content", repository_id="recovery-repo"  # Invalid
             )
             await doc_repo.save(invalid_doc)
         except Exception:
@@ -715,18 +696,18 @@ class TestSystemResilienceIntegration:
 
         # System should still work after error
         valid_doc = Document(
-            id='recovery-test-doc',
-            title='Recovery Test Document',
-            content='Testing system recovery after errors.',
-            repository_id='recovery-repo',
-            author='recovery-author'
+            id="recovery-test-doc",
+            title="Recovery Test Document",
+            content="Testing system recovery after errors.",
+            repository_id="recovery-repo",
+            author="recovery-author",
         )
 
         await doc_repo.save(valid_doc)
-        retrieved = await doc_repo.get_by_id('recovery-test-doc')
+        retrieved = await doc_repo.get_by_id("recovery-test-doc")
 
         assert retrieved is not None
-        assert retrieved.title == 'Recovery Test Document'
+        assert retrieved.title == "Recovery Test Document"
 
         await doc_repo.close()
 
@@ -738,31 +719,31 @@ class TestSystemMonitoringIntegration:
     async def test_operation_metrics_collection(self):
         """Test collection of operation metrics during workflows."""
         # Setup
-        doc_repo = SQLiteDocumentRepository(':memory:')
+        doc_repo = SQLiteDocumentRepository(":memory:")
         await doc_repo.initialize()
 
         # Track operation counts (in real system, this would be automated)
-        operations_count = {'saves': 0, 'retrieves': 0}
+        operations_count = {"saves": 0, "retrieves": 0}
 
         # Perform operations
         for i in range(10):
             doc = Document(
-                id=f'metrics-doc-{i}',
-                title=f'Metrics Test Document {i}',
-                content=f'Content {i}',
-                repository_id='metrics-repo',
-                author='metrics-author'
+                id=f"metrics-doc-{i}",
+                title=f"Metrics Test Document {i}",
+                content=f"Content {i}",
+                repository_id="metrics-repo",
+                author="metrics-author",
             )
 
             await doc_repo.save(doc)
-            operations_count['saves'] += 1
+            operations_count["saves"] += 1
 
-            retrieved = await doc_repo.get_by_id(f'metrics-doc-{i}')
-            operations_count['retrieves'] += 1
+            retrieved = await doc_repo.get_by_id(f"metrics-doc-{i}")
+            operations_count["retrieves"] += 1
 
         # Verify operations were performed
-        assert operations_count['saves'] == 10
-        assert operations_count['retrieves'] == 10
+        assert operations_count["saves"] == 10
+        assert operations_count["retrieves"] == 10
 
         # In a real system, these metrics would be automatically collected
         # and exposed via monitoring endpoints
@@ -772,7 +753,7 @@ class TestSystemMonitoringIntegration:
     @pytest.mark.asyncio
     async def test_error_rate_monitoring(self):
         """Test monitoring of error rates."""
-        doc_repo = SQLiteDocumentRepository(':memory:')
+        doc_repo = SQLiteDocumentRepository(":memory:")
         await doc_repo.initialize()
 
         # Track errors
@@ -784,21 +765,18 @@ class TestSystemMonitoringIntegration:
             if i % 5 == 0:  # Every 5th operation fails
                 try:
                     invalid_doc = Document(
-                        id='',  # Invalid
-                        title=f'Invalid Document {i}',
-                        content='Content',
-                        repository_id='error-repo'
+                        id="", title=f"Invalid Document {i}", content="Content", repository_id="error-repo"  # Invalid
                     )
                     await doc_repo.save(invalid_doc)
                 except Exception:
                     error_count += 1
             else:
                 doc = Document(
-                    id=f'error-test-doc-{i}',
-                    title=f'Error Test Document {i}',
-                    content='Content',
-                    repository_id='error-repo',
-                    author='error-author'
+                    id=f"error-test-doc-{i}",
+                    title=f"Error Test Document {i}",
+                    content="Content",
+                    repository_id="error-repo",
+                    author="error-author",
                 )
                 await doc_repo.save(doc)
                 success_count += 1

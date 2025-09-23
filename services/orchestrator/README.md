@@ -25,45 +25,116 @@ Navigation: [Home](../../README.md) · [Architecture](../../docs/architecture/) 
 ## 🎯 Key Features
 
 ### 🔄 Workflow Management
-- **Parameterized Workflows** - Dynamic input handling with validation
-- **Complex Dependencies** - Action sequencing and dependency resolution
-- **Execution Monitoring** - Real-time status tracking and progress reporting
-- **Version Control** - Workflow versioning and change management
-- **Template System** - Pre-built workflow templates for common scenarios
+- **Parameterized Workflows** - Dynamic input handling with validation and type safety
+- **Complex Dependencies** - Action sequencing and dependency resolution with conditional logic
+- **Execution Monitoring** - Real-time status tracking and progress reporting with detailed metrics
+- **Version Control** - Workflow versioning, change management, and rollback capabilities
+- **Template System** - Pre-built workflow templates for common scenarios with customization
+- **Error Handling** - Comprehensive error recovery, retry mechanisms, and failure analysis
+- **Performance Optimization** - Intelligent resource allocation and execution scheduling
 
 ### 🤝 Multi-Service Orchestration
-- **Service Discovery** - Automatic service location and health checking
-- **Cross-Service Communication** - Secure inter-service messaging
-- **Event-Driven Processing** - Real-time event handling and correlation
-- **Load Balancing** - Intelligent request distribution
-- **Circuit Breaking** - Fault tolerance and graceful degradation
+- **Service Discovery** - Automatic service location, health checking, and dynamic registration
+- **Cross-Service Communication** - Secure inter-service messaging with correlation tracking
+- **Event-Driven Processing** - Real-time event handling, correlation, and saga patterns
+- **Load Balancing** - Intelligent request distribution with health-aware routing
+- **Circuit Breaking** - Fault tolerance, graceful degradation, and automatic recovery
+- **Context Propagation** - Request context, authentication, and metadata across services
+- **Rate Limiting** - Service-level rate limiting and throttling protection
 
 ### 🏢 Enterprise Integration
-- **Service Mesh** - Mutual TLS, authentication, and traffic management
-- **Event Streaming** - Real-time event publishing and subscription
-- **Enterprise Monitoring** - Health checks, metrics, and alerting
-- **Audit Trails** - Complete request tracking and compliance logging
-- **Security** - Enterprise-grade authentication and authorization
+- **Service Mesh** - Mutual TLS, authentication, traffic management, and observability
+- **Event Streaming** - Real-time event publishing, subscription, and message queuing
+- **Enterprise Monitoring** - Health checks, metrics, alerting, and performance monitoring
+- **Audit Trails** - Complete request tracking, compliance logging, and security auditing
+- **Security** - Enterprise-grade authentication, authorization, and access control
+- **High Availability** - Multi-region deployment, failover, and disaster recovery
+- **Scalability** - Horizontal scaling, auto-scaling, and resource optimization
 
 ## 🏗️ Architecture
 
 ### 🎨 Domain-Driven Design Implementation
 
-The Orchestrator follows **enterprise-grade Domain-Driven Design (DDD)** principles with clear bounded contexts:
+The Orchestrator follows **enterprise-grade Domain-Driven Design (DDD)** principles with clear bounded contexts and sophisticated architectural patterns:
 
 ```
 services/orchestrator/
-├── domain/                    # Business logic organized by domain
-│   ├── workflow_management/   # Workflow execution and management
-│   ├── service_registry/      # Service discovery and registration  
-│   ├── health_monitoring/     # System health and monitoring
-│   ├── infrastructure/        # DLQ, saga, tracing, event streaming
-│   ├── ingestion/            # Data ingestion orchestration
-│   └── query_processing/      # Query execution coordination
-├── application/               # Use cases and application services
-├── infrastructure/           # External services and persistence
-└── presentation/             # API controllers and endpoints
+├── domain/                    # Pure business logic organized by bounded contexts
+│   ├── workflow_management/   # Workflow execution and lifecycle management
+│   │   ├── entities/          # Workflow, Execution, Action entities
+│   │   ├── value_objects/     # WorkflowId, ExecutionStatus, ActionConfig
+│   │   ├── services/          # WorkflowValidationService, ExecutionService
+│   │   ├── events/            # WorkflowCreated, ExecutionStarted, ActionCompleted
+│   │   └── repositories/      # WorkflowRepository, ExecutionRepository
+│   ├── service_registry/      # Service discovery and capability management
+│   │   ├── entities/          # Service, Capability, Endpoint entities
+│   │   ├── value_objects/     # ServiceName, CapabilityType, HealthStatus
+│   │   ├── services/          # ServiceDiscoveryService, HealthCheckService
+│   │   ├── events/            # ServiceRegistered, HealthCheckFailed
+│   │   └── repositories/      # ServiceRepository, CapabilityRepository
+│   ├── health_monitoring/     # System health and performance monitoring
+│   │   ├── entities/          # HealthCheck, Metric, Alert entities
+│   │   ├── value_objects/     # HealthStatus, MetricType, AlertSeverity
+│   │   ├── services/          # HealthMonitoringService, AlertService
+│   │   ├── events/            # HealthDegraded, AlertTriggered
+│   │   └── repositories/      # HealthCheckRepository, MetricRepository
+│   ├── infrastructure/        # Infrastructure orchestration and management
+│   │   ├── entities/          # Saga, DeadLetterQueue, CircuitBreaker entities
+│   │   ├── value_objects/     # SagaId, QueueMessage, CircuitState
+│   │   ├── services/          # SagaOrchestrator, QueueManager, CircuitBreakerService
+│   │   ├── events/            # SagaCompensation, QueueMessageProcessed
+│   │   └── repositories/      # SagaRepository, MessageQueueRepository
+│   ├── ingestion/            # Data ingestion workflow orchestration
+│   │   ├── entities/          # IngestionJob, DataSource, ProcessingRule entities
+│   │   ├── value_objects/     # IngestionType, ProcessingStatus, QualityScore
+│   │   ├── services/          # IngestionOrchestrator, QualityAnalyzer
+│   │   ├── events/            # IngestionStarted, QualityAnalyzed
+│   │   └── repositories/      # IngestionRepository, DataSourceRepository
+│   └── query_processing/      # Query execution and coordination
+│       ├── entities/          # Query, Result, Intent entities
+│       ├── value_objects/     # QueryType, IntentType, ResultFormat
+│       ├── services/          # QueryProcessor, IntentClassifier
+│       ├── events/            # QueryExecuted, IntentClassified
+│       └── repositories/      # QueryRepository, IntentRepository
+├── application/               # Application services and use cases
+│   ├── workflow_management/   # Workflow management use cases
+│   ├── service_registry/      # Service registry use cases
+│   ├── health_monitoring/     # Health monitoring use cases
+│   ├── infrastructure/        # Infrastructure use cases
+│   ├── ingestion/            # Ingestion use cases
+│   └── query_processing/      # Query processing use cases
+├── infrastructure/           # External services, persistence, and adapters
+│   ├── persistence/          # Database adapters and repositories
+│   ├── external_services/     # Service clients and integrations
+│   ├── message_brokers/       # Event streaming and messaging
+│   └── security/             # Authentication and authorization
+└── presentation/             # API controllers, DTOs, and presentation logic
+    ├── api/                  # REST API endpoints and controllers
+    ├── cli/                  # Command-line interface
+    ├── events/               # Event handlers and subscribers
+    └── webhooks/             # Webhook handlers and integrations
 ```
+
+### 🏛️ Core Architectural Patterns
+
+#### **1. Domain-Driven Design (DDD)**
+- **Bounded Contexts**: Clear separation between workflow management, service registry, health monitoring, infrastructure, ingestion, and query processing
+- **Entities & Value Objects**: Rich domain models with business logic and validation
+- **Domain Services**: Complex business operations that don't belong to a single entity
+- **Repositories**: Abstract data access with clean interfaces
+- **Domain Events**: Event sourcing for audit trails and decoupled processing
+
+#### **2. Command Query Responsibility Segregation (CQRS)**
+- **Command Side**: Write operations with optimistic locking and validation
+- **Query Side**: Read operations with optimized queries and caching
+- **Event Sourcing**: Complete audit trail of all state changes
+- **Materialized Views**: Pre-computed views for efficient querying
+
+#### **3. Event-Driven Architecture**
+- **Event Storming**: Domain events capture business intent and state changes
+- **Saga Pattern**: Long-running transaction coordination across services
+- **Event Sourcing**: Complete system history for debugging and analysis
+- **Circuit Breaker**: Fault tolerance with automatic recovery
 
 ### 🔗 Service Interaction Architecture
 
@@ -191,10 +262,48 @@ http://localhost:5080
 ```
 
 ### Authentication
-All API endpoints support optional authentication via headers:
+All API endpoints support enterprise-grade authentication via headers:
 ```
 Authorization: Bearer <token>
 X-User-ID: <user_id>
+X-Correlation-ID: <correlation_id>
+X-Request-ID: <request_id>
+```
+
+### Request/Response Format
+
+#### Standard Response Envelope
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Operation completed successfully",
+  "correlation_id": "req-abc123def456",
+  "request_id": "req-abc123def456",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "version": "1.0",
+  "metadata": {
+    "processing_time_ms": 150,
+    "service_version": "2.1.0"
+  }
+}
+```
+
+#### Error Response Format
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid workflow parameters",
+    "details": {
+      "field": "actions",
+      "issue": "Required field missing"
+    },
+    "correlation_id": "req-abc123def456",
+    "timestamp": "2024-01-15T10:30:00Z"
+  }
+}
 ```
 
 ### Core Endpoints
@@ -202,10 +311,10 @@ X-User-ID: <user_id>
 #### 📝 Workflow Management
 
 ##### Create Workflow
-```http
-POST /workflows
-Content-Type: application/json
+**Endpoint**: `POST /workflows`
 
+**Request Body**:
+```json
 {
   "name": "Document Analysis Workflow",
   "description": "Analyze documents for quality and insights",
@@ -214,81 +323,510 @@ Content-Type: application/json
       "name": "document_url",
       "type": "string",
       "description": "URL of document to analyze",
-      "required": true
+      "required": true,
+      "validation": {
+        "pattern": "^https?://.*",
+        "min_length": 10
+      }
+    },
+    {
+      "name": "analysis_type",
+      "type": "string",
+      "description": "Type of analysis to perform",
+      "required": false,
+      "default": "comprehensive",
+      "allowed_values": ["basic", "comprehensive", "security"]
     }
   ],
   "actions": [
     {
-      "action_id": "analyze",
+      "action_id": "fetch_doc",
       "action_type": "service_call",
-      "name": "Analyze Document",
+      "name": "Fetch Document",
+      "description": "Retrieve document content from source",
+      "config": {
+        "service": "source_agent",
+        "endpoint": "/fetch",
+        "method": "POST",
+        "parameters": {
+          "url": "{{document_url}}"
+        },
+        "timeout": 30,
+        "retry_attempts": 3
+      },
+      "depends_on": []
+    },
+    {
+      "action_id": "analyze_content",
+      "action_type": "service_call",
+      "name": "Analyze Content",
+      "description": "Perform quality analysis on document",
       "config": {
         "service": "analysis_service",
         "endpoint": "/analyze",
         "method": "POST",
         "parameters": {
-          "url": "{{document_url}}"
+          "content": "{{fetch_doc.response.content}}",
+          "analysis_type": "{{analysis_type}}"
+        },
+        "timeout": 60,
+        "retry_attempts": 2
+      },
+      "depends_on": ["fetch_doc"],
+      "condition": "{{fetch_doc.success}}"
+    },
+    {
+      "action_id": "store_results",
+      "action_type": "service_call",
+      "name": "Store Analysis Results",
+      "description": "Persist analysis results to document store",
+      "config": {
+        "service": "doc_store",
+        "endpoint": "/documents",
+        "method": "POST",
+        "parameters": {
+          "title": "{{fetch_doc.response.title}}",
+          "content": "{{analyze_content.response.summary}}",
+          "metadata": {
+            "analysis_type": "{{analysis_type}}",
+            "quality_score": "{{analyze_content.response.quality_score}}",
+            "source_url": "{{document_url}}"
+          }
         }
-      }
+      },
+      "depends_on": ["analyze_content"],
+      "condition": "{{analyze_content.success}}"
     }
-  ]
+  ],
+  "tags": ["document_analysis", "quality_check"],
+  "version": "1.0",
+  "created_by": "user@example.com"
 }
 ```
 
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "workflow_id": "workflow_abc123def456",
+    "name": "Document Analysis Workflow",
+    "description": "Analyze documents for quality and insights",
+    "status": "active",
+    "version": "1.0",
+    "created_at": "2024-01-15T10:30:00Z",
+    "created_by": "user@example.com"
+  },
+  "message": "Workflow created successfully",
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z"
+}
+```
+
+**Parameters Schema**:
+- **name** (string, required): Unique workflow name
+- **description** (string, optional): Human-readable description
+- **parameters** (array, required): Input parameter definitions
+  - **name** (string): Parameter identifier
+  - **type** (string): Data type (string, integer, boolean, object)
+  - **description** (string): Human-readable description
+  - **required** (boolean): Whether parameter is mandatory
+  - **default** (any): Default value if not provided
+  - **validation** (object): Validation rules (pattern, min_length, etc.)
+- **actions** (array, required): Sequence of actions to execute
+  - **action_id** (string): Unique action identifier
+  - **action_type** (string): Type of action (service_call, notification, etc.)
+  - **name** (string): Human-readable action name
+  - **config** (object): Action-specific configuration
+  - **depends_on** (array): Action IDs this action depends on
+  - **condition** (string): Conditional expression for execution
+- **tags** (array, optional): Categorization labels
+- **version** (string, optional): Workflow version
+- **created_by** (string, optional): User who created the workflow
+
 ##### List Workflows
-```http
-GET /workflows?page=1&page_size=50&status=active&created_by=user@example.com
+**Endpoint**: `GET /workflows`
+
+**Query Parameters**:
+- `page` (integer, optional): Page number for pagination (default: 1)
+- `page_size` (integer, optional): Number of items per page (default: 50, max: 100)
+- `status` (string, optional): Filter by status (active, inactive, draft)
+- `created_by` (string, optional): Filter by creator
+- `tags` (string, optional): Filter by tags (comma-separated)
+- `search` (string, optional): Search in name and description
+- `sort_by` (string, optional): Sort field (name, created_at, updated_at)
+- `sort_order` (string, optional): Sort order (asc, desc)
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "workflows": [
+      {
+        "workflow_id": "workflow_abc123def456",
+        "name": "Document Analysis Workflow",
+        "description": "Analyze documents for quality and insights",
+        "status": "active",
+        "version": "1.0",
+        "tags": ["document_analysis", "quality_check"],
+        "created_at": "2024-01-15T10:30:00Z",
+        "created_by": "user@example.com",
+        "updated_at": "2024-01-15T10:30:00Z",
+        "execution_count": 25,
+        "success_rate": 0.96
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "page_size": 50,
+      "total_items": 150,
+      "total_pages": 3,
+      "has_next": true,
+      "has_previous": false
+    },
+    "filters": {
+      "status": "active",
+      "created_by": "user@example.com"
+    }
+  },
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z"
+}
 ```
 
 ##### Get Workflow Details
-```http
-GET /workflows/{workflow_id}
-```
+**Endpoint**: `GET /workflows/{workflow_id}`
 
-##### Update Workflow
-```http
-PUT /workflows/{workflow_id}
-Content-Type: application/json
-
+**Response**:
+```json
 {
-  "description": "Updated description",
-  "tags": ["updated", "v2"]
+  "success": true,
+  "data": {
+    "workflow_id": "workflow_abc123def456",
+    "name": "Document Analysis Workflow",
+    "description": "Analyze documents for quality and insights",
+    "status": "active",
+    "version": "1.0",
+    "parameters": [...],
+    "actions": [...],
+    "tags": ["document_analysis", "quality_check"],
+    "created_at": "2024-01-15T10:30:00Z",
+    "created_by": "user@example.com",
+    "updated_at": "2024-01-15T10:30:00Z",
+    "execution_count": 25,
+    "success_rate": 0.96,
+    "average_execution_time": 45.2,
+    "metadata": {
+      "category": "analysis",
+      "complexity": "medium",
+      "estimated_cost": 0.15
+    }
+  },
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z"
 }
 ```
 
-##### Delete Workflow
-```http
-DELETE /workflows/{workflow_id}
+##### Update Workflow
+**Endpoint**: `PUT /workflows/{workflow_id}`
+
+**Request Body**:
+```json
+{
+  "name": "Updated Document Analysis Workflow",
+  "description": "Enhanced analysis with security scanning",
+  "parameters": [
+    {
+      "name": "document_url",
+      "type": "string",
+      "description": "URL of document to analyze",
+      "required": true,
+      "validation": {
+        "pattern": "^https?://.*",
+        "min_length": 10
+      }
+    },
+    {
+      "name": "enable_security_scan",
+      "type": "boolean",
+      "description": "Include security vulnerability scanning",
+      "required": false,
+      "default": false
+    }
+  ],
+  "actions": [...],
+  "tags": ["document_analysis", "quality_check", "security"],
+  "version": "1.1"
+}
 ```
 
-#### 🚀 Workflow Execution
+**Response**: Same format as Create Workflow
 
-##### Execute Workflow
-```http
-POST /workflows/{workflow_id}/execute
-Content-Type: application/json
+##### Delete Workflow
+**Endpoint**: `DELETE /workflows/{workflow_id}`
 
+**Response**:
+```json
 {
-  "parameters": {
-    "document_url": "https://example.com/doc.pdf",
-    "analysis_type": "comprehensive"
+  "success": true,
+  "data": {
+    "workflow_id": "workflow_abc123def456",
+    "deleted_at": "2024-01-15T10:30:00Z"
+  },
+  "message": "Workflow deleted successfully",
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z"
+}
+```
+
+##### Clone Workflow
+**Endpoint**: `POST /workflows/{workflow_id}/clone`
+
+**Request Body**:
+```json
+{
+  "name": "Cloned Document Analysis Workflow",
+  "description": "Customized version with additional checks",
+  "customizations": {
+    "parameters": {
+      "add_security_scan": {
+        "name": "enable_security_scan",
+        "type": "boolean",
+        "description": "Include security vulnerability scanning",
+        "required": false,
+        "default": true
+      }
+    },
+    "actions": {
+      "add_security_check": {
+        "action_id": "security_scan",
+        "action_type": "service_call",
+        "name": "Security Scan",
+        "config": {
+          "service": "secure_analyzer",
+          "endpoint": "/scan",
+          "method": "POST",
+          "parameters": {
+            "content": "{{analyze_content.response.content}}"
+          }
+        },
+        "depends_on": ["analyze_content"],
+        "condition": "{{enable_security_scan}}"
+      }
+    }
   }
 }
 ```
 
+**Response**: Same format as Create Workflow
+
+#### 🚀 Workflow Execution
+
+##### Execute Workflow
+**Endpoint**: `POST /workflows/{workflow_id}/execute`
+
+**Request Body**:
+```json
+{
+  "parameters": {
+    "document_url": "https://example.com/doc.pdf",
+    "analysis_type": "comprehensive",
+    "enable_security_scan": true
+  },
+  "execution_options": {
+    "priority": "high",
+    "timeout_minutes": 30,
+    "retry_on_failure": true,
+    "continue_on_error": false,
+    "callback_url": "https://example.com/webhook/execution-complete",
+    "metadata": {
+      "source": "api",
+      "user_id": "user123",
+      "project": "document_analysis"
+    }
+  },
+  "created_by": "user@example.com"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "execution_id": "exec_abc123def456",
+    "workflow_id": "workflow_abc123def456",
+    "status": "running",
+    "parameters": {
+      "document_url": "https://example.com/doc.pdf",
+      "analysis_type": "comprehensive",
+      "enable_security_scan": true
+    },
+    "execution_options": {
+      "priority": "high",
+      "timeout_minutes": 30,
+      "retry_on_failure": true,
+      "continue_on_error": false,
+      "callback_url": "https://example.com/webhook/execution-complete"
+    },
+    "started_at": "2024-01-15T10:30:00Z",
+    "estimated_completion": "2024-01-15T10:32:00Z",
+    "progress": {
+      "current_step": 0,
+      "total_steps": 3,
+      "current_action": "fetch_doc",
+      "completion_percentage": 0
+    }
+  },
+  "message": "Workflow execution started successfully",
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z"
+}
+```
+
+**Execution Options**:
+- **priority** (string): Execution priority (low, normal, high, urgent)
+- **timeout_minutes** (integer): Maximum execution time
+- **retry_on_failure** (boolean): Whether to retry failed actions
+- **continue_on_error** (boolean): Continue execution on action failures
+- **callback_url** (string): URL to call on completion
+- **metadata** (object): Additional execution context
+
 ##### Get Execution Status
-```http
-GET /workflows/executions/{execution_id}
+**Endpoint**: `GET /workflows/executions/{execution_id}`
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "execution_id": "exec_abc123def456",
+    "workflow_id": "workflow_abc123def456",
+    "status": "completed",
+    "parameters": {...},
+    "execution_options": {...},
+    "started_at": "2024-01-15T10:30:00Z",
+    "completed_at": "2024-01-15T10:31:45Z",
+    "duration_seconds": 105,
+    "progress": {
+      "current_step": 3,
+      "total_steps": 3,
+      "current_action": "store_results",
+      "completion_percentage": 100
+    },
+    "results": {
+      "fetch_doc": {
+        "success": true,
+        "duration": 15.2,
+        "response": {
+          "title": "API Documentation",
+          "content": "...",
+          "content_type": "application/pdf"
+        }
+      },
+      "analyze_content": {
+        "success": true,
+        "duration": 45.8,
+        "response": {
+          "quality_score": 0.87,
+          "summary": "Well-structured API documentation...",
+          "findings": [...]
+        }
+      },
+      "store_results": {
+        "success": true,
+        "duration": 5.1,
+        "response": {
+          "document_id": "doc_xyz789ghi012",
+          "stored_at": "2024-01-15T10:31:40Z"
+        }
+      }
+    },
+    "errors": [],
+    "cost_estimate": 0.12,
+    "created_by": "user@example.com"
+  },
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:32:00Z"
+}
 ```
 
 ##### List Workflow Executions
-```http
-GET /workflows/{workflow_id}/executions?limit=100
+**Endpoint**: `GET /workflows/{workflow_id}/executions`
+
+**Query Parameters**:
+- `limit` (integer, optional): Maximum executions to return (default: 50)
+- `offset` (integer, optional): Number of executions to skip (default: 0)
+- `status` (string, optional): Filter by status (running, completed, failed, cancelled)
+- `created_by` (string, optional): Filter by executor
+- `start_date` (string, optional): Filter by start date (ISO 8601)
+- `end_date` (string, optional): Filter by end date (ISO 8601)
+- `sort_by` (string, optional): Sort field (started_at, completed_at, duration)
+- `sort_order` (string, optional): Sort order (asc, desc)
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "executions": [
+      {
+        "execution_id": "exec_abc123def456",
+        "status": "completed",
+        "started_at": "2024-01-15T10:30:00Z",
+        "completed_at": "2024-01-15T10:31:45Z",
+        "duration_seconds": 105,
+        "success": true,
+        "cost_estimate": 0.12,
+        "created_by": "user@example.com"
+      }
+    ],
+    "pagination": {
+      "limit": 50,
+      "offset": 0,
+      "total": 125,
+      "has_more": true
+    },
+    "summary": {
+      "total_executions": 125,
+      "successful_executions": 120,
+      "failed_executions": 3,
+      "cancelled_executions": 2,
+      "average_duration": 98.5,
+      "average_cost": 0.15
+    }
+  },
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:32:00Z"
+}
 ```
 
 ##### Cancel Execution
-```http
-POST /workflows/executions/{execution_id}/cancel
+**Endpoint**: `POST /workflows/executions/{execution_id}/cancel`
+
+**Request Body** (optional):
+```json
+{
+  "reason": "User requested cancellation",
+  "force": false
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "execution_id": "exec_abc123def456",
+    "status": "cancelled",
+    "cancelled_at": "2024-01-15T10:30:30Z",
+    "reason": "User requested cancellation"
+  },
+  "message": "Execution cancelled successfully",
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:35Z"
+}
 ```
 
 #### 🎯 Advanced Features

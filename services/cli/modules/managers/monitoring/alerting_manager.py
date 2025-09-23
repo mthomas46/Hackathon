@@ -1,15 +1,12 @@
 """Alerting Manager for CLI monitoring operations."""
 
-from typing import Dict, Any, List, Optional
-from pathlib import Path
-import json
-import yaml
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
+from rich.prompt import Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
 
 from ...base.base_manager import BaseManager
-from ...formatters.display_utils import DisplayManager
 
 
 class AlertingManager(BaseManager):
@@ -28,7 +25,7 @@ class AlertingManager(BaseManager):
             ("4", "Delete Alert Rule"),
             ("5", "Alert History"),
             ("6", "Alert Notifications"),
-            ("b", "Back to Advanced Monitoring")
+            ("b", "Back to Advanced Monitoring"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -67,16 +64,14 @@ class AlertingManager(BaseManager):
                 table.add_column("Triggered", style="green")
 
                 for alert in alerts:
-                    severity_color = {
-                        "critical": "red",
-                        "warning": "yellow",
-                        "info": "blue"
-                    }.get(alert.get("severity", "info"), "white")
+                    severity_color = {"critical": "red", "warning": "yellow", "info": "blue"}.get(
+                        alert.get("severity", "info"), "white"
+                    )
 
                     status_display = {
                         "firing": "[red]FIRING[/red]",
                         "resolved": "[green]RESOLVED[/green]",
-                        "pending": "[yellow]PENDING[/yellow]"
+                        "pending": "[yellow]PENDING[/yellow]",
                     }.get(alert.get("status", "unknown"), "[dim]UNKNOWN[/dim]")
 
                     table.add_row(
@@ -84,7 +79,7 @@ class AlertingManager(BaseManager):
                         f"[{severity_color}]{alert.get('severity', 'info').upper()}[/{severity_color}]",
                         status_display,
                         alert.get("description", "No description"),
-                        alert.get("triggered_at", "Unknown")
+                        alert.get("triggered_at", "Unknown"),
                     )
 
                 self.console.print(table)
@@ -110,17 +105,11 @@ class AlertingManager(BaseManager):
                 self.display.show_warning("Alert rule name cannot be empty")
                 return
 
-            rule_type = await self.select_from_list(
-                ["threshold", "rate", "absence", "custom"],
-                "Alert rule type"
-            )
+            rule_type = await self.select_from_list(["threshold", "rate", "absence", "custom"], "Alert rule type")
             if not rule_type:
                 return
 
-            severity = await self.select_from_list(
-                ["critical", "warning", "info"],
-                "Alert severity"
-            )
+            severity = await self.select_from_list(["critical", "warning", "info"], "Alert severity")
             if not severity:
                 severity = "warning"
 
@@ -133,7 +122,7 @@ class AlertingManager(BaseManager):
                 "severity": severity,
                 "description": description,
                 "enabled": True,
-                "created_at": self._get_timestamp()
+                "created_at": self._get_timestamp(),
             }
 
             # Add type-specific configuration
@@ -143,22 +132,20 @@ class AlertingManager(BaseManager):
                 operator = await self.select_from_list([">", "<", ">=", "<=", "=="], "Operator")
 
                 if metric and threshold and operator:
-                    rule_config.update({
-                        "metric": metric,
-                        "threshold": float(threshold),
-                        "operator": operator,
-                        "duration": "5m"  # Default 5 minutes
-                    })
+                    rule_config.update(
+                        {
+                            "metric": metric,
+                            "threshold": float(threshold),
+                            "operator": operator,
+                            "duration": "5m",  # Default 5 minutes
+                        }
+                    )
             elif rule_type == "rate":
                 metric = await self.get_user_input("Metric name")
                 rate = await self.get_user_input("Rate threshold (e.g., 10 per minute)")
 
                 if metric and rate:
-                    rule_config.update({
-                        "metric": metric,
-                        "rate_threshold": float(rate),
-                        "time_window": "5m"
-                    })
+                    rule_config.update({"metric": metric, "rate_threshold": float(rate), "time_window": "5m"})
 
             # Save alert rule
             success = await self._save_alert_rule(rule_name, rule_config)
@@ -192,15 +179,9 @@ class AlertingManager(BaseManager):
             self.display.show_info(f"Editing alert rule: {selected_rule}")
 
             # Allow editing basic properties
-            new_description = await self.get_user_input(
-                "New description",
-                default=rule_config.get("description", "")
-            )
+            new_description = await self.get_user_input("New description", default=rule_config.get("description", ""))
 
-            new_severity = await self.select_from_list(
-                ["critical", "warning", "info"],
-                "New severity"
-            )
+            new_severity = await self.select_from_list(["critical", "warning", "info"], "New severity")
 
             if new_description != rule_config.get("description", ""):
                 rule_config["description"] = new_description
@@ -262,7 +243,7 @@ class AlertingManager(BaseManager):
                     "status": "resolved",
                     "triggered_at": "2024-01-15 10:30:00",
                     "resolved_at": "2024-01-15 10:45:00",
-                    "duration": "15m"
+                    "duration": "15m",
                 },
                 {
                     "alert": "Memory Usage Spike",
@@ -270,7 +251,7 @@ class AlertingManager(BaseManager):
                     "status": "resolved",
                     "triggered_at": "2024-01-15 09:15:00",
                     "resolved_at": "2024-01-15 09:30:00",
-                    "duration": "15m"
+                    "duration": "15m",
                 },
                 {
                     "alert": "Disk Space Low",
@@ -278,8 +259,8 @@ class AlertingManager(BaseManager):
                     "status": "firing",
                     "triggered_at": "2024-01-15 08:00:00",
                     "resolved_at": None,
-                    "duration": "2h 30m"
-                }
+                    "duration": "2h 30m",
+                },
             ]
 
             table = Table(title="Alert History")
@@ -290,16 +271,14 @@ class AlertingManager(BaseManager):
             table.add_column("Duration", style="green")
 
             for alert in history:
-                severity_color = {
-                    "critical": "red",
-                    "warning": "yellow",
-                    "info": "blue"
-                }.get(alert.get("severity", "info"), "white")
+                severity_color = {"critical": "red", "warning": "yellow", "info": "blue"}.get(
+                    alert.get("severity", "info"), "white"
+                )
 
                 status_display = {
                     "firing": "[red]FIRING[/red]",
                     "resolved": "[green]RESOLVED[/green]",
-                    "pending": "[yellow]PENDING[/yellow]"
+                    "pending": "[yellow]PENDING[/yellow]",
                 }.get(alert.get("status", "unknown"), "[dim]UNKNOWN[/dim]")
 
                 table.add_row(
@@ -307,7 +286,7 @@ class AlertingManager(BaseManager):
                     f"[{severity_color}]{alert['severity'].upper()}[/{severity_color}]",
                     status_display,
                     alert["triggered_at"],
-                    alert["duration"]
+                    alert["duration"],
                 )
 
             self.console.print(table)
@@ -328,18 +307,14 @@ class AlertingManager(BaseManager):
                 "email": {
                     "enabled": True,
                     "recipients": ["admin@example.com", "ops@example.com"],
-                    "critical_only": True
+                    "critical_only": True,
                 },
-                "slack": {
-                    "enabled": False,
-                    "webhook_url": "https://hooks.slack.com/...",
-                    "channel": "#alerts"
-                },
+                "slack": {"enabled": False, "webhook_url": "https://hooks.slack.com/...", "channel": "#alerts"},
                 "webhook": {
                     "enabled": True,
                     "url": "https://api.example.com/webhooks/alerts",
-                    "headers": {"Authorization": "Bearer ***"}
-                }
+                    "headers": {"Authorization": "Bearer ***"},
+                },
             }
 
             table = Table(title="Alert Notification Configuration")
@@ -379,22 +354,22 @@ class AlertingManager(BaseManager):
                 "severity": "warning",
                 "status": "firing",
                 "description": "CPU usage above 80% for 5 minutes",
-                "triggered_at": "2024-01-15 14:30:00"
+                "triggered_at": "2024-01-15 14:30:00",
             },
             {
                 "name": "Memory Usage High",
                 "severity": "critical",
                 "status": "firing",
                 "description": "Memory usage above 90%",
-                "triggered_at": "2024-01-15 14:25:00"
+                "triggered_at": "2024-01-15 14:25:00",
             },
             {
                 "name": "Disk Space Low",
                 "severity": "warning",
                 "status": "resolved",
                 "description": "Disk space below 10%",
-                "triggered_at": "2024-01-15 12:00:00"
-            }
+                "triggered_at": "2024-01-15 12:00:00",
+            },
         ]
 
     async def _save_alert_rule(self, name: str, rule: Dict[str, Any]) -> bool:
@@ -423,4 +398,5 @@ class AlertingManager(BaseManager):
     def _get_timestamp(self) -> str:
         """Get current timestamp."""
         from datetime import datetime
+
         return datetime.utcnow().isoformat()

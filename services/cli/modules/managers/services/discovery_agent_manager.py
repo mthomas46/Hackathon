@@ -1,17 +1,18 @@
-"""Discovery Agent Manager module for CLI service.
+"""
+Discovery Agent Manager module for CLI service.
 
-Provides power-user operations for discovery agent including
-API discovery, OpenAPI parsing, service registration, and endpoint management.
+Provides power-user operations for discovery agent including API
+discovery, OpenAPI parsing, service registration, and endpoint
+management.
 """
 
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
 import json
 import os
+from typing import Any, Dict, List, Optional
+
+from rich.console import Console
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
 
 from ...base.base_manager import BaseManager
 
@@ -23,7 +24,8 @@ class DiscoveryAgentManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def discovery_agent_menu(self):
-        """Main discovery agent management menu with enhanced interactive experience."""
+        """Main discovery agent management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Discovery Agent Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -34,11 +36,15 @@ class DiscoveryAgentManager(BaseManager):
             ("3", "Discovery History and Results"),
             ("4", "Service Registration Management"),
             ("5", "Discovery Validation and Testing"),
-            ("6", "Discovery Agent Configuration")
+            ("6", "Discovery Agent Configuration"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.service_discovery_menu()
         elif choice == "2":
@@ -59,13 +65,16 @@ class DiscoveryAgentManager(BaseManager):
         """Service discovery submenu."""
         while True:
             menu = create_menu_table("Service Discovery", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Discover from Inline OpenAPI Spec"),
-                ("2", "Discover from OpenAPI URL"),
-                ("3", "Discover from Local File"),
-                ("4", "Discover with Custom Configuration"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Discover from Inline OpenAPI Spec"),
+                    ("2", "Discover from OpenAPI URL"),
+                    ("3", "Discover from Local File"),
+                    ("4", "Discover with Custom Configuration"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -95,26 +104,16 @@ class DiscoveryAgentManager(BaseManager):
                 "info": {
                     "title": service_name.title(),
                     "version": "1.0.0",
-                    "description": f"Auto-generated spec for {service_name}"
+                    "description": f"Auto-generated spec for {service_name}",
                 },
                 "paths": {
                     "/health": {
-                        "get": {
-                            "summary": "Health check",
-                            "responses": {
-                                "200": {"description": "Service is healthy"}
-                            }
-                        }
+                        "get": {"summary": "Health check", "responses": {"200": {"description": "Service is healthy"}}}
                     },
                     "/info": {
-                        "get": {
-                            "summary": "Service information",
-                            "responses": {
-                                "200": {"description": "Service info"}
-                            }
-                        }
-                    }
-                }
+                        "get": {"summary": "Service information", "responses": {"200": {"description": "Service info"}}}
+                    },
+                },
             }
 
             self.console.print("[yellow]Default OpenAPI spec template:[/yellow]")
@@ -130,12 +129,7 @@ class DiscoveryAgentManager(BaseManager):
 
             dry_run = Confirm.ask("[bold cyan]Dry run (no registration)?[/bold cyan]", default=True)
 
-            discover_request = {
-                "name": service_name,
-                "base_url": base_url,
-                "spec": spec,
-                "dry_run": dry_run
-            }
+            discover_request = {"name": service_name, "base_url": base_url, "spec": spec, "dry_run": dry_run}
 
             await self.perform_discovery(discover_request)
 
@@ -155,7 +149,7 @@ class DiscoveryAgentManager(BaseManager):
                 "name": service_name,
                 "base_url": base_url,
                 "openapi_url": openapi_url,
-                "dry_run": dry_run
+                "dry_run": dry_run,
             }
 
             await self.perform_discovery(discover_request)
@@ -174,17 +168,12 @@ class DiscoveryAgentManager(BaseManager):
                 self.console.print(f"[red]File not found: {file_path}[/red]")
                 return
 
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 spec = json.load(f)
 
             dry_run = Confirm.ask("[bold cyan]Dry run (no registration)?[/bold cyan]", default=True)
 
-            discover_request = {
-                "name": service_name,
-                "base_url": base_url,
-                "spec": spec,
-                "dry_run": dry_run
-            }
+            discover_request = {"name": service_name, "base_url": base_url, "spec": spec, "dry_run": dry_run}
 
             await self.perform_discovery(discover_request)
 
@@ -259,16 +248,11 @@ class DiscoveryAgentManager(BaseManager):
         if endpoints:
             content += "\n[bold cyan]Discovered Endpoints:[/bold cyan]\n"
             for i, endpoint in enumerate(endpoints[:10], 1):  # Show first 10
-                method = endpoint.get('method', 'GET')
-                path = endpoint.get('path', '/')
-                summary = endpoint.get('summary', 'No summary')
+                method = endpoint.get("method", "GET")
+                path = endpoint.get("path", "/")
+                summary = endpoint.get("summary", "No summary")
 
-                method_color = {
-                    'GET': 'green',
-                    'POST': 'yellow',
-                    'PUT': 'blue',
-                    'DELETE': 'red'
-                }.get(method, 'white')
+                method_color = {"GET": "green", "POST": "yellow", "PUT": "blue", "DELETE": "red"}.get(method, "white")
 
                 content += f"{i:2d}. [{method_color}]{method}[/{method_color}] {path}\n"
                 content += f"    {summary}\n"
@@ -280,7 +264,7 @@ class DiscoveryAgentManager(BaseManager):
             reg_info = discovery_data["registration"]
             content += f"\n[bold green]Registration Details:[/bold green]\n"
             content += f"• Registered with orchestrator: {reg_info.get('success', False)}\n"
-            if reg_info.get('service_id'):
+            if reg_info.get("service_id"):
                 content += f"• Service ID: {reg_info['service_id']}\n"
 
         print_panel(self.console, content, border_style="green" if count > 0 else "yellow")
@@ -294,23 +278,18 @@ class DiscoveryAgentManager(BaseManager):
             table.add_column("Parameters", style="green")
 
             for endpoint in endpoints:
-                method = endpoint.get('method', 'GET')
-                path = endpoint.get('path', '/')
-                summary = endpoint.get('summary', 'No summary')
-                params = len(endpoint.get('parameters', []))
+                method = endpoint.get("method", "GET")
+                path = endpoint.get("path", "/")
+                summary = endpoint.get("summary", "No summary")
+                params = len(endpoint.get("parameters", []))
 
-                method_color = {
-                    'GET': 'green',
-                    'POST': 'yellow',
-                    'PUT': 'blue',
-                    'DELETE': 'red'
-                }.get(method, 'white')
+                method_color = {"GET": "green", "POST": "yellow", "PUT": "blue", "DELETE": "red"}.get(method, "white")
 
                 table.add_row(
                     f"[{method_color}]{method}[/{method_color}]",
                     path,
                     summary[:40] + "..." if len(summary) > 40 else summary,
-                    str(params)
+                    str(params),
                 )
 
             self.console.print(table)
@@ -319,13 +298,16 @@ class DiscoveryAgentManager(BaseManager):
         """Bulk discovery operations submenu."""
         while True:
             menu = create_menu_table("Bulk Discovery Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Discover Multiple Services from Config"),
-                ("2", "Batch URL-based Discovery"),
-                ("3", "Discover from Directory of Specs"),
-                ("4", "Parallel Discovery Execution"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Discover Multiple Services from Config"),
+                    ("2", "Batch URL-based Discovery"),
+                    ("3", "Discover from Directory of Specs"),
+                    ("4", "Parallel Discovery Execution"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -352,7 +334,7 @@ class DiscoveryAgentManager(BaseManager):
                 self.console.print(f"[red]Configuration file not found: {config_file}[/red]")
                 return
 
-            with open(config_file, 'r') as f:
+            with open(config_file, "r") as f:
                 config = json.load(f)
 
             services = config.get("services", [])
@@ -414,12 +396,7 @@ class DiscoveryAgentManager(BaseManager):
                 # Try to infer base URL from OpenAPI URL
                 base_url = url.replace("/openapi.json", "").replace("/swagger.json", "")
 
-                services.append({
-                    "name": service_name,
-                    "base_url": base_url,
-                    "openapi_url": url,
-                    "dry_run": dry_run
-                })
+                services.append({"name": service_name, "base_url": base_url, "openapi_url": url, "dry_run": dry_run})
 
             self.console.print(f"[yellow]Generated {len(services)} service configurations:[/yellow]")
             for service in services:
@@ -456,6 +433,7 @@ class DiscoveryAgentManager(BaseManager):
                 return
 
             import glob
+
             spec_files = glob.glob(os.path.join(directory, file_pattern))
 
             if not spec_files:
@@ -477,7 +455,7 @@ class DiscoveryAgentManager(BaseManager):
                     try:
                         service_name = os.path.splitext(os.path.basename(file_path))[0]
 
-                        with open(file_path, 'r') as f:
+                        with open(file_path, "r") as f:
                             spec = json.load(f)
 
                         # Infer base URL from spec or use default
@@ -487,7 +465,7 @@ class DiscoveryAgentManager(BaseManager):
                             "name": service_name,
                             "base_url": base_url,
                             "spec": spec,
-                            "dry_run": dry_run
+                            "dry_run": dry_run,
                         }
 
                         self.console.print(f"\n[yellow]Processing {os.path.basename(file_path)}...[/yellow]")
@@ -522,13 +500,16 @@ class DiscoveryAgentManager(BaseManager):
         """Discovery history and results submenu."""
         while True:
             menu = create_menu_table("Discovery History", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Recent Discovery Operations"),
-                ("2", "Search Discovery History"),
-                ("3", "View Discovery Statistics"),
-                ("4", "Export Discovery Results"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Recent Discovery Operations"),
+                    ("2", "Search Discovery History"),
+                    ("3", "View Discovery Statistics"),
+                    ("4", "Export Discovery Results"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -562,7 +543,9 @@ class DiscoveryAgentManager(BaseManager):
     async def search_discovery_history(self):
         """Search discovery history."""
         try:
-            self.console.print("[yellow]Discovery history search would allow filtering by service name, date, etc.[/yellow]")
+            self.console.print(
+                "[yellow]Discovery history search would allow filtering by service name, date, etc.[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -595,14 +578,17 @@ class DiscoveryAgentManager(BaseManager):
         """Service registration management submenu."""
         while True:
             menu = create_menu_table("Service Registration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Registered Services"),
-                ("2", "Register Discovered Service"),
-                ("3", "Unregister Service"),
-                ("4", "Update Service Registration"),
-                ("5", "Validate Registrations"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Registered Services"),
+                    ("2", "Register Discovered Service"),
+                    ("3", "Unregister Service"),
+                    ("4", "Update Service Registration"),
+                    ("5", "Validate Registrations"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -651,7 +637,9 @@ class DiscoveryAgentManager(BaseManager):
         """Unregister a service."""
         try:
             # This would require orchestrator API for unregistration
-            self.console.print("[yellow]Service unregistration would remove a service from the orchestrator registry[/yellow]")
+            self.console.print(
+                "[yellow]Service unregistration would remove a service from the orchestrator registry[/yellow]"
+            )
             self.console.print("[yellow]This requires orchestrator API support for unregistration[/yellow]")
 
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
@@ -671,7 +659,9 @@ class DiscoveryAgentManager(BaseManager):
     async def validate_registrations(self):
         """Validate service registrations."""
         try:
-            self.console.print("[yellow]Registration validation would check if registered services are still accessible[/yellow]")
+            self.console.print(
+                "[yellow]Registration validation would check if registered services are still accessible[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -681,13 +671,16 @@ class DiscoveryAgentManager(BaseManager):
         """Discovery validation and testing submenu."""
         while True:
             menu = create_menu_table("Discovery Validation", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Validate OpenAPI Spec"),
-                ("2", "Test Endpoint Accessibility"),
-                ("3", "Compare Discovery Results"),
-                ("4", "Generate Discovery Report"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Validate OpenAPI Spec"),
+                    ("2", "Test Endpoint Accessibility"),
+                    ("3", "Compare Discovery Results"),
+                    ("4", "Generate Discovery Report"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -744,7 +737,9 @@ class DiscoveryAgentManager(BaseManager):
     async def test_endpoint_accessibility(self):
         """Test endpoint accessibility."""
         try:
-            self.console.print("[yellow]Endpoint accessibility testing would check if discovered endpoints are reachable[/yellow]")
+            self.console.print(
+                "[yellow]Endpoint accessibility testing would check if discovered endpoints are reachable[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -753,7 +748,9 @@ class DiscoveryAgentManager(BaseManager):
     async def compare_discovery_results(self):
         """Compare discovery results."""
         try:
-            self.console.print("[yellow]Discovery result comparison would show differences between discovery runs[/yellow]")
+            self.console.print(
+                "[yellow]Discovery result comparison would show differences between discovery runs[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -762,7 +759,9 @@ class DiscoveryAgentManager(BaseManager):
     async def generate_discovery_report(self):
         """Generate discovery report."""
         try:
-            self.console.print("[yellow]Discovery report generation would create comprehensive reports of discovery operations[/yellow]")
+            self.console.print(
+                "[yellow]Discovery report generation would create comprehensive reports of discovery operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -772,13 +771,16 @@ class DiscoveryAgentManager(BaseManager):
         """Discovery agent configuration submenu."""
         while True:
             menu = create_menu_table("Discovery Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Discovery Agent Config"),
-                ("2", "Configure Orchestrator Integration"),
-                ("3", "Set Discovery Defaults"),
-                ("4", "Configure Validation Rules"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Discovery Agent Config"),
+                    ("2", "Configure Orchestrator Integration"),
+                    ("3", "Set Discovery Defaults"),
+                    ("4", "Configure Validation Rules"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -808,7 +810,9 @@ class DiscoveryAgentManager(BaseManager):
     async def configure_orchestrator_integration(self):
         """Configure orchestrator integration."""
         try:
-            self.console.print("[yellow]Orchestrator integration config would set registration endpoints and auth[/yellow]")
+            self.console.print(
+                "[yellow]Orchestrator integration config would set registration endpoints and auth[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -817,7 +821,9 @@ class DiscoveryAgentManager(BaseManager):
     async def set_discovery_defaults(self):
         """Set discovery defaults."""
         try:
-            self.console.print("[yellow]Discovery defaults would configure default behavior for all discoveries[/yellow]")
+            self.console.print(
+                "[yellow]Discovery defaults would configure default behavior for all discoveries[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -835,7 +841,9 @@ class DiscoveryAgentManager(BaseManager):
     async def discover_service_from_cli(self, discover_request: Dict[str, Any]):
         """Discover service for CLI usage (no interactive prompts)."""
         try:
-            with self.console.status(f"[bold green]Discovering service {discover_request.get('name', 'unknown')}...[/bold green]") as status:
+            with self.console.status(
+                f"[bold green]Discovering service {discover_request.get('name', 'unknown')}...[/bold green]"
+            ) as status:
                 response = await self.clients.post_json("discovery-agent/discover", discover_request)
 
             if response.get("data"):

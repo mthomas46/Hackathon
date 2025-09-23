@@ -1,7 +1,7 @@
-"""Health Check Result Value Object"""
+"""Health Check Result Value Object."""
 
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
 from .health_status import HealthStatus
 
@@ -16,7 +16,7 @@ class HealthCheckResult:
         timestamp: Optional[datetime] = None,
         details: Optional[Dict[str, Any]] = None,
         response_time_ms: Optional[float] = None,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ):
         self._status = status
         self._message = message.strip()
@@ -73,7 +73,7 @@ class HealthCheckResult:
             "status": self._status.value,
             "message": self._message,
             "timestamp": self._timestamp.isoformat(),
-            "details": self._details
+            "details": self._details,
         }
 
         if self._response_time_ms is not None:
@@ -86,18 +86,10 @@ class HealthCheckResult:
 
     @classmethod
     def success(
-        cls,
-        message: str,
-        details: Optional[Dict[str, Any]] = None,
-        response_time_ms: Optional[float] = None
-    ) -> 'HealthCheckResult':
+        cls, message: str, details: Optional[Dict[str, Any]] = None, response_time_ms: Optional[float] = None
+    ) -> "HealthCheckResult":
         """Create a successful health check result."""
-        return cls(
-            status=HealthStatus.HEALTHY,
-            message=message,
-            details=details,
-            response_time_ms=response_time_ms
-        )
+        return cls(status=HealthStatus.HEALTHY, message=message, details=details, response_time_ms=response_time_ms)
 
     @classmethod
     def failure(
@@ -105,23 +97,25 @@ class HealthCheckResult:
         message: str,
         error_message: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None,
-        response_time_ms: Optional[float] = None
-    ) -> 'HealthCheckResult':
+        response_time_ms: Optional[float] = None,
+    ) -> "HealthCheckResult":
         """Create a failed health check result."""
         return cls(
             status=HealthStatus.UNHEALTHY,
             message=message,
             details=details,
             response_time_ms=response_time_ms,
-            error_message=error_message
+            error_message=error_message,
         )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, HealthCheckResult):
             return NotImplemented
-        return (self._status == other._status and
-                self._message == other._message and
-                self._error_message == other._error_message)
+        return (
+            self._status == other._status
+            and self._message == other._message
+            and self._error_message == other._error_message
+        )
 
     def __repr__(self) -> str:
         return f"HealthCheckResult(status={self._status}, message='{self._message}')"

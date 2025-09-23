@@ -1,26 +1,19 @@
 """Tests for Application Use Cases."""
 
-import pytest
-from unittest.mock import Mock, AsyncMock, MagicMock
-from datetime import datetime, timezone
-from typing import Dict, Any, List
-from uuid import uuid4
+from unittest.mock import AsyncMock, Mock
 
-from ...application.use_cases.perform_analysis_use_case import (
-    PerformAnalysisUseCase, PerformAnalysisCommand, PerformAnalysisResult
-)
+import pytest
+
 from ...application.use_cases.create_document_use_case import CreateDocumentUseCase
+from ...application.use_cases.create_finding_use_case import CreateFindingUseCase
 from ...application.use_cases.get_document_use_case import GetDocumentUseCase
 from ...application.use_cases.get_findings_use_case import GetFindingsUseCase
-from ...application.use_cases.create_finding_use_case import CreateFindingUseCase
-
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.finding import Finding, FindingSeverity
-from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
-
-from ...domain.exceptions import DocumentNotFoundException, AnalysisExecutionException
+from ...application.use_cases.perform_analysis_use_case import (
+    PerformAnalysisCommand,
+    PerformAnalysisResult,
+    PerformAnalysisUseCase,
+)
+from ...domain.exceptions import DocumentNotFoundException
 
 
 class TestPerformAnalysisUseCase:
@@ -29,19 +22,12 @@ class TestPerformAnalysisUseCase:
     @pytest.fixture
     def mock_repositories(self):
         """Mock repositories for testing."""
-        return {
-            'document_repository': Mock(),
-            'analysis_repository': Mock(),
-            'finding_repository': Mock()
-        }
+        return {"document_repository": Mock(), "analysis_repository": Mock(), "finding_repository": Mock()}
 
     @pytest.fixture
     def mock_services(self):
         """Mock domain services for testing."""
-        return {
-            'analysis_service': Mock(),
-            'finding_service': Mock()
-        }
+        return {"analysis_service": Mock(), "finding_service": Mock()}
 
     @pytest.fixture
     def mock_event_bus(self):
@@ -51,31 +37,31 @@ class TestPerformAnalysisUseCase:
     def test_use_case_creation(self, mock_services, mock_repositories, mock_event_bus):
         """Test creating perform analysis use case."""
         use_case = PerformAnalysisUseCase(
-            analysis_service=mock_services['analysis_service'],
-            finding_service=mock_services['finding_service'],
-            document_repository=mock_repositories['document_repository'],
-            analysis_repository=mock_repositories['analysis_repository'],
-            finding_repository=mock_repositories['finding_repository'],
-            event_bus=mock_event_bus
+            analysis_service=mock_services["analysis_service"],
+            finding_service=mock_services["finding_service"],
+            document_repository=mock_repositories["document_repository"],
+            analysis_repository=mock_repositories["analysis_repository"],
+            finding_repository=mock_repositories["finding_repository"],
+            event_bus=mock_event_bus,
         )
 
-        assert use_case.analysis_service == mock_services['analysis_service']
+        assert use_case.analysis_service == mock_services["analysis_service"]
         assert use_case.event_bus == mock_event_bus
 
     def test_command_creation(self):
         """Test perform analysis command creation."""
         command = PerformAnalysisCommand(
-            document_id='doc-123',
-            analysis_type='semantic_similarity',
-            configuration={'threshold': 0.8},
-            priority='high',
-            timeout_seconds=300
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
+            configuration={"threshold": 0.8},
+            priority="high",
+            timeout_seconds=300,
         )
 
-        assert command.document_id == 'doc-123'
-        assert command.analysis_type == 'semantic_similarity'
-        assert command.configuration == {'threshold': 0.8}
-        assert command.priority == 'high'
+        assert command.document_id == "doc-123"
+        assert command.analysis_type == "semantic_similarity"
+        assert command.configuration == {"threshold": 0.8}
+        assert command.priority == "high"
         assert command.timeout_seconds == 300
 
     @pytest.mark.asyncio
@@ -83,49 +69,48 @@ class TestPerformAnalysisUseCase:
         """Test successful analysis execution."""
         # Setup mocks
         mock_doc = Mock()
-        mock_doc.id = 'doc-123'
+        mock_doc.id = "doc-123"
 
         mock_analysis = Mock()
         mock_analysis.id = Mock()
-        mock_analysis.id.value = 'analysis-123'
-        mock_analysis.document_id = 'doc-123'
+        mock_analysis.id.value = "analysis-123"
+        mock_analysis.document_id = "doc-123"
         mock_analysis.start = Mock()
         mock_analysis.complete = Mock()
 
-        mock_repositories['document_repository'].get_by_id = AsyncMock(return_value=mock_doc)
-        mock_repositories['analysis_repository'].save = AsyncMock()
-        mock_repositories['finding_repository'].save = AsyncMock()
+        mock_repositories["document_repository"].get_by_id = AsyncMock(return_value=mock_doc)
+        mock_repositories["analysis_repository"].save = AsyncMock()
+        mock_repositories["finding_repository"].save = AsyncMock()
 
-        mock_services['analysis_service'].create_analysis = Mock(return_value=mock_analysis)
-        mock_services['analysis_service'].execute_analysis = Mock(return_value={
-            'findings': [
-                {
-                    'title': 'Test Finding',
-                    'description': 'Test description',
-                    'severity': 'medium',
-                    'category': 'test',
-                    'confidence': 0.8
-                }
-            ]
-        })
+        mock_services["analysis_service"].create_analysis = Mock(return_value=mock_analysis)
+        mock_services["analysis_service"].execute_analysis = Mock(
+            return_value={
+                "findings": [
+                    {
+                        "title": "Test Finding",
+                        "description": "Test description",
+                        "severity": "medium",
+                        "category": "test",
+                        "confidence": 0.8,
+                    }
+                ]
+            }
+        )
 
-        mock_services['finding_service'].create_finding = Mock(return_value=Mock())
+        mock_services["finding_service"].create_finding = Mock(return_value=Mock())
 
         mock_event_bus.publish = AsyncMock()
 
         use_case = PerformAnalysisUseCase(
-            analysis_service=mock_services['analysis_service'],
-            finding_service=mock_services['finding_service'],
-            document_repository=mock_repositories['document_repository'],
-            analysis_repository=mock_repositories['analysis_repository'],
-            finding_repository=mock_repositories['finding_repository'],
-            event_bus=mock_event_bus
+            analysis_service=mock_services["analysis_service"],
+            finding_service=mock_services["finding_service"],
+            document_repository=mock_repositories["document_repository"],
+            analysis_repository=mock_repositories["analysis_repository"],
+            finding_repository=mock_repositories["finding_repository"],
+            event_bus=mock_event_bus,
         )
 
-        command = PerformAnalysisCommand(
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
-        )
+        command = PerformAnalysisCommand(document_id="doc-123", analysis_type="semantic_similarity")
 
         # Execute
         result = await use_case.execute(command)
@@ -138,30 +123,27 @@ class TestPerformAnalysisUseCase:
         assert len(result.events) > 0
 
         # Verify method calls
-        mock_repositories['document_repository'].get_by_id.assert_called_once_with('doc-123')
-        mock_repositories['analysis_repository'].save.assert_called()
+        mock_repositories["document_repository"].get_by_id.assert_called_once_with("doc-123")
+        mock_repositories["analysis_repository"].save.assert_called()
         mock_event_bus.publish.assert_called()
 
     @pytest.mark.asyncio
     async def test_document_not_found_error(self, mock_services, mock_repositories, mock_event_bus):
         """Test document not found error handling."""
         # Setup mocks
-        mock_repositories['document_repository'].get_by_id = AsyncMock(return_value=None)
+        mock_repositories["document_repository"].get_by_id = AsyncMock(return_value=None)
         mock_event_bus.publish = AsyncMock()
 
         use_case = PerformAnalysisUseCase(
-            analysis_service=mock_services['analysis_service'],
-            finding_service=mock_services['finding_service'],
-            document_repository=mock_repositories['document_repository'],
-            analysis_repository=mock_repositories['analysis_repository'],
-            finding_repository=mock_repositories['finding_repository'],
-            event_bus=mock_event_bus
+            analysis_service=mock_services["analysis_service"],
+            finding_service=mock_services["finding_service"],
+            document_repository=mock_repositories["document_repository"],
+            analysis_repository=mock_repositories["analysis_repository"],
+            finding_repository=mock_repositories["finding_repository"],
+            event_bus=mock_event_bus,
         )
 
-        command = PerformAnalysisCommand(
-            document_id='non-existent-doc',
-            analysis_type='semantic_similarity'
-        )
+        command = PerformAnalysisCommand(document_id="non-existent-doc", analysis_type="semantic_similarity")
 
         # Execute and expect exception
         with pytest.raises(DocumentNotFoundException):
@@ -175,33 +157,30 @@ class TestPerformAnalysisUseCase:
         """Test analysis execution error handling."""
         # Setup mocks
         mock_doc = Mock()
-        mock_doc.id = 'doc-123'
+        mock_doc.id = "doc-123"
 
         mock_analysis = Mock()
         mock_analysis.id = Mock()
-        mock_analysis.id.value = 'analysis-123'
+        mock_analysis.id.value = "analysis-123"
         mock_analysis.fail = Mock()
 
-        mock_repositories['document_repository'].get_by_id = AsyncMock(return_value=mock_doc)
-        mock_repositories['analysis_repository'].save = AsyncMock()
+        mock_repositories["document_repository"].get_by_id = AsyncMock(return_value=mock_doc)
+        mock_repositories["analysis_repository"].save = AsyncMock()
         mock_event_bus.publish = AsyncMock()
 
-        mock_services['analysis_service'].create_analysis = Mock(return_value=mock_analysis)
-        mock_services['analysis_service'].execute_analysis = Mock(side_effect=Exception("Analysis failed"))
+        mock_services["analysis_service"].create_analysis = Mock(return_value=mock_analysis)
+        mock_services["analysis_service"].execute_analysis = Mock(side_effect=Exception("Analysis failed"))
 
         use_case = PerformAnalysisUseCase(
-            analysis_service=mock_services['analysis_service'],
-            finding_service=mock_services['finding_service'],
-            document_repository=mock_repositories['document_repository'],
-            analysis_repository=mock_repositories['analysis_repository'],
-            finding_repository=mock_repositories['finding_repository'],
-            event_bus=mock_event_bus
+            analysis_service=mock_services["analysis_service"],
+            finding_service=mock_services["finding_service"],
+            document_repository=mock_repositories["document_repository"],
+            analysis_repository=mock_repositories["analysis_repository"],
+            finding_repository=mock_repositories["finding_repository"],
+            event_bus=mock_event_bus,
         )
 
-        command = PerformAnalysisCommand(
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
-        )
+        command = PerformAnalysisCommand(document_id="doc-123", analysis_type="semantic_similarity")
 
         # Execute
         result = await use_case.execute(command)
@@ -219,61 +198,60 @@ class TestPerformAnalysisUseCase:
         """Test findings processing in analysis result."""
         # Setup mocks
         mock_doc = Mock()
-        mock_doc.id = 'doc-123'
+        mock_doc.id = "doc-123"
 
         mock_analysis = Mock()
         mock_analysis.id = Mock()
-        mock_analysis.id.value = 'analysis-123'
-        mock_analysis.document_id = 'doc-123'
+        mock_analysis.id.value = "analysis-123"
+        mock_analysis.document_id = "doc-123"
         mock_analysis.start = Mock()
         mock_analysis.complete = Mock()
 
         mock_finding = Mock()
         mock_finding.id = Mock()
-        mock_finding.id.value = 'finding-123'
+        mock_finding.id.value = "finding-123"
 
-        mock_repositories['document_repository'].get_by_id = AsyncMock(return_value=mock_doc)
-        mock_repositories['analysis_repository'].save = AsyncMock()
-        mock_repositories['finding_repository'].save = AsyncMock()
+        mock_repositories["document_repository"].get_by_id = AsyncMock(return_value=mock_doc)
+        mock_repositories["analysis_repository"].save = AsyncMock()
+        mock_repositories["finding_repository"].save = AsyncMock()
 
-        mock_services['analysis_service'].create_analysis = Mock(return_value=mock_analysis)
-        mock_services['analysis_service'].execute_analysis = Mock(return_value={
-            'findings': [
-                {
-                    'title': 'Security Issue',
-                    'description': 'Potential security vulnerability',
-                    'severity': 'high',
-                    'category': 'security',
-                    'confidence': 0.9
-                }
-            ]
-        })
+        mock_services["analysis_service"].create_analysis = Mock(return_value=mock_analysis)
+        mock_services["analysis_service"].execute_analysis = Mock(
+            return_value={
+                "findings": [
+                    {
+                        "title": "Security Issue",
+                        "description": "Potential security vulnerability",
+                        "severity": "high",
+                        "category": "security",
+                        "confidence": 0.9,
+                    }
+                ]
+            }
+        )
 
-        mock_services['finding_service'].create_finding = Mock(return_value=mock_finding)
+        mock_services["finding_service"].create_finding = Mock(return_value=mock_finding)
 
         mock_event_bus.publish = AsyncMock()
 
         use_case = PerformAnalysisUseCase(
-            analysis_service=mock_services['analysis_service'],
-            finding_service=mock_services['finding_service'],
-            document_repository=mock_repositories['document_repository'],
-            analysis_repository=mock_repositories['analysis_repository'],
-            finding_repository=mock_repositories['finding_repository'],
-            event_bus=mock_event_bus
+            analysis_service=mock_services["analysis_service"],
+            finding_service=mock_services["finding_service"],
+            document_repository=mock_repositories["document_repository"],
+            analysis_repository=mock_repositories["analysis_repository"],
+            finding_repository=mock_repositories["finding_repository"],
+            event_bus=mock_event_bus,
         )
 
-        command = PerformAnalysisCommand(
-            document_id='doc-123',
-            analysis_type='security_scan'
-        )
+        command = PerformAnalysisCommand(document_id="doc-123", analysis_type="security_scan")
 
         # Execute
         result = await use_case.execute(command)
 
         # Assert findings were processed
         assert len(result.findings) == 1
-        mock_services['finding_service'].create_finding.assert_called_once()
-        mock_repositories['finding_repository'].save.assert_called()
+        mock_services["finding_service"].create_finding.assert_called_once()
+        mock_repositories["finding_repository"].save.assert_called()
 
     def test_result_creation(self):
         """Test perform analysis result creation."""
@@ -286,7 +264,7 @@ class TestPerformAnalysisUseCase:
             execution_time_seconds=2.5,
             success=True,
             error_message=None,
-            events=[]
+            events=[],
         )
 
         assert result.analysis == mock_analysis
@@ -300,37 +278,34 @@ class TestPerformAnalysisUseCase:
         """Test event publishing during analysis execution."""
         # Setup mocks
         mock_doc = Mock()
-        mock_doc.id = 'doc-123'
+        mock_doc.id = "doc-123"
 
         mock_analysis = Mock()
         mock_analysis.id = Mock()
-        mock_analysis.id.value = 'analysis-123'
-        mock_analysis.document_id = 'doc-123'
+        mock_analysis.id.value = "analysis-123"
+        mock_analysis.document_id = "doc-123"
         mock_analysis.start = Mock()
         mock_analysis.complete = Mock()
 
-        mock_repositories['document_repository'].get_by_id = AsyncMock(return_value=mock_doc)
-        mock_repositories['analysis_repository'].save = AsyncMock()
+        mock_repositories["document_repository"].get_by_id = AsyncMock(return_value=mock_doc)
+        mock_repositories["analysis_repository"].save = AsyncMock()
 
-        mock_services['analysis_service'].create_analysis = Mock(return_value=mock_analysis)
-        mock_services['analysis_service'].execute_analysis = Mock(return_value={})
+        mock_services["analysis_service"].create_analysis = Mock(return_value=mock_analysis)
+        mock_services["analysis_service"].execute_analysis = Mock(return_value={})
 
         mock_event_bus.publish = AsyncMock()
 
         use_case = PerformAnalysisUseCase(
-            analysis_service=mock_services['analysis_service'],
-            finding_service=mock_services['finding_service'],
-            document_repository=mock_repositories['document_repository'],
-            analysis_repository=mock_repositories['analysis_repository'],
-            finding_repository=mock_repositories['finding_repository'],
-            event_bus=mock_event_bus
+            analysis_service=mock_services["analysis_service"],
+            finding_service=mock_services["finding_service"],
+            document_repository=mock_repositories["document_repository"],
+            analysis_repository=mock_repositories["analysis_repository"],
+            finding_repository=mock_repositories["finding_repository"],
+            event_bus=mock_event_bus,
         )
 
         command = PerformAnalysisCommand(
-            document_id='doc-123',
-            analysis_type='semantic_similarity',
-            user_id='user-456',
-            session_id='session-789'
+            document_id="doc-123", analysis_type="semantic_similarity", user_id="user-456", session_id="session-789"
         )
 
         # Execute
@@ -356,10 +331,7 @@ class TestCreateDocumentUseCase:
 
     def test_use_case_creation(self, mock_document_repository, mock_event_bus):
         """Test creating create document use case."""
-        use_case = CreateDocumentUseCase(
-            document_repository=mock_document_repository,
-            event_bus=mock_event_bus
-        )
+        use_case = CreateDocumentUseCase(document_repository=mock_document_repository, event_bus=mock_event_bus)
 
         assert use_case.document_repository == mock_document_repository
         assert use_case.event_bus == mock_event_bus
@@ -369,27 +341,21 @@ class TestCreateDocumentUseCase:
         """Test successful document creation."""
         # Setup mocks
         mock_document = Mock()
-        mock_document.id = 'doc-123'
+        mock_document.id = "doc-123"
 
         mock_document_repository.save = AsyncMock()
         mock_event_bus.publish = AsyncMock()
 
-        use_case = CreateDocumentUseCase(
-            document_repository=mock_document_repository,
-            event_bus=mock_event_bus
-        )
+        use_case = CreateDocumentUseCase(document_repository=mock_document_repository, event_bus=mock_event_bus)
 
         # Execute
-        result = await use_case.execute({
-            'title': 'Test Document',
-            'content': 'Test content',
-            'repository_id': 'repo-123',
-            'author': 'test-author'
-        })
+        result = await use_case.execute(
+            {"title": "Test Document", "content": "Test content", "repository_id": "repo-123", "author": "test-author"}
+        )
 
         # Assert
         assert result.success is True
-        assert result.document.id == 'doc-123'
+        assert result.document.id == "doc-123"
         mock_document_repository.save.assert_called_once()
         mock_event_bus.publish.assert_called()
 
@@ -412,19 +378,19 @@ class TestGetDocumentUseCase:
         """Test successful document retrieval."""
         # Setup mocks
         mock_document = Mock()
-        mock_document.id = 'doc-123'
+        mock_document.id = "doc-123"
 
         mock_document_repository.get_by_id = AsyncMock(return_value=mock_document)
 
         use_case = GetDocumentUseCase(document_repository=mock_document_repository)
 
         # Execute
-        result = await use_case.execute('doc-123')
+        result = await use_case.execute("doc-123")
 
         # Assert
         assert result.success is True
         assert result.document == mock_document
-        mock_document_repository.get_by_id.assert_called_once_with('doc-123')
+        mock_document_repository.get_by_id.assert_called_once_with("doc-123")
 
     @pytest.mark.asyncio
     async def test_get_document_not_found(self, mock_document_repository):
@@ -434,7 +400,7 @@ class TestGetDocumentUseCase:
         use_case = GetDocumentUseCase(document_repository=mock_document_repository)
 
         # Execute
-        result = await use_case.execute('non-existent-doc')
+        result = await use_case.execute("non-existent-doc")
 
         # Assert
         assert result.success is False
@@ -464,12 +430,12 @@ class TestGetFindingsUseCase:
         use_case = GetFindingsUseCase(finding_repository=mock_finding_repository)
 
         # Execute
-        result = await use_case.execute(analysis_id='analysis-123')
+        result = await use_case.execute(analysis_id="analysis-123")
 
         # Assert
         assert result.success is True
         assert len(result.findings) == 3
-        mock_finding_repository.get_by_analysis_id.assert_called_once_with('analysis-123')
+        mock_finding_repository.get_by_analysis_id.assert_called_once_with("analysis-123")
 
     @pytest.mark.asyncio
     async def test_get_findings_by_severity(self, mock_finding_repository):
@@ -481,12 +447,12 @@ class TestGetFindingsUseCase:
         use_case = GetFindingsUseCase(finding_repository=mock_finding_repository)
 
         # Execute
-        result = await use_case.execute(severity='high')
+        result = await use_case.execute(severity="high")
 
         # Assert
         assert result.success is True
         assert len(result.findings) == 2
-        mock_finding_repository.get_by_severity.assert_called_once_with('high')
+        mock_finding_repository.get_by_severity.assert_called_once_with("high")
 
 
 class TestCreateFindingUseCase:
@@ -504,10 +470,7 @@ class TestCreateFindingUseCase:
 
     def test_use_case_creation(self, mock_finding_repository, mock_event_bus):
         """Test creating create finding use case."""
-        use_case = CreateFindingUseCase(
-            finding_repository=mock_finding_repository,
-            event_bus=mock_event_bus
-        )
+        use_case = CreateFindingUseCase(finding_repository=mock_finding_repository, event_bus=mock_event_bus)
 
         assert use_case.finding_repository == mock_finding_repository
         assert use_case.event_bus == mock_event_bus
@@ -517,29 +480,28 @@ class TestCreateFindingUseCase:
         """Test successful finding creation."""
         # Setup mocks
         mock_finding = Mock()
-        mock_finding.id = 'finding-123'
+        mock_finding.id = "finding-123"
 
         mock_finding_repository.save = AsyncMock()
         mock_event_bus.publish = AsyncMock()
 
-        use_case = CreateFindingUseCase(
-            finding_repository=mock_finding_repository,
-            event_bus=mock_event_bus
-        )
+        use_case = CreateFindingUseCase(finding_repository=mock_finding_repository, event_bus=mock_event_bus)
 
         # Execute
-        result = await use_case.execute({
-            'analysis_id': 'analysis-123',
-            'document_id': 'doc-123',
-            'title': 'Test Finding',
-            'description': 'Test description',
-            'severity': 'medium',
-            'category': 'test'
-        })
+        result = await use_case.execute(
+            {
+                "analysis_id": "analysis-123",
+                "document_id": "doc-123",
+                "title": "Test Finding",
+                "description": "Test description",
+                "severity": "medium",
+                "category": "test",
+            }
+        )
 
         # Assert
         assert result.success is True
-        assert result.finding.id == 'finding-123'
+        assert result.finding.id == "finding-123"
         mock_finding_repository.save.assert_called_once()
         mock_event_bus.publish.assert_called()
 
@@ -562,12 +524,12 @@ class TestUseCaseIntegration:
         mock_event_bus = Mock()
 
         mock_document = Mock()
-        mock_document.id = 'doc-123'
+        mock_document.id = "doc-123"
 
         mock_analysis = Mock()
         mock_analysis.id = Mock()
-        mock_analysis.id.value = 'analysis-123'
-        mock_analysis.document_id = 'doc-123'
+        mock_analysis.id.value = "analysis-123"
+        mock_analysis.document_id = "doc-123"
 
         # Create use cases
         create_doc_uc = CreateDocumentUseCase(mock_doc_repo, mock_event_bus)
@@ -577,7 +539,7 @@ class TestUseCaseIntegration:
             document_repository=mock_doc_repo,
             analysis_repository=mock_analysis_repo,
             finding_repository=mock_finding_repo,
-            event_bus=mock_event_bus
+            event_bus=mock_event_bus,
         )
         get_findings_uc = GetFindingsUseCase(mock_finding_repo)
 
@@ -617,13 +579,13 @@ class TestUseCaseValidation:
 
         # Valid command
         valid_command = PerformAnalysisCommand(
-            document_id='doc-123',
-            analysis_type='semantic_similarity',
-            configuration={'valid': 'config'},
-            priority='normal'
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
+            configuration={"valid": "config"},
+            priority="normal",
         )
 
-        assert valid_command.document_id == 'doc-123'
+        assert valid_command.document_id == "doc-123"
 
         # Invalid command would be caught by validation layers
         # (business validators, etc.)

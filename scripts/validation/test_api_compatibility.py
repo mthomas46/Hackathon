@@ -8,19 +8,22 @@
 import asyncio
 import json
 import logging
-from typing import Dict, List, Any, Optional
-import httpx
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import httpx
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class CompatibilityTestResult:
     """Result of a compatibility test."""
+
     endpoint: str
     method: str
     status_code: int
@@ -30,9 +33,11 @@ class CompatibilityTestResult:
     deprecation_warning: bool = False
     response_format_valid: bool = True
 
+
 @dataclass
 class CompatibilityTestSuite:
     """Test suite for API compatibility validation."""
+
     base_url: str
     results: List[CompatibilityTestResult] = None
     total_tests: int = 0
@@ -59,8 +64,9 @@ class CompatibilityTestSuite:
             "passed_tests": self.passed_tests,
             "failed_tests": self.failed_tests,
             "success_rate": f"{(self.passed_tests / self.total_tests * 100):.1f}%" if self.total_tests > 0 else "0%",
-            "compatibility_status": "✅ FULLY COMPATIBLE" if self.failed_tests == 0 else "❌ ISSUES FOUND"
+            "compatibility_status": "✅ FULLY COMPATIBLE" if self.failed_tests == 0 else "❌ ISSUES FOUND",
         }
+
 
 class APICompatibilityValidator:
     """Validates API compatibility between legacy and DDD implementations."""
@@ -90,12 +96,23 @@ class APICompatibilityValidator:
             {"method": "POST", "path": "/analyze/risk", "description": "Risk assessment"},
             {"method": "POST", "path": "/analyze/risk/portfolio", "description": "Portfolio risk assessment"},
             {"method": "POST", "path": "/analyze/maintenance/forecast", "description": "Maintenance forecast"},
-            {"method": "POST", "path": "/analyze/maintenance/forecast/portfolio", "description": "Portfolio maintenance forecast"},
+            {
+                "method": "POST",
+                "path": "/analyze/maintenance/forecast/portfolio",
+                "description": "Portfolio maintenance forecast",
+            },
             {"method": "POST", "path": "/analyze/quality/degradation", "description": "Quality degradation detection"},
-            {"method": "POST", "path": "/analyze/quality/degradation/portfolio", "description": "Portfolio quality degradation"},
+            {
+                "method": "POST",
+                "path": "/analyze/quality/degradation/portfolio",
+                "description": "Portfolio quality degradation",
+            },
             {"method": "POST", "path": "/analyze/change/impact", "description": "Change impact analysis"},
-            {"method": "POST", "path": "/analyze/change/impact/portfolio", "description": "Portfolio change impact analysis"},
-
+            {
+                "method": "POST",
+                "path": "/analyze/change/impact/portfolio",
+                "description": "Portfolio change impact analysis",
+            },
             # Distributed Processing Endpoints
             {"method": "POST", "path": "/distributed/tasks", "description": "Submit distributed task"},
             {"method": "POST", "path": "/distributed/tasks/batch", "description": "Submit batch tasks"},
@@ -105,28 +122,28 @@ class APICompatibilityValidator:
             {"method": "GET", "path": "/distributed/stats", "description": "Get processing stats"},
             {"method": "POST", "path": "/distributed/workers/scale", "description": "Scale workers"},
             {"method": "POST", "path": "/distributed/start", "description": "Start distributed processing"},
-            {"method": "PUT", "path": "/distributed/load-balancing/strategy", "description": "Set load balancing strategy"},
+            {
+                "method": "PUT",
+                "path": "/distributed/load-balancing/strategy",
+                "description": "Set load balancing strategy",
+            },
             {"method": "GET", "path": "/distributed/queue/status", "description": "Get queue status"},
             {"method": "PUT", "path": "/distributed/load-balancing/config", "description": "Configure load balancing"},
             {"method": "GET", "path": "/distributed/load-balancing/config", "description": "Get load balancing config"},
-
             # Repository Management Endpoints
             {"method": "POST", "path": "/repositories/analyze", "description": "Analyze repositories"},
             {"method": "POST", "path": "/repositories/connectivity", "description": "Test repository connectivity"},
             {"method": "POST", "path": "/repositories/connectors/config", "description": "Configure connector"},
             {"method": "GET", "path": "/repositories/connectors", "description": "Get supported connectors"},
             {"method": "GET", "path": "/repositories/frameworks", "description": "Get analysis frameworks"},
-
             # Workflow Endpoints
             {"method": "POST", "path": "/workflows/events", "description": "Process workflow event"},
             {"method": "GET", "path": "/workflows/test-workflow-123", "description": "Get workflow status"},
             {"method": "GET", "path": "/workflows/queue/status", "description": "Get workflow queue status"},
             {"method": "POST", "path": "/workflows/webhook/config", "description": "Configure webhook"},
-
             # Remediation Endpoints
             {"method": "POST", "path": "/remediate", "description": "Automated remediation"},
             {"method": "POST", "path": "/remediate/preview", "description": "Remediation preview"},
-
             # Reporting Endpoints
             {"method": "POST", "path": "/reports/generate", "description": "Generate report"},
             {"method": "GET", "path": "/findings", "description": "Get findings"},
@@ -134,15 +151,17 @@ class APICompatibilityValidator:
             {"method": "GET", "path": "/reports/confluence/consolidation", "description": "Confluence consolidation"},
             {"method": "GET", "path": "/reports/jira/staleness", "description": "Jira staleness report"},
             {"method": "POST", "path": "/reports/findings/notify-owners", "description": "Notify owners"},
-
             # Integration Endpoints
             {"method": "GET", "path": "/integration/health", "description": "Integration health"},
             {"method": "POST", "path": "/integration/analyze-with-prompt", "description": "Analyze with prompt"},
-            {"method": "POST", "path": "/integration/natural-language-analysis", "description": "Natural language analysis"},
+            {
+                "method": "POST",
+                "path": "/integration/natural-language-analysis",
+                "description": "Natural language analysis",
+            },
             {"method": "GET", "path": "/integration/prompts/categories", "description": "Get prompt categories"},
             {"method": "POST", "path": "/integration/log-analysis", "description": "Log analysis"},
             {"method": "POST", "path": "/architecture/analyze", "description": "Architecture analysis"},
-
             # PR Confidence Endpoints
             {"method": "POST", "path": "/pr-confidence/analyze", "description": "Analyze PR confidence"},
             {"method": "GET", "path": "/pr-confidence/history/test-pr-123", "description": "Get PR history"},
@@ -152,76 +171,38 @@ class APICompatibilityValidator:
     def get_sample_payload(self, endpoint: str) -> Dict[str, Any]:
         """Get sample payload for endpoint testing."""
         payloads = {
-            "/analyze": {
-                "targets": ["doc:sample"],
-                "analysis_type": "consistency"
-            },
-            "/analyze/semantic-similarity": {
-                "documents": ["Sample document content"],
-                "threshold": 0.7
-            },
-            "/analyze/sentiment": {
-                "text": "This is a great feature that works well.",
-                "context": "documentation"
-            },
-            "/analyze/tone": {
-                "content": "This documentation is excellent.",
-                "audience": "developers"
-            },
+            "/analyze": {"targets": ["doc:sample"], "analysis_type": "consistency"},
+            "/analyze/semantic-similarity": {"documents": ["Sample document content"], "threshold": 0.7},
+            "/analyze/sentiment": {"text": "This is a great feature that works well.", "context": "documentation"},
+            "/analyze/tone": {"content": "This documentation is excellent.", "audience": "developers"},
             "/analyze/quality": {
                 "document_id": "doc:sample",
-                "content": "Sample documentation content for quality analysis."
+                "content": "Sample documentation content for quality analysis.",
             },
-            "/analyze/trends": {
-                "timeframe": "30d",
-                "metrics": ["quality", "consistency"]
-            },
-            "/analyze/risk": {
-                "document_id": "doc:sample",
-                "factors": ["age", "complexity", "usage"]
-            },
+            "/analyze/trends": {"timeframe": "30d", "metrics": ["quality", "consistency"]},
+            "/analyze/risk": {"document_id": "doc:sample", "factors": ["age", "complexity", "usage"]},
             "/distributed/tasks": {
                 "task_type": "analysis",
                 "payload": {"document_id": "doc:sample"},
-                "priority": "normal"
+                "priority": "normal",
             },
-            "/distributed/tasks/batch": {
-                "tasks": [
-                    {
-                        "task_type": "analysis",
-                        "payload": {"document_id": "doc:1"}
-                    }
-                ]
-            },
+            "/distributed/tasks/batch": {"tasks": [{"task_type": "analysis", "payload": {"document_id": "doc:1"}}]},
             "/repositories/analyze": {
                 "repository_url": "https://github.com/example/repo",
-                "analysis_type": "consistency"
+                "analysis_type": "consistency",
             },
             "/repositories/connectivity": {
                 "repository_url": "https://github.com/example/repo",
-                "connection_type": "git"
+                "connection_type": "git",
             },
-            "/workflows/events": {
-                "event_type": "pr_opened",
-                "payload": {"pr_id": "123", "repository": "example/repo"}
-            },
-            "/remediate": {
-                "document_id": "doc:sample",
-                "issues": [{"type": "grammar", "location": "line 10"}]
-            },
-            "/reports/generate": {
-                "report_type": "consistency",
-                "filters": {"severity": "high"}
-            },
+            "/workflows/events": {"event_type": "pr_opened", "payload": {"pr_id": "123", "repository": "example/repo"}},
+            "/remediate": {"document_id": "doc:sample", "issues": [{"type": "grammar", "location": "line 10"}]},
+            "/reports/generate": {"report_type": "consistency", "filters": {"severity": "high"}},
             "/integration/analyze-with-prompt": {
                 "prompt": "Analyze this documentation",
-                "context": "Sample documentation content"
+                "context": "Sample documentation content",
             },
-            "/pr-confidence/analyze": {
-                "pr_id": "123",
-                "repository": "example/repo",
-                "changes": ["Modified README.md"]
-            }
+            "/pr-confidence/analyze": {"pr_id": "123", "repository": "example/repo", "changes": ["Modified README.md"]},
         }
 
         # Return default payload for endpoints without specific samples
@@ -265,7 +246,7 @@ class APICompatibilityValidator:
                 status_code=response.status_code,
                 response_time=response_time,
                 compatible=compatible,
-                deprecation_warning=deprecation_warning
+                deprecation_warning=deprecation_warning,
             )
 
         except Exception as e:
@@ -277,7 +258,7 @@ class APICompatibilityValidator:
                 status_code=0,
                 response_time=response_time,
                 compatible=False,
-                error_message=str(e)
+                error_message=str(e),
             )
 
     def validate_response(self, response: httpx.Response, endpoint_info: Dict[str, Any]) -> bool:
@@ -375,7 +356,7 @@ class APICompatibilityValidator:
         logger.info(f"🏆 Status: {summary['compatibility_status']}")
 
         # Detailed results
-        if summary['failed_tests'] > 0:
+        if summary["failed_tests"] > 0:
             logger.warning("\n🚨 FAILED ENDPOINTS:")
             for result in self.test_suite.results:
                 if not result.compatible:
@@ -394,16 +375,17 @@ class APICompatibilityValidator:
             "performance": {
                 "average_response_time": avg_time if response_times else 0,
                 "max_response_time": max_time if response_times else 0,
-                "total_endpoints_tested": len(endpoints)
-            }
+                "total_endpoints_tested": len(endpoints),
+            },
         }
 
     def save_results(self, results: Dict[str, Any], output_file: str = "api_compatibility_results.json"):
         """Save test results to file."""
         output_path = Path(output_file)
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(results, f, indent=2, default=str)
         logger.info(f"💾 Results saved to: {output_path}")
+
 
 async def main():
     """Main entry point."""
@@ -433,6 +415,7 @@ async def main():
 
         logger.info(f"\n🎯 Exit Code: {exit_code} ({'SUCCESS' if exit_code == 0 else 'ISSUES FOUND'})")
         return exit_code
+
 
 if __name__ == "__main__":
     exit(asyncio.run(main()))

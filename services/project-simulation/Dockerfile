@@ -107,6 +107,11 @@ EXPOSE 5075
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
+ENV PYTHONPATH=/app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
     PYTHONPATH=/app \
     PYTHONDONTWRITEBYTECODE=1 \
     ENVIRONMENT=production \
@@ -219,3 +224,6 @@ CMD ["pytest", "--cov=.", "--cov-report=html", "--cov-report=term", "tests/"]
 # Default target: Production Runtime
 # ============================================================================
 FROM runtime
+
+# Run as non-root user
+USER appuser

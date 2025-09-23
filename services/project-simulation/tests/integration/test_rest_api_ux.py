@@ -1,29 +1,28 @@
-"""Integration Tests for REST API and User Experience.
+"""
+Integration Tests for REST API and User Experience.
 
 This module contains comprehensive tests for the REST API endpoints,
-HATEOAS implementation, WebSocket functionality, and overall user experience.
-Tests cover API maturity levels, real-time communication, error handling,
-and user interaction patterns.
+HATEOAS implementation, WebSocket functionality, and overall user
+experience. Tests cover API maturity levels, real-time communication,
+error handling, and user interaction patterns.
 """
 
-import pytest
-import asyncio
 import json
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, timedelta
+from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from starlette.websockets import WebSocketDisconnect
+import pytest
+
 try:
     import websockets
+
     WEBSOCKETS_AVAILABLE = True
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
 
 try:
-    import httpx
+    pass
+
     HTTPX_AVAILABLE = True
 except ImportError:
     HTTPX_AVAILABLE = False
@@ -37,10 +36,12 @@ except ImportError:
 
 
 class TestHATEOASImplementation:
-    """Test cases for HATEOAS (Hypermedia as the Engine of Application State) implementation."""
+    """Test cases for HATEOAS (Hypermedia as the Engine of Application State)
+    implementation."""
 
     def test_root_endpoint_provides_api_discovery_links(self, test_client):
-        """Test that root endpoint provides comprehensive API discovery links."""
+        """Test that root endpoint provides comprehensive API discovery
+        links."""
         response = test_client.get("/")
 
         assert response.status_code == 200
@@ -51,13 +52,7 @@ class TestHATEOASImplementation:
         links = data["_links"]
 
         # Check for essential API navigation links
-        required_links = [
-            "self",
-            "health",
-            "simulations",
-            "config",
-            "documentation"
-        ]
+        required_links = ["self", "health", "simulations", "config", "documentation"]
 
         for link in required_links:
             assert link in links, f"Missing required HATEOAS link: {link}"
@@ -65,7 +60,8 @@ class TestHATEOASImplementation:
             assert links[link]["href"].startswith(("http://", "/")), f"Invalid href format for {link}"
 
     def test_simulation_collection_provides_navigation_links(self, test_client):
-        """Test that simulation collection endpoint provides proper navigation links."""
+        """Test that simulation collection endpoint provides proper navigation
+        links."""
         response = test_client.get("/api/v1/simulations")
 
         assert response.status_code == 200
@@ -85,12 +81,15 @@ class TestHATEOASImplementation:
     def test_simulation_resource_provides_action_links(self, test_client):
         """Test that individual simulation resources provide action links."""
         # First create a simulation
-        create_response = test_client.post("/api/v1/simulations", json={
-            "name": "Test Simulation",
-            "description": "HATEOAS Test Simulation",
-            "project_type": "web_application",
-            "complexity": "medium"
-        })
+        create_response = test_client.post(
+            "/api/v1/simulations",
+            json={
+                "name": "Test Simulation",
+                "description": "HATEOAS Test Simulation",
+                "project_type": "web_application",
+                "complexity": "medium",
+            },
+        )
 
         if create_response.status_code == 201:
             simulation_data = create_response.json()
@@ -133,11 +132,7 @@ class TestHATEOASImplementation:
     def test_api_versioning_links_are_consistent(self, test_client):
         """Test that API versioning links are consistent across endpoints."""
         # Check multiple endpoints for consistent versioning
-        endpoints = [
-            "/",
-            "/api/v1/simulations",
-            "/health"
-        ]
+        endpoints = ["/", "/api/v1/simulations", "/health"]
 
         for endpoint in endpoints:
             response = test_client.get(endpoint)
@@ -154,10 +149,10 @@ class TestHATEOASImplementation:
 
     @pytest.mark.asyncio
     async def test_hateoas_links_are_functional(self):
-        """Test that HATEOAS links are actually functional and point to valid endpoints."""
+        """Test that HATEOAS links are actually functional and point to valid
+        endpoints."""
         # This would require a running server to test link functionality
         # For now, we'll test the link structure and format
-        pass
 
 
 class TestWebSocketEndpoints:
@@ -168,7 +163,7 @@ class TestWebSocketEndpoints:
     async def test_simulation_websocket_connection(self):
         """Test WebSocket connection for simulation updates."""
         # Mock WebSocket connection test
-        with patch('websockets.connect') as mock_websocket:
+        with patch("websockets.connect") as mock_websocket:
             mock_ws = AsyncMock()
             mock_websocket.return_value.__aenter__.return_value = mock_ws
 
@@ -187,7 +182,7 @@ class TestWebSocketEndpoints:
     @pytest.mark.asyncio
     async def test_system_websocket_connection(self):
         """Test WebSocket connection for system-wide updates."""
-        with patch('websockets.connect') as mock_websocket:
+        with patch("websockets.connect") as mock_websocket:
             mock_ws = AsyncMock()
             mock_websocket.return_value.__aenter__.return_value = mock_ws
 
@@ -204,7 +199,6 @@ class TestWebSocketEndpoints:
         """Test that WebSocket endpoints are properly registered."""
         # Test that WebSocket routes are available
         # This is more of a configuration test
-        pass
 
     @pytest.mark.asyncio
     async def test_websocket_message_format(self):
@@ -215,7 +209,7 @@ class TestWebSocketEndpoints:
             "simulation_id": "test-123",
             "status": "running",
             "progress": 0.75,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Verify message structure
@@ -249,10 +243,7 @@ class TestAPIErrorHandling:
     def test_400_validation_error_response(self, test_client):
         """Test validation error responses."""
         # Send invalid data
-        invalid_data = {
-            "name": "",  # Empty name should cause validation error
-            "project_type": "invalid_type"
-        }
+        invalid_data = {"name": "", "project_type": "invalid_type"}  # Empty name should cause validation error
 
         response = test_client.post("/api/v1/simulations", json=invalid_data)
 
@@ -268,12 +259,10 @@ class TestAPIErrorHandling:
         """Test internal server error responses."""
         # This would require mocking an internal error
         # For now, test the error response structure
-        pass
 
     def test_rate_limiting_error_response(self, test_client):
         """Test rate limiting error responses."""
         # This would require rate limiting middleware to be active
-        pass
 
     def test_cors_headers_are_present(self, test_client):
         """Test that CORS headers are properly set."""
@@ -289,11 +278,7 @@ class TestAPIErrorHandling:
         response = test_client.get("/")
 
         # Check security headers
-        security_headers = [
-            "x-content-type-options",
-            "x-frame-options",
-            "x-xss-protection"
-        ]
+        security_headers = ["x-content-type-options", "x-frame-options", "x-xss-protection"]
 
         for header in security_headers:
             assert header in response.headers, f"Missing security header: {header}"
@@ -306,17 +291,14 @@ class TestCLIFunctionality:
         """Test that CLI scripts can be executed."""
         # This would require running actual CLI scripts
         # For now, test script structure
-        pass
 
     def test_cli_help_functionality(self):
         """Test CLI help and usage information."""
         # Test --help flags and usage messages
-        pass
 
     def test_cli_error_handling(self):
         """Test CLI error handling and user feedback."""
         # Test invalid arguments and error messages
-        pass
 
 
 class TestAPIResponseFormats:
@@ -363,12 +345,15 @@ class TestAPIResponseFormats:
     def test_crud_response_formats(self, test_client):
         """Test CRUD operation response formats."""
         # Test CREATE
-        create_response = test_client.post("/api/v1/simulations", json={
-            "name": "CRUD Test",
-            "description": "Testing CRUD responses",
-            "project_type": "web_application",
-            "complexity": "medium"
-        })
+        create_response = test_client.post(
+            "/api/v1/simulations",
+            json={
+                "name": "CRUD Test",
+                "description": "Testing CRUD responses",
+                "project_type": "web_application",
+                "complexity": "medium",
+            },
+        )
 
         if create_response.status_code == 201:
             create_data = create_response.json()
@@ -380,11 +365,7 @@ class TestAPIResponseFormats:
 
     def test_response_content_types(self, test_client):
         """Test that responses have correct content types."""
-        endpoints = [
-            "/",
-            "/health",
-            "/api/v1/simulations"
-        ]
+        endpoints = ["/", "/health", "/api/v1/simulations"]
 
         for endpoint in endpoints:
             response = test_client.get(endpoint)
@@ -411,12 +392,10 @@ class TestAPIPerformance:
     def test_concurrent_requests_handled_properly(self, test_client):
         """Test that concurrent requests are handled properly."""
         # This would require multiple concurrent requests
-        pass
 
     def test_large_payload_handling(self, test_client):
         """Test handling of large request payloads."""
         # Test with large simulation configurations
-        pass
 
 
 # Fixtures
@@ -433,8 +412,9 @@ def test_client():
         sys.path.insert(0, str(current_dir))
 
         # Try to import the actual main app
-        from main import app
         from fastapi.testclient import TestClient
+        from main import app
+
         print("✓ Using actual FastAPI application")
         return TestClient(app)
 
@@ -455,20 +435,16 @@ def test_client():
                     "health": {"href": "/health", "title": "Health Check"},
                     "simulations": {"href": "/api/v1/simulations", "title": "Simulations"},
                     "config": {"href": "/api/v1/config", "title": "Configuration"},
-                    "documentation": {"href": "/docs", "title": "API Documentation"}
+                    "documentation": {"href": "/docs", "title": "API Documentation"},
                 },
                 "api_version": "v1",
-                "message": "Project Simulation API"
+                "message": "Project Simulation API",
             }
 
         @app.get("/health")
         async def health():
             """Mock health endpoint."""
-            return {
-                "status": "healthy",
-                "message": "Service is operational",
-                "timestamp": "2024-01-15T10:30:45Z"
-            }
+            return {"status": "healthy", "message": "Service is operational", "timestamp": "2024-01-15T10:30:45Z"}
 
         @app.get("/api/v1/simulations")
         async def simulations():
@@ -477,15 +453,10 @@ def test_client():
                 "_links": {
                     "self": {"href": "/api/v1/simulations"},
                     "first": {"href": "/api/v1/simulations?page=1"},
-                    "next": {"href": "/api/v1/simulations?page=2"}
+                    "next": {"href": "/api/v1/simulations?page=2"},
                 },
                 "data": [],
-                "_metadata": {
-                    "page": 1,
-                    "per_page": 20,
-                    "total": 0,
-                    "total_pages": 1
-                }
+                "_metadata": {"page": 1, "per_page": 20, "total": 0, "total_pages": 1},
             }
 
         @app.get("/api/v1/simulations/{simulation_id}")
@@ -496,11 +467,11 @@ def test_client():
                     "_links": {
                         "collection": {"href": "/api/v1/simulations", "title": "Back to simulations"},
                         "help": {"href": "/docs/errors", "title": "Error documentation"},
-                        "support": {"href": "/support", "title": "Get support"}
+                        "support": {"href": "/support", "title": "Get support"},
                     },
                     "error": "Resource not found",
                     "message": "The requested simulation does not exist",
-                    "status_code": 404
+                    "status_code": 404,
                 }
             return {"id": simulation_id, "status": "running"}
 
@@ -510,7 +481,7 @@ def test_client():
 @pytest.fixture
 def mock_simulation_service():
     """Mock simulation application service."""
-    with patch('main.get_simulation_container') as mock_container:
+    with patch("main.get_simulation_container") as mock_container:
         mock_service = AsyncMock()
         mock_container.return_value.get.return_value = mock_service
         yield mock_service

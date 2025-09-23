@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Prompt Store Service
+LangGraph Integration for Prompt Store Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Prompt Store Service, enabling intelligent prompt management in AI workflows.
+for the Prompt Store Service, enabling intelligent prompt management in
+AI workflows.
 """
 
-import asyncio
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.shared.utilities import get_service_client
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import get_service_client
 
 
 class PromptStoreLangGraphIntegration:
@@ -31,8 +31,13 @@ class PromptStoreLangGraphIntegration:
         """Initialize LangGraph tools for prompt store."""
 
         @tool
-        async def create_prompt_langgraph(name: str, category: str, content: str,
-                                        variables: List[str], workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def create_prompt_langgraph(
+            name: str,
+            category: str,
+            content: str,
+            variables: List[str],
+            workflow_context: Optional[Dict[str, Any]] = None,
+        ) -> Dict[str, Any]:
             """Create a prompt within LangGraph workflow context."""
             try:
                 # Enhance prompt with workflow context
@@ -41,7 +46,7 @@ class PromptStoreLangGraphIntegration:
                     "workflow_context": workflow_context or {},
                     "created_at": datetime.now().isoformat(),
                     "langgraph_integration": True,
-                    "performance_tracking": True
+                    "performance_tracking": True,
                 }
 
                 result = await self.service_client.post_json(
@@ -51,8 +56,8 @@ class PromptStoreLangGraphIntegration:
                         "category": category,
                         "content": content,
                         "variables": variables,
-                        "metadata": enhanced_metadata
-                    }
+                        "metadata": enhanced_metadata,
+                    },
                 )
 
                 # Track prompt in workflow context
@@ -62,18 +67,20 @@ class PromptStoreLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_prompts:
                             self.workflow_prompts[workflow_id] = []
-                        self.workflow_prompts[workflow_id].append({
-                            "prompt_id": prompt_id,
-                            "name": name,
-                            "category": category,
-                            "created_at": datetime.now().isoformat()
-                        })
+                        self.workflow_prompts[workflow_id].append(
+                            {
+                                "prompt_id": prompt_id,
+                                "name": name,
+                                "category": category,
+                                "created_at": datetime.now().isoformat(),
+                            }
+                        )
 
                 return {
                     "success": True,
                     "prompt_id": prompt_id,
                     "workflow_integration": "completed",
-                    "prompt_tracked": bool(workflow_context)
+                    "prompt_tracked": bool(workflow_context),
                 }
 
             except Exception as e:
@@ -81,8 +88,9 @@ class PromptStoreLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_prompt_langgraph(name: str, category: str,
-                                     workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def get_prompt_langgraph(
+            name: str, category: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Retrieve a prompt within LangGraph workflow context."""
             try:
                 result = await self.service_client.get_json(
@@ -100,18 +108,15 @@ class PromptStoreLangGraphIntegration:
                     if prompt_id:
                         self._track_prompt_usage(prompt_id, workflow_context)
 
-                return {
-                    "success": True,
-                    "prompt": result,
-                    "workflow_integration": "completed"
-                }
+                return {"success": True, "prompt": result, "workflow_integration": "completed"}
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_optimal_prompt_langgraph(task_type: str, context: Dict[str, Any],
-                                              workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def get_optimal_prompt_langgraph(
+            task_type: str, context: Dict[str, Any], workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Get the optimal prompt for a task within workflow context."""
             try:
                 # Enhance context with workflow information
@@ -119,30 +124,23 @@ class PromptStoreLangGraphIntegration:
                     **context,
                     "workflow_context": workflow_context,
                     "request_timestamp": datetime.now().isoformat(),
-                    "optimization_request": True
+                    "optimization_request": True,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/orchestration/prompts/select",
-                    {
-                        "task_type": task_type,
-                        "context": enhanced_context
-                    }
+                    {"task_type": task_type, "context": enhanced_context},
                 )
 
                 # Track optimization request
                 if workflow_context and result.get("prompt_id"):
-                    self._track_prompt_optimization(
-                        result["prompt_id"],
-                        task_type,
-                        workflow_context
-                    )
+                    self._track_prompt_optimization(result["prompt_id"], task_type, workflow_context)
 
                 return {
                     "success": True,
                     "optimal_prompt": result,
                     "workflow_integration": "completed",
-                    "optimization_tracked": bool(workflow_context)
+                    "optimization_tracked": bool(workflow_context),
                 }
 
             except Exception as e:
@@ -150,8 +148,9 @@ class PromptStoreLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def update_prompt_performance_langgraph(prompt_id: str, performance_metrics: Dict[str, Any],
-                                                    workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def update_prompt_performance_langgraph(
+            prompt_id: str, performance_metrics: Dict[str, Any], workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Update prompt performance metrics from workflow execution."""
             try:
                 # Enhance performance metrics with workflow context
@@ -159,31 +158,26 @@ class PromptStoreLangGraphIntegration:
                     **performance_metrics,
                     "workflow_context": workflow_context,
                     "updated_at": datetime.now().isoformat(),
-                    "update_source": "langgraph_workflow"
+                    "update_source": "langgraph_workflow",
                 }
 
                 result = await self.service_client.put_json(
                     f"{self.service_name}/api/v1/prompts/{prompt_id}/performance",
-                    {
-                        "performance_metrics": enhanced_metrics,
-                        "updated_by": "langgraph_workflow"
-                    }
+                    {"performance_metrics": enhanced_metrics, "updated_by": "langgraph_workflow"},
                 )
 
                 # Update local performance tracking
                 if prompt_id not in self.performance_tracker:
                     self.performance_tracker[prompt_id] = []
-                self.performance_tracker[prompt_id].append({
-                    "metrics": enhanced_metrics,
-                    "workflow_context": workflow_context,
-                    "timestamp": datetime.now().isoformat()
-                })
+                self.performance_tracker[prompt_id].append(
+                    {
+                        "metrics": enhanced_metrics,
+                        "workflow_context": workflow_context,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
 
-                return {
-                    "success": True,
-                    "performance_updated": result,
-                    "workflow_integration": "completed"
-                }
+                return {"success": True, "performance_updated": result, "workflow_integration": "completed"}
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
@@ -200,7 +194,7 @@ class PromptStoreLangGraphIntegration:
                         "prompts": local_prompts,
                         "source": "workflow_cache",
                         "workflow_id": workflow_id,
-                        "cached_count": len(local_prompts)
+                        "cached_count": len(local_prompts),
                     }
 
                 # Query prompts by workflow metadata
@@ -208,11 +202,8 @@ class PromptStoreLangGraphIntegration:
                     f"{self.service_name}/api/v1/search",
                     {
                         "query": f"workflow_id:{workflow_id}",
-                        "filters": {
-                            "langgraph_integration": True,
-                            "workflow_query": True
-                        }
-                    }
+                        "filters": {"langgraph_integration": True, "workflow_query": True},
+                    },
                 )
 
                 return {
@@ -220,7 +211,7 @@ class PromptStoreLangGraphIntegration:
                     "prompts": result.get("results", []),
                     "source": "database_query",
                     "workflow_id": workflow_id,
-                    "total_found": len(result.get("results", []))
+                    "total_found": len(result.get("results", [])),
                 }
 
             except Exception as e:
@@ -232,7 +223,7 @@ class PromptStoreLangGraphIntegration:
             "get_prompt_langgraph": get_prompt_langgraph,
             "get_optimal_prompt_langgraph": get_optimal_prompt_langgraph,
             "update_prompt_performance_langgraph": update_prompt_performance_langgraph,
-            "get_workflow_prompts_langgraph": get_workflow_prompts_langgraph
+            "get_workflow_prompts_langgraph": get_workflow_prompts_langgraph,
         }
 
     def _track_prompt_usage(self, prompt_id: str, workflow_context: Dict[str, Any]):
@@ -243,7 +234,7 @@ class PromptStoreLangGraphIntegration:
         usage_record = {
             "action": "retrieved",
             "workflow_context": workflow_context,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.performance_tracker[prompt_id].append(usage_record)
@@ -257,7 +248,7 @@ class PromptStoreLangGraphIntegration:
             "action": "optimized",
             "task_type": task_type,
             "workflow_context": workflow_context,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         self.performance_tracker[prompt_id].append(optimization_record)
@@ -285,7 +276,7 @@ class PromptStoreLangGraphIntegration:
                 "action": "create_prompt",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["prompt_creation", "variable_management", "workflow_tracking"]
+                "capabilities": ["prompt_creation", "variable_management", "workflow_tracking"],
             }
 
         elif "get" in instruction_lower or "retrieve" in instruction_lower:
@@ -293,7 +284,7 @@ class PromptStoreLangGraphIntegration:
                 "action": "get_prompt",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["prompt_retrieval", "version_control", "performance_tracking"]
+                "capabilities": ["prompt_retrieval", "version_control", "performance_tracking"],
             }
 
         elif "optimal" in instruction_lower or "best" in instruction_lower:
@@ -301,7 +292,7 @@ class PromptStoreLangGraphIntegration:
                 "action": "get_optimal_prompt",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["prompt_optimization", "context_awareness", "performance_based_selection"]
+                "capabilities": ["prompt_optimization", "context_awareness", "performance_based_selection"],
             }
 
         elif "performance" in instruction_lower or "metrics" in instruction_lower:
@@ -309,7 +300,7 @@ class PromptStoreLangGraphIntegration:
                 "action": "update_performance",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["performance_tracking", "metrics_collection", "optimization_feedback"]
+                "capabilities": ["performance_tracking", "metrics_collection", "optimization_feedback"],
             }
 
         else:
@@ -317,7 +308,7 @@ class PromptStoreLangGraphIntegration:
                 "action": "general_prompt_operation",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["prompt_management", "workflow_integration", "performance_monitoring"]
+                "capabilities": ["prompt_management", "workflow_integration", "performance_monitoring"],
             }
 
     async def _process_prompt_workflow_response(self, response: str) -> Dict[str, Any]:
@@ -327,14 +318,14 @@ class PromptStoreLangGraphIntegration:
             "content": response,
             "timestamp": datetime.now().isoformat(),
             "processed_by": self.service_name,
-            "response_type": "prompt_workflow"
+            "response_type": "prompt_workflow",
         }
 
         return {
             "status": "processed",
             "service": self.service_name,
             "response_stored": True,
-            "next_actions": ["await_workflow_instructions", "prepare_prompt_tools"]
+            "next_actions": ["await_workflow_instructions", "prepare_prompt_tools"],
         }
 
     def get_langgraph_capabilities(self) -> Dict[str, Any]:
@@ -347,25 +338,16 @@ class PromptStoreLangGraphIntegration:
                 "prompt_retrieval",
                 "prompt_optimization",
                 "performance_tracking",
-                "workflow_prompt_management"
+                "workflow_prompt_management",
             ],
-            "tool_categories": [
-                "creation_tools",
-                "retrieval_tools",
-                "optimization_tools",
-                "performance_tools"
-            ],
-            "message_types": [
-                "prompt_instructions",
-                "workflow_responses",
-                "optimization_commands"
-            ],
+            "tool_categories": ["creation_tools", "retrieval_tools", "optimization_tools", "performance_tools"],
+            "message_types": ["prompt_instructions", "workflow_responses", "optimization_commands"],
             "integration_features": [
                 "workflow_context_awareness",
                 "performance_monitoring",
                 "optimization_engine",
-                "usage_tracking"
-            ]
+                "usage_tracking",
+            ],
         }
 
     def get_workflow_integration_status(self) -> Dict[str, Any]:
@@ -377,7 +359,7 @@ class PromptStoreLangGraphIntegration:
             "performance_tracked_prompts": len(self.performance_tracker),
             "total_prompt_operations": sum(len(prompts) for prompts in self.workflow_prompts.values()),
             "last_activity": datetime.now().isoformat(),
-            "capabilities_ready": True
+            "capabilities_ready": True,
         }
 
     def get_prompt_performance_summary(self) -> Dict[str, Any]:
@@ -386,7 +368,7 @@ class PromptStoreLangGraphIntegration:
             "total_prompts_tracked": len(self.performance_tracker),
             "total_operations": sum(len(operations) for operations in self.performance_tracker.values()),
             "operation_types": {},
-            "recent_activity": []
+            "recent_activity": [],
         }
 
         # Analyze operation types
@@ -401,10 +383,7 @@ class PromptStoreLangGraphIntegration:
         all_operations = []
         for prompt_id, operations in self.performance_tracker.items():
             for operation in operations[-5:]:  # Last 5 from each prompt
-                all_operations.append({
-                    "prompt_id": prompt_id,
-                    **operation
-                })
+                all_operations.append({"prompt_id": prompt_id, **operation})
 
         # Sort by timestamp and get most recent
         all_operations.sort(key=lambda x: x.get("timestamp", ""), reverse=True)

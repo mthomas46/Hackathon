@@ -6,7 +6,8 @@ for more interactive menu experiences while preserving all existing functionalit
 """
 
 import asyncio
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 import questionary
 from rich.console import Console
 from rich.panel import Panel
@@ -46,7 +47,7 @@ class InteractiveOverlay:
         back_option: str = "b",
         enable_shortcuts: bool = True,
         enable_search: bool = True,
-        enable_cache: bool = True
+        enable_cache: bool = True,
     ) -> None:
         """Enhanced menu loop with questionary for better UX."""
 
@@ -72,11 +73,8 @@ class InteractiveOverlay:
 
                 # Use questionary for interactive selection (with built-in shortcuts)
                 if self.use_interactive:
-                    choice_display = await self._questionary_select(
-                        f"Select option for {title}:",
-                        display_items
-                    )
-                    choice = choice_display.split(':')[0].strip()
+                    choice_display = await self._questionary_select(f"Select option for {title}:", display_items)
+                    choice = choice_display.split(":")[0].strip()
                 else:
                     # Fallback to original method
                     choice = await self._fallback_selection(display_items, back_option)
@@ -108,33 +106,31 @@ class InteractiveOverlay:
         try:
             # Create enhanced questionary selection with custom styling (if enabled)
             if self.use_custom_styling:
-                style = questionary.Style([
-                    ('qmark', 'fg:#673ab7 bold'),       # Purple question mark
-                    ('question', 'bold'),               # Bold question text
-                    ('answer', 'fg:#ff5722 bold'),      # Orange answer highlight
-                    ('pointer', 'fg:#673ab7 bold'),     # Purple pointer
-                    ('selected', 'fg:#ff5722 bold'),    # Orange selected item
-                    ('separator', 'fg:#cc5454'),        # Red separator
-                    ('instruction', ''),                # Default instruction text
-                ])
+                style = questionary.Style(
+                    [
+                        ("qmark", "fg:#673ab7 bold"),  # Purple question mark
+                        ("question", "bold"),  # Bold question text
+                        ("answer", "fg:#ff5722 bold"),  # Orange answer highlight
+                        ("pointer", "fg:#673ab7 bold"),  # Purple pointer
+                        ("selected", "fg:#ff5722 bold"),  # Orange selected item
+                        ("separator", "fg:#cc5454"),  # Red separator
+                        ("instruction", ""),  # Default instruction text
+                    ]
+                )
             else:
                 style = None
 
             result = await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: questionary.select(
-                    message,
-                    choices=choices,
-                    style=style,
-                    use_indicator=True,
-                    use_shortcuts=True
-                ).ask()
+                    message, choices=choices, style=style, use_indicator=True, use_shortcuts=True
+                ).ask(),
             )
             return result
         except Exception:
             # Fallback if questionary fails
             self.use_interactive = False
-            return choices[0].split(':')[0].strip()
+            return choices[0].split(":")[0].strip()
 
     async def _fallback_selection(self, display_items: List[str], back_option: str) -> str:
         """Fallback to original selection method."""
@@ -150,13 +146,15 @@ class InteractiveOverlay:
             if choice.isdigit():
                 index = int(choice) - 1
                 if 0 <= index < len(display_items):
-                    return display_items[index].split(':')[0].strip()
+                    return display_items[index].split(":")[0].strip()
 
             self.console.print("[red]Invalid selection. Please try again.[/red]")
 
-    def _show_enhanced_menu_header(self, title: str, items: List[Tuple[str, str]],
-                                  enable_shortcuts: bool = True, enable_search: bool = True) -> None:
-        """Show enhanced menu header with service status and keyboard shortcuts."""
+    def _show_enhanced_menu_header(
+        self, title: str, items: List[Tuple[str, str]], enable_shortcuts: bool = True, enable_search: bool = True
+    ) -> None:
+        """Show enhanced menu header with service status and keyboard
+        shortcuts."""
         # Create a rich panel with menu information
         menu_info = Text()
         menu_info.append(f"\n{title}\n", style="bold cyan")
@@ -195,16 +193,14 @@ class InteractiveOverlay:
             menu_info.append(f" [dim]{cache_status} Cached[/dim]", style="dim green")
 
         panel = Panel(
-            menu_info,
-            title="[bold blue]🎮 Interactive Menu[/bold blue]",
-            border_style="blue",
-            padding=(1, 2)
+            menu_info, title="[bold blue]🎮 Interactive Menu[/bold blue]", border_style="blue", padding=(1, 2)
         )
 
         self.console.print(panel)
 
-    async def _load_menu_items_cached(self, manager: BaseManager, title: str,
-                                    menu_items: Optional[List[Tuple[str, str]]], enable_cache: bool) -> List[Tuple[str, str]]:
+    async def _load_menu_items_cached(
+        self, manager: BaseManager, title: str, menu_items: Optional[List[Tuple[str, str]]], enable_cache: bool
+    ) -> List[Tuple[str, str]]:
         """Load menu items with caching for better performance."""
         cache_key = f"{title}_{manager.__class__.__name__}"
 
@@ -243,21 +239,22 @@ class InteractiveOverlay:
 
     def record_command_usage(self, command: str):
         """Record command usage for analytics."""
-        self.command_history.append({
-            'command': command,
-            'timestamp': asyncio.get_event_loop().time(),
-            'count': self.usage_stats.get(command, 0) + 1
-        })
+        self.command_history.append(
+            {
+                "command": command,
+                "timestamp": asyncio.get_event_loop().time(),
+                "count": self.usage_stats.get(command, 0) + 1,
+            }
+        )
         self.usage_stats[command] = self.usage_stats.get(command, 0) + 1
 
     def get_popular_commands(self, limit: int = 5) -> List[str]:
         """Get most popular commands based on usage."""
-        return sorted(self.usage_stats.keys(),
-                     key=lambda x: self.usage_stats[x],
-                     reverse=True)[:limit]
+        return sorted(self.usage_stats.keys(), key=lambda x: self.usage_stats[x], reverse=True)[:limit]
 
     async def _show_success_feedback(self, operation: str = "Operation") -> None:
-        """Show enhanced success feedback after operation with visual indicators."""
+        """Show enhanced success feedback after operation with visual
+        indicators."""
         try:
             # Show success indicator
             self.show_status_indicator("success", f"{operation} completed successfully!")
@@ -271,16 +268,16 @@ class InteractiveOverlay:
                     "💡 Tip: Press 's' anytime for service health status",
                     "💡 Tip: Use arrow keys for quick navigation",
                     "💡 Tip: Press 'b' to go back to previous menu",
-                    "💡 Tip: All interactive menus support keyboard shortcuts"
+                    "💡 Tip: All interactive menus support keyboard shortcuts",
                 ]
 
                 # Show a random tip occasionally
                 import random
+
                 if random.random() < 0.3:  # 30% chance
                     tip = random.choice(tips)
                     await asyncio.get_event_loop().run_in_executor(
-                        None,
-                        lambda: questionary.print(tip, style="dim cyan")
+                        None, lambda: questionary.print(tip, style="dim cyan")
                     )
 
             await asyncio.sleep(0.8)  # Brief pause for user to read
@@ -290,10 +287,12 @@ class InteractiveOverlay:
 
             # Show tip in fallback mode too
             import random
+
             if self.show_tips and random.random() < 0.2:  # 20% chance in fallback
                 self.show_status_indicator("info", "Tip: Press 's' for service health status")
 
             from rich.prompt import Prompt
+
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     async def service_health_check_prompt(self, manager: BaseManager) -> bool:
@@ -320,7 +319,7 @@ class InteractiveOverlay:
         options = [
             "Check service status in Settings menu",
             "Continue anyway (may cause errors)",
-            "Go back to main menu"
+            "Go back to main menu",
         ]
 
         try:
@@ -330,16 +329,18 @@ class InteractiveOverlay:
                     "⚠️  Service Health Warning - Choose your action:",
                     choices=options,
                     default=options[0],
-                    style=questionary.Style([
-                        ('qmark', 'fg:#ff9800 bold'),       # Orange warning question mark
-                        ('question', 'bold fg:#ff9800'),    # Bold orange question
-                        ('answer', 'fg:#4caf50 bold'),      # Green answer
-                        ('pointer', 'fg:#ff9800 bold'),     # Orange pointer
-                        ('selected', 'fg:#4caf50 bold'),    # Green selected
-                        ('separator', 'fg:#ff9800'),        # Orange separator
-                    ]),
-                    use_indicator=True
-                ).ask()
+                    style=questionary.Style(
+                        [
+                            ("qmark", "fg:#ff9800 bold"),  # Orange warning question mark
+                            ("question", "bold fg:#ff9800"),  # Bold orange question
+                            ("answer", "fg:#4caf50 bold"),  # Green answer
+                            ("pointer", "fg:#ff9800 bold"),  # Orange pointer
+                            ("selected", "fg:#4caf50 bold"),  # Green selected
+                            ("separator", "fg:#ff9800"),  # Orange separator
+                        ]
+                    ),
+                    use_indicator=True,
+                ).ask(),
             )
 
             if "Settings" in choice:
@@ -348,7 +349,7 @@ class InteractiveOverlay:
                 return False  # Will redirect to settings
             elif "Continue" in choice:
                 self.console.print("[yellow]⚠️  Proceeding despite service warnings...[/yellow]")
-                return True   # Proceed despite warnings
+                return True  # Proceed despite warnings
             else:
                 self.console.print("[blue]ℹ️  Returning to main menu...[/blue]")
                 return False  # Go back
@@ -364,8 +365,8 @@ class InteractiveOverlay:
     async def _show_loading_spinner(self, message: str, duration: float = 1.0):
         """Show a loading spinner with message."""
         try:
-            from rich.spinner import Spinner
             from rich.live import Live
+            from rich.spinner import Spinner
 
             spinner = Spinner("dots", text=f"[cyan]{message}[/cyan]")
             with Live(spinner, refresh_per_second=10, console=self.console):
@@ -378,7 +379,7 @@ class InteractiveOverlay:
     async def _show_progress_bar(self, operation: str, total: int = 100):
         """Show a progress bar for long-running operations."""
         try:
-            from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+            from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
             with Progress(
                 SpinnerColumn(),
@@ -386,7 +387,7 @@ class InteractiveOverlay:
                 BarColumn(),
                 TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
                 console=self.console,
-                transient=True
+                transient=True,
             ) as progress:
                 task = progress.add_task(f"[cyan]{operation}...", total=total)
 
@@ -407,17 +408,14 @@ class InteractiveOverlay:
             "info": ("ℹ️", "blue"),
             "loading": ("⏳", "cyan"),
             "cached": ("🟢", "green"),
-            "stale": ("🟡", "yellow")
+            "stale": ("🟡", "yellow"),
         }
 
         icon, color = status_indicators.get(status, ("❓", "white"))
         self.console.print(f"[{color}]{icon} {message}[/{color}]")
 
     def _show_service_health_warning(
-        self,
-        unhealthy_services: List[str],
-        health_results: Dict[str, Dict[str, Any]],
-        manager: BaseManager
+        self, unhealthy_services: List[str], health_results: Dict[str, Dict[str, Any]], manager: BaseManager
     ) -> None:
         """Show detailed service health warning."""
 
@@ -435,10 +433,7 @@ class InteractiveOverlay:
         warning_text.append("\nThis may cause operations to fail.\n", style="yellow")
 
         panel = Panel(
-            warning_text,
-            title="[bold red]Service Health Check[/bold red]",
-            border_style="red",
-            padding=(1, 2)
+            warning_text, title="[bold red]Service Health Check[/bold red]", border_style="red", padding=(1, 2)
         )
 
         self.console.print(panel)
@@ -447,9 +442,13 @@ class InteractiveOverlay:
 # Global overlay instance
 interactive_overlay = None
 
-def get_interactive_overlay(console: Console, enable_interactive: bool = True,
-                           show_tips: bool = True, use_custom_styling: bool = True) -> InteractiveOverlay:
-    """Get or create the global interactive overlay instance with configuration options.
+
+def get_interactive_overlay(
+    console: Console, enable_interactive: bool = True, show_tips: bool = True, use_custom_styling: bool = True
+) -> InteractiveOverlay:
+    """
+    Get or create the global interactive overlay instance with configuration
+    options.
 
     Args:
         console: Rich console instance
@@ -462,17 +461,16 @@ def get_interactive_overlay(console: Console, enable_interactive: bool = True,
     """
     global interactive_overlay
     if interactive_overlay is None:
-        interactive_overlay = InteractiveOverlay(
-            console=console,
-            enable_interactive=enable_interactive
-        )
+        interactive_overlay = InteractiveOverlay(console=console, enable_interactive=enable_interactive)
         interactive_overlay.show_tips = show_tips
         interactive_overlay.use_custom_styling = use_custom_styling
 
     return interactive_overlay
 
+
 def configure_interactive_overlay(show_tips: bool = True, use_custom_styling: bool = True) -> None:
-    """Configure the global interactive overlay settings.
+    """
+    Configure the global interactive overlay settings.
 
     Args:
         show_tips: Whether to show helpful tips

@@ -1,7 +1,7 @@
-"""Workflow Parameter Entity"""
+"""Workflow Parameter Entity."""
 
-from typing import Any, Optional, List, Dict
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.parameter_value import ParameterType
 
@@ -63,6 +63,7 @@ class WorkflowParameter:
 
             if pattern and isinstance(value, str):
                 import re
+
                 if not re.match(pattern, value):
                     return False, f"Parameter '{self.name}' does not match required pattern"
 
@@ -81,5 +82,5 @@ class WorkflowParameter:
             "required": self.required,
             "default_value": self.default_value,
             "validation_rules": self.validation_rules,
-            "allowed_values": self.allowed_values
+            "allowed_values": self.allowed_values,
         }

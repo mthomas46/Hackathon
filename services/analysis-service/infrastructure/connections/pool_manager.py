@@ -1,17 +1,17 @@
 """Connection Pool Manager - Centralized management of multiple connection pools."""
 
 import asyncio
-import threading
-from typing import Any, Dict, List, Optional, Type
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .connection_pool import ConnectionPool, ConnectionPoolConfig, PooledConnection
+from .connection_pool import ConnectionPool, ConnectionPoolConfig
 
 
 @dataclass
 class PoolMetrics:
     """Metrics for connection pool performance."""
+
     pool_name: str
     created_connections: int = 0
     active_connections: int = 0
@@ -42,12 +42,7 @@ class ConnectionPoolManager:
         self._healthy_pools = 0
         self._unhealthy_pools = 0
 
-    async def register_pool(
-        self,
-        name: str,
-        pool: ConnectionPool,
-        enable_monitoring: bool = True
-    ) -> None:
+    async def register_pool(self, name: str, pool: ConnectionPool, enable_monitoring: bool = True) -> None:
         """Register a connection pool."""
         async with self._lock:
             if name in self.pools:
@@ -155,19 +150,19 @@ class ConnectionPoolManager:
                             stats = pool.get_stats()
                             metrics = self.metrics[name]
 
-                            metrics.created_connections = stats.get('created_count', 0)
-                            metrics.active_connections = stats.get('in_use_count', 0)
-                            metrics.idle_connections = stats.get('available_count', 0)
-                            metrics.total_acquires = stats.get('acquired_count', 0)
-                            metrics.total_releases = stats.get('released_count', 0)
-                            metrics.failed_acquires = stats.get('failed_count', 0)
+                            metrics.created_connections = stats.get("created_count", 0)
+                            metrics.active_connections = stats.get("in_use_count", 0)
+                            metrics.idle_connections = stats.get("available_count", 0)
+                            metrics.total_acquires = stats.get("acquired_count", 0)
+                            metrics.total_releases = stats.get("released_count", 0)
+                            metrics.failed_acquires = stats.get("failed_count", 0)
 
                             # Perform health check
                             health = await pool.health_check()
                             metrics.last_health_check = datetime.utcnow()
-                            metrics.health_status = health.get('status', 'unknown')
+                            metrics.health_status = health.get("status", "unknown")
 
-                            if metrics.health_status == 'healthy':
+                            if metrics.health_status == "healthy":
                                 healthy_count += 1
                             else:
                                 unhealthy_count += 1
@@ -202,17 +197,17 @@ class ConnectionPoolManager:
         total_failed = sum(m.failed_acquires for m in self.metrics.values())
 
         return {
-            'total_pools': self._total_pools,
-            'healthy_pools': self._healthy_pools,
-            'unhealthy_pools': self._unhealthy_pools,
-            'total_active_connections': total_active,
-            'total_idle_connections': total_idle,
-            'total_created_connections': total_created,
-            'total_acquires': total_acquires,
-            'total_releases': total_releases,
-            'total_failed_acquires': total_failed,
-            'pool_utilization_rate': total_active / max(1, total_active + total_idle),
-            'acquire_success_rate': total_acquires / max(1, total_acquires + total_failed)
+            "total_pools": self._total_pools,
+            "healthy_pools": self._healthy_pools,
+            "unhealthy_pools": self._unhealthy_pools,
+            "total_active_connections": total_active,
+            "total_idle_connections": total_idle,
+            "total_created_connections": total_created,
+            "total_acquires": total_acquires,
+            "total_releases": total_releases,
+            "total_failed_acquires": total_failed,
+            "pool_utilization_rate": total_active / max(1, total_active + total_idle),
+            "acquire_success_rate": total_acquires / max(1, total_acquires + total_failed),
         }
 
     async def health_check_all_pools(self) -> Dict[str, Any]:
@@ -225,25 +220,22 @@ class ConnectionPoolManager:
                     health = await pool.health_check()
                     results[name] = health
                 except Exception as e:
-                    results[name] = {
-                        'status': 'error',
-                        'error': str(e)
-                    }
+                    results[name] = {"status": "error", "error": str(e)}
 
         # Add global health summary
-        healthy_count = sum(1 for r in results.values() if r.get('status') == 'healthy')
+        healthy_count = sum(1 for r in results.values() if r.get("status") == "healthy")
         total_count = len(results)
 
-        overall_status = 'healthy' if healthy_count == total_count else 'degraded'
+        overall_status = "healthy" if healthy_count == total_count else "degraded"
         if healthy_count == 0:
-            overall_status = 'unhealthy'
+            overall_status = "unhealthy"
 
-        results['_summary'] = {
-            'overall_status': overall_status,
-            'total_pools': total_count,
-            'healthy_pools': healthy_count,
-            'unhealthy_pools': total_count - healthy_count,
-            'timestamp': datetime.utcnow().isoformat()
+        results["_summary"] = {
+            "overall_status": overall_status,
+            "total_pools": total_count,
+            "healthy_pools": healthy_count,
+            "unhealthy_pools": total_count - healthy_count,
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
         return results
@@ -256,13 +248,7 @@ class ConnectionPoolManager:
 
         return pool.acquire()
 
-    async def execute_with_pool(
-        self,
-        pool_name: str,
-        operation: callable,
-        *args,
-        **kwargs
-    ) -> Any:
+    async def execute_with_pool(self, pool_name: str, operation: callable, *args, **kwargs) -> Any:
         """Execute operation using a connection from specified pool."""
         async with self.acquire_connection(pool_name) as connection:
             return await operation(connection, *args, **kwargs)
@@ -275,7 +261,7 @@ class ConnectionPoolManager:
         max_lifetime: int = 3600,
         acquire_timeout: float = 30.0,
         enable_metrics: bool = True,
-        enable_health_checks: bool = True
+        enable_health_checks: bool = True,
     ) -> ConnectionPoolConfig:
         """Create a standardized pool configuration."""
         return ConnectionPoolConfig(
@@ -285,7 +271,7 @@ class ConnectionPoolManager:
             max_lifetime=max_lifetime,
             acquire_timeout=acquire_timeout,
             enable_metrics=enable_metrics,
-            enable_health_checks=enable_health_checks
+            enable_health_checks=enable_health_checks,
         )
 
 
@@ -316,10 +302,7 @@ class PoolManagerService:
             print("Connection Pool Manager Service stopped")
 
     async def register_database_pool(
-        self,
-        name: str,
-        database_url: str,
-        pool_config: Optional[ConnectionPoolConfig] = None
+        self, name: str, database_url: str, pool_config: Optional[ConnectionPoolConfig] = None
     ) -> None:
         """Register a database connection pool."""
         from .database_pool import DatabasePoolFactory
@@ -335,7 +318,7 @@ class PoolManagerService:
         name: str,
         base_url: str,
         pool_config: Optional[ConnectionPoolConfig] = None,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
     ) -> None:
         """Register an HTTP connection pool."""
         from .http_pool import HTTPPoolFactory
@@ -344,17 +327,12 @@ class PoolManagerService:
             pool_config = self.pool_manager.create_pool_config()
 
         pool = HTTPPoolFactory.create_advanced_pool(
-            base_url=base_url,
-            max_connections=pool_config.max_size,
-            headers=headers
+            base_url=base_url, max_connections=pool_config.max_size, headers=headers
         )
         await self.pool_manager.register_pool(name, pool)
 
     async def register_redis_pool(
-        self,
-        name: str,
-        redis_url: str,
-        pool_config: Optional[ConnectionPoolConfig] = None
+        self, name: str, redis_url: str, pool_config: Optional[ConnectionPoolConfig] = None
     ) -> None:
         """Register a Redis connection pool."""
         from .redis_pool import RedisPoolFactory
@@ -362,19 +340,16 @@ class PoolManagerService:
         if pool_config is None:
             pool_config = self.pool_manager.create_pool_config()
 
-        pool = RedisPoolFactory.create_pool_from_url(
-            redis_url,
-            max_connections=pool_config.max_size
-        )
+        pool = RedisPoolFactory.create_pool_from_url(redis_url, max_connections=pool_config.max_size)
         await self.pool_manager.register_pool(name, pool)
 
     async def get_service_status(self) -> Dict[str, Any]:
         """Get service status and metrics."""
         return {
-            'service_started': self._started,
-            'pool_manager_metrics': self.pool_manager.get_global_metrics(),
-            'registered_pools': self.pool_manager.list_pools(),
-            'pool_health': await self.pool_manager.health_check_all_pools()
+            "service_started": self._started,
+            "pool_manager_metrics": self.pool_manager.get_global_metrics(),
+            "registered_pools": self.pool_manager.list_pools(),
+            "pool_health": await self.pool_manager.health_check_all_pools(),
         }
 
 

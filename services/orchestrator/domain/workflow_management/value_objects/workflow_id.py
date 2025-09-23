@@ -1,4 +1,4 @@
-"""Workflow ID Value Object"""
+"""Workflow ID Value Object."""
 
 import uuid
 from typing import Union
@@ -19,7 +19,7 @@ class WorkflowId:
             raise TypeError(f"WorkflowId must be str or UUID, got {type(value)}")
 
     @classmethod
-    def generate(cls) -> 'WorkflowId':
+    def generate(cls) -> "WorkflowId":
         """Generate a new unique workflow ID."""
         return cls(uuid.uuid4())
 

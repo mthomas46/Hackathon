@@ -1,12 +1,13 @@
-"""Sidebar Navigation Component.
+"""
+Sidebar Navigation Component.
 
 This module provides the sidebar navigation component for the dashboard,
 including page selection, theme switching, and quick actions.
 """
 
-import streamlit as st
-from typing import Dict, Any, Optional
+from typing import Any, Dict
 
+import streamlit as st
 from infrastructure.config.config import get_config
 
 
@@ -21,11 +22,7 @@ def render_sidebar(pages: Dict[str, Dict[str, Any]]) -> str:
 
     # Environment indicator
     if config.environment != "production":
-        env_color = {
-            "development": "🟢",
-            "staging": "🟡",
-            "testing": "🔵"
-        }.get(config.environment, "⚪")
+        env_color = {"development": "🟢", "staging": "🟡", "testing": "🔵"}.get(config.environment, "⚪")
 
         st.sidebar.markdown(f"{env_color} **{config.environment.title()}**")
 
@@ -59,7 +56,7 @@ def render_quick_status():
 
     with col1:
         # Simulation service status
-        if 'simulation_client' in st.session_state:
+        if "simulation_client" in st.session_state:
             try:
                 # This would be a quick health check
                 st.sidebar.metric("Service", "✅ Connected")
@@ -68,7 +65,7 @@ def render_quick_status():
 
     with col2:
         # Active simulations count
-        active_count = getattr(st.session_state, 'active_simulations_count', 0)
+        active_count = getattr(st.session_state, "active_simulations_count", 0)
         st.sidebar.metric("Active", active_count)
 
 
@@ -77,7 +74,7 @@ def render_page_navigation(pages: Dict[str, Dict[str, Any]]) -> str:
     st.sidebar.subheader("📋 Navigation")
 
     # Get current page from session state
-    current_page = getattr(st.session_state, 'current_page', 'overview')
+    current_page = getattr(st.session_state, "current_page", "overview")
 
     # Create radio button navigation
     page_options = []
@@ -100,7 +97,7 @@ def render_page_navigation(pages: Dict[str, Dict[str, Any]]) -> str:
         format_func=lambda x: pages[x]["name"],
         index=current_index,
         key="page_navigation",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
 
     # Update session state
@@ -126,22 +123,19 @@ def render_quick_actions():
             st.rerun()
 
     # Recent simulations dropdown
-    if 'simulations_cache' in st.session_state and st.session_state.simulations_cache:
+    if "simulations_cache" in st.session_state and st.session_state.simulations_cache:
         st.sidebar.subheader("🕒 Recent Simulations")
 
         # Get recent simulations (last 5)
         simulations_data = st.session_state.simulations_cache
-        if 'simulations' in simulations_data:
-            recent_sims = simulations_data['simulations'][:5]
+        if "simulations" in simulations_data:
+            recent_sims = simulations_data["simulations"][:5]
 
             sim_options = ["Select simulation..."]
             sim_options.extend([f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}" for sim in recent_sims])
 
             selected_sim = st.sidebar.selectbox(
-                "Quick Access:",
-                options=sim_options,
-                key="quick_sim_select",
-                label_visibility="collapsed"
+                "Quick Access:", options=sim_options, key="quick_sim_select", label_visibility="collapsed"
             )
 
             if selected_sim and selected_sim != "Select simulation...":
@@ -156,13 +150,9 @@ def render_theme_selector():
     """Render theme selector."""
     st.sidebar.subheader("🎨 Theme")
 
-    theme_options = {
-        "light": "☀️ Light",
-        "dark": "🌙 Dark",
-        "auto": "🔄 Auto"
-    }
+    theme_options = {"light": "☀️ Light", "dark": "🌙 Dark", "auto": "🔄 Auto"}
 
-    current_theme = getattr(st.session_state, 'theme', 'light')
+    current_theme = getattr(st.session_state, "theme", "light")
 
     selected_theme = st.sidebar.selectbox(
         "Choose Theme:",
@@ -170,7 +160,7 @@ def render_theme_selector():
         format_func=lambda x: theme_options[x],
         index=list(theme_options.keys()).index(current_theme),
         key="theme_selector",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
 
     # Update theme in session state
@@ -186,7 +176,8 @@ def render_sidebar_footer():
     st.sidebar.markdown("---")
 
     with st.sidebar.expander("ℹ️ Info & Links"):
-        st.markdown("""
+        st.markdown(
+            """
         **Project Simulation Dashboard**
 
         A comprehensive interface for managing and monitoring
@@ -200,7 +191,8 @@ def render_sidebar_footer():
         **Connected to:**
         - Simulation Service: `http://localhost:5075`
         - Environment: Development
-        """)
+        """
+        )
 
     # Version info
     config = get_config()

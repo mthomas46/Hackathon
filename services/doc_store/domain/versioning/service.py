@@ -1,10 +1,13 @@
-"""Versioning service for business logic operations.
+"""
+Versioning service for business logic operations.
 
 Handles document versioning and history management.
 """
-from typing import Dict, Any, List, Optional
-from ...core.service import BaseService
+
+from typing import Any, Dict, List, Optional
+
 from ...core.entities import DocumentVersion
+from ...core.service import BaseService
 from .repository import VersioningRepository
 
 
@@ -32,19 +35,24 @@ class VersioningService(BaseService[DocumentVersion]):
         """Create document version from data."""
         return DocumentVersion(
             id=entity_id,
-            document_id=data['document_id'],
-            version_number=data['version_number'],
-            content=data['content'],
-            content_hash=data['content_hash'],
-            metadata=data.get('metadata', {}),
-            change_summary=data.get('change_summary', ''),
-            changed_by=data.get('changed_by')
+            document_id=data["document_id"],
+            version_number=data["version_number"],
+            content=data["content"],
+            content_hash=data["content_hash"],
+            metadata=data.get("metadata", {}),
+            change_summary=data.get("change_summary", ""),
+            changed_by=data.get("changed_by"),
         )
 
-    def create_version(self, document_id: str, content: str, content_hash: str,
-                      metadata: Optional[Dict[str, Any]] = None,
-                      change_summary: Optional[str] = None,
-                      changed_by: Optional[str] = None) -> DocumentVersion:
+    def create_version(
+        self,
+        document_id: str,
+        content: str,
+        content_hash: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        change_summary: Optional[str] = None,
+        changed_by: Optional[str] = None,
+    ) -> DocumentVersion:
         """Create a new version of a document."""
         # Validate inputs
         if not content:
@@ -53,9 +61,7 @@ class VersioningService(BaseService[DocumentVersion]):
         if not content_hash:
             raise ValueError("Content hash is required")
 
-        return self.repository.create_version(
-            document_id, content, content_hash, metadata, change_summary, changed_by
-        )
+        return self.repository.create_version(document_id, content, content_hash, metadata, change_summary, changed_by)
 
     def get_document_versions(self, document_id: str, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
         """Get version history for a document."""
@@ -67,7 +73,7 @@ class VersioningService(BaseService[DocumentVersion]):
             "total": len(versions),
             "limit": limit,
             "offset": offset,
-            "latest_version": max((v.version_number for v in versions), default=0)
+            "latest_version": max((v.version_number for v in versions), default=0),
         }
 
     def get_document_version(self, document_id: str, version_number: int) -> Optional[DocumentVersion]:
@@ -81,8 +87,9 @@ class VersioningService(BaseService[DocumentVersion]):
 
         return self.repository.compare_versions(document_id, version_a, version_b)
 
-    def rollback_to_version(self, document_id: str, version_number: int,
-                           changed_by: Optional[str] = None) -> DocumentVersion:
+    def rollback_to_version(
+        self, document_id: str, version_number: int, changed_by: Optional[str] = None
+    ) -> DocumentVersion:
         """Rollback a document to a previous version."""
         # Get the target version
         target_version = self.repository.get_version_by_number(document_id, version_number)
@@ -97,7 +104,7 @@ class VersioningService(BaseService[DocumentVersion]):
             content_hash=target_version.content_hash,
             metadata=target_version.metadata,
             change_summary=f"Rolled back to version {version_number}",
-            changed_by=changed_by
+            changed_by=changed_by,
         )
 
         return rollback_version
@@ -115,7 +122,7 @@ class VersioningService(BaseService[DocumentVersion]):
             return {
                 "document_id": document_id,
                 "message": f"Document has {total_versions} versions, no cleanup needed",
-                "versions_deleted": 0
+                "versions_deleted": 0,
             }
 
         # Perform cleanup
@@ -126,7 +133,7 @@ class VersioningService(BaseService[DocumentVersion]):
             "versions_before": total_versions,
             "versions_after": total_versions - deleted_count,
             "versions_deleted": deleted_count,
-            "versions_kept": keep_versions
+            "versions_kept": keep_versions,
         }
 
     def get_version_statistics(self) -> Dict[str, Any]:
@@ -142,13 +149,15 @@ class VersioningService(BaseService[DocumentVersion]):
         for version_num in sorted(versions_dict.keys()):
             if version_num >= since_version:
                 version = versions_dict[version_num]
-                changes.append({
-                    "version": version_num,
-                    "change_summary": version.change_summary,
-                    "changed_by": version.changed_by,
-                    "created_at": version.created_at.isoformat(),
-                    "content_length": len(version.content),
-                    "metadata_keys": list(version.metadata.keys())
-                })
+                changes.append(
+                    {
+                        "version": version_num,
+                        "change_summary": version.change_summary,
+                        "changed_by": version.changed_by,
+                        "created_at": version.created_at.isoformat(),
+                        "content_length": len(version.content),
+                        "metadata_keys": list(version.metadata.keys()),
+                    }
+                )
 
         return changes

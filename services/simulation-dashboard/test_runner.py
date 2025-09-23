@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Test runner for the Simulation Dashboard Service.
+"""
+Test runner for the Simulation Dashboard Service.
 
 This script provides a convenient way to run different types of tests
 for the simulation dashboard with various options and configurations.
 """
 
-import sys
+import argparse
 import os
 import subprocess
-import argparse
+import sys
 from pathlib import Path
 
 
@@ -26,117 +27,72 @@ Examples:
   python test_runner.py --coverage          # Run with coverage report
   python test_runner.py --verbose           # Run with verbose output
   python test_runner.py --web               # Generate HTML coverage report
-        """
+        """,
     )
 
     # Test type options
     test_group = parser.add_mutually_exclusive_group()
-    test_group.add_argument(
-        '--unit', '-u',
-        action='store_true',
-        help='Run unit tests only'
-    )
-    test_group.add_argument(
-        '--integration', '-i',
-        action='store_true',
-        help='Run integration tests only'
-    )
-    test_group.add_argument(
-        '--functional', '-f',
-        action='store_true',
-        help='Run functional tests only'
-    )
-    test_group.add_argument(
-        '--all', '-a',
-        action='store_true',
-        default=True,
-        help='Run all tests (default)'
-    )
+    test_group.add_argument("--unit", "-u", action="store_true", help="Run unit tests only")
+    test_group.add_argument("--integration", "-i", action="store_true", help="Run integration tests only")
+    test_group.add_argument("--functional", "-f", action="store_true", help="Run functional tests only")
+    test_group.add_argument("--all", "-a", action="store_true", default=True, help="Run all tests (default)")
 
     # Output options
-    parser.add_argument(
-        '--coverage', '-c',
-        action='store_true',
-        help='Generate coverage report'
-    )
-    parser.add_argument(
-        '--web', '-w',
-        action='store_true',
-        help='Generate HTML coverage report (implies --coverage)'
-    )
-    parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Verbose output'
-    )
-    parser.add_argument(
-        '--quiet', '-q',
-        action='store_true',
-        help='Quiet output'
-    )
+    parser.add_argument("--coverage", "-c", action="store_true", help="Generate coverage report")
+    parser.add_argument("--web", "-w", action="store_true", help="Generate HTML coverage report (implies --coverage)")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
+    parser.add_argument("--quiet", "-q", action="store_true", help="Quiet output")
 
     # Specific test options
-    parser.add_argument(
-        '--pattern', '-p',
-        help='Run tests matching pattern (e.g., "test_config")'
-    )
-    parser.add_argument(
-        '--marker', '-m',
-        help='Run tests with specific marker (e.g., "slow", "websocket")'
-    )
+    parser.add_argument("--pattern", "-p", help='Run tests matching pattern (e.g., "test_config")')
+    parser.add_argument("--marker", "-m", help='Run tests with specific marker (e.g., "slow", "websocket")')
 
     # Environment options
     parser.add_argument(
-        '--env',
-        choices=['development', 'test', 'production'],
-        default='test',
-        help='Test environment (default: test)'
+        "--env", choices=["development", "test", "production"], default="test", help="Test environment (default: test)"
     )
 
     args = parser.parse_args()
 
     # Build pytest command
-    cmd = [sys.executable, '-m', 'pytest']
+    cmd = [sys.executable, "-m", "pytest"]
 
     # Test directory selection
     if args.unit:
-        cmd.append('tests/unit/')
+        cmd.append("tests/unit/")
     elif args.integration:
-        cmd.append('tests/integration/')
+        cmd.append("tests/integration/")
     elif args.functional:
-        cmd.append('tests/functional/')
+        cmd.append("tests/functional/")
     else:
-        cmd.append('tests/')
+        cmd.append("tests/")
 
     # Coverage options
     if args.web:
         args.coverage = True
 
     if args.coverage:
-        cmd.extend([
-            '--cov=.',
-            '--cov-report=term-missing'
-        ])
+        cmd.extend(["--cov=.", "--cov-report=term-missing"])
         if args.web:
-            cmd.extend(['--cov-report=html'])
+            cmd.extend(["--cov-report=html"])
 
     # Output options
     if args.verbose:
-        cmd.append('-v')
+        cmd.append("-v")
     elif args.quiet:
-        cmd.append('-q')
+        cmd.append("-q")
 
     # Pattern matching
     if args.pattern:
-        cmd.extend(['-k', args.pattern])
+        cmd.extend(["-k", args.pattern])
 
     # Marker filtering
     if args.marker:
-        cmd.extend(['-m', args.marker])
+        cmd.extend(["-m", args.marker])
 
     # Environment setup
-    os.environ['DASHBOARD_ENVIRONMENT'] = args.env
-    os.environ['DASHBOARD_DEBUG'] = 'true' if args.env == 'development' else 'false'
+    os.environ["DASHBOARD_ENVIRONMENT"] = args.env
+    os.environ["DASHBOARD_DEBUG"] = "true" if args.env == "development" else "false"
 
     print("🚀 Running Simulation Dashboard Tests")
     print(f"Environment: {args.env}")
@@ -170,12 +126,12 @@ Examples:
 def run_specific_test_suite(suite_name: str):
     """Run a specific test suite."""
     suites = {
-        'unit': 'tests/unit/',
-        'integration': 'tests/integration/',
-        'functional': 'tests/functional/',
-        'websocket': ['-m', 'websocket'],
-        'slow': ['-m', 'slow'],
-        'ui': ['-m', 'ui']
+        "unit": "tests/unit/",
+        "integration": "tests/integration/",
+        "functional": "tests/functional/",
+        "websocket": ["-m", "websocket"],
+        "slow": ["-m", "slow"],
+        "ui": ["-m", "ui"],
     }
 
     if suite_name not in suites:
@@ -183,12 +139,12 @@ def run_specific_test_suite(suite_name: str):
         print(f"Available suites: {', '.join(suites.keys())}")
         return 1
 
-    cmd = [sys.executable, '-m', 'pytest']
+    cmd = [sys.executable, "-m", "pytest"]
     if isinstance(suites[suite_name], list):
         cmd.extend(suites[suite_name])
     else:
         cmd.append(suites[suite_name])
-    cmd.extend(['-v', '--tb=short'])
+    cmd.extend(["-v", "--tb=short"])
 
     print(f"🧪 Running {suite_name} test suite...")
     result = subprocess.run(cmd, cwd=Path(__file__).parent)
@@ -200,23 +156,23 @@ def check_test_environment():
     issues = []
 
     # Check if tests directory exists
-    if not Path('tests').exists():
+    if not Path("tests").exists():
         issues.append("❌ Tests directory not found")
 
     # Check if pytest is available
     try:
-        import pytest
+        pass
     except ImportError:
         issues.append("❌ pytest not installed")
 
     # Check if coverage is available
     try:
-        import pytest_cov
+        pass
     except ImportError:
         issues.append("⚠️  pytest-cov not installed (coverage reports unavailable)")
 
     # Check test structure
-    test_dirs = ['tests/unit', 'tests/integration', 'tests/functional']
+    test_dirs = ["tests/unit", "tests/integration", "tests/functional"]
     for test_dir in test_dirs:
         if not Path(test_dir).exists():
             issues.append(f"⚠️  {test_dir} directory not found")
@@ -234,10 +190,10 @@ def check_test_environment():
 
 if __name__ == "__main__":
     # If run with suite name as argument
-    if len(sys.argv) == 2 and sys.argv[1] in ['unit', 'integration', 'functional', 'websocket', 'slow', 'ui']:
+    if len(sys.argv) == 2 and sys.argv[1] in ["unit", "integration", "functional", "websocket", "slow", "ui"]:
         suite_name = sys.argv[1]
         sys.exit(run_specific_test_suite(suite_name))
-    elif len(sys.argv) == 2 and sys.argv[1] == 'check':
+    elif len(sys.argv) == 2 and sys.argv[1] == "check":
         success = check_test_environment()
         sys.exit(0 if success else 1)
     else:

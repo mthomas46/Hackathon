@@ -8,6 +8,7 @@ Shows how business logic has been moved from orchestrator to analysis service.
 import json
 from datetime import datetime
 
+
 def demonstrate_architecture_refactoring():
     """Demonstrate the refactored architecture."""
     print("🏗️  PR CONFIDENCE ANALYSIS - ARCHITECTURE REFACTORING")
@@ -136,8 +137,8 @@ def demonstrate_architecture_refactoring():
             "Independent service scaling",
             "Easier testing and maintenance",
             "Loose coupling between services",
-            "Better code organization"
-        ]
+            "Better code organization",
+        ],
     }
 
     with open("../../docs/examples/architecture_refactoring_demo.json", "w") as f:
@@ -147,6 +148,7 @@ def demonstrate_architecture_refactoring():
     print("   📄 Details saved to: docs/examples/architecture_refactoring_demo.json")
 
     return demo_results
+
 
 def show_code_comparison():
     """Show before/after code comparison."""
@@ -190,6 +192,7 @@ def show_code_comparison():
     print("   • Independent testing of each service")
     print("   • Easier maintenance and updates")
     print("   • Better scalability and performance")
+
 
 if __name__ == "__main__":
     demonstrate_architecture_refactoring()

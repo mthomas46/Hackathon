@@ -1,12 +1,12 @@
-"""Service Registration Domain Service"""
+"""Service Registration Domain Service."""
 
-from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
 from ..entities.service import Service
-from ..value_objects.service_id import ServiceId
 from ..value_objects.service_capability import ServiceCapability
 from ..value_objects.service_endpoint import ServiceEndpoint
+from ..value_objects.service_id import ServiceId
 
 
 class ServiceRegistrationService:
@@ -26,7 +26,7 @@ class ServiceRegistrationService:
         openapi_url: Optional[str] = None,
         capabilities: Optional[list[str]] = None,
         endpoints: Optional[list[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Service:
         """Register a new service instance."""
         # Check if service already exists
@@ -45,7 +45,7 @@ class ServiceRegistrationService:
             category=category,
             base_url=base_url,
             openapi_url=openapi_url,
-            metadata=metadata
+            metadata=metadata,
         )
 
         # Add capabilities

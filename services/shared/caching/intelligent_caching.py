@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """
-Intelligent Caching Framework
+Intelligent Caching Framework.
 
-This module provides enterprise-grade caching capabilities with intelligent
-invalidation, performance monitoring, and workflow-aware optimization.
+This module provides enterprise-grade caching capabilities with
+intelligent invalidation, performance monitoring, and workflow-aware
+optimization.
 """
 
 import asyncio
-import hashlib
 import json
-import time
-from typing import Dict, Any, List, Optional, Callable, Union, Tuple
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
-import threading
-from collections import OrderedDict
-import psutil
 import os
+import threading
+import time
+from collections import OrderedDict
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
+
+import psutil
 
 from ..core.constants_new import ServiceNames
 from ..monitoring.logging import fire_and_forget
@@ -25,6 +26,7 @@ from ..monitoring.logging import fire_and_forget
 
 class CacheStrategy(Enum):
     """Cache strategies for different use cases."""
+
     LRU = "lru"  # Least Recently Used
     LFU = "lfu"  # Least Frequently Used
     TTL = "ttl"  # Time To Live
@@ -34,6 +36,7 @@ class CacheStrategy(Enum):
 
 class CachePriority(Enum):
     """Cache priority levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -43,6 +46,7 @@ class CachePriority(Enum):
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     key: str
     value: Any
     timestamp: datetime = field(default_factory=datetime.now)
@@ -59,6 +63,7 @@ class CacheEntry:
 @dataclass
 class CacheMetrics:
     """Cache performance metrics."""
+
     total_requests: int = 0
     cache_hits: int = 0
     cache_misses: int = 0
@@ -124,11 +129,16 @@ class IntelligentCache:
             thread = threading.Thread(target=start_tasks, daemon=True)
             thread.start()
 
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None,
-                 priority: CachePriority = CachePriority.MEDIUM,
-                 workflow_id: Optional[str] = None,
-                 dependencies: Optional[List[str]] = None,
-                 metadata: Optional[Dict[str, Any]] = None) -> bool:
+    async def set(
+        self,
+        key: str,
+        value: Any,
+        ttl_seconds: Optional[int] = None,
+        priority: CachePriority = CachePriority.MEDIUM,
+        workflow_id: Optional[str] = None,
+        dependencies: Optional[List[str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> bool:
         """Set a cache entry with intelligent metadata."""
         with self._lock:
             try:
@@ -150,7 +160,7 @@ class IntelligentCache:
                     workflow_id=workflow_id,
                     dependencies=dependencies or [],
                     ttl_seconds=ttl_seconds or self.default_ttl_seconds,
-                    metadata=metadata or {}
+                    metadata=metadata or {},
                 )
 
                 # Store in main cache
@@ -246,8 +256,7 @@ class IntelligentCache:
                         workflow_cache.pop(key, None)
 
                     # Clean up empty workflow caches
-                    self.workflow_caches = {wid: cache for wid, cache in self.workflow_caches.items()
-                                          if cache}
+                    self.workflow_caches = {wid: cache for wid, cache in self.workflow_caches.items() if cache}
 
                     # Update LRU and LFU tracking
                     self.lru_order.pop(key, None)
@@ -282,9 +291,13 @@ class IntelligentCache:
 
             return invalidated_count
 
-    async def get_or_set(self, key: str, fetch_func: Callable[[], Any],
-                        ttl_seconds: Optional[int] = None,
-                        workflow_id: Optional[str] = None) -> Any:
+    async def get_or_set(
+        self,
+        key: str,
+        fetch_func: Callable[[], Any],
+        ttl_seconds: Optional[int] = None,
+        workflow_id: Optional[str] = None,
+    ) -> Any:
         """Get from cache or set with fetch function."""
         # Try to get from cache first
         cached_value = await self.get(key, workflow_id)
@@ -308,14 +321,14 @@ class IntelligentCache:
         """Calculate the size of a value in bytes."""
         try:
             if isinstance(value, (str, bytes)):
-                return len(value.encode('utf-8') if isinstance(value, str) else value)
+                return len(value.encode("utf-8") if isinstance(value, str) else value)
             elif isinstance(value, dict):
-                return len(json.dumps(value).encode('utf-8'))
+                return len(json.dumps(value).encode("utf-8"))
             elif isinstance(value, list):
                 return sum(self._calculate_size(item) for item in value)
             else:
                 # Estimate size for other types
-                return len(str(value).encode('utf-8'))
+                return len(str(value).encode("utf-8"))
         except:
             return 1024  # Default estimate
 
@@ -350,8 +363,7 @@ class IntelligentCache:
             # Weighted average
             weight = 0.1
             self.metrics.average_response_time = (
-                self.metrics.average_response_time * (1 - weight) +
-                response_time * weight
+                self.metrics.average_response_time * (1 - weight) + response_time * weight
             )
 
     async def _periodic_cleanup(self):
@@ -373,7 +385,9 @@ class IntelligentCache:
                         await self.invalidate(key, cascade=False)
 
                     if expired_keys:
-                        fire_and_forget("info", f"Cleaned up {len(expired_keys)} expired cache entries", self.service_name)
+                        fire_and_forget(
+                            "info", f"Cleaned up {len(expired_keys)} expired cache entries", self.service_name
+                        )
 
             except Exception as e:
                 fire_and_forget("error", f"Periodic cleanup failed: {e}", self.service_name)
@@ -399,7 +413,7 @@ class IntelligentCache:
                         "evictions": self.metrics.evictions,
                         "invalidations": self.metrics.invalidations,
                         "memory_usage_mb": self.metrics.memory_usage_bytes / (1024 * 1024),
-                        "cache_size_items": self.metrics.cache_size_items
+                        "cache_size_items": self.metrics.cache_size_items,
                     }
 
                     self.performance_history.append(metrics_snapshot)
@@ -427,7 +441,9 @@ class IntelligentCache:
                     if self._get_total_size() > target_size:
                         await self._evict_entries(self._get_total_size() - target_size)
 
-                    fire_and_forget("warning", f"High memory usage ({memory_usage_percent}%), reduced cache size", self.service_name)
+                    fire_and_forget(
+                        "warning", f"High memory usage ({memory_usage_percent}%), reduced cache size", self.service_name
+                    )
 
             except Exception as e:
                 fire_and_forget("error", f"Memory monitor failed: {e}", self.service_name)
@@ -451,13 +467,13 @@ class IntelligentCache:
                     "hit_ratio": self.metrics.hit_ratio,
                     "average_response_time_ms": self.metrics.average_response_time * 1000,
                     "evictions": self.metrics.evictions,
-                    "invalidations": self.metrics.invalidations
+                    "invalidations": self.metrics.invalidations,
                 },
                 "memory_info": {
                     "system_memory_percent": psutil.virtual_memory().percent,
-                    "process_memory_mb": psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024)
+                    "process_memory_mb": psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024),
                 },
-                "recent_performance": self.performance_history[-10:] if self.performance_history else []
+                "recent_performance": self.performance_history[-10:] if self.performance_history else [],
             }
 
     def get_workflow_cache_info(self, workflow_id: str) -> Dict[str, Any]:
@@ -479,10 +495,10 @@ class IntelligentCache:
                         "key": entry.key,
                         "size_bytes": entry.size_bytes,
                         "access_count": entry.access_count,
-                        "last_accessed": entry.last_accessed.isoformat()
+                        "last_accessed": entry.last_accessed.isoformat(),
                     }
                     for entry in workflow_cache.values()
-                ]
+                ],
             }
 
     async def optimize_for_workflow(self, workflow_id: str, priority_keys: List[str]):
@@ -496,7 +512,11 @@ class IntelligentCache:
                         if workflow_id in self.workflow_caches and key in self.workflow_caches[workflow_id]:
                             self.workflow_caches[workflow_id][key].priority = CachePriority.HIGH
 
-            fire_and_forget("info", f"Optimized cache for workflow {workflow_id} with {len(priority_keys)} priority keys", self.service_name)
+            fire_and_forget(
+                "info",
+                f"Optimized cache for workflow {workflow_id} with {len(priority_keys)} priority keys",
+                self.service_name,
+            )
 
     async def warmup_cache(self, warmup_data: Dict[str, Any]):
         """Warm up cache with predefined data."""
@@ -549,10 +569,7 @@ def get_service_cache(service_name: str) -> IntelligentCache:
 
 def get_cache_metrics() -> Dict[str, Any]:
     """Get metrics for all service caches."""
-    return {
-        service_name: cache.get_cache_stats()
-        for service_name, cache in service_caches.items()
-    }
+    return {service_name: cache.get_cache_stats() for service_name, cache in service_caches.items()}
 
 
 async def invalidate_all_caches(workflow_id: Optional[str] = None):

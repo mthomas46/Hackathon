@@ -5,20 +5,25 @@ Creates realistic prompts, A/B tests, analytics data, and relationships
 for testing the new domain-driven architecture.
 """
 
-import os
-import sys
 import json
-from pathlib import Path
-from datetime import datetime, timezone, timedelta
+import os
 import random
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 # Add the project root to Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from services.prompt_store.db.schema import init_database
 from services.prompt_store.core.entities import (
-    Prompt, PromptVersion, ABTest, PromptUsage, PromptRelationship, BulkOperation
+    ABTest,
+    BulkOperation,
+    Prompt,
+    PromptRelationship,
+    PromptUsage,
+    PromptVersion,
 )
+from services.prompt_store.db.schema import init_database
 from services.prompt_store.domain.prompts.repository import PromptRepository
 from services.prompt_store.domain.prompts.versioning_repository import PromptVersioningRepository
 
@@ -43,7 +48,7 @@ Function signature: {{function_name}}({{parameters}}) -> {{return_type}}""",
             "variables": ["function_name", "description", "parameters", "return_type"],
             "tags": ["python", "functions", "documentation", "type_hints"],
             "is_template": True,
-            "created_by": "test_user_1"
+            "created_by": "test_user_1",
         },
         {
             "name": "sql_query_optimizer",
@@ -61,9 +66,8 @@ Provide:
             "variables": ["sql_query"],
             "tags": ["sql", "optimization", "performance", "database"],
             "is_template": True,
-            "created_by": "test_user_2"
+            "created_by": "test_user_2",
         },
-
         # Writing prompts
         {
             "name": "blog_post_outline",
@@ -83,7 +87,7 @@ Word count goal: {{word_count}}""",
             "variables": ["topic", "audience", "word_count"],
             "tags": ["blogging", "content_creation", "outlining", "seo"],
             "is_template": True,
-            "created_by": "test_user_3"
+            "created_by": "test_user_3",
         },
         {
             "name": "email_sequence",
@@ -103,9 +107,8 @@ Make it {{tone}} and focused on {{target_audience}}.""",
             "variables": ["sequence_length", "product_service", "goals", "tone", "target_audience"],
             "tags": ["email_marketing", "sequences", "copywriting", "marketing"],
             "is_template": True,
-            "created_by": "test_user_4"
+            "created_by": "test_user_4",
         },
-
         # Analysis prompts
         {
             "name": "data_analysis_report",
@@ -128,9 +131,8 @@ Focus on {{focus_areas}} and provide actionable insights.""",
             "variables": ["dataset_description", "key_metrics", "time_period", "focus_areas"],
             "tags": ["data_analysis", "reporting", "insights", "visualization"],
             "is_template": True,
-            "created_by": "test_user_5"
+            "created_by": "test_user_5",
         },
-
         # AI/ML prompts
         {
             "name": "model_evaluation",
@@ -153,9 +155,8 @@ Provide recommendations for improvement and deployment readiness.""",
             "variables": ["model_type", "use_case", "algorithm", "data_size", "features"],
             "tags": ["machine_learning", "evaluation", "performance", "deployment"],
             "is_template": True,
-            "created_by": "test_user_1"
+            "created_by": "test_user_1",
         },
-
         # Business prompts
         {
             "name": "business_plan_section",
@@ -168,11 +169,18 @@ Target market: {{target_market}}
 Competitive advantage: {{competitive_advantage}}
 
 Make it {{tone}} and focused on convincing {{audience_type}} investors/partners.""",
-            "variables": ["section_name", "business_description", "target_market", "competitive_advantage", "tone", "audience_type"],
+            "variables": [
+                "section_name",
+                "business_description",
+                "target_market",
+                "competitive_advantage",
+                "tone",
+                "audience_type",
+            ],
             "tags": ["business_planning", "entrepreneurship", "strategy", "finance"],
             "is_template": True,
-            "created_by": "test_user_2"
-        }
+            "created_by": "test_user_2",
+        },
     ]
 
     return prompts_data
@@ -188,7 +196,7 @@ def create_ab_tests_data(prompts):
             "prompt_b_id": next(p.id for p in prompts if p.name == "python_function"),  # Same prompt for demo
             "test_metric": "response_quality",
             "traffic_split": 0.5,
-            "created_by": "test_user_1"
+            "created_by": "test_user_1",
         },
         {
             "name": "blog_post_engagement_test",
@@ -197,8 +205,8 @@ def create_ab_tests_data(prompts):
             "prompt_b_id": next(p.id for p in prompts if p.name == "blog_post_outline"),
             "test_metric": "user_satisfaction",
             "traffic_split": 0.6,
-            "created_by": "test_user_3"
-        }
+            "created_by": "test_user_3",
+        },
     ]
 
     return ab_tests_data
@@ -227,17 +235,19 @@ def create_usage_data(prompts):
                 "output_tokens": random.randint(50, 2000),
                 "response_time_ms": random.randint(100, 5000),
                 "success": random.choices([True, False], weights=[0.95, 0.05])[0],
-                "created_at": timestamp
+                "created_at": timestamp,
             }
 
             # Add some error messages for failed requests
             if not usage["success"]:
-                usage["error_message"] = random.choice([
-                    "Template variable missing",
-                    "Invalid input format",
-                    "Rate limit exceeded",
-                    "Internal server error"
-                ])
+                usage["error_message"] = random.choice(
+                    [
+                        "Template variable missing",
+                        "Invalid input format",
+                        "Rate limit exceeded",
+                        "Internal server error",
+                    ]
+                )
 
             usage_data.append(usage)
 
@@ -271,7 +281,7 @@ def create_relationships_data(prompts):
                         "relationship_type": random.choice(["similar", "extends", "references", "alternative"]),
                         "strength": random.uniform(0.3, 0.9),
                         "metadata": {"auto_generated": True, "confidence": random.uniform(0.7, 0.95)},
-                        "created_by": "system"
+                        "created_by": "system",
                     }
                     relationships_data.append(relationship)
 
@@ -290,7 +300,7 @@ def create_relationships_data(prompts):
                 "relationship_type": "inspiration",
                 "strength": random.uniform(0.1, 0.4),
                 "metadata": {"cross_category": True, "inspirational": True},
-                "created_by": "system"
+                "created_by": "system",
             }
             relationships_data.append(relationship)
 
@@ -321,7 +331,7 @@ def populate_test_data(seed_realistic: bool = True):
             is_template=prompt_data["is_template"],
             created_by=prompt_data["created_by"],
             performance_score=random.uniform(0.6, 0.95),
-            usage_count=random.randint(0, 100)
+            usage_count=random.randint(0, 100),
         )
         saved_prompt = prompt_repo.save(prompt)
         prompts.append(saved_prompt)
@@ -349,7 +359,7 @@ def populate_test_data(seed_realistic: bool = True):
                 variables=prompt.variables,
                 change_summary=f"Version {version_num} improvements",
                 change_type="update",
-                created_by=prompt.created_by
+                created_by=prompt.created_by,
             )
             version_repo.save(version)
             versions_created += 1
@@ -372,7 +382,7 @@ def populate_test_data(seed_realistic: bool = True):
             prompt_b_id=test_data["prompt_b_id"],
             test_metric=test_data["test_metric"],
             traffic_split=test_data["traffic_split"],
-            created_by=test_data["created_by"]
+            created_by=test_data["created_by"],
         )
         saved_test = ab_test_repo.save(ab_test)
         ab_tests.append(saved_test)
@@ -398,7 +408,7 @@ def populate_test_data(seed_realistic: bool = True):
             response_time_ms=usage_item["response_time_ms"],
             success=usage_item["success"],
             error_message=usage_item.get("error_message"),
-            created_at=usage_item["created_at"]
+            created_at=usage_item["created_at"],
         )
         usage_repo.save(usage)
 
@@ -418,7 +428,7 @@ def populate_test_data(seed_realistic: bool = True):
             relationship_type=rel_data["relationship_type"],
             strength=rel_data["strength"],
             metadata=rel_data["metadata"],
-            created_by=rel_data["created_by"]
+            created_by=rel_data["created_by"],
         )
         relationship_repo.save(relationship)
 
@@ -443,10 +453,10 @@ def populate_test_data(seed_realistic: bool = True):
                 {"prompt_id": "success_2", "status": "success"},
                 {"prompt_id": "success_3", "status": "success"},
                 {"prompt_id": "success_4", "status": "success"},
-                {"prompt_id": "failed_1", "status": "failed", "error": "validation error"}
+                {"prompt_id": "failed_1", "status": "failed", "error": "validation error"},
             ],
             "created_by": "test_user_1",
-            "completed_at": datetime.now(timezone.utc) - timedelta(hours=2)
+            "completed_at": datetime.now(timezone.utc) - timedelta(hours=2),
         },
         {
             "operation_type": "create_prompts",
@@ -460,11 +470,11 @@ def populate_test_data(seed_realistic: bool = True):
             "results": [
                 {"prompt_id": "new_1", "status": "success"},
                 {"prompt_id": "new_2", "status": "success"},
-                {"prompt_id": "new_3", "status": "success"}
+                {"prompt_id": "new_3", "status": "success"},
             ],
             "created_by": "test_user_2",
-            "completed_at": datetime.now(timezone.utc) - timedelta(hours=4)
-        }
+            "completed_at": datetime.now(timezone.utc) - timedelta(hours=4),
+        },
     ]
 
     bulk_repo = BulkOperationRepository()
@@ -480,7 +490,7 @@ def populate_test_data(seed_realistic: bool = True):
             metadata=bulk_data["metadata"],
             results=bulk_data["results"],
             created_by=bulk_data["created_by"],
-            completed_at=bulk_data["completed_at"]
+            completed_at=bulk_data["completed_at"],
         )
         bulk_repo.save(bulk_op)
 

@@ -1,5 +1,5 @@
 """
-Testing Framework
+Testing Framework.
 
 Fixtures, mocks, and testing utilities for shared modules.
 """

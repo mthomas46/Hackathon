@@ -1,21 +1,23 @@
-"""Security Filter Module for LLM Gateway Service.
+"""
+Security Filter Module for LLM Gateway Service.
 
-Handles security-aware routing and content analysis to ensure sensitive content
-is routed to appropriate LLM providers based on security policies.
+Handles security-aware routing and content analysis to ensure sensitive
+content is routed to appropriate LLM providers based on security
+policies.
 """
 
-import re
-from typing import Dict, Any, List, Set
 from dataclasses import dataclass
+from typing import Any, Dict, List, Set
 
 from services.shared.config import get_config_value
-from services.shared.logging import fire_and_forget
 from services.shared.constants_new import ServiceNames
+from services.shared.logging import fire_and_forget
 
 
 @dataclass
 class SecurityAnalysis:
     """Result of security content analysis."""
+
     is_sensitive: bool
     sensitivity_score: float
     detected_keywords: List[str]
@@ -35,27 +37,62 @@ class SecurityFilter:
         # Default sensitive keywords
         default_keywords = {
             # Authentication & Security
-            'password', 'passwd', 'pwd', 'secret', 'token', 'key', 'credential',
-            'auth', 'authentication', 'authorization', 'oauth', 'bearer',
-
+            "password",
+            "passwd",
+            "pwd",
+            "secret",
+            "token",
+            "key",
+            "credential",
+            "auth",
+            "authentication",
+            "authorization",
+            "oauth",
+            "bearer",
             # Personal Information
-            'ssn', 'social security', 'credit card', 'ccv', 'cvv', 'pin',
-            'address', 'phone', 'email', 'birthdate', 'social security number',
-
+            "ssn",
+            "social security",
+            "credit card",
+            "ccv",
+            "cvv",
+            "pin",
+            "address",
+            "phone",
+            "email",
+            "birthdate",
+            "social security number",
             # Financial Information
-            'bank account', 'routing number', 'iban', 'swift', 'bitcoin',
-            'wallet', 'private key', 'seed phrase',
-
+            "bank account",
+            "routing number",
+            "iban",
+            "swift",
+            "bitcoin",
+            "wallet",
+            "private key",
+            "seed phrase",
             # Confidential Business Info
-            'confidential', 'internal', 'proprietary', 'trade secret',
-            'nd', 'non-disclosure', 'nda', 'intellectual property',
-
+            "confidential",
+            "internal",
+            "proprietary",
+            "trade secret",
+            "nd",
+            "non-disclosure",
+            "nda",
+            "intellectual property",
             # Health Information
-            'medical', 'health', 'diagnosis', 'treatment', 'patient',
-            'phi', 'protected health information',
-
+            "medical",
+            "health",
+            "diagnosis",
+            "treatment",
+            "patient",
+            "phi",
+            "protected health information",
             # Legal Information
-            'contract', 'agreement', 'legal', 'litigation', 'compliance'
+            "contract",
+            "agreement",
+            "legal",
+            "litigation",
+            "compliance",
         }
 
         # Try to load from config
@@ -63,7 +100,7 @@ class SecurityFilter:
             config_keywords = get_config_value("SENSITIVE_KEYWORDS", "", section="security")
             if config_keywords:
                 # Parse comma-separated keywords
-                additional_keywords = {kw.strip().lower() for kw in config_keywords.split(',')}
+                additional_keywords = {kw.strip().lower() for kw in config_keywords.split(",")}
                 default_keywords.update(additional_keywords)
         except:
             pass
@@ -75,30 +112,19 @@ class SecurityFilter:
         return {
             "sensitive_only_providers": get_config_value(
                 "SECURE_ONLY_MODELS", "ollama,bedrock", section="secure_analyzer"
-            ).split(','),
-
+            ).split(","),
             "all_providers": get_config_value(
                 "ALL_PROVIDERS", "bedrock,ollama,openai,anthropic,grok", section="secure_analyzer"
-            ).split(','),
-
-            "sensitivity_threshold": float(get_config_value(
-                "SENSITIVITY_THRESHOLD", "0.7", section="security"
-            )),
-
-            "auto_classify": get_config_value(
-                "AUTO_CLASSIFY_SENSITIVE", "true", section="security"
-            ).lower() == "true"
+            ).split(","),
+            "sensitivity_threshold": float(get_config_value("SENSITIVITY_THRESHOLD", "0.7", section="security")),
+            "auto_classify": get_config_value("AUTO_CLASSIFY_SENSITIVE", "true", section="security").lower() == "true",
         }
 
     async def analyze_content(self, content: str) -> SecurityAnalysis:
         """Analyze content for security sensitivity."""
         if not content:
             return SecurityAnalysis(
-                is_sensitive=False,
-                sensitivity_score=0.0,
-                detected_keywords=[],
-                categories=[],
-                recommendations=[]
+                is_sensitive=False, sensitivity_score=0.0, detected_keywords=[], categories=[], recommendations=[]
             )
 
         content_lower = content.lower()
@@ -120,9 +146,7 @@ class SecurityFilter:
         categories = self._categorize_content(content_lower, detected_keywords)
 
         # Generate recommendations
-        recommendations = self._generate_security_recommendations(
-            is_sensitive, sensitivity_score, categories
-        )
+        recommendations = self._generate_security_recommendations(is_sensitive, sensitivity_score, categories)
 
         # Log security analysis
         if is_sensitive or detected_keywords:
@@ -134,8 +158,8 @@ class SecurityFilter:
                     "sensitivity_score": sensitivity_score,
                     "detected_keywords_count": len(detected_keywords),
                     "categories": categories,
-                    "is_sensitive": is_sensitive
-                }
+                    "is_sensitive": is_sensitive,
+                },
             )
 
         return SecurityAnalysis(
@@ -143,7 +167,7 @@ class SecurityFilter:
             sensitivity_score=sensitivity_score,
             detected_keywords=detected_keywords,
             categories=categories,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
     def _categorize_content(self, content: str, detected_keywords: List[str]) -> List[str]:
@@ -151,38 +175,37 @@ class SecurityFilter:
         categories = []
 
         # Authentication & Security
-        if any(kw in detected_keywords for kw in ['password', 'token', 'key', 'secret']):
+        if any(kw in detected_keywords for kw in ["password", "token", "key", "secret"]):
             categories.append("authentication")
 
         # Personal Information
-        if any(kw in detected_keywords for kw in ['ssn', 'email', 'phone', 'address']):
+        if any(kw in detected_keywords for kw in ["ssn", "email", "phone", "address"]):
             categories.append("personal_data")
 
         # Financial Information
-        if any(kw in detected_keywords for kw in ['credit card', 'bank account', 'bitcoin']):
+        if any(kw in detected_keywords for kw in ["credit card", "bank account", "bitcoin"]):
             categories.append("financial_data")
 
         # Health Information
-        if any(kw in detected_keywords for kw in ['medical', 'health', 'patient']):
+        if any(kw in detected_keywords for kw in ["medical", "health", "patient"]):
             categories.append("health_data")
 
         # Business Confidential
-        if any(kw in detected_keywords for kw in ['confidential', 'internal', 'proprietary']):
+        if any(kw in detected_keywords for kw in ["confidential", "internal", "proprietary"]):
             categories.append("business_confidential")
 
         # Legal Information
-        if any(kw in detected_keywords for kw in ['contract', 'legal', 'compliance']):
+        if any(kw in detected_keywords for kw in ["contract", "legal", "compliance"]):
             categories.append("legal_information")
 
         # Code/Security patterns
-        if 'import' in content or 'function' in content or 'class' in content:
-            if any(kw in detected_keywords for kw in ['secret', 'key', 'token']):
+        if "import" in content or "function" in content or "class" in content:
+            if any(kw in detected_keywords for kw in ["secret", "key", "token"]):
                 categories.append("code_security")
 
         return categories
 
-    def _generate_security_recommendations(self, is_sensitive: bool, score: float,
-                                         categories: List[str]) -> List[str]:
+    def _generate_security_recommendations(self, is_sensitive: bool, score: float, categories: List[str]) -> List[str]:
         """Generate security recommendations based on analysis."""
         recommendations = []
 
@@ -228,7 +251,7 @@ class SecurityFilter:
             "llm_gateway_security_keywords_updated",
             f"Updated sensitive keywords: added {len(new_keywords)} new keywords",
             ServiceNames.LLM_GATEWAY,
-            {"new_keywords_count": len(new_keywords)}
+            {"new_keywords_count": len(new_keywords)},
         )
 
     def get_security_stats(self) -> Dict[str, Any]:
@@ -236,5 +259,5 @@ class SecurityFilter:
         return {
             "sensitive_keywords_count": len(self.sensitive_keywords),
             "security_policies": self.security_policies,
-            "auto_classification_enabled": self.security_policies["auto_classify"]
+            "auto_classification_enabled": self.security_policies["auto_classify"],
         }

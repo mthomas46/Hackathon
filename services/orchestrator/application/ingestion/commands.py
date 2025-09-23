@@ -1,12 +1,13 @@
-"""Ingestion Application Commands"""
+"""Ingestion Application Commands."""
 
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 @dataclass
 class StartIngestionCommand:
     """Command to start document ingestion."""
+
     source_url: str
     source_type: str
     parameters: Dict[str, Any]
@@ -15,10 +16,12 @@ class StartIngestionCommand:
 @dataclass
 class CancelIngestionCommand:
     """Command to cancel document ingestion."""
+
     ingestion_id: str
 
 
 @dataclass
 class RetryIngestionCommand:
     """Command to retry failed ingestion."""
+
     ingestion_id: str

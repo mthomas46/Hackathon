@@ -1,20 +1,22 @@
-"""Distribution Charts Components.
+"""
+Distribution Charts Components.
 
 This module provides chart components for displaying data distributions,
 histograms, box plots, and statistical visualizations.
 """
 
-import streamlit as st
-import pandas as pd
+from typing import Any, Dict, List, Optional
+
 import numpy as np
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime
+import pandas as pd
 import plotly.graph_objects as go
+import streamlit as st
 from plotly.subplots import make_subplots
 
 try:
     import plotly.express as px
     import plotly.figure_factory as ff
+
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
@@ -26,9 +28,10 @@ def render_distribution_chart(
     chart_type: str = "histogram",
     title: str = "Data Distribution",
     width: Optional[int] = None,
-    height: Optional[int] = 400
+    height: Optional[int] = 400,
 ) -> None:
-    """Render data distribution chart.
+    """
+    Render data distribution chart.
 
     Args:
         distribution_data: Distribution data to visualize
@@ -44,11 +47,11 @@ def render_distribution_chart(
     try:
         st.markdown(f"### {title}")
 
-        if not distribution_data or 'data' not in distribution_data:
+        if not distribution_data or "data" not in distribution_data:
             st.info("No distribution data available")
             return
 
-        data = distribution_data['data']
+        data = distribution_data["data"]
 
         if isinstance(data, list) and len(data) > 0:
             df = pd.DataFrame(data)
@@ -66,52 +69,36 @@ def render_distribution_chart(
             # Create the appropriate chart type
             if chart_type == "histogram":
                 fig = px.histogram(
-                    df,
-                    x=value_col,
-                    title=title,
-                    labels={value_col: value_col.replace('_', ' ').title()},
-                    nbins=30
+                    df, x=value_col, title=title, labels={value_col: value_col.replace("_", " ").title()}, nbins=30
                 )
             elif chart_type == "box":
-                fig = px.box(
-                    df,
-                    y=value_col,
-                    title=title,
-                    labels={value_col: value_col.replace('_', ' ').title()}
-                )
+                fig = px.box(df, y=value_col, title=title, labels={value_col: value_col.replace("_", " ").title()})
             elif chart_type == "violin":
                 fig = px.violin(
                     df,
                     y=value_col,
                     title=title,
-                    labels={value_col: value_col.replace('_', ' ').title()},
+                    labels={value_col: value_col.replace("_", " ").title()},
                     box=True,
-                    points="all"
+                    points="all",
                 )
             elif chart_type == "kde":
                 # Create KDE plot approximation using histogram
                 fig = ff.create_distplot(
-                    [df[value_col].dropna()],
-                    [value_col.replace('_', ' ').title()],
-                    show_hist=True,
-                    show_rug=False
+                    [df[value_col].dropna()], [value_col.replace("_", " ").title()], show_hist=True, show_rug=False
                 )
                 fig.update_layout(title=title)
             else:
                 # Default to histogram
                 fig = px.histogram(
-                    df,
-                    x=value_col,
-                    title=title,
-                    labels={value_col: value_col.replace('_', ' ').title()},
-                    nbins=30
+                    df, x=value_col, title=title, labels={value_col: value_col.replace("_", " ").title()}, nbins=30
                 )
 
             fig.update_layout(
                 width=width,
                 height=height,
-                xaxis_title=value_col.replace('_', ' ').title(),
-                yaxis_title="Frequency" if chart_type == "histogram" else "Value"
+                xaxis_title=value_col.replace("_", " ").title(),
+                yaxis_title="Frequency" if chart_type == "histogram" else "Value",
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -201,9 +188,10 @@ def render_multi_distribution_chart(
     multi_data: Dict[str, Any],
     title: str = "Multiple Distributions Comparison",
     width: Optional[int] = None,
-    height: Optional[int] = 400
+    height: Optional[int] = 400,
 ) -> None:
-    """Render comparison of multiple distributions.
+    """
+    Render comparison of multiple distributions.
 
     Args:
         multi_data: Multiple distribution data
@@ -218,11 +206,11 @@ def render_multi_distribution_chart(
     try:
         st.markdown(f"### {title}")
 
-        if not multi_data or 'distributions' not in multi_data:
+        if not multi_data or "distributions" not in multi_data:
             st.info("No multi-distribution data available")
             return
 
-        distributions = multi_data['distributions']
+        distributions = multi_data["distributions"]
 
         if not distributions:
             st.info("No distributions to compare")
@@ -236,15 +224,15 @@ def render_multi_distribution_chart(
         fig = make_subplots(
             rows=rows,
             cols=cols,
-            subplot_titles=[dist.get('name', f'Distribution {i+1}') for i, dist in enumerate(distributions)]
+            subplot_titles=[dist.get("name", f"Distribution {i+1}") for i, dist in enumerate(distributions)],
         )
 
         for i, dist in enumerate(distributions):
             row = (i // 3) + 1
             col = (i % 3) + 1
 
-            if 'data' in dist and isinstance(dist['data'], list):
-                values = pd.Series(dist['data'])
+            if "data" in dist and isinstance(dist["data"], list):
+                values = pd.Series(dist["data"])
 
                 # Create histogram for this distribution
                 hist_data = np.histogram(values.dropna(), bins=20)
@@ -252,19 +240,14 @@ def render_multi_distribution_chart(
                     go.Bar(
                         x=hist_data[1][:-1],
                         y=hist_data[0],
-                        name=dist.get('name', f'Distribution {i+1}'),
-                        showlegend=False
+                        name=dist.get("name", f"Distribution {i+1}"),
+                        showlegend=False,
                     ),
                     row=row,
-                    col=col
+                    col=col,
                 )
 
-        fig.update_layout(
-            title=title,
-            width=width,
-            height=height,
-            showlegend=False
-        )
+        fig.update_layout(title=title, width=width, height=height, showlegend=False)
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -287,17 +270,17 @@ def render_comparative_stats(distributions: List[Dict[str, Any]]) -> None:
         comparison_data = []
 
         for dist in distributions:
-            if 'data' in dist and isinstance(dist['data'], list):
-                values = pd.Series(dist['data'])
-                name = dist.get('name', 'Unnamed')
+            if "data" in dist and isinstance(dist["data"], list):
+                values = pd.Series(dist["data"])
+                name = dist.get("name", "Unnamed")
 
                 stats = {
-                    'Distribution': name,
-                    'Count': len(values),
-                    'Mean': ".2f",
-                    'Std Dev': ".2f",
-                    'Min': ".2f",
-                    'Max': ".2f"
+                    "Distribution": name,
+                    "Count": len(values),
+                    "Mean": ".2f",
+                    "Std Dev": ".2f",
+                    "Min": ".2f",
+                    "Max": ".2f",
                 }
                 comparison_data.append(stats)
 
@@ -306,7 +289,7 @@ def render_comparative_stats(distributions: List[Dict[str, Any]]) -> None:
             st.dataframe(comparison_df, use_container_width=True)
 
             # Add insights
-            means = [stats['Mean'] for stats in comparison_data]
+            means = [stats["Mean"] for stats in comparison_data]
             if len(means) > 1:
                 max_mean_idx = means.index(max(means))
                 min_mean_idx = means.index(min(means))
@@ -323,9 +306,10 @@ def render_probability_distribution_chart(
     prob_data: Dict[str, Any],
     title: str = "Probability Distribution",
     width: Optional[int] = None,
-    height: Optional[int] = 400
+    height: Optional[int] = 400,
 ) -> None:
-    """Render probability distribution chart.
+    """
+    Render probability distribution chart.
 
     Args:
         prob_data: Probability distribution data
@@ -340,62 +324,45 @@ def render_probability_distribution_chart(
     try:
         st.markdown(f"### {title}")
 
-        if not prob_data or 'distribution' not in prob_data:
+        if not prob_data or "distribution" not in prob_data:
             st.info("No probability distribution data available")
             return
 
-        distribution = prob_data['distribution']
+        distribution = prob_data["distribution"]
 
-        if isinstance(distribution, dict) and 'x' in distribution and 'y' in distribution:
-            x_values = distribution['x']
-            y_values = distribution['y']
+        if isinstance(distribution, dict) and "x" in distribution and "y" in distribution:
+            x_values = distribution["x"]
+            y_values = distribution["y"]
 
             # Create probability distribution plot
             fig = go.Figure()
 
-            fig.add_trace(go.Scatter(
-                x=x_values,
-                y=y_values,
-                mode='lines',
-                name='Probability Density',
-                fill='tozeroy',
-                line=dict(color='blue')
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=x_values,
+                    y=y_values,
+                    mode="lines",
+                    name="Probability Density",
+                    fill="tozeroy",
+                    line=dict(color="blue"),
+                )
+            )
 
             # Add mean line if available
-            if 'mean' in prob_data:
-                mean_val = prob_data['mean']
-                fig.add_vline(
-                    x=mean_val,
-                    line_dash="dash",
-                    line_color="red",
-                    annotation_text=f"Mean: {mean_val:.2f}"
-                )
+            if "mean" in prob_data:
+                mean_val = prob_data["mean"]
+                fig.add_vline(x=mean_val, line_dash="dash", line_color="red", annotation_text=f"Mean: {mean_val:.2f}")
 
             # Add standard deviation lines if available
-            if 'std' in prob_data and 'mean' in prob_data:
-                mean_val = prob_data['mean']
-                std_val = prob_data['std']
+            if "std" in prob_data and "mean" in prob_data:
+                mean_val = prob_data["mean"]
+                std_val = prob_data["std"]
 
-                fig.add_vline(
-                    x=mean_val - std_val,
-                    line_dash="dot",
-                    line_color="orange",
-                    annotation_text="-1σ"
-                )
-                fig.add_vline(
-                    x=mean_val + std_val,
-                    line_dash="dot",
-                    line_color="orange",
-                    annotation_text="+1σ"
-                )
+                fig.add_vline(x=mean_val - std_val, line_dash="dot", line_color="orange", annotation_text="-1σ")
+                fig.add_vline(x=mean_val + std_val, line_dash="dot", line_color="orange", annotation_text="+1σ")
 
             fig.update_layout(
-                title=title,
-                width=width,
-                height=height,
-                xaxis_title="Value",
-                yaxis_title="Probability Density"
+                title=title, width=width, height=height, xaxis_title="Value", yaxis_title="Probability Density"
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -421,44 +388,44 @@ def render_distribution_parameters(prob_data: Dict[str, Any]) -> None:
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            if 'mean' in prob_data:
-                st.metric("Mean", ".2f", prob_data['mean'])
+            if "mean" in prob_data:
+                st.metric("Mean", ".2f", prob_data["mean"])
 
         with col2:
-            if 'median' in prob_data:
-                st.metric("Median", ".2f", prob_data['median'])
+            if "median" in prob_data:
+                st.metric("Median", ".2f", prob_data["median"])
 
         with col3:
-            if 'std' in prob_data:
-                st.metric("Std Deviation", ".2f", prob_data['std'])
+            if "std" in prob_data:
+                st.metric("Std Deviation", ".2f", prob_data["std"])
 
         with col4:
-            if 'variance' in prob_data:
-                st.metric("Variance", ".2f", prob_data['variance'])
+            if "variance" in prob_data:
+                st.metric("Variance", ".2f", prob_data["variance"])
 
         # Additional parameters
-        if 'skewness' in prob_data or 'kurtosis' in prob_data:
+        if "skewness" in prob_data or "kurtosis" in prob_data:
             col5, col6 = st.columns(2)
 
             with col5:
-                if 'skewness' in prob_data:
-                    st.metric("Skewness", ".2f", prob_data['skewness'])
+                if "skewness" in prob_data:
+                    st.metric("Skewness", ".2f", prob_data["skewness"])
 
             with col6:
-                if 'kurtosis' in prob_data:
-                    st.metric("Kurtosis", ".2f", prob_data['kurtosis'])
+                if "kurtosis" in prob_data:
+                    st.metric("Kurtosis", ".2f", prob_data["kurtosis"])
 
         # Distribution type
-        if 'distribution_type' in prob_data:
-            dist_type = prob_data['distribution_type']
+        if "distribution_type" in prob_data:
+            dist_type = prob_data["distribution_type"]
             st.info(f"**Distribution Type:** {dist_type}")
 
             # Add interpretation based on distribution type
-            if dist_type.lower() == 'normal':
+            if dist_type.lower() == "normal":
                 st.success("✅ Normal distribution - data follows expected pattern")
-            elif 'skew' in dist_type.lower():
+            elif "skew" in dist_type.lower():
                 st.warning("⚠️ Skewed distribution - data shows asymmetry")
-            elif 'heavy' in dist_type.lower():
+            elif "heavy" in dist_type.lower():
                 st.warning("⚠️ Heavy-tailed distribution - extreme values are common")
 
     except Exception as e:
@@ -469,9 +436,10 @@ def render_cumulative_distribution_chart(
     cdf_data: Dict[str, Any],
     title: str = "Cumulative Distribution Function",
     width: Optional[int] = None,
-    height: Optional[int] = 400
+    height: Optional[int] = 400,
 ) -> None:
-    """Render cumulative distribution function chart.
+    """
+    Render cumulative distribution function chart.
 
     Args:
         cdf_data: CDF data
@@ -486,11 +454,11 @@ def render_cumulative_distribution_chart(
     try:
         st.markdown(f"### {title}")
 
-        if not cdf_data or 'data' not in cdf_data:
+        if not cdf_data or "data" not in cdf_data:
             st.info("No CDF data available")
             return
 
-        data = cdf_data['data']
+        data = cdf_data["data"]
 
         if isinstance(data, list) and len(data) > 0:
             df = pd.DataFrame(data)
@@ -500,9 +468,9 @@ def render_cumulative_distribution_chart(
             prob_col = None
 
             for col in df.columns:
-                if 'value' in col.lower():
+                if "value" in col.lower():
                     value_col = col
-                elif 'prob' in col.lower() or 'cumulative' in col.lower() or 'cdf' in col.lower():
+                elif "prob" in col.lower() or "cumulative" in col.lower() or "cdf" in col.lower():
                     prob_col = col
 
             if not value_col or not prob_col:
@@ -525,10 +493,7 @@ def render_cumulative_distribution_chart(
                 x=value_col,
                 y=prob_col,
                 title=title,
-                labels={
-                    value_col: value_col.replace('_', ' ').title(),
-                    prob_col: 'Cumulative Probability'
-                }
+                labels={value_col: value_col.replace("_", " ").title(), prob_col: "Cumulative Probability"},
             )
 
             # Add reference lines
@@ -538,9 +503,9 @@ def render_cumulative_distribution_chart(
             fig.update_layout(
                 width=width,
                 height=height,
-                xaxis_title=value_col.replace('_', ' ').title(),
+                xaxis_title=value_col.replace("_", " ").title(),
                 yaxis_title="Cumulative Probability",
-                yaxis=dict(range=[0, 1])
+                yaxis=dict(range=[0, 1]),
             )
 
             st.plotly_chart(fig, use_container_width=True)

@@ -1,12 +1,14 @@
-"""Core entities for Prompt Store service.
+"""
+Core entities for Prompt Store service.
 
-Following domain-driven design principles with base entities and specific domain entities.
+Following domain-driven design principles with base entities and
+specific domain entities.
 """
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from dataclasses import dataclass, field
 
 
 class BaseEntity(ABC):
@@ -14,7 +16,7 @@ class BaseEntity(ABC):
 
     def __init__(self, id: Optional[str] = None):
         # Only set id if it's not already set
-        if not hasattr(self, 'id') or self.id is None:
+        if not hasattr(self, "id") or self.id is None:
             self.id = id
         self.created_at = datetime.now(timezone.utc)
         self.updated_at = datetime.now(timezone.utc)
@@ -22,13 +24,11 @@ class BaseEntity(ABC):
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         """Convert entity to dictionary representation."""
-        pass
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BaseEntity':
+    def from_dict(cls, data: Dict[str, Any]) -> "BaseEntity":
         """Create entity from dictionary representation."""
-        pass
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""
@@ -44,6 +44,7 @@ class BaseEntity(ABC):
 @dataclass
 class Prompt(BaseEntity):
     """Core prompt entity."""
+
     name: str
     category: str
     description: str = ""
@@ -82,11 +83,11 @@ class Prompt(BaseEntity):
             "version": self.version,
             "parent_id": self.parent_id,
             "performance_score": self.performance_score,
-            "usage_count": self.usage_count
+            "usage_count": self.usage_count,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Prompt':
+    def from_dict(cls, data: Dict[str, Any]) -> "Prompt":
         """Create prompt from dictionary."""
         prompt = cls(
             name=data["name"],
@@ -102,19 +103,20 @@ class Prompt(BaseEntity):
             version=data.get("version", 1),
             parent_id=data.get("parent_id"),
             performance_score=data.get("performance_score", 0.0),
-            usage_count=data.get("usage_count", 0)
+            usage_count=data.get("usage_count", 0),
         )
         prompt.id = data.get("id")
         if "created_at" in data:
-            prompt.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            prompt.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "updated_at" in data:
-            prompt.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+            prompt.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
         return prompt
 
 
 @dataclass
 class PromptVersion(BaseEntity):
     """Prompt version history entity."""
+
     prompt_id: str
     version: int
     content: str
@@ -138,11 +140,11 @@ class PromptVersion(BaseEntity):
             "change_summary": self.change_summary,
             "change_type": self.change_type,
             "created_by": self.created_by,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptVersion':
+    def from_dict(cls, data: Dict[str, Any]) -> "PromptVersion":
         """Create version from dictionary."""
         version = cls(
             prompt_id=data["prompt_id"],
@@ -151,17 +153,18 @@ class PromptVersion(BaseEntity):
             variables=data.get("variables", []),
             change_summary=data.get("change_summary", ""),
             change_type=data.get("change_type", "update"),
-            created_by=data.get("created_by", "")
+            created_by=data.get("created_by", ""),
         )
         version.id = data.get("id")
         if "created_at" in data:
-            version.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            version.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         return version
 
 
 @dataclass
 class ABTest(BaseEntity):
     """A/B testing configuration entity."""
+
     name: str
     description: str = ""
     prompt_a_id: str = ""
@@ -200,11 +203,11 @@ class ABTest(BaseEntity):
             "created_by": self.created_by,
             "winner": self.winner,
             "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat()
+            "updated_at": self.updated_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ABTest':
+    def from_dict(cls, data: Dict[str, Any]) -> "ABTest":
         """Create A/B test from dictionary."""
         test = cls(
             name=data["name"],
@@ -216,23 +219,24 @@ class ABTest(BaseEntity):
             traffic_split=data.get("traffic_split", 0.5),
             target_audience=data.get("target_audience", {}),
             created_by=data.get("created_by", ""),
-            winner=data.get("winner")
+            winner=data.get("winner"),
         )
         test.id = data.get("id")
         if "start_date" in data:
-            test.start_date = datetime.fromisoformat(data["start_date"].replace('Z', '+00:00'))
+            test.start_date = datetime.fromisoformat(data["start_date"].replace("Z", "+00:00"))
         if "end_date" in data and data["end_date"]:
-            test.end_date = datetime.fromisoformat(data["end_date"].replace('Z', '+00:00'))
+            test.end_date = datetime.fromisoformat(data["end_date"].replace("Z", "+00:00"))
         if "created_at" in data:
-            test.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            test.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "updated_at" in data:
-            test.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+            test.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
         return test
 
 
 @dataclass
 class PromptUsage(BaseEntity):
     """Prompt usage tracking entity."""
+
     prompt_id: str
     session_id: Optional[str] = None
     user_id: Optional[str] = None
@@ -266,11 +270,11 @@ class PromptUsage(BaseEntity):
             "error_message": self.error_message,
             "metadata": self.metadata,
             "llm_service": self.llm_service,
-            "created_at": self.created_at.isoformat()
+            "created_at": self.created_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptUsage':
+    def from_dict(cls, data: Dict[str, Any]) -> "PromptUsage":
         """Create usage from dictionary."""
         usage = cls(
             prompt_id=data["prompt_id"],
@@ -283,17 +287,18 @@ class PromptUsage(BaseEntity):
             response_time_ms=data.get("response_time_ms"),
             success=data.get("success", True),
             error_message=data.get("error_message"),
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
         )
         usage.id = data.get("id")
         if "created_at" in data:
-            usage.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            usage.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         return usage
 
 
 @dataclass
 class PromptRelationship(BaseEntity):
     """Prompt relationship entity for semantic connections."""
+
     source_prompt_id: str
     target_prompt_id: str
     relationship_type: str  # extends, references, alternative, similar
@@ -316,11 +321,11 @@ class PromptRelationship(BaseEntity):
             "metadata": self.metadata,
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat()
+            "updated_at": self.updated_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PromptRelationship':
+    def from_dict(cls, data: Dict[str, Any]) -> "PromptRelationship":
         """Create relationship from dictionary."""
         relationship = cls(
             source_prompt_id=data["source_prompt_id"],
@@ -328,19 +333,20 @@ class PromptRelationship(BaseEntity):
             relationship_type=data["relationship_type"],
             strength=data.get("strength", 1.0),
             metadata=data.get("metadata", {}),
-            created_by=data.get("created_by", "")
+            created_by=data.get("created_by", ""),
         )
         relationship.id = data.get("id")
         if "created_at" in data:
-            relationship.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            relationship.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "updated_at" in data:
-            relationship.updated_at = datetime.fromisoformat(data["updated_at"].replace('Z', '+00:00'))
+            relationship.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
         return relationship
 
 
 @dataclass
 class ABTestResult(BaseEntity):
     """A/B test results and analytics entity."""
+
     test_id: str
     prompt_id: str
     metric_value: float
@@ -366,11 +372,11 @@ class ABTestResult(BaseEntity):
             "statistical_significance": self.statistical_significance,
             "failed_requests": self.failed_requests,
             "successful_requests": self.successful_requests,
-            "recorded_at": self.created_at.isoformat()
+            "recorded_at": self.created_at.isoformat(),
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ABTestResult':
+    def from_dict(cls, data: Dict[str, Any]) -> "ABTestResult":
         """Create A/B test result from dictionary."""
         result = cls(
             test_id=data["test_id"],
@@ -378,17 +384,18 @@ class ABTestResult(BaseEntity):
             metric_value=data["metric_value"],
             sample_size=data["sample_size"],
             confidence_level=data.get("confidence_level", 0.0),
-            statistical_significance=data.get("statistical_significance", False)
+            statistical_significance=data.get("statistical_significance", False),
         )
         result.id = data.get("id")
         if "recorded_at" in data:
-            result.created_at = datetime.fromisoformat(data["recorded_at"].replace('Z', '+00:00'))
+            result.created_at = datetime.fromisoformat(data["recorded_at"].replace("Z", "+00:00"))
         return result
 
 
 @dataclass
 class BulkOperation(BaseEntity):
     """Bulk operation tracking entity."""
+
     operation_type: str  # create_prompts, update_prompts, delete_prompts, tag_prompts
     status: str = "pending"  # pending, processing, completed, failed
     total_items: int = 0
@@ -420,11 +427,11 @@ class BulkOperation(BaseEntity):
             "results": self.results,
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BulkOperation':
+    def from_dict(cls, data: Dict[str, Any]) -> "BulkOperation":
         """Create bulk operation from dictionary."""
         operation = cls(
             operation_type=data["operation_type"],
@@ -437,10 +444,10 @@ class BulkOperation(BaseEntity):
             metadata=data.get("metadata", {}),
             results=data.get("results", []),
             created_by=data.get("created_by", ""),
-            id=data.get("id")
+            id=data.get("id"),
         )
         if "created_at" in data:
-            operation.created_at = datetime.fromisoformat(data["created_at"].replace('Z', '+00:00'))
+            operation.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
         if "completed_at" in data and data["completed_at"]:
-            operation.completed_at = datetime.fromisoformat(data["completed_at"].replace('Z', '+00:00'))
+            operation.completed_at = datetime.fromisoformat(data["completed_at"].replace("Z", "+00:00"))
         return operation

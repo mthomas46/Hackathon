@@ -5,21 +5,22 @@ from the LLM Documentation Ecosystem, following DRY principles and maximizing co
 """
 
 import sys
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Union, Type
 from datetime import datetime
-from pydantic import BaseModel, Field, validator, root_validator
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Type, Union
+
+from pydantic import BaseModel, Field, validator
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 # Import shared models and utilities
 try:
-    from shared.models.base import BaseResponse, BaseRequest, PaginationParams
-    from shared.models.health import HealthStatus, HealthCheck
+    from shared.models.base import BaseRequest, BaseResponse, PaginationParams
+    from shared.models.health import HealthCheck, HealthStatus
     from shared.models.monitoring import MetricData, PerformanceMetrics
-    from shared.models.responses import StandardResponse, ErrorResponse
+    from shared.models.responses import ErrorResponse, StandardResponse
 except ImportError:
     # Fallback definitions if shared models not available
     class BaseResponse(BaseModel):
@@ -72,6 +73,7 @@ try:
     # Doc Store models
     from services.doc_store.models import Document, DocumentMetadata
 except ImportError:
+
     class Document(BaseModel):
         id: str = Field(description="Document ID")
         title: str = Field(description="Document title")
@@ -84,10 +86,12 @@ except ImportError:
         updated_at: datetime = Field(default_factory=datetime.now, description="Last update timestamp")
         tags: List[str] = Field(default_factory=list, description="Document tags")
 
+
 try:
     # Analysis Service models
     from services.analysis_service.models import AnalysisResult, QualityMetrics
 except ImportError:
+
     class AnalysisResult(BaseModel):
         document_id: str = Field(description="Analyzed document ID")
         score: float = Field(description="Analysis score")
@@ -99,10 +103,12 @@ except ImportError:
         coherence_score: float = Field(description="Coherence score")
         relevance_score: float = Field(description="Relevance score")
 
+
 try:
     # LLM Gateway models
     from services.llm_gateway.models import GenerationRequest, GenerationResponse
 except ImportError:
+
     class GenerationRequest(BaseModel):
         prompt: str = Field(description="Generation prompt")
         model: str = Field(default="gpt-4", description="Model to use")
@@ -115,10 +121,12 @@ except ImportError:
         tokens_used: int = Field(description="Tokens consumed")
         finish_reason: str = Field(description="Generation finish reason")
 
+
 try:
     # Orchestrator models
     from services.orchestrator.models import WorkflowDefinition, WorkflowExecution
 except ImportError:
+
     class WorkflowDefinition(BaseModel):
         id: str = Field(description="Workflow definition ID")
         name: str = Field(description="Workflow name")
@@ -134,19 +142,22 @@ except ImportError:
 
 # Simulation-Specific Models (extending ecosystem models)
 
+
 class SimulationBaseRequest(BaseRequest):
     """Base request model for simulation operations."""
+
     simulation_id: Optional[str] = Field(default=None, description="Simulation ID for context")
     correlation_id: Optional[str] = Field(default=None, description="Request correlation ID")
     user_id: Optional[str] = Field(default=None, description="Requesting user ID")
 
-    @validator('correlation_id', always=True)
+    @validator("correlation_id", always=True)
     def generate_correlation_id(cls, v):
         return v or f"sim-{datetime.now().strftime('%Y%m%d%H%M%S')}-{hash(datetime.now()) % 10000:04d}"
 
 
 class SimulationBaseResponse(StandardResponse):
     """Base response model for simulation operations."""
+
     simulation_id: Optional[str] = Field(default=None, description="Simulation ID")
     request_id: Optional[str] = Field(default=None, description="Request ID for correlation")
     processing_time_ms: Optional[float] = Field(default=None, description="Processing time")
@@ -154,6 +165,7 @@ class SimulationBaseResponse(StandardResponse):
 
 class SimulationHealthCheck(HealthCheck):
     """Enhanced health check for simulation service."""
+
     service_status: Dict[str, HealthStatus] = Field(default_factory=dict, description="Individual service health")
     ecosystem_connectivity: Dict[str, bool] = Field(default_factory=dict, description="Ecosystem service connectivity")
     active_simulations: int = Field(default=0, description="Number of active simulations")
@@ -162,6 +174,7 @@ class SimulationHealthCheck(HealthCheck):
 
 class SimulationMetrics(PerformanceMetrics):
     """Enhanced performance metrics for simulation service."""
+
     active_simulations: int = Field(default=0, description="Currently active simulations")
     completed_simulations: int = Field(default=0, description="Total completed simulations")
     average_simulation_duration: float = Field(default=0.0, description="Average simulation duration in seconds")
@@ -172,6 +185,7 @@ class SimulationMetrics(PerformanceMetrics):
 
 class ProjectDocument(Document):
     """Project document model extending ecosystem Document."""
+
     project_id: str = Field(description="Associated project ID")
     simulation_id: str = Field(description="Associated simulation ID")
     document_type: str = Field(description="Type of project document")
@@ -179,15 +193,17 @@ class ProjectDocument(Document):
     quality_score: Optional[float] = Field(default=None, description="Document quality score")
     generation_metadata: Dict[str, Any] = Field(default_factory=dict, description="Document generation metadata")
 
-    @validator('quality_score')
+    @validator("quality_score")
     def validate_quality_score(cls, v):
         if v is not None and not (0.0 <= v <= 1.0):
-            raise ValueError('Quality score must be between 0.0 and 1.0')
+            raise ValueError("Quality score must be between 0.0 and 1.0")
         return v
 
 
 class SimulationAnalysisResult(AnalysisResult):
-    """Simulation-specific analysis result extending ecosystem AnalysisResult."""
+    """Simulation-specific analysis result extending ecosystem
+    AnalysisResult."""
+
     simulation_context: Dict[str, Any] = Field(default_factory=dict, description="Simulation context")
     project_phase: Optional[str] = Field(default=None, description="Project phase context")
     team_impact: Dict[str, Any] = Field(default_factory=dict, description="Team impact analysis")
@@ -195,7 +211,9 @@ class SimulationAnalysisResult(AnalysisResult):
 
 
 class SimulationGenerationRequest(GenerationRequest):
-    """Simulation-specific generation request extending ecosystem GenerationRequest."""
+    """Simulation-specific generation request extending ecosystem
+    GenerationRequest."""
+
     simulation_context: Dict[str, Any] = Field(default_factory=dict, description="Simulation context")
     project_type: Optional[str] = Field(default=None, description="Project type context")
     complexity_level: Optional[str] = Field(default=None, description="Complexity level context")
@@ -204,7 +222,9 @@ class SimulationGenerationRequest(GenerationRequest):
 
 
 class SimulationWorkflowDefinition(WorkflowDefinition):
-    """Simulation workflow definition extending ecosystem WorkflowDefinition."""
+    """Simulation workflow definition extending ecosystem
+    WorkflowDefinition."""
+
     simulation_type: str = Field(description="Type of simulation workflow")
     project_template: Optional[str] = Field(default=None, description="Project template to use")
     required_services: List[str] = Field(default_factory=list, description="Required ecosystem services")
@@ -213,6 +233,7 @@ class SimulationWorkflowDefinition(WorkflowDefinition):
 
 class SimulationWorkflowExecution(WorkflowExecution):
     """Simulation workflow execution extending ecosystem WorkflowExecution."""
+
     simulation_id: str = Field(description="Associated simulation ID")
     project_id: str = Field(description="Associated project ID")
     phase_progress: Dict[str, float] = Field(default_factory=dict, description="Progress by phase")
@@ -222,8 +243,10 @@ class SimulationWorkflowExecution(WorkflowExecution):
 
 # Specialized Simulation Models
 
+
 class SimulationConfiguration(BaseModel):
     """Simulation configuration model."""
+
     simulation_id: str = Field(description="Unique simulation identifier")
     project_config: Dict[str, Any] = Field(description="Project configuration")
     team_config: Dict[str, Any] = Field(description="Team configuration")
@@ -232,11 +255,17 @@ class SimulationConfiguration(BaseModel):
     quality_thresholds: Dict[str, float] = Field(default_factory=dict, description="Quality thresholds")
     performance_targets: Dict[str, Any] = Field(default_factory=dict, description="Performance targets")
 
-    @validator('ecosystem_services')
+    @validator("ecosystem_services")
     def validate_services(cls, v):
         valid_services = {
-            'doc_store', 'prompt_store', 'analysis_service', 'llm_gateway',
-            'mock_data_generator', 'orchestrator', 'log_collector', 'notification_service'
+            "doc_store",
+            "prompt_store",
+            "analysis_service",
+            "llm_gateway",
+            "mock_data_generator",
+            "orchestrator",
+            "log_collector",
+            "notification_service",
         }
         invalid_services = set(v) - valid_services
         if invalid_services:
@@ -246,6 +275,7 @@ class SimulationConfiguration(BaseModel):
 
 class SimulationProgress(BaseModel):
     """Simulation progress tracking model."""
+
     simulation_id: str = Field(description="Simulation ID")
     status: str = Field(description="Current simulation status")
     progress_percentage: float = Field(ge=0, le=100, description="Overall progress percentage")
@@ -259,6 +289,7 @@ class SimulationProgress(BaseModel):
 
 class SimulationResults(BaseModel):
     """Simulation results model."""
+
     simulation_id: str = Field(description="Simulation ID")
     project_id: str = Field(description="Project ID")
     status: str = Field(description="Final simulation status")
@@ -274,6 +305,7 @@ class SimulationResults(BaseModel):
 
 class EcosystemServiceStatus(BaseModel):
     """Ecosystem service status model."""
+
     service_name: str = Field(description="Service name")
     status: HealthStatus = Field(description="Service health status")
     response_time_ms: Optional[float] = Field(default=None, description="Response time")
@@ -286,39 +318,33 @@ class EcosystemServiceStatus(BaseModel):
 # Model Registry for Dynamic Loading
 MODEL_REGISTRY = {
     # Base Models
-    'BaseRequest': SimulationBaseRequest,
-    'BaseResponse': SimulationBaseResponse,
-    'StandardResponse': SimulationBaseResponse,
-    'ErrorResponse': ErrorResponse,
-    'PaginationParams': PaginationParams,
-
+    "BaseRequest": SimulationBaseRequest,
+    "BaseResponse": SimulationBaseResponse,
+    "StandardResponse": SimulationBaseResponse,
+    "ErrorResponse": ErrorResponse,
+    "PaginationParams": PaginationParams,
     # Health & Monitoring Models
-    'HealthCheck': SimulationHealthCheck,
-    'HealthStatus': HealthStatus,
-    'MetricData': MetricData,
-    'PerformanceMetrics': SimulationMetrics,
-
+    "HealthCheck": SimulationHealthCheck,
+    "HealthStatus": HealthStatus,
+    "MetricData": MetricData,
+    "PerformanceMetrics": SimulationMetrics,
     # Document Models
-    'Document': ProjectDocument,
-    'DocumentMetadata': DocumentMetadata,
-
+    "Document": ProjectDocument,
+    "DocumentMetadata": DocumentMetadata,
     # Analysis Models
-    'AnalysisResult': SimulationAnalysisResult,
-    'QualityMetrics': QualityMetrics,
-
+    "AnalysisResult": SimulationAnalysisResult,
+    "QualityMetrics": QualityMetrics,
     # AI Generation Models
-    'GenerationRequest': SimulationGenerationRequest,
-    'GenerationResponse': GenerationResponse,
-
+    "GenerationRequest": SimulationGenerationRequest,
+    "GenerationResponse": GenerationResponse,
     # Workflow Models
-    'WorkflowDefinition': SimulationWorkflowDefinition,
-    'WorkflowExecution': SimulationWorkflowExecution,
-
+    "WorkflowDefinition": SimulationWorkflowDefinition,
+    "WorkflowExecution": SimulationWorkflowExecution,
     # Simulation-Specific Models
-    'SimulationConfiguration': SimulationConfiguration,
-    'SimulationProgress': SimulationProgress,
-    'SimulationResults': SimulationResults,
-    'EcosystemServiceStatus': EcosystemServiceStatus,
+    "SimulationConfiguration": SimulationConfiguration,
+    "SimulationProgress": SimulationProgress,
+    "SimulationResults": SimulationResults,
+    "EcosystemServiceStatus": EcosystemServiceStatus,
 }
 
 
@@ -355,6 +381,7 @@ def get_model_schema(model_name: str) -> Dict[str, Any]:
 
 # Ecosystem Integration Helpers
 
+
 def create_ecosystem_request(service_name: str, operation: str, **kwargs) -> Dict[str, Any]:
     """Create a standardized request for ecosystem service integration."""
     return {
@@ -362,50 +389,64 @@ def create_ecosystem_request(service_name: str, operation: str, **kwargs) -> Dic
         "operation": operation,
         "timestamp": datetime.now(),
         "correlation_id": f"eco-{datetime.now().strftime('%Y%m%d%H%M%S')}-{hash(datetime.now()) % 10000:04d}",
-        "parameters": kwargs
+        "parameters": kwargs,
     }
 
 
-def create_simulation_response(success: bool, data: Any = None, message: str = None,
-                              simulation_id: str = None) -> SimulationBaseResponse:
+def create_simulation_response(
+    success: bool, data: Any = None, message: str = None, simulation_id: str = None
+) -> SimulationBaseResponse:
     """Create a standardized simulation response."""
-    return SimulationBaseResponse(
-        success=success,
-        data=data,
-        message=message,
-        simulation_id=simulation_id
-    )
+    return SimulationBaseResponse(success=success, data=data, message=message, simulation_id=simulation_id)
 
 
 # Export all models
 __all__ = [
     # Base Models
-    'BaseRequest', 'BaseResponse', 'StandardResponse', 'ErrorResponse', 'PaginationParams',
-
+    "BaseRequest",
+    "BaseResponse",
+    "StandardResponse",
+    "ErrorResponse",
+    "PaginationParams",
     # Health & Monitoring
-    'HealthCheck', 'HealthStatus', 'MetricData', 'PerformanceMetrics', 'SimulationHealthCheck', 'SimulationMetrics',
-
+    "HealthCheck",
+    "HealthStatus",
+    "MetricData",
+    "PerformanceMetrics",
+    "SimulationHealthCheck",
+    "SimulationMetrics",
     # Document Models
-    'Document', 'DocumentMetadata', 'ProjectDocument',
-
+    "Document",
+    "DocumentMetadata",
+    "ProjectDocument",
     # Analysis Models
-    'AnalysisResult', 'QualityMetrics', 'SimulationAnalysisResult',
-
+    "AnalysisResult",
+    "QualityMetrics",
+    "SimulationAnalysisResult",
     # AI Generation Models
-    'GenerationRequest', 'GenerationResponse', 'SimulationGenerationRequest',
-
+    "GenerationRequest",
+    "GenerationResponse",
+    "SimulationGenerationRequest",
     # Workflow Models
-    'WorkflowDefinition', 'WorkflowExecution', 'SimulationWorkflowDefinition', 'SimulationWorkflowExecution',
-
+    "WorkflowDefinition",
+    "WorkflowExecution",
+    "SimulationWorkflowDefinition",
+    "SimulationWorkflowExecution",
     # Simulation Models
-    'SimulationBaseRequest', 'SimulationBaseResponse', 'SimulationConfiguration',
-    'SimulationProgress', 'SimulationResults', 'EcosystemServiceStatus',
-
+    "SimulationBaseRequest",
+    "SimulationBaseResponse",
+    "SimulationConfiguration",
+    "SimulationProgress",
+    "SimulationResults",
+    "EcosystemServiceStatus",
     # Utility Functions
-    'get_model', 'create_model_instance', 'validate_model_data',
-    'get_available_models', 'get_model_schema',
-    'create_ecosystem_request', 'create_simulation_response',
-
+    "get_model",
+    "create_model_instance",
+    "validate_model_data",
+    "get_available_models",
+    "get_model_schema",
+    "create_ecosystem_request",
+    "create_simulation_response",
     # Registry
-    'MODEL_REGISTRY'
+    "MODEL_REGISTRY",
 ]

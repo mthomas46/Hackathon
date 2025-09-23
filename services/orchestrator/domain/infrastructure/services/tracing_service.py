@@ -1,7 +1,7 @@
-"""Tracing Service Domain Service"""
+"""Tracing Service Domain Service."""
 
-from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.distributed_trace import DistributedTrace
 from ..value_objects.trace_span import TraceSpan
@@ -21,7 +21,7 @@ class TracingService:
         root_service: str,
         root_operation: str,
         trace_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> DistributedTrace:
         """Start a new distributed trace."""
         trace = DistributedTrace(
@@ -29,7 +29,7 @@ class TracingService:
             root_service=root_service,
             root_operation=root_operation,
             status=TraceStatus.ACTIVE,
-            metadata=metadata
+            metadata=metadata,
         )
 
         self._active_traces[trace.trace_id] = trace
@@ -41,7 +41,7 @@ class TracingService:
         service_name: str,
         operation_name: str,
         parent_span_id: Optional[str] = None,
-        tags: Optional[Dict[str, Any]] = None
+        tags: Optional[Dict[str, Any]] = None,
     ) -> Optional[TraceSpan]:
         """Create a new span in an existing trace."""
         trace = self._active_traces.get(trace_id)
@@ -49,10 +49,7 @@ class TracingService:
             return None
 
         span = TraceSpan(
-            parent_span_id=parent_span_id,
-            service_name=service_name,
-            operation_name=operation_name,
-            tags=tags
+            parent_span_id=parent_span_id, service_name=service_name, operation_name=operation_name, tags=tags
         )
 
         trace.add_span(span)
@@ -71,11 +68,7 @@ class TracingService:
 
         return False
 
-    def complete_trace(
-        self,
-        trace_id: str,
-        status: TraceStatus = TraceStatus.COMPLETED
-    ) -> bool:
+    def complete_trace(self, trace_id: str, status: TraceStatus = TraceStatus.COMPLETED) -> bool:
         """Complete a distributed trace."""
         trace = self._active_traces.get(trace_id)
         if not trace:
@@ -94,10 +87,7 @@ class TracingService:
         return self._active_traces.get(trace_id) or self._completed_traces.get(trace_id)
 
     def list_active_traces(
-        self,
-        service_filter: Optional[str] = None,
-        limit: int = 50,
-        offset: int = 0
+        self, service_filter: Optional[str] = None, limit: int = 50, offset: int = 0
     ) -> List[DistributedTrace]:
         """List active traces with optional filtering."""
         traces = list(self._active_traces.values())
@@ -117,7 +107,7 @@ class TracingService:
         service_filter: Optional[str] = None,
         status_filter: Optional[TraceStatus] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[DistributedTrace]:
         """List completed traces with optional filtering."""
         traces = list(self._completed_traces.values())
@@ -136,10 +126,7 @@ class TracingService:
         return traces[start_idx:end_idx]
 
     def get_service_traces(
-        self,
-        service_name: str,
-        active_only: bool = False,
-        limit: int = 50
+        self, service_name: str, active_only: bool = False, limit: int = 50
     ) -> List[DistributedTrace]:
         """Get traces for a specific service."""
         traces = []
@@ -175,10 +162,7 @@ class TracingService:
         avg_spans_per_trace = total_spans / total_traces if total_traces > 0 else 0
 
         # Calculate average trace duration
-        completed_durations = [
-            t.duration_microseconds for t in completed_traces
-            if t.duration_microseconds is not None
-        ]
+        completed_durations = [t.duration_microseconds for t in completed_traces if t.duration_microseconds is not None]
         avg_duration = sum(completed_durations) / len(completed_durations) if completed_durations else None
 
         return {
@@ -188,11 +172,15 @@ class TracingService:
             "failed_traces": failed_traces,
             "total_spans": total_spans,
             "avg_spans_per_trace": avg_spans_per_trace,
-            "avg_trace_duration_microseconds": avg_duration
+            "avg_trace_duration_microseconds": avg_duration,
         }
 
     def cleanup_old_traces(self, max_age_hours: int = 24) -> int:
-        """Clean up old completed traces. Returns count removed."""
+        """
+        Clean up old completed traces.
+
+        Returns count removed.
+        """
         cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
         traces_to_remove = []
 

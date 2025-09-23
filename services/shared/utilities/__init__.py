@@ -1,4 +1,5 @@
-"""Shared Utilities Package.
+"""
+Shared Utilities Package.
 
 This package contains utility functions and helpers used across all services
 in the LLM Documentation Ecosystem.
@@ -10,5 +11,5 @@ Modules:
 - helpers: Additional helper functions
 - validation: Input validation utilities
 - observability: Monitoring and observability helpers
-- resilience: Circuit breaker and retry logic
+- resilience: Circuit breaker and retry logic.
 """

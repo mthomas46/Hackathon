@@ -1,16 +1,18 @@
-"""Orchestrator Manager module for CLI service.
+"""
+Orchestrator Manager module for CLI service.
 
 Provides power-user operations for orchestrator management including
 workflows, registry, infrastructure monitoring, and job management.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
 
 from services.shared.core.constants_new import ServiceNames
+
 from ...base.base_manager import BaseManager
 
 
@@ -28,11 +30,12 @@ class OrchestratorManager(BaseManager):
             ("3", "Job Operations (Quality Recalc, Consolidation)"),
             ("4", "Infrastructure Status (System Health, Metrics)"),
             ("5", "E2E Demo (Full Pipeline Test)"),
-            ("6", "Orchestrator Configuration")
+            ("6", "Orchestrator Configuration"),
         ]
 
     async def orchestrator_management_menu(self):
-        """Main orchestrator management menu with enhanced interactive experience."""
+        """Main orchestrator management menu with enhanced interactive
+        experience."""
         menu_items = await self.get_main_menu()
         await self.run_menu_loop("Orchestrator Management", menu_items, use_interactive=True)
 
@@ -62,13 +65,16 @@ class OrchestratorManager(BaseManager):
         """Workflow management submenu."""
         while True:
             menu = create_menu_table("Workflow Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "List Active Workflows"),
-                ("2", "Run Workflow"),
-                ("3", "View Workflow History"),
-                ("4", "Monitor Workflow Status"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "List Active Workflows"),
+                    ("2", "Run Workflow"),
+                    ("3", "View Workflow History"),
+                    ("4", "Monitor Workflow Status"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -107,7 +113,7 @@ class OrchestratorManager(BaseManager):
                         workflow.get("id", "N/A"),
                         workflow.get("status", "unknown"),
                         workflow.get("type", "unknown"),
-                        workflow.get("started_at", "unknown")
+                        workflow.get("started_at", "unknown"),
                     )
 
                 self.console.print(table)
@@ -120,22 +126,22 @@ class OrchestratorManager(BaseManager):
     async def run_workflow(self):
         """Run a workflow."""
         try:
-            workflow_type = Prompt.ask("[bold cyan]Workflow type[/bold cyan]",
-                                     choices=["ingest", "analyze", "consolidate", "custom"])
+            workflow_type = Prompt.ask(
+                "[bold cyan]Workflow type[/bold cyan]", choices=["ingest", "analyze", "consolidate", "custom"]
+            )
             workflow_config = {}
 
             if workflow_type == "custom":
                 # Allow custom workflow configuration
-                config_input = Prompt.ask("[bold cyan]Workflow configuration (JSON)[/bold cyan]",
-                                        default="{}")
+                config_input = Prompt.ask("[bold cyan]Workflow configuration (JSON)[/bold cyan]", default="{}")
                 import json
+
                 workflow_config = json.loads(config_input)
 
             with self.console.status(f"[bold green]Running {workflow_type} workflow...") as status:
-                response = await self.clients.post_json("orchestrator/workflows/run", {
-                    "type": workflow_type,
-                    "config": workflow_config
-                })
+                response = await self.clients.post_json(
+                    "orchestrator/workflows/run", {"type": workflow_type, "config": workflow_config}
+                )
 
             if response.get("workflow_id"):
                 self.console.print(f"[green]✅ Workflow started: {response['workflow_id']}[/green]")
@@ -167,7 +173,7 @@ class OrchestratorManager(BaseManager):
                         workflow.get("status", "unknown"),
                         workflow.get("type", "unknown"),
                         workflow.get("started_at", "unknown"),
-                        workflow.get("completed_at", "unknown")
+                        workflow.get("completed_at", "unknown"),
                     )
 
                 self.console.print(table)
@@ -188,12 +194,9 @@ class OrchestratorManager(BaseManager):
 
             if response.get("workflow"):
                 workflow = response["workflow"]
-                status_color = {
-                    "running": "yellow",
-                    "completed": "green",
-                    "failed": "red",
-                    "pending": "blue"
-                }.get(workflow.get("status", "unknown"), "white")
+                status_color = {"running": "yellow", "completed": "green", "failed": "red", "pending": "blue"}.get(
+                    workflow.get("status", "unknown"), "white"
+                )
 
                 content = f"""
 [bold]Workflow Status[/bold]
@@ -219,13 +222,16 @@ Progress: {workflow.get('progress', 'N/A')}%
         """Registry management submenu."""
         while True:
             menu = create_menu_table("Service Registry", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "List Registered Services"),
-                ("2", "Register New Service"),
-                ("3", "Poll OpenAPI Specs"),
-                ("4", "View Service Details"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "List Registered Services"),
+                    ("2", "Register New Service"),
+                    ("3", "Poll OpenAPI Specs"),
+                    ("4", "View Service Details"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -263,7 +269,7 @@ Progress: {workflow.get('progress', 'N/A')}%
                         service.get("name", "N/A"),
                         service.get("url", "N/A"),
                         service.get("status", "unknown"),
-                        service.get("last_seen", "unknown")
+                        service.get("last_seen", "unknown"),
                     )
 
                 self.console.print(table)
@@ -278,15 +284,14 @@ Progress: {workflow.get('progress', 'N/A')}%
         try:
             service_name = Prompt.ask("[bold cyan]Service name[/bold cyan]")
             service_url = Prompt.ask("[bold cyan]Service URL[/bold cyan]")
-            service_type = Prompt.ask("[bold cyan]Service type[/bold cyan]",
-                                    choices=["api", "worker", "storage", "other"])
+            service_type = Prompt.ask(
+                "[bold cyan]Service type[/bold cyan]", choices=["api", "worker", "storage", "other"]
+            )
 
             with self.console.status("[bold green]Registering service...") as status:
-                response = await self.clients.post_json("orchestrator/registry/register", {
-                    "name": service_name,
-                    "url": service_url,
-                    "type": service_type
-                })
+                response = await self.clients.post_json(
+                    "orchestrator/registry/register", {"name": service_name, "url": service_url, "type": service_type}
+                )
 
             if response.get("registered"):
                 self.console.print(f"[green]✅ Service '{service_name}' registered successfully![/green]")
@@ -302,9 +307,7 @@ Progress: {workflow.get('progress', 'N/A')}%
             service_url = Prompt.ask("[bold cyan]Service URL to poll[/bold cyan]")
 
             with self.console.status("[bold green]Polling OpenAPI spec...") as status:
-                response = await self.clients.post_json("orchestrator/registry/poll-openapi", {
-                    "url": service_url
-                })
+                response = await self.clients.post_json("orchestrator/registry/poll-openapi", {"url": service_url})
 
             if response.get("endpoints"):
                 self.console.print(f"[green]✅ Found {len(response['endpoints'])} endpoints:[/green]")
@@ -358,12 +361,15 @@ Endpoints: {len(service.get('endpoints', []))}
         """Job operations submenu."""
         while True:
             menu = create_menu_table("Job Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Recalculate Document Quality"),
-                ("2", "Notify Consolidation Complete"),
-                ("3", "View Job Status"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Recalculate Document Quality"),
+                    ("2", "Notify Consolidation Complete"),
+                    ("3", "View Job Status"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -383,7 +389,9 @@ Endpoints: {len(service.get('endpoints', []))}
     async def recalc_quality(self):
         """Recalculate document quality."""
         try:
-            confirm = Confirm.ask("[bold yellow]This will recalculate quality for all documents. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                "[bold yellow]This will recalculate quality for all documents. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Recalculating document quality...") as status:
@@ -405,9 +413,9 @@ Endpoints: {len(service.get('endpoints', []))}
             consolidation_id = Prompt.ask("[bold cyan]Consolidation ID[/bold cyan]")
 
             with self.console.status("[bold green]Notifying consolidation complete...") as status:
-                response = await self.clients.post_json("orchestrator/jobs/notify-consolidation", {
-                    "consolidation_id": consolidation_id
-                })
+                response = await self.clients.post_json(
+                    "orchestrator/jobs/notify-consolidation", {"consolidation_id": consolidation_id}
+                )
 
             if response.get("notified"):
                 self.console.print(f"[green]✅ Consolidation notification sent for: {consolidation_id}[/green]")
@@ -441,7 +449,7 @@ Endpoints: {len(service.get('endpoints', []))}
                         job.get("type", "unknown"),
                         job.get("status", "unknown"),
                         f"{job.get('progress', 0)}%",
-                        job.get("started_at", "unknown")
+                        job.get("started_at", "unknown"),
                     )
 
                 self.console.print(table)
@@ -468,12 +476,15 @@ Completed: {job.get('completed_at', 'unknown')}
         """Infrastructure status submenu."""
         while True:
             menu = create_menu_table("Infrastructure Status", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "System Health Overview"),
-                ("2", "Orchestrator Metrics"),
-                ("3", "Peer Services Status"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "System Health Overview"),
+                    ("2", "Orchestrator Metrics"),
+                    ("3", "Peer Services Status"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -576,7 +587,7 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
                         peer.get("name", "N/A"),
                         peer.get("url", "N/A"),
                         f"[{status_color}]{peer.get('status', 'unknown')}[/{status_color}]",
-                        peer.get("last_ping", "unknown")
+                        peer.get("last_ping", "unknown"),
                     )
 
                 self.console.print(table)
@@ -590,12 +601,15 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
         """E2E demo submenu."""
         while True:
             menu = create_menu_table("E2E Demo", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Run Full E2E Pipeline"),
-                ("2", "Run Document Processing Demo"),
-                ("3", "Run Analysis Workflow Demo"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Run Full E2E Pipeline"),
+                    ("2", "Run Document Processing Demo"),
+                    ("3", "Run Analysis Workflow Demo"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -627,6 +641,7 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
                     demo_id = response["demo_id"]
                     while True:
                         import asyncio
+
                         await asyncio.sleep(2)
 
                         try:
@@ -635,7 +650,9 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
                                 self.console.print("[green]✅ E2E demo completed successfully![/green]")
                                 break
                             elif status_response.get("failed"):
-                                self.console.print(f"[red]❌ E2E demo failed: {status_response.get('error', 'Unknown error')}[/red]")
+                                self.console.print(
+                                    f"[red]❌ E2E demo failed: {status_response.get('error', 'Unknown error')}[/red]"
+                                )
                                 break
                             else:
                                 progress = status_response.get("progress", 0)
@@ -682,12 +699,15 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
         """Orchestrator configuration submenu."""
         while True:
             menu = create_menu_table("Orchestrator Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Effective Configuration"),
-                ("2", "View Orchestrator Info"),
-                ("3", "View Configuration"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Effective Configuration"),
+                    ("2", "View Orchestrator Info"),
+                    ("3", "View Configuration"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -714,9 +734,9 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
 
             if response.get("config"):
                 import json
+
                 config_str = json.dumps(response["config"], indent=2)
-                print_panel(self.console, f"[bold]Effective Configuration[/bold]\n\n{config_str}",
-                          border_style="cyan")
+                print_panel(self.console, f"[bold]Effective Configuration[/bold]\n\n{config_str}", border_style="cyan")
             else:
                 self.console.print("[yellow]No configuration available.[/yellow]")
 

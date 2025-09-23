@@ -1,14 +1,16 @@
 from __future__ import annotations
 
-import os
 import asyncio
 from typing import Any, Dict, Optional
+
 import httpx
+
 from ..core.config.config import get_config_value
 
 
 async def post_log(level: str, message: str, service: str, context: Optional[Dict[str, Any]] = None) -> None:
-    """Asynchronously send a log item to log-collector. Never raises.
+    """
+    Asynchronously send a log item to log-collector. Never raises.
 
     Honors LOG_COLLECTOR_URL; when set to http://testserver, uses in-process ASGI transport.
     """
@@ -42,7 +44,8 @@ async def post_log(level: str, message: str, service: str, context: Optional[Dic
 
 
 def fire_and_forget(level: str, message: str, service: str, context: Optional[Dict[str, Any]] = None) -> None:
-    """Schedule non-blocking log emission; safe to call from sync/async contexts."""
+    """Schedule non-blocking log emission; safe to call from sync/async
+    contexts."""
     try:
         loop = asyncio.get_running_loop()
         loop.create_task(post_log(level, message, service, context))
@@ -51,5 +54,3 @@ def fire_and_forget(level: str, message: str, service: str, context: Optional[Di
             asyncio.run(post_log(level, message, service, context))
         except Exception:
             return
-
-

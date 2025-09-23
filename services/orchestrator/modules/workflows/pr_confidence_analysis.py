@@ -1,23 +1,22 @@
 """
 PR Confidence Analysis Workflow using LangGraph.
 
-This workflow analyzes GitHub PRs against Jira requirements and Confluence documentation
-to provide confidence scores and recommendations for PR approval.
+This workflow analyzes GitHub PRs against Jira requirements and
+Confluence documentation to provide confidence scores and
+recommendations for PR approval.
 """
 
-from typing import Dict, Any, List
-from langgraph.graph import StateGraph, END
 from datetime import datetime
+from typing import Any, Dict
+
+from langgraph.graph import END, StateGraph
 
 from ..langgraph.state import WorkflowState
 from ..langgraph.tools import (
-    store_document_tool,
-    search_documents_tool,
     analyze_document_tool,
     get_optimal_prompt_tool,
     send_notification_tool,
-    ingest_github_repo_tool,
-    ingest_jira_issues_tool
+    store_document_tool,
 )
 
 
@@ -76,18 +75,13 @@ class PRConfidenceAnalysisWorkflow:
             # Store PR data for later analysis
             await store_document_tool(
                 content=str(pr_details),
-                metadata={
-                    "type": "pr_analysis",
-                    "pr_id": pr_details.get("id"),
-                    "workflow_id": state["run_id"]
-                },
-                source="github"
+                metadata={"type": "pr_analysis", "pr_id": pr_details.get("id"), "workflow_id": state["run_id"]},
+                source="github",
             )
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Extracted PR context for {pr_data.get('id', 'unknown PR')}"
-        })
+        state["messages"].append(
+            {"role": "assistant", "content": f"Extracted PR context for {pr_data.get('id', 'unknown PR')}"}
+        )
 
         return state
 
@@ -106,18 +100,13 @@ class PRConfidenceAnalysisWorkflow:
             # Store Jira data
             await store_document_tool(
                 content=str(jira_data),
-                metadata={
-                    "type": "jira_requirements",
-                    "ticket_id": jira_ticket,
-                    "workflow_id": state["run_id"]
-                },
-                source="jira"
+                metadata={"type": "jira_requirements", "ticket_id": jira_ticket, "workflow_id": state["run_id"]},
+                source="jira",
             )
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Fetched Jira requirements for ticket {jira_ticket}"
-        })
+        state["messages"].append(
+            {"role": "assistant", "content": f"Fetched Jira requirements for ticket {jira_ticket}"}
+        )
 
         return state
 
@@ -140,18 +129,13 @@ class PRConfidenceAnalysisWorkflow:
         for page_data in confluence_data:
             await store_document_tool(
                 content=str(page_data),
-                metadata={
-                    "type": "confluence_docs",
-                    "page_id": page_data.get("id"),
-                    "workflow_id": state["run_id"]
-                },
-                source="confluence"
+                metadata={"type": "confluence_docs", "page_id": page_data.get("id"), "workflow_id": state["run_id"]},
+                source="confluence",
             )
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Fetched {len(confluence_data)} Confluence documentation pages"
-        })
+        state["messages"].append(
+            {"role": "assistant", "content": f"Fetched {len(confluence_data)} Confluence documentation pages"}
+        )
 
         return state
 
@@ -163,21 +147,20 @@ class PRConfidenceAnalysisWorkflow:
         jira_requirements = state["context"].get("jira_requirements", {})
 
         # Get optimal prompt for requirements analysis
-        prompt = await get_optimal_prompt_tool("requirements_alignment_analysis", {
-            "task_type": "pr_review",
-            "analysis_focus": "requirements_coverage"
-        })
-
-        # Simulate AI analysis (would use LLM Gateway in real implementation)
-        alignment_analysis = await self._simulate_requirements_alignment_analysis(
-            pr_details, jira_requirements
+        prompt = await get_optimal_prompt_tool(
+            "requirements_alignment_analysis", {"task_type": "pr_review", "analysis_focus": "requirements_coverage"}
         )
 
+        # Simulate AI analysis (would use LLM Gateway in real implementation)
+        alignment_analysis = await self._simulate_requirements_alignment_analysis(pr_details, jira_requirements)
+
         state["context"]["requirements_alignment"] = alignment_analysis
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Requirements alignment analysis: {alignment_analysis.get('overall_score', 0):.1%} coverage"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Requirements alignment analysis: {alignment_analysis.get('overall_score', 0):.1%} coverage",
+            }
+        )
 
         return state
 
@@ -192,17 +175,17 @@ class PRConfidenceAnalysisWorkflow:
         consistency_results = []
         for doc in confluence_docs:
             result = await analyze_document_tool(
-                content=str(doc),
-                analysis_type="consistency_check",
-                reference_content=str(pr_details)
+                content=str(doc), analysis_type="consistency_check", reference_content=str(pr_details)
             )
             consistency_results.append(result)
 
         state["context"]["documentation_consistency"] = consistency_results
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Documentation consistency analysis completed for {len(consistency_results)} documents"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Documentation consistency analysis completed for {len(consistency_results)} documents",
+            }
+        )
 
         return state
 
@@ -214,7 +197,11 @@ class PRConfidenceAnalysisWorkflow:
         consistency_results = state["context"].get("documentation_consistency", [])
 
         # Calculate weighted confidence score
-        consistency_avg = sum(r.get("consistency_score", 0) for r in consistency_results) / len(consistency_results) if consistency_results else 0.5
+        consistency_avg = (
+            sum(r.get("consistency_score", 0) for r in consistency_results) / len(consistency_results)
+            if consistency_results
+            else 0.5
+        )
 
         # Weighted calculation: 60% requirements, 40% documentation
         confidence_score = (alignment_score * 0.6) + (consistency_avg * 0.4)
@@ -226,16 +213,18 @@ class PRConfidenceAnalysisWorkflow:
             "confidence_level": confidence_level,
             "component_scores": {
                 "requirements_alignment": alignment_score,
-                "documentation_consistency": consistency_avg
+                "documentation_consistency": consistency_avg,
             },
-            "calculated_at": datetime.now().isoformat()
+            "calculated_at": datetime.now().isoformat(),
         }
 
         state["context"]["confidence_score"] = confidence_result
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Calculated confidence score: {confidence_score:.1%} ({confidence_level})"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Calculated confidence score: {confidence_score:.1%} ({confidence_level})",
+            }
+        )
 
         return state
 
@@ -268,10 +257,9 @@ class PRConfidenceAnalysisWorkflow:
         state["context"]["gaps"] = gaps
         state["context"]["risks"] = risks
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Identified {len(gaps)} gaps and {len(risks)} risks"
-        })
+        state["messages"].append(
+            {"role": "assistant", "content": f"Identified {len(gaps)} gaps and {len(risks)} risks"}
+        )
 
         return state
 
@@ -303,10 +291,7 @@ class PRConfidenceAnalysisWorkflow:
             recommendations.append("PR has significant gaps that must be addressed before approval")
 
         state["context"]["recommendations"] = recommendations
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Generated {len(recommendations)} recommendations"
-        })
+        state["messages"].append({"role": "assistant", "content": f"Generated {len(recommendations)} recommendations"})
 
         return state
 
@@ -329,14 +314,21 @@ class PRConfidenceAnalysisWorkflow:
             "confidence_level": confidence_result.get("confidence_level", "unknown"),
             "summary": {
                 "requirements_coverage": state["context"].get("requirements_alignment", {}).get("overall_score", 0),
-                "documentation_consistency": sum(r.get("consistency_score", 0) for r in state["context"].get("documentation_consistency", [])) / len(state["context"].get("documentation_consistency", [])) if state["context"].get("documentation_consistency") else 0,
+                "documentation_consistency": (
+                    sum(r.get("consistency_score", 0) for r in state["context"].get("documentation_consistency", []))
+                    / len(state["context"].get("documentation_consistency", []))
+                    if state["context"].get("documentation_consistency")
+                    else 0
+                ),
                 "gaps_identified": len(gaps),
-                "risks_identified": len(risks)
+                "risks_identified": len(risks),
             },
             "gaps": gaps,
             "risks": risks,
             "recommendations": recommendations,
-            "approval_recommendation": "approve" if confidence_result.get("overall_score", 0) >= 0.8 else "review_required"
+            "approval_recommendation": (
+                "approve" if confidence_result.get("overall_score", 0) >= 0.8 else "review_required"
+            ),
         }
 
         # Store the final report
@@ -346,16 +338,13 @@ class PRConfidenceAnalysisWorkflow:
                 "type": "pr_confidence_report",
                 "pr_id": pr_details.get("id"),
                 "workflow_id": state["run_id"],
-                "confidence_score": confidence_result.get("overall_score", 0)
+                "confidence_score": confidence_result.get("overall_score", 0),
             },
-            source="orchestrator"
+            source="orchestrator",
         )
 
         state["context"]["final_report"] = report
-        state["messages"].append({
-            "role": "assistant",
-            "content": "Final PR confidence report generated and stored"
-        })
+        state["messages"].append({"role": "assistant", "content": "Final PR confidence report generated and stored"})
 
         return state
 
@@ -375,8 +364,8 @@ class PRConfidenceAnalysisWorkflow:
             additional_data={
                 "pr_id": pr_details.get("id"),
                 "confidence_level": confidence_result.get("confidence_level"),
-                "recommendation": final_report.get("approval_recommendation")
-            }
+                "recommendation": final_report.get("approval_recommendation"),
+            },
         )
 
         # Send notification to tech lead/product manager
@@ -384,13 +373,10 @@ class PRConfidenceAnalysisWorkflow:
             message=f"PR Review Required: {pr_details.get('id')} - {final_report.get('approval_recommendation', 'review_required').replace('_', ' ').title()}",
             recipient="tech_lead",
             urgency="high",
-            additional_data=final_report
+            additional_data=final_report,
         )
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": "Notifications sent to stakeholders"
-        })
+        state["messages"].append({"role": "assistant", "content": "Notifications sent to stakeholders"})
 
         return state
 
@@ -405,7 +391,7 @@ class PRConfidenceAnalysisWorkflow:
             "jira_ticket": "PROJ-456",
             "related_docs": ["API_AUTH_DOCS", "SECURITY_GUIDE"],
             "files_changed": ["src/auth/oauth2_client.py", "src/auth/middleware.py"],
-            "diff_summary": "+250 lines, -50 lines"
+            "diff_summary": "+250 lines, -50 lines",
         }
 
     async def _simulate_jira_ingestion(self, ticket_id: str) -> Dict[str, Any]:
@@ -417,10 +403,10 @@ class PRConfidenceAnalysisWorkflow:
             "acceptance_criteria": [
                 "User can authenticate with OAuth2 provider",
                 "API validates OAuth2 tokens",
-                "Token refresh mechanism implemented"
+                "Token refresh mechanism implemented",
             ],
             "story_points": 8,
-            "priority": "High"
+            "priority": "High",
         }
 
     async def _simulate_confluence_ingestion(self, page_id: str) -> Dict[str, Any]:
@@ -429,22 +415,21 @@ class PRConfidenceAnalysisWorkflow:
             "id": page_id,
             "title": "Authentication API Documentation",
             "content": "OAuth2 implementation guide with endpoints and security requirements.",
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
-    async def _simulate_requirements_alignment_analysis(self, pr_details: Dict[str, Any], jira_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _simulate_requirements_alignment_analysis(
+        self, pr_details: Dict[str, Any], jira_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Simulate requirements alignment analysis."""
         return {
             "overall_score": 0.75,
             "acceptance_criteria_coverage": {
                 "oauth2_flow": {"status": "implemented", "confidence": 0.9},
                 "token_validation": {"status": "implemented", "confidence": 0.8},
-                "token_refresh": {"status": "partial", "confidence": 0.6}
+                "token_refresh": {"status": "partial", "confidence": 0.6},
             },
-            "gaps": [
-                "Token refresh endpoint not fully tested",
-                "Error handling for expired tokens missing"
-            ]
+            "gaps": ["Token refresh endpoint not fully tested", "Error handling for expired tokens missing"],
         }
 
 

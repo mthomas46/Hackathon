@@ -1,13 +1,14 @@
-"""Integration Tests for API Error Handling and Edge Cases.
-
-This module contains comprehensive tests for API error handling, edge cases,
-and robust error response validation in the Project Simulation Service.
 """
+Integration Tests for API Error Handling and Edge Cases.
+
+This module contains comprehensive tests for API error handling, edge
+cases, and robust error response validation in the Project Simulation
+Service.
+"""
+
 
 import pytest
 from fastapi.testclient import TestClient
-from typing import Dict, Any, List
-import json
 
 
 class TestAPIErrorResponses:
@@ -26,9 +27,7 @@ class TestAPIErrorResponses:
         """Test 400 error response format."""
         # Send invalid JSON
         response = test_client.post(
-            "/api/v1/simulations",
-            data="invalid json",
-            headers={"Content-Type": "application/json"}
+            "/api/v1/simulations", data="invalid json", headers={"Content-Type": "application/json"}
         )
         assert response.status_code == 422  # FastAPI validation error
 
@@ -64,9 +63,7 @@ class TestAPIInputValidation:
     def test_invalid_json_handling(self, test_client: TestClient):
         """Test handling of invalid JSON input."""
         response = test_client.post(
-            "/api/v1/simulations",
-            data="not json",
-            headers={"Content-Type": "application/json"}
+            "/api/v1/simulations", data="not json", headers={"Content-Type": "application/json"}
         )
         assert response.status_code in [400, 422]
 
@@ -83,7 +80,7 @@ class TestAPIInputValidation:
             "project_type": "INVALID_TYPE",
             "complexity": "INVALID_COMPLEXITY",
             "team_size": -1,
-            "duration_days": 0
+            "duration_days": 0,
         }
         response = test_client.post("/api/v1/simulations", json=invalid_data)
         assert response.status_code in [400, 422]
@@ -105,11 +102,7 @@ class TestAPIRateLimiting:
         response = test_client.get("/health")
 
         # Rate limiting headers may or may not be present
-        rate_headers = [
-            "x-ratelimit-limit",
-            "x-ratelimit-remaining",
-            "x-ratelimit-reset"
-        ]
+        rate_headers = ["x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"]
 
         # At least some rate limiting should be in place
         has_rate_limit = any(header in response.headers for header in rate_headers)
@@ -136,12 +129,7 @@ class TestAPITimeoutHandling:
     def test_long_running_request_handling(self, test_client: TestClient):
         """Test handling of potentially long-running requests."""
         # Test simulation execution which might be long-running
-        sim_data = {
-            "project_type": "WEB_APPLICATION",
-            "complexity": "MEDIUM",
-            "team_size": 5,
-            "duration_days": 30
-        }
+        sim_data = {"project_type": "WEB_APPLICATION", "complexity": "MEDIUM", "team_size": 5, "duration_days": 30}
 
         create_response = test_client.post("/api/v1/simulations", json=sim_data)
         if create_response.status_code == 201:
@@ -158,9 +146,7 @@ class TestAPIConcurrency:
 
     def test_concurrent_requests_handling(self, test_client: TestClient):
         """Test handling of concurrent requests."""
-        import asyncio
-        import httpx
-        from concurrent.futures import ThreadPoolExecutor
+
 
         # Make multiple concurrent requests
         def make_request():
@@ -178,12 +164,7 @@ class TestAPIConcurrency:
 
     def test_simultaneous_simulation_creation(self, test_client: TestClient):
         """Test creating multiple simulations simultaneously."""
-        sim_data = {
-            "project_type": "WEB_APPLICATION",
-            "complexity": "MEDIUM",
-            "team_size": 5,
-            "duration_days": 30
-        }
+        sim_data = {"project_type": "WEB_APPLICATION", "complexity": "MEDIUM", "team_size": 5, "duration_days": 30}
 
         responses = []
         for _ in range(3):
@@ -200,19 +181,12 @@ class TestAPIEdgeCases:
 
     def test_empty_request_body(self, test_client: TestClient):
         """Test handling of empty request body."""
-        response = test_client.post(
-            "/api/v1/simulations",
-            data="",
-            headers={"Content-Type": "application/json"}
-        )
+        response = test_client.post("/api/v1/simulations", data="", headers={"Content-Type": "application/json"})
         assert response.status_code in [400, 422]
 
     def test_malformed_headers(self, test_client: TestClient):
         """Test handling of malformed headers."""
-        response = test_client.get(
-            "/health",
-            headers={"Content-Type": "invalid/content/type"}
-        )
+        response = test_client.get("/health", headers={"Content-Type": "invalid/content/type"})
         assert response.status_code == 200  # Health should still work
 
     def test_special_characters_in_urls(self, test_client: TestClient):
@@ -234,7 +208,7 @@ class TestAPIEdgeCases:
             "complexity": "MEDIUM",
             "team_size": 5,
             "duration_days": 30,
-            "description": "Test with Unicode: ñáéíóú 🚀"
+            "description": "Test with Unicode: ñáéíóú 🚀",
         }
         response = test_client.post("/api/v1/simulations", json=unicode_data)
         # Should handle Unicode properly
@@ -246,34 +220,20 @@ class TestAPIContentNegotiation:
 
     def test_accept_header_handling(self, test_client: TestClient):
         """Test handling of Accept headers."""
-        response = test_client.get(
-            "/health",
-            headers={"Accept": "application/json"}
-        )
+        response = test_client.get("/health", headers={"Accept": "application/json"})
         assert response.status_code == 200
         assert "application/json" in response.headers.get("content-type", "")
 
     def test_content_type_header_handling(self, test_client: TestClient):
         """Test handling of Content-Type headers."""
-        sim_data = {
-            "project_type": "WEB_APPLICATION",
-            "complexity": "MEDIUM",
-            "team_size": 5,
-            "duration_days": 30
-        }
-        response = test_client.post(
-            "/api/v1/simulations",
-            json=sim_data,
-            headers={"Content-Type": "application/json"}
-        )
+        sim_data = {"project_type": "WEB_APPLICATION", "complexity": "MEDIUM", "team_size": 5, "duration_days": 30}
+        response = test_client.post("/api/v1/simulations", json=sim_data, headers={"Content-Type": "application/json"})
         assert response.status_code in [200, 201, 400, 422]
 
     def test_unsupported_content_type(self, test_client: TestClient):
         """Test handling of unsupported content types."""
         response = test_client.post(
-            "/api/v1/simulations",
-            data="<xml>invalid</xml>",
-            headers={"Content-Type": "application/xml"}
+            "/api/v1/simulations", data="<xml>invalid</xml>", headers={"Content-Type": "application/xml"}
         )
         # Should handle gracefully
         assert response.status_code in [200, 201, 400, 415, 422]
@@ -295,7 +255,7 @@ class TestAPISecurityEdgeCases:
             "complexity": "MEDIUM",
             "team_size": 5,
             "duration_days": 30,
-            "description": "<script>alert('xss')</script>"
+            "description": "<script>alert('xss')</script>",
         }
         response = test_client.post("/api/v1/simulations", json=xss_data)
         # Should handle safely
@@ -333,4 +293,5 @@ class TestAPIPerformanceEdgeCases:
 def test_client():
     """Create test client for API testing."""
     from main import app
+
     return TestClient(app)

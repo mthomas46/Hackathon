@@ -1,6 +1,6 @@
-"""Summarization Request Value Object"""
+"""Summarization Request Value Object."""
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 
 class SummarizationRequest:
@@ -14,7 +14,7 @@ class SummarizationRequest:
         override_policy: bool = False,
         max_length: Optional[int] = None,
         min_length: Optional[int] = None,
-        style: str = "neutral"
+        style: str = "neutral",
     ):
         self._content = content.strip()
         self._keywords = keywords or []
@@ -101,7 +101,7 @@ class SummarizationRequest:
             "override_policy": self._override_policy,
             "style": self._style,
             "content_length": self.content_length,
-            "has_keywords": self.has_keywords
+            "has_keywords": self.has_keywords,
         }
 
         if self._keyword_document:

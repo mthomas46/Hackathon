@@ -1,18 +1,21 @@
-"""Redis Event Persistence Integration Tests.
+"""
+Redis Event Persistence Integration Tests.
 
-This module contains comprehensive integration tests for Redis-based event persistence,
-replay functionality, and event store operations in the Project Simulation Service.
+This module contains comprehensive integration tests for Redis-based
+event persistence, replay functionality, and event store operations in
+the Project Simulation Service.
 """
 
-import pytest
 import asyncio
 import json
-import time
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
 import sys
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -37,7 +40,7 @@ class TestRedisEventStore:
 
         print("✅ Redis event store initialization validated")
 
-    @patch('redis.Redis')
+    @patch("redis.Redis")
     def test_event_store_connection(self, mock_redis_class):
         """Test Redis event store connection establishment."""
         # Mock Redis instance
@@ -68,7 +71,7 @@ class TestRedisEventStore:
             simulation_id="sim-456",
             timestamp=datetime.now(),
             data={"status": "running", "phase": "initialization"},
-            priority=EventPriority.NORMAL
+            priority=EventPriority.NORMAL,
         )
 
         # Store event
@@ -89,22 +92,26 @@ class TestRedisEventStore:
 
         # Mock stored events
         stored_events = [
-            json.dumps({
-                "event_id": "event-1",
-                "event_type": "simulation_started",
-                "simulation_id": "sim-123",
-                "timestamp": datetime.now().isoformat(),
-                "data": {"phase": "init"},
-                "priority": "normal"
-            }).encode('utf-8'),
-            json.dumps({
-                "event_id": "event-2",
-                "event_type": "phase_completed",
-                "simulation_id": "sim-123",
-                "timestamp": datetime.now().isoformat(),
-                "data": {"phase": "planning", "duration": 300},
-                "priority": "high"
-            }).encode('utf-8')
+            json.dumps(
+                {
+                    "event_id": "event-1",
+                    "event_type": "simulation_started",
+                    "simulation_id": "sim-123",
+                    "timestamp": datetime.now().isoformat(),
+                    "data": {"phase": "init"},
+                    "priority": "normal",
+                }
+            ).encode("utf-8"),
+            json.dumps(
+                {
+                    "event_id": "event-2",
+                    "event_type": "phase_completed",
+                    "simulation_id": "sim-123",
+                    "timestamp": datetime.now().isoformat(),
+                    "data": {"phase": "planning", "duration": 300},
+                    "priority": "high",
+                }
+            ).encode("utf-8"),
         ]
 
         mock_redis.lrange.return_value = stored_events
@@ -132,30 +139,36 @@ class TestRedisEventStore:
 
         # Mock stored events of different types
         stored_events = [
-            json.dumps({
-                "event_id": "event-1",
-                "event_type": "simulation_started",
-                "simulation_id": "sim-123",
-                "timestamp": datetime.now().isoformat(),
-                "data": {},
-                "priority": "normal"
-            }).encode('utf-8'),
-            json.dumps({
-                "event_id": "event-2",
-                "event_type": "phase_completed",
-                "simulation_id": "sim-123",
-                "timestamp": datetime.now().isoformat(),
-                "data": {"phase": "planning"},
-                "priority": "normal"
-            }).encode('utf-8'),
-            json.dumps({
-                "event_id": "event-3",
-                "event_type": "document_generated",
-                "simulation_id": "sim-123",
-                "timestamp": datetime.now().isoformat(),
-                "data": {"document_type": "requirements"},
-                "priority": "low"
-            }).encode('utf-8')
+            json.dumps(
+                {
+                    "event_id": "event-1",
+                    "event_type": "simulation_started",
+                    "simulation_id": "sim-123",
+                    "timestamp": datetime.now().isoformat(),
+                    "data": {},
+                    "priority": "normal",
+                }
+            ).encode("utf-8"),
+            json.dumps(
+                {
+                    "event_id": "event-2",
+                    "event_type": "phase_completed",
+                    "simulation_id": "sim-123",
+                    "timestamp": datetime.now().isoformat(),
+                    "data": {"phase": "planning"},
+                    "priority": "normal",
+                }
+            ).encode("utf-8"),
+            json.dumps(
+                {
+                    "event_id": "event-3",
+                    "event_type": "document_generated",
+                    "simulation_id": "sim-123",
+                    "timestamp": datetime.now().isoformat(),
+                    "data": {"document_type": "requirements"},
+                    "priority": "low",
+                }
+            ).encode("utf-8"),
         ]
 
         mock_redis.lrange.return_value = stored_events
@@ -178,14 +191,16 @@ class TestRedisEventStore:
         # Create 50 mock events
         stored_events = []
         for i in range(50):
-            event_data = json.dumps({
-                "event_id": f"event-{i}",
-                "event_type": "test_event",
-                "simulation_id": "sim-123",
-                "timestamp": datetime.now().isoformat(),
-                "data": {"sequence": i},
-                "priority": "normal"
-            }).encode('utf-8')
+            event_data = json.dumps(
+                {
+                    "event_id": f"event-{i}",
+                    "event_type": "test_event",
+                    "simulation_id": "sim-123",
+                    "timestamp": datetime.now().isoformat(),
+                    "data": {"sequence": i},
+                    "priority": "normal",
+                }
+            ).encode("utf-8")
             stored_events.append(event_data)
 
         mock_redis.lrange.return_value = stored_events[:20]  # First page
@@ -208,10 +223,7 @@ class TestRedisEventStore:
         """Test event TTL (time-to-live) expiration."""
         mock_redis = Mock()
 
-        event_store = RedisEventStore(
-            redis_client=mock_redis,
-            event_ttl_seconds=3600  # 1 hour
-        )
+        event_store = RedisEventStore(redis_client=mock_redis, event_ttl_seconds=3600)  # 1 hour
 
         test_event = SimulationEvent(
             event_id="test-event-123",
@@ -219,7 +231,7 @@ class TestRedisEventStore:
             simulation_id="sim-456",
             timestamp=datetime.now(),
             data={"status": "running"},
-            priority=EventPriority.NORMAL
+            priority=EventPriority.NORMAL,
         )
 
         # Store event
@@ -239,7 +251,7 @@ class TestRedisEventStore:
         mock_redis.keys.return_value = [
             "simulation_events:sim-1",
             "simulation_events:sim-2",
-            "simulation_events:sim-old"
+            "simulation_events:sim-old",
         ]
 
         mock_redis.ttl.side_effect = lambda key: 100 if "old" in key else 3600
@@ -285,7 +297,7 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 0, 0),
                 data={"phase": "init"},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             ),
             SimulationEvent(
                 event_id="event-2",
@@ -293,8 +305,8 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 5, 0),
                 data={"phase": "planning"},
-                priority=EventPriority.NORMAL
-            )
+                priority=EventPriority.NORMAL,
+            ),
         ]
 
         mock_event_store.get_events.return_value = events
@@ -303,6 +315,7 @@ class TestEventReplayManager:
 
         # Mock event handler
         handled_events = []
+
         async def mock_handler(event):
             handled_events.append(event)
             await asyncio.sleep(0.01)  # Simulate processing time
@@ -330,7 +343,7 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 0, 0),
                 data={},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             ),
             SimulationEvent(
                 event_id="event-2",
@@ -338,7 +351,7 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 5, 0),
                 data={"phase": "planning"},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             ),
             SimulationEvent(
                 event_id="event-3",
@@ -346,8 +359,8 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 10, 0),
                 data={"doc_type": "requirements"},
-                priority=EventPriority.NORMAL
-            )
+                priority=EventPriority.NORMAL,
+            ),
         ]
 
         mock_event_store.get_events.return_value = events
@@ -356,16 +369,13 @@ class TestEventReplayManager:
 
         # Mock event handler
         handled_events = []
+
         async def mock_handler(event):
             handled_events.append(event)
 
         # Replay only phase_completed events
         replay_result = asyncio.run(
-            replay_manager.replay_events(
-                "sim-123",
-                mock_handler,
-                event_types=["phase_completed"]
-            )
+            replay_manager.replay_events("sim-123", mock_handler, event_types=["phase_completed"])
         )
 
         assert replay_result["total_events"] == 1
@@ -387,7 +397,7 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, i, 0),
                 data={"sequence": i},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             )
             events.append(event)
 
@@ -397,6 +407,7 @@ class TestEventReplayManager:
 
         # Mock event handler with timing
         processing_times = []
+
         async def mock_handler(event):
             start_time = time.time()
             await asyncio.sleep(0.001)  # Simulate processing
@@ -431,7 +442,7 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 0, 0),
                 data={},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             ),
             SimulationEvent(
                 event_id="event-2",
@@ -439,8 +450,8 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 5, 0),
                 data={"phase": "planning"},
-                priority=EventPriority.NORMAL
-            )
+                priority=EventPriority.NORMAL,
+            ),
         ]
 
         mock_event_store.get_events.return_value = events
@@ -449,6 +460,7 @@ class TestEventReplayManager:
 
         # Mock event handler that fails on second event
         handled_events = []
+
         async def mock_handler(event):
             if event.event_id == "event-2":
                 raise Exception("Processing failed")
@@ -476,7 +488,7 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 0, 0),
                 data={},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             ),
             SimulationEvent(
                 event_id="event-2",
@@ -484,8 +496,8 @@ class TestEventReplayManager:
                 simulation_id="sim-123",
                 timestamp=datetime(2024, 1, 1, 10, 5, 0),  # 5 minutes later
                 data={"phase": "planning"},
-                priority=EventPriority.NORMAL
-            )
+                priority=EventPriority.NORMAL,
+            ),
         ]
 
         mock_event_store.get_events.return_value = events
@@ -496,6 +508,7 @@ class TestEventReplayManager:
         replay_manager.replay_speed_multiplier = 2.0
 
         timing_differences = []
+
         async def mock_handler(event):
             timing_differences.append(time.time())
 
@@ -529,7 +542,7 @@ class TestRedisEventPersistenceIntegration:
             ("workflow_executed", {"type": "document_analysis", "success": True}),
             ("document_generated", {"type": "architecture", "word_count": 2000}),
             ("phase_completed", {"phase": "design", "duration": 600}),
-            ("simulation_completed", {"success": True, "total_duration": 900})
+            ("simulation_completed", {"success": True, "total_duration": 900}),
         ]
 
         stored_events = []
@@ -542,7 +555,7 @@ class TestRedisEventPersistenceIntegration:
                 simulation_id="workflow-sim-123",
                 timestamp=datetime.now(),
                 data=data,
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             )
 
             event_store.store_event(event)
@@ -553,14 +566,16 @@ class TestRedisEventPersistenceIntegration:
 
         # Simulate event retrieval for analysis
         mock_events_data = [
-            json.dumps({
-                "event_id": event.event_id,
-                "event_type": event.event_type,
-                "simulation_id": event.simulation_id,
-                "timestamp": event.timestamp.isoformat(),
-                "data": event.data,
-                "priority": event.priority.value
-            }).encode('utf-8')
+            json.dumps(
+                {
+                    "event_id": event.event_id,
+                    "event_type": event.event_type,
+                    "simulation_id": event.simulation_id,
+                    "timestamp": event.timestamp.isoformat(),
+                    "data": event.data,
+                    "priority": event.priority.value,
+                }
+            ).encode("utf-8")
             for event in stored_events
         ]
 
@@ -601,7 +616,7 @@ class TestRedisEventPersistenceIntegration:
                 simulation_id="load-test-sim",
                 timestamp=datetime.now(),
                 data={"sequence": i, "data_size": 100},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             )
 
             event_store.store_event(event)
@@ -615,14 +630,16 @@ class TestRedisEventPersistenceIntegration:
 
         # Test retrieval performance
         mock_events_data = [
-            json.dumps({
-                "event_id": event.event_id,
-                "event_type": event.event_type,
-                "simulation_id": event.simulation_id,
-                "timestamp": event.timestamp.isoformat(),
-                "data": event.data,
-                "priority": event.priority.value
-            }).encode('utf-8')
+            json.dumps(
+                {
+                    "event_id": event.event_id,
+                    "event_type": event.event_type,
+                    "simulation_id": event.simulation_id,
+                    "timestamp": event.timestamp.isoformat(),
+                    "data": event.data,
+                    "priority": event.priority.value,
+                }
+            ).encode("utf-8")
             for event in events
         ]
 
@@ -652,7 +669,7 @@ class TestRedisEventPersistenceIntegration:
             simulation_id="error-sim",
             timestamp=datetime.now(),
             data={"test": "error_recovery"},
-            priority=EventPriority.NORMAL
+            priority=EventPriority.NORMAL,
         )
 
         # Test error handling
@@ -681,7 +698,7 @@ class TestRedisEventPersistenceIntegration:
                 simulation_id="failed-sim",
                 timestamp=datetime(2024, 1, 1, 10, 0, 0),
                 data={"scenario": "complex_project"},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             ),
             SimulationEvent(
                 event_id="fail-2",
@@ -689,7 +706,7 @@ class TestRedisEventPersistenceIntegration:
                 simulation_id="failed-sim",
                 timestamp=datetime(2024, 1, 1, 10, 5, 0),
                 data={"phase": "planning"},
-                priority=EventPriority.NORMAL
+                priority=EventPriority.NORMAL,
             ),
             SimulationEvent(
                 event_id="fail-3",
@@ -697,7 +714,7 @@ class TestRedisEventPersistenceIntegration:
                 simulation_id="failed-sim",
                 timestamp=datetime(2024, 1, 1, 10, 15, 0),
                 data={"service": "mock_data_generator", "error": "timeout"},
-                priority=EventPriority.HIGH
+                priority=EventPriority.HIGH,
             ),
             SimulationEvent(
                 event_id="fail-4",
@@ -705,8 +722,8 @@ class TestRedisEventPersistenceIntegration:
                 simulation_id="failed-sim",
                 timestamp=datetime(2024, 1, 1, 10, 20, 0),
                 data={"reason": "service_unavailable", "phase": "planning"},
-                priority=EventPriority.CRITICAL
-            )
+                priority=EventPriority.CRITICAL,
+            ),
         ]
 
         mock_event_store.get_events.return_value = failed_simulation_events
@@ -715,12 +732,11 @@ class TestRedisEventPersistenceIntegration:
 
         # Replay for debugging
         debug_log = []
+
         async def debug_handler(event):
-            debug_log.append({
-                "timestamp": event.timestamp.isoformat(),
-                "event_type": event.event_type,
-                "data": event.data
-            })
+            debug_log.append(
+                {"timestamp": event.timestamp.isoformat(), "event_type": event.event_type, "data": event.data}
+            )
 
         replay_result = asyncio.run(replay_manager.replay_events("failed-sim", debug_handler))
 
@@ -741,17 +757,28 @@ class TestRedisEventPersistenceIntegration:
 # Helper classes and fixtures
 from pathlib import Path
 
+
 class EventPriority:
     """Event priority levels."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
     CRITICAL = "critical"
 
+
 class SimulationEvent:
     """Simulation event model for testing."""
-    def __init__(self, event_id: str, event_type: str, simulation_id: str,
-                 timestamp: datetime, data: Dict[str, Any], priority: str):
+
+    def __init__(
+        self,
+        event_id: str,
+        event_type: str,
+        simulation_id: str,
+        timestamp: datetime,
+        data: Dict[str, Any],
+        priority: str,
+    ):
         self.event_id = event_id
         self.event_type = event_type
         self.simulation_id = simulation_id
@@ -759,10 +786,13 @@ class SimulationEvent:
         self.data = data
         self.priority = priority
 
+
 class RedisEventStore:
     """Mock Redis event store for testing."""
-    def __init__(self, redis_client=None, key_prefix="simulation_events",
-                 max_events_per_key=1000, event_ttl_seconds=86400*30):
+
+    def __init__(
+        self, redis_client=None, key_prefix="simulation_events", max_events_per_key=1000, event_ttl_seconds=86400 * 30
+    ):
         self.redis_client = redis_client or Mock()
         self.key_prefix = key_prefix
         self.max_events_per_key = max_events_per_key
@@ -779,14 +809,16 @@ class RedisEventStore:
         """Store an event in Redis."""
         try:
             key = f"{self.key_prefix}:{event.simulation_id}"
-            event_data = json.dumps({
-                "event_id": event.event_id,
-                "event_type": event.event_type,
-                "simulation_id": event.simulation_id,
-                "timestamp": event.timestamp.isoformat(),
-                "data": event.data,
-                "priority": event.priority
-            })
+            event_data = json.dumps(
+                {
+                    "event_id": event.event_id,
+                    "event_type": event.event_type,
+                    "simulation_id": event.simulation_id,
+                    "timestamp": event.timestamp.isoformat(),
+                    "data": event.data,
+                    "priority": event.priority,
+                }
+            )
 
             self.redis_client.lpush(key, event_data)
             self.redis_client.expire(key, self.event_ttl_seconds)
@@ -802,14 +834,14 @@ class RedisEventStore:
 
             events = []
             for event_data in event_data_list:
-                data = json.loads(event_data.decode('utf-8'))
+                data = json.loads(event_data.decode("utf-8"))
                 event = SimulationEvent(
                     event_id=data["event_id"],
                     event_type=data["event_type"],
                     simulation_id=data["simulation_id"],
                     timestamp=datetime.fromisoformat(data["timestamp"]),
                     data=data["data"],
-                    priority=data["priority"]
+                    priority=data["priority"],
                 )
                 events.append(event)
 
@@ -838,8 +870,10 @@ class RedisEventStore:
         except:
             return 0
 
+
 class EventReplayManager:
     """Mock event replay manager for testing."""
+
     def __init__(self, event_store=None, max_replay_events=10000, replay_speed_multiplier=1.0):
         self.event_store = event_store or Mock()
         self.max_replay_events = max_replay_events
@@ -882,7 +916,7 @@ class EventReplayManager:
             "successful_events": successful,
             "failed_events": failed,
             "average_processing_time": sum(processing_times) / len(processing_times) if processing_times else 0,
-            "total_replay_time": sum(processing_times)
+            "total_replay_time": sum(processing_times),
         }
 
 

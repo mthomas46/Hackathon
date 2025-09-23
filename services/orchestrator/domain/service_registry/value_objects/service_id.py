@@ -1,6 +1,5 @@
-"""Service ID Value Object"""
+"""Service ID Value Object."""
 
-from typing import Union
 
 
 class ServiceId:

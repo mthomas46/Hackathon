@@ -1,11 +1,11 @@
 """
 Service registry for managing service registrations.
+
 Following DDD infrastructure patterns with clean separation of concerns.
 """
 
-from typing import Dict, List, Optional
 from threading import Lock
-from datetime import datetime
+from typing import Dict, List, Optional
 
 from simulation.domain.entities.discovery import ServiceRegistration
 
@@ -51,10 +51,7 @@ class ServiceRegistry:
     def get_services_by_pattern(self, pattern: str) -> List[ServiceRegistration]:
         """Get services whose names match the given pattern."""
         with self._lock:
-            return [
-                service for service in self._services.values()
-                if pattern.lower() in service.service_name.lower()
-            ]
+            return [service for service in self._services.values() if pattern.lower() in service.service_name.lower()]
 
     def clear_all(self) -> None:
         """Clear all service registrations (for testing)."""

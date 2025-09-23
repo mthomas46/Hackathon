@@ -1,16 +1,18 @@
 """
 Domain entities for analysis results.
+
 Following DDD principles with clean, focused entities.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List
 
 
 class AnalysisType(Enum):
     """Types of analysis that can be performed."""
+
     DOCUMENT_ANALYSIS = "document_analysis"
     TIMELINE_ANALYSIS = "timeline_analysis"
     TEAM_DYNAMICS = "team_dynamics"
@@ -21,6 +23,7 @@ class AnalysisType(Enum):
 @dataclass
 class AnalysisResult:
     """Represents the result of an analysis operation."""
+
     simulation_id: str
     analysis_type: AnalysisType
     findings: List[str] = field(default_factory=list)

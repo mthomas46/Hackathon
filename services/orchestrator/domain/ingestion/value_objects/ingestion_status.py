@@ -1,4 +1,4 @@
-"""Ingestion Status Value Object"""
+"""Ingestion Status Value Object."""
 
 from enum import Enum
 
@@ -6,18 +6,18 @@ from enum import Enum
 class IngestionStatus(Enum):
     """Enumeration of ingestion process statuses."""
 
-    PENDING = "pending"           # Ingestion request received, waiting to start
-    QUEUED = "queued"            # Ingestion queued for processing
-    INITIALIZING = "initializing" # Setting up ingestion process
-    CONNECTING = "connecting"     # Connecting to source system
-    DISCOVERING = "discovering"   # Discovering content to ingest
-    DOWNLOADING = "downloading"   # Downloading content from source
-    PROCESSING = "processing"     # Processing downloaded content
-    INDEXING = "indexing"         # Indexing content for search
-    VALIDATING = "validating"     # Validating ingested content
-    COMPLETED = "completed"       # Ingestion completed successfully
-    FAILED = "failed"            # Ingestion failed with error
-    CANCELLED = "cancelled"      # Ingestion was cancelled
+    PENDING = "pending"  # Ingestion request received, waiting to start
+    QUEUED = "queued"  # Ingestion queued for processing
+    INITIALIZING = "initializing"  # Setting up ingestion process
+    CONNECTING = "connecting"  # Connecting to source system
+    DISCOVERING = "discovering"  # Discovering content to ingest
+    DOWNLOADING = "downloading"  # Downloading content from source
+    PROCESSING = "processing"  # Processing downloaded content
+    INDEXING = "indexing"  # Indexing content for search
+    VALIDATING = "validating"  # Validating ingested content
+    COMPLETED = "completed"  # Ingestion completed successfully
+    FAILED = "failed"  # Ingestion failed with error
+    CANCELLED = "cancelled"  # Ingestion was cancelled
     PARTIAL_SUCCESS = "partial_success"  # Some content ingested, some failed
 
     @property
@@ -30,7 +30,7 @@ class IngestionStatus(Enum):
             IngestionStatus.DOWNLOADING,
             IngestionStatus.PROCESSING,
             IngestionStatus.INDEXING,
-            IngestionStatus.VALIDATING
+            IngestionStatus.VALIDATING,
         }
         return self in active_statuses
 
@@ -41,7 +41,7 @@ class IngestionStatus(Enum):
             IngestionStatus.COMPLETED,
             IngestionStatus.FAILED,
             IngestionStatus.CANCELLED,
-            IngestionStatus.PARTIAL_SUCCESS
+            IngestionStatus.PARTIAL_SUCCESS,
         }
         return self in final_statuses
 
@@ -71,9 +71,9 @@ class IngestionStatus(Enum):
             IngestionStatus.COMPLETED: 100,
             IngestionStatus.FAILED: 0,
             IngestionStatus.CANCELLED: 0,
-            IngestionStatus.PARTIAL_SUCCESS: 100
+            IngestionStatus.PARTIAL_SUCCESS: 100,
         }
         return progress_map.get(self, 0)
 
     def __str__(self) -> str:
-        return self.value.replace('_', ' ').title()
+        return self.value.replace("_", " ").title()

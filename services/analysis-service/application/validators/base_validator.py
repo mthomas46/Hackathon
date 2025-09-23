@@ -1,13 +1,14 @@
 """Base validation infrastructure for application layer."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Union
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class ValidationSeverity(Enum):
     """Severity levels for validation errors."""
+
     ERROR = "error"
     WARNING = "warning"
     INFO = "info"
@@ -16,6 +17,7 @@ class ValidationSeverity(Enum):
 @dataclass
 class ValidationError:
     """Represents a validation error."""
+
     field: Optional[str]
     message: str
     code: str
@@ -25,46 +27,37 @@ class ValidationError:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
         return {
-            'field': self.field,
-            'message': self.message,
-            'code': self.code,
-            'severity': self.severity.value,
-            'metadata': self.metadata or {}
+            "field": self.field,
+            "message": self.message,
+            "code": self.code,
+            "severity": self.severity.value,
+            "metadata": self.metadata or {},
         }
 
 
 @dataclass
 class ValidationResult:
     """Result of a validation operation."""
+
     is_valid: bool
     errors: List[ValidationError]
     warnings: List[ValidationError]
     metadata: Optional[Dict[str, Any]] = None
 
     @classmethod
-    def success(cls, metadata: Optional[Dict[str, Any]] = None) -> 'ValidationResult':
+    def success(cls, metadata: Optional[Dict[str, Any]] = None) -> "ValidationResult":
         """Create a successful validation result."""
-        return cls(
-            is_valid=True,
-            errors=[],
-            warnings=[],
-            metadata=metadata
-        )
+        return cls(is_valid=True, errors=[], warnings=[], metadata=metadata)
 
     @classmethod
     def failure(
         cls,
         errors: List[ValidationError],
         warnings: Optional[List[ValidationError]] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> 'ValidationResult':
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> "ValidationResult":
         """Create a failed validation result."""
-        return cls(
-            is_valid=False,
-            errors=errors,
-            warnings=warnings or [],
-            metadata=metadata
-        )
+        return cls(is_valid=False, errors=errors, warnings=warnings or [], metadata=metadata)
 
     def has_errors(self) -> bool:
         """Check if there are any errors."""
@@ -97,10 +90,13 @@ class BaseValidator(ABC):
     @abstractmethod
     async def validate(self, data: Any) -> ValidationResult:
         """Validate the given data."""
-        pass
 
     async def validate_field(self, field_name: str, field_value: Any) -> List[ValidationError]:
-        """Validate a specific field. Override in subclasses as needed."""
+        """
+        Validate a specific field.
+
+        Override in subclasses as needed.
+        """
         return []
 
     def create_error(
@@ -109,31 +105,17 @@ class BaseValidator(ABC):
         code: str,
         field: Optional[str] = None,
         severity: ValidationSeverity = ValidationSeverity.ERROR,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> ValidationError:
         """Create a validation error."""
-        return ValidationError(
-            field=field,
-            message=message,
-            code=code,
-            severity=severity,
-            metadata=metadata
-        )
+        return ValidationError(field=field, message=message, code=code, severity=severity, metadata=metadata)
 
     def create_warning(
-        self,
-        message: str,
-        code: str,
-        field: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        self, message: str, code: str, field: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
     ) -> ValidationError:
         """Create a validation warning."""
         return ValidationError(
-            field=field,
-            message=message,
-            code=code,
-            severity=ValidationSeverity.WARNING,
-            metadata=metadata
+            field=field, message=message, code=code, severity=ValidationSeverity.WARNING, metadata=metadata
         )
 
 
@@ -160,11 +142,7 @@ class CompositeValidator(BaseValidator):
                 all_metadata.update(result.metadata)
 
         if all_errors:
-            return ValidationResult.failure(
-                errors=all_errors,
-                warnings=all_warnings,
-                metadata=all_metadata
-            )
+            return ValidationResult.failure(errors=all_errors, warnings=all_warnings, metadata=all_metadata)
 
         return ValidationResult.success(metadata=all_metadata)
 
@@ -172,12 +150,7 @@ class CompositeValidator(BaseValidator):
 class ConditionalValidator(BaseValidator):
     """Validator that only validates if a condition is met."""
 
-    def __init__(
-        self,
-        validator: BaseValidator,
-        condition_func: callable,
-        name: Optional[str] = None
-    ):
+    def __init__(self, validator: BaseValidator, condition_func: callable, name: Optional[str] = None):
         """Initialize conditional validator."""
         super().__init__(name)
         self.validator = validator
@@ -217,7 +190,7 @@ class ValidationContext:
         user_id: Optional[str] = None,
         session_id: Optional[str] = None,
         correlation_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """Initialize validation context."""
         self.user_id = user_id
@@ -228,8 +201,8 @@ class ValidationContext:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'user_id': self.user_id,
-            'session_id': self.session_id,
-            'correlation_id': self.correlation_id,
-            'metadata': self.metadata
+            "user_id": self.user_id,
+            "session_id": self.session_id,
+            "correlation_id": self.correlation_id,
+            "metadata": self.metadata,
         }

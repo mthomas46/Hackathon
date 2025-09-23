@@ -1,14 +1,18 @@
-"""Core request and response models for Doc Store service.
+"""
+Core request and response models for Doc Store service.
 
 Consolidated and simplified from the original 595-line file.
 """
-from typing import Optional, Dict, Any, List
+
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel
 
 
 # Document Models
 class DocumentRequest(BaseModel):
     """Base document request model."""
+
     id: Optional[str] = None
     content: str
     content_hash: Optional[str] = None
@@ -18,6 +22,7 @@ class DocumentRequest(BaseModel):
 
 class DocumentResponse(BaseModel):
     """Base document response model."""
+
     id: str
     content: str
     content_hash: str
@@ -27,6 +32,7 @@ class DocumentResponse(BaseModel):
 
 class DocumentListResponse(BaseModel):
     """Response for document listing."""
+
     items: List[Dict[str, Any]]
     total: int
     has_more: bool
@@ -34,12 +40,14 @@ class DocumentListResponse(BaseModel):
 
 class MetadataUpdateRequest(BaseModel):
     """Request for updating document metadata."""
+
     metadata: Dict[str, Any]
 
 
 # Analysis Models
 class AnalysisRequest(BaseModel):
     """Request for storing analysis results."""
+
     document_id: Optional[str] = None
     content: Optional[str] = None
     analyzer: Optional[str] = None
@@ -52,6 +60,7 @@ class AnalysisRequest(BaseModel):
 
 class AnalysisResponse(BaseModel):
     """Response for analysis operations."""
+
     id: str
     document_id: str
     analyzer: str
@@ -63,6 +72,7 @@ class AnalysisResponse(BaseModel):
 
 class AnalysisListResponse(BaseModel):
     """Response for analysis listing."""
+
     items: List[Dict[str, Any]]
     total: int
 
@@ -70,6 +80,7 @@ class AnalysisListResponse(BaseModel):
 # Search Models
 class SearchRequest(BaseModel):
     """Request for document search."""
+
     query: str
     limit: Optional[int] = 50
     filters: Optional[Dict[str, Any]] = None
@@ -77,6 +88,7 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     """Response for search operations."""
+
     items: List[Dict[str, Any]]
     total: int
     query: str
@@ -85,6 +97,7 @@ class SearchResponse(BaseModel):
 # Quality Models
 class QualityResponse(BaseModel):
     """Response for quality analysis."""
+
     items: List[Dict[str, Any]]
     total: int
     stale_count: int
@@ -94,6 +107,7 @@ class QualityResponse(BaseModel):
 # Style Examples Models
 class StyleExamplesResponse(BaseModel):
     """Response for style examples."""
+
     items: List[Dict[str, Any]]
     languages: List[str]
 
@@ -101,6 +115,7 @@ class StyleExamplesResponse(BaseModel):
 # Analytics Models
 class AnalyticsRequest(BaseModel):
     """Request for analytics operations."""
+
     document_id: Optional[str] = None
     start_date: Optional[str] = None
     end_date: Optional[str] = None
@@ -109,6 +124,7 @@ class AnalyticsRequest(BaseModel):
 
 class AnalyticsResponse(BaseModel):
     """Response for analytics operations."""
+
     summary: Dict[str, Any]
     trends: List[Dict[str, Any]]
     insights: List[str]
@@ -116,6 +132,7 @@ class AnalyticsResponse(BaseModel):
 
 class AnalyticsSummaryResponse(BaseModel):
     """Summary analytics response."""
+
     total_documents: int
     total_analyses: int
     average_quality_score: float
@@ -125,6 +142,7 @@ class AnalyticsSummaryResponse(BaseModel):
 # Versioning Models
 class DocumentVersionResponse(BaseModel):
     """Response for document versions."""
+
     versions: List[Dict[str, Any]]
     current_version: int
     total_versions: int
@@ -132,6 +150,7 @@ class DocumentVersionResponse(BaseModel):
 
 class VersionComparison(BaseModel):
     """Version comparison response."""
+
     version1: Dict[str, Any]
     version2: Dict[str, Any]
     differences: List[Dict[str, Any]]
@@ -139,6 +158,7 @@ class VersionComparison(BaseModel):
 
 class VersionRollbackRequest(BaseModel):
     """Request for version rollback."""
+
     version_number: int
     reason: Optional[str] = None
 
@@ -146,6 +166,7 @@ class VersionRollbackRequest(BaseModel):
 # Relationship Models
 class RelationshipRequest(BaseModel):
     """Request for relationship operations."""
+
     source_id: str
     target_id: str
     relationship_type: str
@@ -155,6 +176,7 @@ class RelationshipRequest(BaseModel):
 
 class RelationshipsResponse(BaseModel):
     """Response for relationship queries."""
+
     document_id: str
     relationships: List[Dict[str, Any]]
     total_count: int
@@ -163,6 +185,7 @@ class RelationshipsResponse(BaseModel):
 
 class PathsResponse(BaseModel):
     """Response for path finding."""
+
     start_id: str
     end_id: str
     paths: List[List[Dict[str, Any]]]
@@ -171,6 +194,7 @@ class PathsResponse(BaseModel):
 
 class GraphStatisticsResponse(BaseModel):
     """Response for graph statistics."""
+
     total_nodes: int
     total_relationships: int
     relationship_types: Dict[str, int]
@@ -181,12 +205,14 @@ class GraphStatisticsResponse(BaseModel):
 # Tagging Models
 class TagRequest(BaseModel):
     """Request for tagging operations."""
+
     document_id: str
     content: Optional[str] = None
 
 
 class TagResponse(BaseModel):
     """Response for tagging operations."""
+
     document_id: str
     entities: List[Dict[str, Any]]
     tags: List[Dict[str, Any]]
@@ -195,6 +221,7 @@ class TagResponse(BaseModel):
 
 class TagSearchRequest(BaseModel):
     """Request for tag-based search."""
+
     tags: List[str]
     operator: Optional[str] = "AND"  # AND, OR
     limit: Optional[int] = 50
@@ -202,6 +229,7 @@ class TagSearchRequest(BaseModel):
 
 class TagSearchResponse(BaseModel):
     """Response for tag search."""
+
     items: List[Dict[str, Any]]
     total: int
     tags_matched: List[str]
@@ -209,6 +237,7 @@ class TagSearchResponse(BaseModel):
 
 class TaxonomyResponse(BaseModel):
     """Response for tag taxonomy."""
+
     tags: List[Dict[str, Any]]
     hierarchy: Dict[str, List[str]]
 
@@ -216,6 +245,7 @@ class TaxonomyResponse(BaseModel):
 # Lifecycle Models
 class LifecyclePolicyRequest(BaseModel):
     """Request for lifecycle policy operations."""
+
     name: str
     description: Optional[str] = None
     conditions: Dict[str, Any]
@@ -225,12 +255,14 @@ class LifecyclePolicyRequest(BaseModel):
 
 class LifecycleTransitionRequest(BaseModel):
     """Request for lifecycle transitions."""
+
     new_phase: str
     reason: Optional[str] = None
 
 
 class LifecycleStatusResponse(BaseModel):
     """Response for lifecycle status."""
+
     document_id: str
     current_phase: str
     retention_period_days: Optional[int] = None
@@ -242,6 +274,7 @@ class LifecycleStatusResponse(BaseModel):
 # Notification Models
 class WebhookRequest(BaseModel):
     """Request for webhook operations."""
+
     name: str
     url: str
     events: List[str]
@@ -253,12 +286,14 @@ class WebhookRequest(BaseModel):
 
 class WebhooksListResponse(BaseModel):
     """Response for webhooks listing."""
+
     webhooks: List[Dict[str, Any]]
     total: int
 
 
 class NotificationStatsResponse(BaseModel):
     """Response for notification statistics."""
+
     total_events: int
     delivered_webhooks: int
     failed_deliveries: int
@@ -268,11 +303,13 @@ class NotificationStatsResponse(BaseModel):
 # Bulk Operations Models
 class BulkDocumentRequest(BaseModel):
     """Request for bulk document operations."""
+
     documents: List[DocumentRequest]
 
 
 class BulkOperationStatus(BaseModel):
     """Response for bulk operation status."""
+
     operation_id: str
     operation_type: str
     status: str
@@ -283,6 +320,7 @@ class BulkOperationStatus(BaseModel):
 
 class BulkOperationsListResponse(BaseModel):
     """Response for bulk operations listing."""
+
     operations: List[Dict[str, Any]]
     total: int
 
@@ -290,6 +328,7 @@ class BulkOperationsListResponse(BaseModel):
 # Cache Models
 class CacheStatsResponse(BaseModel):
     """Response for cache statistics."""
+
     cache_enabled: bool
     local_cache_entries: int
     total_hits: int
@@ -301,6 +340,7 @@ class CacheStatsResponse(BaseModel):
 
 class CacheInvalidationRequest(BaseModel):
     """Request for cache invalidation."""
+
     tags: Optional[List[str]] = None
     patterns: Optional[List[str]] = None
 
@@ -308,6 +348,7 @@ class CacheInvalidationRequest(BaseModel):
 # Generic Response Models
 class SuccessResponse(BaseModel):
     """Generic success response."""
+
     success: bool = True
     message: str
     data: Optional[Dict[str, Any]] = None
@@ -316,6 +357,7 @@ class SuccessResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Generic error response."""
+
     success: bool = False
     error: str
     code: Optional[str] = None

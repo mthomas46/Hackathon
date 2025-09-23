@@ -4,12 +4,12 @@ Validates that the test structure is properly organized and follows best practic
 after the DDD refactor, without requiring full test execution.
 """
 
+import ast
 import os
+import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Any
-import ast
-import re
+from typing import Any, Dict, List
 
 
 class TestStructureValidator:
@@ -37,7 +37,7 @@ class TestStructureValidator:
             "test_files_validation": test_files_validation,
             "coverage_validation": coverage_validation,
             "overall_score": round(overall_score, 2),
-            "recommendations": self._generate_recommendations(validations)
+            "recommendations": self._generate_recommendations(validations),
         }
 
         print("\n📊 TEST STRUCTURE VALIDATION:")
@@ -59,7 +59,7 @@ class TestStructureValidator:
             "presentation": ["test_controllers.py", "test_models.py"],
             "integration": ["test_end_to_end_integration.py", "test_application_infrastructure_integration.py"],
             "performance": ["test_performance_validation.py"],
-            "e2e": ["test_complete_user_workflows.py"]
+            "e2e": ["test_complete_user_workflows.py"],
         }
 
         score = 0
@@ -90,7 +90,7 @@ class TestStructureValidator:
             "score": min(10, score * 2),  # Scale to 0-10
             "issues": issues,
             "found_files": found_files,
-            "expected_categories": list(expected_structure.keys())
+            "expected_categories": list(expected_structure.keys()),
         }
 
     def _validate_test_files(self) -> Dict[str, Any]:
@@ -118,13 +118,13 @@ class TestStructureValidator:
             "score": min(10, avg_score * 10),
             "total_test_files": analyzed_files,
             "issues": issues,
-            "average_file_score": round(avg_score, 2)
+            "average_file_score": round(avg_score, 2),
         }
 
     def _analyze_test_file(self, file_path: Path) -> float:
         """Analyze a single test file for quality indicators."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Parse the AST
@@ -135,38 +135,36 @@ class TestStructureValidator:
 
             # Check for class-based tests
             has_test_classes = any(
-                isinstance(node, ast.ClassDef) and node.name.startswith('Test')
-                for node in ast.walk(tree)
+                isinstance(node, ast.ClassDef) and node.name.startswith("Test") for node in ast.walk(tree)
             )
             if has_test_classes:
                 score += 1
 
             # Check for fixtures
-            has_fixtures = 'fixture' in content.lower()
+            has_fixtures = "fixture" in content.lower()
             if has_fixtures:
                 score += 1
 
             # Check for parametrized tests
-            has_parametrize = 'parametrize' in content
+            has_parametrize = "parametrize" in content
             if has_parametrize:
                 score += 1
 
             # Check for assertions
-            assertion_count = content.count('assert ')
+            assertion_count = content.count("assert ")
             if assertion_count > 0:
                 score += 1
 
             # Check for docstrings
             has_docstrings = any(
-                isinstance(node, (ast.FunctionDef, ast.ClassDef)) and
-                ast.get_docstring(node) is not None
+                isinstance(node, (ast.FunctionDef, ast.ClassDef)) and ast.get_docstring(node) is not None
                 for node in ast.walk(tree)
             )
             if has_docstrings:
                 score += 1
 
             # Check for proper imports
-            has_pytest_import = 'import pytest' in content or 'from pytest' in content
+            has_pytest_import = "import pytest" in content or "from pytest" in content
             if has_pytest_import:
                 score += 1
 
@@ -182,7 +180,7 @@ class TestStructureValidator:
             "domain": ["entities", "services", "factories"],
             "application": ["use_cases", "dto", "services"],
             "infrastructure": ["repositories", "config"],
-            "presentation": ["controllers", "models"]
+            "presentation": ["controllers", "models"],
         }
 
         coverage_score = 0
@@ -197,13 +195,10 @@ class TestStructureValidator:
                 test_patterns = [
                     f"{layer}/test_{component}.py",
                     f"{layer}/test_{layer}_{component}.py",
-                    f"test_{component}.py"
+                    f"test_{component}.py",
                 ]
 
-                has_test = any(
-                    (self.test_dir / pattern).exists()
-                    for pattern in test_patterns
-                )
+                has_test = any((self.test_dir / pattern).exists() for pattern in test_patterns)
 
                 if has_test:
                     covered_components += 1
@@ -215,7 +210,7 @@ class TestStructureValidator:
             "score": min(10, coverage_percentage / 10),  # Convert percentage to 0-10 scale
             "coverage_percentage": round(coverage_percentage, 1),
             "covered_components": covered_components,
-            "total_components": total_components
+            "total_components": total_components,
         }
 
     def _generate_recommendations(self, validations: List[Dict[str, Any]]) -> List[str]:
@@ -249,10 +244,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Test Structure Validation")
-    parser.add_argument("--test-dir", default="services/analysis-service/tests",
-                       help="Path to test directory")
-    parser.add_argument("--output", default="test_structure_validation.json",
-                       help="Output file for results")
+    parser.add_argument("--test-dir", default="services/analysis-service/tests", help="Path to test directory")
+    parser.add_argument("--output", default="test_structure_validation.json", help="Output file for results")
 
     args = parser.parse_args()
 
@@ -264,7 +257,8 @@ def main():
 
     # Save results
     import json
-    with open(args.output, 'w') as f:
+
+    with open(args.output, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
     print(f"\n💾 Results saved to: {args.output}")

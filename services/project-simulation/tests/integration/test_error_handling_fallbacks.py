@@ -4,22 +4,18 @@ This module contains integration tests for error handling patterns, fallback
 mechanisms, authentication/authorization, and service mesh resilience.
 """
 
-import pytest
 import asyncio
-import httpx
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any, Optional
+from unittest.mock import AsyncMock, Mock, patch
 
-from simulation.infrastructure.clients.ecosystem_clients import (
-    EcosystemServiceClient, EcosystemServiceRegistry
-)
+import httpx
+import pytest
+from simulation.domain.value_objects import ServiceEndpoint
+from simulation.infrastructure.clients.ecosystem_clients import EcosystemServiceClient
+from simulation.infrastructure.config.discovery import FallbackServiceClient, LocalServiceDiscovery, ServiceHealth
 from simulation.infrastructure.resilience.circuit_breaker import (
-    ServiceCircuitBreaker, EcosystemCircuitBreakerRegistry, ResilientServiceClient
+    ResilientServiceClient,
+    ServiceCircuitBreaker,
 )
-from simulation.infrastructure.config.discovery import (
-    LocalServiceDiscovery, FallbackServiceClient, ServiceHealth
-)
-from simulation.domain.value_objects import ServiceEndpoint, ServiceHealth as DomainServiceHealth
 
 
 class TestErrorHandlingPatterns:
@@ -277,7 +273,7 @@ class TestServiceMeshResilience:
         services = [
             ("healthy", "http://httpbin.org", True),
             ("unhealthy", "http://unavailable.com", False),
-            ("another_healthy", "http://httpbin.org", True)
+            ("another_healthy", "http://httpbin.org", True),
         ]
 
         for name, url, is_healthy in services:
@@ -300,7 +296,7 @@ class TestServiceMeshResilience:
     async def test_resilient_client_with_circuit_breaker(self):
         """Test resilient client with circuit breaker protection."""
         # Mock the ecosystem client
-        with patch('simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client') as mock_get_client:
+        with patch("simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client") as mock_get_client:
             mock_client = Mock()
             mock_get_client.return_value = mock_client
 
@@ -319,7 +315,7 @@ class TestServiceMeshResilience:
     @pytest.mark.asyncio
     async def test_resilient_client_failure_handling(self):
         """Test resilient client failure handling."""
-        with patch('simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client') as mock_get_client:
+        with patch("simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client") as mock_get_client:
             mock_client = Mock()
             mock_get_client.return_value = mock_client
 
@@ -367,6 +363,7 @@ class TestMultiServiceOrchestration:
     @pytest.mark.asyncio
     async def test_concurrent_service_calls(self):
         """Test concurrent service calls orchestration."""
+
         async def make_request(client_num: int):
             endpoint = ServiceEndpoint("http://httpbin.org", timeout_seconds=30)
             client = EcosystemServiceClient(f"concurrent_{client_num}", endpoint)
@@ -421,7 +418,7 @@ class TestDataConsistencyValidation:
                 "name": "Test Project",
                 "type": "web_application",
                 "complexity": "medium",
-                "team_size": 5
+                "team_size": 5,
             }
 
             response = await client.post_json("/post", test_data)
@@ -450,11 +447,7 @@ class TestDataConsistencyValidation:
             project_id = "consistency-test-123"
 
             # Create project data
-            create_data = {
-                "id": project_id,
-                "name": "Consistency Test Project",
-                "type": "api_service"
-            }
+            create_data = {"id": project_id, "name": "Consistency Test Project", "type": "api_service"}
 
             # Simulate multiple operations on same data
             responses = []
@@ -473,7 +466,8 @@ class TestDataConsistencyValidation:
 
 @pytest.mark.integration
 class TestErrorHandlingFallbacksIntegrationSuite:
-    """Comprehensive integration test suite for error handling and fallbacks."""
+    """Comprehensive integration test suite for error handling and
+    fallbacks."""
 
     @pytest.mark.asyncio
     async def test_complete_error_handling_workflow(self):
@@ -596,11 +590,11 @@ class TestErrorHandlingFallbacksIntegrationSuite:
         valid_configs = [
             ServiceEndpoint("https://secure-service.com", timeout_seconds=30, retries=3),
             ServiceEndpoint("http://service.com", timeout_seconds=60, retries=5),
-            ServiceEndpoint("http://service.com/api", timeout_seconds=10, retries=1)
+            ServiceEndpoint("http://service.com/api", timeout_seconds=10, retries=1),
         ]
 
         for config in valid_configs:
-            assert config.url.startswith(('http://', 'https://'))
+            assert config.url.startswith(("http://", "https://"))
             assert config.timeout_seconds > 0
             assert config.retries >= 0
 
@@ -608,7 +602,7 @@ class TestErrorHandlingFallbacksIntegrationSuite:
         invalid_configs = [
             ("ftp://invalid.com", 30, 3),  # Invalid scheme
             ("http://service.com", 0, 3),  # Invalid timeout
-            ("http://service.com", 30, -1)  # Invalid retries
+            ("http://service.com", 30, -1),  # Invalid retries
         ]
 
         for url, timeout, retries in invalid_configs:

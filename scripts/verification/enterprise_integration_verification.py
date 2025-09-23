@@ -12,25 +12,29 @@ Comprehensive verification and enhancement of enterprise integration components:
 
 import asyncio
 import json
-import sys
 import os
+import sys
 import time
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
+
+from services.shared.enterprise_integration import (
+    EnterpriseIntegrationManager,
+    RequestContext,
+    ServiceDiscoveryManager,
+    StandardizedAPIResponse,
+    WorkflowContext,
+)
 
 # Import enterprise integration components
 from services.shared.enterprise_service_mesh import EnterpriseServiceMesh, ServiceIdentity
-from services.shared.event_streaming import EventStreamProcessor, StreamEvent, EventType, EventPriority
-from services.shared.health import SystemHealth, DependencyHealth, HealthStatus
+from services.shared.event_streaming import EventPriority, EventStreamProcessor, EventType, StreamEvent
+from services.shared.health import DependencyHealth, HealthStatus, SystemHealth
 from services.shared.observability import ObservabilityManager
 from services.shared.operational_excellence import OperationalExcellenceManager
-from services.shared.enterprise_integration import (
-    EnterpriseIntegrationManager, WorkflowContext, RequestContext,
-    StandardizedAPIResponse, ServiceDiscoveryManager
-)
 
 
 class EnterpriseIntegrationVerifier:
@@ -55,9 +59,7 @@ class EnterpriseIntegrationVerifier:
 
             # Test service registration
             service_id = ServiceIdentity(
-                service_name="test_workflow_service",
-                service_version="1.0.0",
-                environment="test"
+                service_name="test_workflow_service", service_version="1.0.0", environment="test"
             )
 
             registration_result = await self.service_mesh.register_service(service_id)
@@ -66,26 +68,20 @@ class EnterpriseIntegrationVerifier:
             cert_result = await self.service_mesh.generate_service_certificate(service_id)
 
             # Test request processing
-            test_request = {
-                "method": "GET",
-                "path": "/health",
-                "headers": {"Authorization": "Bearer test-token"}
-            }
+            test_request = {"method": "GET", "path": "/health", "headers": {"Authorization": "Bearer test-token"}}
 
             # Mock service endpoint
             async def mock_endpoint(request_data):
                 return {"status": "healthy", "service": "test"}
 
             # Test secure communication
-            secure_result = await self.service_mesh.process_request(
-                service_id, test_request, mock_endpoint
-            )
+            secure_result = await self.service_mesh.process_request(service_id, test_request, mock_endpoint)
 
             results = {
                 "service_registration": bool(registration_result),
                 "certificate_generation": bool(cert_result),
                 "secure_communication": bool(secure_result),
-                "mesh_status": await self.service_mesh.get_mesh_status()
+                "mesh_status": await self.service_mesh.get_mesh_status(),
             }
 
             print(f"✅ Service Mesh: Registration {'✅' if results['service_registration'] else '❌'}")
@@ -112,11 +108,7 @@ class EnterpriseIntegrationVerifier:
                 event_type=EventType.SYSTEM,
                 priority=EventPriority.MEDIUM,
                 source_service="verifier",
-                payload={
-                    "action": "test_workflow_execution",
-                    "workflow_id": "wf-123",
-                    "status": "started"
-                }
+                payload={"action": "test_workflow_execution", "workflow_id": "wf-123", "status": "started"},
             )
 
             publish_result = await self.event_stream.publish_event(test_event)
@@ -129,9 +121,7 @@ class EnterpriseIntegrationVerifier:
                 print(f"📨 Received event: {event.event_id}")
 
             subscription_result = await self.event_stream.subscribe_to_events(
-                "test-subscriber",
-                [EventType.SYSTEM],
-                test_handler
+                "test-subscriber", [EventType.SYSTEM], test_handler
             )
 
             # Wait a moment for event processing
@@ -145,7 +135,7 @@ class EnterpriseIntegrationVerifier:
                 "event_subscription": bool(subscription_result),
                 "event_correlation": bool(correlation_result),
                 "stream_statistics": await self.event_stream.get_stream_statistics(),
-                "events_received": len(events_received)
+                "events_received": len(events_received),
             }
 
             print(f"✅ Event Streaming: Publishing {'✅' if results['event_publishing'] else '❌'}")
@@ -165,8 +155,8 @@ class EnterpriseIntegrationVerifier:
 
         try:
             # Import workflow repository for testing
-            from services.orchestrator.modules.workflow_management.repository import WorkflowRepository
             from services.orchestrator.modules.workflow_management.models import WorkflowDefinition, WorkflowStatus
+            from services.orchestrator.modules.workflow_management.repository import WorkflowRepository
 
             # Initialize repository
             repo = WorkflowRepository()
@@ -189,11 +179,11 @@ class EnterpriseIntegrationVerifier:
                 indexes = [row[0] for row in cursor.fetchall()]
 
                 expected_indexes = [
-                    'idx_workflow_status',
-                    'idx_workflow_created_by',
-                    'idx_execution_workflow_id',
-                    'idx_execution_status',
-                    'idx_execution_initiated_by'
+                    "idx_workflow_status",
+                    "idx_workflow_created_by",
+                    "idx_execution_workflow_id",
+                    "idx_execution_status",
+                    "idx_execution_initiated_by",
                 ]
 
                 indexes_present = all(idx in indexes for idx in expected_indexes)
@@ -214,7 +204,7 @@ class EnterpriseIntegrationVerifier:
                 "execution_table_columns": exec_columns,
                 "expected_indexes": expected_indexes,
                 "actual_indexes": indexes,
-                "database_stats": stats
+                "database_stats": stats,
             }
 
             print(f"✅ Database: Optimization {'✅' if results['database_optimization'] else '❌'}")
@@ -236,7 +226,7 @@ class EnterpriseIntegrationVerifier:
 
         try:
             # Import health components
-            from services.shared.health import create_health_response, HealthStatus
+            from services.shared.health import HealthStatus, create_health_response
 
             # Test health status creation
             health_status = HealthStatus(
@@ -244,15 +234,11 @@ class EnterpriseIntegrationVerifier:
                 service="workflow_management",
                 version="1.0.0",
                 uptime_seconds=3600.0,
-                environment="test"
+                environment="test",
             )
 
             # Test dependency health
-            dependency_health = DependencyHealth(
-                name="workflow_database",
-                status="healthy",
-                response_time_ms=45.2
-            )
+            dependency_health = DependencyHealth(name="workflow_database", status="healthy", response_time_ms=45.2)
 
             # Test system health
             system_health = SystemHealth(
@@ -260,25 +246,15 @@ class EnterpriseIntegrationVerifier:
                 services_checked=5,
                 services_healthy=5,
                 services_unhealthy=0,
-                service_details={
-                    "workflow_service": dependency_health,
-                    "database": dependency_health
-                },
-                environment_info={
-                    "environment": "test",
-                    "version": "1.0.0"
-                }
+                service_details={"workflow_service": dependency_health, "database": dependency_health},
+                environment_info={"environment": "test", "version": "1.0.0"},
             )
 
             # Test health response creation
             health_response = create_health_response(
                 status="healthy",
                 service="workflow_management",
-                additional_info={
-                    "database_connected": True,
-                    "active_workflows": 2,
-                    "pending_executions": 1
-                }
+                additional_info={"database_connected": True, "active_workflows": 2, "pending_executions": 1},
             )
 
             results = {
@@ -286,7 +262,7 @@ class EnterpriseIntegrationVerifier:
                 "dependency_health_tracking": dependency_health.status == "healthy",
                 "system_health_monitoring": system_health.overall_healthy,
                 "health_response_generation": health_response.get("status") == "healthy",
-                "health_components_available": True
+                "health_components_available": True,
             }
 
             print(f"✅ Health: Status Creation {'✅' if results['health_status_creation'] else '❌'}")
@@ -311,13 +287,15 @@ class EnterpriseIntegrationVerifier:
             # Get all routes
             routes = []
             for route in workflow_router.routes:
-                if hasattr(route, 'methods'):
+                if hasattr(route, "methods"):
                     for method in route.methods:
-                        routes.append({
-                            "method": method,
-                            "path": route.path,
-                            "endpoint": route.endpoint.__name__ if route.endpoint else "unknown"
-                        })
+                        routes.append(
+                            {
+                                "method": method,
+                                "path": route.path,
+                                "endpoint": route.endpoint.__name__ if route.endpoint else "unknown",
+                            }
+                        )
 
             # Categorize endpoints
             crud_endpoints = {
@@ -325,13 +303,13 @@ class EnterpriseIntegrationVerifier:
                 "workflow_read": any(r["method"] == "GET" and r["path"] == "/{workflow_id}" for r in routes),
                 "workflow_update": any(r["method"] == "PUT" and r["path"] == "/{workflow_id}" for r in routes),
                 "workflow_delete": any(r["method"] == "DELETE" and r["path"] == "/{workflow_id}" for r in routes),
-                "workflow_list": any(r["method"] == "GET" and r["path"] == "/" for r in routes)
+                "workflow_list": any(r["method"] == "GET" and r["path"] == "/" for r in routes),
             }
 
             execution_endpoints = {
                 "workflow_execute": any(r["method"] == "POST" and "execute" in r["path"] for r in routes),
                 "execution_status": any(r["method"] == "GET" and "executions" in r["path"] for r in routes),
-                "execution_cancel": any(r["method"] == "POST" and "cancel" in r["path"] for r in routes)
+                "execution_cancel": any(r["method"] == "POST" and "cancel" in r["path"] for r in routes),
             }
 
             advanced_endpoints = {
@@ -339,14 +317,14 @@ class EnterpriseIntegrationVerifier:
                 "templates": any("templates" in r["path"] for r in routes),
                 "statistics": any("statistics" in r["path"] for r in routes),
                 "health": any("health" in r["path"] for r in routes),
-                "activity": any("activity" in r["path"] for r in routes)
+                "activity": any("activity" in r["path"] for r in routes),
             }
 
             # Check for proper HTTP status codes and response formats
             proper_responses = all(
-                hasattr(route, 'response_model') or hasattr(route, 'responses')
+                hasattr(route, "response_model") or hasattr(route, "responses")
                 for route in workflow_router.routes
-                if hasattr(route, 'methods') and 'GET' in route.methods
+                if hasattr(route, "methods") and "GET" in route.methods
             )
 
             results = {
@@ -357,11 +335,10 @@ class EnterpriseIntegrationVerifier:
                 "proper_responses": proper_responses,
                 "http_methods_supported": list(set(r["method"] for r in routes)),
                 "endpoints_list": routes,
-                "api_completeness_score": sum([
-                    sum(crud_endpoints.values()),
-                    sum(execution_endpoints.values()),
-                    sum(advanced_endpoints.values())
-                ]) / (len(crud_endpoints) + len(execution_endpoints) + len(advanced_endpoints))
+                "api_completeness_score": sum(
+                    [sum(crud_endpoints.values()), sum(execution_endpoints.values()), sum(advanced_endpoints.values())]
+                )
+                / (len(crud_endpoints) + len(execution_endpoints) + len(advanced_endpoints)),
             }
 
             print(f"✅ REST API: Total Endpoints {results['total_endpoints']}")
@@ -389,7 +366,7 @@ class EnterpriseIntegrationVerifier:
                 workflow_id="test-wf-123",
                 execution_id="test-exec-456",
                 user_id="test-user",
-                correlation_id="test-corr-789"
+                correlation_id="test-corr-789",
             )
 
             # Test request context
@@ -397,7 +374,7 @@ class EnterpriseIntegrationVerifier:
                 request_id="test-req-123",
                 user_id="test-user",
                 service_name="workflow_service",
-                operation="create_workflow"
+                operation="create_workflow",
             )
 
             # Test standardized response
@@ -405,10 +382,7 @@ class EnterpriseIntegrationVerifier:
                 success=True,
                 message="Test operation successful",
                 data={"workflow_id": "test-123"},
-                metadata={
-                    "request_id": request_context.request_id,
-                    "processing_time_ms": 150.5
-                }
+                metadata={"request_id": request_context.request_id, "processing_time_ms": 150.5},
             )
 
             # Test service discovery
@@ -420,12 +394,18 @@ class EnterpriseIntegrationVerifier:
                 "request_context_tracking": bool(request_context.request_id),
                 "standardized_responses": response.success,
                 "service_discovery": bool(service_info),
-                "integration_components_available": True
+                "integration_components_available": True,
             }
 
-            print(f"✅ Enterprise Integration: Context Management {'✅' if results['workflow_context_management'] else '❌'}")
-            print(f"✅ Enterprise Integration: Request Tracking {'✅' if results['request_context_tracking'] else '❌'}")
-            print(f"✅ Enterprise Integration: Standardized Responses {'✅' if results['standardized_responses'] else '❌'}")
+            print(
+                f"✅ Enterprise Integration: Context Management {'✅' if results['workflow_context_management'] else '❌'}"
+            )
+            print(
+                f"✅ Enterprise Integration: Request Tracking {'✅' if results['request_context_tracking'] else '❌'}"
+            )
+            print(
+                f"✅ Enterprise Integration: Standardized Responses {'✅' if results['standardized_responses'] else '❌'}"
+            )
             print(f"✅ Enterprise Integration: Service Discovery {'✅' if results['service_discovery'] else '❌'}")
 
             return results
@@ -445,7 +425,7 @@ class EnterpriseIntegrationVerifier:
             ("Database Persistence", self.verify_database_persistence),
             ("Health Monitoring", self.verify_health_monitoring),
             ("RESTful API", self.verify_restful_api),
-            ("Enterprise Integration", self.verify_enterprise_integration)
+            ("Enterprise Integration", self.verify_enterprise_integration),
         ]
 
         all_results = {}
@@ -473,7 +453,7 @@ class EnterpriseIntegrationVerifier:
                 all_results[component_name.lower().replace(" ", "_")] = {
                     "error": str(e),
                     "status": "error",
-                    "_success_rate": 0.0
+                    "_success_rate": 0.0,
                 }
 
         # Calculate overall success
@@ -485,7 +465,7 @@ class EnterpriseIntegrationVerifier:
             "overall_success_rate": overall_success_rate,
             "component_success_rates": {k: v.get("_success_rate", 0) for k, v in all_results.items()},
             "timestamp": datetime.now().isoformat(),
-            "status": "healthy" if overall_success_rate >= 0.8 else "needs_attention"
+            "status": "healthy" if overall_success_rate >= 0.8 else "needs_attention",
         }
 
         print("\n" + "=" * 80)
@@ -526,7 +506,7 @@ async def enhance_enterprise_integration():
 
     try:
         from services.orchestrator.modules.workflow_management.service import WorkflowManagementService
-        from services.shared.event_streaming import EventStreamProcessor, StreamEvent, EventType
+        from services.shared.event_streaming import EventStreamProcessor, EventType, StreamEvent
 
         # Create workflow event publisher
         class WorkflowEventPublisher:
@@ -540,11 +520,7 @@ async def enhance_enterprise_integration():
                     event_type=EventType.BUSINESS,
                     priority=EventPriority.MEDIUM,
                     source_service="workflow_management",
-                    payload={
-                        "event_type": event_type,
-                        "timestamp": datetime.now().isoformat(),
-                        **workflow_data
-                    }
+                    payload={"event_type": event_type, "timestamp": datetime.now().isoformat(), **workflow_data},
                 )
 
                 await self.event_stream.publish_event(event)
@@ -560,7 +536,7 @@ async def enhance_enterprise_integration():
     print("🏥 Adding comprehensive health checks...")
 
     try:
-        from services.shared.health import HealthStatus, DependencyHealth
+        from services.shared.health import DependencyHealth, HealthStatus
 
         class WorkflowHealthChecker:
             def __init__(self):
@@ -571,6 +547,7 @@ async def enhance_enterprise_integration():
                 try:
                     # Check database connectivity
                     from services.orchestrator.modules.workflow_management.repository import WorkflowRepository
+
                     repo = WorkflowRepository()
 
                     # Get statistics
@@ -578,6 +555,7 @@ async def enhance_enterprise_integration():
 
                     # Check active executions
                     from services.orchestrator.modules.workflow_management.service import WorkflowManagementService
+
                     if not self.workflow_service:
                         self.workflow_service = WorkflowManagementService()
 
@@ -588,18 +566,16 @@ async def enhance_enterprise_integration():
                         "workflows_total": stats.get("workflows", {}).get("total_workflows", 0),
                         "executions_total": stats.get("executions", {}).get("total_executions", 0),
                         "active_executions": active_count,
-                        "success_rate": stats.get("executions", {}).get("total_executions", 0) and
-                                       (stats.get("executions", {}).get("completed_executions", 0) /
-                                        stats.get("executions", {}).get("total_executions", 0)),
-                        "status": "healthy"
+                        "success_rate": stats.get("executions", {}).get("total_executions", 0)
+                        and (
+                            stats.get("executions", {}).get("completed_executions", 0)
+                            / stats.get("executions", {}).get("total_executions", 0)
+                        ),
+                        "status": "healthy",
                     }
 
                 except Exception as e:
-                    return {
-                        "database_connected": False,
-                        "error": str(e),
-                        "status": "unhealthy"
-                    }
+                    return {"database_connected": False, "error": str(e), "status": "unhealthy"}
 
         health_checker = WorkflowHealthChecker()
         enhancements.append(("Comprehensive Health Checks", "✅ Created"))
@@ -619,7 +595,7 @@ async def enhance_enterprise_integration():
                 self.rate_limits = {
                     "workflow_create": 10,  # per minute
                     "workflow_execute": 5,  # per minute
-                    "general": 100  # per minute
+                    "general": 100,  # per minute
                 }
 
             async def check_rate_limit(self, endpoint: str, client_id: str) -> bool:
@@ -632,8 +608,7 @@ async def enhance_enterprise_integration():
 
                 # Clean old requests
                 self.requests[client_id] = [
-                    req_time for req_time in self.requests[client_id]
-                    if req_time > window_start
+                    req_time for req_time in self.requests[client_id] if req_time > window_start
                 ]
 
                 # Check limit
@@ -665,7 +640,7 @@ async def enhance_enterprise_integration():
                     "requests_total": 0,
                     "requests_successful": 0,
                     "requests_failed": 0,
-                    "average_response_time": 0.0
+                    "average_response_time": 0.0,
                 }
 
             async def record_request(self, success: bool, response_time: float):
@@ -687,9 +662,12 @@ async def enhance_enterprise_integration():
                 """Get service mesh performance metrics."""
                 return {
                     **self.metrics,
-                    "success_rate": (self.metrics["requests_successful"] / self.metrics["requests_total"]
-                                   if self.metrics["requests_total"] > 0 else 0),
-                    "mesh_status": await self.service_mesh.get_mesh_status()
+                    "success_rate": (
+                        self.metrics["requests_successful"] / self.metrics["requests_total"]
+                        if self.metrics["requests_total"] > 0
+                        else 0
+                    ),
+                    "mesh_status": await self.service_mesh.get_mesh_status(),
                 }
 
         mesh_monitor = ServiceMeshMonitor()
@@ -730,19 +708,19 @@ async def main():
     print(f"\n🎯 OVERALL STATUS: {summary.get('status', 'unknown').upper()}")
     print(".1%")
 
-    print("
-📊 COMPONENT STATUS:"    for component, results in verification_results.items():
+    print("\n📊 COMPONENT STATUS:")
+    for component, results in verification_results.items():
         if component != "_summary":
             success_rate = results.get("_success_rate", 0)
             status_icon = "✅" if success_rate >= 0.8 else "⚠️" if success_rate >= 0.5 else "❌"
             print(f"   {status_icon} {component.replace('_', ' ').title()}: {success_rate:.1%}")
 
-    print("
-🔧 ENHANCEMENTS APPLIED:"    for enhancement, status in enhancement_results:
+    print("\n🔧 ENHANCEMENTS APPLIED:")
+    for enhancement, status in enhancement_results:
         print(f"   {status} {enhancement}")
 
-    print("
-🏆 RECOMMENDATIONS:"    if summary.get("overall_success_rate", 0) >= 0.9:
+    print("\n🏆 RECOMMENDATIONS:")
+    if summary.get("overall_success_rate", 0) >= 0.9:
         print("   🏆 EXCELLENT! Enterprise integration is fully functional.")
         print("   All components are working optimally with comprehensive features.")
     elif summary.get("overall_success_rate", 0) >= 0.8:
@@ -763,7 +741,7 @@ async def main():
     return {
         "verification_results": verification_results,
         "enhancement_results": enhancement_results,
-        "summary": summary
+        "summary": summary,
     }
 
 

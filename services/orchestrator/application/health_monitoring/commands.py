@@ -1,12 +1,13 @@
-"""Application Commands for Health Monitoring"""
+"""Application Commands for Health Monitoring."""
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 
 @dataclass
 class CheckSystemHealthCommand:
     """Command to check overall system health."""
+
     include_metrics: bool = True
     timeout_seconds: float = 5.0
 
@@ -14,6 +15,7 @@ class CheckSystemHealthCommand:
 @dataclass
 class CheckServiceHealthCommand:
     """Command to check health of a specific service."""
+
     service_name: str
     timeout_seconds: float = 5.0
 
@@ -21,6 +23,7 @@ class CheckServiceHealthCommand:
 @dataclass
 class RegisterHealthCheckCommand:
     """Command to register a custom health check for a service."""
+
     service_name: str
     check_function_name: str  # Reference to check function
     metadata: Optional[Dict[str, Any]] = None
@@ -33,4 +36,5 @@ class RegisterHealthCheckCommand:
 @dataclass
 class UpdateSystemMetricsCommand:
     """Command to update system metrics."""
+
     metrics: Dict[str, Any]

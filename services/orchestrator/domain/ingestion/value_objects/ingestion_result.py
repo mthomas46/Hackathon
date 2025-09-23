@@ -1,7 +1,7 @@
-"""Ingestion Result Value Object"""
+"""Ingestion Result Value Object."""
 
-from typing import Dict, Any, Optional, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from .ingestion_status import IngestionStatus
@@ -23,7 +23,7 @@ class IngestionResult:
         metadata: Optional[Dict[str, Any]] = None,
         started_at: Optional[datetime] = None,
         completed_at: Optional[datetime] = None,
-        duration_seconds: Optional[float] = None
+        duration_seconds: Optional[float] = None,
     ):
         self._ingestion_id = ingestion_id or str(uuid4())
         self._request_id = request_id
@@ -154,11 +154,7 @@ class IngestionResult:
 
     def add_error(self, error_type: str, message: str, details: Optional[Dict[str, Any]] = None):
         """Add an error to the result."""
-        error = {
-            "type": error_type,
-            "message": message,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        error = {"type": error_type, "message": message, "timestamp": datetime.utcnow().isoformat()}
         if details:
             error["details"] = details
 
@@ -208,7 +204,7 @@ class IngestionResult:
             "progress_percentage": self.progress_percentage,
             "has_errors": self.has_errors,
             "is_complete": self.is_complete,
-            "is_successful": self.is_successful
+            "is_successful": self.is_successful,
         }
 
         if self._started_at:

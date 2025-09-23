@@ -8,23 +8,22 @@ without complex dependencies.
 
 import asyncio
 import json
-import uuid
-import time
-from datetime import datetime
-from typing import Dict, Any, Optional
+import os
 
 # Add the services directory to the path
 import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+import time
+import uuid
+from datetime import datetime
+from typing import Any, Dict, Optional
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
 
 # Import our successfully implemented modules
-from services.interpreter.modules.advanced_nlp_engine import (
-    ConversationMemoryManager, AdvancedIntentRecognizer
-)
+from services.interpreter.modules.advanced_nlp_engine import AdvancedIntentRecognizer, ConversationMemoryManager
 from services.shared.enterprise_error_handling_v2 import enterprise_error_handler
-from services.shared.event_streaming import event_stream_processor
 from services.shared.enterprise_service_mesh import enterprise_service_mesh
+from services.shared.event_streaming import event_stream_processor
 
 
 class SimpleOrchestrator:
@@ -45,19 +44,23 @@ class SimpleOrchestrator:
             # Initialize Phase 2 components
             print("📝 Initializing Advanced NLP Engine...")
             from services.interpreter.modules.advanced_nlp_engine import initialize_advanced_nlp
+
             await initialize_advanced_nlp()
 
             # Initialize Phase 1 components
             print("🔧 Initializing Enterprise Error Handling...")
             from services.shared.enterprise_error_handling_v2 import initialize_enterprise_error_handling
+
             await initialize_enterprise_error_handling()
 
             print("🔄 Initializing Event Streaming...")
             from services.shared.event_streaming import initialize_event_streaming
+
             await initialize_event_streaming()
 
             print("🔗 Initializing Service Mesh...")
             from services.shared.enterprise_service_mesh import initialize_enterprise_service_mesh
+
             await initialize_enterprise_service_mesh()
 
             print("✅ Orchestrator initialized successfully!")
@@ -205,24 +208,26 @@ class SimpleOrchestrator:
                 print(f"   • Clarification Needed: {intent_result.clarification_question}")
 
             # Add response to conversation
-            conversation.add_message({
-                "intent": intent_result.intent,
-                "confidence": intent_result.confidence_score
-            }, "assistant")
+            conversation.add_message(
+                {"intent": intent_result.intent, "confidence": intent_result.confidence_score}, "assistant"
+            )
 
             # Publish event
-            await event_stream_processor.publish_event("system_events", {
-                "event_id": str(uuid.uuid4()),
-                "event_type": "nlp_processed",
-                "source_service": "orchestrator",
-                "event_name": "nlp_query_processed",
-                "payload": {
-                    "query": query,
-                    "intent": intent_result.intent,
-                    "confidence": intent_result.confidence_score
+            await event_stream_processor.publish_event(
+                "system_events",
+                {
+                    "event_id": str(uuid.uuid4()),
+                    "event_type": "nlp_processed",
+                    "source_service": "orchestrator",
+                    "event_name": "nlp_query_processed",
+                    "payload": {
+                        "query": query,
+                        "intent": intent_result.intent,
+                        "confidence": intent_result.confidence_score,
+                    },
+                    "timestamp": datetime.now(),
                 },
-                "timestamp": datetime.now()
-            })
+            )
 
         except Exception as e:
             print(f"❌ NLP processing failed: {e}")
@@ -246,8 +251,8 @@ class SimpleOrchestrator:
                     "results": {
                         "quality_score": 0.85,
                         "issues_found": 3,
-                        "recommendations": ["Improve consistency", "Add more examples"]
-                    }
+                        "recommendations": ["Improve consistency", "Add more examples"],
+                    },
                 }
             elif workflow_type == "pr_analysis":
                 result = {
@@ -257,14 +262,14 @@ class SimpleOrchestrator:
                     "results": {
                         "confidence_score": 0.78,
                         "risks_identified": 2,
-                        "recommendations": ["Add more tests", "Update documentation"]
-                    }
+                        "recommendations": ["Add more tests", "Update documentation"],
+                    },
                 }
             else:
                 result = {
                     "status": "completed",
                     "workflow_type": workflow_type,
-                    "message": f"Generic {workflow_type} workflow completed"
+                    "message": f"Generic {workflow_type} workflow completed",
                 }
 
             duration = time.time() - start_time
@@ -274,24 +279,23 @@ class SimpleOrchestrator:
             print(f"   • Result: {result['message']}")
             print(f"   • Status: {result['status']}")
 
-            if 'results' in result:
+            if "results" in result:
                 print("   • Key Results:")
-                for key, value in result['results'].items():
+                for key, value in result["results"].items():
                     print(f"     - {key}: {value}")
 
             # Publish workflow completion event
-            await event_stream_processor.publish_event("system_events", {
-                "event_id": str(uuid.uuid4()),
-                "event_type": "workflow_completed",
-                "source_service": "orchestrator",
-                "event_name": "workflow_execution_finished",
-                "payload": {
-                    "workflow_type": workflow_type,
-                    "duration": duration,
-                    "result": result
+            await event_stream_processor.publish_event(
+                "system_events",
+                {
+                    "event_id": str(uuid.uuid4()),
+                    "event_type": "workflow_completed",
+                    "source_service": "orchestrator",
+                    "event_name": "workflow_execution_finished",
+                    "payload": {"workflow_type": workflow_type, "duration": duration, "result": result},
+                    "timestamp": datetime.now(),
                 },
-                "timestamp": datetime.now()
-            })
+            )
 
         except Exception as e:
             print(f"❌ Workflow simulation failed: {e}")
@@ -309,7 +313,7 @@ class SimpleOrchestrator:
                 "service_name": "orchestrator",
                 "operation": "test_error_handling",
                 "user_id": "standalone_user",
-                "error_type": "test_error"
+                "error_type": "test_error",
             }
 
             error_response = await enterprise_error_handler.handle_error(test_error, context)
@@ -322,18 +326,21 @@ class SimpleOrchestrator:
             print(f"   • User Message: {error_response['user_message']}")
 
             # Publish error event
-            await event_stream_processor.publish_event("system_events", {
-                "event_id": str(uuid.uuid4()),
-                "event_type": "error_handled",
-                "source_service": "orchestrator",
-                "event_name": "error_processing_completed",
-                "payload": {
-                    "error_message": error_msg,
-                    "error_id": error_response['error']['id'],
-                    "recovery_successful": error_response['recovery']['successful']
+            await event_stream_processor.publish_event(
+                "system_events",
+                {
+                    "event_id": str(uuid.uuid4()),
+                    "event_type": "error_handled",
+                    "source_service": "orchestrator",
+                    "event_name": "error_processing_completed",
+                    "payload": {
+                        "error_message": error_msg,
+                        "error_id": error_response["error"]["id"],
+                        "recovery_successful": error_response["recovery"]["successful"],
+                    },
+                    "timestamp": datetime.now(),
                 },
-                "timestamp": datetime.now()
-            })
+            )
 
         except Exception as e:
             print(f"❌ Error handling test failed: {e}")
@@ -346,7 +353,7 @@ class SimpleOrchestrator:
         # Get events from the activity feed (simplified)
         stats = event_stream_processor.get_stream_statistics()
 
-        for stream_name, stream_data in stats.get('stream_details', {}).items():
+        for stream_name, stream_data in stats.get("stream_details", {}).items():
             print(f"Stream: {stream_name}")
             print(f"   • Events: {stream_data.get('total_events', 0)}")
             print(f"   • Processing: {stream_data.get('processing_metrics', {}).get('events_processed', 0)} processed")
@@ -378,41 +385,43 @@ class SimpleOrchestrator:
                 "intent_recognizer": "healthy",
                 "error_handler": "healthy",
                 "event_processor": "healthy",
-                "service_mesh": "healthy"
+                "service_mesh": "healthy",
             },
             "performance": {
                 "active_conversations": self.conversation_memory.get_active_conversations_count(),
                 "commands_processed": len(self.command_history),
                 "errors_processed": len(enterprise_error_handler.error_history),
-                "events_processed": event_stream_processor.get_stream_statistics().get('total_events_processed', 0)
+                "events_processed": event_stream_processor.get_stream_statistics().get("total_events_processed", 0),
             },
             "phase1_features": [
                 "Enterprise Error Handling ✅",
                 "Service Mesh Security ✅",
                 "Event Streaming Infrastructure ✅",
                 "Core Service Integration ✅",
-                "Infrastructure Monitoring ✅"
+                "Infrastructure Monitoring ✅",
             ],
             "phase2_features": [
                 "Advanced NLP Engine ✅",
                 "Conversation Memory Management ✅",
                 "Context-Aware Intent Recognition ✅",
-                "Multi-Modal Processing Support ✅"
-            ]
+                "Multi-Modal Processing Support ✅",
+            ],
         }
 
         print("✅ Diagnostics completed:")
-        print(f"   • Components: {len([c for c in diagnostics['components'].values() if c == 'healthy'])}/{len(diagnostics['components'])} healthy")
+        print(
+            f"   • Components: {len([c for c in diagnostics['components'].values() if c == 'healthy'])}/{len(diagnostics['components'])} healthy"
+        )
         print(f"   • Active Conversations: {diagnostics['performance']['active_conversations']}")
         print(f"   • Commands Processed: {diagnostics['performance']['commands_processed']}")
 
         print("\n🎯 IMPLEMENTED FEATURES:")
         print("Phase 1 - Critical Foundation:")
-        for feature in diagnostics['phase1_features']:
+        for feature in diagnostics["phase1_features"]:
             print(f"   • {feature}")
 
         print("\nPhase 2 - Advanced Orchestration:")
-        for feature in diagnostics['phase2_features']:
+        for feature in diagnostics["phase2_features"]:
             print(f"   • {feature}")
 
         return diagnostics

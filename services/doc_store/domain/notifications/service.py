@@ -1,11 +1,13 @@
-"""Notifications service for business logic operations.
+"""
+Notifications service for business logic operations.
 
 Handles notification processing and webhook management.
 """
-import uuid
-from typing import Dict, Any, Optional, List
+
+from typing import Any, Dict, Optional
+
+from ...core.entities import NotificationEvent
 from ...core.service import BaseService
-from ...core.entities import NotificationEvent, Webhook
 from .repository import NotificationsRepository
 
 
@@ -24,22 +26,28 @@ class NotificationsService(BaseService[NotificationEvent]):
         """Create notification event from data."""
         return NotificationEvent(
             id=entity_id,
-            event_type=data['event_type'],
-            entity_type=data['entity_type'],
-            entity_id=data['entity_id'],
-            user_id=data.get('user_id'),
-            metadata=data.get('metadata', {})
+            event_type=data["event_type"],
+            entity_type=data["entity_type"],
+            entity_id=data["entity_id"],
+            user_id=data.get("user_id"),
+            metadata=data.get("metadata", {}),
         )
 
-    def emit_event(self, event_type: str, entity_type: str, entity_id: str,
-                  user_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None) -> NotificationEvent:
+    def emit_event(
+        self,
+        event_type: str,
+        entity_type: str,
+        entity_id: str,
+        user_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> NotificationEvent:
         """Emit a notification event."""
         data = {
-            'event_type': event_type,
-            'entity_type': entity_type,
-            'entity_id': entity_id,
-            'user_id': user_id,
-            'metadata': metadata or {}
+            "event_type": event_type,
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+            "user_id": user_id,
+            "metadata": metadata or {},
         }
         event = self.create_entity(data)
 
@@ -57,20 +65,21 @@ class NotificationsService(BaseService[NotificationEvent]):
             # For now, we'll just log that webhooks would be triggered
             pass
 
-    def get_event_history(self, event_type: Optional[str] = None, entity_type: Optional[str] = None,
-                         entity_id: Optional[str] = None, limit: int = 100) -> Dict[str, Any]:
+    def get_event_history(
+        self,
+        event_type: Optional[str] = None,
+        entity_type: Optional[str] = None,
+        entity_id: Optional[str] = None,
+        limit: int = 100,
+    ) -> Dict[str, Any]:
         """Get notification event history."""
         events = self.repository.get_event_history(event_type, entity_type, entity_id, limit)
 
         return {
             "events": [event.to_dict() for event in events],
             "total": len(events),
-            "filters": {
-                "event_type": event_type,
-                "entity_type": entity_type,
-                "entity_id": entity_id
-            },
-            "limit": limit
+            "filters": {"event_type": event_type, "entity_type": entity_type, "entity_id": entity_id},
+            "limit": limit,
         }
 
     def get_notification_stats(self, days_back: int = 7) -> Dict[str, Any]:

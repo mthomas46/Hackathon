@@ -4,12 +4,11 @@ This module contains comprehensive tests for monitoring integration,
 health checks, metrics collection, and observability validation.
 """
 
+import json
+from pathlib import Path
+
 import pytest
 import requests
-import time
-import json
-from unittest.mock import patch, MagicMock
-from pathlib import Path
 
 
 class TestHealthCheckIntegration:
@@ -19,12 +18,7 @@ class TestHealthCheckIntegration:
         """Test that health endpoint returns proper JSON format."""
         # This test assumes the service is running
         # In a real CI/CD environment, this would test against a running container
-        health_response = {
-            "status": "healthy",
-            "timestamp": "2024-01-01T00:00:00Z",
-            "version": "1.0.0",
-            "uptime": 3600
-        }
+        health_response = {"status": "healthy", "timestamp": "2024-01-01T00:00:00Z", "version": "1.0.0", "uptime": 3600}
 
         # Validate required fields
         assert "status" in health_response
@@ -38,14 +32,10 @@ class TestHealthCheckIntegration:
             "status": "healthy",
             "timestamp": "2024-01-01T00:00:00Z",
             "version": "1.0.0",
-            "services": {
-                "database": "healthy",
-                "redis": "healthy",
-                "ecosystem": "healthy"
-            },
+            "services": {"database": "healthy", "redis": "healthy", "ecosystem": "healthy"},
             "uptime": 3600,
             "memory_usage": 85.5,
-            "cpu_usage": 12.3
+            "cpu_usage": 12.3,
         }
 
         # Validate schema
@@ -118,17 +108,17 @@ simulation_requests_total{method="POST",endpoint="/simulate",status="200"} 42
 """
 
         # Validate Prometheus format
-        lines = mock_metrics.strip().split('\n')
+        lines = mock_metrics.strip().split("\n")
 
         # Should have HELP and TYPE comments
-        help_lines = [line for line in lines if line.startswith('# HELP')]
-        type_lines = [line for line in lines if line.startswith('# TYPE')]
+        help_lines = [line for line in lines if line.startswith("# HELP")]
+        type_lines = [line for line in lines if line.startswith("# TYPE")]
 
         assert len(help_lines) > 0, "Metrics should have HELP comments"
         assert len(type_lines) > 0, "Metrics should have TYPE comments"
 
         # Should have metric values
-        metric_lines = [line for line in lines if not line.startswith('#')]
+        metric_lines = [line for line in lines if not line.startswith("#")]
         assert len(metric_lines) > 0, "Metrics should have actual values"
 
     @pytest.mark.integration
@@ -217,7 +207,7 @@ class TestLogAggregationIntegration:
         # Mock log entries
         mock_logs = [
             '{"timestamp": "2024-01-01T00:00:00Z", "level": "INFO", "message": "Service started", "service": "project-simulation"}',
-            '{"timestamp": "2024-01-01T00:00:01Z", "level": "DEBUG", "message": "Processing request", "request_id": "12345"}'
+            '{"timestamp": "2024-01-01T00:00:01Z", "level": "DEBUG", "message": "Processing request", "request_id": "12345"}',
         ]
 
         for log_entry in mock_logs:
@@ -331,10 +321,7 @@ class TestServiceDiscoveryIntegration:
             "service": "project-simulation",
             "address": "localhost",
             "port": 5075,
-            "health_check": {
-                "http": "http://localhost:5075/health",
-                "interval": "30s"
-            }
+            "health_check": {"http": "http://localhost:5075/health", "interval": "30s"},
         }
 
         # Validate registration structure
@@ -388,16 +375,13 @@ class TestObservabilityIntegration:
                 "level": "INFO",
                 "message": "Processing simulation request",
                 "request_id": "req-12345",
-                "trace_id": "trace-67890"
+                "trace_id": "trace-67890",
             },
             "metric": {
                 "name": "simulation_requests_total",
-                "labels": {
-                    "request_id": "req-12345",
-                    "trace_id": "trace-67890"
-                },
-                "value": 1
-            }
+                "labels": {"request_id": "req-12345", "trace_id": "trace-67890"},
+                "value": 1,
+            },
         }
 
         # Validate correlation
@@ -420,8 +404,8 @@ class TestObservabilityIntegration:
             "panels": [
                 {"title": "CPU Usage", "type": "graph"},
                 {"title": "Memory Usage", "type": "graph"},
-                {"title": "Request Rate", "type": "graph"}
-            ]
+                {"title": "Request Rate", "type": "graph"},
+            ],
         }
 
         # Validate dashboard configuration

@@ -4,21 +4,23 @@ Docker Services Testing Script
 Tests individual services and all services in Docker containers
 """
 
-import os
-import sys
 import asyncio
+import json
+import os
 import subprocess
+import sys
 import time
-import requests
 from pathlib import Path
 from typing import Dict, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
+
 import docker
-import json
+import requests
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 console = Console()
+
 
 class DockerServiceTester:
     """Test Docker services individually and as a group."""
@@ -32,7 +34,7 @@ class DockerServiceTester:
                 "image": "redis:7-alpine",
                 "ports": {"6379/tcp": 6379},
                 "health_url": None,
-                "health_check": self._check_redis_health
+                "health_check": self._check_redis_health,
             },
             "doc_store": {
                 "name": "Doc Store",
@@ -41,7 +43,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5010/health"
+                "health_url": "http://localhost:5010/health",
             },
             "analysis_service": {
                 "name": "Analysis Service",
@@ -50,7 +52,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis", "doc_store"],
-                "health_url": "http://localhost:5020/health"
+                "health_url": "http://localhost:5020/health",
             },
             "orchestrator": {
                 "name": "Orchestrator",
@@ -59,7 +61,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5099/health/system"
+                "health_url": "http://localhost:5099/health/system",
             },
             "prompt_store": {
                 "name": "Prompt Store",
@@ -68,7 +70,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5110/health"
+                "health_url": "http://localhost:5110/health",
             },
             "summarizer_hub": {
                 "name": "Summarizer Hub",
@@ -77,7 +79,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5060/health"
+                "health_url": "http://localhost:5060/health",
             },
             "architecture_digitizer": {
                 "name": "Architecture Digitizer",
@@ -86,7 +88,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5105/health"
+                "health_url": "http://localhost:5105/health",
             },
             "bedrock_proxy": {
                 "name": "Bedrock Proxy",
@@ -95,7 +97,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:7090/health"
+                "health_url": "http://localhost:7090/health",
             },
             "github_mcp": {
                 "name": "GitHub MCP",
@@ -104,7 +106,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5072/health"
+                "health_url": "http://localhost:5072/health",
             },
             "interpreter": {
                 "name": "Interpreter",
@@ -113,7 +115,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5120/health"
+                "health_url": "http://localhost:5120/health",
             },
             "code_analyzer": {
                 "name": "Code Analyzer",
@@ -122,7 +124,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5085/health"
+                "health_url": "http://localhost:5085/health",
             },
             "secure_analyzer": {
                 "name": "Secure Analyzer",
@@ -131,7 +133,7 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5070/health"
+                "health_url": "http://localhost:5070/health",
             },
             "log_collector": {
                 "name": "Log Collector",
@@ -140,8 +142,8 @@ class DockerServiceTester:
                 "volumes": [f"{self.project_root}:/app:ro"],
                 "environment": ["PYTHONPATH=/app"],
                 "depends_on": ["redis"],
-                "health_url": "http://localhost:5080/health"
-            }
+                "health_url": "http://localhost:5080/health",
+            },
         }
 
         self.containers: Dict[str, docker.models.containers.Container] = {}
@@ -151,7 +153,8 @@ class DockerServiceTester:
         """Check Redis health."""
         try:
             import redis
-            r = redis.Redis(host='localhost', port=6379, db=0)
+
+            r = redis.Redis(host="localhost", port=6379, db=0)
             return r.ping()
         except:
             return False
@@ -227,7 +230,7 @@ class DockerServiceTester:
             container.reload()
             if container.status != "running":
                 console.print(f"❌ Container not running: {container.status}")
-                logs = container.logs().decode('utf-8')
+                logs = container.logs().decode("utf-8")
                 console.print(f"Logs: {logs[:500]}...")
                 return False
 
@@ -237,7 +240,7 @@ class DockerServiceTester:
                 return True
             else:
                 console.print(f"❌ {service['name']} health check failed")
-                logs = container.logs().decode('utf-8')
+                logs = container.logs().decode("utf-8")
                 console.print(f"Logs: {logs[:500]}...")
                 return False
 
@@ -259,7 +262,7 @@ class DockerServiceTester:
                 ["docker-compose", "-f", "docker-compose.dev.yml", "up", "-d"],
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=300,
             )
 
             if result.returncode != 0:
@@ -286,7 +289,9 @@ class DockerServiceTester:
 
             success_rate = healthy_services / total_services if total_services > 0 else 0
 
-            console.print(f"\n📊 Health Check Results: {healthy_services}/{total_services} services healthy ({success_rate:.1%})")
+            console.print(
+                f"\n📊 Health Check Results: {healthy_services}/{total_services} services healthy ({success_rate:.1%})"
+            )
 
             if success_rate >= 0.8:  # 80% success rate
                 console.print("🎉 Docker ecosystem test PASSED")
@@ -312,9 +317,7 @@ class DockerServiceTester:
         results = {}
 
         with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
+            SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
         ) as progress:
             task = progress.add_task("Testing individual services...", total=len(self.services_config))
 
@@ -349,8 +352,7 @@ class DockerServiceTester:
 
             # Cleanup
             console.print("🧹 Cleaning up Docker containers...")
-            subprocess.run(["docker-compose", "-f", "docker-compose.dev.yml", "down"],
-                         capture_output=True)
+            subprocess.run(["docker-compose", "-f", "docker-compose.dev.yml", "down"], capture_output=True)
 
             return success
 
@@ -368,10 +370,15 @@ class DockerServiceTester:
 
         for service_id, service in self.services_config.items():
             port = list(service.get("ports", {}).values())[0] if service.get("ports") else "N/A"
-            status = "🟢 Running" if service_id in self.containers and self.containers[service_id].status == "running" else "🔴 Stopped"
+            status = (
+                "🟢 Running"
+                if service_id in self.containers and self.containers[service_id].status == "running"
+                else "🔴 Stopped"
+            )
             table.add_row(service["name"], str(port), service.get("description", "N/A"), status)
 
         console.print(table)
+
 
 async def main():
     """Main function."""
@@ -412,6 +419,7 @@ async def main():
 
     if not any([args.individual, args.ecosystem, args.all, args.service, args.status]):
         parser.print_help()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

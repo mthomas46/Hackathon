@@ -1,24 +1,21 @@
 """Tests for Application Events system."""
 
-import pytest
-from unittest.mock import Mock, AsyncMock
 from datetime import datetime, timezone
-from typing import Dict, Any, List
-from uuid import uuid4
+from unittest.mock import AsyncMock, Mock
+
+import pytest
 
 from ...application.events.application_events import (
-    ApplicationEvent, AnalysisRequestedEvent, AnalysisCompletedEvent,
-    AnalysisFailedEvent, DocumentCreatedEvent, DocumentUpdatedEvent,
-    FindingCreatedEvent, FindingResolvedEvent
+    AnalysisCompletedEvent,
+    AnalysisFailedEvent,
+    AnalysisRequestedEvent,
+    ApplicationEvent,
+    DocumentCreatedEvent,
+    FindingCreatedEvent,
 )
 from ...application.events.event_bus import EventBus
 from ...application.events.event_publisher import EventPublisher
 from ...application.events.event_subscriber import EventSubscriber
-
-from ...domain.entities.document import Document
-from ...domain.entities.analysis import Analysis
-from ...domain.entities.finding import Finding
-from ...domain.value_objects.analysis_type import AnalysisType
 
 
 class TestApplicationEvents:
@@ -27,149 +24,146 @@ class TestApplicationEvents:
     def test_application_event_creation(self):
         """Test creating base application event."""
         event = ApplicationEvent(
-            event_id='event-123',
-            event_type='test_event',
-            correlation_id='corr-456',
+            event_id="event-123",
+            event_type="test_event",
+            correlation_id="corr-456",
             timestamp=datetime.now(timezone.utc),
-            metadata={'source': 'test'}
+            metadata={"source": "test"},
         )
 
-        assert event.event_id == 'event-123'
-        assert event.event_type == 'test_event'
-        assert event.correlation_id == 'corr-456'
-        assert event.metadata == {'source': 'test'}
+        assert event.event_id == "event-123"
+        assert event.event_type == "test_event"
+        assert event.correlation_id == "corr-456"
+        assert event.metadata == {"source": "test"}
 
     def test_analysis_requested_event_creation(self):
         """Test creating analysis requested event."""
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity',
-            requested_by='user-789',
-            priority='high',
-            configuration={'threshold': 0.8},
-            metadata={'session_id': 'session-101'}
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
+            requested_by="user-789",
+            priority="high",
+            configuration={"threshold": 0.8},
+            metadata={"session_id": "session-101"},
         )
 
-        assert event.event_type == 'analysis_requested'
-        assert event.document_id == 'doc-123'
-        assert event.analysis_type == 'semantic_similarity'
-        assert event.requested_by == 'user-789'
-        assert event.priority == 'high'
-        assert event.configuration == {'threshold': 0.8}
+        assert event.event_type == "analysis_requested"
+        assert event.document_id == "doc-123"
+        assert event.analysis_type == "semantic_similarity"
+        assert event.requested_by == "user-789"
+        assert event.priority == "high"
+        assert event.configuration == {"threshold": 0.8}
 
     def test_analysis_completed_event_creation(self):
         """Test creating analysis completed event."""
         event = AnalysisCompletedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            analysis_id='analysis-123',
-            document_id='doc-123',
-            analysis_type='semantic_similarity',
-            result={'similarity_score': 0.85},
+            event_id="event-123",
+            correlation_id="corr-456",
+            analysis_id="analysis-123",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
+            result={"similarity_score": 0.85},
             execution_time_seconds=2.5,
             findings_count=3,
-            metadata={'user_id': 'user-789'}
+            metadata={"user_id": "user-789"},
         )
 
-        assert event.event_type == 'analysis_completed'
-        assert event.analysis_id == 'analysis-123'
-        assert event.result == {'similarity_score': 0.85}
+        assert event.event_type == "analysis_completed"
+        assert event.analysis_id == "analysis-123"
+        assert event.result == {"similarity_score": 0.85}
         assert event.execution_time_seconds == 2.5
         assert event.findings_count == 3
 
     def test_analysis_failed_event_creation(self):
         """Test creating analysis failed event."""
         event = AnalysisFailedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity',
-            error_message='Analysis failed due to network error',
-            error_code='NETWORK_ERROR',
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
+            error_message="Analysis failed due to network error",
+            error_code="NETWORK_ERROR",
             retry_count=2,
-            metadata={'user_id': 'user-789'}
+            metadata={"user_id": "user-789"},
         )
 
-        assert event.event_type == 'analysis_failed'
-        assert event.error_message == 'Analysis failed due to network error'
-        assert event.error_code == 'NETWORK_ERROR'
+        assert event.event_type == "analysis_failed"
+        assert event.error_message == "Analysis failed due to network error"
+        assert event.error_code == "NETWORK_ERROR"
         assert event.retry_count == 2
 
     def test_document_created_event_creation(self):
         """Test creating document created event."""
         event = DocumentCreatedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            repository_id='repo-456',
-            author='user-789',
-            metadata={'size': 1024}
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            repository_id="repo-456",
+            author="user-789",
+            metadata={"size": 1024},
         )
 
-        assert event.event_type == 'document_created'
-        assert event.document_id == 'doc-123'
-        assert event.repository_id == 'repo-456'
-        assert event.author == 'user-789'
+        assert event.event_type == "document_created"
+        assert event.document_id == "doc-123"
+        assert event.repository_id == "repo-456"
+        assert event.author == "user-789"
 
     def test_finding_created_event_creation(self):
         """Test creating finding created event."""
         event = FindingCreatedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            finding_id='finding-123',
-            document_id='doc-123',
-            analysis_id='analysis-456',
-            severity='high',
-            category='security',
-            description='Critical security vulnerability found',
+            event_id="event-123",
+            correlation_id="corr-456",
+            finding_id="finding-123",
+            document_id="doc-123",
+            analysis_id="analysis-456",
+            severity="high",
+            category="security",
+            description="Critical security vulnerability found",
             confidence=0.9,
-            metadata={'rule_id': 'SEC-001'}
+            metadata={"rule_id": "SEC-001"},
         )
 
-        assert event.event_type == 'finding_created'
-        assert event.finding_id == 'finding-123'
-        assert event.severity == 'high'
-        assert event.category == 'security'
+        assert event.event_type == "finding_created"
+        assert event.finding_id == "finding-123"
+        assert event.severity == "high"
+        assert event.category == "security"
         assert event.confidence == 0.9
 
     def test_event_serialization(self):
         """Test event serialization."""
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         # Test to_dict
         event_dict = event.to_dict()
         assert isinstance(event_dict, dict)
-        assert event_dict['event_id'] == 'event-123'
-        assert event_dict['event_type'] == 'analysis_requested'
+        assert event_dict["event_id"] == "event-123"
+        assert event_dict["event_type"] == "analysis_requested"
 
         # Test to_json
         event_json = event.to_json()
         assert isinstance(event_json, str)
-        assert 'event-123' in event_json
+        assert "event-123" in event_json
 
     def test_event_from_dict(self):
         """Test creating event from dictionary."""
         event_data = {
-            'event_id': 'event-123',
-            'event_type': 'analysis_requested',
-            'correlation_id': 'corr-456',
-            'timestamp': datetime.now(timezone.utc).isoformat(),
-            'document_id': 'doc-123',
-            'analysis_type': 'semantic_similarity'
+            "event_id": "event-123",
+            "event_type": "analysis_requested",
+            "correlation_id": "corr-456",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "document_id": "doc-123",
+            "analysis_type": "semantic_similarity",
         }
 
         event = AnalysisRequestedEvent.from_dict(event_data)
 
-        assert event.event_id == 'event-123'
-        assert event.document_id == 'doc-123'
-        assert event.analysis_type == 'semantic_similarity'
+        assert event.event_id == "event-123"
+        assert event.document_id == "doc-123"
+        assert event.analysis_type == "semantic_similarity"
 
 
 class TestEventBus:
@@ -191,12 +185,12 @@ class TestEventBus:
         subscriber.handle_event = AsyncMock()
 
         # Subscribe to events
-        bus.subscribe('analysis_requested', subscriber)
-        bus.subscribe('analysis_completed', subscriber)
+        bus.subscribe("analysis_requested", subscriber)
+        bus.subscribe("analysis_completed", subscriber)
 
-        assert 'analysis_requested' in bus._subscribers
-        assert 'analysis_completed' in bus._subscribers
-        assert subscriber in bus._subscribers['analysis_requested']
+        assert "analysis_requested" in bus._subscribers
+        assert "analysis_completed" in bus._subscribers
+        assert subscriber in bus._subscribers["analysis_requested"]
 
     @pytest.mark.asyncio
     async def test_event_publishing(self):
@@ -208,13 +202,10 @@ class TestEventBus:
         subscriber.handle_event = AsyncMock()
 
         # Subscribe and publish
-        bus.subscribe('analysis_requested', subscriber)
+        bus.subscribe("analysis_requested", subscriber)
 
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         await bus.publish(event)
@@ -235,15 +226,12 @@ class TestEventBus:
         subscriber2.handle_event = AsyncMock()
 
         # Subscribe both
-        bus.subscribe('analysis_requested', subscriber1)
-        bus.subscribe('analysis_requested', subscriber2)
+        bus.subscribe("analysis_requested", subscriber1)
+        bus.subscribe("analysis_requested", subscriber2)
 
         # Publish event
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         await bus.publish(event)
@@ -262,11 +250,11 @@ class TestEventBus:
         subscriber.handle_event = AsyncMock()
 
         # Subscribe and then unsubscribe
-        bus.subscribe('analysis_requested', subscriber)
-        assert subscriber in bus._subscribers['analysis_requested']
+        bus.subscribe("analysis_requested", subscriber)
+        assert subscriber in bus._subscribers["analysis_requested"]
 
-        bus.unsubscribe('analysis_requested', subscriber)
-        assert subscriber not in bus._subscribers['analysis_requested']
+        bus.unsubscribe("analysis_requested", subscriber)
+        assert subscriber not in bus._subscribers["analysis_requested"]
 
     @pytest.mark.asyncio
     async def test_publish_to_nonexistent_event_type(self):
@@ -274,10 +262,7 @@ class TestEventBus:
         bus = EventBus()
 
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         # Should not raise exception
@@ -292,13 +277,10 @@ class TestEventBus:
         subscriber = Mock()
         subscriber.handle_event = AsyncMock(side_effect=Exception("Subscriber error"))
 
-        bus.subscribe('analysis_requested', subscriber)
+        bus.subscribe("analysis_requested", subscriber)
 
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         # Should handle subscriber errors gracefully
@@ -328,10 +310,7 @@ class TestEventPublisher:
         publisher._event_bus = mock_bus
 
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         await publisher.publish(event)
@@ -351,21 +330,18 @@ class TestEventPublisher:
 
         events = [
             AnalysisRequestedEvent(
-                event_id='event-1',
-                correlation_id='corr-1',
-                document_id='doc-1',
-                analysis_type='semantic_similarity'
+                event_id="event-1", correlation_id="corr-1", document_id="doc-1", analysis_type="semantic_similarity"
             ),
             AnalysisCompletedEvent(
-                event_id='event-2',
-                correlation_id='corr-2',
-                analysis_id='analysis-1',
-                document_id='doc-1',
-                analysis_type='semantic_similarity',
-                result={'score': 0.85},
+                event_id="event-2",
+                correlation_id="corr-2",
+                analysis_id="analysis-1",
+                document_id="doc-1",
+                analysis_type="semantic_similarity",
+                result={"score": 0.85},
                 execution_time_seconds=2.0,
-                findings_count=2
-            )
+                findings_count=2,
+            ),
         ]
 
         await publisher.publish_batch(events)
@@ -387,10 +363,7 @@ class TestEventPublisher:
         publisher._event_bus = mock_bus
 
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         # Should succeed on retry
@@ -414,10 +387,7 @@ class TestEventSubscriber:
         subscriber = EventSubscriber()
 
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         # Should handle event without error (base implementation)
@@ -438,18 +408,11 @@ class TestEventSubscriber:
 
         # Create events of different types
         analysis_event = AnalysisRequestedEvent(
-            event_id='event-1',
-            correlation_id='corr-1',
-            document_id='doc-1',
-            analysis_type='semantic_similarity'
+            event_id="event-1", correlation_id="corr-1", document_id="doc-1", analysis_type="semantic_similarity"
         )
 
         document_event = DocumentCreatedEvent(
-            event_id='event-2',
-            correlation_id='corr-2',
-            document_id='doc-2',
-            repository_id='repo-1',
-            author='user-1'
+            event_id="event-2", correlation_id="corr-2", document_id="doc-2", repository_id="repo-1", author="user-1"
         )
 
         # Subscriber should handle both (base implementation accepts all)
@@ -473,26 +436,23 @@ class TestEventIntegration:
         subscriber.handle_event = AsyncMock()
 
         # Subscribe to events
-        bus.subscribe('analysis_requested', subscriber)
-        bus.subscribe('analysis_completed', subscriber)
+        bus.subscribe("analysis_requested", subscriber)
+        bus.subscribe("analysis_completed", subscriber)
 
         # Create and publish events
         requested_event = AnalysisRequestedEvent(
-            event_id='event-1',
-            correlation_id='corr-123',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-1", correlation_id="corr-123", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         completed_event = AnalysisCompletedEvent(
-            event_id='event-2',
-            correlation_id='corr-123',
-            analysis_id='analysis-123',
-            document_id='doc-123',
-            analysis_type='semantic_similarity',
-            result={'score': 0.85},
+            event_id="event-2",
+            correlation_id="corr-123",
+            analysis_id="analysis-123",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
+            result={"score": 0.85},
             execution_time_seconds=2.0,
-            findings_count=1
+            findings_count=1,
         )
 
         # Publish events
@@ -511,17 +471,18 @@ class TestEventIntegration:
 
         # First subscriber that creates another event
         first_subscriber = Mock()
+
         async def first_handler(event):
             # Create completion event
             completion_event = AnalysisCompletedEvent(
-                event_id='completion-event',
+                event_id="completion-event",
                 correlation_id=event.correlation_id,
-                analysis_id='analysis-123',
+                analysis_id="analysis-123",
                 document_id=event.document_id,
                 analysis_type=event.analysis_type,
-                result={'score': 0.9},
+                result={"score": 0.9},
                 execution_time_seconds=1.5,
-                findings_count=0
+                findings_count=0,
             )
             await bus.publish(completion_event)
 
@@ -532,15 +493,15 @@ class TestEventIntegration:
         second_subscriber.handle_event = AsyncMock()
 
         # Subscribe
-        bus.subscribe('analysis_requested', first_subscriber)
-        bus.subscribe('analysis_completed', second_subscriber)
+        bus.subscribe("analysis_requested", first_subscriber)
+        bus.subscribe("analysis_completed", second_subscriber)
 
         # Publish initial event
         initial_event = AnalysisRequestedEvent(
-            event_id='initial-event',
-            correlation_id='corr-123',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="initial-event",
+            correlation_id="corr-123",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         await bus.publish(initial_event)
@@ -563,15 +524,12 @@ class TestEventIntegration:
         bad_subscriber.handle_event = AsyncMock(side_effect=Exception("Subscriber failed"))
 
         # Subscribe both
-        bus.subscribe('analysis_requested', good_subscriber)
-        bus.subscribe('analysis_requested', bad_subscriber)
+        bus.subscribe("analysis_requested", good_subscriber)
+        bus.subscribe("analysis_requested", bad_subscriber)
 
         # Publish event
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         # Should not raise exception despite one subscriber failing
@@ -596,20 +554,21 @@ class TestEventPerformance:
             subscriber = Mock()
             subscriber.handle_event = AsyncMock()
             subscribers.append(subscriber)
-            bus.subscribe('test_event', subscriber)
+            bus.subscribe("test_event", subscriber)
 
         # Publish many events
         events = []
         for i in range(50):
             event = ApplicationEvent(
-                event_id=f'event-{i}',
-                event_type='test_event',
-                correlation_id=f'corr-{i}',
-                timestamp=datetime.now(timezone.utc)
+                event_id=f"event-{i}",
+                event_type="test_event",
+                correlation_id=f"corr-{i}",
+                timestamp=datetime.now(timezone.utc),
             )
             events.append(event)
 
         import time
+
         start_time = time.time()
 
         for event in events:
@@ -631,18 +590,19 @@ class TestEventPerformance:
         events = []
         for i in range(100):
             event = AnalysisCompletedEvent(
-                event_id=f'event-{i}',
-                correlation_id=f'corr-{i}',
-                analysis_id=f'analysis-{i}',
-                document_id=f'doc-{i}',
-                analysis_type='semantic_similarity',
-                result={'score': 0.85},
+                event_id=f"event-{i}",
+                correlation_id=f"corr-{i}",
+                analysis_id=f"analysis-{i}",
+                document_id=f"doc-{i}",
+                analysis_type="semantic_similarity",
+                result={"score": 0.85},
                 execution_time_seconds=2.0,
-                findings_count=1
+                findings_count=1,
             )
             events.append(event)
 
         import time
+
         start_time = time.time()
 
         # Serialize all events
@@ -668,6 +628,7 @@ class TestEventMonitoring:
         published_events = []
 
         original_publish = bus.publish
+
         async def tracked_publish(event):
             published_events.append(event)
             await original_publish(event)
@@ -677,21 +638,18 @@ class TestEventMonitoring:
         # Publish some events
         events = [
             AnalysisRequestedEvent(
-                event_id='event-1',
-                correlation_id='corr-1',
-                document_id='doc-1',
-                analysis_type='semantic_similarity'
+                event_id="event-1", correlation_id="corr-1", document_id="doc-1", analysis_type="semantic_similarity"
             ),
             AnalysisCompletedEvent(
-                event_id='event-2',
-                correlation_id='corr-2',
-                analysis_id='analysis-1',
-                document_id='doc-1',
-                analysis_type='semantic_similarity',
-                result={'score': 0.85},
+                event_id="event-2",
+                correlation_id="corr-2",
+                analysis_id="analysis-1",
+                document_id="doc-1",
+                analysis_type="semantic_similarity",
+                result={"score": 0.85},
                 execution_time_seconds=2.0,
-                findings_count=1
-            )
+                findings_count=1,
+            ),
         ]
 
         for event in events:
@@ -699,8 +657,8 @@ class TestEventMonitoring:
 
         # Verify events were tracked
         assert len(published_events) == 2
-        assert published_events[0].event_type == 'analysis_requested'
-        assert published_events[1].event_type == 'analysis_completed'
+        assert published_events[0].event_type == "analysis_requested"
+        assert published_events[1].event_type == "analysis_completed"
 
     @pytest.mark.asyncio
     async def test_event_error_tracking(self):
@@ -711,6 +669,7 @@ class TestEventMonitoring:
         errors = []
 
         original_publish = bus.publish
+
         async def error_tracked_publish(event):
             try:
                 await original_publish(event)
@@ -723,14 +682,11 @@ class TestEventMonitoring:
         subscriber = Mock()
         subscriber.handle_event = AsyncMock(side_effect=Exception("Processing failed"))
 
-        bus.subscribe('analysis_requested', subscriber)
+        bus.subscribe("analysis_requested", subscriber)
 
         # Publish event
         event = AnalysisRequestedEvent(
-            event_id='event-123',
-            correlation_id='corr-456',
-            document_id='doc-123',
-            analysis_type='semantic_similarity'
+            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
         )
 
         await bus.publish(event)

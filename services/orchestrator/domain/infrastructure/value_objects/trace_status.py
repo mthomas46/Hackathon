@@ -1,4 +1,4 @@
-"""Trace Status Value Object"""
+"""Trace Status Value Object."""
 
 from enum import Enum
 

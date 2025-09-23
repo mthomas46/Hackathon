@@ -1,5 +1,5 @@
 """
-Core Configuration
+Core Configuration.
 
 Configuration management and settings for shared services.
 """

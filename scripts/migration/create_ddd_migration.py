@@ -26,7 +26,8 @@ def create_ddd_schema():
     # ============================================================================
 
     # Documents table with enhanced DDD structure
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS documents (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -56,10 +57,12 @@ def create_ddd_schema():
             CONSTRAINT chk_status CHECK (status IN ('active', 'archived', 'deleted')),
             CONSTRAINT chk_quality_score CHECK (quality_score >= 0.0 AND quality_score <= 1.0)
         )
-    """)
+    """
+    )
 
     # Analyses table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS analyses (
             id TEXT PRIMARY KEY,
             document_id TEXT NOT NULL,
@@ -82,10 +85,12 @@ def create_ddd_schema():
             CONSTRAINT chk_analysis_status CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),
             CONSTRAINT chk_analysis_priority CHECK (priority >= 1 AND priority <= 10)
         )
-    """)
+    """
+    )
 
     # Findings table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS findings (
             id TEXT PRIMARY KEY,
             analysis_id TEXT NOT NULL,
@@ -112,14 +117,16 @@ def create_ddd_schema():
             CONSTRAINT chk_finding_status CHECK (status IN ('open', 'in_progress', 'resolved', 'dismissed')),
             CONSTRAINT chk_confidence CHECK (confidence >= 0.0 AND confidence <= 1.0)
         )
-    """)
+    """
+    )
 
     # ============================================================================
     # ANALYSIS-SPECIFIC TABLES
     # ============================================================================
 
     # Semantic analysis results
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS semantic_analysis_results (
             id TEXT PRIMARY KEY,
             document_id TEXT NOT NULL,
@@ -136,10 +143,12 @@ def create_ddd_schema():
             FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
             FOREIGN KEY (analysis_id) REFERENCES analyses(id) ON DELETE CASCADE
         )
-    """)
+    """
+    )
 
     # Sentiment analysis results
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS sentiment_analysis_results (
             id TEXT PRIMARY KEY,
             document_id TEXT NOT NULL,
@@ -159,10 +168,12 @@ def create_ddd_schema():
             CONSTRAINT chk_sentiment CHECK (sentiment IN ('positive', 'negative', 'neutral')),
             CONSTRAINT chk_sentiment_confidence CHECK (confidence >= 0.0 AND confidence <= 1.0)
         )
-    """)
+    """
+    )
 
     # Quality metrics
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS quality_metrics (
             id TEXT PRIMARY KEY,
             document_id TEXT NOT NULL,
@@ -180,10 +191,12 @@ def create_ddd_schema():
             FOREIGN KEY (document_id) REFERENCES documents(id) ON DELETE CASCADE,
             FOREIGN KEY (analysis_id) REFERENCES analyses(id) ON DELETE CASCADE
         )
-    """)
+    """
+    )
 
     # Risk assessments
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS risk_assessments (
             id TEXT PRIMARY KEY,
             document_id TEXT NOT NULL,
@@ -202,14 +215,16 @@ def create_ddd_schema():
             FOREIGN KEY (analysis_id) REFERENCES analyses(id) ON DELETE CASCADE,
             CONSTRAINT chk_risk_level CHECK (risk_level IN ('minimal', 'low', 'medium', 'high', 'critical'))
         )
-    """)
+    """
+    )
 
     # ============================================================================
     # REPOSITORY MANAGEMENT TABLES
     # ============================================================================
 
     # Repositories table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS repositories (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -236,14 +251,16 @@ def create_ddd_schema():
             CONSTRAINT chk_repo_type CHECK (repository_type IN ('github', 'gitlab', 'bitbucket', 'local')),
             CONSTRAINT chk_sync_status CHECK (sync_status IN ('never', 'pending', 'running', 'completed', 'failed'))
         )
-    """)
+    """
+    )
 
     # ============================================================================
     # DISTRIBUTED PROCESSING TABLES
     # ============================================================================
 
     # Workers table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS workers (
             id TEXT PRIMARY KEY,
             hostname TEXT NOT NULL,
@@ -263,10 +280,12 @@ def create_ddd_schema():
             metadata TEXT,  -- JSON metadata
             CONSTRAINT chk_worker_status CHECK (status IN ('idle', 'busy', 'offline', 'error'))
         )
-    """)
+    """
+    )
 
     # Distributed tasks table
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS distributed_tasks (
             id TEXT PRIMARY KEY,
             task_type TEXT NOT NULL,
@@ -293,7 +312,8 @@ def create_ddd_schema():
             CONSTRAINT chk_task_status CHECK (status IN ('pending', 'assigned', 'running', 'completed', 'failed', 'cancelled')),
             CONSTRAINT chk_task_priority CHECK (priority >= 1 AND priority <= 10)
         )
-    """)
+    """
+    )
 
     # ============================================================================
     # PERFORMANCE INDEXES
@@ -336,7 +356,8 @@ def create_ddd_schema():
     # ============================================================================
 
     # Create schema migrations table to track migrations
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS schema_migrations (
             migration_id TEXT PRIMARY KEY,
             migration_name TEXT NOT NULL,
@@ -346,22 +367,26 @@ def create_ddd_schema():
             checksum TEXT,
             metadata TEXT  -- JSON metadata
         )
-    """)
+    """
+    )
 
     # Record this migration
     migration_id = "001_create_ddd_core_schema"
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT OR REPLACE INTO schema_migrations
         (migration_id, migration_name, executed_at, execution_time_seconds, status, metadata)
         VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        migration_id,
-        "Create DDD Core Schema",
-        datetime.now().isoformat(),
-        0.0,
-        "completed",
-        '{"description": "Complete DDD schema with all domain tables and indexes"}'
-    ))
+    """,
+        (
+            migration_id,
+            "Create DDD Core Schema",
+            datetime.now().isoformat(),
+            0.0,
+            "completed",
+            '{"description": "Complete DDD schema with all domain tables and indexes"}',
+        ),
+    )
 
     conn.commit()
     conn.close()

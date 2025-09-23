@@ -4,15 +4,11 @@ This module contains comprehensive tests for CI/CD pipeline validation,
 build process verification, and deployment pipeline testing.
 """
 
-import pytest
-import subprocess
 import os
-import json
-import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-import yaml
+
 import docker
+import pytest
 
 
 class TestCIBuildProcess:
@@ -30,7 +26,7 @@ class TestCIBuildProcess:
                 if script_path.exists():
                     assert script_path.is_file(), f"{script} should be a file"
                     # Check if executable (on Unix-like systems)
-                    if os.name != 'nt':
+                    if os.name != "nt":
                         assert os.access(script_path, os.X_OK), f"{script} should be executable"
 
     def test_requirements_file_valid(self):
@@ -39,13 +35,13 @@ class TestCIBuildProcess:
         assert req_path.exists(), "requirements.txt should exist"
 
         content = req_path.read_text()
-        lines = content.strip().split('\n')
+        lines = content.strip().split("\n")
 
         # Should have some packages
         assert len(lines) > 0, "requirements.txt should not be empty"
 
         # Check for common packages
-        package_names = [line.split('==')[0].split('>=')[0].strip() for line in lines if line.strip()]
+        package_names = [line.split("==")[0].split(">=")[0].strip() for line in lines if line.strip()]
         expected_packages = ["fastapi", "uvicorn", "pydantic"]
 
         for package in expected_packages:
@@ -226,10 +222,7 @@ class TestDeploymentValidation:
             client = docker.from_env()
             assert client.ping(), "Docker daemon should be responding"
 
-            containers = client.containers.list(
-                filters={"name": "hackathon-project-simulation"},
-                all=True
-            )
+            containers = client.containers.list(filters={"name": "hackathon-project-simulation"}, all=True)
 
             if containers:
                 container = containers[0]
@@ -237,7 +230,9 @@ class TestDeploymentValidation:
                 host_config = container.attrs.get("HostConfig", {})
                 assert isinstance(host_config, dict), "Container should have host configuration"
                 # Resource limits are typically set in docker-compose, so we just verify the structure exists
-                assert "Memory" in host_config or "CpuShares" in host_config, "Container should have resource configuration"
+                assert (
+                    "Memory" in host_config or "CpuShares" in host_config
+                ), "Container should have resource configuration"
             else:
                 pytest.skip("Container not found for resource testing")
 
@@ -302,12 +297,7 @@ class TestSecurityValidation:
         # Check common files for potential secrets
         files_to_check = ["Dockerfile", "docker-compose.yml", "config/local-development.env"]
 
-        secret_patterns = [
-            "password.*=",
-            "secret.*=",
-            "key.*=",
-            "token.*="
-        ]
+        secret_patterns = ["password.*=", "secret.*=", "key.*=", "token.*="]
 
         for file_path in files_to_check:
             check_file = Path(file_path)

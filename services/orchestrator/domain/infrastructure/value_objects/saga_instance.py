@@ -1,7 +1,7 @@
-"""Saga Instance Value Object"""
+"""Saga Instance Value Object."""
 
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from .saga_status import SagaStatus
@@ -16,7 +16,7 @@ class SagaStep:
         service_name: str,
         operation: str,
         compensation_operation: Optional[str] = None,
-        status: str = "pending"
+        status: str = "pending",
     ):
         self.step_id = step_id
         self.service_name = service_name
@@ -37,7 +37,7 @@ class SagaInstance:
         correlation_id: str,
         steps: List[SagaStep],
         saga_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         self._saga_id = saga_id or str(uuid4())
         self._saga_type = saga_type.strip()
@@ -191,7 +191,7 @@ class SagaInstance:
                     "status": step.status,
                     "executed_at": step.executed_at.isoformat() if step.executed_at else None,
                     "completed_at": step.completed_at.isoformat() if step.completed_at else None,
-                    "error_message": step.error_message
+                    "error_message": step.error_message,
                 }
                 for step in self._steps
             ],
@@ -200,7 +200,7 @@ class SagaInstance:
             "started_at": self._started_at.isoformat() if self._started_at else None,
             "completed_at": self._completed_at.isoformat() if self._completed_at else None,
             "error_message": self._error_message,
-            "duration_seconds": self.duration_seconds
+            "duration_seconds": self.duration_seconds,
         }
 
     def __repr__(self) -> str:

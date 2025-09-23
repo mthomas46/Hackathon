@@ -19,7 +19,7 @@ LABEL architecture="Domain-Driven Design with CQRS"
 WORKDIR /app
 
 # Install system dependencies for ML libraries
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gcc \
     g++ \
@@ -45,6 +45,11 @@ COPY config/ ./config/
 
 # Set Python path and environment
 ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONHASHSEED=random
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV SERVICE_NAME=analysis-service
 ENV SERVICE_PORT=5020
 ENV REDIS_HOST=redis

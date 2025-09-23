@@ -1,19 +1,20 @@
-"""Services Overview UI handlers for Frontend service.
-
-Handles comprehensive system-wide monitoring dashboard
-showing health and status of all services in the ecosystem.
 """
-from typing import Dict, Any
+Services Overview UI handlers for Frontend service.
+
+Handles comprehensive system-wide monitoring dashboard showing health
+and status of all services in the ecosystem.
+"""
+
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from ..services_overview_monitor import services_overview_monitor
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    get_frontend_clients,
+    handle_frontend_error,
+)
 
 
 class ServicesOverviewUIHandlers:
@@ -33,7 +34,7 @@ class ServicesOverviewUIHandlers:
                 "system_metrics": overview_data.get("system_metrics", {}),
                 "service_statuses": overview_data.get("service_statuses", {}),
                 "categorized_services": overview_data.get("categorized_services", {}),
-                "last_updated": overview_data.get("last_updated", "Never")
+                "last_updated": overview_data.get("last_updated", "Never"),
             }
 
             html = """
@@ -634,4 +635,6 @@ class ServicesOverviewUIHandlers:
 """
             return create_html_response(html, "Services Overview Dashboard")
         except Exception as e:
-            return handle_frontend_error("render services overview dashboard", e, **build_frontend_context("render_services_overview_dashboard"))
+            return handle_frontend_error(
+                "render services overview dashboard", e, **build_frontend_context("render_services_overview_dashboard")
+            )

@@ -1,4 +1,5 @@
-"""Shared Infrastructure for LLM Documentation Ecosystem.
+"""
+Shared Infrastructure for LLM Documentation Ecosystem.
 
 This package contains shared utilities, middleware, logging, and other
 common infrastructure components used across all services in the ecosystem.
@@ -18,5 +19,5 @@ Modules:
 Usage:
     from services.shared.core.responses import create_success_response
     from services.shared.utilities.middleware import ServiceMiddleware
-    from services.shared.monitoring.health import register_health_endpoints
+    from services.shared.monitoring.health import register_health_endpoints.
 """

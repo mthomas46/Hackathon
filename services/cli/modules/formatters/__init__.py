@@ -1,7 +1,7 @@
 """CLI display formatters."""
 
 from .display_utils import DisplayManager
-from .table_formatters import TableFormatter
 from .status_formatters import StatusFormatter
+from .table_formatters import TableFormatter
 
-__all__ = ['DisplayManager', 'TableFormatter', 'StatusFormatter']
+__all__ = ["DisplayManager", "TableFormatter", "StatusFormatter"]

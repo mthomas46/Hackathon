@@ -1,5 +1,5 @@
 """
-Core Models
+Core Models.
 
 Shared Pydantic models used across all services.
 """

@@ -1,4 +1,4 @@
-"""Event Status Value Object"""
+"""Event Status Value Object."""
 
 from enum import Enum
 

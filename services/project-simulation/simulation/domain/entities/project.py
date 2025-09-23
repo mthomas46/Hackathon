@@ -5,19 +5,20 @@ simulation projects in the domain-driven design architecture.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
-from enum import Enum
+from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from ..value_objects import ProjectType, ComplexityLevel, ProjectStatus
-from ..events import ProjectCreated, ProjectStatusChanged, ProjectPhaseCompleted
+from ..events import ProjectCreated, ProjectPhaseCompleted, ProjectStatusChanged
+from ..value_objects import ComplexityLevel, ProjectStatus, ProjectType
 
 
 @dataclass(frozen=True)
 class ProjectId:
     """Value object for Project ID."""
+
     value: UUID = field(default_factory=uuid4)
 
     @classmethod
@@ -32,6 +33,7 @@ class ProjectId:
 @dataclass
 class TeamMember:
     """Entity representing a team member."""
+
     id: str
     name: str
     role: str
@@ -43,7 +45,7 @@ class TeamMember:
 
     def can_handle_task(self, task_type: str) -> bool:
         """Check if team member can handle a specific task type."""
-        return task_type in self.specialization or self.expertise_level in ['expert', 'advanced', 'senior']
+        return task_type in self.specialization or self.expertise_level in ["expert", "advanced", "senior"]
 
     def get_productivity_for_task(self, task_type: str) -> float:
         """Get productivity multiplier for a specific task."""
@@ -55,6 +57,7 @@ class TeamMember:
 @dataclass
 class ProjectPhase:
     """Entity representing a project phase."""
+
     name: str
     duration_days: int
     deliverables: List[str] = field(default_factory=list)
@@ -87,11 +90,13 @@ class ProjectPhase:
 
 @dataclass
 class Project:
-    """Project Aggregate Root.
-
-    This is the root entity for the Project aggregate, containing
-    all project-related data and enforcing business rules.
     """
+    Project Aggregate Root.
+
+    This is the root entity for the Project aggregate, containing all
+    project-related data and enforcing business rules.
+    """
+
     id: ProjectId
     name: str
     description: str
@@ -114,12 +119,14 @@ class Project:
         """Initialize project with default phases if none provided."""
         if not self.phases:
             self._initialize_default_phases()
-        self._add_domain_event(ProjectCreated(
-            project_id=str(self.id.value),
-            project_name=self.name,
-            project_type=self.type.value,
-            complexity=self.complexity.value
-        ))
+        self._add_domain_event(
+            ProjectCreated(
+                project_id=str(self.id.value),
+                project_name=self.name,
+                project_type=self.type.value,
+                complexity=self.complexity.value,
+            )
+        )
 
     def _initialize_default_phases(self) -> None:
         """Initialize default project phases based on project type."""
@@ -129,36 +136,36 @@ class Project:
                     name="planning",
                     duration_days=7,
                     deliverables=["requirements", "architecture_overview", "project_plan"],
-                    team_allocation={"product_manager": 1, "technical_lead": 1}
+                    team_allocation={"product_manager": 1, "technical_lead": 1},
                 ),
                 ProjectPhase(
                     name="design",
                     duration_days=10,
                     deliverables=["technical_design", "user_stories", "wireframes"],
                     dependencies=["planning"],
-                    team_allocation={"designer": 1, "developer": 2, "technical_lead": 1}
+                    team_allocation={"designer": 1, "developer": 2, "technical_lead": 1},
                 ),
                 ProjectPhase(
                     name="development",
                     duration_days=21,
                     deliverables=["backend_api", "frontend_ui", "database_schema"],
                     dependencies=["design"],
-                    team_allocation={"developer": 3, "technical_lead": 1}
+                    team_allocation={"developer": 3, "technical_lead": 1},
                 ),
                 ProjectPhase(
                     name="testing",
                     duration_days=7,
                     deliverables=["test_cases", "test_results", "bug_reports"],
                     dependencies=["development"],
-                    team_allocation={"qa_engineer": 2, "developer": 1}
+                    team_allocation={"qa_engineer": 2, "developer": 1},
                 ),
                 ProjectPhase(
                     name="deployment",
                     duration_days=3,
                     deliverables=["production_deployment", "documentation"],
                     dependencies=["testing"],
-                    team_allocation={"devops_engineer": 1, "technical_lead": 1}
-                )
+                    team_allocation={"devops_engineer": 1, "technical_lead": 1},
+                ),
             ]
         elif self.type == ProjectType.API_SERVICE:
             self.phases = [
@@ -166,29 +173,29 @@ class Project:
                     name="requirements",
                     duration_days=5,
                     deliverables=["api_requirements", "security_requirements"],
-                    team_allocation={"product_manager": 1, "technical_lead": 1}
+                    team_allocation={"product_manager": 1, "technical_lead": 1},
                 ),
                 ProjectPhase(
                     name="design",
                     duration_days=8,
                     deliverables=["api_specification", "data_model", "architecture"],
                     dependencies=["requirements"],
-                    team_allocation={"technical_lead": 1, "developer": 2}
+                    team_allocation={"technical_lead": 1, "developer": 2},
                 ),
                 ProjectPhase(
                     name="implementation",
                     duration_days=15,
                     deliverables=["api_endpoints", "documentation", "tests"],
                     dependencies=["design"],
-                    team_allocation={"developer": 3}
+                    team_allocation={"developer": 3},
                 ),
                 ProjectPhase(
                     name="validation",
                     duration_days=4,
                     deliverables=["security_audit", "performance_test", "documentation_review"],
                     dependencies=["implementation"],
-                    team_allocation={"qa_engineer": 1, "security_engineer": 1}
-                )
+                    team_allocation={"qa_engineer": 1, "security_engineer": 1},
+                ),
             ]
         # Add more project types as needed...
 
@@ -230,13 +237,15 @@ class Project:
         # Find the phase number (index + 1)
         phase_number = self.phases.index(phase) + 1
 
-        self._add_domain_event(ProjectPhaseCompleted(
-            project_id=str(self.id.value),
-            phase_name=phase_name,
-            phase_number=phase_number,
-            completion_percentage=100.0,
-            duration_days=(phase.end_date - phase.start_date).days
-        ))
+        self._add_domain_event(
+            ProjectPhaseCompleted(
+                project_id=str(self.id.value),
+                phase_name=phase_name,
+                phase_number=phase_number,
+                completion_percentage=100.0,
+                duration_days=(phase.end_date - phase.start_date).days,
+            )
+        )
 
     def update_status(self, new_status: ProjectStatus) -> None:
         """Update project status."""
@@ -247,12 +256,14 @@ class Project:
         self.status = new_status
         self.updated_at = datetime.now()
 
-        self._add_domain_event(ProjectStatusChanged(
-            project_id=str(self.id.value),
-            old_status=old_status.value,
-            new_status=new_status.value,
-            changed_by="system"
-        ))
+        self._add_domain_event(
+            ProjectStatusChanged(
+                project_id=str(self.id.value),
+                old_status=old_status.value,
+                new_status=new_status.value,
+                changed_by="system",
+            )
+        )
 
     def get_current_phase(self) -> Optional[ProjectPhase]:
         """Get the currently active phase."""

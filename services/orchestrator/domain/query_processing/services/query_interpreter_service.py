@@ -1,12 +1,12 @@
-"""Query Interpreter Service Domain Service"""
+"""Query Interpreter Service Domain Service."""
 
-from typing import Dict, Any, List, Optional, Tuple
 import re
+from typing import Any, Dict, List, Tuple
 
 from ..value_objects.natural_language_query import NaturalLanguageQuery
-from ..value_objects.query_interpretation import QueryInterpretation
-from ..value_objects.query_intent import QueryIntent
 from ..value_objects.query_confidence import QueryConfidence
+from ..value_objects.query_intent import QueryIntent
+from ..value_objects.query_interpretation import QueryInterpretation
 from ..value_objects.query_type import QueryType
 
 
@@ -21,55 +21,56 @@ class QueryInterpreterService:
         """Load regex patterns for intent recognition."""
         return {
             QueryIntent.SEARCH_DOCUMENTS: [
-                r'\b(search|find|locate|get|retrieve|look)\b.*\b(document|doc|file|paper|article|info|information|data)\b',
-                r'\b(show|give)\b.*\b(me|us)\b.*\b(document|file|info)\b',
-                r'\bdocument|file|paper|article\b'
+                r"\b(search|find|locate|get|retrieve|look)\b.*\b(document|doc|file|paper|article|info|information|data)\b",
+                r"\b(show|give)\b.*\b(me|us)\b.*\b(document|file|info)\b",
+                r"\bdocument|file|paper|article\b",
             ],
             QueryIntent.ANALYZE_CONTENT: [
-                r'\b(analyze|analyse|examine|review|assess)\b.*\b(content|document|text|code)\b',
-                r'\b(what is|what are|explain)\b.*\b(in|about)\b',
-                r'\b(break down|understand|comprehend)\b'
+                r"\b(analyze|analyse|examine|review|assess)\b.*\b(content|document|text|code)\b",
+                r"\b(what is|what are|explain)\b.*\b(in|about)\b",
+                r"\b(break down|understand|comprehend)\b",
             ],
             QueryIntent.EXECUTE_WORKFLOW: [
-                r'\b(run|execute|start|launch|perform|do)\b.*\b(workflow|process|job|task|analysis)\b',
-                r'\b(execute|run)\b.*\b(workflow|analysis|process)\b',
-                r'\bworkflow|process|analysis\b'
+                r"\b(run|execute|start|launch|perform|do)\b.*\b(workflow|process|job|task|analysis)\b",
+                r"\b(execute|run)\b.*\b(workflow|analysis|process)\b",
+                r"\bworkflow|process|analysis\b",
             ],
             QueryIntent.CHECK_STATUS: [
-                r'\b(status|health|condition|state)\b.*\b(of|for)\b',
-                r'\b(is|are)\b.*\b(running|working|up|down|healthy)\b',
-                r'\b(how is|what is)\b.*\b(status|doing)\b'
+                r"\b(status|health|condition|state)\b.*\b(of|for)\b",
+                r"\b(is|are)\b.*\b(running|working|up|down|healthy)\b",
+                r"\b(how is|what is)\b.*\b(status|doing)\b",
             ],
             QueryIntent.GET_METRICS: [
-                r'\b(metrics|statistics|stats|numbers|data)\b',
-                r'\b(performance|usage|efficiency)\b.*\b(of|for)\b',
-                r'\b(show|give|tell)\b.*\b(metrics|stats)\b'
+                r"\b(metrics|statistics|stats|numbers|data)\b",
+                r"\b(performance|usage|efficiency)\b.*\b(of|for)\b",
+                r"\b(show|give|tell)\b.*\b(metrics|stats)\b",
             ],
             QueryIntent.SUMMARIZE_CONTENT: [
-                r'\b(summarize|summary|summarise|tl;dr|overview)\b',
-                r'\b(short version|brief|concise)\b.*\b(of|for)\b',
-                r'\b(what is|tell me about)\b.*\b(briefly|shortly)\b'
+                r"\b(summarize|summary|summarise|tl;dr|overview)\b",
+                r"\b(short version|brief|concise)\b.*\b(of|for)\b",
+                r"\b(what is|tell me about)\b.*\b(briefly|shortly)\b",
             ],
             QueryIntent.LIST_RESOURCES: [
-                r'\b(list|show|display|get)\b.*\b(all|available|existing)\b',
-                r'\b(what|which)\b.*\b(are there|exist|available)\b',
-                r'\b(give me|show me)\b.*\b(list of)\b'
+                r"\b(list|show|display|get)\b.*\b(all|available|existing)\b",
+                r"\b(what|which)\b.*\b(are there|exist|available)\b",
+                r"\b(give me|show me)\b.*\b(list of)\b",
             ],
             QueryIntent.GREETING: [
-                r'\b(hello|hi|hey|greetings|good morning|good afternoon)\b',
-                r'\b(how are you|how do you do)\b',
-                r'\b(nice to meet you|pleased to meet you)\b'
+                r"\b(hello|hi|hey|greetings|good morning|good afternoon)\b",
+                r"\b(how are you|how do you do)\b",
+                r"\b(nice to meet you|pleased to meet you)\b",
             ],
             QueryIntent.CLARIFICATION: [
-                r'\b(can you|could you|would you)\b.*\b(clarify|explain|elaborate)\b',
-                r'\b(what do you mean|what does that mean)\b',
-                r'\b(i don\'t understand|i\'m confused)\b'
-            ]
+                r"\b(can you|could you|would you)\b.*\b(clarify|explain|elaborate)\b",
+                r"\b(what do you mean|what does that mean)\b",
+                r"\b(i don\'t understand|i\'m confused)\b",
+            ],
         }
 
     def interpret_query(self, query: NaturalLanguageQuery) -> QueryInterpretation:
         """
-        Interpret a natural language query and return structured interpretation.
+        Interpret a natural language query and return structured
+        interpretation.
 
         Args:
             query: The natural language query to interpret
@@ -109,11 +110,11 @@ class QueryInterpreterService:
             clarification_questions=clarification_questions,
             alternative_interpretations=alternative_interpretations,
             metadata={
-                'original_query': query.query,
-                'word_count': query.word_count,
-                'has_context': query.has_context,
-                'intent_matches': len(intent_matches)
-            }
+                "original_query": query.query,
+                "word_count": query.word_count,
+                "has_context": query.has_context,
+                "intent_matches": len(intent_matches),
+            },
         )
 
     def _identify_intents(self, query_text: str) -> Dict[QueryIntent, float]:
@@ -141,11 +142,7 @@ class QueryInterpreterService:
             return QueryIntent.UNKNOWN, 0.0
 
         # Sort by score, then by priority
-        sorted_intents = sorted(
-            intent_matches.items(),
-            key=lambda x: (x[1], x[0].priority),
-            reverse=True
-        )
+        sorted_intents = sorted(intent_matches.items(), key=lambda x: (x[1], x[0].priority), reverse=True)
 
         best_intent, best_score = sorted_intents[0]
 
@@ -159,9 +156,9 @@ class QueryInterpreterService:
         """Classify the query type."""
         if query.is_conversational:
             return QueryType.CONVERSATIONAL
-        elif query.query.startswith(('run ', 'execute ', 'start ', 'create ')):
+        elif query.query.startswith(("run ", "execute ", "start ", "create ")):
             return QueryType.COMMAND
-        elif '?' in query.query or query.query.lower().startswith(('what ', 'how ', 'why ', 'when ', 'where ', 'who ')):
+        elif "?" in query.query or query.query.lower().startswith(("what ", "how ", "why ", "when ", "where ", "who ")):
             return QueryType.NATURAL_LANGUAGE
         else:
             return QueryType.STRUCTURED
@@ -173,21 +170,21 @@ class QueryInterpreterService:
         # Simple entity extraction based on intent
         if intent == QueryIntent.SEARCH_DOCUMENTS:
             # Look for document types or topics
-            doc_types = re.findall(r'\b(document|file|paper|article|report)\b', query_text, re.IGNORECASE)
+            doc_types = re.findall(r"\b(document|file|paper|article|report)\b", query_text, re.IGNORECASE)
             if doc_types:
-                entities['document_type'] = doc_types[0].lower()
+                entities["document_type"] = doc_types[0].lower()
 
         elif intent == QueryIntent.CHECK_STATUS:
             # Look for service or component names
-            services = re.findall(r'\b(orchestrator|analyzer|store|gateway)\b', query_text, re.IGNORECASE)
+            services = re.findall(r"\b(orchestrator|analyzer|store|gateway)\b", query_text, re.IGNORECASE)
             if services:
-                entities['service_name'] = services[0].lower()
+                entities["service_name"] = services[0].lower()
 
         elif intent == QueryIntent.EXECUTE_WORKFLOW:
             # Look for workflow names or types
-            workflow_indicators = re.findall(r'\b(workflow|process|task|job)\b', query_text, re.IGNORECASE)
+            workflow_indicators = re.findall(r"\b(workflow|process|task|job)\b", query_text, re.IGNORECASE)
             if workflow_indicators:
-                entities['workflow_type'] = workflow_indicators[0].lower()
+                entities["workflow_type"] = workflow_indicators[0].lower()
 
         return entities
 
@@ -199,22 +196,22 @@ class QueryInterpreterService:
             # For executable intents, try to extract actionable parameters
             if intent == QueryIntent.EXECUTE_WORKFLOW:
                 # Look for workflow identifiers - more specific patterns
-                workflow_id_match = re.search(r'\b(workflow|analysis)[_-]?(\w+)\b', query_text, re.IGNORECASE)
+                workflow_id_match = re.search(r"\b(workflow|analysis)[_-]?(\w+)\b", query_text, re.IGNORECASE)
                 if workflow_id_match:
-                    parameters['workflow_id'] = workflow_id_match.group(0)
+                    parameters["workflow_id"] = workflow_id_match.group(0)
                 else:
                     # Look for any identifier after the intent words
                     words = query_text.lower().split()
                     for i, word in enumerate(words):
-                        if word in ['workflow', 'analysis', 'process'] and i + 1 < len(words):
-                            parameters['workflow_id'] = words[i + 1]
+                        if word in ["workflow", "analysis", "process"] and i + 1 < len(words):
+                            parameters["workflow_id"] = words[i + 1]
                             break
 
             elif intent == QueryIntent.SEARCH_DOCUMENTS:
                 # Look for search terms
                 search_terms = re.findall(r'"([^"]*)"|\b(\w+)\b(?=\s+(?:in|about|for|on))', query_text)
                 if search_terms:
-                    parameters['search_terms'] = [term for group in search_terms for term in group if term]
+                    parameters["search_terms"] = [term for group in search_terms for term in group if term]
 
         return parameters
 
@@ -249,7 +246,9 @@ class QueryInterpreterService:
 
         return questions
 
-    def _generate_alternatives(self, intent_matches: Dict[QueryIntent, float], best_intent: QueryIntent) -> List[Dict[str, Any]]:
+    def _generate_alternatives(
+        self, intent_matches: Dict[QueryIntent, float], best_intent: QueryIntent
+    ) -> List[Dict[str, Any]]:
         """Generate alternative interpretations."""
         alternatives = []
 
@@ -257,15 +256,11 @@ class QueryInterpreterService:
         sorted_intents = sorted(
             [(intent, score) for intent, score in intent_matches.items() if intent != best_intent],
             key=lambda x: x[1],
-            reverse=True
+            reverse=True,
         )
 
         for intent, score in sorted_intents[:3]:
             if score > 0.2:  # Minimum threshold for alternatives
-                alternatives.append({
-                    'intent': intent.value,
-                    'confidence_score': score,
-                    'description': str(intent)
-                })
+                alternatives.append({"intent": intent.value, "confidence_score": score, "description": str(intent)})
 
         return alternatives

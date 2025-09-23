@@ -1,9 +1,12 @@
-"""Analytics service for business logic operations.
+"""
+Analytics service for business logic operations.
 
 Handles analytics processing and business rules.
 """
-from typing import Dict, Any
-from .repository import AnalyticsRepository, AnalyticsData
+
+from typing import Any, Dict
+
+from .repository import AnalyticsData, AnalyticsRepository
 
 
 class AnalyticsService:
@@ -26,12 +29,12 @@ class AnalyticsService:
         """Get basic entity counts."""
         counts = self.repository.get_basic_counts()
         return {
-            "total_documents": counts['documents'],
-            "total_analyses": counts['analyses'],
-            "total_ensembles": counts['ensembles'],
-            "total_style_examples": counts['style_examples'],
-            "total_versions": counts['versions'],
-            "total_tags": counts['tags']
+            "total_documents": counts["documents"],
+            "total_analyses": counts["analyses"],
+            "total_ensembles": counts["ensembles"],
+            "total_style_examples": counts["style_examples"],
+            "total_versions": counts["versions"],
+            "total_tags": counts["tags"],
         }
 
     def get_storage_stats(self) -> Dict[str, Any]:
@@ -43,11 +46,11 @@ class AnalyticsService:
         metrics = self.repository.get_quality_metrics()
 
         # Add computed percentages
-        total_docs = self.repository.get_basic_counts()['documents']
+        total_docs = self.repository.get_basic_counts()["documents"]
         if total_docs > 0:
-            metrics['stale_percentage'] = (metrics['stale_documents'] / total_docs) * 100
-            metrics['redundant_percentage'] = (metrics['redundant_documents'] / total_docs) * 100
-            metrics['analyzed_percentage'] = ((total_docs - metrics['orphaned_analyses']) / total_docs) * 100
+            metrics["stale_percentage"] = (metrics["stale_documents"] / total_docs) * 100
+            metrics["redundant_percentage"] = (metrics["redundant_documents"] / total_docs) * 100
+            metrics["analyzed_percentage"] = ((total_docs - metrics["orphaned_analyses"]) / total_docs) * 100
 
         return metrics
 
@@ -71,58 +74,68 @@ class AnalyticsService:
             "overview": {
                 "total_documents": analytics.total_documents,
                 "total_analyses": analytics.total_analyses,
-                "analysis_coverage": f"{analytics.content_insights.get('analysis_coverage', 0):.1f}%"
+                "analysis_coverage": f"{analytics.content_insights.get('analysis_coverage', 0):.1f}%",
             },
             "quality": {
-                "stale_documents": analytics.quality_metrics.get('stale_documents', 0),
-                "redundant_documents": analytics.quality_metrics.get('redundant_documents', 0),
-                "quality_score": "Good" if analytics.quality_metrics.get('stale_percentage', 0) < 20 else "Needs Attention"
+                "stale_documents": analytics.quality_metrics.get("stale_documents", 0),
+                "redundant_documents": analytics.quality_metrics.get("redundant_documents", 0),
+                "quality_score": (
+                    "Good" if analytics.quality_metrics.get("stale_percentage", 0) < 20 else "Needs Attention"
+                ),
             },
             "storage": {
-                "total_size_mb": analytics.storage_stats.get('total_size_bytes', 0) / (1024 * 1024),
-                "avg_size_kb": analytics.storage_stats.get('avg_document_size', 0) / 1024
+                "total_size_mb": analytics.storage_stats.get("total_size_bytes", 0) / (1024 * 1024),
+                "avg_size_kb": analytics.storage_stats.get("avg_document_size", 0) / 1024,
             },
-            "insights": []
+            "insights": [],
         }
 
         # Generate insights and recommendations
         insights = []
 
         # Quality insights
-        if analytics.quality_metrics.get('stale_percentage', 0) > 30:
-            insights.append({
-                "type": "warning",
-                "title": "High Stale Content",
-                "description": f"{analytics.quality_metrics.get('stale_percentage', 0):.1f}% of documents are stale",
-                "recommendation": "Consider archiving or updating stale documents"
-            })
+        if analytics.quality_metrics.get("stale_percentage", 0) > 30:
+            insights.append(
+                {
+                    "type": "warning",
+                    "title": "High Stale Content",
+                    "description": f"{analytics.quality_metrics.get('stale_percentage', 0):.1f}% of documents are stale",
+                    "recommendation": "Consider archiving or updating stale documents",
+                }
+            )
 
         # Analysis coverage insights
-        if analytics.content_insights.get('analysis_coverage', 0) < 50:
-            insights.append({
-                "type": "info",
-                "title": "Low Analysis Coverage",
-                "description": f"Only {analytics.content_insights.get('analysis_coverage', 0):.1f}% of documents have analysis",
-                "recommendation": "Run analysis on more documents to improve insights"
-            })
+        if analytics.content_insights.get("analysis_coverage", 0) < 50:
+            insights.append(
+                {
+                    "type": "info",
+                    "title": "Low Analysis Coverage",
+                    "description": f"Only {analytics.content_insights.get('analysis_coverage', 0):.1f}% of documents have analysis",
+                    "recommendation": "Run analysis on more documents to improve insights",
+                }
+            )
 
         # Storage insights
-        if analytics.storage_stats.get('avg_document_size', 0) > 100000:  # 100KB
-            insights.append({
-                "type": "info",
-                "title": "Large Document Sizes",
-                "description": f"Average document size is {analytics.storage_stats.get('avg_document_size', 0)/1024:.1f}KB",
-                "recommendation": "Consider compressing or splitting large documents"
-            })
+        if analytics.storage_stats.get("avg_document_size", 0) > 100000:  # 100KB
+            insights.append(
+                {
+                    "type": "info",
+                    "title": "Large Document Sizes",
+                    "description": f"Average document size is {analytics.storage_stats.get('avg_document_size', 0)/1024:.1f}KB",
+                    "recommendation": "Consider compressing or splitting large documents",
+                }
+            )
 
         # Relationship insights
-        if analytics.relationship_insights.get('total_relationships', 0) < analytics.total_documents * 0.1:
-            insights.append({
-                "type": "info",
-                "title": "Low Connectivity",
-                "description": f"Only {analytics.relationship_insights.get('total_relationships', 0)} relationships found",
-                "recommendation": "Add more relationships to improve document connectivity"
-            })
+        if analytics.relationship_insights.get("total_relationships", 0) < analytics.total_documents * 0.1:
+            insights.append(
+                {
+                    "type": "info",
+                    "title": "Low Connectivity",
+                    "description": f"Only {analytics.relationship_insights.get('total_relationships', 0)} relationships found",
+                    "recommendation": "Add more relationships to improve document connectivity",
+                }
+            )
 
         summary["insights"] = insights
 

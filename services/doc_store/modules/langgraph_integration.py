@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Document Store Service
+LangGraph Integration for Document Store Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Document Store Service, enabling it to participate in AI-powered workflows.
+for the Document Store Service, enabling it to participate in AI-powered
+workflows.
 """
 
-import asyncio
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.shared.utilities import get_service_client
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import get_service_client
 
 
 class DocStoreLangGraphIntegration:
@@ -31,8 +31,9 @@ class DocStoreLangGraphIntegration:
         """Initialize LangGraph tools for document store."""
 
         @tool
-        async def store_document_langgraph(content: str, metadata: Dict[str, Any],
-                                         source: str, workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def store_document_langgraph(
+            content: str, metadata: Dict[str, Any], source: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Store a document within a LangGraph workflow context."""
             try:
                 # Enhance metadata with workflow context
@@ -42,16 +43,12 @@ class DocStoreLangGraphIntegration:
                     "workflow_context": workflow_context or {},
                     "langgraph_integration": True,
                     "stored_at": datetime.now().isoformat(),
-                    "workflow_id": workflow_context.get("workflow_id") if workflow_context else None
+                    "workflow_id": workflow_context.get("workflow_id") if workflow_context else None,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/documents",
-                    {
-                        "content": content,
-                        "metadata": enhanced_metadata,
-                        "source": f"{source}_langgraph"
-                    }
+                    {"content": content, "metadata": enhanced_metadata, "source": f"{source}_langgraph"},
                 )
 
                 # Cache for workflow continuity
@@ -61,18 +58,20 @@ class DocStoreLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_cache:
                             self.workflow_cache[workflow_id] = []
-                        self.workflow_cache[workflow_id].append({
-                            "doc_id": doc_id,
-                            "action": "stored",
-                            "timestamp": datetime.now().isoformat(),
-                            "metadata": enhanced_metadata
-                        })
+                        self.workflow_cache[workflow_id].append(
+                            {
+                                "doc_id": doc_id,
+                                "action": "stored",
+                                "timestamp": datetime.now().isoformat(),
+                                "metadata": enhanced_metadata,
+                            }
+                        )
 
                 return {
                     "success": True,
                     "document_id": doc_id,
                     "workflow_integration": "completed",
-                    "cache_updated": bool(workflow_context)
+                    "cache_updated": bool(workflow_context),
                 }
 
             except Exception as e:
@@ -80,13 +79,12 @@ class DocStoreLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def retrieve_document_langgraph(doc_id: str,
-                                            workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def retrieve_document_langgraph(
+            doc_id: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Retrieve a document within LangGraph workflow context."""
             try:
-                result = await self.service_client.get_json(
-                    f"{self.service_name}/api/v1/documents/{doc_id}"
-                )
+                result = await self.service_client.get_json(f"{self.service_name}/api/v1/documents/{doc_id}")
 
                 # Add workflow context to retrieval
                 if workflow_context:
@@ -99,25 +97,24 @@ class DocStoreLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_cache:
                             self.workflow_cache[workflow_id] = []
-                        self.workflow_cache[workflow_id].append({
-                            "doc_id": doc_id,
-                            "action": "retrieved",
-                            "timestamp": datetime.now().isoformat(),
-                            "workflow_context": workflow_context
-                        })
+                        self.workflow_cache[workflow_id].append(
+                            {
+                                "doc_id": doc_id,
+                                "action": "retrieved",
+                                "timestamp": datetime.now().isoformat(),
+                                "workflow_context": workflow_context,
+                            }
+                        )
 
-                return {
-                    "success": True,
-                    "document": result,
-                    "workflow_integration": "completed"
-                }
+                return {"success": True, "document": result, "workflow_integration": "completed"}
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def search_documents_langgraph(query: str, filters: Dict[str, Any],
-                                           workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def search_documents_langgraph(
+            query: str, filters: Dict[str, Any], workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Search documents within LangGraph workflow context."""
             try:
                 # Enhance filters with workflow context
@@ -125,15 +122,11 @@ class DocStoreLangGraphIntegration:
                     **filters,
                     "workflow_context": workflow_context,
                     "search_timestamp": datetime.now().isoformat(),
-                    "langgraph_search": True
+                    "langgraph_search": True,
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/search",
-                    {
-                        "query": query,
-                        "filters": enhanced_filters
-                    }
+                    f"{self.service_name}/api/v1/search", {"query": query, "filters": enhanced_filters}
                 )
 
                 # Add workflow metadata to results
@@ -141,14 +134,10 @@ class DocStoreLangGraphIntegration:
                     "search_performed_in_workflow": bool(workflow_context),
                     "query": query,
                     "filters_applied": list(enhanced_filters.keys()),
-                    "results_count": len(result.get("results", []))
+                    "results_count": len(result.get("results", [])),
                 }
 
-                return {
-                    "success": True,
-                    "search_results": result,
-                    "workflow_integration": "completed"
-                }
+                return {"success": True, "search_results": result, "workflow_integration": "completed"}
 
             except Exception as e:
                 fire_and_forget("error", f"LangGraph document search failed: {e}", self.service_name)
@@ -165,7 +154,7 @@ class DocStoreLangGraphIntegration:
                         "success": True,
                         "documents": cached_docs,
                         "source": "workflow_cache",
-                        "workflow_id": workflow_id
+                        "workflow_id": workflow_id,
                     }
 
                 # Query by workflow metadata
@@ -173,11 +162,8 @@ class DocStoreLangGraphIntegration:
                     f"{self.service_name}/api/v1/search",
                     {
                         "query": f"workflow_id:{workflow_id}",
-                        "filters": {
-                            "langgraph_integration": True,
-                            "workflow_query": True
-                        }
-                    }
+                        "filters": {"langgraph_integration": True, "workflow_query": True},
+                    },
                 )
 
                 return {
@@ -185,7 +171,7 @@ class DocStoreLangGraphIntegration:
                     "documents": result.get("results", []),
                     "source": "database_query",
                     "workflow_id": workflow_id,
-                    "total_found": len(result.get("results", []))
+                    "total_found": len(result.get("results", [])),
                 }
 
             except Exception as e:
@@ -193,9 +179,9 @@ class DocStoreLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def create_document_relationship_langgraph(doc_id_1: str, doc_id_2: str,
-                                                       relationship_type: str,
-                                                       workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def create_document_relationship_langgraph(
+            doc_id_1: str, doc_id_2: str, relationship_type: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Create a relationship between documents within a workflow."""
             try:
                 relationship_data = {
@@ -204,19 +190,14 @@ class DocStoreLangGraphIntegration:
                     "relationship_type": relationship_type,
                     "workflow_context": workflow_context,
                     "created_at": datetime.now().isoformat(),
-                    "langgraph_created": True
+                    "langgraph_created": True,
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/relationships",
-                    relationship_data
+                    f"{self.service_name}/api/v1/relationships", relationship_data
                 )
 
-                return {
-                    "success": True,
-                    "relationship": result,
-                    "workflow_integration": "completed"
-                }
+                return {"success": True, "relationship": result, "workflow_integration": "completed"}
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
@@ -226,7 +207,7 @@ class DocStoreLangGraphIntegration:
             "retrieve_document_langgraph": retrieve_document_langgraph,
             "search_documents_langgraph": search_documents_langgraph,
             "get_workflow_documents_langgraph": get_workflow_documents_langgraph,
-            "create_document_relationship_langgraph": create_document_relationship_langgraph
+            "create_document_relationship_langgraph": create_document_relationship_langgraph,
         }
 
     async def handle_langgraph_workflow_message(self, message: BaseMessage) -> Dict[str, Any]:
@@ -252,7 +233,7 @@ class DocStoreLangGraphIntegration:
                 "action": "store_document",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["document_storage", "metadata_enhancement", "workflow_tracking"]
+                "capabilities": ["document_storage", "metadata_enhancement", "workflow_tracking"],
             }
 
         elif "retrieve" in instruction_lower or "get" in instruction_lower:
@@ -260,7 +241,7 @@ class DocStoreLangGraphIntegration:
                 "action": "retrieve_document",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["document_retrieval", "workflow_context", "cache_optimization"]
+                "capabilities": ["document_retrieval", "workflow_context", "cache_optimization"],
             }
 
         elif "search" in instruction_lower or "find" in instruction_lower:
@@ -268,7 +249,7 @@ class DocStoreLangGraphIntegration:
                 "action": "search_documents",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["document_search", "advanced_filtering", "workflow_aware_search"]
+                "capabilities": ["document_search", "advanced_filtering", "workflow_aware_search"],
             }
 
         elif "relationship" in instruction_lower or "link" in instruction_lower:
@@ -276,7 +257,7 @@ class DocStoreLangGraphIntegration:
                 "action": "manage_relationships",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["relationship_creation", "document_linking", "workflow_relationships"]
+                "capabilities": ["relationship_creation", "document_linking", "workflow_relationships"],
             }
 
         else:
@@ -284,7 +265,7 @@ class DocStoreLangGraphIntegration:
                 "action": "general_document_operation",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["document_operations", "workflow_integration", "metadata_management"]
+                "capabilities": ["document_operations", "workflow_integration", "metadata_management"],
             }
 
     async def _process_document_workflow_response(self, response: str) -> Dict[str, Any]:
@@ -294,7 +275,7 @@ class DocStoreLangGraphIntegration:
             "content": response,
             "timestamp": datetime.now().isoformat(),
             "processed_by": self.service_name,
-            "response_type": "document_workflow"
+            "response_type": "document_workflow",
         }
 
         # Update active workflow if exists
@@ -305,7 +286,7 @@ class DocStoreLangGraphIntegration:
             "status": "processed",
             "service": self.service_name,
             "response_stored": True,
-            "active_workflows_updated": len(self.active_workflows)
+            "active_workflows_updated": len(self.active_workflows),
         }
 
     def get_langgraph_capabilities(self) -> Dict[str, Any]:
@@ -318,25 +299,16 @@ class DocStoreLangGraphIntegration:
                 "document_retrieval",
                 "document_search",
                 "relationship_management",
-                "workflow_document_tracking"
+                "workflow_document_tracking",
             ],
-            "tool_categories": [
-                "storage_tools",
-                "retrieval_tools",
-                "search_tools",
-                "relationship_tools"
-            ],
-            "message_types": [
-                "document_instructions",
-                "workflow_responses",
-                "storage_commands"
-            ],
+            "tool_categories": ["storage_tools", "retrieval_tools", "search_tools", "relationship_tools"],
+            "message_types": ["document_instructions", "workflow_responses", "storage_commands"],
             "integration_features": [
                 "workflow_context_awareness",
                 "cache_optimization",
                 "relationship_tracking",
-                "metadata_enhancement"
-            ]
+                "metadata_enhancement",
+            ],
         }
 
     def get_workflow_integration_status(self) -> Dict[str, Any]:
@@ -348,7 +320,7 @@ class DocStoreLangGraphIntegration:
             "active_workflows": len(self.active_workflows),
             "total_cached_documents": sum(len(docs) for docs in self.workflow_cache.values()),
             "last_activity": datetime.now().isoformat(),
-            "capabilities_ready": True
+            "capabilities_ready": True,
         }
 
     async def cleanup_workflow_cache(self, workflow_id: Optional[str] = None) -> Dict[str, Any]:

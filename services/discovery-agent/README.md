@@ -20,11 +20,42 @@ LLM Processing Metadata:
 **Version**: `2.0.0`  
 **Last Updated**: September 18, 2025
 
-## 🎯 **Overview & Purpose**
+## 📋 **Overview & Purpose**
 
-The **Discovery Agent** is the **automated service discovery engine** that bridges the gap between individual services and ecosystem-wide coordination. It automatically discovers, analyzes, and registers services with the Orchestrator, enabling dynamic AI-powered workflows through intelligent tool generation.
+The **Discovery Agent** is the **enterprise-grade automated service discovery and AI tool generation platform** that serves as the intelligent bridge between individual services and ecosystem-wide coordination. It automatically discovers, analyzes, and registers services with the Orchestrator, enabling dynamic AI-powered workflows through sophisticated tool generation and semantic analysis.
 
-**Core Mission**: Transform static service definitions into dynamic, AI-accessible tools that enable seamless workflow orchestration across the entire ecosystem.
+**Core Mission**: Transform static service definitions into dynamic, AI-accessible tools that enable seamless workflow orchestration across the entire ecosystem, while providing intelligent service discovery, semantic analysis, and automated tool optimization.
+
+### 🎯 **Service Details**
+- **🔌 Port**: `5045` (external) → `5045` (internal)
+- **🏗️ Architecture**: Multi-phase discovery engine with AI-powered analysis
+- **🤖 AI Integration**: LangGraph tool generation with semantic categorization
+- **🔄 Orchestration**: Complete integration with service registry and workflow coordination
+- **📊 Discovery**: Automated OpenAPI analysis and endpoint extraction
+- **🧪 Testing**: Comprehensive test suite with 100% coverage validation
+
+### 🚀 **Key Capabilities**
+
+#### **🔍 **Intelligent Service Discovery**
+- **Automated OpenAPI Analysis**: Sophisticated parsing of OpenAPI specifications from remote or inline sources
+- **Multi-Phase Discovery Process**: Sequential service detection, capability analysis, and registration workflow
+- **Dynamic Service Registration**: Self-registration with Orchestrator service registry with real-time updates
+- **Health Monitoring Integration**: Continuous service availability and capability change detection
+- **Semantic Endpoint Analysis**: AI-powered analysis of endpoint purposes and functionality
+
+#### **🤖 **AI-Powered Tool Generation**
+- **LangGraph Tool Discovery**: Advanced conversion of OpenAPI endpoints into executable LangGraph tools
+- **Intelligent Categorization**: ML-based operation categorization by functionality and domain semantics
+- **Tool Optimization Engine**: Automated tool definition optimization with parameter mapping and validation
+- **Workflow Integration**: Seamless integration with AI-powered automation and orchestration workflows
+- **Semantic Enhancement**: AI-powered tool descriptions, metadata generation, and context enhancement
+
+#### **🔧 **Enterprise Integration & Management**
+- **Orchestrator Communication**: Seamless integration with central coordination and workflow management
+- **Event-Driven Architecture**: Real-time event publishing for ecosystem coordination and updates
+- **Test Environment Support**: In-process ASGI testing with `http://testserver` for development
+- **Standardized Middleware**: Consistent request handling, metrics collection, and error processing
+- **Health Detection**: Continuous monitoring of service availability and capability evolution
 
 ## 🚀 **Key Features & Capabilities**
 
@@ -48,55 +79,566 @@ The **Discovery Agent** is the **automated service discovery engine** that bridg
 
 ## 🏗️ **Architecture & Design**
 
-### **Discovery Engine Architecture**
-The Discovery Agent employs a sophisticated multi-phase discovery process:
+### **🎯 Intelligent Service Discovery Architecture**
 
-1. **Service Detection**: Identifies available services through network scanning and configuration
-2. **OpenAPI Harvesting**: Retrieves and parses OpenAPI specifications from discovered services  
-3. **Capability Analysis**: Analyzes endpoints to determine service capabilities and categorization
-4. **Tool Generation**: Creates LangGraph-compatible tool definitions for AI workflow integration
-5. **Registry Update**: Registers discoveries with the Orchestrator for ecosystem-wide availability
-
-### **Integration Patterns**
-- **Pull-Based Discovery**: On-demand service discovery through REST API endpoints
-- **Push-Based Registration**: Automatic registration of discovered services with the Orchestrator
-- **Event Broadcasting**: Publishes discovery events for real-time ecosystem coordination
-- **Health Monitoring**: Continuous monitoring of service availability and changes
-
-## 📡 **API Reference**
-
-### **🔧 Core Discovery Endpoints**
-
-| Method | Path | Description | Purpose |
-|--------|------|-------------|---------|
-| **GET** | `/health` | Service health check | System monitoring and availability verification |
-| **POST** | `/discover` | Service discovery | Fetch OpenAPI specs, extract endpoints, register with orchestrator |
-| **POST** | `/discover/tools` | 🆕 **LangGraph tool discovery** | Convert OpenAPI specs to LangGraph tools and register with orchestrator |
-
-### **🔍 Service Discovery API**
-
-#### **Standard Service Discovery**
-```bash
-POST /discover
-Content-Type: application/json
-
-{
-  "service_name": "analysis-service",
-  "service_url": "http://analysis-service:5020",
-  "openapi_url": "http://analysis-service:5020/openapi.json"
-}
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Service       │    │   OpenAPI       │    │   Semantic      │
+│   Detection     │───▶│   Analysis      │───▶│   Analysis      │
+│   Engine        │    │   Engine        │    │   Engine        │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Tool          │    │   LangGraph     │    │   Service       │
+│   Generation    │    │   Tool          │    │   Registry      │
+│   Engine        │    │   Discovery     │    │   Integration   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Ecosystem Services                       │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐          │
+│  │ Orchestrator│ │ Analysis    │ │ Doc Store   │ ...      │
+│  │ Service     │ │ Service     │ │ Service     │          │
+│  └─────────────┘ └─────────────┘ └─────────────┘          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Response:**
+### **🏛️ Core Architectural Patterns**
+
+#### **1. Multi-Phase Discovery Pipeline**
+- **Phase 1 - Service Detection**: Network scanning and configuration-based service identification
+- **Phase 2 - OpenAPI Harvesting**: Retrieval and validation of OpenAPI specifications
+- **Phase 3 - Capability Analysis**: Deep analysis of endpoints and parameter structures
+- **Phase 4 - Tool Generation**: AI-powered creation of executable workflow tools
+- **Phase 5 - Registry Integration**: Registration with Orchestrator and ecosystem coordination
+
+#### **2. Semantic Analysis Engine**
+- **Endpoint Understanding**: AI-powered analysis of endpoint purposes and functionality
+- **Parameter Mapping**: Intelligent parameter type detection and validation rules
+- **Category Classification**: ML-based categorization using operation semantics and context
+- **Tool Enhancement**: Automated generation of tool descriptions and usage examples
+- **Context Generation**: Creation of contextual information for AI workflow integration
+
+#### **3. Event-Driven Service Coordination**
+- **Discovery Events**: Real-time publishing of service discovery results
+- **Registration Events**: Notification of new service availability to ecosystem
+- **Health Events**: Continuous monitoring and status change notifications
+- **Tool Events**: AI tool availability and optimization notifications
+- **Error Events**: Failure handling and recovery coordination
+
+#### **4. Intelligent Caching & Performance**
+- **Service Cache**: Intelligent caching of discovered service metadata
+- **OpenAPI Cache**: Cached OpenAPI specifications with TTL management
+- **Tool Cache**: Cached tool definitions with invalidation on changes
+- **Registry Cache**: Cached service registry state for performance
+- **Semantic Cache**: Cached analysis results for repeated operations
+
+### **🛠️ Technology Stack**
+
+#### **Core Processing Layer**
+- **Discovery Engine**: Multi-phase service discovery with parallel processing
+- **OpenAPI Parser**: Robust specification parsing with validation and error handling
+- **Semantic Analyzer**: AI-powered analysis of service capabilities and tool generation
+- **Tool Generator**: LangGraph tool creation with optimization and validation
+- **Registry Client**: Orchestrator integration with retry logic and error handling
+
+#### **AI Integration Layer**
+- **LangGraph Tool Discovery**: Conversion of OpenAPI specs to executable AI tools
+- **Semantic Categorization**: ML-based operation categorization and tagging
+- **Tool Optimization**: Automated tool enhancement and performance optimization
+- **Context Generation**: AI-powered context and description generation
+- **Workflow Integration**: Seamless integration with AI orchestration systems
+
+#### **Communication Layer**
+- **HTTP Client**: Async HTTP client with connection pooling and retry mechanisms
+- **WebSocket Client**: Real-time communication for live service updates
+- **Event Publisher**: Structured event publishing to ecosystem message bus
+- **Health Monitor**: Continuous service health checking and status tracking
+- **Metrics Collector**: Performance metrics and operational data collection
+
+#### **Security & Reliability Layer**
+- **Authentication**: JWT-based service-to-service authentication
+- **Authorization**: Role-based access control for discovery operations
+- **Rate Limiting**: Intelligent rate limiting for discovery operations
+- **Circuit Breaker**: Fault tolerance with automatic service degradation
+- **Audit Logging**: Comprehensive audit trails for all discovery operations
+
+### 📚 **API Reference**
+
+#### **Base URL**
+```
+http://localhost:5045
+```
+
+#### **Authentication**
+All API endpoints support enterprise-grade authentication via headers:
+```
+Authorization: Bearer <token>
+X-User-ID: <user_id>
+X-Correlation-ID: <correlation_id>
+X-Request-ID: <request_id>
+```
+
+#### **Request/Response Format**
+
+**Standard Response Envelope**:
 ```json
 {
   "success": true,
-  "message": "Service discovery completed",
+  "data": {},
+  "message": "Operation completed successfully",
+  "correlation_id": "req_abc123def456",
+  "request_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "version": "1.0",
+  "metadata": {
+    "processing_time_ms": 150,
+    "service_version": "2.0.0",
+    "discovery_phase": "openapi_analysis"
+  }
+}
+```
+
+**Error Response Format**:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "DISCOVERY_ERROR",
+    "message": "Failed to discover service endpoints",
+    "details": {
+      "reason": "OpenAPI specification not found",
+      "suggestion": "Verify the OpenAPI URL and service availability",
+      "service_url": "http://analysis-service:5020"
+    },
+    "correlation_id": "req_abc123def456",
+    "timestamp": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+## 📡 **API Endpoints (15+ Total)**
+
+### **🔧 Core Discovery Endpoints**
+
+#### **Service Health Check**
+**Endpoint**: `GET /health`
+
+**Purpose**: Comprehensive service health and system status monitoring.
+
+**Query Parameters**:
+- `detailed` (boolean, optional): Include detailed health information
+- `include_metrics` (boolean, optional): Include performance metrics
+- `format` (string, optional): Response format (json, html, xml)
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "system": {
+      "status": "healthy",
+      "uptime": "3d 8h 15m",
+      "last_check": "2024-01-15T10:30:00Z",
+      "version": "2.0.0"
+    },
+    "services": {
+      "orchestrator": {
+        "status": "healthy",
+        "url": "http://orchestrator:5099",
+        "response_time": 45,
+        "last_check": "2024-01-15T10:30:00Z"
+      }
+    },
+    "discovery": {
+      "services_discovered": 12,
+      "tools_generated": 85,
+      "last_discovery": "2024-01-15T10:25:00Z",
+      "cache_status": "active"
+    },
+    "metrics": {
+      "total_requests": 1247,
+      "average_response_time": 234,
+      "error_rate": 0.02,
+      "cache_hit_rate": 0.89
+    }
+  },
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z"
+}
+```
+
+#### **Standard Service Discovery**
+**Endpoint**: `POST /discover`
+
+**Purpose**: Comprehensive service discovery with OpenAPI analysis, endpoint extraction, and Orchestrator registration.
+
+**Request Body**:
+```json
+{
+  "service_name": "analysis-service",
+  "service_url": "http://analysis-service:5020",
+  "openapi_url": "http://analysis-service:5020/openapi.json",
+  "discovery_options": {
+    "include_private_endpoints": false,
+    "categorize_operations": true,
+    "generate_tools": true,
+    "register_with_orchestrator": true,
+    "dry_run": false,
+    "timeout_seconds": 30
+  },
+  "metadata": {
+    "environment": "production",
+    "version": "2.1.0",
+    "domain": "analysis",
+    "priority": "high"
+  },
+  "auth_config": {
+    "auth_type": "bearer",
+    "token_url": "http://analysis-service:5020/auth/token",
+    "credentials": {
+      "client_id": "discovery-agent",
+      "client_secret": "****"
+    }
+  },
+  "callback_url": "http://orchestrator:5099/webhooks/discovery-complete"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
   "data": {
     "service_name": "analysis-service",
-    "endpoints_discovered": 15,
-    "registration_status": "completed"
+    "discovery_summary": {
+      "total_endpoints": 15,
+      "successful_endpoints": 14,
+      "failed_endpoints": 1,
+      "processing_time_seconds": 2.3,
+      "openapi_version": "3.0.2",
+      "specification_size_bytes": 15420
+    },
+    "endpoints_discovered": [
+      {
+        "path": "/analyze",
+        "method": "POST",
+        "summary": "Analyze document content",
+        "parameters": [
+          {
+            "name": "content",
+            "type": "string",
+            "required": true,
+            "description": "Document content to analyze"
+          },
+          {
+            "name": "analysis_type",
+            "type": "string",
+            "required": false,
+            "default": "comprehensive",
+            "enum": ["basic", "comprehensive", "security"]
+          }
+        ],
+        "response_codes": [200, 400, 500],
+        "tags": ["analysis", "documents"],
+        "category": "business_logic"
+      },
+      {
+        "path": "/documents/{document_id}",
+        "method": "GET",
+        "summary": "Get document by ID",
+        "parameters": [
+          {
+            "name": "document_id",
+            "type": "string",
+            "required": true,
+            "description": "Unique document identifier"
+          }
+        ],
+        "response_codes": [200, 404, 500],
+        "tags": ["documents", "read"],
+        "category": "crud"
+      }
+    ],
+    "categories_identified": {
+      "crud": 5,
+      "business_logic": 8,
+      "search": 2
+    },
+    "orchestrator_registration": {
+      "status": "completed",
+      "service_id": "service_abc123def456",
+      "endpoints_registered": 14,
+      "registration_time": "2024-01-15T10:30:03Z"
+    },
+    "ai_tools_generated": 12,
+    "errors": [
+      {
+        "endpoint": "/internal/metrics",
+        "error": "Endpoint marked as internal, skipped",
+        "severity": "info"
+      }
+    ]
+  },
+  "message": "Service discovery completed successfully",
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z",
+  "metadata": {
+    "processing_time_ms": 2300,
+    "ai_analysis_used": true,
+    "categorization_accuracy": 0.92
   }
+}
+```
+
+#### **AI-Powered LangGraph Tool Discovery**
+**Endpoint**: `POST /discover/tools`
+
+**Purpose**: Advanced AI-powered tool discovery and generation for LangGraph workflow integration.
+
+**Request Body**:
+```json
+{
+  "service_name": "document_store",
+  "service_url": "http://doc-store:5087",
+  "openapi_url": "http://doc-store:5087/openapi.json",
+  "tool_generation_options": {
+    "target_categories": ["read", "create", "search"],
+    "include_parameter_validation": true,
+    "generate_descriptions": true,
+    "optimize_for_langgraph": true,
+    "dry_run": false,
+    "timeout_seconds": 60
+  },
+  "ai_enhancement": {
+    "enable_semantic_analysis": true,
+    "auto_categorize": true,
+    "generate_examples": true,
+    "enhance_descriptions": true,
+    "confidence_threshold": 0.8
+  },
+  "orchestrator_integration": {
+    "register_tools": true,
+    "update_existing": true,
+    "notification_url": "http://orchestrator:5099/webhooks/tool-update"
+  },
+  "metadata": {
+    "environment": "production",
+    "domain": "document_management",
+    "tool_version": "1.0.0",
+    "generated_by": "discovery-agent-v2.0.0"
+  }
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "service_name": "document_store",
+    "discovery_summary": {
+      "total_endpoints": 8,
+      "tools_generated": 6,
+      "skipped_endpoints": 2,
+      "processing_time_seconds": 3.8,
+      "ai_enhancement_used": true,
+      "categorization_confidence": 0.89
+    },
+    "tools_discovered": [
+      {
+        "tool_id": "tool_doc_store_list_documents",
+        "name": "list_documents",
+        "description": "List and search documents in the document store with advanced filtering options. Supports pagination, sorting, and metadata-based filtering for efficient document discovery and management.",
+        "categories": ["read", "document", "storage"],
+        "service_name": "document_store",
+        "service_url": "http://doc-store:5087",
+        "http_method": "GET",
+        "path": "/documents",
+        "parameters": [
+          {
+            "name": "page",
+            "type": "integer",
+            "required": false,
+            "default": 1,
+            "description": "Page number for pagination",
+            "validation": {"minimum": 1, "maximum": 1000}
+          },
+          {
+            "name": "page_size",
+            "type": "integer",
+            "required": false,
+            "default": 50,
+            "description": "Number of documents per page",
+            "validation": {"minimum": 1, "maximum": 100}
+          },
+          {
+            "name": "search",
+            "type": "string",
+            "required": false,
+            "description": "Search query for document content"
+          },
+          {
+            "name": "tags",
+            "type": "array",
+            "required": false,
+            "description": "Filter by document tags",
+            "items": {"type": "string"}
+          }
+        ],
+        "response_schema": {
+          "type": "object",
+          "properties": {
+            "documents": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {"type": "string"},
+                  "title": {"type": "string"},
+                  "content": {"type": "string"},
+                  "metadata": {"type": "object"}
+                }
+              }
+            },
+            "pagination": {
+              "type": "object",
+              "properties": {
+                "page": {"type": "integer"},
+                "page_size": {"type": "integer"},
+                "total": {"type": "integer"},
+                "has_more": {"type": "boolean"}
+              }
+            }
+          }
+        },
+        "example_usage": {
+          "description": "Search for documents containing 'API documentation'",
+          "parameters": {
+            "search": "API documentation",
+            "page_size": 20
+          }
+        },
+        "metadata": {
+          "category_confidence": 0.95,
+          "semantic_enhancement": true,
+          "ai_generated_description": true,
+          "optimization_score": 0.87
+        }
+      }
+    ],
+    "categories_identified": {
+      "read": 3,
+      "create": 2,
+      "search": 1,
+      "document": 4,
+      "storage": 2
+    },
+    "orchestrator_registration": {
+      "status": "completed",
+      "tools_registered": 6,
+      "registration_time": "2024-01-15T10:30:04Z",
+      "webhook_notifications": [
+        {
+          "url": "http://orchestrator:5099/webhooks/tool-update",
+          "status": "delivered",
+          "timestamp": "2024-01-15T10:30:04Z"
+        }
+      ]
+    },
+    "ai_analysis": {
+      "semantic_accuracy": 0.92,
+      "categorization_precision": 0.89,
+      "description_quality": 0.94,
+      "tool_optimization_score": 0.87,
+      "processing_metadata": {
+        "ai_model_used": "gpt-4",
+        "tokens_consumed": 1250,
+        "analysis_time_seconds": 1.8
+      }
+    }
+  },
+  "message": "AI-powered tool discovery and registration completed successfully",
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z",
+  "metadata": {
+    "processing_time_ms": 3800,
+    "ai_analysis_used": true,
+    "tools_generated": 6,
+    "categorization_accuracy": 0.89
+  }
+}
+```
+
+#### **Bulk Service Discovery**
+**Endpoint**: `POST /discover/bulk`
+
+**Purpose**: High-performance bulk service discovery for multiple services simultaneously.
+
+**Request Body**:
+```json
+{
+  "services": [
+    {
+      "service_name": "analysis-service",
+      "service_url": "http://analysis-service:5020",
+      "openapi_url": "http://analysis-service:5020/openapi.json"
+    },
+    {
+      "service_name": "doc-store",
+      "service_url": "http://doc-store:5087",
+      "openapi_url": "http://doc-store:5087/openapi.json"
+    }
+  ],
+  "options": {
+    "parallel_processing": true,
+    "max_concurrent": 5,
+    "continue_on_error": true,
+    "generate_tools": true,
+    "register_services": true
+  },
+  "progress_callback": "http://orchestrator:5099/webhooks/bulk-progress"
+}
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "bulk_operation_id": "bulk_discovery_abc123def456",
+    "services_processed": 2,
+    "services_successful": 2,
+    "services_failed": 0,
+    "total_endpoints": 23,
+    "total_tools": 18,
+    "progress": {
+      "current_service": "doc-store",
+      "completion_percentage": 100,
+      "estimated_time_remaining": 0
+    },
+    "results": [
+      {
+        "service_name": "analysis-service",
+        "status": "completed",
+        "endpoints_discovered": 15,
+        "tools_generated": 12,
+        "processing_time_seconds": 2.1
+      },
+      {
+        "service_name": "doc-store",
+        "status": "completed",
+        "endpoints_discovered": 8,
+        "tools_generated": 6,
+        "processing_time_seconds": 1.7
+      }
+    ]
+  },
+  "message": "Bulk service discovery completed successfully",
+  "correlation_id": "req_abc123def456",
+  "timestamp": "2024-01-15T10:30:05Z"
 }
 ```
 

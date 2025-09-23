@@ -1,10 +1,11 @@
 """
 Summary Processor for consolidating analysis results.
+
 Following DDD principles with clean, focused functionality.
 """
 
-from typing import List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List
 
 
 class SummaryProcessor:
@@ -18,7 +19,7 @@ class SummaryProcessor:
             "priority_level": "medium",
             "processing_timestamp": datetime.now().isoformat(),
             "summary_metrics": {},
-            "confidence_score": 0.0
+            "confidence_score": 0.0,
         }
 
         all_findings = []
@@ -47,7 +48,8 @@ class SummaryProcessor:
         # Determine priority level
         high_priority_indicators = ["critical", "urgent", "immediate", "risk", "issue"]
         high_priority_count = sum(
-            1 for rec in consolidated["consolidated_recommendations"]
+            1
+            for rec in consolidated["consolidated_recommendations"]
             if any(indicator in rec.lower() for indicator in high_priority_indicators)
         )
 
@@ -71,14 +73,15 @@ class SummaryProcessor:
                 "priority": self._determine_action_priority(rec),
                 "category": self._categorize_action(rec),
                 "estimated_effort": self._estimate_effort(rec),
-                "dependencies": []
+                "dependencies": [],
             }
             action_items.append(action_item)
 
         return action_items
 
     def calculate_confidence_score(self, analysis_results: List[Dict[str, Any]]) -> float:
-        """Calculate overall confidence score from multiple analysis results."""
+        """Calculate overall confidence score from multiple analysis
+        results."""
         if not analysis_results:
             return 0.0
 
@@ -144,7 +147,7 @@ class SummaryProcessor:
             "budget": ["budget", "cost", "finance", "spending"],
             "risk": ["risk", "issue", "problem", "mitigation"],
             "quality": ["quality", "testing", "review", "standards"],
-            "technical": ["technical", "architecture", "design", "implementation"]
+            "technical": ["technical", "architecture", "design", "implementation"],
         }
 
         for category, keywords in categories.items():

@@ -1,23 +1,28 @@
-"""Configuration management for Summarizer Hub.
+"""
+Configuration management for Summarizer Hub.
 
 Handles loading hub configuration from YAML files and merging provider
 configurations with defaults for consistent service operation.
 """
-from typing import Dict, Any, Optional
-from services.shared.core.config.config import load_yaml_config, get_config_value
+
+from typing import Any, Dict
+
+from services.shared.core.config.config import get_config_value, load_yaml_config
 
 
 class ConfigManager:
-    """Manages hub configuration loading and provider configuration merging.
+    """
+    Manages hub configuration loading and provider configuration merging.
 
-    Provides centralized configuration management for the summarizer hub,
-    allowing provider settings to be defined globally and merged with
-    request-specific overrides.
+    Provides centralized configuration management for the summarizer
+    hub, allowing provider settings to be defined globally and merged
+    with request-specific overrides.
     """
 
     @staticmethod
     def load_hub_config() -> Dict[str, Any]:
-        """Load hub configuration from YAML configuration file.
+        """
+        Load hub configuration from YAML configuration file.
 
         Returns the complete hub configuration dictionary containing
         provider defaults and other service-wide settings.
@@ -26,16 +31,14 @@ class ConfigManager:
             Dictionary containing hub configuration, or empty dict if loading fails
         """
         config_path = get_config_value(
-            "SH_CONFIG",
-            "services/summarizer-hub/config.yaml",
-            section="summarizer_hub",
-            env_key="SH_CONFIG"
+            "SH_CONFIG", "services/summarizer-hub/config.yaml", section="summarizer_hub", env_key="SH_CONFIG"
         )
         return load_yaml_config(config_path)
 
     @staticmethod
     def merge_provider_from_config(provider_config, hub_config: Dict[str, Any]):
-        """Merge provider configuration with hub-wide defaults.
+        """
+        Merge provider configuration with hub-wide defaults.
 
         Finds the provider by name in the hub configuration and fills in
         any missing fields from the global defaults. Request-specific

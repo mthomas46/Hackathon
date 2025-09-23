@@ -1,0 +1,805 @@
+openapi: 3.0.3
+info:
+  title: Intelligent Project Simulation Dashboard API
+  description: |
+    REST API for the Intelligent Project Simulation Dashboard Service.
+
+    This API provides programmatic access to dashboard functionality, enabling:
+    - Real-time simulation monitoring and management
+    - AI-powered insights and recommendations
+    - Predictive analytics and anomaly detection
+    - Autonomous operations and self-healing
+    - Ecosystem health monitoring and alerting
+    - Comprehensive reporting and analytics
+
+    ## Authentication
+    Currently supports anonymous access. Enterprise deployments should implement
+    appropriate authentication and authorization mechanisms.
+
+    ## Rate Limiting
+    API endpoints implement intelligent rate limiting to ensure fair usage.
+
+    ## Versioning
+    API follows semantic versioning. Current version: v1
+
+    ## Response Codes
+    - `200`: Success
+    - `400`: Bad Request - Invalid input parameters
+    - `401`: Unauthorized - Authentication required
+    - `403`: Forbidden - Insufficient permissions
+    - `404`: Not Found - Resource does not exist
+    - `429`: Too Many Requests - Rate limit exceeded
+    - `500`: Internal Server Error - Server-side error
+    - `503`: Service Unavailable - Service temporarily unavailable
+  version: 1.0.0
+  contact:
+    name: LLM Documentation Ecosystem Team
+    email: team@llm-docs-ecosystem.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8502
+    description: Local development server
+  - url: https://api.simulation-dashboard.company.com
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check the health status of the Simulation Dashboard API service.
+      operationId: getHealth
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "healthy"
+                timestamp: "2024-01-01T12:00:00Z"
+                version: "1.0.0"
+                uptime_seconds: 3600.5
+                environment: "production"
+
+  /api/v1/simulations:
+    get:
+      summary: List Simulations
+      description: |
+        Retrieve a list of all project simulations with summary information.
+
+        Supports filtering by status and pagination for large result sets.
+      operationId: listSimulations
+      tags:
+        - Simulations
+      parameters:
+        - name: status
+          in: query
+          description: Filter simulations by status
+          required: false
+          schema:
+            type: string
+            enum: [pending, running, completed, failed, cancelled]
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 50
+        - name: offset
+          in: query
+          description: Number of results to skip (for pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of simulations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SimulationSummary'
+              example:
+                - id: "sim_001"
+                  name: "Software Development Project Alpha"
+                  status: "running"
+                  progress: 67.5
+                  created_at: "2024-01-01T08:30:00Z"
+                  updated_at: "2024-01-01T10:45:00Z"
+                  duration_weeks: 8
+                  complexity: "medium"
+                - id: "sim_002"
+                  name: "Data Pipeline Optimization"
+                  status: "completed"
+                  progress: 100.0
+                  created_at: "2023-12-28T14:20:00Z"
+                  updated_at: "2024-01-01T09:15:00Z"
+                  duration_weeks: 6
+                  complexity: "high"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/simulations/{simulation_id}:
+    get:
+      summary: Get Simulation Details
+      description: Retrieve detailed information about a specific simulation.
+      operationId: getSimulation
+      tags:
+        - Simulations
+      parameters:
+        - name: simulation_id
+          in: path
+          required: true
+          description: Unique identifier of the simulation
+          schema:
+            type: string
+            pattern: '^sim_\d{3,6}$'
+      responses:
+        '200':
+          description: Simulation details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulationSummary'
+              example:
+                id: "sim_123"
+                name: "Enterprise Software Migration"
+                status: "running"
+                progress: 45.2
+                created_at: "2024-01-01T09:00:00Z"
+                updated_at: "2024-01-01T11:30:00Z"
+                duration_weeks: 12
+                complexity: "high"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/dashboard/metrics:
+    get:
+      summary: Dashboard Metrics
+      description: |
+        Retrieve comprehensive metrics about dashboard operations and simulations.
+
+        Includes KPIs, performance indicators, and operational statistics.
+      operationId: getDashboardMetrics
+      tags:
+        - Dashboard
+        - Metrics
+      responses:
+        '200':
+          description: Dashboard metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardMetrics'
+              example:
+                total_simulations: 156
+                active_simulations: 28
+                completed_simulations: 103
+                failed_simulations: 12
+                success_rate: 89.7
+                avg_completion_time: 192.5
+                total_compute_hours: 29850.0
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/dashboard/ai-metrics:
+    get:
+      summary: AI Metrics
+      description: |
+        Retrieve metrics about AI-powered features and insights.
+
+        Includes insight generation statistics, prediction accuracy, and autonomous actions.
+      operationId: getAIMetrics
+      tags:
+        - Dashboard
+        - AI
+        - Metrics
+      responses:
+        '200':
+          description: AI metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIMetrics'
+              example:
+                insights_generated: 1456
+                recommendations_made: 1023
+                predictions_accuracy: 93.8
+                anomaly_detections: 189
+                autonomous_actions: 95
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/ecosystem/health:
+    get:
+      summary: Ecosystem Health
+      description: |
+        Retrieve comprehensive health status of the entire LLM Documentation Ecosystem.
+
+        Checks connectivity and status of all 21+ microservices.
+      operationId: getEcosystemHealth
+      tags:
+        - Health
+        - Ecosystem
+        - Monitoring
+      responses:
+        '200':
+          description: Ecosystem health status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EcosystemHealth'
+              example:
+                overall_status: "healthy"
+                services:
+                  project-simulation:
+                    status: "healthy"
+                    response_time: 45
+                    version: "1.0.0"
+                  llm-gateway:
+                    status: "healthy"
+                    response_time: 120
+                    version: "1.0.0"
+                  analysis-service:
+                    status: "warning"
+                    response_time: 89
+                    version: "1.0.0"
+                    issue: "High CPU usage detected"
+                last_check: "2024-01-01T12:00:00Z"
+                issues_count: 0
+                warnings_count: 1
+        '503':
+          description: One or more critical services are unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EcosystemHealth'
+
+  /api/v1/simulations/{simulation_id}/insights:
+    post:
+      summary: Generate AI Insights
+      description: |
+        Generate AI-powered insights and recommendations for a specific simulation.
+
+        Uses LLM Gateway to analyze simulation data and provide actionable insights.
+      operationId: generateSimulationInsights
+      tags:
+        - Simulations
+        - AI
+        - Insights
+      parameters:
+        - name: simulation_id
+          in: path
+          required: true
+          description: Unique identifier of the simulation
+          schema:
+            type: string
+            pattern: '^sim_\d{3,6}$'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                analysis_type:
+                  type: string
+                  enum: [performance, risk, optimization, prediction]
+                  default: performance
+                  description: Type of analysis to perform
+                include_historical:
+                  type: boolean
+                  default: true
+                  description: Include historical simulation data in analysis
+            example:
+              analysis_type: "performance"
+              include_historical: true
+      responses:
+        '200':
+          description: AI insights generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIInsightsResponse'
+              example:
+                simulation_id: "sim_123"
+                insights:
+                  - "Performance trending 15% above baseline"
+                  - "Resource utilization optimized for cost efficiency"
+                  - "Risk factors identified in execution phase"
+                  - "Recommendation: Increase parallel processing by 20%"
+                confidence: 0.89
+                generated_at: "2024-01-01T12:00:00Z"
+                model_used: "gpt-4-turbo"
+                processing_time: 2.3
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/dashboard/config:
+    get:
+      summary: Get Dashboard Configuration
+      description: |
+        Retrieve current dashboard configuration settings.
+
+        Returns sanitized configuration without sensitive data like API keys.
+      operationId: getDashboardConfig
+      tags:
+        - Dashboard
+        - Configuration
+      responses:
+        '200':
+          description: Dashboard configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardConfig'
+              example:
+                environment: "production"
+                debug: false
+                theme: "dark"
+                version: "1.0.0"
+                features:
+                  ai_insights: true
+                  autonomous_operations: false
+                  real_time_monitoring: true
+                  predictive_analytics: true
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/v1/dashboard/actions/autonomous:
+    post:
+      summary: Trigger Autonomous Action
+      description: |
+        Trigger an autonomous optimization or remediation action.
+
+        Allows programmatic triggering of self-healing and optimization actions.
+      operationId: triggerAutonomousAction
+      tags:
+        - Dashboard
+        - Autonomous
+        - Actions
+      parameters:
+        - name: action_type
+          in: query
+          required: true
+          description: Type of autonomous action to trigger
+          schema:
+            type: string
+            enum:
+              - optimize_performance
+              - scale_resources
+              - cleanup_cache
+              - health_check
+              - backup_data
+              - update_models
+      responses:
+        '200':
+          description: Autonomous action triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutonomousActionResponse'
+              example:
+                action_id: "action_1704110400.123"
+                action_type: "optimize_performance"
+                status: "initiated"
+                estimated_completion: "2024-01-01T12:05:00Z"
+                description: "Autonomous performance optimization initiated"
+                confidence: 0.95
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: Autonomous actions are disabled or restricted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimit'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - version
+        - uptime_seconds
+        - environment
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Service health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Health check timestamp
+        version:
+          type: string
+          description: API version
+        uptime_seconds:
+          type: number
+          minimum: 0
+          description: Service uptime in seconds
+        environment:
+          type: string
+          enum: [development, staging, production]
+          description: Deployment environment
+
+    SimulationSummary:
+      type: object
+      required:
+        - id
+        - name
+        - status
+        - progress
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          pattern: '^sim_\d{3,6}$'
+          description: Unique simulation identifier
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Simulation name
+        status:
+          type: string
+          enum: [pending, running, completed, failed, cancelled]
+          description: Current simulation status
+        progress:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Completion percentage
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        duration_weeks:
+          type: integer
+          minimum: 1
+          maximum: 52
+          description: Planned duration in weeks
+        complexity:
+          type: string
+          enum: [low, medium, high]
+          description: Complexity level
+
+    DashboardMetrics:
+      type: object
+      required:
+        - total_simulations
+        - active_simulations
+        - completed_simulations
+        - failed_simulations
+        - success_rate
+        - avg_completion_time
+        - total_compute_hours
+      properties:
+        total_simulations:
+          type: integer
+          minimum: 0
+          description: Total number of simulations
+        active_simulations:
+          type: integer
+          minimum: 0
+          description: Currently active simulations
+        completed_simulations:
+          type: integer
+          minimum: 0
+          description: Completed simulations
+        failed_simulations:
+          type: integer
+          minimum: 0
+          description: Failed simulations
+        success_rate:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Overall success rate percentage
+        avg_completion_time:
+          type: number
+          minimum: 0
+          description: Average completion time in hours
+        total_compute_hours:
+          type: number
+          minimum: 0
+          description: Total compute hours consumed
+
+    AIMetrics:
+      type: object
+      required:
+        - insights_generated
+        - recommendations_made
+        - predictions_accuracy
+        - anomaly_detections
+        - autonomous_actions
+      properties:
+        insights_generated:
+          type: integer
+          minimum: 0
+          description: Number of AI insights generated
+        recommendations_made:
+          type: integer
+          minimum: 0
+          description: Number of recommendations provided
+        predictions_accuracy:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Prediction accuracy percentage
+        anomaly_detections:
+          type: integer
+          minimum: 0
+          description: Number of anomalies detected
+        autonomous_actions:
+          type: integer
+          minimum: 0
+          description: Number of autonomous actions taken
+
+    EcosystemHealth:
+      type: object
+      required:
+        - overall_status
+        - services
+        - last_check
+        - issues_count
+        - warnings_count
+      properties:
+        overall_status:
+          type: string
+          enum: [healthy, warning, error]
+          description: Overall ecosystem health
+        services:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: [healthy, warning, error]
+              response_time:
+                type: integer
+                minimum: 0
+                description: Response time in milliseconds
+              version:
+                type: string
+                description: Service version
+              issue:
+                type: string
+                description: Issue description if any
+          description: Individual service health status
+        last_check:
+          type: string
+          format: date-time
+          description: Last health check timestamp
+        issues_count:
+          type: integer
+          minimum: 0
+          description: Number of active issues
+        warnings_count:
+          type: integer
+          minimum: 0
+          description: Number of active warnings
+
+    AIInsightsResponse:
+      type: object
+      required:
+        - simulation_id
+        - insights
+        - confidence
+        - generated_at
+      properties:
+        simulation_id:
+          type: string
+          description: Simulation identifier
+        insights:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          description: List of AI-generated insights
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Confidence score of insights
+        generated_at:
+          type: string
+          format: date-time
+          description: Generation timestamp
+        model_used:
+          type: string
+          description: AI model used for generation
+        processing_time:
+          type: number
+          minimum: 0
+          description: Processing time in seconds
+
+    DashboardConfig:
+      type: object
+      required:
+        - environment
+        - debug
+        - theme
+        - version
+        - features
+      properties:
+        environment:
+          type: string
+          enum: [development, staging, production]
+        debug:
+          type: boolean
+        theme:
+          type: string
+          enum: [light, dark, auto]
+        version:
+          type: string
+        features:
+          type: object
+          properties:
+            ai_insights:
+              type: boolean
+            autonomous_operations:
+              type: boolean
+            real_time_monitoring:
+              type: boolean
+            predictive_analytics:
+              type: boolean
+
+    AutonomousActionResponse:
+      type: object
+      required:
+        - action_id
+        - action_type
+        - status
+        - estimated_completion
+        - description
+        - confidence
+      properties:
+        action_id:
+          type: string
+          description: Unique action identifier
+        action_type:
+          type: string
+          enum:
+            - optimize_performance
+            - scale_resources
+            - cleanup_cache
+            - health_check
+            - backup_data
+            - update_models
+        status:
+          type: string
+          enum: [initiated, running, completed, failed]
+        estimated_completion:
+          type: string
+          format: date-time
+        description:
+          type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    APIErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - timestamp
+      properties:
+        error:
+          type: string
+          description: Error type or code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+        request_id:
+          type: string
+          description: Request identifier for tracing
+
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIErrorResponse'
+          example:
+            error: "VALIDATION_ERROR"
+            message: "Invalid simulation_id format"
+            details:
+              simulation_id: "Must match pattern '^sim_\\d{3,6}$'"
+            timestamp: "2024-01-01T12:00:00Z"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIErrorResponse'
+          example:
+            error: "NOT_FOUND"
+            message: "Simulation not found"
+            details:
+              simulation_id: "sim_999"
+            timestamp: "2024-01-01T12:00:00Z"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+    RateLimit:
+      description: Too Many Requests - Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIErrorResponse'
+          example:
+            error: "RATE_LIMIT_EXCEEDED"
+            message: "API rate limit exceeded"
+            details:
+              limit: 100
+              window: "1 minute"
+              reset_in: 45
+            timestamp: "2024-01-01T12:00:00Z"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+    InternalError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIErrorResponse'
+          example:
+            error: "INTERNAL_ERROR"
+            message: "An unexpected error occurred"
+            timestamp: "2024-01-01T12:00:00Z"
+            request_id: "550e8400-e29b-41d4-a716-446655440000"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication (optional for development)

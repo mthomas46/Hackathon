@@ -1,17 +1,20 @@
-"""Interpreter monitoring infrastructure for Frontend service.
+"""
+Interpreter monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for interpreter
 service natural language processing and workflow generation.
 """
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
+
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_interpreter_url, get_frontend_clients
+
+from .shared_utils import get_frontend_clients, get_interpreter_url
 
 
 class InterpreterMonitor:
-    """Monitor for interpreter service natural language processing and workflow operations."""
+    """Monitor for interpreter service natural language processing and workflow
+    operations."""
 
     def __init__(self):
         self._interpretations = []
@@ -43,9 +46,11 @@ class InterpreterMonitor:
                 "intents": intents_response,
                 "interpretation_stats": self._calculate_interpretation_stats(),
                 "execution_stats": self._calculate_execution_stats(),
-                "recent_interpretations": self._interpretations[-10:] if self._interpretations else [],  # Last 10 interpretations
+                "recent_interpretations": (
+                    self._interpretations[-10:] if self._interpretations else []
+                ),  # Last 10 interpretations
                 "recent_executions": self._executions[-10:] if self._executions else [],  # Last 10 executions
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._status_cache = status_data
@@ -62,7 +67,7 @@ class InterpreterMonitor:
                 "execution_stats": {},
                 "recent_interpretations": [],
                 "recent_executions": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
     async def get_supported_intents(self) -> List[Dict[str, Any]]:
@@ -77,7 +82,9 @@ class InterpreterMonitor:
         except Exception as e:
             return []
 
-    async def interpret_query(self, query: str, session_id: Optional[str] = None, user_id: Optional[str] = None) -> Dict[str, Any]:
+    async def interpret_query(
+        self, query: str, session_id: Optional[str] = None, user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Interpret a natural language query and cache the result."""
         try:
             clients = get_frontend_clients()
@@ -103,7 +110,7 @@ class InterpreterMonitor:
                     "entities": response.get("entities", []),
                     "confidence": response.get("confidence", 0),
                     "workflow": response.get("workflow", {}),
-                    "response": response
+                    "response": response,
                 }
 
                 self._interpretations.insert(0, interpretation_result)  # Add to front
@@ -118,24 +125,19 @@ class InterpreterMonitor:
                     "intent": interpretation_result["intent"],
                     "confidence": interpretation_result["confidence"],
                     "workflow": interpretation_result["workflow"],
-                    "response": response
+                    "response": response,
                 }
 
-            return {
-                "success": False,
-                "error": "Interpretation failed",
-                "response": response
-            }
+            return {"success": False, "error": "Interpretation failed", "response": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
-    async def execute_workflow(self, query: str, session_id: Optional[str] = None, user_id: Optional[str] = None) -> Dict[str, Any]:
-        """Execute a workflow from a natural language query and cache the result."""
+    async def execute_workflow(
+        self, query: str, session_id: Optional[str] = None, user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Execute a workflow from a natural language query and cache the
+        result."""
         try:
             clients = get_frontend_clients()
             interpreter_url = get_interpreter_url()
@@ -159,7 +161,7 @@ class InterpreterMonitor:
                 "results": response.get("results", {}),
                 "execution_time": response.get("execution_time"),
                 "steps_completed": len(response.get("results", {}).get("steps", [])),
-                "response": response
+                "response": response,
             }
 
             self._executions.insert(0, execution_result)  # Add to front
@@ -173,25 +175,16 @@ class InterpreterMonitor:
                 "execution_id": execution_result["id"],
                 "results": execution_result["results"],
                 "execution_time": execution_result["execution_time"],
-                "response": response
+                "response": response,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
     def _calculate_interpretation_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached interpretations."""
         if not self._interpretations:
-            return {
-                "total_interpretations": 0,
-                "average_confidence": 0,
-                "unique_intents": 0,
-                "intents_detected": []
-            }
+            return {"total_interpretations": 0, "average_confidence": 0, "unique_intents": 0, "intents_detected": []}
 
         total = len(self._interpretations)
         avg_confidence = sum(interp.get("confidence", 0) for interp in self._interpretations) / total
@@ -206,7 +199,7 @@ class InterpreterMonitor:
             "total_interpretations": total,
             "average_confidence": round(avg_confidence, 2),
             "unique_intents": len(intents),
-            "intents_detected": list(intents)
+            "intents_detected": list(intents),
         }
 
     def _calculate_execution_stats(self) -> Dict[str, Any]:
@@ -217,7 +210,7 @@ class InterpreterMonitor:
                 "successful_executions": 0,
                 "failed_executions": 0,
                 "average_execution_time": 0,
-                "average_steps_completed": 0
+                "average_steps_completed": 0,
             }
 
         total = len(self._executions)
@@ -236,7 +229,7 @@ class InterpreterMonitor:
             "failed_executions": failed,
             "success_rate": round((successful / total) * 100, 1) if total > 0 else 0,
             "average_execution_time": round(avg_execution_time, 2),
-            "average_steps_completed": round(avg_steps, 1)
+            "average_steps_completed": round(avg_steps, 1),
         }
 
     def get_interpretation_history(self, limit: int = 20) -> List[Dict[str, Any]]:

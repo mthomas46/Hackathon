@@ -1,11 +1,11 @@
 """SQLite implementation of document repository."""
 
-import sqlite3
 import json
-from typing import List, Optional, Dict, Any
+import sqlite3
 from datetime import datetime
+from typing import List, Optional
 
-from ...domain.entities import Document, DocumentId, Content, Metadata
+from ...domain.entities import Content, Document, DocumentId, Metadata
 from .document_repository import DocumentRepository
 
 
@@ -20,7 +20,8 @@ class SQLiteDocumentRepository(DocumentRepository):
     def _init_db(self) -> None:
         """Initialize database schema."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS documents (
                     id TEXT PRIMARY KEY,
                     title TEXT NOT NULL,
@@ -34,7 +35,8 @@ class SQLiteDocumentRepository(DocumentRepository):
                     updated_at TEXT NOT NULL,
                     metadata TEXT  -- JSON object
                 )
-            """)
+            """
+            )
 
             # Create indexes for performance
             conn.execute("CREATE INDEX IF NOT EXISTS idx_documents_author ON documents(author)")
@@ -44,33 +46,39 @@ class SQLiteDocumentRepository(DocumentRepository):
     async def save(self, document: Document) -> None:
         """Save a document to SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT OR REPLACE INTO documents
                 (id, title, content_text, content_format, author, tags,
                  repository_id, version, created_at, updated_at, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                document.id.value,
-                document.title,
-                document.content.text,
-                document.content.format,
-                document.metadata.author,
-                json.dumps(document.metadata.tags),
-                document.repository_id,
-                document.version,
-                document.metadata.created_at.isoformat(),
-                document.metadata.updated_at.isoformat(),
-                json.dumps(document.metadata.properties)
-            ))
+            """,
+                (
+                    document.id.value,
+                    document.title,
+                    document.content.text,
+                    document.content.format,
+                    document.metadata.author,
+                    json.dumps(document.metadata.tags),
+                    document.repository_id,
+                    document.version,
+                    document.metadata.created_at.isoformat(),
+                    document.metadata.updated_at.isoformat(),
+                    json.dumps(document.metadata.properties),
+                ),
+            )
 
     async def get_by_id(self, document_id: str) -> Optional[Document]:
         """Get document by ID from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, title, content_text, content_format, author, tags,
                        repository_id, version, created_at, updated_at, metadata
                 FROM documents WHERE id = ?
-            """, (document_id,))
+            """,
+                (document_id,),
+            )
 
             row = cursor.fetchone()
             if not row:
@@ -81,22 +89,27 @@ class SQLiteDocumentRepository(DocumentRepository):
     async def get_all(self) -> List[Document]:
         """Get all documents from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, title, content_text, content_format, author, tags,
                        repository_id, version, created_at, updated_at, metadata
                 FROM documents ORDER BY updated_at DESC
-            """)
+            """
+            )
 
             return [self._row_to_document(row) for row in cursor.fetchall()]
 
     async def get_by_author(self, author: str) -> List[Document]:
         """Get documents by author from SQLite."""
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute("""
+            cursor = conn.execute(
+                """
                 SELECT id, title, content_text, content_format, author, tags,
                        repository_id, version, created_at, updated_at, metadata
                 FROM documents WHERE author = ? ORDER BY updated_at DESC
-            """, (author,))
+            """,
+                (author,),
+            )
 
             return [self._row_to_document(row) for row in cursor.fetchall()]
 
@@ -108,8 +121,19 @@ class SQLiteDocumentRepository(DocumentRepository):
 
     def _row_to_document(self, row) -> Document:
         """Convert database row to Document entity."""
-        id, title, content_text, content_format, author, tags_json, \
-        repository_id, version, created_at_str, updated_at_str, metadata_json = row
+        (
+            id,
+            title,
+            content_text,
+            content_format,
+            author,
+            tags_json,
+            repository_id,
+            version,
+            created_at_str,
+            updated_at_str,
+            metadata_json,
+        ) = row
 
         # Parse dates
         created_at = datetime.fromisoformat(created_at_str)
@@ -123,11 +147,7 @@ class SQLiteDocumentRepository(DocumentRepository):
         document_id = DocumentId(id)
         content = Content(text=content_text, format=content_format)
         metadata = Metadata(
-            created_at=created_at,
-            updated_at=updated_at,
-            author=author,
-            tags=tags,
-            properties=properties
+            created_at=created_at, updated_at=updated_at, author=author, tags=tags, properties=properties
         )
 
         return Document(
@@ -136,5 +156,5 @@ class SQLiteDocumentRepository(DocumentRepository):
             content=content,
             metadata=metadata,
             repository_id=repository_id,
-            version=version
+            version=version,
         )

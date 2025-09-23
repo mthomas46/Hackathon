@@ -1,17 +1,20 @@
-"""Cache infrastructure for Prompt Store service.
+"""
+Cache infrastructure for Prompt Store service.
 
 Provides Redis and local caching capabilities for prompts and analytics.
 """
 
-import time
 import json
-from typing import Any, Dict, List, Optional, Union
+import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from services.shared.utilities import utc_now
 
 try:
     import redis.asyncio as aioredis
+
     REDIS_AVAILABLE = True
 except ImportError:
     aioredis = None
@@ -21,6 +24,7 @@ except ImportError:
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
+
     value: Any
     created_at: datetime
     ttl: int
@@ -32,6 +36,7 @@ class CacheEntry:
 @dataclass
 class CacheStats:
     """Cache statistics."""
+
     total_hits: int = 0
     total_misses: int = 0
     total_size_bytes: int = 0
@@ -100,12 +105,7 @@ class PromptStoreCache:
 
     async def set(self, key: str, value: Any, ttl: int = 3600, tags: Optional[List[str]] = None) -> bool:
         """Set value in cache."""
-        entry = CacheEntry(
-            value=value,
-            created_at=utc_now(),
-            ttl=ttl,
-            tags=tags or []
-        )
+        entry = CacheEntry(value=value, created_at=utc_now(), ttl=ttl, tags=tags or [])
 
         # Try Redis first
         if self.redis_client:
@@ -192,7 +192,7 @@ class PromptStoreCache:
             "evictions": self.stats.evictions,
             "local_cache_entries": len(self.local_cache),
             "avg_response_time_ms": avg_response_time * 1000,
-            "redis_available": self.redis_client is not None
+            "redis_available": self.redis_client is not None,
         }
 
     def _is_expired(self, entry: CacheEntry) -> bool:
@@ -204,8 +204,9 @@ class PromptStoreCache:
         if not self.local_cache:
             return
 
-        oldest_key = min(self.local_cache.keys(),
-                        key=lambda k: self.local_cache[k].last_accessed or self.local_cache[k].created_at)
+        oldest_key = min(
+            self.local_cache.keys(), key=lambda k: self.local_cache[k].last_accessed or self.local_cache[k].created_at
+        )
 
         if oldest_key:
             del self.local_cache[oldest_key]

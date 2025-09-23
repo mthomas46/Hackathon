@@ -62,7 +62,11 @@ The **Log Collector** is the **centralized logging hub** that provides comprehen
 | **POST** | `/logs` | Ingest single log entry | Individual log event ingestion and processing |
 | **POST** | `/logs/batch` | Batch log ingestion | High-volume log processing and bulk operations |
 | **GET** | `/logs` | Query and list logs | Log retrieval with filtering and pagination |
+| **GET** | `/logs/time-range` | Time-range log queries | Get logs within specific time periods |
+| **GET** | `/search` | Full-text log search | Advanced search across all log content |
 | **GET** | `/stats` | Log statistics and metrics | Operational insights and performance monitoring |
+| **GET** | `/metrics/{service}` | Service-specific metrics | Detailed health analysis for individual services |
+| **POST** | `/export` | Export logs to file | Filtered log export in JSON/JSONL formats |
 
 ### **🔍 Log Query Parameters**
 
@@ -72,6 +76,10 @@ The **Log Collector** is the **centralized logging hub** that provides comprehen
 | `level` | string | Filter by log level | `?level=ERROR` |
 | `limit` | integer | Limit result count | `?limit=100` |
 | `since` | timestamp | Logs since timestamp | `?since=2025-09-18T10:00:00Z` |
+| `q` | string | Full-text search query | `?q=error+timeout` |
+| `start_time` | timestamp | Time range start | `?start_time=2025-09-18T09:00:00Z` |
+| `end_time` | timestamp | Time range end | `?end_time=2025-09-18T11:00:00Z` |
+| `time_window_minutes` | integer | Service metrics time window | `?time_window_minutes=60` |
 
 ### **📊 Usage Examples**
 
@@ -123,26 +131,57 @@ GET /logs?level=ERROR&limit=50
 # Get logs from specific service
 GET /logs?service=orchestrator&limit=100
 
-# Get statistics
-GET /stats
+# Full-text search
+GET /search?q=connection+timeout&limit=20
+
+# Time-range queries
+GET /logs/time-range?start_time=2025-09-18T09:00:00Z&end_time=2025-09-18T11:00:00Z
+
+# Get statistics with time window
+GET /stats?hours=24
+
+# Get service-specific metrics
+GET /metrics/orchestrator?time_window_minutes=120
+```
+
+#### **Log Export**
+```bash
+POST /export
+Content-Type: application/json
+
+{
+  "filters": {
+    "service": "orchestrator",
+    "level": "ERROR"
+  },
+  "format": "jsonl",
+  "filename": "orchestrator-errors.jsonl"
+}
 ```
 
 ## 🏗️ **Architecture & Design**
 
 ### **🎯 Logging Architecture**
-The Log Collector employs a high-performance, in-memory architecture optimized for rapid ingestion and query processing:
+The Log Collector employs a sophisticated, multi-tier architecture with both in-memory and persistent storage capabilities:
 
 #### **Core Components**
-- **Ring Buffer Storage**: High-performance circular buffer for efficient memory management
+- **Dual Storage Engine**: In-memory ring buffer + optional disk persistence
 - **Log Processor**: Real-time log parsing, validation, and metadata extraction
-- **Query Engine**: Advanced filtering and search capabilities for log retrieval
-- **Statistics Calculator**: Real-time metrics and analytics generation
+- **Advanced Query Engine**: Full-text search, time-range queries, and complex filtering
+- **Statistics Calculator**: Real-time metrics, service health scoring, and analytics
+- **Export Engine**: Flexible log export in multiple formats (JSON/JSONL)
+
+#### **Storage Architecture**
+- **Ring Buffer**: Configurable in-memory circular buffer (default: 5000 entries)
+- **Persistent Storage**: Optional disk persistence with configurable retention (default: 7 days)
+- **Automatic Cleanup**: Time-based cleanup with configurable retention policies
+- **Thread-Safe Operations**: Concurrent access protection with threading locks
 
 #### **Performance Optimization**
-- **In-Memory Storage**: Ultra-fast access with configurable memory limits
+- **Lazy Cleanup**: Intelligent cleanup scheduling to minimize performance impact
 - **Batch Processing**: Efficient bulk operations for high-volume scenarios
-- **Indexing Strategy**: Smart indexing for rapid service and level-based queries
-- **Memory Management**: Automatic cleanup and circular buffer management
+- **Memory Management**: Automatic cleanup and bounded memory usage
+- **Search Optimization**: Indexed search capabilities for rapid query execution
 
 ## ⚙️ **Configuration**
 
@@ -154,6 +193,33 @@ The Log Collector employs a high-performance, in-memory architecture optimized f
 | `MAX_LOGS` | Maximum logs in ring buffer | `5000` | Optional |
 | `LOG_LEVEL` | Minimum log level to process | `DEBUG` | Optional |
 | `ENABLE_STATS` | Enable statistics calculation | `true` | Optional |
+| `PERSIST_LOGS` | Enable disk persistence | `false` | Optional |
+| `LOG_STORAGE_PATH` | Path for persistent log storage | `./logs` | Optional |
+| `LOG_RETENTION_DAYS` | Days to retain logs on disk | `7` | Optional |
+
+### **🔧 Advanced Configuration Examples**
+
+#### **High-Volume Production Setup**
+```bash
+export MAX_LOGS=10000
+export PERSIST_LOGS=true
+export LOG_STORAGE_PATH=/var/log/ecosystem
+export LOG_RETENTION_DAYS=30
+```
+
+#### **Development Environment**
+```bash
+export MAX_LOGS=1000
+export PERSIST_LOGS=false
+export LOG_LEVEL=DEBUG
+```
+
+#### **Minimal Resource Setup**
+```bash
+export MAX_LOGS=500
+export ENABLE_STATS=false
+export LOG_RETENTION_DAYS=1
+```
 
 ### **🎯 Service Dependencies**
 
@@ -187,29 +253,56 @@ The Log Collector employs a high-performance, in-memory architecture optimized f
 
 ### **🔧 Test Coverage**
 - **Unit Tests**: [tests/unit/log_collector](../../tests/unit/log_collector) - Comprehensive unit test suite
+- **Storage Tests**: In-memory and persistent storage functionality validation
+- **Search Tests**: Full-text search and time-range query testing
+- **Statistics Tests**: Metrics calculation and service health scoring validation
+- **Export Tests**: Log export functionality and format validation
 - **Integration Tests**: Multi-service log ingestion and processing validation
 - **Performance Tests**: High-volume log ingestion and query performance testing
-- **Isolation Tests**: Test environment isolation and state management
+- **Concurrency Tests**: Thread-safe operations and concurrent access validation
+
+### **📊 Test Classes & Methods**
+
+| Test Class | Methods | Coverage |
+|------------|---------|----------|
+| `TestLogStorage` | 8+ methods | Storage operations, persistence, cleanup |
+| `TestLogSearch` | 6+ methods | Full-text search, filtering, time-range queries |
+| `TestLogStatistics` | 5+ methods | Metrics calculation, health scoring, analytics |
+| `TestLogExport` | 4+ methods | Export functionality, format validation |
+| `TestLogIntegration` | 3+ methods | Multi-service scenarios, batch processing |
 
 ### **📊 Testing Strategies**
-- **Per-Test Isolation**: Comprehensive test isolation with in-memory log state management
+- **Storage Isolation**: Comprehensive test isolation with in-memory log state management
 - **Flexible Assertions**: Adaptive test expectations for accumulated log scenarios
 - **Volume Testing**: High-volume ingestion testing for performance validation
-- **Query Validation**: Comprehensive filtering and search functionality testing
+- **Query Validation**: Comprehensive filtering, search, and analytics functionality testing
+- **Persistence Testing**: Disk storage, retention policies, and recovery validation
+- **Concurrency Testing**: Thread-safe operations and race condition prevention
 
 ### **🔄 Performance Testing**
 - **Batch Processing**: Large batch ingestion performance and memory management
 - **Concurrent Access**: Multi-service concurrent log ingestion validation
-- **Memory Management**: Ring buffer behavior and memory cleanup validation
-- **Query Performance**: Complex query performance under various load conditions
+- **Memory Management**: Ring buffer behavior and automatic cleanup validation
+- **Query Performance**: Complex search and analytics performance under load
+- **Persistence Performance**: Disk I/O performance and retention policy efficiency
 
 ## 🚀 **Future Enhancements**
 
 ### **🔧 Planned Features**
 - **External Backend Integration**: Loki, ELK Stack, and other enterprise logging solutions
 - **Advanced Analytics**: Machine learning-based log analysis and anomaly detection
-- **Real-time Streaming**: WebSocket support for live log streaming
-- **Enhanced Retention**: Persistent storage with configurable retention policies
+- **Real-time Streaming**: WebSocket support for live log streaming and real-time dashboards
+- **Log Correlation Engine**: Intelligent correlation of related log events across services
+- **Alert Management**: Configurable alerting rules and notification channels
+- **Log Archiving**: Long-term storage with compression and efficient retrieval
+- **Multi-Region Support**: Distributed logging with cross-region replication
+- **Custom Dashboards**: User-configurable log visualization and monitoring dashboards
+
+### **🔬 Advanced Analytics Features**
+- **Pattern Recognition**: Automatic detection of common error patterns and trends
+- **Predictive Analytics**: Forecasting potential issues based on log patterns
+- **Root Cause Analysis**: Intelligent analysis of error cascades and dependencies
+- **Performance Trending**: Long-term performance analysis and capacity planning insights
 
 ## 🔗 **Related Documentation**
 

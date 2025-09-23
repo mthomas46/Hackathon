@@ -1,14 +1,15 @@
-"""Data browser infrastructure for Frontend service.
-
-Provides read-only browsing capabilities for doc_store and prompt-store data
-with caching, filtering, and pagination support.
 """
-from typing import Dict, Any, List, Optional
-import asyncio
-from datetime import datetime
+Data browser infrastructure for Frontend service.
+
+Provides read-only browsing capabilities for doc_store and prompt-store
+data with caching, filtering, and pagination support.
+"""
+
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_doc_store_url, get_prompt_store_url, get_frontend_clients
+
+from .shared_utils import get_doc_store_url, get_frontend_clients, get_prompt_store_url
 
 
 class DataBrowser:
@@ -16,19 +17,8 @@ class DataBrowser:
 
     def __init__(self):
         self._cache = {
-            "doc_store": {
-                "documents": [],
-                "analyses": [],
-                "quality": {},
-                "style_examples": {},
-                "last_updated": None
-            },
-            "prompt_store": {
-                "prompts": [],
-                "analytics": {},
-                "ab_tests": [],
-                "last_updated": None
-            }
+            "doc_store": {"documents": [], "analyses": [], "quality": {}, "style_examples": {}, "last_updated": None},
+            "prompt_store": {"prompts": [], "analytics": {}, "ab_tests": [], "last_updated": None},
         }
         self._cache_ttl = 60  # Cache for 60 seconds
 
@@ -40,10 +30,7 @@ class DataBrowser:
         return (utc_now() - last_updated).total_seconds() < self._cache_ttl
 
     async def get_doc_store_documents(
-        self,
-        limit: int = 50,
-        offset: int = 0,
-        force_refresh: bool = False
+        self, limit: int = 50, offset: int = 0, force_refresh: bool = False
     ) -> Dict[str, Any]:
         """Get documents from doc_store with pagination."""
         if not force_refresh and self.is_cache_fresh("doc_store"):
@@ -55,7 +42,7 @@ class DataBrowser:
                 "total": len(documents),
                 "limit": limit,
                 "offset": offset,
-                "cached": True
+                "cached": True,
             }
 
         try:
@@ -78,18 +65,11 @@ class DataBrowser:
                 "total": len(documents),
                 "limit": limit,
                 "offset": offset,
-                "cached": False
+                "cached": False,
             }
 
         except Exception as e:
-            return {
-                "documents": [],
-                "total": 0,
-                "limit": limit,
-                "offset": offset,
-                "error": str(e),
-                "cached": False
-            }
+            return {"documents": [], "total": 0, "limit": limit, "offset": offset, "error": str(e), "cached": False}
 
     async def get_doc_store_document(self, doc_id: str) -> Dict[str, Any]:
         """Get a specific document by ID."""
@@ -104,11 +84,7 @@ class DataBrowser:
             return {"document": None, "error": str(e)}
 
     async def get_doc_store_analyses(
-        self,
-        document_id: Optional[str] = None,
-        limit: int = 50,
-        offset: int = 0,
-        force_refresh: bool = False
+        self, document_id: Optional[str] = None, limit: int = 50, offset: int = 0, force_refresh: bool = False
     ) -> Dict[str, Any]:
         """Get analyses from doc_store with optional filtering."""
         if not force_refresh and self.is_cache_fresh("doc_store"):
@@ -124,7 +100,7 @@ class DataBrowser:
                 "total": len(analyses),
                 "limit": limit,
                 "offset": offset,
-                "cached": True
+                "cached": True,
             }
 
         try:
@@ -151,18 +127,11 @@ class DataBrowser:
                 "total": len(analyses),
                 "limit": limit,
                 "offset": offset,
-                "cached": False
+                "cached": False,
             }
 
         except Exception as e:
-            return {
-                "analyses": [],
-                "total": 0,
-                "limit": limit,
-                "offset": offset,
-                "error": str(e),
-                "cached": False
-            }
+            return {"analyses": [], "total": 0, "limit": limit, "offset": offset, "error": str(e), "cached": False}
 
     async def get_doc_store_quality(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Get document quality metrics."""
@@ -205,11 +174,7 @@ class DataBrowser:
             return {"style_examples": {}, "error": str(e), "cached": False}
 
     async def get_prompt_store_prompts(
-        self,
-        category: Optional[str] = None,
-        limit: int = 50,
-        offset: int = 0,
-        force_refresh: bool = False
+        self, category: Optional[str] = None, limit: int = 50, offset: int = 0, force_refresh: bool = False
     ) -> Dict[str, Any]:
         """Get prompts from prompt-store with optional filtering."""
         if not force_refresh and self.is_cache_fresh("prompt_store"):
@@ -225,7 +190,7 @@ class DataBrowser:
                 "total": len(prompts),
                 "limit": limit,
                 "offset": offset,
-                "cached": True
+                "cached": True,
             }
 
         try:
@@ -252,18 +217,11 @@ class DataBrowser:
                 "total": len(prompts),
                 "limit": limit,
                 "offset": offset,
-                "cached": False
+                "cached": False,
             }
 
         except Exception as e:
-            return {
-                "prompts": [],
-                "total": 0,
-                "limit": limit,
-                "offset": offset,
-                "error": str(e),
-                "cached": False
-            }
+            return {"prompts": [], "total": 0, "limit": limit, "offset": offset, "error": str(e), "cached": False}
 
     async def get_prompt_store_analytics(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Get prompt store analytics."""
@@ -298,17 +256,11 @@ class DataBrowser:
                 "results": response.get("results", []),
                 "total": response.get("total", 0),
                 "query": query,
-                "limit": limit
+                "limit": limit,
             }
 
         except Exception as e:
-            return {
-                "results": [],
-                "total": 0,
-                "query": query,
-                "limit": limit,
-                "error": str(e)
-            }
+            return {"results": [], "total": 0, "query": query, "limit": limit, "error": str(e)}
 
     def get_doc_store_categories(self) -> List[str]:
         """Get unique categories from cached documents."""
@@ -355,7 +307,7 @@ def get_doc_store_summary() -> Dict[str, Any]:
         "languages": data_browser.get_doc_store_languages(),
         "quality_metrics": quality.get("metrics", {}),
         "stale_documents": quality.get("stale_documents", []),
-        "last_updated": data_browser._cache["doc_store"]["last_updated"]
+        "last_updated": data_browser._cache["doc_store"]["last_updated"],
     }
 
 
@@ -368,5 +320,5 @@ def get_prompt_store_summary() -> Dict[str, Any]:
         "total_prompts": len(prompts),
         "categories": data_browser.get_prompt_store_categories(),
         "analytics": analytics,
-        "last_updated": data_browser._cache["prompt_store"]["last_updated"]
+        "last_updated": data_browser._cache["prompt_store"]["last_updated"],
     }

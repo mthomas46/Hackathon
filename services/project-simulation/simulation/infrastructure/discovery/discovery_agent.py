@@ -1,24 +1,25 @@
 """
 Discovery agent for service registration and health checking.
+
 Following DDD infrastructure patterns with clean separation of concerns.
 """
 
-import httpx
-from typing import List, Optional
 import time
-from datetime import datetime
+from typing import List, Optional
 
+import httpx
 from simulation.domain.entities.discovery import (
-    ServiceRegistration,
-    ServiceEndpoint,
-    HealthStatus,
+    DiscoveryResult,
     EndpointValidation,
-    DiscoveryResult
+    HealthStatus,
+    ServiceEndpoint,
+    ServiceRegistration,
 )
 
 
 class DiscoveryAgent:
-    """Agent responsible for service discovery, registration, and health monitoring."""
+    """Agent responsible for service discovery, registration, and health
+    monitoring."""
 
     def __init__(self, registry, http_client: Optional[httpx.AsyncClient] = None):
         self.registry = registry
@@ -33,7 +34,7 @@ class DiscoveryAgent:
             base_url=base_url,
             endpoints=endpoints,
             version="1.0.0",
-            health_check_url=f"{base_url}/health"
+            health_check_url=f"{base_url}/health",
         )
 
         self.registry.register_service(registration)
@@ -52,19 +53,15 @@ class DiscoveryAgent:
                     is_healthy=True,
                     version=health_data.get("version"),
                     uptime_seconds=health_data.get("uptime"),
-                    endpoints=health_data.get("endpoints", [])
+                    endpoints=health_data.get("endpoints", []),
                 )
             else:
                 return HealthStatus(
-                    is_healthy=False,
-                    error_message=f"Health check failed with status {response.status_code}"
+                    is_healthy=False, error_message=f"Health check failed with status {response.status_code}"
                 )
 
         except Exception as e:
-            return HealthStatus(
-                is_healthy=False,
-                error_message=str(e)
-            )
+            return HealthStatus(is_healthy=False, error_message=str(e))
 
     async def update_service_endpoints(self, service_name: str, new_endpoints: List[ServiceEndpoint]) -> bool:
         """Update the endpoints for an existing service."""
@@ -79,7 +76,7 @@ class DiscoveryAgent:
             version=existing_service.version,
             health_check_url=existing_service.health_check_url,
             registered_at=existing_service.registered_at,
-            is_active=existing_service.is_active
+            is_active=existing_service.is_active,
         )
 
         return self.registry.update_service(service_name, updated_registration)
@@ -100,10 +97,7 @@ class DiscoveryAgent:
         service = self.registry.get_service(service_name)
         if service:
             return DiscoveryResult(
-                service_name=service_name,
-                base_url=service.base_url,
-                status="found",
-                registration=service
+                service_name=service_name, base_url=service.base_url, status="found", registration=service
             )
 
         # Try fallback discovery
@@ -114,70 +108,46 @@ class DiscoveryAgent:
                     service_name=service_name,
                     base_url=fallback_result.get("base_url"),
                     status="found",
-                    registration=None
+                    registration=None,
                 )
         except Exception as e:
-            return DiscoveryResult(
-                service_name=service_name,
-                status="error",
-                error_message=str(e)
-            )
+            return DiscoveryResult(service_name=service_name, status="error", error_message=str(e))
 
         return DiscoveryResult(service_name=service_name, status="not_found")
 
     def _get_simulation_service_endpoints(self) -> List[ServiceEndpoint]:
         """Get all endpoints for the project simulation service."""
         return [
+            ServiceEndpoint(path="/api/v1/simulations", method="POST", description="Create new simulation"),
             ServiceEndpoint(
-                path="/api/v1/simulations",
-                method="POST",
-                description="Create new simulation"
+                path="/api/v1/simulations/{simulation_id}", method="GET", description="Get simulation details"
             ),
             ServiceEndpoint(
-                path="/api/v1/simulations/{simulation_id}",
-                method="GET",
-                description="Get simulation details"
+                path="/api/v1/simulations/{simulation_id}/execute", method="POST", description="Execute simulation"
             ),
             ServiceEndpoint(
-                path="/api/v1/simulations/{simulation_id}/execute",
-                method="POST",
-                description="Execute simulation"
-            ),
-            ServiceEndpoint(
-                path="/api/v1/simulations/{simulation_id}/cancel",
-                method="POST",
-                description="Cancel simulation"
+                path="/api/v1/simulations/{simulation_id}/cancel", method="POST", description="Cancel simulation"
             ),
             ServiceEndpoint(
                 path="/api/v1/interpreter/simulate",
                 method="POST",
-                description="Create simulation from interpreter query"
+                description="Create simulation from interpreter query",
             ),
             ServiceEndpoint(
-                path="/api/v1/interpreter/mock-data",
-                method="POST",
-                description="Generate mock data for interpreter"
+                path="/api/v1/interpreter/mock-data", method="POST", description="Generate mock data for interpreter"
             ),
             ServiceEndpoint(
                 path="/api/v1/interpreter/analyze",
                 method="POST",
-                description="Perform analysis using simulation infrastructure"
+                description="Perform analysis using simulation infrastructure",
             ),
             ServiceEndpoint(
-                path="/api/v1/interpreter/capabilities",
-                method="GET",
-                description="Get interpreter capabilities"
+                path="/api/v1/interpreter/capabilities", method="GET", description="Get interpreter capabilities"
             ),
+            ServiceEndpoint(path="/api/v1/health", method="GET", description="Health check endpoint"),
             ServiceEndpoint(
-                path="/api/v1/health",
-                method="GET",
-                description="Health check endpoint"
+                path="/api/v1/service-discovery", method="GET", description="Service discovery information"
             ),
-            ServiceEndpoint(
-                path="/api/v1/service-discovery",
-                method="GET",
-                description="Service discovery information"
-            )
         ]
 
     async def _validate_single_endpoint(self, base_url: str, endpoint: ServiceEndpoint) -> EndpointValidation:
@@ -192,9 +162,7 @@ class DiscoveryAgent:
                 response = await self.http_client.post(url, json={})
             else:
                 return EndpointValidation(
-                    endpoint=endpoint,
-                    is_accessible=False,
-                    error_message=f"Unsupported method: {endpoint.method}"
+                    endpoint=endpoint, is_accessible=False, error_message=f"Unsupported method: {endpoint.method}"
                 )
 
             response_time = int((time.time() - start_time) * 1000)
@@ -203,15 +171,11 @@ class DiscoveryAgent:
                 endpoint=endpoint,
                 is_accessible=response.status_code < 500,
                 response_time_ms=response_time,
-                status_code=response.status_code
+                status_code=response.status_code,
             )
 
         except Exception as e:
-            return EndpointValidation(
-                endpoint=endpoint,
-                is_accessible=False,
-                error_message=str(e)
-            )
+            return EndpointValidation(endpoint=endpoint, is_accessible=False, error_message=str(e))
 
     async def _fallback_discovery(self, service_name: str) -> Optional[dict]:
         """Fallback service discovery mechanism."""

@@ -1,9 +1,9 @@
-"""Base Domain Event"""
+"""Base Domain Event."""
 
-from abc import ABC
-from typing import Any, Dict
-from datetime import datetime
 import uuid
+from abc import ABC
+from datetime import datetime
+from typing import Any, Dict
 
 
 class DomainEvent(ABC):
@@ -25,5 +25,5 @@ class DomainEvent(ABC):
             "aggregate_id": self.aggregate_id,
             "event_data": self.event_data,
             "timestamp": self.timestamp.isoformat(),
-            "version": self.version
+            "version": self.version,
         }

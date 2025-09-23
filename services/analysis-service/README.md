@@ -31,70 +31,139 @@ The **Analysis Service** is the **comprehensive document intelligence engine** t
 ## 🚀 **Key Features & Capabilities**
 
 ### **🔍 Advanced Analysis Engine**
-- **Consistency Analysis**: Deep document consistency checking and API/document drift detection
-- **Quality Assessment**: Intelligent quality scoring with degradation detection using ML algorithms
-- **Semantic Analysis**: AI-powered content understanding using embedding vectors and similarity calculations
-- **Trend Analysis**: Performance trends and pattern analysis for proactive insights
+- **Multi-Dimensional Analysis**: Comprehensive analysis across consistency, quality, semantic similarity, sentiment, tone, and risk factors
+- **Quality Degradation Detection**: ML-powered detection of documentation quality degradation over time
+- **Semantic Similarity Analysis**: AI-powered content understanding using embedding vectors and similarity calculations
+- **Trend Analysis & Forecasting**: Performance trends, predictive analytics, and maintenance forecasting
+- **Risk Assessment**: Comprehensive risk factor analysis for documentation drift and quality issues
 
-### **📊 Intelligent Reporting**
-- **Findings Management**: Comprehensive findings retrieval and categorization (summary, trends, lifecycle, PR confidence)
-- **Report Generation**: Automated report generation including Confluence consolidation and Jira staleness reports
-- **Owner Notification**: Intelligent owner resolution and automated notification system
-- **Analytics Dashboard**: Real-time analytics and performance monitoring
+### **📊 Intelligent Reporting & Findings**
+- **Comprehensive Findings Management**: Advanced categorization (summary, trends, lifecycle, PR confidence, maintenance forecasts)
+- **Automated Report Generation**: Multi-format reports including Confluence consolidation, Jira staleness, and cross-repository analysis
+- **Owner Resolution & Notification**: Intelligent owner identification and automated notification workflows
+- **Real-time Analytics Dashboard**: Live monitoring with performance metrics and health scoring
 
-### **🤖 AI-Powered Analysis**
-- **Prompt Integration**: Advanced prompt-driven analysis through Prompt Store integration
-- **Natural Language Processing**: Natural language query analysis via Interpreter service
-- **ML Enhancement**: Machine learning algorithms for intelligent content assessment
-- **Context-Aware Processing**: Intelligent analysis based on document context and relationships
+### **🤖 AI-Powered Analysis Suite**
+- **Prompt-Driven Analysis**: Advanced integration with Prompt Store for customizable AI analysis workflows
+- **Natural Language Processing**: Interpreter service integration for natural language query processing
+- **Sentiment & Tone Analysis**: ML algorithms for content sentiment, tone patterns, and writing style assessment
+- **Context-Aware Processing**: Intelligent analysis considering document relationships and ecosystem context
 
-### **⚡ Distributed Processing**
-- **Scalable Architecture**: Distributed processing with worker scaling for enterprise loads
-- **Performance Optimization**: Intelligent load balancing and resource optimization
-- **Async Operations**: Non-blocking analysis operations for high-throughput processing
-- **Queue Management**: Advanced queue management for reliable analysis processing
+### **⚡ Enterprise Distributed Processing**
+- **Scalable Worker Architecture**: Dynamic worker scaling with intelligent load balancing strategies
+- **High-Throughput Processing**: Async operations with advanced queue management for enterprise workloads
+- **Cross-Repository Analysis**: Multi-repository connectivity analysis and dependency mapping
+- **Automated Remediation**: AI-powered automated fixes for detected documentation issues
 
 ## 🏗️ **Architecture & Design**
 
 ### **🎯 Analysis Engine Architecture**
-The Analysis Service employs a sophisticated, distributed analysis architecture designed for enterprise-scale document processing:
+The Analysis Service employs a sophisticated, modular architecture designed for enterprise-scale document processing with extensive analysis capabilities:
 
-#### **Core Components**
-- **Analysis Coordinator**: Central coordination of analysis workflows
-- **Worker Pool**: Scalable worker processes for distributed analysis tasks
-- **Quality Engine**: ML-powered quality assessment and scoring
-- **Findings Aggregator**: Intelligent aggregation and correlation of analysis results
+#### **Core Architectural Components**
+- **Analysis Coordinator**: Central orchestration of analysis workflows and distributed task management
+- **Distributed Processor**: Scalable worker pool with intelligent load balancing and queue management
+- **Analysis Handler Framework**: Modular handler system for different analysis types (semantic, quality, risk, trend, etc.)
+- **Automated Remediation Engine**: AI-powered automated fixes and remediation workflows
+- **Cross-Repository Analyzer**: Multi-repository analysis and dependency mapping capabilities
+
+#### **Analysis Modules & Capabilities**
+- **Semantic Analysis**: Embedding-based similarity analysis and content understanding
+- **Quality Assessment**: ML-powered quality scoring with degradation detection
+- **Risk Assessment**: Comprehensive risk factor analysis and predictive modeling
+- **Trend Analysis**: Performance trends and predictive maintenance forecasting
+- **Sentiment Analysis**: Content sentiment, tone, and writing style assessment
+- **Change Impact Analysis**: Impact assessment for documentation changes across portfolios
+
+#### **Enterprise Features**
+- **Workflow Integration**: Event-driven analysis workflows with webhook support
+- **Maintenance Forecasting**: Predictive maintenance scheduling and lifecycle management
+- **Repository Connectivity**: Cross-platform repository analysis and dependency mapping
+- **Real-time Monitoring**: Live analytics dashboard with performance metrics
 
 ## 📡 **API Reference**
 
-### **🔧 Core Analysis Endpoints**
+### **🔍 Analysis Endpoints**
 
-| Method | Path | Description | Purpose |
-|--------|------|-------------|---------|
-| **POST** | `/analyze` | Analyze targets | Core document analysis with configurable analysis types |
-| **POST** | `/analyze/generate-report` | Generate simulation reports | Comprehensive analysis reports for simulation service |
-| **POST** | `/analyze/pull-request` | Analyze pull request | PR analysis with refactoring suggestions and health scoring |
-| **GET** | `/findings` | List findings | Retrieve analysis findings with filtering (limit, severity, type) |
-| **GET** | `/integration/health` | Integration health | Service integration health and dependency status |
+| Method | Path | Description | Analysis Type |
+|--------|------|-------------|---------------|
+| **POST** | `/analyze` | Core document analysis | Configurable multi-type analysis |
+| **POST** | `/analyze/semantic-similarity` | Semantic similarity analysis | Embedding-based content similarity |
+| **POST** | `/analyze/sentiment` | Sentiment analysis | Content sentiment and tone assessment |
+| **POST** | `/analyze/tone` | Tone analysis | Writing style and tone patterns |
+| **POST** | `/analyze/quality` | Quality assessment | Comprehensive quality scoring |
+| **POST** | `/analyze/trends` | Trend analysis | Performance trends and predictions |
+| **POST** | `/analyze/trends/portfolio` | Portfolio trend analysis | Cross-document trend analysis |
+| **POST** | `/analyze/risk` | Risk assessment | Documentation risk factor analysis |
+| **POST** | `/analyze/risk/portfolio` | Portfolio risk assessment | Cross-document risk analysis |
+| **POST** | `/analyze/maintenance/forecast` | Maintenance forecasting | Predictive maintenance scheduling |
+| **POST** | `/analyze/maintenance/forecast/portfolio` | Portfolio maintenance forecast | Cross-document maintenance planning |
+| **POST** | `/analyze/quality/degradation` | Quality degradation detection | Time-based quality monitoring |
+| **POST** | `/analyze/quality/degradation/portfolio` | Portfolio quality monitoring | Cross-document quality trends |
+| **POST** | `/analyze/change/impact` | Change impact analysis | Impact assessment for documentation changes |
+| **POST** | `/analyze/change/impact/portfolio` | Portfolio change impact | Cross-document change analysis |
 
-### **📊 Report Generation Endpoints**
+### **🔧 Remediation & Workflow Endpoints**
+
+| Method | Path | Description | Function |
+|--------|------|-------------|----------|
+| **POST** | `/remediate` | Apply automated fixes | Execute remediation workflows |
+| **POST** | `/remediate/preview` | Preview remediation changes | Dry-run remediation without execution |
+| **POST** | `/workflows/events` | Process workflow events | Event-driven analysis triggering |
+| **GET** | `/workflows/{workflow_id}` | Get workflow status | Workflow execution monitoring |
+| **GET** | `/workflows/queue/status` | Get queue status | Workflow queue monitoring |
+| **POST** | `/workflows/webhook/config` | Configure webhooks | Workflow integration setup |
+
+### **🏢 Repository & Cross-Platform Analysis**
+
+| Method | Path | Description | Scope |
+|--------|------|-------------|-------|
+| **POST** | `/repositories/analyze` | Multi-repository analysis | Cross-repository documentation analysis |
+| **POST** | `/repositories/connectivity` | Connectivity analysis | Repository dependency mapping |
+| **POST** | `/repositories/connectors/config` | Configure connectors | External system integration setup |
+| **GET** | `/repositories/connectors` | List connectors | Available repository connectors |
+| **GET** | `/repositories/frameworks` | Analysis frameworks | Cross-repository analysis frameworks |
+
+### **⚡ Distributed Processing Endpoints**
+
+| Method | Path | Description | Management |
+|--------|------|-------------|------------|
+| **POST** | `/distributed/tasks` | Submit distributed task | Single task distributed processing |
+| **POST** | `/distributed/tasks/batch` | Submit batch tasks | Multiple tasks batch processing |
+| **GET** | `/distributed/tasks/{task_id}` | Get task status | Task execution monitoring |
+| **DELETE** | `/distributed/tasks/{task_id}` | Cancel distributed task | Task cancellation |
+| **GET** | `/distributed/workers` | Get worker status | Worker pool monitoring |
+| **GET** | `/distributed/stats` | Get processing stats | Distributed system statistics |
+| **POST** | `/distributed/workers/scale` | Scale workers | Dynamic worker scaling |
+| **POST** | `/distributed/start` | Start distributed system | System initialization |
+| **PUT** | `/distributed/load-balancing/strategy` | Configure load balancing | Load distribution strategy |
+| **GET** | `/distributed/queue/status` | Get queue status | Processing queue monitoring |
+| **PUT** | `/distributed/load-balancing/config` | Configure load balancing | Advanced load balancing settings |
+| **GET** | `/distributed/load-balancing/config` | Get load balancing config | Current load balancing configuration |
+
+### **📊 Reporting & Findings Management**
 
 | Method | Path | Description | Output |
 |--------|------|-------------|--------|
-| **POST** | `/reports/generate` | Generate comprehensive reports | Summary, trends, lifecycle, PR confidence analysis |
-| **GET** | `/reports/confluence/consolidation` | Confluence consolidation report | Cross-platform content consolidation analysis |
-| **GET** | `/reports/jira/staleness` | Jira staleness report | Issue staleness and lifecycle analysis |
-| **POST** | `/reports/findings/notify-owners` | Notify finding owners | Automated owner notification for identified issues |
+| **GET** | `/findings` | List findings | Filtered findings retrieval |
+| **GET** | `/detectors` | List analysis detectors | Available analysis capabilities |
+| **POST** | `/reports/generate` | Generate reports | Multi-format report generation |
+| **GET** | `/reports/confluence/consolidation` | Confluence consolidation | Content consolidation analysis |
+| **GET** | `/reports/jira/staleness` | Jira staleness analysis | Issue lifecycle analysis |
+| **POST** | `/reports/findings/notify-owners` | Notify owners | Automated owner notifications |
 
-### **🤖 AI Integration Endpoints**
+### **🔗 Integration & Health Endpoints**
 
 | Method | Path | Description | Integration |
 |--------|------|-------------|-------------|
-| **POST** | `/integration/analyze-with-prompt` | Prompt-driven analysis | Prompt Store integration for AI-powered analysis |
-| **POST** | `/integration/natural-language-analysis` | Natural language analysis | Interpreter service integration for query processing |
-| **POST** | `/integration/log-analysis` | Analysis usage logging | Comprehensive usage tracking and analytics |
+| **GET** | `/integration/health` | Integration health check | Service dependency status |
+| **POST** | `/integration/analyze-with-prompt` | Prompt-driven analysis | Prompt Store AI integration |
+| **POST** | `/integration/natural-language-analysis` | Natural language analysis | Interpreter NLP integration |
+| **POST** | `/integration/log-analysis` | Analysis usage logging | Usage tracking and analytics |
 
-### **🔍 Analysis Request Example**
+### **🔍 Analysis Request Examples**
+
+#### **Multi-Type Document Analysis**
 ```bash
 POST /analyze
 Content-Type: application/json
@@ -104,8 +173,92 @@ Content-Type: application/json
   "analysis_types": ["consistency", "quality", "semantic"],
   "options": {
     "include_recommendations": true,
-    "severity_threshold": "medium"
+    "severity_threshold": "medium",
+    "context_window": 1000
   }
+}
+```
+
+#### **Semantic Similarity Analysis**
+```bash
+POST /analyze/semantic-similarity
+Content-Type: application/json
+
+{
+  "documents": ["doc-1", "doc-2", "doc-3"],
+  "similarity_threshold": 0.8,
+  "embedding_model": "text-embedding-ada-002",
+  "analysis_scope": "content_and_metadata"
+}
+```
+
+#### **Quality Degradation Analysis**
+```bash
+POST /analyze/quality/degradation
+Content-Type: application/json
+
+{
+  "document_id": "doc-123",
+  "time_range": {
+    "start": "2024-01-01T00:00:00Z",
+    "end": "2024-12-31T23:59:59Z"
+  },
+  "degradation_metrics": ["completeness", "accuracy", "consistency"],
+  "alert_threshold": 0.1
+}
+```
+
+#### **Risk Assessment Portfolio Analysis**
+```bash
+POST /analyze/risk/portfolio
+Content-Type: application/json
+
+{
+  "portfolio_scope": {
+    "repositories": ["repo-1", "repo-2"],
+    "document_types": ["api_docs", "user_guides"],
+    "tags": ["critical", "public"]
+  },
+  "risk_factors": ["drift", "staleness", "inconsistency"],
+  "prediction_window_days": 90,
+  "risk_threshold": "high"
+}
+```
+
+#### **Distributed Task Processing**
+```bash
+POST /distributed/tasks/batch
+Content-Type: application/json
+
+{
+  "tasks": [
+    {
+      "type": "semantic_analysis",
+      "document_ids": ["doc-1", "doc-2"],
+      "priority": "high"
+    },
+    {
+      "type": "quality_assessment",
+      "document_ids": ["doc-3", "doc-4"],
+      "priority": "medium"
+    }
+  ],
+  "load_balancing_strategy": "adaptive",
+  "completion_callback": "http://callback-service/notify"
+}
+```
+
+#### **Automated Remediation**
+```bash
+POST /remediate
+Content-Type: application/json
+
+{
+  "findings": ["finding-123", "finding-456"],
+  "remediation_strategy": "conservative",
+  "preview_only": false,
+  "backup_original": true,
+  "owner_approval_required": true
 }
 ```
 
@@ -113,13 +266,62 @@ Content-Type: application/json
 
 ### **🔧 Environment Variables**
 
+#### **Core Service Configuration**
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `DOC_STORE_URL` | Doc Store service base URL | - | ✅ |
-| `SOURCE_AGENT_URL` | Source Agent service base URL | - | ✅ |
-| `ANALYSIS_SERVICE_URL` | Self base URL for internal calls | - | Optional |
-| `REDIS_HOST` | Redis host for event processing | `redis` | Optional |
 | `SERVICE_PORT` | Service port (internal) | `5020` | Optional |
+| `HOST` | Service host binding | `0.0.0.0` | Optional |
+| `ENVIRONMENT` | Deployment environment | `development` | Optional |
+| `DEBUG` | Enable debug logging | `false` | Optional |
+| `LOG_LEVEL` | Logging level | `INFO` | Optional |
+| `TESTING` | Enable testing mode | `false` | Optional |
+
+#### **Database & Caching Configuration**
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `ANALYSIS_DB_PATH` | Analysis database path | `./data/analysis.db` | Optional |
+| `ENABLE_CACHING` | Enable caching layer | `true` | Optional |
+| `CACHE_MAX_MEMORY` | Cache memory limit (MB) | `512` | Optional |
+| `CACHE_DEFAULT_TTL` | Default cache TTL (seconds) | `3600` | Optional |
+| `CACHE_CONNECTION_TIMEOUT` | Cache connection timeout | `5` | Optional |
+| `CACHE_ENABLE_COMPRESSION` | Enable cache compression | `true` | Optional |
+| `CACHE_MAX_RETRIES` | Maximum cache retry attempts | `3` | Optional |
+| `CACHE_POOL_SIZE` | Cache connection pool size | `10` | Optional |
+
+#### **Distributed Processing Configuration**
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `MAX_CONCURRENT_REQUESTS` | Maximum concurrent requests | `100` | Optional |
+| `REQUEST_TIMEOUT` | Request timeout (seconds) | `30` | Optional |
+| `EXTERNAL_MAX_RETRIES` | External service retry attempts | `3` | Optional |
+| `EXTERNAL_REQUEST_TIMEOUT` | External request timeout | `10` | Optional |
+| `EXTERNAL_RETRY_DELAY` | Retry delay between attempts | `1` | Optional |
+
+#### **AI/ML Model Configuration**
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `OPENAI_MODEL` | OpenAI model for analysis | `gpt-4` | Optional |
+| `OPENAI_MAX_TOKENS` | Maximum tokens per request | `4096` | Optional |
+| `OPENAI_TEMPERATURE` | Model temperature setting | `0.3` | Optional |
+| `SENTIMENT_MODEL` | Sentiment analysis model | `cardiffnlp/twitter-roberta-base-sentiment` | Optional |
+| `SENTIMENT_CONFIDENCE_THRESHOLD` | Sentiment confidence threshold | `0.6` | Optional |
+| `SEMANTIC_SIMILARITY_THRESHOLD` | Semantic similarity threshold | `0.8` | Optional |
+| `SEMANTIC_BATCH_SIZE` | Batch size for semantic processing | `10` | Optional |
+
+#### **External Service Integration**
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `REDIS_HOST` | Redis host for event processing | `redis` | Optional |
+| `REDIS_PORT` | Redis port | `6379` | Optional |
+| `REDIS_DB` | Redis database number | `0` | Optional |
+| `REDIS_SSL` | Enable Redis SSL | `false` | Optional |
+| `POSTGRES_PORT` | PostgreSQL port (if used) | `5432` | Optional |
+
+#### **Observability & Monitoring**
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `ENABLE_METRICS` | Enable metrics collection | `true` | Optional |
+| `ENABLE_TRACING` | Enable distributed tracing | `false` | Optional |
 
 ### **🎯 Service Dependencies**
 
@@ -156,15 +358,39 @@ curl http://localhost:5080/integration/health
 
 ### **🔧 Test Coverage**
 - **Unit Tests**: [tests/unit/analysis_service](../../tests/unit/analysis_service) - Comprehensive unit test suite
-- **Integration Tests**: Cross-service communication and data flow validation
-- **Performance Tests**: Load testing for high-volume analysis operations
-- **AI Testing**: Validation of ML-powered analysis accuracy and performance
+- **Analysis Algorithm Tests**: Validation of semantic, sentiment, quality, risk, and trend analysis algorithms
+- **Distributed Processing Tests**: Worker scaling, load balancing, and task queue management validation
+- **Integration Tests**: Cross-service communication with Doc Store, Prompt Store, and Interpreter services
+- **Remediation Tests**: Automated fix validation and preview functionality testing
+- **Repository Analysis Tests**: Cross-repository connectivity and dependency mapping validation
+- **Performance Tests**: High-volume analysis operations and distributed processing load testing
+- **AI/ML Model Tests**: ML-powered analysis accuracy and model performance validation
+
+### **📊 Test Classes & Methods**
+
+| Test Class | Methods | Coverage |
+|------------|---------|----------|
+| `TestAnalysisAlgorithms` | 15+ methods | Core analysis types (semantic, quality, risk, trend) |
+| `TestDistributedProcessing` | 10+ methods | Worker management, load balancing, task queues |
+| `TestRemediationEngine` | 8+ methods | Automated fixes, preview mode, backup validation |
+| `TestRepositoryAnalysis` | 6+ methods | Cross-repo analysis, connectivity mapping |
+| `TestIntegrationEndpoints` | 12+ methods | Service integrations, API compatibility |
+| `TestPerformanceBenchmarks` | 5+ methods | Load testing, throughput, latency validation |
 
 ### **📊 Testing Strategies**
-- **Envelope-Aware Assertions**: Support for both success envelopes and direct response validation
-- **Mock Integration**: Comprehensive mocking of Doc Store and Source Agent with URL-based branching
-- **Parameter Validation**: Query parameter handling and error path validation
-- **Filter Behavior**: Strict validation of limits, severity filtering, and type-based filtering
+- **Algorithm Validation**: ML model accuracy testing with known datasets and edge cases
+- **Distributed Scaling**: Worker pool scaling, load distribution, and failure recovery testing
+- **Integration Mocking**: Comprehensive service mocking with realistic response simulation
+- **Performance Benchmarking**: Measurable throughput, latency, and resource utilization testing
+- **Error Path Coverage**: Comprehensive error handling and graceful degradation validation
+- **Cross-Service Compatibility**: End-to-end workflow testing across service boundaries
+
+### **🔄 Performance Testing**
+- **Analysis Throughput**: High-volume document processing performance and scalability validation
+- **Distributed Efficiency**: Worker utilization, queue management, and load balancing effectiveness
+- **Memory Management**: Large dataset processing and garbage collection efficiency
+- **Concurrent Workloads**: Multi-tenant analysis operations and resource contention handling
+- **AI Model Performance**: ML inference speed, batch processing optimization, and model accuracy
 
 ## 🔗 **Related Documentation**
 

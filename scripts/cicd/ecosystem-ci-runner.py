@@ -6,24 +6,22 @@ Comprehensive CI/CD integration for automated validation and deployment
 
 import argparse
 import json
+import logging
 import os
 import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-import logging
+from typing import Any, Dict, List, Optional
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('ci_run.log', mode='w')
-    ]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("ci_run.log", mode="w")],
 )
 logger = logging.getLogger(__name__)
+
 
 class CIRunner:
     """CI/CD runner for ecosystem validation and deployment"""
@@ -80,7 +78,7 @@ class CIRunner:
             ("syntax", self._check_syntax),
             ("imports", self._check_imports),
             ("config", self._check_config_files),
-            ("ports", self._check_ports_quick)
+            ("ports", self._check_ports_quick),
         ]
 
         results = {}
@@ -98,11 +96,7 @@ class CIRunner:
                 all_passed = False
                 logger.error(f"❌ {check_name} check error: {e}")
 
-        self.results["quick_validation"] = {
-            "passed": all_passed,
-            "checks": results,
-            "duration": time.time()
-        }
+        self.results["quick_validation"] = {"passed": all_passed, "checks": results, "duration": time.time()}
 
         return all_passed
 
@@ -115,7 +109,7 @@ class CIRunner:
             ("dockerfiles", self._check_dockerfiles),
             ("environment", self._check_environment),
             ("connectivity", self._check_connectivity),
-            ("health_endpoints", self._check_health_endpoints)
+            ("health_endpoints", self._check_health_endpoints),
         ]
 
         results = {}
@@ -133,11 +127,7 @@ class CIRunner:
                 all_passed = False
                 logger.error(f"❌ {check_name} check error: {e}")
 
-        self.results["standard_validation"] = {
-            "passed": all_passed,
-            "checks": results,
-            "duration": time.time()
-        }
+        self.results["standard_validation"] = {"passed": all_passed, "checks": results, "duration": time.time()}
 
         return all_passed
 
@@ -151,7 +141,7 @@ class CIRunner:
             ("config_drift", self._check_config_drift),
             ("logging", self._check_logging),
             ("api_contracts", self._check_api_contracts),
-            ("integration", self._check_integration)
+            ("integration", self._check_integration),
         ]
 
         results = {}
@@ -169,11 +159,7 @@ class CIRunner:
                 all_passed = False
                 logger.error(f"❌ {check_name} check error: {e}")
 
-        self.results["comprehensive_validation"] = {
-            "passed": all_passed,
-            "checks": results,
-            "duration": time.time()
-        }
+        self.results["comprehensive_validation"] = {"passed": all_passed, "checks": results, "duration": time.time()}
 
         return all_passed
 
@@ -184,7 +170,7 @@ class CIRunner:
         checks = [
             ("secrets", self._check_secrets),
             ("vulnerabilities", self._check_vulnerabilities),
-            ("permissions", self._check_permissions)
+            ("permissions", self._check_permissions),
         ]
 
         results = {}
@@ -202,11 +188,7 @@ class CIRunner:
                 all_passed = False
                 logger.error(f"❌ {check_name} security check error: {e}")
 
-        self.results["security_validation"] = {
-            "passed": all_passed,
-            "checks": results,
-            "duration": time.time()
-        }
+        self.results["security_validation"] = {"passed": all_passed, "checks": results, "duration": time.time()}
 
         return all_passed
 
@@ -224,14 +206,13 @@ class CIRunner:
             if scripts_dir.exists():
                 for py_file in scripts_dir.glob("*.py"):
                     result = subprocess.run(
-                        [sys.executable, "-m", "py_compile", str(py_file)],
-                        capture_output=True, text=True, timeout=30
+                        [sys.executable, "-m", "py_compile", str(py_file)], capture_output=True, text=True, timeout=30
                     )
                     if result.returncode != 0:
                         return {
                             "passed": False,
                             "error": f"Syntax error in {py_file}: {result.stderr}",
-                            "file": str(py_file)
+                            "file": str(py_file),
                         }
 
             return {"passed": True, "files_checked": len(list(scripts_dir.glob("*.py"))) if scripts_dir.exists() else 0}
@@ -245,25 +226,25 @@ class CIRunner:
 
         try:
             # Test key imports (use absolute imports where possible)
-            test_imports = [
-                ("yaml", "yaml"),
-                ("json", "json"),
-                ("os", "os"),
-                ("pathlib", "pathlib")
-            ]
+            test_imports = [("yaml", "yaml"), ("json", "json"), ("os", "os"), ("pathlib", "pathlib")]
 
             # Test relative imports by trying to import the modules directly
             script_imports = []
-            for module_path in ["scripts.hardening.docker_standardization",
-                              "scripts.hardening.environment_validator",
-                              "scripts.hardening.dependency_validator"]:
+            for module_path in [
+                "scripts.hardening.docker_standardization",
+                "scripts.hardening.environment_validator",
+                "scripts.hardening.dependency_validator",
+            ]:
                 try:
                     # Try importing by executing the module
                     import subprocess
                     import sys
+
                     result = subprocess.run(
                         [sys.executable, "-c", f"import {module_path}"],
-                        capture_output=True, text=True, cwd=self.workspace_path
+                        capture_output=True,
+                        text=True,
+                        cwd=self.workspace_path,
                     )
                     if result.returncode != 0:
                         script_imports.append(f"{module_path}: Import failed")
@@ -279,13 +260,15 @@ class CIRunner:
                 except ImportError as e:
                     failed_imports.append(f"{std_module}: {e}")
 
-            all_failed = failed_imports + [imp for imp in script_imports if "failed" in imp.lower() or "error" in imp.lower()]
+            all_failed = failed_imports + [
+                imp for imp in script_imports if "failed" in imp.lower() or "error" in imp.lower()
+            ]
 
             if all_failed:
                 return {
                     "passed": False,
                     "error": f"Import errors: {', '.join(all_failed)}",
-                    "failed_imports": all_failed
+                    "failed_imports": all_failed,
                 }
 
             return {"passed": True, "imports_tested": len(test_imports) + len(script_imports)}
@@ -298,10 +281,7 @@ class CIRunner:
         logger.info("Checking configuration files...")
 
         try:
-            config_files = [
-                "docker-compose.dev.yml",
-                "config/standardized/port_registry.json"
-            ]
+            config_files = ["docker-compose.dev.yml", "config/standardized/port_registry.json"]
 
             missing_files = []
             invalid_files = []
@@ -314,12 +294,13 @@ class CIRunner:
 
                 # Try to parse the file
                 try:
-                    if config_file.endswith('.yml'):
+                    if config_file.endswith(".yml"):
                         import yaml
-                        with open(file_path, 'r') as f:
+
+                        with open(file_path, "r") as f:
                             yaml.safe_load(f)
-                    elif config_file.endswith('.json'):
-                        with open(file_path, 'r') as f:
+                    elif config_file.endswith(".json"):
+                        with open(file_path, "r") as f:
                             json.load(f)
                 except Exception as e:
                     invalid_files.append(f"{config_file}: {e}")
@@ -335,7 +316,7 @@ class CIRunner:
                     "passed": False,
                     "error": error_msg,
                     "missing_files": missing_files,
-                    "invalid_files": invalid_files
+                    "invalid_files": invalid_files,
                 }
 
             return {"passed": True, "files_checked": len(config_files)}
@@ -350,19 +331,17 @@ class CIRunner:
         try:
             result = subprocess.run(
                 [sys.executable, "scripts/hardening/docker_standardization.py"],
-                capture_output=True, text=True, timeout=60
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             if result.returncode != 0:
-                return {
-                    "passed": False,
-                    "error": f"Port validation failed: {result.stderr}",
-                    "stdout": result.stdout
-                }
+                return {"passed": False, "error": f"Port validation failed: {result.stderr}", "stdout": result.stdout}
 
             return {
                 "passed": True,
-                "stdout": result.stdout[:500] + "..." if len(result.stdout) > 500 else result.stdout
+                "stdout": result.stdout[:500] + "..." if len(result.stdout) > 500 else result.stdout,
             }
 
         except Exception as e:
@@ -375,13 +354,15 @@ class CIRunner:
         try:
             result = subprocess.run(
                 [sys.executable, "scripts/hardening/dependency_validator.py"],
-                capture_output=True, text=True, timeout=60
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             return {
                 "passed": result.returncode == 0,
                 "stdout": result.stdout[:500] + "..." if len(result.stdout) > 500 else result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
             }
 
         except Exception as e:
@@ -394,7 +375,9 @@ class CIRunner:
         try:
             result = subprocess.run(
                 [sys.executable, "scripts/hardening/dockerfile_validator.py"],
-                capture_output=True, text=True, timeout=120
+                capture_output=True,
+                text=True,
+                timeout=120,
             )
 
             # Dockerfile validator exits with 1 if critical issues found
@@ -403,7 +386,7 @@ class CIRunner:
             return {
                 "passed": passed,
                 "stdout": result.stdout[:1000] + "..." if len(result.stdout) > 1000 else result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
             }
 
         except Exception as e:
@@ -416,13 +399,15 @@ class CIRunner:
         try:
             result = subprocess.run(
                 [sys.executable, "scripts/hardening/environment_validator.py"],
-                capture_output=True, text=True, timeout=60
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             return {
                 "passed": result.returncode == 0,
                 "stdout": result.stdout[:500] + "..." if len(result.stdout) > 500 else result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
             }
 
         except Exception as e:
@@ -435,13 +420,15 @@ class CIRunner:
         try:
             result = subprocess.run(
                 [sys.executable, "scripts/hardening/service_connectivity_validator.py"],
-                capture_output=True, text=True, timeout=60
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             return {
                 "passed": result.returncode == 0,
                 "stdout": result.stdout[:500] + "..." if len(result.stdout) > 500 else result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
             }
 
         except Exception as e:
@@ -454,13 +441,15 @@ class CIRunner:
         try:
             result = subprocess.run(
                 [sys.executable, "ecosystem_functional_test_suite.py"],
-                capture_output=True, text=True, timeout=300  # 5 minutes
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minutes
             )
 
             return {
                 "passed": result.returncode == 0,
                 "stdout": result.stdout[:1000] + "..." if len(result.stdout) > 1000 else result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
             }
 
         except Exception as e:
@@ -473,13 +462,15 @@ class CIRunner:
         try:
             result = subprocess.run(
                 [sys.executable, "scripts/safeguards/unified_health_monitor.py", "--performance"],
-                capture_output=True, text=True, timeout=60
+                capture_output=True,
+                text=True,
+                timeout=60,
             )
 
             return {
                 "passed": result.returncode == 0,
                 "stdout": result.stdout[:500] + "..." if len(result.stdout) > 500 else result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
             }
 
         except Exception as e:
@@ -493,7 +484,10 @@ class CIRunner:
             # Run comprehensive health endpoint validator
             result = subprocess.run(
                 [sys.executable, "scripts/safeguards/health_endpoint_validator.py", "--mode", "single"],
-                capture_output=True, text=True, cwd=self.workspace_path, timeout=60
+                capture_output=True,
+                text=True,
+                cwd=self.workspace_path,
+                timeout=60,
             )
 
             if result.returncode == 0:
@@ -502,7 +496,7 @@ class CIRunner:
                 return {
                     "passed": False,
                     "error": f"Health endpoint validation failed: {result.stderr}",
-                    "details": result.stdout
+                    "details": result.stdout,
                 }
 
         except subprocess.TimeoutExpired:
@@ -518,14 +512,20 @@ class CIRunner:
             # Run comprehensive configuration drift detection
             result = subprocess.run(
                 [sys.executable, "scripts/safeguards/config_drift_detector.py", "--scan-only"],
-                capture_output=True, text=True, cwd=self.workspace_path, timeout=60
+                capture_output=True,
+                text=True,
+                cwd=self.workspace_path,
+                timeout=60,
             )
 
             if result.returncode == 0:
                 # Now run the actual drift detection
                 drift_result = subprocess.run(
                     [sys.executable, "scripts/safeguards/config_drift_detector.py"],
-                    capture_output=True, text=True, cwd=self.workspace_path, timeout=120
+                    capture_output=True,
+                    text=True,
+                    cwd=self.workspace_path,
+                    timeout=120,
                 )
 
                 if drift_result.returncode == 0:
@@ -534,13 +534,13 @@ class CIRunner:
                     return {
                         "passed": False,
                         "error": f"Configuration drift detected: {drift_result.stderr}",
-                        "details": drift_result.stdout
+                        "details": drift_result.stdout,
                     }
             else:
                 return {
                     "passed": False,
                     "error": f"Configuration scan failed: {result.stderr}",
-                    "details": result.stdout
+                    "details": result.stdout,
                 }
 
         except subprocess.TimeoutExpired:
@@ -557,14 +557,13 @@ class CIRunner:
             # For now, we'll do a basic check
             result = subprocess.run(
                 [sys.executable, "-c", "print('Logging validation placeholder - implement actual logging checks')"],
-                capture_output=True, text=True, cwd=self.workspace_path, timeout=30
+                capture_output=True,
+                text=True,
+                cwd=self.workspace_path,
+                timeout=30,
             )
 
-            return {
-                "passed": result.returncode == 0,
-                "logging_check": "basic_validation",
-                "details": result.stdout
-            }
+            return {"passed": result.returncode == 0, "logging_check": "basic_validation", "details": result.stdout}
 
         except subprocess.TimeoutExpired:
             return {"passed": False, "error": "Logging validation timed out"}
@@ -579,7 +578,10 @@ class CIRunner:
             # Run comprehensive API contract validation
             result = subprocess.run(
                 [sys.executable, "scripts/safeguards/api_contract_validator.py"],
-                capture_output=True, text=True, cwd=self.workspace_path, timeout=120
+                capture_output=True,
+                text=True,
+                cwd=self.workspace_path,
+                timeout=120,
             )
 
             if result.returncode == 0:
@@ -588,7 +590,7 @@ class CIRunner:
                 return {
                     "passed": False,
                     "error": f"API contract validation failed: {result.stderr}",
-                    "details": result.stdout
+                    "details": result.stdout,
                 }
 
         except subprocess.TimeoutExpired:
@@ -604,13 +606,15 @@ class CIRunner:
             # This could be enhanced to run specific integration tests
             result = subprocess.run(
                 [sys.executable, "-c", "print('Integration check placeholder - implement actual integration tests')"],
-                capture_output=True, text=True, timeout=30
+                capture_output=True,
+                text=True,
+                timeout=30,
             )
 
             return {
                 "passed": True,  # Placeholder
                 "message": "Integration check completed (placeholder)",
-                "stdout": result.stdout
+                "stdout": result.stdout,
             }
 
         except Exception as e:
@@ -626,22 +630,19 @@ class CIRunner:
                 r'password\s*[=:]\s*["\'][^"\']+["\']',
                 r'secret\s*[=:]\s*["\'][^"\']+["\']',
                 r'key\s*[=:]\s*["\'][^"\']+["\']',
-                r'token\s*[=:]\s*["\'][^"\']+["\']'
+                r'token\s*[=:]\s*["\'][^"\']+["\']',
             ]
 
             found_secrets = []
 
             # Check key files
-            files_to_check = [
-                "docker-compose.dev.yml",
-                "scripts/hardening/*.py"
-            ]
+            files_to_check = ["docker-compose.dev.yml", "scripts/hardening/*.py"]
 
             for file_pattern in files_to_check:
                 for file_path in self.workspace_path.glob(file_pattern):
                     if file_path.is_file():
                         try:
-                            with open(file_path, 'r') as f:
+                            with open(file_path, "r") as f:
                                 content = f.read()
 
                             for pattern in secret_patterns:
@@ -655,7 +656,7 @@ class CIRunner:
                 return {
                     "passed": False,
                     "error": f"Potential secrets found: {len(found_secrets)} instances",
-                    "secrets_found": found_secrets[:5]  # Show first 5
+                    "secrets_found": found_secrets[:5],  # Show first 5
                 }
 
             return {"passed": True, "message": "No obvious secrets found"}
@@ -677,7 +678,7 @@ class CIRunner:
             return {
                 "passed": True,
                 "message": "Vulnerability check completed (placeholder - integrate with security tools)",
-                "tools_recommended": ["trivy", "snyk", "bandit"]
+                "tools_recommended": ["trivy", "snyk", "bandit"],
             }
 
         except Exception as e:
@@ -699,7 +700,7 @@ class CIRunner:
                 return {
                     "passed": False,
                     "error": f"Python files with executable permissions: {len(suspicious_files)}",
-                    "suspicious_files": suspicious_files[:5]
+                    "suspicious_files": suspicious_files[:5],
                 }
 
             return {"passed": True, "message": "File permissions look good"}
@@ -714,7 +715,7 @@ class CIRunner:
             "overall_success": overall_success,
             "validation_levels": list(self.results.keys()),
             "summary": {},
-            "details": self.results
+            "details": self.results,
         }
 
         # Calculate summary
@@ -732,12 +733,12 @@ class CIRunner:
             "total_checks": total_checks,
             "passed_checks": passed_checks,
             "failed_checks": total_checks - passed_checks,
-            "success_rate": passed_checks / total_checks if total_checks > 0 else 0
+            "success_rate": passed_checks / total_checks if total_checks > 0 else 0,
         }
 
         # Save report
         report_file = self.reports_dir / f"ci_report_{int(time.time())}.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(report, f, indent=2, default=str)
 
         # Print summary
@@ -745,11 +746,18 @@ class CIRunner:
         logger.info(f"  Overall Status: {'✅ PASSED' if overall_success else '❌ FAILED'}")
 
         # Calculate summary stats if not already available
-        if 'summary' not in report:
-            total_checks = sum(len(level_results.get("checks", {})) for level_results in self.results.values() if "checks" in level_results)
+        if "summary" not in report:
+            total_checks = sum(
+                len(level_results.get("checks", {}))
+                for level_results in self.results.values()
+                if "checks" in level_results
+            )
             passed_checks = sum(
-                1 for level_results in self.results.values() if "checks" in level_results
-                for check_result in level_results["checks"].values() if check_result.get("passed", False)
+                1
+                for level_results in self.results.values()
+                if "checks" in level_results
+                for check_result in level_results["checks"].values()
+                if check_result.get("passed", False)
             )
             success_rate = passed_checks / total_checks if total_checks > 0 else 0
 
@@ -773,26 +781,11 @@ def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description="Ecosystem CI/CD Runner")
     parser.add_argument(
-        "--level",
-        choices=["quick", "standard", "comprehensive"],
-        default="standard",
-        help="Validation level to run"
+        "--level", choices=["quick", "standard", "comprehensive"], default="standard", help="Validation level to run"
     )
-    parser.add_argument(
-        "--workspace",
-        default=".",
-        help="Workspace path"
-    )
-    parser.add_argument(
-        "--fail-fast",
-        action="store_true",
-        help="Exit immediately on first failure"
-    )
-    parser.add_argument(
-        "--report-only",
-        action="store_true",
-        help="Only generate reports, don't fail on errors"
-    )
+    parser.add_argument("--workspace", default=".", help="Workspace path")
+    parser.add_argument("--fail-fast", action="store_true", help="Exit immediately on first failure")
+    parser.add_argument("--report-only", action="store_true", help="Only generate reports, don't fail on errors")
 
     args = parser.parse_args()
 

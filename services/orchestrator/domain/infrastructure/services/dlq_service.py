@@ -1,7 +1,7 @@
-"""DLQ Service Domain Service"""
+"""DLQ Service Domain Service."""
 
-from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.dlq_event import DLQEvent
 
@@ -21,7 +21,7 @@ class DLQService:
         failure_reason: str,
         correlation_id: Optional[str] = None,
         service_name: Optional[str] = None,
-        error_details: Optional[Dict[str, Any]] = None
+        error_details: Optional[Dict[str, Any]] = None,
     ) -> DLQEvent:
         """Add an event to the DLQ."""
         dlq_event = DLQEvent(
@@ -32,7 +32,7 @@ class DLQService:
             original_timestamp=datetime.utcnow(),  # Could be passed in
             correlation_id=correlation_id,
             service_name=service_name,
-            error_details=error_details
+            error_details=error_details,
         )
 
         self._dlq_events[dlq_event.dlq_id] = dlq_event
@@ -55,7 +55,7 @@ class DLQService:
         service_filter: Optional[str] = None,
         correlation_id_filter: Optional[str] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[DLQEvent]:
         """List DLQ events with optional filters."""
         events = list(self._dlq_events.values())
@@ -79,42 +79,36 @@ class DLQService:
         return events[start_idx:end_idx]
 
     def retry_dlq_events(self, dlq_ids: List[str]) -> Dict[str, Any]:
-        """Retry DLQ events. Returns retry results."""
-        results = {
-            "total_requested": len(dlq_ids),
-            "retried": [],
-            "failed": [],
-            "exhausted": []
-        }
+        """
+        Retry DLQ events.
+
+        Returns retry results.
+        """
+        results = {"total_requested": len(dlq_ids), "retried": [], "failed": [], "exhausted": []}
 
         for dlq_id in dlq_ids:
             dlq_event = self._dlq_events.get(dlq_id)
             if not dlq_event:
-                results["failed"].append({
-                    "dlq_id": dlq_id,
-                    "reason": "DLQ event not found"
-                })
+                results["failed"].append({"dlq_id": dlq_id, "reason": "DLQ event not found"})
                 continue
 
             if dlq_event.increment_retry_count():
                 results["retried"].append(dlq_event.dlq_id)
                 # In a real implementation, this would re-queue the event
             else:
-                results["exhausted"].append({
-                    "dlq_id": dlq_event.dlq_id,
-                    "max_retries": dlq_event.max_retries,
-                    "current_retries": dlq_event.retry_count
-                })
+                results["exhausted"].append(
+                    {
+                        "dlq_id": dlq_event.dlq_id,
+                        "max_retries": dlq_event.max_retries,
+                        "current_retries": dlq_event.retry_count,
+                    }
+                )
 
         return results
 
     def remove_from_dlq(self, dlq_ids: List[str]) -> Dict[str, Any]:
         """Remove events from DLQ."""
-        results = {
-            "total_requested": len(dlq_ids),
-            "removed": [],
-            "not_found": []
-        }
+        results = {"total_requested": len(dlq_ids), "removed": [], "not_found": []}
 
         for dlq_id in dlq_ids:
             if dlq_id in self._dlq_events:
@@ -136,7 +130,7 @@ class DLQService:
                 "events_by_service": {},
                 "retryable_events": 0,
                 "oldest_event": None,
-                "newest_event": None
+                "newest_event": None,
             }
 
         # Calculate statistics
@@ -158,11 +152,15 @@ class DLQService:
             "events_by_service": events_by_service,
             "retryable_events": retryable_count,
             "oldest_event": sorted_events[0].dlq_timestamp.isoformat(),
-            "newest_event": sorted_events[-1].dlq_timestamp.isoformat()
+            "newest_event": sorted_events[-1].dlq_timestamp.isoformat(),
         }
 
     def cleanup_old_events(self, max_age_hours: int = 24) -> int:
-        """Remove events older than specified hours. Returns count removed."""
+        """
+        Remove events older than specified hours.
+
+        Returns count removed.
+        """
         cutoff_time = datetime.utcnow() - timedelta(hours=max_age_hours)
         events_to_remove = []
 

@@ -1,4 +1,5 @@
-"""Project Simulation Service.
+"""
+Project Simulation Service.
 
 A comprehensive service for simulating realistic software engineering projects
 within the LLM Documentation Ecosystem. This service generates believable

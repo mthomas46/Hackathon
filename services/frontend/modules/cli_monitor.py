@@ -1,18 +1,15 @@
-"""CLI Service monitoring infrastructure for Frontend service.
+"""
+CLI Service monitoring infrastructure for Frontend service.
 
 Provides terminal pass-through capabilities for CLI service operations,
 enabling full CLI functionality through web interface.
 """
-from typing import Dict, Any, List, Optional
+
 import asyncio
-import subprocess
-import threading
-import queue
-import time
-from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_cli_url, get_frontend_clients
+
 
 
 class CLIMonitor:
@@ -30,7 +27,9 @@ class CLIMonitor:
             return False
         return (utc_now() - cache_time).total_seconds() < self._cache_ttl
 
-    async def execute_cli_command(self, command: str, args: Optional[List[str]] = None, session_id: Optional[str] = None) -> Dict[str, Any]:
+    async def execute_cli_command(
+        self, command: str, args: Optional[List[str]] = None, session_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Execute a CLI command and return the result."""
         try:
             # Build the command
@@ -40,18 +39,15 @@ class CLIMonitor:
 
             # Create a subprocess to run the CLI command
             process = await asyncio.create_subprocess_exec(
-                *cmd_args,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd="."
+                *cmd_args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, cwd="."
             )
 
             # Wait for the command to complete
             stdout, stderr = await process.communicate()
 
             # Decode output
-            stdout_text = stdout.decode('utf-8', errors='replace')
-            stderr_text = stderr.decode('utf-8', errors='replace')
+            stdout_text = stdout.decode("utf-8", errors="replace")
+            stderr_text = stderr.decode("utf-8", errors="replace")
 
             result = {
                 "command": command,
@@ -60,7 +56,7 @@ class CLIMonitor:
                 "stdout": stdout_text,
                 "stderr": stderr_text,
                 "success": process.returncode == 0,
-                "timestamp": utc_now().isoformat()
+                "timestamp": utc_now().isoformat(),
             }
 
             # Store in history
@@ -79,7 +75,7 @@ class CLIMonitor:
                 "stdout": "",
                 "stderr": f"Error executing command: {str(e)}",
                 "success": False,
-                "timestamp": utc_now().isoformat()
+                "timestamp": utc_now().isoformat(),
             }
 
             # Store error in history
@@ -101,7 +97,7 @@ class CLIMonitor:
                 "last_check": utc_now().isoformat(),
                 "cli_available": result["success"],
                 "health_output": result["stdout"],
-                "error_output": result["stderr"]
+                "error_output": result["stderr"],
             }
 
             self._health_cache = health_data
@@ -110,42 +106,29 @@ class CLIMonitor:
             return health_data
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "last_check": utc_now().isoformat(),
-                "cli_available": False,
-                "error": str(e)
-            }
+            return {"status": "unhealthy", "last_check": utc_now().isoformat(), "cli_available": False, "error": str(e)}
 
     async def get_available_commands(self) -> Dict[str, Any]:
         """Get list of available CLI commands."""
         return {
             "commands": [
-                {
-                    "name": "interactive",
-                    "description": "Start interactive TUI workflow",
-                    "usage": "interactive"
-                },
+                {"name": "interactive", "description": "Start interactive TUI workflow", "usage": "interactive"},
                 {
                     "name": "get-prompt",
                     "description": "Retrieve and render a prompt",
-                    "usage": "get-prompt <category> <name> [--content <content>]"
+                    "usage": "get-prompt <category> <name> [--content <content>]",
                 },
-                {
-                    "name": "health",
-                    "description": "Check service health across the stack",
-                    "usage": "health"
-                },
+                {"name": "health", "description": "Check service health across the stack", "usage": "health"},
                 {
                     "name": "list-prompts",
                     "description": "List available prompts",
-                    "usage": "list-prompts [--category <category>]"
+                    "usage": "list-prompts [--category <category>]",
                 },
                 {
                     "name": "test-integration",
                     "description": "Run cross-service checks from CLI",
-                    "usage": "test-integration"
-                }
+                    "usage": "test-integration",
+                },
             ],
             "interactive_menus": [
                 "Prompt Management",
@@ -154,8 +137,8 @@ class CLIMonitor:
                 "Analytics & Monitoring",
                 "Service Health Check",
                 "Service Actions & Bulk Ops",
-                "Test Service Integration"
-            ]
+                "Test Service Integration",
+            ],
         }
 
     async def get_command_history(self, limit: int = 20) -> List[Dict[str, Any]]:
@@ -180,15 +163,11 @@ class CLIMonitor:
                 "success": result["success"],
                 "output": result["stdout"],
                 "error": result["stderr"],
-                "category": category
+                "category": category,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "category": category
-            }
+            return {"success": False, "error": str(e), "category": category}
 
     async def get_prompt_details(self, category: str, name: str, content: Optional[str] = None) -> Dict[str, Any]:
         """Get specific prompt details via CLI."""
@@ -205,33 +184,21 @@ class CLIMonitor:
                 "error": result["stderr"],
                 "category": category,
                 "name": name,
-                "content": content
+                "content": content,
             }
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "category": category,
-                "name": name
-            }
+            return {"success": False, "error": str(e), "category": category, "name": name}
 
     async def run_integration_tests(self) -> Dict[str, Any]:
         """Run integration tests via CLI."""
         try:
             result = await self.execute_cli_command("test-integration")
 
-            return {
-                "success": result["success"],
-                "output": result["stdout"],
-                "error": result["stderr"]
-            }
+            return {"success": result["success"], "output": result["stdout"], "error": result["stderr"]}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
 
 # Global instance

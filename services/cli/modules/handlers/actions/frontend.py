@@ -1,6 +1,7 @@
-from typing import Any, Dict, List, Tuple, Callable
+from typing import Any, Callable, List, Tuple
 
 from services.shared.integrations.clients.clients import ServiceClients
+
 from ...utils.display_helpers import print_kv
 
 
@@ -19,5 +20,3 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("Show metrics", metrics),
         ("View config (effective)", config_effective),
     ]
-
-

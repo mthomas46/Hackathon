@@ -1,4 +1,5 @@
-"""Sample documents for Interpreter service context.
+"""
+Sample documents for Interpreter service context.
 
 This module contains a diverse set of sample documents that can be used as context
 when processing queries that require document analysis or simulation scenarios.
@@ -6,7 +7,7 @@ Includes various document types: Confluence pages, Jira tickets, Pull Requests,
 with different content characteristics.
 """
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 class SampleDocumentRepository:
@@ -29,7 +30,7 @@ class SampleDocumentRepository:
                 "category": "architecture",
                 "tags": ["architecture", "microservices", "security", "performance"],
                 "author": "Sarah Johnson",
-                "status": "published"
+                "status": "published",
             },
             {
                 "id": "conf_002",
@@ -41,21 +42,20 @@ class SampleDocumentRepository:
                 "category": "compliance",
                 "tags": ["data_retention", "gdpr", "compliance"],
                 "author": "Lisa Rodriguez",
-                "status": "published"
+                "status": "published",
             },
             {
                 "id": "conf_003",
                 "type": "confluence",
                 "title": "API Documentation - Account Management",
-                "content": "# Account Management API\n\n## Overview\nThe Account Management API provides comprehensive account lifecycle management.\n\n## Endpoints\n\n### GET /api/v1/accounts\nRetrieve account information for authenticated user.\n\n**Parameters:**\n- accountId (optional): Specific account ID\n\n**Response:**\n```json\n{\n  \"accountId\": \"12345\",\n  \"balance\": 1500.00,\n  \"currency\": \"USD\",\n  \"status\": \"active\"\n}\n```\n\n### POST /api/v1/accounts\nCreate new account for customer.",
+                "content": '# Account Management API\n\n## Overview\nThe Account Management API provides comprehensive account lifecycle management.\n\n## Endpoints\n\n### GET /api/v1/accounts\nRetrieve account information for authenticated user.\n\n**Parameters:**\n- accountId (optional): Specific account ID\n\n**Response:**\n```json\n{\n  "accountId": "12345",\n  "balance": 1500.00,\n  "currency": "USD",\n  "status": "active"\n}\n```\n\n### POST /api/v1/accounts\nCreate new account for customer.',
                 "dateCreated": "2024-01-20T11:15:00Z",
                 "dateUpdated": "2024-02-15T16:45:00Z",
                 "category": "api",
                 "tags": ["api", "documentation", "account_management"],
                 "author": "Mike Chen",
-                "status": "published"
+                "status": "published",
             },
-
             # CONTRADICTORY DOCUMENT - Conflicts with data retention policy
             {
                 "id": "conf_conflict_001",
@@ -67,9 +67,8 @@ class SampleDocumentRepository:
                 "category": "compliance",
                 "tags": ["data_retention", "gdpr", "compliance", "conflict"],
                 "author": "Emma Wilson",
-                "status": "published"
+                "status": "published",
             },
-
             # SPARSE DOCUMENT
             {
                 "id": "conf_sparse_001",
@@ -81,9 +80,8 @@ class SampleDocumentRepository:
                 "category": "design",
                 "tags": ["mobile", "design"],
                 "author": "Alex Thompson",
-                "status": "draft"
+                "status": "draft",
             },
-
             # BLANK DOCUMENT
             {
                 "id": "conf_blank_001",
@@ -95,9 +93,8 @@ class SampleDocumentRepository:
                 "category": "integration",
                 "tags": ["integration", "third_party"],
                 "author": "Robert Davis",
-                "status": "draft"
+                "status": "draft",
             },
-
             # JIRA TICKETS
             {
                 "id": "jira_001",
@@ -116,14 +113,14 @@ class SampleDocumentRepository:
                     {
                         "author": "Mike Chen",
                         "timestamp": "2024-01-12T10:30:00Z",
-                        "content": "Started implementation of OAuth2 flow. Need to clarify MFA requirements."
+                        "content": "Started implementation of OAuth2 flow. Need to clarify MFA requirements.",
                     },
                     {
                         "author": "Sarah Johnson",
                         "timestamp": "2024-01-12T14:15:00Z",
-                        "content": "MFA is required for all users. Please implement SMS-based 2FA initially."
-                    }
-                ]
+                        "content": "MFA is required for all users. Please implement SMS-based 2FA initially.",
+                    },
+                ],
             },
             {
                 "id": "jira_002",
@@ -142,14 +139,14 @@ class SampleDocumentRepository:
                     {
                         "author": "David Kim",
                         "timestamp": "2024-01-26T09:30:00Z",
-                        "content": "Investigating memory leak. Found issue in connection pooling configuration."
+                        "content": "Investigating memory leak. Found issue in connection pooling configuration.",
                     },
                     {
                         "author": "David Kim",
                         "timestamp": "2024-01-28T14:15:00Z",
-                        "content": "Root cause identified: PreparedStatement objects not being closed properly in batch processing."
-                    }
-                ]
+                        "content": "Root cause identified: PreparedStatement objects not being closed properly in batch processing.",
+                    },
+                ],
             },
             {
                 "id": "jira_003",
@@ -163,9 +160,8 @@ class SampleDocumentRepository:
                 "author": "Emma Wilson",
                 "assignee": "Robert Davis",
                 "status": "in_progress",
-                "priority": "high"
+                "priority": "high",
             },
-
             # GAP IDENTIFICATION DOCUMENT
             {
                 "id": "jira_gap_001",
@@ -179,9 +175,8 @@ class SampleDocumentRepository:
                 "author": "Mike Chen",
                 "assignee": "David Kim",
                 "status": "blocked",
-                "priority": "high"
+                "priority": "high",
             },
-
             # PULL REQUESTS
             {
                 "id": "pr_001",
@@ -198,14 +193,14 @@ class SampleDocumentRepository:
                     {
                         "author": "Sarah Johnson",
                         "timestamp": "2024-01-18T10:20:00Z",
-                        "content": "Code looks good. Can you add more comprehensive error handling for OAuth2 exceptions?"
+                        "content": "Code looks good. Can you add more comprehensive error handling for OAuth2 exceptions?",
                     },
                     {
                         "author": "Mike Chen",
                         "timestamp": "2024-01-18T14:15:00Z",
-                        "content": "Added comprehensive error handling and proper HTTP status codes for OAuth2 errors."
-                    }
-                ]
+                        "content": "Added comprehensive error handling and proper HTTP status codes for OAuth2 errors.",
+                    },
+                ],
             },
             {
                 "id": "pr_002",
@@ -217,34 +212,33 @@ class SampleDocumentRepository:
                 "category": "bug_fix",
                 "tags": ["memory_leak", "performance", "database", "transaction_processing"],
                 "author": "David Kim",
-                "status": "merged"
+                "status": "merged",
             },
-
             # SIMILAR DOCUMENTS (API Documentation variations)
             {
                 "id": "conf_similar_001",
                 "type": "confluence",
                 "title": "API Documentation - User Management",
-                "content": "# User Management API\n\n## Overview\nThe User Management API provides comprehensive user lifecycle management.\n\n## Endpoints\n\n### GET /api/v1/users\nRetrieve user information for authenticated user.\n\n**Parameters:**\n- userId (optional): Specific user ID\n\n**Response:**\n```json\n{\n  \"userId\": \"12345\",\n  \"email\": \"user@example.com\",\n  \"status\": \"active\"\n}\n```\n\n### POST /api/v1/users\nCreate new user account.",
+                "content": '# User Management API\n\n## Overview\nThe User Management API provides comprehensive user lifecycle management.\n\n## Endpoints\n\n### GET /api/v1/users\nRetrieve user information for authenticated user.\n\n**Parameters:**\n- userId (optional): Specific user ID\n\n**Response:**\n```json\n{\n  "userId": "12345",\n  "email": "user@example.com",\n  "status": "active"\n}\n```\n\n### POST /api/v1/users\nCreate new user account.',
                 "dateCreated": "2024-01-20T11:16:00Z",
                 "dateUpdated": "2024-02-15T16:46:00Z",
                 "category": "api",
                 "tags": ["api", "documentation", "user_management"],
                 "author": "Mike Chen",
-                "status": "published"
+                "status": "published",
             },
             {
                 "id": "conf_similar_002",
                 "type": "confluence",
                 "title": "API Documentation - User Management v2",
-                "content": "# User Management API\n\n## Overview\nThe User Management API provides comprehensive user lifecycle management.\n\n## Endpoints\n\n### GET /api/v1/users\nRetrieve user information for authenticated user.\n\n**Parameters:**\n- userId (optional): Specific user ID\n\n**Response:**\n```json\n{\n  \"userId\": \"12345\",\n  \"email\": \"user@example.com\",\n  \"status\": \"active\"\n}\n```\n\n### POST /api/v1/users\nCreate new user account.",
+                "content": '# User Management API\n\n## Overview\nThe User Management API provides comprehensive user lifecycle management.\n\n## Endpoints\n\n### GET /api/v1/users\nRetrieve user information for authenticated user.\n\n**Parameters:**\n- userId (optional): Specific user ID\n\n**Response:**\n```json\n{\n  "userId": "12345",\n  "email": "user@example.com",\n  "status": "active"\n}\n```\n\n### POST /api/v1/users\nCreate new user account.',
                 "dateCreated": "2024-01-20T11:17:00Z",
                 "dateUpdated": "2024-02-15T16:47:00Z",
                 "category": "api",
                 "tags": ["api", "documentation", "user_management"],
                 "author": "Mike Chen",
-                "status": "published"
-            }
+                "status": "published",
+            },
         ]
 
     def get_documents_by_type(self, doc_type: str) -> List[Dict[str, Any]]:
@@ -256,7 +250,8 @@ class SampleDocumentRepository:
         return [doc for doc in self.documents if doc.get("category", "").lower() == category.lower()]
 
     def get_similar_documents(self) -> List[Dict[str, Any]]:
-        """Get documents that are highly similar (for testing deduplication)."""
+        """Get documents that are highly similar (for testing
+        deduplication)."""
         return [doc for doc in self.documents if "similar" in doc.get("id", "")]
 
     def get_contradictory_documents(self) -> List[Dict[str, Any]]:

@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Any, Dict, Optional, List, Callable, Awaitable
 from datetime import datetime, timezone
 from functools import wraps
+from typing import Any, Awaitable, Callable, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 
 class DocumentEnvelope(BaseModel):
@@ -27,7 +28,8 @@ class ApiSchemaEnvelope(BaseModel):
 
 
 def validate_envelope(model: BaseModel):
-    """Decorator to validate request bodies against an envelope model.
+    """
+    Decorator to validate request bodies against an envelope model.
 
     Usage:
         @app.post("/ingest")
@@ -35,6 +37,7 @@ def validate_envelope(model: BaseModel):
         async def ingest(env: ApiSchemaEnvelope):
             ...
     """
+
     def _decorator(func: Callable[..., Awaitable[Any]]):
         @wraps(func)
         async def _wrapped(*args, **kwargs):
@@ -47,9 +50,10 @@ def validate_envelope(model: BaseModel):
                 _ = model.model_validate(body)
             except Exception as e:
                 from fastapi import HTTPException
+
                 raise HTTPException(status_code=400, detail=f"Invalid envelope: {e}")
             return await func(*args, **kwargs)
+
         return _wrapped
+
     return _decorator
-
-

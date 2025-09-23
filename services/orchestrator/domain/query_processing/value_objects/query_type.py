@@ -1,4 +1,4 @@
-"""Query Type Value Object"""
+"""Query Type Value Object."""
 
 from enum import Enum
 
@@ -6,11 +6,11 @@ from enum import Enum
 class QueryType(Enum):
     """Enumeration of supported query types."""
 
-    NATURAL_LANGUAGE = "natural_language"    # Free-form natural language queries
-    STRUCTURED = "structured"                # Structured query with specific parameters
-    HYBRID = "hybrid"                       # Combination of natural language and structured elements
-    COMMAND = "command"                     # Direct command execution
-    CONVERSATIONAL = "conversational"       # Multi-turn conversational queries
+    NATURAL_LANGUAGE = "natural_language"  # Free-form natural language queries
+    STRUCTURED = "structured"  # Structured query with specific parameters
+    HYBRID = "hybrid"  # Combination of natural language and structured elements
+    COMMAND = "command"  # Direct command execution
+    CONVERSATIONAL = "conversational"  # Multi-turn conversational queries
 
     @property
     def requires_interpretation(self) -> bool:

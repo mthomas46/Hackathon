@@ -13,18 +13,16 @@ Key Features:
 - Performance metrics and monitoring
 """
 
-import sys
-import json
-import time
-import uuid
-from pathlib import Path
-from typing import Dict, Any, List, Optional, Union, Iterator, Callable
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
 import asyncio
-import threading
+import json
+import sys
+import uuid
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -34,6 +32,7 @@ from simulation.infrastructure.logging import get_simulation_logger
 
 class EventPriority(str, Enum):
     """Event priority levels for processing."""
+
     LOW = "low"
     NORMAL = "normal"
     HIGH = "high"
@@ -42,6 +41,7 @@ class EventPriority(str, Enum):
 
 class EventType(str, Enum):
     """Types of simulation events."""
+
     SIMULATION_STARTED = "simulation_started"
     SIMULATION_COMPLETED = "simulation_completed"
     SIMULATION_FAILED = "simulation_failed"
@@ -60,6 +60,7 @@ class EventType(str, Enum):
 
 class CompressionType(str, Enum):
     """Event data compression types."""
+
     NONE = "none"
     GZIP = "gzip"
     LZ4 = "lz4"
@@ -68,6 +69,7 @@ class CompressionType(str, Enum):
 @dataclass
 class SimulationEvent:
     """Represents a simulation event with metadata."""
+
     event_id: str
     simulation_id: str
     event_type: EventType
@@ -93,11 +95,11 @@ class SimulationEvent:
             "user_id": self.user_id,
             "session_id": self.session_id,
             "tags": self.tags,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'SimulationEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "SimulationEvent":
         """Create event from dictionary."""
         return cls(
             event_id=data["event_id"],
@@ -110,13 +112,14 @@ class SimulationEvent:
             user_id=data.get("user_id"),
             session_id=data.get("session_id"),
             tags=data.get("tags", []),
-            metadata=data.get("metadata", {})
+            metadata=data.get("metadata", {}),
         )
 
 
 @dataclass
 class ReplayConfiguration:
     """Configuration for event replay."""
+
     simulation_id: str
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
@@ -131,15 +134,17 @@ class ReplayConfiguration:
 class RedisEventStore:
     """Redis-based event store with persistence and replay capabilities."""
 
-    def __init__(self,
-                 redis_host: str = "localhost",
-                 redis_port: int = 6379,
-                 redis_db: int = 0,
-                 redis_password: Optional[str] = None,
-                 key_prefix: str = "simulation:events",
-                 compression: CompressionType = CompressionType.NONE,
-                 ttl_seconds: int = 86400 * 7,  # 7 days
-                 max_connections: int = 10):
+    def __init__(
+        self,
+        redis_host: str = "localhost",
+        redis_port: int = 6379,
+        redis_db: int = 0,
+        redis_password: Optional[str] = None,
+        key_prefix: str = "simulation:events",
+        compression: CompressionType = CompressionType.NONE,
+        ttl_seconds: int = 86400 * 7,  # 7 days
+        max_connections: int = 10,
+    ):
         """Initialize Redis event store."""
         self.redis_host = redis_host
         self.redis_port = redis_port
@@ -156,12 +161,7 @@ class RedisEventStore:
         self._running = False
 
         # Statistics
-        self.stats = {
-            "events_stored": 0,
-            "events_retrieved": 0,
-            "replay_sessions": 0,
-            "errors": 0
-        }
+        self.stats = {"events_stored": 0, "events_retrieved": 0, "replay_sessions": 0, "errors": 0}
 
     async def initialize(self) -> None:
         """Initialize Redis connection and setup."""
@@ -177,15 +177,13 @@ class RedisEventStore:
                 db=self.redis_db,
                 password=self.redis_password,
                 max_connections=self.max_connections,
-                decode_responses=True
+                decode_responses=True,
             )
 
             self._redis_client = redis.Redis(connection_pool=pool)
 
             # Test connection
-            await asyncio.get_event_loop().run_in_executor(
-                self._executor, self._redis_client.ping
-            )
+            await asyncio.get_event_loop().run_in_executor(self._executor, self._redis_client.ping)
 
             # Setup indexes and streams
             await self._setup_indexes()
@@ -214,10 +212,12 @@ class RedisEventStore:
             # Apply compression if configured
             if self.compression == CompressionType.GZIP:
                 import gzip
+
                 serialized_data = gzip.compress(serialized_data.encode())
             elif self.compression == CompressionType.LZ4:
                 try:
                     import lz4.frame
+
                     serialized_data = lz4.frame.compress(serialized_data.encode())
                 except ImportError:
                     self.logger.warning("LZ4 not available, storing uncompressed")
@@ -227,7 +227,7 @@ class RedisEventStore:
                 f"{self.key_prefix}:simulation:{event.simulation_id}",
                 f"{self.key_prefix}:type:{event.event_type.value}",
                 f"{self.key_prefix}:time:{int(event.timestamp.timestamp())}",
-                f"{self.key_prefix}:event:{event.event_id}"
+                f"{self.key_prefix}:event:{event.event_id}",
             ]
 
             # Use pipeline for atomic operations
@@ -264,14 +264,16 @@ class RedisEventStore:
             self.stats["errors"] += 1
             return False
 
-    async def get_events(self,
-                        simulation_id: Optional[str] = None,
-                        event_types: List[EventType] = None,
-                        start_time: Optional[datetime] = None,
-                        end_time: Optional[datetime] = None,
-                        tags: List[str] = None,
-                        limit: int = 100,
-                        offset: int = 0) -> List[SimulationEvent]:
+    async def get_events(
+        self,
+        simulation_id: Optional[str] = None,
+        event_types: List[EventType] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        tags: List[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> List[SimulationEvent]:
         """Retrieve events with filtering."""
         try:
             if not self._redis_client:
@@ -301,9 +303,11 @@ class RedisEventStore:
                         if isinstance(data, bytes):
                             if self.compression == CompressionType.GZIP:
                                 import gzip
+
                                 data = gzip.decompress(data).decode()
                             elif self.compression == CompressionType.LZ4:
                                 import lz4.frame
+
                                 data = lz4.frame.decompress(data).decode()
 
                         event_data = json.loads(data)
@@ -332,7 +336,7 @@ class RedisEventStore:
                 start_time=config.start_time,
                 end_time=config.end_time,
                 tags=config.tags if config.tags else None,
-                limit=config.max_events or 1000
+                limit=config.max_events or 1000,
             )
 
             # Sort events by timestamp
@@ -373,13 +377,15 @@ class RedisEventStore:
 
             timeline = []
             for event in sorted(events, key=lambda e: e.timestamp):
-                timeline.append({
-                    "timestamp": event.timestamp.isoformat(),
-                    "event_type": event.event_type.value,
-                    "description": self._get_event_description(event),
-                    "data": event.data,
-                    "tags": event.tags
-                })
+                timeline.append(
+                    {
+                        "timestamp": event.timestamp.isoformat(),
+                        "event_type": event.event_type.value,
+                        "description": self._get_event_description(event),
+                        "data": event.data,
+                        "tags": event.tags,
+                    }
+                )
 
             return timeline
 
@@ -387,17 +393,19 @@ class RedisEventStore:
             self.logger.error(f"Failed to get simulation timeline: {e}")
             return []
 
-    async def get_event_statistics(self,
-                                 simulation_id: Optional[str] = None,
-                                 start_time: Optional[datetime] = None,
-                                 end_time: Optional[datetime] = None) -> Dict[str, Any]:
+    async def get_event_statistics(
+        self,
+        simulation_id: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ) -> Dict[str, Any]:
         """Get statistics about stored events."""
         try:
             events = await self.get_events(
                 simulation_id=simulation_id,
                 start_time=start_time,
                 end_time=end_time,
-                limit=10000  # Large limit for statistics
+                limit=10000,  # Large limit for statistics
             )
 
             stats = {
@@ -405,10 +413,10 @@ class RedisEventStore:
                 "event_types": {},
                 "time_range": {
                     "start": min(events, key=lambda e: e.timestamp).timestamp.isoformat() if events else None,
-                    "end": max(events, key=lambda e: e.timestamp).timestamp.isoformat() if events else None
+                    "end": max(events, key=lambda e: e.timestamp).timestamp.isoformat() if events else None,
                 },
                 "simulations": set(),
-                "tags": set()
+                "tags": set(),
             }
 
             for event in events:
@@ -490,20 +498,21 @@ class RedisEventStore:
             message = json.dumps(event.to_dict())
 
             await asyncio.get_event_loop().run_in_executor(
-                self._executor,
-                lambda: self._redis_client.publish(channel, message)
+                self._executor, lambda: self._redis_client.publish(channel, message)
             )
         except Exception as e:
             self.logger.error(f"Failed to publish event: {e}")
 
-    async def _build_event_query(self,
-                               simulation_id: Optional[str],
-                               event_types: Optional[List[EventType]],
-                               start_time: Optional[datetime],
-                               end_time: Optional[datetime],
-                               tags: Optional[List[str]],
-                               limit: int,
-                               offset: int) -> List[str]:
+    async def _build_event_query(
+        self,
+        simulation_id: Optional[str],
+        event_types: Optional[List[EventType]],
+        start_time: Optional[datetime],
+        end_time: Optional[datetime],
+        tags: Optional[List[str]],
+        limit: int,
+        offset: int,
+    ) -> List[str]:
         """Build Redis query for event filtering."""
         if not self._redis_client:
             return []
@@ -577,7 +586,7 @@ class RedisEventStore:
             EventType.DOCUMENT_GENERATED: f"Document '{event.data.get('document_title', 'Unknown')}' generated",
             EventType.WORKFLOW_EXECUTED: f"Workflow '{event.data.get('workflow_name', 'Unknown')}' executed",
             EventType.ANALYSIS_COMPLETED: "Analysis completed",
-            EventType.ERROR_OCCURRED: f"Error occurred: {event.data.get('error', 'Unknown')}"
+            EventType.ERROR_OCCURRED: f"Error occurred: {event.data.get('error', 'Unknown')}",
         }
 
         return descriptions.get(event.event_type, f"Event: {event.event_type.value}")
@@ -586,22 +595,24 @@ class RedisEventStore:
 
     async def _store_fallback(self, event: SimulationEvent) -> bool:
         """Fallback storage when Redis is not available."""
-        if not hasattr(self, '_fallback_store'):
+        if not hasattr(self, "_fallback_store"):
             self._fallback_store = {}
 
         self._fallback_store[event.event_id] = event
         self.stats["events_stored"] += 1
         return True
 
-    async def _get_fallback_events(self,
-                                 simulation_id: Optional[str],
-                                 event_types: Optional[List[EventType]],
-                                 start_time: Optional[datetime],
-                                 end_time: Optional[datetime],
-                                 limit: int,
-                                 offset: int) -> List[SimulationEvent]:
+    async def _get_fallback_events(
+        self,
+        simulation_id: Optional[str],
+        event_types: Optional[List[EventType]],
+        start_time: Optional[datetime],
+        end_time: Optional[datetime],
+        limit: int,
+        offset: int,
+    ) -> List[SimulationEvent]:
         """Fallback event retrieval."""
-        if not hasattr(self, '_fallback_store'):
+        if not hasattr(self, "_fallback_store"):
             return []
 
         events = list(self._fallback_store.values())
@@ -639,10 +650,9 @@ class EventReplayManager:
         self.logger = get_simulation_logger()
         self.active_replays: Dict[str, ReplayConfiguration] = {}
 
-    async def start_replay(self,
-                          simulation_id: str,
-                          callback: Callable[[SimulationEvent], None],
-                          config: ReplayConfiguration) -> str:
+    async def start_replay(
+        self, simulation_id: str, callback: Callable[[SimulationEvent], None], config: ReplayConfiguration
+    ) -> str:
         """Start an event replay session."""
         replay_id = str(uuid.uuid4())
 
@@ -674,7 +684,7 @@ class EventReplayManager:
             "simulation_id": config.simulation_id,
             "status": "active",
             "speed_multiplier": config.speed_multiplier,
-            "event_types": [et.value for et in config.event_types] if config.event_types else None
+            "event_types": [et.value for et in config.event_types] if config.event_types else None,
         }
 
     async def _execute_replay(self, replay_id: str, callback: Callable[[SimulationEvent], None]) -> None:
@@ -726,14 +736,14 @@ async def initialize_event_persistence() -> None:
 
 
 __all__ = [
-    'RedisEventStore',
-    'EventReplayManager',
-    'SimulationEvent',
-    'EventType',
-    'EventPriority',
-    'CompressionType',
-    'ReplayConfiguration',
-    'get_event_store',
-    'get_replay_manager',
-    'initialize_event_persistence'
+    "RedisEventStore",
+    "EventReplayManager",
+    "SimulationEvent",
+    "EventType",
+    "EventPriority",
+    "CompressionType",
+    "ReplayConfiguration",
+    "get_event_store",
+    "get_replay_manager",
+    "initialize_event_persistence",
 ]

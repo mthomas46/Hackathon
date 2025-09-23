@@ -1,28 +1,19 @@
-"""Notification Service Manager module for CLI service.
+"""
+Notification Service Manager module for CLI service.
 
-Provides power-user operations for notification service including
-owner resolution, notification delivery, DLQ management, and resolutions.
+Provides power-user operations for notification service including owner
+resolution, notification delivery, DLQ management, and resolutions.
 """
 
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
 import json
-import os
-import asyncio
+from typing import Any, Dict, List, Optional
+
+from rich.console import Console
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
 
 from ...base.base_manager import BaseManager
-from ...shared_utils import (
-    
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 
 
 class NotificationServiceManager(BaseManager):
@@ -33,14 +24,14 @@ class NotificationServiceManager(BaseManager):
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for notification service operations."""
-        return [
-            ("1", "Notification Management"),
-            ("2", "Template Configuration"),
-            ("3", "Delivery Monitoring")
-        ]
+        return [("1", "Notification Management"), ("2", "Template Configuration"), ("3", "Delivery Monitoring")]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         self.display.show_error("Feature not yet implemented")
         return True
 
@@ -48,15 +39,18 @@ class NotificationServiceManager(BaseManager):
         """Main notification service menu."""
         while True:
             menu = create_menu_table("Notification Service Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Owner Management (Update, resolve, and manage ownership)"),
-                ("2", "Notification Delivery (Send notifications via various channels)"),
-                ("3", "Dead Letter Queue (Manage failed notification delivery)"),
-                ("4", "Notification Monitoring (Track delivery status and analytics)"),
-                ("5", "Channel Configuration (Configure notification channels)"),
-                ("6", "Notification Service Health & Configuration"),
-                ("b", "Back to Main Menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Owner Management (Update, resolve, and manage ownership)"),
+                    ("2", "Notification Delivery (Send notifications via various channels)"),
+                    ("3", "Dead Letter Queue (Manage failed notification delivery)"),
+                    ("4", "Notification Monitoring (Track delivery status and analytics)"),
+                    ("5", "Channel Configuration (Configure notification channels)"),
+                    ("6", "Notification Service Health & Configuration"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -82,14 +76,17 @@ class NotificationServiceManager(BaseManager):
         """Owner management submenu."""
         while True:
             menu = create_menu_table("Owner Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Update Owner Information"),
-                ("2", "Resolve Owners to Targets"),
-                ("3", "Bulk Owner Resolution"),
-                ("4", "View Owner Registry"),
-                ("5", "Owner Resolution Testing"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Update Owner Information"),
+                    ("2", "Resolve Owners to Targets"),
+                    ("3", "Bulk Owner Resolution"),
+                    ("4", "View Owner Registry"),
+                    ("5", "Owner Resolution Testing"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -119,7 +116,7 @@ class NotificationServiceManager(BaseManager):
             update_request = {
                 "id": entity_id,
                 "owner": owner_name if owner_name else None,
-                "team": team_name if team_name else None
+                "team": team_name if team_name else None,
             }
 
             response = await self.clients.post_json("notification-service/owners/update", update_request)
@@ -189,10 +186,7 @@ class NotificationServiceManager(BaseManager):
                 status_style = "red"
 
             table.add_row(
-                owner,
-                f"[{status_style}]{status}[/{status_style}]",
-                str(len(targets)),
-                ", ".join(target_types)
+                owner, f"[{status_style}]{status}[/{status_style}]", str(len(targets)), ", ".join(target_types)
             )
 
         self.console.print(table)
@@ -240,14 +234,17 @@ class NotificationServiceManager(BaseManager):
         """Notification delivery submenu."""
         while True:
             menu = create_menu_table("Notification Delivery", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Send Notification"),
-                ("2", "Send Bulk Notifications"),
-                ("3", "Test Channel Connectivity"),
-                ("4", "Preview Notification"),
-                ("5", "Notification Templates"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Send Notification"),
+                    ("2", "Send Bulk Notifications"),
+                    ("3", "Test Channel Connectivity"),
+                    ("4", "Preview Notification"),
+                    ("5", "Notification Templates"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -295,7 +292,7 @@ class NotificationServiceManager(BaseManager):
                 "title": title,
                 "message": message,
                 "metadata": metadata,
-                "labels": labels
+                "labels": labels,
             }
 
             with self.console.status(f"[bold green]Sending {channel} notification...[/bold green]") as status:
@@ -357,7 +354,9 @@ class NotificationServiceManager(BaseManager):
     async def send_bulk_notifications(self):
         """Send bulk notifications."""
         try:
-            self.console.print("[yellow]Bulk notification sending would process multiple notifications from file[/yellow]")
+            self.console.print(
+                "[yellow]Bulk notification sending would process multiple notifications from file[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -376,7 +375,7 @@ class NotificationServiceManager(BaseManager):
                 "title": "Connectivity Test",
                 "message": "This is a test notification to verify channel connectivity.",
                 "metadata": {"test": True},
-                "labels": ["test", "connectivity"]
+                "labels": ["test", "connectivity"],
             }
 
             with self.console.status(f"[bold green]Testing {channel} connectivity...[/bold green]") as status:
@@ -439,14 +438,17 @@ class NotificationServiceManager(BaseManager):
         """Dead letter queue management submenu."""
         while True:
             menu = create_menu_table("Dead Letter Queue Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Failed Notifications"),
-                ("2", "Retry Failed Notifications"),
-                ("3", "Clear Dead Letter Queue"),
-                ("4", "Analyze Failure Patterns"),
-                ("5", "Export DLQ Data"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Failed Notifications"),
+                    ("2", "Retry Failed Notifications"),
+                    ("3", "Clear Dead Letter Queue"),
+                    ("4", "Analyze Failure Patterns"),
+                    ("5", "Export DLQ Data"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -523,11 +525,7 @@ class NotificationServiceManager(BaseManager):
             timestamp = entry.get("timestamp", "Unknown")
 
             table.add_row(
-                str(entry.get("id", "N/A")),
-                notification.get("channel", "unknown"),
-                title,
-                error_short,
-                timestamp
+                str(entry.get("id", "N/A")), notification.get("channel", "unknown"), title, error_short, timestamp
             )
 
         self.console.print(table)
@@ -556,10 +554,14 @@ class NotificationServiceManager(BaseManager):
     async def clear_dead_letter_queue(self):
         """Clear the dead letter queue."""
         try:
-            confirm = Confirm.ask("[bold red]Clear all entries from dead letter queue? This cannot be undone.[/bold red]", default=False)
+            confirm = Confirm.ask(
+                "[bold red]Clear all entries from dead letter queue? This cannot be undone.[/bold red]", default=False
+            )
 
             if confirm:
-                self.console.print("[yellow]Dead letter queue clearing would remove all failed notification entries[/yellow]")
+                self.console.print(
+                    "[yellow]Dead letter queue clearing would remove all failed notification entries[/yellow]"
+                )
                 Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
             else:
                 self.console.print("[green]Dead letter queue clearing cancelled[/green]")
@@ -629,14 +631,17 @@ class NotificationServiceManager(BaseManager):
         """Notification monitoring submenu."""
         while True:
             menu = create_menu_table("Notification Monitoring", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Delivery Statistics"),
-                ("2", "Monitor Notification Health"),
-                ("3", "Track Deduplication Events"),
-                ("4", "Notification Performance Metrics"),
-                ("5", "Alert Configuration"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Delivery Statistics"),
+                    ("2", "Monitor Notification Health"),
+                    ("3", "Track Deduplication Events"),
+                    ("4", "Notification Performance Metrics"),
+                    ("5", "Alert Configuration"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -659,7 +664,9 @@ class NotificationServiceManager(BaseManager):
     async def view_delivery_statistics(self):
         """View notification delivery statistics."""
         try:
-            self.console.print("[yellow]Delivery statistics would show success rates, failure rates, and channel performance[/yellow]")
+            self.console.print(
+                "[yellow]Delivery statistics would show success rates, failure rates, and channel performance[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -668,7 +675,9 @@ class NotificationServiceManager(BaseManager):
     async def monitor_notification_health(self):
         """Monitor notification system health."""
         try:
-            self.console.print("[yellow]Notification health monitoring would track system status and performance[/yellow]")
+            self.console.print(
+                "[yellow]Notification health monitoring would track system status and performance[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -677,7 +686,9 @@ class NotificationServiceManager(BaseManager):
     async def track_deduplication_events(self):
         """Track deduplication events."""
         try:
-            self.console.print("[yellow]Deduplication tracking would monitor duplicate notification prevention[/yellow]")
+            self.console.print(
+                "[yellow]Deduplication tracking would monitor duplicate notification prevention[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -686,7 +697,9 @@ class NotificationServiceManager(BaseManager):
     async def notification_performance_metrics(self):
         """View notification performance metrics."""
         try:
-            self.console.print("[yellow]Performance metrics would show delivery times, throughput, and latency[/yellow]")
+            self.console.print(
+                "[yellow]Performance metrics would show delivery times, throughput, and latency[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -705,14 +718,17 @@ class NotificationServiceManager(BaseManager):
         """Channel configuration submenu."""
         while True:
             menu = create_menu_table("Channel Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Configure Webhook Channels"),
-                ("2", "Configure Email Channels"),
-                ("3", "Configure Slack Channels"),
-                ("4", "Test Channel Configurations"),
-                ("5", "Channel Performance Tuning"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Configure Webhook Channels"),
+                    ("2", "Configure Email Channels"),
+                    ("3", "Configure Slack Channels"),
+                    ("4", "Test Channel Configurations"),
+                    ("5", "Channel Performance Tuning"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -735,7 +751,9 @@ class NotificationServiceManager(BaseManager):
     async def configure_webhook_channels(self):
         """Configure webhook channels."""
         try:
-            self.console.print("[yellow]Webhook channel configuration would set up HTTP endpoints for notifications[/yellow]")
+            self.console.print(
+                "[yellow]Webhook channel configuration would set up HTTP endpoints for notifications[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -753,7 +771,9 @@ class NotificationServiceManager(BaseManager):
     async def configure_slack_channels(self):
         """Configure Slack channels."""
         try:
-            self.console.print("[yellow]Slack channel configuration would set up webhooks and channel mappings[/yellow]")
+            self.console.print(
+                "[yellow]Slack channel configuration would set up webhooks and channel mappings[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -762,7 +782,9 @@ class NotificationServiceManager(BaseManager):
     async def test_channel_configurations(self):
         """Test channel configurations."""
         try:
-            self.console.print("[yellow]Channel configuration testing would validate all notification channels[/yellow]")
+            self.console.print(
+                "[yellow]Channel configuration testing would validate all notification channels[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -771,7 +793,9 @@ class NotificationServiceManager(BaseManager):
     async def channel_performance_tuning(self):
         """Tune channel performance."""
         try:
-            self.console.print("[yellow]Channel performance tuning would optimize delivery rates and reliability[/yellow]")
+            self.console.print(
+                "[yellow]Channel performance tuning would optimize delivery rates and reliability[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -781,14 +805,17 @@ class NotificationServiceManager(BaseManager):
         """Notification service health and configuration submenu."""
         while True:
             menu = create_menu_table("Notification Service Health & Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Service Health"),
-                ("2", "Monitor System Status"),
-                ("3", "Configuration Management"),
-                ("4", "Performance Monitoring"),
-                ("5", "Service Logs"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Service Health"),
+                    ("2", "Monitor System Status"),
+                    ("3", "Configuration Management"),
+                    ("4", "Performance Monitoring"),
+                    ("5", "Service Logs"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -834,7 +861,9 @@ class NotificationServiceManager(BaseManager):
     async def monitor_system_status(self):
         """Monitor system status."""
         try:
-            self.console.print("[yellow]System status monitoring would show overall notification system health[/yellow]")
+            self.console.print(
+                "[yellow]System status monitoring would show overall notification system health[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -852,7 +881,9 @@ class NotificationServiceManager(BaseManager):
     async def performance_monitoring(self):
         """Monitor notification service performance."""
         try:
-            self.console.print("[yellow]Performance monitoring would track delivery metrics and system performance[/yellow]")
+            self.console.print(
+                "[yellow]Performance monitoring would track delivery metrics and system performance[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:

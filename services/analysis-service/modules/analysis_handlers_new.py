@@ -6,9 +6,10 @@ handler modules in the handlers/ package with proper dependency injection.
 """
 
 import logging
-from typing import Any, Optional, Dict, List
+from typing import Any, Dict, Optional
+
 from .handlers import handler_registry
-from .handlers.factory import get_handler_factory, create_handler, initialize_handlers
+from .handlers.factory import create_handler, get_handler_factory, initialize_handlers
 
 # Global handler factory
 _handler_factory = None
@@ -18,7 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class AnalysisHandlers:
-    """Delegates analysis operations to refactored handlers with dependency injection."""
+    """Delegates analysis operations to refactored handlers with dependency
+    injection."""
 
     def __init__(self):
         self._factory = get_handler_factory()
@@ -419,7 +421,8 @@ class AnalysisHandlers:
             return {"error": "Handler not available", "analysis_id": f"config-{id(req)}"}
 
     async def handle_get_load_balancing_config(self):
-        """Handle load balancing configuration retrieval with dependency injection."""
+        """Handle load balancing configuration retrieval with dependency
+        injection."""
         handler = await self._get_handler("get_load_balancing_config")
         if handler:
             return await handler.handle({"type": "get_load_balancing_config"})

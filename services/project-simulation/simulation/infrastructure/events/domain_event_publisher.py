@@ -4,21 +4,18 @@ This module implements the domain event publishing infrastructure
 for communication between bounded contexts.
 """
 
+import asyncio
 import sys
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Callable, Awaitable
-from datetime import datetime
-import asyncio
-import json
+from typing import Awaitable, Callable, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 from streaming.event_streaming import EventPublisher
 
-from ...domain.events import DomainEvent, event_from_dict
-from ...domain.value_objects import ServiceHealth
-from ..logging import get_simulation_logger
+from ...domain.events import DomainEvent
 from ..clients.ecosystem_clients import get_ecosystem_client
+from ..logging import get_simulation_logger
 
 
 class DomainEventPublisher:
@@ -38,7 +35,7 @@ class DomainEventPublisher:
                 "Publishing domain event",
                 event_type=event.event_type,
                 event_id=event.event_id,
-                aggregate_id=event.get_aggregate_id()
+                aggregate_id=event.get_aggregate_id(),
             )
 
             # Store event for tracking
@@ -55,17 +52,12 @@ class DomainEventPublisher:
             await self._publish_to_ecosystem(event)
 
             self.logger.debug(
-                "Domain event published successfully",
-                event_type=event.event_type,
-                event_id=event.event_id
+                "Domain event published successfully", event_type=event.event_type, event_id=event.event_id
             )
 
         except Exception as e:
             self.logger.error(
-                "Failed to publish domain event",
-                error=str(e),
-                event_type=event.event_type,
-                event_id=event.event_id
+                "Failed to publish domain event", error=str(e), event_type=event.event_type, event_id=event.event_id
             )
             raise
 
@@ -80,7 +72,7 @@ class DomainEventPublisher:
                 "occurred_at": event.occurred_at.isoformat(),
                 "event_data": event.to_dict(),
                 "source_service": "project-simulation",
-                "event_version": event.event_version
+                "event_version": event.event_version,
             }
 
             # This would integrate with the shared event streaming infrastructure
@@ -89,15 +81,11 @@ class DomainEventPublisher:
                 "Event published to ecosystem",
                 event_type=event.event_type,
                 event_id=event.event_id,
-                aggregate_id=event.get_aggregate_id()
+                aggregate_id=event.get_aggregate_id(),
             )
 
         except Exception as e:
-            self.logger.warning(
-                "Failed to publish event to ecosystem",
-                error=str(e),
-                event_type=event.event_type
-            )
+            self.logger.warning("Failed to publish event to ecosystem", error=str(e), event_type=event.event_type)
 
     def subscribe(self, event_type: str, handler: Callable[[DomainEvent], Awaitable[None]]) -> None:
         """Subscribe to a specific event type."""
@@ -105,22 +93,14 @@ class DomainEventPublisher:
             self._subscribers[event_type] = []
         self._subscribers[event_type].append(handler)
 
-        self.logger.debug(
-            "Subscribed to domain event",
-            event_type=event_type,
-            handler=str(handler)
-        )
+        self.logger.debug("Subscribed to domain event", event_type=event_type, handler=str(handler))
 
     def unsubscribe(self, event_type: str, handler: Callable[[DomainEvent], Awaitable[None]]) -> None:
         """Unsubscribe from a specific event type."""
         if event_type in self._subscribers:
             try:
                 self._subscribers[event_type].remove(handler)
-                self.logger.debug(
-                    "Unsubscribed from domain event",
-                    event_type=event_type,
-                    handler=str(handler)
-                )
+                self.logger.debug("Unsubscribed from domain event", event_type=event_type, handler=str(handler))
             except ValueError:
                 pass
 
@@ -137,11 +117,7 @@ class DomainEventPublisher:
     async def replay_events(self, event_type: Optional[str] = None) -> List[DomainEvent]:
         """Replay published events (useful for testing/debugging)."""
         events = self.get_published_events(event_type)
-        self.logger.info(
-            "Replaying domain events",
-            event_type=event_type or "all",
-            event_count=len(events)
-        )
+        self.logger.info("Replaying domain events", event_type=event_type or "all", event_count=len(events))
         return events
 
 
@@ -232,11 +208,6 @@ class DomainEventBus:
     async def _register_default_handlers(self) -> None:
         """Register default event handlers."""
         # Import here to avoid circular imports
-        from ...domain.events import (
-            ProjectCreated, ProjectStatusChanged, ProjectPhaseCompleted,
-            SimulationStarted, SimulationCompleted, SimulationFailed,
-            DocumentGenerated, WorkflowExecuted
-        )
 
         # Project events
         self.publisher.subscribe("ProjectCreated", self._handle_project_created)
@@ -258,11 +229,7 @@ class DomainEventBus:
 
     async def _handle_project_created(self, event: ProjectCreated) -> None:
         """Handle project created event."""
-        self.logger.info(
-            "Project created event received",
-            project_id=event.project_id,
-            project_name=event.project_name
-        )
+        self.logger.info("Project created event received", project_id=event.project_id, project_name=event.project_name)
 
         # Could trigger notifications, analytics, etc.
 
@@ -272,28 +239,20 @@ class DomainEventBus:
             "Project status changed",
             project_id=event.project_id,
             old_status=event.old_status,
-            new_status=event.new_status
+            new_status=event.new_status,
         )
 
         # Could trigger status-based workflows
 
     async def _handle_project_phase_completed(self, event: ProjectPhaseCompleted) -> None:
         """Handle project phase completed event."""
-        self.logger.info(
-            "Project phase completed",
-            project_id=event.project_id,
-            phase_name=event.phase_name
-        )
+        self.logger.info("Project phase completed", project_id=event.project_id, phase_name=event.phase_name)
 
         # Could trigger next phase initialization
 
     async def _handle_simulation_started(self, event: SimulationStarted) -> None:
         """Handle simulation started event."""
-        self.logger.info(
-            "Simulation started",
-            simulation_id=event.simulation_id,
-            project_id=event.project_id
-        )
+        self.logger.info("Simulation started", simulation_id=event.simulation_id, project_id=event.project_id)
 
         # Could trigger monitoring, notifications
 
@@ -303,7 +262,7 @@ class DomainEventBus:
             "Simulation completed",
             simulation_id=event.simulation_id,
             project_id=event.project_id,
-            success=event.success
+            success=event.success,
         )
 
         # Could trigger result processing, notifications
@@ -314,7 +273,7 @@ class DomainEventBus:
             "Simulation failed",
             simulation_id=event.simulation_id,
             project_id=event.project_id,
-            failure_reason=event.failure_reason
+            failure_reason=event.failure_reason,
         )
 
         # Could trigger error handling, notifications
@@ -325,7 +284,7 @@ class DomainEventBus:
             "Document generated",
             simulation_id=event.simulation_id,
             document_type=event.document_type,
-            word_count=event.word_count
+            word_count=event.word_count,
         )
 
         # Could trigger document analysis workflows
@@ -337,7 +296,7 @@ class DomainEventBus:
             simulation_id=event.simulation_id,
             workflow_type=event.workflow_type,
             success=event.success,
-            execution_time=event.execution_time_seconds
+            execution_time=event.execution_time_seconds,
         )
 
         # Could trigger follow-up workflows or notifications
@@ -373,10 +332,10 @@ async def publish_domain_event(event: DomainEvent) -> None:
 
 
 __all__ = [
-    'DomainEventPublisher',
-    'EcosystemEventSubscriber',
-    'DomainEventBus',
-    'get_domain_event_bus',
-    'initialize_event_bus',
-    'publish_domain_event'
+    "DomainEventPublisher",
+    "EcosystemEventSubscriber",
+    "DomainEventBus",
+    "get_domain_event_bus",
+    "initialize_event_bus",
+    "publish_domain_event",
 ]

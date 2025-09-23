@@ -1,12 +1,14 @@
-"""Prompt repository implementation.
+"""
+Prompt repository implementation.
 
 Handles database operations for prompts following domain-driven design.
 """
 
-from typing import List, Optional, Dict, Any, Tuple
-from services.prompt_store.core.repository import BaseRepository
+from typing import Any, Dict, List, Optional
+
 from services.prompt_store.core.entities import Prompt
-from services.prompt_store.db.queries import execute_paged_query, execute_query, serialize_json, deserialize_json
+from services.prompt_store.core.repository import BaseRepository
+from services.prompt_store.db.queries import deserialize_json, execute_paged_query, execute_query, serialize_json
 
 
 class PromptRepository(BaseRepository[Prompt]):
@@ -17,25 +19,27 @@ class PromptRepository(BaseRepository[Prompt]):
 
     def _row_to_entity(self, row: Dict[str, Any]) -> Prompt:
         """Convert database row to Prompt entity."""
-        return Prompt.from_dict({
-            "id": row["id"],
-            "name": row["name"],
-            "category": row["category"],
-            "description": row["description"],
-            "content": row["content"],
-            "variables": deserialize_json(row["variables"]),
-            "tags": deserialize_json(row["tags"]),
-            "is_active": row["is_active"],
-            "is_template": row["is_template"],
-            "lifecycle_status": row["lifecycle_status"],
-            "created_by": row["created_by"],
-            "created_at": row["created_at"],
-            "updated_at": row["updated_at"],
-            "version": row["version"],
-            "parent_id": row["parent_id"],
-            "performance_score": row["performance_score"],
-            "usage_count": row["usage_count"]
-        })
+        return Prompt.from_dict(
+            {
+                "id": row["id"],
+                "name": row["name"],
+                "category": row["category"],
+                "description": row["description"],
+                "content": row["content"],
+                "variables": deserialize_json(row["variables"]),
+                "tags": deserialize_json(row["tags"]),
+                "is_active": row["is_active"],
+                "is_template": row["is_template"],
+                "lifecycle_status": row["lifecycle_status"],
+                "created_by": row["created_by"],
+                "created_at": row["created_at"],
+                "updated_at": row["updated_at"],
+                "version": row["version"],
+                "parent_id": row["parent_id"],
+                "performance_score": row["performance_score"],
+                "usage_count": row["usage_count"],
+            }
+        )
 
     def _entity_to_row(self, entity: Prompt) -> Dict[str, Any]:
         """Convert Prompt entity to database row."""
@@ -56,7 +60,7 @@ class PromptRepository(BaseRepository[Prompt]):
             "version": entity.version,
             "parent_id": entity.parent_id,
             "performance_score": entity.performance_score,
-            "usage_count": entity.usage_count
+            "usage_count": entity.usage_count,
         }
 
     def save(self, entity: Prompt) -> Prompt:
@@ -162,8 +166,9 @@ class PromptRepository(BaseRepository[Prompt]):
         row = execute_query(query, (category, name), fetch_one=True)
         return self._row_to_entity(row) if row else None
 
-    def search_prompts(self, query: str, category: Optional[str] = None,
-                      tags: Optional[List[str]] = None, limit: int = 50) -> List[Prompt]:
+    def search_prompts(
+        self, query: str, category: Optional[str] = None, tags: Optional[List[str]] = None, limit: int = 50
+    ) -> List[Prompt]:
         """Search prompts using FTS and filters."""
         from services.prompt_store.db.queries import execute_search_query
 
@@ -197,7 +202,9 @@ class PromptRepository(BaseRepository[Prompt]):
         # This is a simplified implementation - in practice, you'd use JSON functions
         all_prompts = []
         for tag in tags:
-            query = f"SELECT * FROM {self.table_name} WHERE tags LIKE ? AND is_active = 1 ORDER BY created_at DESC LIMIT ?"
+            query = (
+                f"SELECT * FROM {self.table_name} WHERE tags LIKE ? AND is_active = 1 ORDER BY created_at DESC LIMIT ?"
+            )
             rows = execute_query(query, (f"%{tag}%", limit), fetch_all=True)
             all_prompts.extend([self._row_to_entity(row) for row in rows])
 

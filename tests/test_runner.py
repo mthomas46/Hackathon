@@ -72,7 +72,7 @@ class ServiceContainer:
                 if response.status_code == 200:
                     print(f"{self.service_name} is ready")
                     return
-            except:
+            except Exception:
                 pass
 
             time.sleep(2)

@@ -4,18 +4,19 @@ Analyzes code complexity metrics to ensure the DDD refactor has improved
 maintainability and reduced complexity compared to the monolithic approach.
 """
 
-import os
 import ast
+import os
 import re
-from typing import Dict, List, Any, Optional, Tuple
-from pathlib import Path
 import statistics
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
 class ComplexityMetrics:
     """Code complexity metrics for a file."""
+
     file_path: str
     lines_of_code: int
     functions_count: int
@@ -41,7 +42,7 @@ class ComplexityMetrics:
             "cyclomatic_complexity_max": self.cyclomatic_complexity_max,
             "halstead_volume": self.halstead_volume,
             "maintainability_index": self.maintainability_index,
-            "comment_ratio": self.comment_ratio
+            "comment_ratio": self.comment_ratio,
         }
 
 
@@ -88,7 +89,7 @@ class CodeComplexityAnalyzer:
             "summary": summary,
             "assessment": assessment,
             "recommendations": recommendations,
-            "analysis_timestamp": __import__('time').time()
+            "analysis_timestamp": __import__("time").time(),
         }
 
         print("\n📊 COMPLEXITY ANALYSIS SUMMARY:")
@@ -102,7 +103,7 @@ class CodeComplexityAnalyzer:
     def _analyze_file(self, file_path: Path) -> Optional[ComplexityMetrics]:
         """Analyze a single Python file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             if not content.strip():
@@ -112,7 +113,7 @@ class CodeComplexityAnalyzer:
             tree = ast.parse(content)
 
             # Basic metrics
-            lines_of_code = len([line for line in content.split('\n') if line.strip()])
+            lines_of_code = len([line for line in content.split("\n") if line.strip()])
             functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
             classes = [node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
 
@@ -143,7 +144,7 @@ class CodeComplexityAnalyzer:
             )
 
             # Comment ratio
-            comment_lines = len(re.findall(r'^\s*#.*', content, re.MULTILINE))
+            comment_lines = len(re.findall(r"^\s*#.*", content, re.MULTILINE))
             comment_ratio = (comment_lines / lines_of_code * 100) if lines_of_code > 0 else 0
 
             return ComplexityMetrics(
@@ -157,7 +158,7 @@ class CodeComplexityAnalyzer:
                 cyclomatic_complexity_max=max_complexity,
                 halstead_volume=halstead_volume,
                 maintainability_index=maintainability_index,
-                comment_ratio=comment_ratio
+                comment_ratio=comment_ratio,
             )
 
         except Exception as e:
@@ -181,27 +182,28 @@ class CodeComplexityAnalyzer:
     def _calculate_halstead_volume(self, content: str) -> float:
         """Calculate Halstead volume (simplified)."""
         # Count operators and operands
-        operators = len(re.findall(r'[+\-*/=<>!&|^~%]+', content))
-        operands = len(re.findall(r'\b\w+\b', content))
+        operators = len(re.findall(r"[+\-*/=<>!&|^~%]+", content))
+        operands = len(re.findall(r"\b\w+\b", content))
 
         if operators == 0 or operands == 0:
             return 0
 
         program_length = operators + operands
-        vocabulary = len(set(re.findall(r'[+\-*/=<>!&|^~%]+|\b\w+\b', content)))
+        vocabulary = len(set(re.findall(r"[+\-*/=<>!&|^~%]+|\b\w+\b", content)))
 
         if vocabulary == 0:
             return 0
 
         # Halstead volume = length * log2(vocabulary)
         import math
+
         return program_length * math.log2(vocabulary)
 
     def _calculate_maintainability_index(self, loc: int, complexity: float, volume: float) -> float:
         """Calculate maintainability index (simplified version of MI)."""
         # Simplified maintainability index formula
         # Higher values = more maintainable (0-100 scale)
-        mi = 171 - 5.2 * (complexity ** 0.5) - 0.23 * (volume / loc if loc > 0 else 0) - 16.2 * (loc ** 0.5)
+        mi = 171 - 5.2 * (complexity**0.5) - 0.23 * (volume / loc if loc > 0 else 0) - 16.2 * (loc**0.5)
 
         # Clamp to 0-100 range
         return max(0, min(100, mi))
@@ -244,7 +246,7 @@ class CodeComplexityAnalyzer:
             "avg_maintainability": avg_maintainability,
             "files_over_500_loc": len([m for m in self.metrics if m.lines_of_code > 500]),
             "files_over_1000_loc": len([m for m in self.metrics if m.lines_of_code > 1000]),
-            "high_complexity_files": len([m for m in self.metrics if m.cyclomatic_complexity_max > 10])
+            "high_complexity_files": len([m for m in self.metrics if m.cyclomatic_complexity_max > 10]),
         }
 
     def _assess_complexity_health(self, summary: Dict[str, Any]) -> Dict[str, Any]:
@@ -292,9 +294,11 @@ class CodeComplexityAnalyzer:
         return {
             "overall_score": final_score,
             "maintainability_grade": grade,
-            "complexity_health": "excellent" if final_score >= 8 else
-                               "good" if final_score >= 6 else
-                               "fair" if final_score >= 4 else "poor"
+            "complexity_health": (
+                "excellent"
+                if final_score >= 8
+                else "good" if final_score >= 6 else "fair" if final_score >= 4 else "poor"
+            ),
         }
 
     def _generate_complexity_recommendations(self, summary: Dict[str, Any]) -> List[str]:
@@ -309,7 +313,9 @@ class CodeComplexityAnalyzer:
         # Complexity recommendations
         high_complexity_files = summary.get("high_complexity_files", 0)
         if high_complexity_files > 0:
-            recommendations.append(f"Refactor {high_complexity_files} high-complexity functions using extraction methods")
+            recommendations.append(
+                f"Refactor {high_complexity_files} high-complexity functions using extraction methods"
+            )
 
         # Maintainability recommendations
         avg_maintainability = summary.get("avg_maintainability", 100)
@@ -338,10 +344,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Code Complexity Analysis")
-    parser.add_argument("--source", default="services/analysis-service",
-                       help="Source directory to analyze")
-    parser.add_argument("--output", default="code_complexity_analysis.json",
-                       help="Output file for results")
+    parser.add_argument("--source", default="services/analysis-service", help="Source directory to analyze")
+    parser.add_argument("--output", default="code_complexity_analysis.json", help="Output file for results")
 
     args = parser.parse_args()
 
@@ -353,7 +357,8 @@ def main():
 
     # Save results
     import json
-    with open(args.output, 'w') as f:
+
+    with open(args.output, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
     print(f"\n💾 Results saved to: {args.output}")
@@ -376,4 +381,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

@@ -1,11 +1,12 @@
-"""Security Scanner Module for Discovery Agent service.
+"""
+Security Scanner Module for Discovery Agent service.
 
 This module provides security scanning capabilities for discovered tools
 using the secure-analyzer service integration.
 """
 
-import re
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List
+
 try:
     from services.shared.clients import ServiceClients
 except ImportError:
@@ -14,7 +15,8 @@ except ImportError:
 
 
 class ToolSecurityScanner:
-    """Security scanner for discovered LangGraph tools using secure-analyzer service"""
+    """Security scanner for discovered LangGraph tools using secure-analyzer
+    service."""
 
     def __init__(self, secure_analyzer_url: str = "http://localhost:5070"):
         self.secure_analyzer_url = secure_analyzer_url
@@ -27,11 +29,11 @@ class ToolSecurityScanner:
             "authorization": ["permission", "role", "access", "admin"],
             "data_exposure": ["sensitive", "private", "confidential", "personal"],
             "file_operations": ["file", "upload", "download", "path", "directory"],
-            "network_operations": ["url", "external", "remote", "fetch", "request"]
+            "network_operations": ["url", "external", "remote", "fetch", "request"],
         }
 
     async def scan_tool_security(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Scan a single tool for security vulnerabilities"""
+        """Scan a single tool for security vulnerabilities."""
 
         security_analysis = {
             "tool_name": tool["name"],
@@ -40,7 +42,7 @@ class ToolSecurityScanner:
             "risk_level": "low",
             "vulnerabilities": [],
             "recommendations": [],
-            "secure_analyzer_result": None
+            "secure_analyzer_result": None,
         }
 
         # Analyze tool for common security risks
@@ -66,7 +68,7 @@ class ToolSecurityScanner:
         return security_analysis
 
     def _analyze_injection_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for injection vulnerabilities"""
+        """Analyze tool for injection vulnerabilities."""
         vulnerabilities = []
 
         # Check path for injection-prone patterns
@@ -74,54 +76,62 @@ class ToolSecurityScanner:
 
         # SQL injection risks
         if any(word in path for word in ["query", "search", "filter", "where"]):
-            vulnerabilities.append({
-                "type": "sql_injection_risk",
-                "severity": "medium",
-                "description": f"Path '{tool['path']}' may be vulnerable to SQL injection",
-                "location": "path",
-                "mitigation": "Use parameterized queries and input validation"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "sql_injection_risk",
+                    "severity": "medium",
+                    "description": f"Path '{tool['path']}' may be vulnerable to SQL injection",
+                    "location": "path",
+                    "mitigation": "Use parameterized queries and input validation",
+                }
+            )
 
         # Command injection risks
         if any(word in path for word in ["execute", "run", "command", "script"]):
-            vulnerabilities.append({
-                "type": "command_injection_risk",
-                "severity": "high",
-                "description": f"Path '{tool['path']}' may allow command injection",
-                "location": "path",
-                "mitigation": "Sanitize inputs and use allowlisted commands only"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "command_injection_risk",
+                    "severity": "high",
+                    "description": f"Path '{tool['path']}' may allow command injection",
+                    "location": "path",
+                    "mitigation": "Sanitize inputs and use allowlisted commands only",
+                }
+            )
 
         # Check parameters for injection risks
         for param in tool.get("parameters", {}).get("properties", {}):
             param_name = param.lower()
 
             if any(word in param_name for word in ["query", "command", "script", "code"]):
-                vulnerabilities.append({
-                    "type": "parameter_injection_risk",
-                    "severity": "medium",
-                    "description": f"Parameter '{param}' may be vulnerable to injection",
-                    "location": f"parameter:{param}",
-                    "mitigation": "Implement strict input validation and sanitization"
-                })
+                vulnerabilities.append(
+                    {
+                        "type": "parameter_injection_risk",
+                        "severity": "medium",
+                        "description": f"Parameter '{param}' may be vulnerable to injection",
+                        "location": f"parameter:{param}",
+                        "mitigation": "Implement strict input validation and sanitization",
+                    }
+                )
 
         return vulnerabilities
 
     def _analyze_auth_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for authentication/authorization risks"""
+        """Analyze tool for authentication/authorization risks."""
         vulnerabilities = []
 
         path = tool.get("path", "").lower()
 
         # Admin/management endpoints without auth
         if any(word in path for word in ["admin", "manage", "config", "delete"]):
-            vulnerabilities.append({
-                "type": "privileged_operation_risk",
-                "severity": "high",
-                "description": f"Privileged operation '{tool['path']}' may lack proper authorization",
-                "location": "path",
-                "mitigation": "Implement role-based access control and authentication"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "privileged_operation_risk",
+                    "severity": "high",
+                    "description": f"Privileged operation '{tool['path']}' may lack proper authorization",
+                    "location": "path",
+                    "mitigation": "Implement role-based access control and authentication",
+                }
+            )
 
         # Check for auth-related parameters
         for param in tool.get("parameters", {}).get("properties", {}):
@@ -130,80 +140,90 @@ class ToolSecurityScanner:
             if any(word in param_name for word in ["token", "password", "key", "secret"]):
                 # Check if parameter is in query string (insecure)
                 if param in tool.get("parameters", {}).get("query", []):
-                    vulnerabilities.append({
-                        "type": "credential_exposure_risk",
-                        "severity": "high",
-                        "description": f"Sensitive parameter '{param}' passed in URL/query",
-                        "location": f"parameter:{param}",
-                        "mitigation": "Move sensitive parameters to request body or headers"
-                    })
+                    vulnerabilities.append(
+                        {
+                            "type": "credential_exposure_risk",
+                            "severity": "high",
+                            "description": f"Sensitive parameter '{param}' passed in URL/query",
+                            "location": f"parameter:{param}",
+                            "mitigation": "Move sensitive parameters to request body or headers",
+                        }
+                    )
 
         return vulnerabilities
 
     def _analyze_data_exposure_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for data exposure risks"""
+        """Analyze tool for data exposure risks."""
         vulnerabilities = []
 
         # Check for endpoints that might expose sensitive data
         path = tool.get("path", "").lower()
 
         if any(word in path for word in ["dump", "export", "backup", "logs"]):
-            vulnerabilities.append({
-                "type": "data_exposure_risk",
-                "severity": "medium",
-                "description": f"Endpoint '{tool['path']}' may expose sensitive data",
-                "location": "path",
-                "mitigation": "Implement access controls and data filtering"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "data_exposure_risk",
+                    "severity": "medium",
+                    "description": f"Endpoint '{tool['path']}' may expose sensitive data",
+                    "location": "path",
+                    "mitigation": "Implement access controls and data filtering",
+                }
+            )
 
         # Check for parameters that might expose data
         for param in tool.get("parameters", {}).get("properties", {}):
             param_name = param.lower()
 
             if any(word in param_name for word in ["user", "email", "private", "internal"]):
-                vulnerabilities.append({
-                    "type": "parameter_data_exposure",
-                    "severity": "low",
-                    "description": f"Parameter '{param}' may expose sensitive information",
-                    "location": f"parameter:{param}",
-                    "mitigation": "Review data access controls and implement field filtering"
-                })
+                vulnerabilities.append(
+                    {
+                        "type": "parameter_data_exposure",
+                        "severity": "low",
+                        "description": f"Parameter '{param}' may expose sensitive information",
+                        "location": f"parameter:{param}",
+                        "mitigation": "Review data access controls and implement field filtering",
+                    }
+                )
 
         return vulnerabilities
 
     def _analyze_file_operation_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for file operation risks"""
+        """Analyze tool for file operation risks."""
         vulnerabilities = []
 
         path = tool.get("path", "").lower()
 
         # File upload/download risks
         if any(word in path for word in ["upload", "download", "file"]):
-            vulnerabilities.append({
-                "type": "file_operation_risk",
-                "severity": "medium",
-                "description": f"File operation '{tool['path']}' may be vulnerable to path traversal",
-                "location": "path",
-                "mitigation": "Validate file paths and implement file type restrictions"
-            })
+            vulnerabilities.append(
+                {
+                    "type": "file_operation_risk",
+                    "severity": "medium",
+                    "description": f"File operation '{tool['path']}' may be vulnerable to path traversal",
+                    "location": "path",
+                    "mitigation": "Validate file paths and implement file type restrictions",
+                }
+            )
 
         # Check for path parameters
         for param in tool.get("parameters", {}).get("properties", {}):
             param_name = param.lower()
 
             if any(word in param_name for word in ["path", "file", "directory", "folder"]):
-                vulnerabilities.append({
-                    "type": "path_traversal_risk",
-                    "severity": "high",
-                    "description": f"Path parameter '{param}' vulnerable to traversal attacks",
-                    "location": f"parameter:{param}",
-                    "mitigation": "Sanitize paths and restrict to allowed directories"
-                })
+                vulnerabilities.append(
+                    {
+                        "type": "path_traversal_risk",
+                        "severity": "high",
+                        "description": f"Path parameter '{param}' vulnerable to traversal attacks",
+                        "location": f"parameter:{param}",
+                        "mitigation": "Sanitize paths and restrict to allowed directories",
+                    }
+                )
 
         return vulnerabilities
 
     async def _scan_with_secure_analyzer(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Use the secure-analyzer service for advanced security scanning"""
+        """Use the secure-analyzer service for advanced security scanning."""
 
         try:
             # Prepare tool data for secure-analyzer
@@ -211,11 +231,7 @@ class ToolSecurityScanner:
                 "content": str(tool),  # Convert tool dict to string for analysis
                 "type": "tool_definition",
                 "service": tool.get("service"),
-                "metadata": {
-                    "tool_name": tool.get("name"),
-                    "method": tool.get("method"),
-                    "path": tool.get("path")
-                }
+                "metadata": {"tool_name": tool.get("name"), "method": tool.get("method"), "path": tool.get("path")},
             }
 
             async with self.service_client.session() as session:
@@ -225,26 +241,16 @@ class ToolSecurityScanner:
                 async with session.post(url, json=scan_data, timeout=10) as response:
                     if response.status == 200:
                         result = await response.json()
-                        return {
-                            "success": True,
-                            "analysis": result,
-                            "response_time": 0.1  # Placeholder
-                        }
+                        return {"success": True, "analysis": result, "response_time": 0.1}  # Placeholder
                     else:
                         error_text = await response.text()
-                        return {
-                            "success": False,
-                            "error": f"Secure-analyzer returned {response.status}: {error_text}"
-                        }
+                        return {"success": False, "error": f"Secure-analyzer returned {response.status}: {error_text}"}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": f"Failed to connect to secure-analyzer: {str(e)}"
-            }
+            return {"success": False, "error": f"Failed to connect to secure-analyzer: {str(e)}"}
 
     def _calculate_risk_level(self, vulnerabilities: List[Dict], secure_analyzer_result: Dict) -> str:
-        """Calculate overall risk level for a tool"""
+        """Calculate overall risk level for a tool."""
 
         # Count vulnerabilities by severity
         high_count = len([v for v in vulnerabilities if v.get("severity") == "high"])
@@ -269,7 +275,7 @@ class ToolSecurityScanner:
             return "low"
 
     def _generate_security_recommendations(self, vulnerabilities: List[Dict], tool: Dict) -> List[str]:
-        """Generate security recommendations based on vulnerabilities"""
+        """Generate security recommendations based on vulnerabilities."""
 
         recommendations = []
 
@@ -307,7 +313,7 @@ class ToolSecurityScanner:
         return list(set(recommendations))  # Remove duplicates
 
     async def scan_tool_catalog(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Scan an entire catalog of tools for security issues"""
+        """Scan an entire catalog of tools for security issues."""
 
         scan_results = {
             "timestamp": "2025-01-17T21:30:00Z",
@@ -317,11 +323,11 @@ class ToolSecurityScanner:
                 "medium_risk": 0,
                 "low_risk": 0,
                 "secure_analyzer_success": 0,
-                "secure_analyzer_failures": 0
+                "secure_analyzer_failures": 0,
             },
             "tool_results": [],
             "overall_assessment": "",
-            "critical_findings": []
+            "critical_findings": [],
         }
 
         print(f"🔒 Security scanning {len(tools)} tools...")
@@ -344,11 +350,9 @@ class ToolSecurityScanner:
             high_vulns = [v for v in tool_security["vulnerabilities"] if v.get("severity") == "high"]
             if high_vulns:
                 for vuln in high_vulns:
-                    scan_results["critical_findings"].append({
-                        "tool": tool["name"],
-                        "service": tool["service"],
-                        "vulnerability": vuln
-                    })
+                    scan_results["critical_findings"].append(
+                        {"tool": tool["name"], "service": tool["service"], "vulnerability": vuln}
+                    )
 
         # Generate overall assessment
         total_tools = scan_results["tools_scanned"]

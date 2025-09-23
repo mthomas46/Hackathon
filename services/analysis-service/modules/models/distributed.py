@@ -1,6 +1,7 @@
 """Distributed Models - Distributed processing request and response models."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field
 
 from .base import BaseModel
@@ -8,6 +9,7 @@ from .base import BaseModel
 
 class DistributedTaskRequest(BaseModel):
     """Request for distributed task submission."""
+
     task_type: str = Field(..., description="Type of distributed task")
     data: Dict[str, Any] = Field(..., description="Task data payload")
     priority: str = Field("normal", description="Task priority")
@@ -17,6 +19,7 @@ class DistributedTaskRequest(BaseModel):
 
 class DistributedTaskResponse(BaseModel):
     """Response for distributed task submission."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     task_id: str = Field(..., description="Task ID")
     status: str = Field(..., description="Task status")
@@ -27,12 +30,14 @@ class DistributedTaskResponse(BaseModel):
 
 class BatchTasksRequest(BaseModel):
     """Request for batch task submission."""
+
     tasks: List[Dict[str, Any]] = Field(..., description="List of tasks to submit")
     batch_options: Optional[Dict[str, Any]] = Field(None, description="Batch processing options")
 
 
 class BatchTasksResponse(BaseModel):
     """Response for batch task submission."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     batch_id: str = Field(..., description="Batch ID")
     task_count: int = Field(..., description="Number of tasks submitted")
@@ -44,11 +49,13 @@ class BatchTasksResponse(BaseModel):
 
 class TaskStatusRequest(BaseModel):
     """Request for task status."""
+
     task_id: str = Field(..., description="Task ID to check")
 
 
 class TaskStatusResponse(BaseModel):
     """Response for task status."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     task_id: str = Field(..., description="Task ID")
     status: str = Field(..., description="Task status")
@@ -61,11 +68,13 @@ class TaskStatusResponse(BaseModel):
 
 class CancelTaskRequest(BaseModel):
     """Request for task cancellation."""
+
     task_id: str = Field(..., description="Task ID to cancel")
 
 
 class WorkersStatusResponse(BaseModel):
     """Response for workers status."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     total_workers: int = Field(..., description="Total number of workers")
     active_workers: int = Field(..., description="Number of active workers")
@@ -78,6 +87,7 @@ class WorkersStatusResponse(BaseModel):
 
 class ProcessingStatsResponse(BaseModel):
     """Response for processing statistics."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     total_tasks_processed: int = Field(..., description="Total tasks processed")
     tasks_completed: int = Field(..., description="Tasks completed")
@@ -97,12 +107,14 @@ class ProcessingStatsResponse(BaseModel):
 
 class ScaleWorkersRequest(BaseModel):
     """Request for worker scaling."""
+
     target_worker_count: int = Field(..., ge=1, le=50, description="Target number of workers")
     scaling_reason: Optional[str] = Field(None, description="Reason for scaling")
 
 
 class ScaleWorkersResponse(BaseModel):
     """Response for worker scaling."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     previous_worker_count: int = Field(..., description="Previous worker count")
     new_worker_count: int = Field(..., description="New worker count")
@@ -113,11 +125,13 @@ class ScaleWorkersResponse(BaseModel):
 
 class LoadBalancingStrategyRequest(BaseModel):
     """Request for load balancing strategy configuration."""
+
     strategy: str = Field(..., description="Load balancing strategy")
 
 
 class LoadBalancingStrategyResponse(BaseModel):
     """Response for load balancing strategy configuration."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     previous_strategy: str = Field(..., description="Previous strategy")
     new_strategy: str = Field(..., description="New strategy")
@@ -127,6 +141,7 @@ class LoadBalancingStrategyResponse(BaseModel):
 
 class QueueStatusResponse(BaseModel):
     """Response for queue status."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     queue_length: int = Field(..., description="Current queue length")
     priority_distribution: Dict[str, int] = Field(default_factory=dict, description="Priority distribution")
@@ -139,6 +154,7 @@ class QueueStatusResponse(BaseModel):
 
 class LoadBalancingConfigRequest(BaseModel):
     """Request for load balancing configuration."""
+
     strategy: Optional[str] = Field(None, description="Load balancing strategy")
     worker_count: Optional[int] = Field(None, ge=1, le=50, description="Worker count")
     max_queue_size: Optional[int] = Field(None, ge=10, le=10000, description="Max queue size")
@@ -147,6 +163,7 @@ class LoadBalancingConfigRequest(BaseModel):
 
 class LoadBalancingConfigResponse(BaseModel):
     """Response for load balancing configuration."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     strategy: str = Field(..., description="Configured strategy")
     worker_count: int = Field(..., description="Configured worker count")

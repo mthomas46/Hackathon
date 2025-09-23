@@ -1,6 +1,5 @@
-"""Workflow Created Event"""
+"""Workflow Created Event."""
 
-from typing import Dict, Any
 
 from .base_event import DomainEvent
 
@@ -12,9 +11,5 @@ class WorkflowCreatedEvent(DomainEvent):
         super().__init__(
             event_type="workflow.created",
             aggregate_id=workflow_id,
-            event_data={
-                "workflow_id": workflow_id,
-                "name": name,
-                "created_by": created_by
-            }
+            event_data={"workflow_id": workflow_id, "name": name, "created_by": created_by},
         )

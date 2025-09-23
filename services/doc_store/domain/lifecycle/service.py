@@ -1,11 +1,14 @@
-"""Lifecycle management service for business logic operations.
+"""
+Lifecycle management service for business logic operations.
 
 Handles lifecycle policy evaluation and automated transitions.
 """
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
-from ...core.service import BaseService
+
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from ...core.entities import LifecyclePolicy
+from ...core.service import BaseService
 from .repository import LifecycleRepository
 
 
@@ -41,23 +44,24 @@ class LifecycleService(BaseService[LifecyclePolicy]):
         """Create lifecycle policy from data."""
         return LifecyclePolicy(
             id=entity_id,
-            name=data['name'],
-            description=data.get('description', ''),
-            conditions=data['conditions'],
-            actions=data['actions'],
-            priority=data.get('priority', 0),
-            enabled=data.get('enabled', True)
+            name=data["name"],
+            description=data.get("description", ""),
+            conditions=data["conditions"],
+            actions=data["actions"],
+            priority=data.get("priority", 0),
+            enabled=data.get("enabled", True),
         )
 
-    def create_policy(self, name: str, description: str, conditions: Dict[str, Any],
-                     actions: Dict[str, Any], priority: int = 0) -> LifecyclePolicy:
+    def create_policy(
+        self, name: str, description: str, conditions: Dict[str, Any], actions: Dict[str, Any], priority: int = 0
+    ) -> LifecyclePolicy:
         """Create a new lifecycle policy."""
         data = {
-            'name': name,
-            'description': description,
-            'conditions': conditions,
-            'actions': actions,
-            'priority': priority
+            "name": name,
+            "description": description,
+            "conditions": conditions,
+            "actions": actions,
+            "priority": priority,
         }
         return self.create_entity(data)
 
@@ -78,23 +82,19 @@ class LifecycleService(BaseService[LifecyclePolicy]):
 
                 # Log the event
                 self.repository.log_lifecycle_event(
-                    document['id'],
-                    'policy_applied',
-                    {'policy_name': policy.name, 'actions': policy.actions}
+                    document["id"], "policy_applied", {"policy_name": policy.name, "actions": policy.actions}
                 )
 
         # Update document lifecycle
         if applied_policies:
             self.repository.update_document_lifecycle(
-                document['id'],
-                'active',  # Start as active
-                retention_days=365  # Default retention
+                document["id"], "active", retention_days=365  # Start as active  # Default retention
             )
 
         return {
-            "document_id": document['id'],
+            "document_id": document["id"],
             "applied_policies": applied_policies,
-            "policy_count": len(applied_policies)
+            "policy_count": len(applied_policies),
         }
 
     def _should_apply_policy(self, policy: LifecyclePolicy, document: Dict[str, Any]) -> bool:
@@ -116,16 +116,16 @@ class LifecycleService(BaseService[LifecyclePolicy]):
 
         if "archive" in actions.values():
             # Mark for archival
-            self.repository.update_document_lifecycle(document['id'], 'archival_pending')
+            self.repository.update_document_lifecycle(document["id"], "archival_pending")
 
         if "delete" in actions.values():
             # Mark for deletion
-            self.repository.update_document_lifecycle(document['id'], 'deletion_pending')
+            self.repository.update_document_lifecycle(document["id"], "deletion_pending")
 
         if "retain" in actions.values():
             # Set retention period
             retention_days = actions.get("retention_days", 365)
-            self.repository.update_document_lifecycle(document['id'], 'retention', retention_days)
+            self.repository.update_document_lifecycle(document["id"], "retention", retention_days)
 
     def process_lifecycle_transitions(self) -> Dict[str, Any]:
         """Process pending lifecycle transitions."""
@@ -135,8 +135,8 @@ class LifecycleService(BaseService[LifecyclePolicy]):
         archival_docs = self.repository.get_documents_for_lifecycle_transition("archival")
         for doc in archival_docs:
             try:
-                self.repository.update_document_lifecycle(doc['id'], 'archived')
-                self.repository.log_lifecycle_event(doc['id'], 'archived')
+                self.repository.update_document_lifecycle(doc["id"], "archived")
+                self.repository.log_lifecycle_event(doc["id"], "archived")
                 processed["archived"] += 1
             except Exception as e:
                 processed["errors"].append(f"Failed to archive {doc['id']}: {str(e)}")
@@ -147,10 +147,11 @@ class LifecycleService(BaseService[LifecyclePolicy]):
             try:
                 # Actually delete the document
                 from ...domain.documents.repository import DocumentRepository
-                doc_repo = DocumentRepository()
-                doc_repo.delete_by_id(doc['id'])
 
-                self.repository.log_lifecycle_event(doc['id'], 'deleted')
+                doc_repo = DocumentRepository()
+                doc_repo.delete_by_id(doc["id"])
+
+                self.repository.log_lifecycle_event(doc["id"], "deleted")
                 processed["deleted"] += 1
             except Exception as e:
                 processed["errors"].append(f"Failed to delete {doc['id']}: {str(e)}")
@@ -159,22 +160,26 @@ class LifecycleService(BaseService[LifecyclePolicy]):
 
     def get_document_lifecycle(self, document_id: str) -> Optional[Dict[str, Any]]:
         """Get lifecycle information for a document."""
-        row = self.repository.execute_query("""
+        row = self.repository.execute_query(
+            """
             SELECT * FROM document_lifecycle WHERE document_id = ?
-        """, (document_id,), fetch_one=True)
+        """,
+            (document_id,),
+            fetch_one=True,
+        )
 
         if not row:
             return None
 
         return {
-            "document_id": row['document_id'],
-            "current_phase": row['current_phase'],
-            "retention_period_days": row['retention_period_days'],
-            "archival_date": row['archival_date'],
-            "deletion_date": row['deletion_date'],
-            "last_reviewed": row['last_reviewed'],
-            "compliance_status": row['compliance_status'],
-            "applied_policies": row['applied_policies']
+            "document_id": row["document_id"],
+            "current_phase": row["current_phase"],
+            "retention_period_days": row["retention_period_days"],
+            "archival_date": row["archival_date"],
+            "deletion_date": row["deletion_date"],
+            "last_reviewed": row["last_reviewed"],
+            "compliance_status": row["compliance_status"],
+            "applied_policies": row["applied_policies"],
         }
 
     def get_lifecycle_statistics(self) -> Dict[str, Any]:

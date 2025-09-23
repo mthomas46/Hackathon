@@ -1,13 +1,14 @@
 """Application Health Service - Comprehensive health monitoring and reporting."""
 
 import asyncio
-import psutil
 import time
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
 from abc import ABC, abstractmethod
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .application_service import ApplicationService, ServiceContext, service_registry
+import psutil
+
+from .application_service import ApplicationService, service_registry
 
 
 class HealthCheck(ABC):
@@ -24,14 +25,13 @@ class HealthCheck(ABC):
     @abstractmethod
     async def check(self) -> Dict[str, Any]:
         """Perform health check."""
-        pass
 
     def get_status(self) -> str:
         """Get health check status."""
         if self.last_check_result is None:
             return "unknown"
 
-        return self.last_check_result.get('status', 'unknown')
+        return self.last_check_result.get("status", "unknown")
 
     def is_healthy(self) -> bool:
         """Check if health check is passing."""
@@ -40,12 +40,12 @@ class HealthCheck(ABC):
     def get_details(self) -> Dict[str, Any]:
         """Get health check details."""
         return {
-            'name': self.name,
-            'description': self.description,
-            'critical': self.critical,
-            'status': self.get_status(),
-            'last_check_time': self.last_check_time,
-            'details': self.last_check_result or {}
+            "name": self.name,
+            "description": self.description,
+            "critical": self.critical,
+            "status": self.get_status(),
+            "last_check_time": self.last_check_time,
+            "details": self.last_check_result or {},
         }
 
 
@@ -63,34 +63,23 @@ class DatabaseHealthCheck(HealthCheck):
             start_time = time.time()
 
             # Basic connectivity check
-            if self.database_url.startswith('sqlite:///'):
+            if self.database_url.startswith("sqlite:///"):
                 import sqlite3
-                conn = sqlite3.connect(self.database_url.replace('sqlite:///', ''))
-                conn.execute('SELECT 1').fetchone()
+
+                conn = sqlite3.connect(self.database_url.replace("sqlite:///", ""))
+                conn.execute("SELECT 1").fetchone()
                 conn.close()
                 response_time = time.time() - start_time
 
-                return {
-                    'status': 'healthy',
-                    'response_time_seconds': response_time,
-                    'database_type': 'sqlite'
-                }
+                return {"status": "healthy", "response_time_seconds": response_time, "database_type": "sqlite"}
             else:
                 # For other databases, we'd need proper connection pooling
                 # This is a placeholder for more complex database health checks
                 response_time = time.time() - start_time
-                return {
-                    'status': 'healthy',
-                    'response_time_seconds': response_time,
-                    'database_type': 'external'
-                }
+                return {"status": "healthy", "response_time_seconds": response_time, "database_type": "external"}
 
         except Exception as e:
-            return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'error_type': type(e).__name__
-            }
+            return {"status": "unhealthy", "error": str(e), "error_type": type(e).__name__}
 
 
 class CacheHealthCheck(HealthCheck):
@@ -104,10 +93,7 @@ class CacheHealthCheck(HealthCheck):
     async def check(self) -> Dict[str, Any]:
         """Check cache health."""
         if not self.cache_service:
-            return {
-                'status': 'unhealthy',
-                'error': 'Cache service not configured'
-            }
+            return {"status": "unhealthy", "error": "Cache service not configured"}
 
         try:
             start_time = time.time()
@@ -124,23 +110,19 @@ class CacheHealthCheck(HealthCheck):
 
             if retrieved_value == test_value:
                 return {
-                    'status': 'healthy',
-                    'response_time_seconds': response_time,
-                    'cache_operations': 'read/write/delete successful'
+                    "status": "healthy",
+                    "response_time_seconds": response_time,
+                    "cache_operations": "read/write/delete successful",
                 }
             else:
                 return {
-                    'status': 'unhealthy',
-                    'error': 'Cache read/write test failed',
-                    'response_time_seconds': response_time
+                    "status": "unhealthy",
+                    "error": "Cache read/write test failed",
+                    "response_time_seconds": response_time,
                 }
 
         except Exception as e:
-            return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'error_type': type(e).__name__
-            }
+            return {"status": "unhealthy", "error": str(e), "error_type": type(e).__name__}
 
 
 class ExternalServiceHealthCheck(HealthCheck):
@@ -162,38 +144,37 @@ class ExternalServiceHealthCheck(HealthCheck):
                 start_time = time.time()
 
                 async with session.get(
-                    self.service_url,
-                    timeout=aiohttp.ClientTimeout(total=self.timeout_seconds)
+                    self.service_url, timeout=aiohttp.ClientTimeout(total=self.timeout_seconds)
                 ) as response:
                     response_time = time.time() - start_time
 
                     if response.status == 200:
                         return {
-                            'status': 'healthy',
-                            'response_time_seconds': response_time,
-                            'http_status': response.status,
-                            'service_url': self.service_url
+                            "status": "healthy",
+                            "response_time_seconds": response_time,
+                            "http_status": response.status,
+                            "service_url": self.service_url,
                         }
                     else:
                         return {
-                            'status': 'degraded',
-                            'response_time_seconds': response_time,
-                            'http_status': response.status,
-                            'service_url': self.service_url
+                            "status": "degraded",
+                            "response_time_seconds": response_time,
+                            "http_status": response.status,
+                            "service_url": self.service_url,
                         }
 
         except asyncio.TimeoutError:
             return {
-                'status': 'unhealthy',
-                'error': f'Timeout after {self.timeout_seconds} seconds',
-                'service_url': self.service_url
+                "status": "unhealthy",
+                "error": f"Timeout after {self.timeout_seconds} seconds",
+                "service_url": self.service_url,
             }
         except Exception as e:
             return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'error_type': type(e).__name__,
-                'service_url': self.service_url
+                "status": "unhealthy",
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "service_url": self.service_url,
             }
 
 
@@ -215,7 +196,7 @@ class SystemHealthCheck(HealthCheck):
             memory_percent = memory.percent
 
             # Disk usage
-            disk = psutil.disk_usage('/')
+            disk = psutil.disk_usage("/")
             disk_percent = disk.percent
 
             # Network connectivity (basic check)
@@ -223,37 +204,34 @@ class SystemHealthCheck(HealthCheck):
             try:
                 # Try to resolve a well-known host
                 import socket
-                socket.gethostbyname('google.com')
+
+                socket.gethostbyname("google.com")
             except Exception:
                 network_ok = False
 
             # Determine overall status
-            status = 'healthy'
+            status = "healthy"
 
             if cpu_percent > 90 or memory_percent > 90 or disk_percent > 95:
-                status = 'critical'
+                status = "critical"
             elif cpu_percent > 75 or memory_percent > 80 or disk_percent > 85:
-                status = 'degraded'
+                status = "degraded"
             elif not network_ok:
-                status = 'degraded'
+                status = "degraded"
 
             return {
-                'status': status,
-                'cpu_percent': cpu_percent,
-                'memory_percent': memory_percent,
-                'memory_used_gb': memory.used / (1024**3),
-                'memory_available_gb': memory.available / (1024**3),
-                'disk_percent': disk_percent,
-                'disk_free_gb': disk.free / (1024**3),
-                'network_connectivity': network_ok
+                "status": status,
+                "cpu_percent": cpu_percent,
+                "memory_percent": memory_percent,
+                "memory_used_gb": memory.used / (1024**3),
+                "memory_available_gb": memory.available / (1024**3),
+                "disk_percent": disk_percent,
+                "disk_free_gb": disk.free / (1024**3),
+                "network_connectivity": network_ok,
             }
 
         except Exception as e:
-            return {
-                'status': 'unhealthy',
-                'error': str(e),
-                'error_type': type(e).__name__
-            }
+            return {"status": "unhealthy", "error": str(e), "error_type": type(e).__name__}
 
 
 class ApplicationHealth:
@@ -277,7 +255,7 @@ class ApplicationHealth:
         # Only perform checks if enough time has passed
         if current_time - self.last_check_time < self.check_interval:
             # Return cached results if available
-            if hasattr(self, '_cached_results'):
+            if hasattr(self, "_cached_results"):
                 return self._cached_results
 
         results = {}
@@ -292,17 +270,13 @@ class ApplicationHealth:
 
                 results[health_check.name] = health_check.get_details()
 
-                if health_check.critical and check_result['status'] == 'unhealthy':
+                if health_check.critical and check_result["status"] == "unhealthy":
                     critical_issues.append(health_check.name)
-                elif check_result['status'] == 'degraded':
+                elif check_result["status"] == "degraded":
                     degraded_services.append(health_check.name)
 
             except Exception as e:
-                results[health_check.name] = {
-                    'name': health_check.name,
-                    'status': 'error',
-                    'error': str(e)
-                }
+                results[health_check.name] = {"name": health_check.name, "status": "error", "error": str(e)}
                 if health_check.critical:
                     critical_issues.append(health_check.name)
 
@@ -318,15 +292,15 @@ class ApplicationHealth:
         self.last_check_time = current_time
 
         health_report = {
-            'status': overall_status,
-            'timestamp': datetime.utcnow().isoformat(),
-            'checks': results,
-            'summary': {
-                'total_checks': len(self.health_checks),
-                'critical_issues': len(critical_issues),
-                'degraded_services': len(degraded_services),
-                'healthy_checks': len([r for r in results.values() if r['status'] == 'healthy'])
-            }
+            "status": overall_status,
+            "timestamp": datetime.utcnow().isoformat(),
+            "checks": results,
+            "summary": {
+                "total_checks": len(self.health_checks),
+                "critical_issues": len(critical_issues),
+                "degraded_services": len(degraded_services),
+                "healthy_checks": len([r for r in results.values() if r["status"] == "healthy"]),
+            },
         }
 
         # Cache results
@@ -340,7 +314,7 @@ class ApplicationHealth:
 
     def get_detailed_report(self) -> Dict[str, Any]:
         """Get detailed health report."""
-        if hasattr(self, '_cached_results'):
+        if hasattr(self, "_cached_results"):
             return self._cached_results
 
         # Perform checks if no cached results
@@ -410,16 +384,16 @@ class HealthService(ApplicationService):
                 health_report = await self.app_health.perform_health_checks()
 
                 # Log health status
-                status = health_report['status']
-                if status == 'critical':
+                status = health_report["status"]
+                if status == "critical":
                     self.logger.error("Health check: CRITICAL", extra=health_report)
-                elif status == 'degraded':
+                elif status == "degraded":
                     self.logger.warning("Health check: DEGRADED", extra=health_report)
                 else:
                     self.logger.debug("Health check: HEALTHY", extra=health_report)
 
                 # Publish health event
-                if hasattr(self, 'event_bus') and self.event_bus:
+                if hasattr(self, "event_bus") and self.event_bus:
                     from ..events.application_events import SystemHealthCheckEvent
 
                     health_event = SystemHealthCheckEvent(
@@ -428,7 +402,7 @@ class HealthService(ApplicationService):
                         service_version="1.0.0",
                         health_status=status,
                         response_time_ms=self.app_health.check_interval * 1000,
-                        system_metrics=health_report
+                        system_metrics=health_report,
                     )
 
                     await self.event_bus.publish(health_event)
@@ -457,10 +431,7 @@ class HealthService(ApplicationService):
         """Remove a health check."""
         async with self.operation_context("remove_health_check"):
             original_count = len(self.app_health.health_checks)
-            self.app_health.health_checks = [
-                hc for hc in self.app_health.health_checks
-                if hc.name != health_check_name
-            ]
+            self.app_health.health_checks = [hc for hc in self.app_health.health_checks if hc.name != health_check_name]
 
             removed = len(self.app_health.health_checks) < original_count
             if removed:
@@ -479,17 +450,17 @@ class HealthService(ApplicationService):
         # Add health service specific info
         try:
             health_report = await self.get_health_report()
-            health['health_service'] = {
-                'overall_status': health_report['status'],
-                'total_checks': health_report['summary']['total_checks'],
-                'critical_issues': health_report['summary']['critical_issues'],
-                'degraded_services': health_report['summary']['degraded_services'],
-                'healthy_checks': health_report['summary']['healthy_checks'],
-                'check_interval_seconds': self.app_health.check_interval
+            health["health_service"] = {
+                "overall_status": health_report["status"],
+                "total_checks": health_report["summary"]["total_checks"],
+                "critical_issues": health_report["summary"]["critical_issues"],
+                "degraded_services": health_report["summary"]["degraded_services"],
+                "healthy_checks": health_report["summary"]["healthy_checks"],
+                "check_interval_seconds": self.app_health.check_interval,
             }
 
         except Exception as e:
-            health['health_service'] = {'error': str(e)}
+            health["health_service"] = {"error": str(e)}
 
         return health
 
@@ -507,13 +478,9 @@ class ServiceHealthCheck(HealthCheck):
         """Check service health."""
         # Use the health data provided during initialization
         # In a real implementation, this would query the service
-        status = self.health_data.get('status', 'unknown')
+        status = self.health_data.get("status", "unknown")
 
-        return {
-            'status': status,
-            'service_name': self.service_name,
-            'details': self.health_data
-        }
+        return {"status": status, "service_name": self.service_name, "details": self.health_data}
 
 
 class DependencyHealthCheck(HealthCheck):
@@ -536,34 +503,24 @@ class DependencyHealthCheck(HealthCheck):
                 async with aiohttp.ClientSession() as session:
                     async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as response:
                         dependency_status[name] = {
-                            'status': 'healthy' if response.status == 200 else 'degraded',
-                            'http_status': response.status,
-                            'url': url
+                            "status": "healthy" if response.status == 200 else "degraded",
+                            "http_status": response.status,
+                            "url": url,
                         }
 
             except Exception as e:
-                dependency_status[name] = {
-                    'status': 'unhealthy',
-                    'error': str(e),
-                    'url': url
-                }
+                dependency_status[name] = {"status": "unhealthy", "error": str(e), "url": url}
 
         # Determine overall status
-        unhealthy_deps = [name for name, status in dependency_status.items()
-                         if status['status'] == 'unhealthy']
+        unhealthy_deps = [name for name, status in dependency_status.items() if status["status"] == "unhealthy"]
 
         if unhealthy_deps:
-            overall_status = 'unhealthy'
+            overall_status = "unhealthy"
         else:
-            degraded_deps = [name for name, status in dependency_status.items()
-                           if status['status'] == 'degraded']
-            overall_status = 'degraded' if degraded_deps else 'healthy'
+            degraded_deps = [name for name, status in dependency_status.items() if status["status"] == "degraded"]
+            overall_status = "degraded" if degraded_deps else "healthy"
 
-        return {
-            'status': overall_status,
-            'dependencies': dependency_status,
-            'unhealthy_count': len(unhealthy_deps)
-        }
+        return {"status": overall_status, "dependencies": dependency_status, "unhealthy_count": len(unhealthy_deps)}
 
 
 # Global health service instance

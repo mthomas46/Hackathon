@@ -1,27 +1,24 @@
-"""Orchestrator monitoring infrastructure for Frontend service.
-
-Provides visualization and monitoring capabilities for orchestrator Redis pub/sub
-activity and service configuration.
 """
-from typing import Dict, Any, List, Optional
-import asyncio
-import json
-from datetime import datetime, timedelta
+Orchestrator monitoring infrastructure for Frontend service.
+
+Provides visualization and monitoring capabilities for orchestrator
+Redis pub/sub activity and service configuration.
+"""
+
 from collections import defaultdict
+from datetime import datetime
+from typing import Any, Dict, List
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_orchestrator_url, get_frontend_clients
+
+from .shared_utils import get_frontend_clients, get_orchestrator_url
 
 
 class OrchestratorMonitor:
     """Monitor for orchestrator Redis pub/sub activity and configuration."""
 
     def __init__(self):
-        self._pubsub_activity = {
-            "ingestion_requested": [],
-            "findings_created": [],
-            "other_events": []
-        }
+        self._pubsub_activity = {"ingestion_requested": [], "findings_created": [], "other_events": []}
         self._config_cache = {}
         self._activity_cache = {}
         self._cache_ttl = 30  # Cache for 30 seconds
@@ -55,7 +52,7 @@ class OrchestratorMonitor:
                 "config": config_response.get("data", {}),
                 "info": info_response.get("data", {}),
                 "metrics": metrics_response.get("data", {}),
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._config_cache = config_data
@@ -64,13 +61,7 @@ class OrchestratorMonitor:
             return config_data
 
         except Exception as e:
-            return {
-                "error": str(e),
-                "config": {},
-                "info": {},
-                "metrics": {},
-                "last_updated": utc_now().isoformat()
-            }
+            return {"error": str(e), "config": {}, "info": {}, "metrics": {}, "last_updated": utc_now().isoformat()}
 
     async def get_redis_pubsub_activity(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Get Redis pub/sub activity information."""
@@ -100,19 +91,19 @@ class OrchestratorMonitor:
                     "ingestion_requested": {
                         "description": "Document ingestion requests from various sources",
                         "estimated_activity": activity_data.get("ingestion_count", 0),
-                        "last_activity": activity_data.get("last_ingestion")
+                        "last_activity": activity_data.get("last_ingestion"),
                     },
                     "findings_created": {
                         "description": "Analysis findings and results publication",
                         "estimated_activity": activity_data.get("findings_count", 0),
-                        "last_activity": activity_data.get("last_findings")
-                    }
+                        "last_activity": activity_data.get("last_findings"),
+                    },
                 },
                 "infrastructure_events": infrastructure_data,
                 "health_status": health_response,
                 "estimated_total_events": activity_data.get("total_events", 0),
                 "time_range": activity_data.get("time_range"),
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._activity_cache["pubsub"] = result
@@ -127,7 +118,7 @@ class OrchestratorMonitor:
                 "infrastructure_events": {},
                 "health_status": {},
                 "estimated_total_events": 0,
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
     async def get_orchestrator_workflows(self, force_refresh: bool = False) -> Dict[str, Any]:
@@ -149,7 +140,7 @@ class OrchestratorMonitor:
                 "available_workflows": workflows_response.get("data", {}),
                 "recent_history": history_response.get("items", []),
                 "workflow_stats": self._calculate_workflow_stats(history_response.get("items", [])),
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._activity_cache["workflows"] = workflow_data
@@ -163,7 +154,7 @@ class OrchestratorMonitor:
                 "available_workflows": {},
                 "recent_history": [],
                 "workflow_stats": {},
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
     def _analyze_pubsub_activity(self, infrastructure_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -184,7 +175,7 @@ class OrchestratorMonitor:
 
             if timestamp:
                 try:
-                    ts = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                    ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                     timestamps.append(ts)
                 except:
                     pass
@@ -205,7 +196,7 @@ class OrchestratorMonitor:
             time_range = {
                 "start": min_time.isoformat(),
                 "end": max_time.isoformat(),
-                "duration_hours": (max_time - min_time).total_seconds() / 3600
+                "duration_hours": (max_time - min_time).total_seconds() / 3600,
             }
 
         return {
@@ -214,7 +205,7 @@ class OrchestratorMonitor:
             "total_events": len(events),
             "last_ingestion": last_ingestion,
             "last_findings": last_findings,
-            "time_range": time_range
+            "time_range": time_range,
         }
 
     def _calculate_workflow_stats(self, history: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -225,7 +216,7 @@ class OrchestratorMonitor:
                 "successful_workflows": 0,
                 "failed_workflows": 0,
                 "average_duration": 0,
-                "most_common_workflow": None
+                "most_common_workflow": None,
             }
 
         total = len(history)
@@ -257,7 +248,7 @@ class OrchestratorMonitor:
             "failed_workflows": failed,
             "success_rate": (successful / total * 100) if total > 0 else 0,
             "average_duration": round(avg_duration, 2),
-            "most_common_workflow": most_common[0] if most_common else None
+            "most_common_workflow": most_common[0] if most_common else None,
         }
 
     async def get_service_health_status(self) -> Dict[str, Any]:
@@ -273,15 +264,11 @@ class OrchestratorMonitor:
                 "service": health_response.get("service"),
                 "version": health_response.get("version"),
                 "count": health_response.get("count", 0),
-                "last_checked": utc_now().isoformat()
+                "last_checked": utc_now().isoformat(),
             }
 
         except Exception as e:
-            return {
-                "orchestrator_healthy": False,
-                "error": str(e),
-                "last_checked": utc_now().isoformat()
-            }
+            return {"orchestrator_healthy": False, "error": str(e), "last_checked": utc_now().isoformat()}
 
 
 # Global instance
@@ -294,9 +281,13 @@ def get_orchestrator_summary() -> Dict[str, Any]:
         "config": orchestrator_monitor._config_cache,
         "pubsub_activity": orchestrator_monitor._activity_cache.get("pubsub", {}),
         "workflows": orchestrator_monitor._activity_cache.get("workflows", {}),
-        "last_updated": max(
-            orchestrator_monitor._activity_cache.get("config_updated"),
-            orchestrator_monitor._activity_cache.get("pubsub_updated"),
-            orchestrator_monitor._activity_cache.get("workflows_updated")
-        ) if any(orchestrator_monitor._activity_cache.values()) else None
+        "last_updated": (
+            max(
+                orchestrator_monitor._activity_cache.get("config_updated"),
+                orchestrator_monitor._activity_cache.get("pubsub_updated"),
+                orchestrator_monitor._activity_cache.get("workflows_updated"),
+            )
+            if any(orchestrator_monitor._activity_cache.values())
+            else None
+        ),
     }

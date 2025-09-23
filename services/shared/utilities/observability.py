@@ -1,15 +1,16 @@
-"""Consolidated observability utilities for monitoring and tracing.
+"""
+Consolidated observability utilities for monitoring and tracing.
 
 Combines distributed tracing and logging functionality.
 """
+
 import time
 import uuid
-import json
-from typing import Dict, Any, Optional, List, Callable
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from starlette.requests import Request
-from starlette.responses import Response
 
 
 class TraceStatus(Enum):
@@ -51,7 +52,7 @@ class DistributedTracer:
         redis_host: str = "redis",
         traces_key: str = "traces:spans",
         max_spans: int = 10000,
-        retention_hours: int = 24
+        retention_hours: int = 24,
     ):
         self.service_name = service_name
         self.redis_host = redis_host
@@ -65,7 +66,7 @@ class DistributedTracer:
         operation_name: str,
         trace_id: Optional[str] = None,
         parent_span_id: Optional[str] = None,
-        tags: Optional[Dict[str, Any]] = None
+        tags: Optional[Dict[str, Any]] = None,
     ) -> TraceSpan:
         if not trace_id:
             trace_id = str(uuid.uuid4())
@@ -78,7 +79,7 @@ class DistributedTracer:
             service_name=self.service_name,
             operation_name=operation_name,
             start_time=now,
-            tags=tags or {}
+            tags=tags or {},
         )
         self._active_spans[span_id] = span
         return span
@@ -88,7 +89,7 @@ class DistributedTracer:
         span_id: str,
         status: TraceStatus = TraceStatus.COMPLETED,
         error: Optional[str] = None,
-        tags: Optional[Dict[str, Any]] = None
+        tags: Optional[Dict[str, Any]] = None,
     ):
         if span_id not in self._active_spans:
             return
@@ -102,22 +103,11 @@ class DistributedTracer:
             span.tags.update(tags)
         del self._active_spans[span_id]
 
-    def add_span_log(
-        self,
-        span_id: str,
-        message: str,
-        level: str = "info",
-        fields: Optional[Dict[str, Any]] = None
-    ):
+    def add_span_log(self, span_id: str, message: str, level: str = "info", fields: Optional[Dict[str, Any]] = None):
         if span_id not in self._active_spans:
             return
         span = self._active_spans[span_id]
-        log_entry = {
-            "timestamp": time.time(),
-            "message": message,
-            "level": level,
-            "fields": fields or {}
-        }
+        log_entry = {"timestamp": time.time(), "message": message, "level": level, "fields": fields or {}}
         span.logs.append(log_entry)
 
     def add_span_tag(self, span_id: str, key: str, value: Any):
@@ -136,7 +126,7 @@ class TraceContext:
         operation_name: str,
         trace_id: Optional[str] = None,
         parent_span_id: Optional[str] = None,
-        tags: Optional[Dict[str, Any]] = None
+        tags: Optional[Dict[str, Any]] = None,
     ):
         self.tracer = tracer
         self.operation_name = operation_name
@@ -146,22 +136,13 @@ class TraceContext:
         self.span: Optional[TraceSpan] = None
 
     def __enter__(self) -> TraceSpan:
-        self.span = self.tracer.start_span(
-            self.operation_name,
-            self.trace_id,
-            self.parent_span_id,
-            self.tags
-        )
+        self.span = self.tracer.start_span(self.operation_name, self.trace_id, self.parent_span_id, self.tags)
         return self.span
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.span:
             if exc_type:
-                self.tracer.finish_span(
-                    self.span.span_id,
-                    TraceStatus.FAILED,
-                    str(exc_val)
-                )
+                self.tracer.finish_span(self.span.span_id, TraceStatus.FAILED, str(exc_val))
             else:
                 self.tracer.finish_span(self.span.span_id)
 
@@ -176,10 +157,7 @@ class CorrelationIDMiddleware:
         correlation_id = request.headers.get("X-Correlation-ID")
         if not correlation_id:
             correlation_id = str(uuid.uuid4())
-        span = self.tracer.start_span(
-            f"{request.method} {request.url.path}",
-            correlation_id
-        )
+        span = self.tracer.start_span(f"{request.method} {request.url.path}", correlation_id)
         self.tracer.add_span_tag(span.span_id, "http.method", request.method)
         self.tracer.add_span_tag(span.span_id, "http.url", str(request.url))
         try:

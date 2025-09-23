@@ -4,22 +4,12 @@ This module contains comprehensive functional tests for complete
 simulation workflows, testing the entire system from creation to completion.
 """
 
-import pytest
-from datetime import datetime
-from uuid import uuid4
-import httpx
 import asyncio
+from uuid import uuid4
 
-from simulation.application.services.simulation_application_service import SimulationApplicationService
+import pytest
 from simulation.infrastructure.di_container import get_simulation_container
 from simulation.infrastructure.repositories.in_memory_repositories import get_repository_registry
-from simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, SimulationConfig
-)
-from simulation.infrastructure.clients.ecosystem_clients import (
-    get_mock_data_generator_client, get_doc_store_client,
-    get_orchestrator_client, get_analysis_service_client
-)
 
 
 class TestSimulationWorkflowFunctional:
@@ -45,7 +35,7 @@ class TestSimulationWorkflowFunctional:
             "type": "web_application",
             "team_size": 4,
             "complexity": "medium",
-            "duration_weeks": 6
+            "duration_weeks": 6,
         }
 
         # When
@@ -73,7 +63,7 @@ class TestSimulationWorkflowFunctional:
             "type": "api_service",
             "team_size": 3,
             "complexity": "simple",
-            "duration_weeks": 4
+            "duration_weeks": 4,
         }
 
         create_result = asyncio.run(app_service.create_simulation(simulation_data))
@@ -102,7 +92,7 @@ class TestSimulationWorkflowFunctional:
             "type": "mobile_application",
             "team_size": 5,
             "complexity": "complex",
-            "duration_weeks": 8
+            "duration_weeks": 8,
         }
 
         create_result = asyncio.run(app_service.create_simulation(simulation_data))
@@ -135,7 +125,7 @@ class TestSimulationWorkflowFunctional:
             "type": "web_application",
             "team_size": 3,
             "complexity": "medium",
-            "duration_weeks": 5
+            "duration_weeks": 5,
         }
 
         create_result = asyncio.run(app_service.create_simulation(simulation_data))
@@ -167,7 +157,7 @@ class TestSimulationWorkflowFunctional:
                 "type": "web_application",
                 "team_size": 3 + i,
                 "complexity": "medium",
-                "duration_weeks": 4 + i
+                "duration_weeks": 4 + i,
             }
             for i in range(3)
         ]
@@ -198,7 +188,7 @@ class TestSimulationWorkflowFunctional:
             "type": "api_service",
             "team_size": 4,
             "complexity": "medium",
-            "duration_weeks": 6
+            "duration_weeks": 6,
         }
 
         create_result = asyncio.run(app_service.create_simulation(simulation_data))
@@ -240,7 +230,7 @@ class TestSimulationWorkflowFunctional:
             "type": project_type,
             "team_size": 4,
             "complexity": "medium",
-            "duration_weeks": 6
+            "duration_weeks": 6,
         }
 
         # When
@@ -261,7 +251,7 @@ class TestSimulationWorkflowFunctional:
             "type": "web_application",
             "team_size": 3 if complexity == "simple" else 5 if complexity == "medium" else 7,
             "complexity": complexity,
-            "duration_weeks": 4 if complexity == "simple" else 8 if complexity == "medium" else 12
+            "duration_weeks": 4 if complexity == "simple" else 8 if complexity == "medium" else 12,
         }
 
         # When
@@ -302,7 +292,7 @@ class TestSimulationWorkflowFunctional:
                 "type": "web_application",
                 "team_size": 3,
                 "complexity": "simple",
-                "duration_weeks": 4
+                "duration_weeks": 4,
             }
             result = asyncio.run(app_service.create_simulation(simulation_data))
             simulation_ids.append(result["simulation_id"])
@@ -330,7 +320,7 @@ class TestSimulationWorkflowFunctional:
             "type": "api_service",
             "team_size": 4,
             "complexity": "medium",
-            "duration_weeks": 6
+            "duration_weeks": 6,
         }
 
         create_result = asyncio.run(app_service.create_simulation(simulation_data))
@@ -367,7 +357,7 @@ class TestSimulationWorkflowFunctional:
             "type": "web_application",
             "team_size": 5,
             "complexity": "medium",
-            "duration_weeks": 8
+            "duration_weeks": 8,
         }
 
         create_result = asyncio.run(app_service.create_simulation(simulation_data))

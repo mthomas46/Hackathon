@@ -1,11 +1,11 @@
-"""Database schema definitions for Prompt Store service.
+"""
+Database schema definitions for Prompt Store service.
 
 Contains all table creation statements and indexes.
 """
 
-import json
-from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List
+
 from ..db.connection import get_prompt_store_connection, return_prompt_store_connection
 
 
@@ -230,7 +230,6 @@ def get_all_table_schemas() -> List[str]:
         create_webhooks_table(),
         create_webhook_deliveries_table(),
         create_notifications_table(),
-
         # Analytics tables
         create_prompt_performance_metrics_table(),
         create_user_satisfaction_scores_table(),
@@ -253,21 +252,17 @@ def create_indexes() -> List[str]:
         "CREATE INDEX IF NOT EXISTS idx_prompts_performance ON prompts(performance_score)",
         "CREATE INDEX IF NOT EXISTS idx_prompts_usage ON prompts(usage_count)",
         "CREATE INDEX IF NOT EXISTS idx_prompts_created_by ON prompts(created_by)",
-
         # Prompt versions indexes
         "CREATE INDEX IF NOT EXISTS idx_prompt_versions_prompt_id ON prompt_versions(prompt_id)",
         "CREATE INDEX IF NOT EXISTS idx_prompt_versions_version ON prompt_versions(prompt_id, version)",
-
         # A/B tests indexes
         "CREATE INDEX IF NOT EXISTS idx_ab_tests_active ON ab_tests(is_active)",
         "CREATE INDEX IF NOT EXISTS idx_ab_tests_prompts ON ab_tests(prompt_a_id, prompt_b_id)",
         "CREATE INDEX IF NOT EXISTS idx_ab_tests_dates ON ab_tests(start_date, end_date)",
-
         # A/B test results indexes
         "CREATE INDEX IF NOT EXISTS idx_ab_test_results_test ON ab_test_results(test_id)",
         "CREATE INDEX IF NOT EXISTS idx_ab_test_results_prompt ON ab_test_results(prompt_id)",
         "CREATE INDEX IF NOT EXISTS idx_ab_test_results_recorded ON ab_test_results(recorded_at)",
-
         # Prompt usage indexes
         "CREATE INDEX IF NOT EXISTS idx_prompt_usage_prompt ON prompt_usage(prompt_id)",
         "CREATE INDEX IF NOT EXISTS idx_prompt_usage_session ON prompt_usage(session_id)",
@@ -275,32 +270,26 @@ def create_indexes() -> List[str]:
         "CREATE INDEX IF NOT EXISTS idx_prompt_usage_service ON prompt_usage(service_name)",
         "CREATE INDEX IF NOT EXISTS idx_prompt_usage_created ON prompt_usage(created_at)",
         "CREATE INDEX IF NOT EXISTS idx_prompt_usage_success ON prompt_usage(success)",
-
         # Prompt relationships indexes
         "CREATE INDEX IF NOT EXISTS idx_prompt_relationships_source ON prompt_relationships(source_prompt_id)",
         "CREATE INDEX IF NOT EXISTS idx_prompt_relationships_target ON prompt_relationships(target_prompt_id)",
         "CREATE INDEX IF NOT EXISTS idx_prompt_relationships_type ON prompt_relationships(relationship_type)",
         "CREATE INDEX IF NOT EXISTS idx_prompt_relationships_strength ON prompt_relationships(strength)",
-
         # Bulk operations indexes
         "CREATE INDEX IF NOT EXISTS idx_bulk_operations_status ON bulk_operations(status)",
         "CREATE INDEX IF NOT EXISTS idx_bulk_operations_type ON bulk_operations(operation_type)",
         "CREATE INDEX IF NOT EXISTS idx_bulk_operations_created ON bulk_operations(created_at)",
-
         # Webhooks indexes
         "CREATE INDEX IF NOT EXISTS idx_webhooks_active ON webhooks(is_active)",
         "CREATE INDEX IF NOT EXISTS idx_webhooks_events ON webhooks(events)",
-
         # Webhook deliveries indexes
         "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_webhook ON webhook_deliveries(webhook_id)",
         "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_status ON webhook_deliveries(status)",
         "CREATE INDEX IF NOT EXISTS idx_webhook_deliveries_created ON webhook_deliveries(created_at)",
-
         # Notifications indexes
         "CREATE INDEX IF NOT EXISTS idx_notifications_event_type ON notifications(event_type)",
         "CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status)",
         "CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at)",
-
         # Analytics indexes
         "CREATE INDEX IF NOT EXISTS idx_performance_metrics_prompt_version ON prompt_performance_metrics(prompt_id, version)",
         "CREATE INDEX IF NOT EXISTS idx_performance_metrics_created ON prompt_performance_metrics(created_at)",
@@ -481,29 +470,36 @@ def init_database() -> None:
             conn.execute(index_sql)
 
         # Enable FTS on prompts table for content search
-        conn.execute("""
+        conn.execute(
+            """
             CREATE VIRTUAL TABLE IF NOT EXISTS prompts_fts USING fts5(
                 name, category, description, content, tags, content='prompts', content_rowid='rowid'
             )
-        """)
+        """
+        )
 
         # Create FTS triggers
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TRIGGER IF NOT EXISTS prompts_fts_insert AFTER INSERT ON prompts
             BEGIN
                 INSERT INTO prompts_fts(rowid, name, category, description, content, tags)
                 VALUES (new.rowid, new.name, new.category, new.description, new.content, new.tags);
             END
-        """)
+        """
+        )
 
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TRIGGER IF NOT EXISTS prompts_fts_delete AFTER DELETE ON prompts
             BEGIN
                 DELETE FROM prompts_fts WHERE rowid = old.rowid;
             END
-        """)
+        """
+        )
 
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TRIGGER IF NOT EXISTS prompts_fts_update AFTER UPDATE ON prompts
             BEGIN
                 UPDATE prompts_fts SET
@@ -514,7 +510,8 @@ def init_database() -> None:
                     tags = new.tags
                 WHERE rowid = new.rowid;
             END
-        """)
+        """
+        )
 
         conn.commit()
         print("✅ Prompt Store database initialized successfully")

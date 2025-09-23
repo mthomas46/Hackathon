@@ -1,14 +1,12 @@
 """Service Configuration Manager for CLI operations."""
 
-from typing import Dict, Any, List, Optional
-from pathlib import Path
 import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import yaml
-import os
 
 from ...base.base_manager import BaseManager
-from ...utils.api_utils import APIClient
-from ...formatters.display_utils import DisplayManager
 
 
 class ServiceConfigManager(BaseManager):
@@ -20,11 +18,15 @@ class ServiceConfigManager(BaseManager):
             ("1", "View Service Configuration"),
             ("2", "Edit Service Configuration"),
             ("3", "Show Configuration Hierarchy"),
-            ("4", "List Configuration Files")
+            ("4", "List Configuration Files"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         service = await self._select_service()
         if not service:
             return True
@@ -55,7 +57,7 @@ class ServiceConfigManager(BaseManager):
                 self.display.show_table(
                     ["File Path", "Size"],
                     [[str(f), f"{f.stat().st_size} bytes"] for f in config_files],
-                    f"Configuration Files for {service}"
+                    f"Configuration Files for {service}",
                 )
             else:
                 self.display.show_warning(f"No configuration files found for service: {service}")
@@ -202,7 +204,7 @@ class ServiceConfigManager(BaseManager):
         global_configs = [
             Path("config") / "app.yaml",
             Path("config") / "config.yaml",
-            Path("config") / f"{service}.yaml"
+            Path("config") / f"{service}.yaml",
         ]
 
         for config_file in global_configs:
@@ -218,15 +220,15 @@ class ServiceConfigManager(BaseManager):
             if not path.exists():
                 return None
 
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Try to format as YAML/JSON if possible
             try:
-                if file_path.endswith(('.yaml', '.yml')):
+                if file_path.endswith((".yaml", ".yml")):
                     data = yaml.safe_load(content)
                     return yaml.dump(data, default_flow_style=False, indent=2)
-                elif file_path.endswith('.json'):
+                elif file_path.endswith(".json"):
                     data = json.loads(content)
                     return json.dumps(data, indent=2)
             except:
@@ -240,12 +242,7 @@ class ServiceConfigManager(BaseManager):
 
     async def _build_config_hierarchy(self, service: str) -> Dict[str, List[str]]:
         """Build the configuration hierarchy for a service."""
-        hierarchy = {
-            "service_specific": [],
-            "service_level": [],
-            "global_level": [],
-            "environment_overrides": []
-        }
+        hierarchy = {"service_specific": [], "service_level": [], "global_level": [], "environment_overrides": []}
 
         # Service-specific configs
         service_dir = Path("services") / service
@@ -259,10 +256,7 @@ class ServiceConfigManager(BaseManager):
             hierarchy["service_level"].append(str(service_config))
 
         # Global configs
-        global_configs = [
-            Path("config") / "app.yaml",
-            Path("config") / "config.yaml"
-        ]
+        global_configs = [Path("config") / "app.yaml", Path("config") / "config.yaml"]
         for config_file in global_configs:
             if config_file.exists():
                 hierarchy["global_level"].append(str(config_file))
@@ -297,12 +291,12 @@ class ServiceConfigManager(BaseManager):
             if not path.exists():
                 return None
 
-            with open(path, 'r', encoding='utf-8') as f:
+            with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-            if file_path.endswith(('.yaml', '.yml')):
+            if file_path.endswith((".yaml", ".yml")):
                 return yaml.safe_load(content)
-            elif file_path.endswith('.json'):
+            elif file_path.endswith(".json"):
                 return json.loads(content)
             else:
                 return None

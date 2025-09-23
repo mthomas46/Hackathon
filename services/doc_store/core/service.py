@@ -1,15 +1,18 @@
-"""Base service for business logic operations.
+"""
+Base service for business logic operations.
 
 Provides common validation, error handling, and business rule patterns.
 """
+
 import uuid
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List, TypeVar, Generic
-from services.shared.core.responses.responses import create_success_response, create_error_response
+from typing import Any, Dict, Generic, List, Optional, TypeVar
+
 from services.shared.utilities.error_handling import ServiceException
+
 from .entities import BaseEntity
 
-T = TypeVar('T', bound=BaseEntity)
+T = TypeVar("T", bound=BaseEntity)
 
 
 class BaseService(Generic[T], ABC):
@@ -21,7 +24,6 @@ class BaseService(Generic[T], ABC):
     @abstractmethod
     def _validate_entity(self, entity: T) -> None:
         """Validate entity before saving."""
-        pass
 
     def create_entity(self, entity_data: Dict[str, Any], entity_id: Optional[str] = None) -> T:
         """Create a new entity with validation."""
@@ -80,13 +82,12 @@ class BaseService(Generic[T], ABC):
             "total": total_count,
             "has_more": has_more,
             "limit": limit,
-            "offset": offset
+            "offset": offset,
         }
 
     @abstractmethod
     def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> T:
         """Create entity instance from data dictionary."""
-        pass
 
     def _apply_updates(self, entity: T, updates: Dict[str, Any]) -> None:
         """Apply updates to entity."""

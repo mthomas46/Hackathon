@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Interpreter Service
+LangGraph Integration for Interpreter Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Interpreter Service, enabling natural language workflow orchestration.
+for the Interpreter Service, enabling natural language workflow
+orchestration.
 """
 
-import asyncio
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.shared.utilities import get_service_client
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import get_service_client
 
 
 class InterpreterLangGraphIntegration:
@@ -31,9 +31,11 @@ class InterpreterLangGraphIntegration:
         """Initialize LangGraph tools for interpreter."""
 
         @tool
-        async def interpret_query_langgraph(query: str, context: Dict[str, Any],
-                                          workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-            """Interpret a natural language query within LangGraph workflow context."""
+        async def interpret_query_langgraph(
+            query: str, context: Dict[str, Any], workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
+            """Interpret a natural language query within LangGraph workflow
+            context."""
             try:
                 # Enhance interpretation with workflow context
                 enhanced_context = {
@@ -41,15 +43,11 @@ class InterpreterLangGraphIntegration:
                     "workflow_context": workflow_context or {},
                     "langgraph_integration": True,
                     "interpretation_timestamp": datetime.now().isoformat(),
-                    "query_type": "workflow_driven"
+                    "query_type": "workflow_driven",
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/interpret",
-                    {
-                        "query": query,
-                        "context": enhanced_context
-                    }
+                    f"{self.service_name}/api/v1/interpret", {"query": query, "context": enhanced_context}
                 )
 
                 # Cache interpretation for workflow continuity
@@ -58,18 +56,20 @@ class InterpreterLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_conversations:
                             self.workflow_conversations[workflow_id] = []
-                        self.workflow_conversations[workflow_id].append({
-                            "query": query,
-                            "interpretation": result,
-                            "timestamp": datetime.now().isoformat(),
-                            "context": enhanced_context
-                        })
+                        self.workflow_conversations[workflow_id].append(
+                            {
+                                "query": query,
+                                "interpretation": result,
+                                "timestamp": datetime.now().isoformat(),
+                                "context": enhanced_context,
+                            }
+                        )
 
                 return {
                     "success": True,
                     "interpretation": result,
                     "workflow_integration": "completed",
-                    "cached_for_workflow": bool(workflow_context)
+                    "cached_for_workflow": bool(workflow_context),
                 }
 
             except Exception as e:
@@ -77,8 +77,9 @@ class InterpreterLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def extract_intent_langgraph(text: str, domain: str = "general",
-                                         workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def extract_intent_langgraph(
+            text: str, domain: str = "general", workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Extract intent from text within workflow context."""
             try:
                 # Check cache first for similar queries
@@ -89,22 +90,18 @@ class InterpreterLangGraphIntegration:
                         "success": True,
                         "intent": cached_result,
                         "source": "cache",
-                        "workflow_integration": "completed"
+                        "workflow_integration": "completed",
                     }
 
                 enhanced_context = {
                     "domain": domain,
                     "workflow_context": workflow_context,
                     "intent_extraction_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True
+                    "langgraph_driven": True,
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/intent",
-                    {
-                        "text": text,
-                        "context": enhanced_context
-                    }
+                    f"{self.service_name}/api/v1/intent", {"text": text, "context": enhanced_context}
                 )
 
                 # Cache the result
@@ -116,18 +113,15 @@ class InterpreterLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_conversations:
                             self.workflow_conversations[workflow_id] = []
-                        self.workflow_conversations[workflow_id].append({
-                            "text": text,
-                            "intent": result,
-                            "domain": domain,
-                            "timestamp": datetime.now().isoformat()
-                        })
+                        self.workflow_conversations[workflow_id].append(
+                            {"text": text, "intent": result, "domain": domain, "timestamp": datetime.now().isoformat()}
+                        )
 
                 return {
                     "success": True,
                     "intent": result,
                     "source": "fresh_analysis",
-                    "workflow_integration": "completed"
+                    "workflow_integration": "completed",
                 }
 
             except Exception as e:
@@ -135,15 +129,16 @@ class InterpreterLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_ecosystem_context_langgraph(query_focus: str = "general",
-                                                workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def get_ecosystem_context_langgraph(
+            query_focus: str = "general", workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Get current ecosystem context within workflow."""
             try:
                 enhanced_context = {
                     "query_focus": query_focus,
                     "workflow_context": workflow_context,
                     "context_request_timestamp": datetime.now().isoformat(),
-                    "langgraph_integration": True
+                    "langgraph_integration": True,
                 }
 
                 result = await self.service_client.get_json(
@@ -155,39 +150,32 @@ class InterpreterLangGraphIntegration:
                     "context_requested_for": query_focus,
                     "workflow_context": workflow_context,
                     "enhanced_at": datetime.now().isoformat(),
-                    "integration_status": "completed"
+                    "integration_status": "completed",
                 }
 
-                return {
-                    "success": True,
-                    "ecosystem_context": result,
-                    "workflow_integration": "completed"
-                }
+                return {"success": True, "ecosystem_context": result, "workflow_integration": "completed"}
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def translate_workflow_instruction_langgraph(instruction: str,
-                                                        target_services: List[str],
-                                                        workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-            """Translate natural language instruction into service-specific commands."""
+        async def translate_workflow_instruction_langgraph(
+            instruction: str, target_services: List[str], workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
+            """Translate natural language instruction into service-specific
+            commands."""
             try:
                 translation_context = {
                     "instruction": instruction,
                     "target_services": target_services,
                     "workflow_context": workflow_context,
                     "translation_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True
+                    "langgraph_driven": True,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/translate/workflow",
-                    {
-                        "instruction": instruction,
-                        "target_services": target_services,
-                        "context": translation_context
-                    }
+                    {"instruction": instruction, "target_services": target_services, "context": translation_context},
                 )
 
                 # Store translation in workflow context
@@ -196,18 +184,20 @@ class InterpreterLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_conversations:
                             self.workflow_conversations[workflow_id] = []
-                        self.workflow_conversations[workflow_id].append({
-                            "original_instruction": instruction,
-                            "translation": result,
-                            "target_services": target_services,
-                            "timestamp": datetime.now().isoformat()
-                        })
+                        self.workflow_conversations[workflow_id].append(
+                            {
+                                "original_instruction": instruction,
+                                "translation": result,
+                                "target_services": target_services,
+                                "timestamp": datetime.now().isoformat(),
+                            }
+                        )
 
                 return {
                     "success": True,
                     "translation": result,
                     "workflow_integration": "completed",
-                    "services_addressed": target_services
+                    "services_addressed": target_services,
                 }
 
             except Exception as e:
@@ -225,7 +215,7 @@ class InterpreterLangGraphIntegration:
                         "conversation_history": conversation_history,
                         "source": "workflow_cache",
                         "workflow_id": workflow_id,
-                        "total_exchanges": len(conversation_history)
+                        "total_exchanges": len(conversation_history),
                     }
 
                 # If not in cache, this would query the service's conversation storage
@@ -235,7 +225,7 @@ class InterpreterLangGraphIntegration:
                     "conversation_history": [],
                     "source": "cache_miss",
                     "workflow_id": workflow_id,
-                    "total_exchanges": 0
+                    "total_exchanges": 0,
                 }
 
             except Exception as e:
@@ -246,7 +236,7 @@ class InterpreterLangGraphIntegration:
             "extract_intent_langgraph": extract_intent_langgraph,
             "get_ecosystem_context_langgraph": get_ecosystem_context_langgraph,
             "translate_workflow_instruction_langgraph": translate_workflow_instruction_langgraph,
-            "get_workflow_conversation_history_langgraph": get_workflow_conversation_history_langgraph
+            "get_workflow_conversation_history_langgraph": get_workflow_conversation_history_langgraph,
         }
 
     async def handle_langgraph_workflow_message(self, message: BaseMessage) -> Dict[str, Any]:
@@ -272,7 +262,7 @@ class InterpreterLangGraphIntegration:
                 "action": "interpret_query",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["natural_language_processing", "context_awareness", "intent_recognition"]
+                "capabilities": ["natural_language_processing", "context_awareness", "intent_recognition"],
             }
 
         elif "intent" in instruction_lower or "meaning" in instruction_lower:
@@ -280,7 +270,7 @@ class InterpreterLangGraphIntegration:
                 "action": "extract_intent",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["intent_analysis", "semantic_understanding", "domain_recognition"]
+                "capabilities": ["intent_analysis", "semantic_understanding", "domain_recognition"],
             }
 
         elif "context" in instruction_lower or "ecosystem" in instruction_lower:
@@ -288,7 +278,7 @@ class InterpreterLangGraphIntegration:
                 "action": "get_context",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["ecosystem_awareness", "service_discovery", "context_management"]
+                "capabilities": ["ecosystem_awareness", "service_discovery", "context_management"],
             }
 
         elif "translate" in instruction_lower or "convert" in instruction_lower:
@@ -296,7 +286,7 @@ class InterpreterLangGraphIntegration:
                 "action": "translate_instruction",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["instruction_translation", "service_mapping", "workflow_orchestration"]
+                "capabilities": ["instruction_translation", "service_mapping", "workflow_orchestration"],
             }
 
         else:
@@ -304,7 +294,7 @@ class InterpreterLangGraphIntegration:
                 "action": "general_interpretation",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["natural_language_processing", "workflow_integration", "context_awareness"]
+                "capabilities": ["natural_language_processing", "workflow_integration", "context_awareness"],
             }
 
     async def _process_interpreter_workflow_response(self, response: str) -> Dict[str, Any]:
@@ -314,14 +304,14 @@ class InterpreterLangGraphIntegration:
             "content": response,
             "timestamp": datetime.now().isoformat(),
             "processed_by": self.service_name,
-            "response_type": "interpreter_workflow"
+            "response_type": "interpreter_workflow",
         }
 
         return {
             "status": "processed",
             "service": self.service_name,
             "response_stored": True,
-            "next_actions": ["await_workflow_instructions", "prepare_interpretation_tools"]
+            "next_actions": ["await_workflow_instructions", "prepare_interpretation_tools"],
         }
 
     def get_langgraph_capabilities(self) -> Dict[str, Any]:
@@ -334,26 +324,16 @@ class InterpreterLangGraphIntegration:
                 "intent_recognition",
                 "ecosystem_context_awareness",
                 "instruction_translation",
-                "conversation_management"
+                "conversation_management",
             ],
-            "tool_categories": [
-                "interpretation_tools",
-                "intent_tools",
-                "context_tools",
-                "translation_tools"
-            ],
-            "message_types": [
-                "human_instructions",
-                "ai_responses",
-                "workflow_commands",
-                "conversation_messages"
-            ],
+            "tool_categories": ["interpretation_tools", "intent_tools", "context_tools", "translation_tools"],
+            "message_types": ["human_instructions", "ai_responses", "workflow_commands", "conversation_messages"],
             "integration_features": [
                 "workflow_context_awareness",
                 "conversation_caching",
                 "intent_caching",
-                "multi_service_coordination"
-            ]
+                "multi_service_coordination",
+            ],
         }
 
     def get_workflow_integration_status(self) -> Dict[str, Any]:
@@ -365,7 +345,7 @@ class InterpreterLangGraphIntegration:
             "cached_intents": len(self.intent_cache),
             "total_conversation_turns": sum(len(conversation) for conversation in self.workflow_conversations.values()),
             "last_activity": datetime.now().isoformat(),
-            "capabilities_ready": True
+            "capabilities_ready": True,
         }
 
     def get_interpretation_performance_summary(self) -> Dict[str, Any]:
@@ -376,7 +356,7 @@ class InterpreterLangGraphIntegration:
             "cache_hit_ratio": 0,  # Would be calculated from actual usage
             "average_response_time": 0,  # Would be tracked from actual calls
             "common_intent_types": {},
-            "recent_activity": []
+            "recent_activity": [],
         }
 
         # Analyze cached intents for patterns
@@ -393,11 +373,13 @@ class InterpreterLangGraphIntegration:
         recent_workflows = []
         for workflow_id, conversation in list(self.workflow_conversations.items())[-5:]:
             if conversation:
-                recent_workflows.append({
-                    "workflow_id": workflow_id,
-                    "last_interaction": conversation[-1]["timestamp"],
-                    "total_turns": len(conversation)
-                })
+                recent_workflows.append(
+                    {
+                        "workflow_id": workflow_id,
+                        "last_interaction": conversation[-1]["timestamp"],
+                        "total_turns": len(conversation),
+                    }
+                )
 
         summary["recent_activity"] = recent_workflows
 

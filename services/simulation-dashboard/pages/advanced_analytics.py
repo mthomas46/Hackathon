@@ -1,41 +1,40 @@
-"""Advanced Analytics Platform Page.
+"""
+Advanced Analytics Platform Page.
 
-This module provides advanced analytics capabilities including real-time analytics pipeline,
-predictive modeling dashboard, causal analysis, and advanced visualization engine.
+This module provides advanced analytics capabilities including real-time
+analytics pipeline, predictive modeling dashboard, causal analysis, and
+advanced visualization engine.
 """
 
-import streamlit as st
-import asyncio
-import time
-import pandas as pd
-import numpy as np
+import warnings
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict
+
+import numpy as np
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import warnings
-warnings.filterwarnings('ignore')
+import streamlit as st
 
-from services.clients.simulation_client import SimulationClient
-from infrastructure.config.config import get_config
+warnings.filterwarnings("ignore")
+
+
 
 
 def render_advanced_analytics_page():
     """Render the advanced analytics platform page."""
     st.markdown("## 📊 Advanced Analytics Platform")
-    st.markdown("Real-time analytics pipeline, predictive modeling, causal analysis, and advanced visualizations for deep simulation insights.")
+    st.markdown(
+        "Real-time analytics pipeline, predictive modeling, causal analysis, and advanced visualizations for deep simulation insights."
+    )
 
     # Initialize session state
     initialize_analytics_state()
 
     # Create tabs for different analytics capabilities
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "⚡ Real-Time Pipeline",
-        "🔮 Predictive Modeling",
-        "🔗 Causal Analysis",
-        "🎨 Visualization Engine"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["⚡ Real-Time Pipeline", "🔮 Predictive Modeling", "🔗 Causal Analysis", "🎨 Visualization Engine"]
+    )
 
     with tab1:
         render_realtime_pipeline()
@@ -52,30 +51,30 @@ def render_advanced_analytics_page():
 
 def initialize_analytics_state():
     """Initialize session state for advanced analytics."""
-    if 'analytics_config' not in st.session_state:
+    if "analytics_config" not in st.session_state:
         st.session_state.analytics_config = {
-            'realtime_enabled': False,
-            'predictive_enabled': False,
-            'causal_enabled': False,
-            'visualization_enabled': True,
-            'pipeline_config': {},
-            'model_configs': {},
-            'causal_configs': {},
-            'viz_configs': {}
+            "realtime_enabled": False,
+            "predictive_enabled": False,
+            "causal_enabled": False,
+            "visualization_enabled": True,
+            "pipeline_config": {},
+            "model_configs": {},
+            "causal_configs": {},
+            "viz_configs": {},
         }
 
-    if 'analytics_data' not in st.session_state:
+    if "analytics_data" not in st.session_state:
         st.session_state.analytics_data = {
-            'realtime_metrics': [],
-            'predictions': {},
-            'causal_insights': [],
-            'visualizations': {}
+            "realtime_metrics": [],
+            "predictions": {},
+            "causal_insights": [],
+            "visualizations": {},
         }
 
-    if 'analytics_models' not in st.session_state:
+    if "analytics_models" not in st.session_state:
         st.session_state.analytics_models = {}
 
-    if 'analytics_performance' not in st.session_state:
+    if "analytics_performance" not in st.session_state:
         st.session_state.analytics_performance = {}
 
 
@@ -91,14 +90,12 @@ def render_realtime_pipeline():
         st.markdown("#### ⚙️ Pipeline Configuration")
         realtime_enabled = st.checkbox(
             "Enable Real-Time Pipeline",
-            value=st.session_state.analytics_config.get('realtime_enabled', False),
-            key="realtime_pipeline_enabled"
+            value=st.session_state.analytics_config.get("realtime_enabled", False),
+            key="realtime_pipeline_enabled",
         )
 
         processing_mode = st.selectbox(
-            "Processing Mode",
-            options=["Streaming", "Batch", "Hybrid"],
-            key="processing_mode"
+            "Processing Mode", options=["Streaming", "Batch", "Hybrid"], key="processing_mode"
         )
 
     with col2:
@@ -114,7 +111,7 @@ def render_realtime_pipeline():
         {"name": "Performance Metrics", "status": "Active", "throughput": 89, "latency": 32},
         {"name": "Audit Events", "status": "Active", "throughput": 67, "latency": 78},
         {"name": "System Resources", "status": "Active", "throughput": 234, "latency": 23},
-        {"name": "User Interactions", "status": "Inactive", "throughput": 0, "latency": 0}
+        {"name": "User Interactions", "status": "Inactive", "throughput": 0, "latency": 0},
     ]
 
     for source in data_sources:
@@ -122,13 +119,13 @@ def render_realtime_pipeline():
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                st.metric("Status", source['status'])
+                st.metric("Status", source["status"])
 
             with col2:
-                st.metric("Throughput", f"{source['throughput']}/sec" if source['throughput'] > 0 else "N/A")
+                st.metric("Throughput", f"{source['throughput']}/sec" if source["throughput"] > 0 else "N/A")
 
             with col3:
-                st.metric("Latency", f"{source['latency']}ms" if source['latency'] > 0 else "N/A")
+                st.metric("Latency", f"{source['latency']}ms" if source["latency"] > 0 else "N/A")
 
     # Real-time metrics dashboard
     st.markdown("#### 📈 Real-Time Metrics Dashboard")
@@ -140,7 +137,7 @@ def render_realtime_pipeline():
         "Average Latency": 67,
         "Error Rate": 0.02,
         "Data Quality Score": 98.5,
-        "Pipeline Health": 96.2
+        "Pipeline Health": 96.2,
     }
 
     col1, col2, col3 = st.columns(3)
@@ -165,12 +162,14 @@ def render_realtime_pipeline():
     # Mock streaming data
     streaming_data = []
     for i in range(20):
-        streaming_data.append({
-            "timestamp": datetime.now() - timedelta(seconds=20-i),
-            "event_type": np.random.choice(["simulation_start", "metric_update", "error", "completion"]),
-            "value": np.random.uniform(10, 100),
-            "source": np.random.choice(["simulation", "system", "user", "audit"])
-        })
+        streaming_data.append(
+            {
+                "timestamp": datetime.now() - timedelta(seconds=20 - i),
+                "event_type": np.random.choice(["simulation_start", "metric_update", "error", "completion"]),
+                "value": np.random.uniform(10, 100),
+                "source": np.random.choice(["simulation", "system", "user", "audit"]),
+            }
+        )
 
     stream_df = pd.DataFrame(streaming_data)
     st.dataframe(stream_df.tail(10), use_container_width=True)
@@ -188,7 +187,7 @@ def render_realtime_pipeline():
             x=list(range(30)),
             y=throughput_data,
             title="Throughput Over Time",
-            labels={'x': 'Time (seconds)', 'y': 'Events/Second'}
+            labels={"x": "Time (seconds)", "y": "Events/Second"},
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -196,10 +195,7 @@ def render_realtime_pipeline():
         # Latency distribution
         latency_data = np.random.exponential(50, 1000)
         fig = px.histogram(
-            latency_data,
-            title="Latency Distribution",
-            labels={'value': 'Latency (ms)', 'count': 'Frequency'},
-            nbins=30
+            latency_data, title="Latency Distribution", labels={"value": "Latency (ms)", "count": "Frequency"}, nbins=30
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -226,12 +222,14 @@ def render_realtime_pipeline():
 
     # Apply pipeline configuration
     if st.button("💾 Apply Pipeline Configuration", key="apply_pipeline_config", type="primary"):
-        apply_pipeline_configuration({
-            'enabled': realtime_enabled,
-            'mode': processing_mode,
-            'throughput_target': throughput_target,
-            'latency_target': latency_target
-        })
+        apply_pipeline_configuration(
+            {
+                "enabled": realtime_enabled,
+                "mode": processing_mode,
+                "throughput_target": throughput_target,
+                "latency_target": latency_target,
+            }
+        )
 
 
 def render_predictive_modeling():
@@ -246,14 +244,14 @@ def render_predictive_modeling():
         st.markdown("#### 🤖 Model Configuration")
         predictive_enabled = st.checkbox(
             "Enable Predictive Modeling",
-            value=st.session_state.analytics_config.get('predictive_enabled', False),
-            key="predictive_modeling_enabled"
+            value=st.session_state.analytics_config.get("predictive_enabled", False),
+            key="predictive_modeling_enabled",
         )
 
         model_type = st.selectbox(
             "Primary Model Type",
             options=["Time Series", "Regression", "Classification", "Ensemble"],
-            key="primary_model_type"
+            key="primary_model_type",
         )
 
     with col2:
@@ -271,7 +269,7 @@ def render_predictive_modeling():
             "status": "Trained",
             "accuracy": 87.3,
             "last_trained": datetime.now() - timedelta(hours=2),
-            "predictions": 1247
+            "predictions": 1247,
         },
         {
             "name": "Failure Predictor",
@@ -279,7 +277,7 @@ def render_predictive_modeling():
             "status": "Training",
             "accuracy": 0,
             "last_trained": None,
-            "predictions": 0
+            "predictions": 0,
         },
         {
             "name": "Resource Forecaster",
@@ -287,7 +285,7 @@ def render_predictive_modeling():
             "status": "Trained",
             "accuracy": 92.1,
             "last_trained": datetime.now() - timedelta(hours=6),
-            "predictions": 892
+            "predictions": 892,
         },
         {
             "name": "Anomaly Detector",
@@ -295,38 +293,33 @@ def render_predictive_modeling():
             "status": "Trained",
             "accuracy": 94.7,
             "last_trained": datetime.now() - timedelta(hours=1),
-            "predictions": 2156
-        }
+            "predictions": 2156,
+        },
     ]
 
     for model in available_models:
-        status_icon = {
-            "Trained": "✅",
-            "Training": "🔄",
-            "Failed": "❌",
-            "Inactive": "⏸️"
-        }.get(model['status'], "❓")
+        status_icon = {"Trained": "✅", "Training": "🔄", "Failed": "❌", "Inactive": "⏸️"}.get(model["status"], "❓")
 
         with st.expander(f"{status_icon} {model['name']} ({model['type']})"):
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
-                st.metric("Status", model['status'])
+                st.metric("Status", model["status"])
 
             with col2:
-                if model['accuracy'] > 0:
-                    st.metric("Accuracy", ".1f", model['accuracy'])
+                if model["accuracy"] > 0:
+                    st.metric("Accuracy", ".1f", model["accuracy"])
                 else:
                     st.metric("Accuracy", "Training...")
 
             with col3:
-                if model['last_trained']:
-                    st.metric("Last Trained", model['last_trained'].strftime('%H:%M'))
+                if model["last_trained"]:
+                    st.metric("Last Trained", model["last_trained"].strftime("%H:%M"))
                 else:
                     st.metric("Last Trained", "Never")
 
             with col4:
-                st.metric("Predictions", model['predictions'])
+                st.metric("Predictions", model["predictions"])
 
     # Model training and evaluation
     st.markdown("#### 🎓 Model Training & Evaluation")
@@ -356,7 +349,7 @@ def render_predictive_modeling():
             "confidence": 0.89,
             "actual": 142.3,
             "timestamp": datetime.now() - timedelta(minutes=5),
-            "accuracy": 97.7
+            "accuracy": 97.7,
         },
         {
             "model": "Resource Forecaster",
@@ -365,7 +358,7 @@ def render_predictive_modeling():
             "confidence": 0.92,
             "actual": 76.8,
             "timestamp": datetime.now() - timedelta(minutes=12),
-            "accuracy": 98.0
+            "accuracy": 98.0,
         },
         {
             "model": "Failure Predictor",
@@ -374,8 +367,8 @@ def render_predictive_modeling():
             "confidence": 0.85,
             "actual": "No Failure",
             "timestamp": datetime.now() - timedelta(hours=1),
-            "accuracy": 100.0
-        }
+            "accuracy": 100.0,
+        },
     ]
 
     results_df = pd.DataFrame(prediction_results)
@@ -387,39 +380,45 @@ def render_predictive_modeling():
     # Mock performance data
     performance_data = []
     for i in range(30):
-        performance_data.append({
-            "date": datetime.now() - timedelta(days=30-i),
-            "performance_accuracy": 85 + np.random.normal(0, 5),
-            "resource_accuracy": 90 + np.random.normal(0, 3),
-            "failure_accuracy": 95 + np.random.normal(0, 2)
-        })
+        performance_data.append(
+            {
+                "date": datetime.now() - timedelta(days=30 - i),
+                "performance_accuracy": 85 + np.random.normal(0, 5),
+                "resource_accuracy": 90 + np.random.normal(0, 3),
+                "failure_accuracy": 95 + np.random.normal(0, 2),
+            }
+        )
 
     perf_df = pd.DataFrame(performance_data)
 
     fig = px.line(
         perf_df,
-        x='date',
-        y=['performance_accuracy', 'resource_accuracy', 'failure_accuracy'],
+        x="date",
+        y=["performance_accuracy", "resource_accuracy", "failure_accuracy"],
         title="Model Performance Trends",
-        labels={'value': 'Accuracy (%)', 'date': 'Date'}
+        labels={"value": "Accuracy (%)", "date": "Date"},
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
     # Apply predictive configuration
     if st.button("💾 Apply Predictive Configuration", key="apply_predictive_config", type="primary"):
-        apply_predictive_configuration({
-            'enabled': predictive_enabled,
-            'model_type': model_type,
-            'target_accuracy': target_accuracy,
-            'max_training_time': max_training_time
-        })
+        apply_predictive_configuration(
+            {
+                "enabled": predictive_enabled,
+                "model_type": model_type,
+                "target_accuracy": target_accuracy,
+                "max_training_time": max_training_time,
+            }
+        )
 
 
 def render_causal_analysis():
     """Render the causal analysis interface."""
     st.markdown("### 🔗 Causal Analysis")
-    st.markdown("Understand cause-and-effect relationships in simulation data using advanced causal inference techniques.")
+    st.markdown(
+        "Understand cause-and-effect relationships in simulation data using advanced causal inference techniques."
+    )
 
     # Causal analysis configuration
     col1, col2 = st.columns(2)
@@ -428,14 +427,19 @@ def render_causal_analysis():
         st.markdown("#### 🔍 Analysis Configuration")
         causal_enabled = st.checkbox(
             "Enable Causal Analysis",
-            value=st.session_state.analytics_config.get('causal_enabled', False),
-            key="causal_analysis_enabled"
+            value=st.session_state.analytics_config.get("causal_enabled", False),
+            key="causal_analysis_enabled",
         )
 
         analysis_method = st.selectbox(
             "Analysis Method",
-            options=["Difference-in-Differences", "Regression Discontinuity", "Instrumental Variables", "Propensity Score Matching"],
-            key="causal_method"
+            options=[
+                "Difference-in-Differences",
+                "Regression Discontinuity",
+                "Instrumental Variables",
+                "Propensity Score Matching",
+            ],
+            key="causal_method",
         )
 
     with col2:
@@ -453,7 +457,7 @@ def render_causal_analysis():
             "confidence": 0.87,
             "effect_size": 0.34,
             "p_value": 0.001,
-            "status": "Supported"
+            "status": "Supported",
         },
         {
             "hypothesis": "Memory optimization reduces error rates",
@@ -461,7 +465,7 @@ def render_causal_analysis():
             "confidence": 0.92,
             "effect_size": 0.28,
             "p_value": 0.003,
-            "status": "Supported"
+            "status": "Supported",
         },
         {
             "hypothesis": "Concurrent simulation limit affects throughput",
@@ -469,7 +473,7 @@ def render_causal_analysis():
             "confidence": 0.76,
             "effect_size": 0.15,
             "p_value": 0.045,
-            "status": "Weak Evidence"
+            "status": "Weak Evidence",
         },
         {
             "hypothesis": "Configuration changes impact resource usage",
@@ -477,32 +481,29 @@ def render_causal_analysis():
             "confidence": 0.94,
             "effect_size": 0.41,
             "p_value": 0.0001,
-            "status": "Strongly Supported"
-        }
+            "status": "Strongly Supported",
+        },
     ]
 
     for hypothesis in hypotheses:
-        status_icon = {
-            "Strongly Supported": "🟢",
-            "Supported": "🟡",
-            "Weak Evidence": "🟠",
-            "Not Supported": "🔴"
-        }.get(hypothesis['status'], "⚪")
+        status_icon = {"Strongly Supported": "🟢", "Supported": "🟡", "Weak Evidence": "🟠", "Not Supported": "🔴"}.get(
+            hypothesis["status"], "⚪"
+        )
 
         with st.expander(f"{status_icon} {hypothesis['hypothesis'][:50]}..."):
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
-                st.metric("Method", hypothesis['method'])
+                st.metric("Method", hypothesis["method"])
 
             with col2:
-                st.metric("Confidence", ".2f", hypothesis['confidence'])
+                st.metric("Confidence", ".2f", hypothesis["confidence"])
 
             with col3:
-                st.metric("Effect Size", ".2f", hypothesis['effect_size'])
+                st.metric("Effect Size", ".2f", hypothesis["effect_size"])
 
             with col4:
-                st.metric("P-Value", ".4f", hypothesis['p_value'])
+                st.metric("P-Value", ".4f", hypothesis["p_value"])
 
             st.write(f"**Status:** {hypothesis['status']}")
 
@@ -528,42 +529,44 @@ def render_causal_analysis():
 
     # Mock causal relationships data
     causal_data = {
-        'nodes': [
-            {'id': 'CPU_Allocation', 'label': 'CPU Allocation'},
-            {'id': 'Performance', 'label': 'Performance'},
-            {'id': 'Memory_Opt', 'label': 'Memory Optimization'},
-            {'id': 'Error_Rate', 'label': 'Error Rate'},
-            {'id': 'Throughput', 'label': 'Throughput'}
+        "nodes": [
+            {"id": "CPU_Allocation", "label": "CPU Allocation"},
+            {"id": "Performance", "label": "Performance"},
+            {"id": "Memory_Opt", "label": "Memory Optimization"},
+            {"id": "Error_Rate", "label": "Error Rate"},
+            {"id": "Throughput", "label": "Throughput"},
         ],
-        'edges': [
-            {'from': 'CPU_Allocation', 'to': 'Performance', 'strength': 0.8},
-            {'from': 'Memory_Opt', 'to': 'Error_Rate', 'strength': 0.7},
-            {'from': 'Performance', 'to': 'Throughput', 'strength': 0.6},
-            {'from': 'Error_Rate', 'to': 'Throughput', 'strength': -0.4}
-        ]
+        "edges": [
+            {"from": "CPU_Allocation", "to": "Performance", "strength": 0.8},
+            {"from": "Memory_Opt", "to": "Error_Rate", "strength": 0.7},
+            {"from": "Performance", "to": "Throughput", "strength": 0.6},
+            {"from": "Error_Rate", "to": "Throughput", "strength": -0.4},
+        ],
     }
 
     # Create causal graph visualization
     fig = go.Figure()
 
     # Add nodes
-    for node in causal_data['nodes']:
-        fig.add_trace(go.Scatter(
-            x=[np.random.uniform(0, 10)],  # Random x position
-            y=[np.random.uniform(0, 10)],  # Random y position
-            mode='markers+text',
-            text=[node['label']],
-            textposition="bottom center",
-            marker=dict(size=20, color='lightblue'),
-            name=node['label']
-        ))
+    for node in causal_data["nodes"]:
+        fig.add_trace(
+            go.Scatter(
+                x=[np.random.uniform(0, 10)],  # Random x position
+                y=[np.random.uniform(0, 10)],  # Random y position
+                mode="markers+text",
+                text=[node["label"]],
+                textposition="bottom center",
+                marker=dict(size=20, color="lightblue"),
+                name=node["label"],
+            )
+        )
 
     # Add edges (simplified - would need proper graph layout in production)
     fig.update_layout(
         title="Causal Relationship Graph",
         showlegend=False,
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False)
+        yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -575,7 +578,7 @@ def render_causal_analysis():
         "CPU allocation has the strongest causal effect on performance (effect size: 0.34)",
         "Memory optimization significantly reduces error rates (28% improvement)",
         "Configuration changes have a substantial impact on resource utilization (41% effect)",
-        "There's a negative causal relationship between error rates and throughput (-0.4 correlation)"
+        "There's a negative causal relationship between error rates and throughput (-0.4 correlation)",
     ]
 
     for insight in insights:
@@ -583,18 +586,22 @@ def render_causal_analysis():
 
     # Apply causal configuration
     if st.button("💾 Apply Causal Configuration", key="apply_causal_config", type="primary"):
-        apply_causal_configuration({
-            'enabled': causal_enabled,
-            'method': analysis_method,
-            'confidence_level': confidence_level,
-            'max_lags': max_lags
-        })
+        apply_causal_configuration(
+            {
+                "enabled": causal_enabled,
+                "method": analysis_method,
+                "confidence_level": confidence_level,
+                "max_lags": max_lags,
+            }
+        )
 
 
 def render_visualization_engine():
     """Render the advanced visualization engine."""
     st.markdown("### 🎨 Advanced Visualization Engine")
-    st.markdown("Sophisticated data visualization with interactive charts, 3D visualizations, and custom dashboard creation.")
+    st.markdown(
+        "Sophisticated data visualization with interactive charts, 3D visualizations, and custom dashboard creation."
+    )
 
     # Visualization configuration
     col1, col2 = st.columns(2)
@@ -603,14 +610,14 @@ def render_visualization_engine():
         st.markdown("#### ⚙️ Engine Configuration")
         visualization_enabled = st.checkbox(
             "Enable Visualization Engine",
-            value=st.session_state.analytics_config.get('visualization_enabled', True),
-            key="visualization_engine_enabled"
+            value=st.session_state.analytics_config.get("visualization_enabled", True),
+            key="visualization_engine_enabled",
         )
 
         viz_type = st.selectbox(
             "Primary Visualization Type",
             options=["Interactive Charts", "3D Visualizations", "Real-time Dashboards", "Custom Components"],
-            key="primary_viz_type"
+            key="primary_viz_type",
         )
 
     with col2:
@@ -629,7 +636,7 @@ def render_visualization_engine():
             "dimensions": "3D",
             "interactivity": "High",
             "data_points": 15420,
-            "last_updated": datetime.now() - timedelta(minutes=5)
+            "last_updated": datetime.now() - timedelta(minutes=5),
         },
         {
             "name": "Resource Usage Over Time",
@@ -637,7 +644,7 @@ def render_visualization_engine():
             "dimensions": "2D",
             "interactivity": "Medium",
             "data_points": 8920,
-            "last_updated": datetime.now() - timedelta(minutes=2)
+            "last_updated": datetime.now() - timedelta(minutes=2),
         },
         {
             "name": "Anomaly Detection Scatter Plot",
@@ -645,7 +652,7 @@ def render_visualization_engine():
             "dimensions": "3D",
             "interactivity": "High",
             "data_points": 6750,
-            "last_updated": datetime.now() - timedelta(minutes=8)
+            "last_updated": datetime.now() - timedelta(minutes=8),
         },
         {
             "name": "Predictive Analytics Dashboard",
@@ -653,8 +660,8 @@ def render_visualization_engine():
             "dimensions": "Multi",
             "interactivity": "Very High",
             "data_points": 12340,
-            "last_updated": datetime.now() - timedelta(minutes=1)
-        }
+            "last_updated": datetime.now() - timedelta(minutes=1),
+        },
     ]
 
     for viz in visualizations:
@@ -662,32 +669,32 @@ def render_visualization_engine():
             col1, col2, col3, col4 = st.columns(4)
 
             with col1:
-                st.metric("Type", viz['type'])
+                st.metric("Type", viz["type"])
 
             with col2:
-                st.metric("Dimensions", viz['dimensions'])
+                st.metric("Dimensions", viz["dimensions"])
 
             with col3:
-                st.metric("Interactivity", viz['interactivity'])
+                st.metric("Interactivity", viz["interactivity"])
 
             with col4:
-                st.metric("Data Points", viz['data_points'])
+                st.metric("Data Points", viz["data_points"])
 
             # Show visualization preview (mock)
-            if viz['type'] == "Heatmap":
+            if viz["type"] == "Heatmap":
                 # Create a heatmap
                 data = np.random.rand(10, 10)
                 fig = px.imshow(data, title=f"{viz['name']} Preview")
                 st.plotly_chart(fig, use_container_width=True)
 
-            elif viz['type'] == "Time Series":
+            elif viz["type"] == "Time Series":
                 # Create a time series chart
-                dates = pd.date_range(start=datetime.now() - timedelta(days=7), periods=100, freq='H')
+                dates = pd.date_range(start=datetime.now() - timedelta(days=7), periods=100, freq="H")
                 values = np.random.rand(100) * 100
                 fig = px.line(x=dates, y=values, title=f"{viz['name']} Preview")
                 st.plotly_chart(fig, use_container_width=True)
 
-            elif viz['type'] == "Scatter":
+            elif viz["type"] == "Scatter":
                 # Create a scatter plot
                 x = np.random.rand(100)
                 y = np.random.rand(100)
@@ -706,26 +713,24 @@ def render_visualization_engine():
         chart_type = st.selectbox(
             "Chart Type",
             options=["Line Chart", "Bar Chart", "Scatter Plot", "Heatmap", "3D Surface", "Network Graph"],
-            key="custom_chart_type"
+            key="custom_chart_type",
         )
 
         data_source = st.selectbox(
             "Data Source",
             options=["Simulation Metrics", "Performance Data", "Audit Events", "Real-time Stream"],
-            key="custom_data_source"
+            key="custom_data_source",
         )
 
     with col2:
         x_axis = st.selectbox(
-            "X-Axis",
-            options=["Time", "CPU Usage", "Memory Usage", "Response Time", "Event Count"],
-            key="custom_x_axis"
+            "X-Axis", options=["Time", "CPU Usage", "Memory Usage", "Response Time", "Event Count"], key="custom_x_axis"
         )
 
         y_axis = st.selectbox(
             "Y-Axis",
             options=["Performance", "Resource Usage", "Error Rate", "Throughput", "Latency"],
-            key="custom_y_axis"
+            key="custom_y_axis",
         )
 
     if st.button("🎨 Generate Custom Visualization", key="generate_custom_viz"):
@@ -750,16 +755,19 @@ def render_visualization_engine():
 
     # Apply visualization configuration
     if st.button("💾 Apply Visualization Configuration", key="apply_viz_config", type="primary"):
-        apply_visualization_configuration({
-            'enabled': visualization_enabled,
-            'viz_type': viz_type,
-            'enable_3d': enable_3d,
-            'real_time_updates': real_time_updates,
-            'custom_themes': custom_themes
-        })
+        apply_visualization_configuration(
+            {
+                "enabled": visualization_enabled,
+                "viz_type": viz_type,
+                "enable_3d": enable_3d,
+                "real_time_updates": real_time_updates,
+                "custom_themes": custom_themes,
+            }
+        )
 
 
 # Helper Functions
+
 
 def control_pipeline(action: str):
     """Control the analytics pipeline."""
@@ -768,7 +776,7 @@ def control_pipeline(action: str):
             "start": "✅ Analytics pipeline started successfully",
             "pause": "⏸️ Analytics pipeline paused",
             "restart": "🔄 Analytics pipeline restarted",
-            "stop": "🛑 Analytics pipeline stopped"
+            "stop": "🛑 Analytics pipeline stopped",
         }
         st.success(action_messages.get(action, f"✅ Pipeline {action}d successfully"))
     except Exception as e:
@@ -778,10 +786,7 @@ def control_pipeline(action: str):
 def apply_pipeline_configuration(config: Dict[str, Any]):
     """Apply pipeline configuration."""
     try:
-        st.session_state.analytics_config.update({
-            'realtime_enabled': config['enabled'],
-            'pipeline_config': config
-        })
+        st.session_state.analytics_config.update({"realtime_enabled": config["enabled"], "pipeline_config": config})
         st.success("✅ Pipeline configuration applied successfully!")
     except Exception as e:
         st.error(f"❌ Failed to apply pipeline configuration: {str(e)}")
@@ -817,10 +822,7 @@ def retrain_all_models():
 def apply_predictive_configuration(config: Dict[str, Any]):
     """Apply predictive configuration."""
     try:
-        st.session_state.analytics_config.update({
-            'predictive_enabled': config['enabled'],
-            'model_configs': config
-        })
+        st.session_state.analytics_config.update({"predictive_enabled": config["enabled"], "model_configs": config})
         st.success("✅ Predictive configuration applied successfully!")
     except Exception as e:
         st.error(f"❌ Failed to apply predictive configuration: {str(e)}")
@@ -856,10 +858,7 @@ def run_impact_analysis():
 def apply_causal_configuration(config: Dict[str, Any]):
     """Apply causal configuration."""
     try:
-        st.session_state.analytics_config.update({
-            'causal_enabled': config['enabled'],
-            'causal_configs': config
-        })
+        st.session_state.analytics_config.update({"causal_enabled": config["enabled"], "causal_configs": config})
         st.success("✅ Causal configuration applied successfully!")
     except Exception as e:
         st.error(f"❌ Failed to apply causal configuration: {str(e)}")
@@ -874,7 +873,7 @@ def generate_custom_visualization(chart_type: str, data_source: str, x_axis: str
             y_data = np.sin(x_data) + np.random.normal(0, 0.1, 100)
             fig = px.line(x=x_data, y=y_data, title=f"Custom {chart_type}")
         elif chart_type == "Bar Chart":
-            x_data = ['A', 'B', 'C', 'D', 'E']
+            x_data = ["A", "B", "C", "D", "E"]
             y_data = np.random.rand(5) * 100
             fig = px.bar(x=x_data, y=y_data, title=f"Custom {chart_type}")
         elif chart_type == "Scatter Plot":
@@ -906,10 +905,7 @@ def export_visualization(format: str):
 def apply_visualization_configuration(config: Dict[str, Any]):
     """Apply visualization configuration."""
     try:
-        st.session_state.analytics_config.update({
-            'visualization_enabled': config['enabled'],
-            'viz_configs': config
-        })
+        st.session_state.analytics_config.update({"visualization_enabled": config["enabled"], "viz_configs": config})
         st.success("✅ Visualization configuration applied successfully!")
     except Exception as e:
         st.error(f"❌ Failed to apply visualization configuration: {str(e)}")

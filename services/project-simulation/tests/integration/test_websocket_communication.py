@@ -1,24 +1,18 @@
-"""Integration Tests for WebSocket Communication.
+"""
+Integration Tests for WebSocket Communication.
 
-This module contains comprehensive tests for WebSocket endpoints,
-real-time event broadcasting, and client-server communication patterns.
-Tests cover connection handling, message routing, and error scenarios.
+This module contains comprehensive tests for WebSocket endpoints, real-
+time event broadcasting, and client-server communication patterns. Tests
+cover connection handling, message routing, and error scenarios.
 """
 
-import pytest
 import asyncio
-import json
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
-import websockets
+import pytest
+from simulation.presentation.websockets.simulation_websocket import SimulationWebSocketHandler
 from starlette.websockets import WebSocketDisconnect
-
-from simulation.presentation.websockets.simulation_websocket import (
-    SimulationWebSocketHandler,
-    WebSocketEventType
-)
 
 
 class TestWebSocketConnectionHandling:
@@ -27,7 +21,9 @@ class TestWebSocketConnectionHandling:
     @pytest.mark.asyncio
     async def test_simulation_websocket_connection_establishment(self):
         """Test successful WebSocket connection for simulation updates."""
-        with patch('simulation.presentation.websockets.simulation_websocket.get_simulation_container') as mock_container:
+        with patch(
+            "simulation.presentation.websockets.simulation_websocket.get_simulation_container"
+        ) as mock_container:
             mock_service = AsyncMock()
             mock_container.return_value.get.return_value = mock_service
 
@@ -49,7 +45,9 @@ class TestWebSocketConnectionHandling:
     @pytest.mark.asyncio
     async def test_websocket_connection_with_invalid_simulation_id(self):
         """Test WebSocket connection with invalid simulation ID."""
-        with patch('simulation.presentation.websockets.simulation_websocket.get_simulation_container') as mock_container:
+        with patch(
+            "simulation.presentation.websockets.simulation_websocket.get_simulation_container"
+        ) as mock_container:
             mock_service = AsyncMock()
             mock_container.return_value.get.return_value = mock_service
 
@@ -85,7 +83,9 @@ class TestWebSocketConnectionHandling:
     @pytest.mark.asyncio
     async def test_websocket_connection_cleanup_on_disconnect(self):
         """Test proper cleanup when WebSocket disconnects."""
-        with patch('simulation.presentation.websockets.simulation_websocket.get_simulation_container') as mock_container:
+        with patch(
+            "simulation.presentation.websockets.simulation_websocket.get_simulation_container"
+        ) as mock_container:
             mock_service = AsyncMock()
             mock_container.return_value.get.return_value = mock_service
 
@@ -115,7 +115,7 @@ class TestWebSocketMessageHandling:
             "simulation_id": "test-123",
             "status": "running",
             "progress": 0.75,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Test message validation
@@ -135,7 +135,7 @@ class TestWebSocketMessageHandling:
             "document_type": "requirements_doc",
             "progress": 0.6,
             "current_step": "validation",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Validate message structure
@@ -154,7 +154,7 @@ class TestWebSocketMessageHandling:
             "error_type": "validation_error",
             "message": "Document validation failed",
             "details": {"field": "complexity", "issue": "invalid_value"},
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Test error message structure
@@ -168,11 +168,7 @@ class TestWebSocketMessageHandling:
         """Test client acknowledgment of received messages."""
         handler = SimulationWebSocketHandler()
 
-        ack_message = {
-            "type": "ack",
-            "message_id": "msg-123",
-            "timestamp": datetime.now().isoformat()
-        }
+        ack_message = {"type": "ack", "message_id": "msg-123", "timestamp": datetime.now().isoformat()}
 
         # Validate acknowledgment structure
         assert ack_message["type"] == "ack"
@@ -184,7 +180,8 @@ class TestWebSocketEventBroadcasting:
 
     @pytest.mark.asyncio
     async def test_broadcast_to_simulation_clients(self):
-        """Test broadcasting messages to all clients of a specific simulation."""
+        """Test broadcasting messages to all clients of a specific
+        simulation."""
         handler = SimulationWebSocketHandler()
 
         # Mock clients
@@ -192,15 +189,9 @@ class TestWebSocketEventBroadcasting:
         mock_client2 = AsyncMock()
 
         # Simulate client connections for simulation
-        handler._simulation_clients = {
-            "test-simulation": [mock_client1, mock_client2]
-        }
+        handler._simulation_clients = {"test-simulation": [mock_client1, mock_client2]}
 
-        message = {
-            "type": "simulation_update",
-            "status": "completed",
-            "timestamp": datetime.now().isoformat()
-        }
+        message = {"type": "simulation_update", "status": "completed", "timestamp": datetime.now().isoformat()}
 
         # Broadcast message
         await handler.broadcast_to_simulation("test-simulation", message)
@@ -223,7 +214,7 @@ class TestWebSocketEventBroadcasting:
         message = {
             "type": "system_notification",
             "message": "System maintenance scheduled",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Broadcast to system
@@ -243,9 +234,7 @@ class TestWebSocketEventBroadcasting:
         mock_client2 = AsyncMock()
         mock_client2.send_json.side_effect = Exception("Connection failed")
 
-        handler._simulation_clients = {
-            "test-simulation": [mock_client1, mock_client2]
-        }
+        handler._simulation_clients = {"test-simulation": [mock_client1, mock_client2]}
 
         message = {"type": "test", "data": "test"}
 
@@ -278,19 +267,16 @@ class TestWebSocketSecurity:
     async def test_websocket_origin_validation(self):
         """Test WebSocket origin validation for security."""
         # This would test CORS-like validation for WebSocket connections
-        pass
 
     @pytest.mark.asyncio
     async def test_websocket_rate_limiting(self):
         """Test rate limiting for WebSocket messages."""
         # Test that rapid message sending is limited
-        pass
 
     @pytest.mark.asyncio
     async def test_websocket_authentication(self):
         """Test WebSocket authentication and authorization."""
         # Test that only authenticated users can connect
-        pass
 
 
 class TestWebSocketPerformance:
@@ -302,10 +288,7 @@ class TestWebSocketPerformance:
         handler = SimulationWebSocketHandler()
 
         # Simulate many rapid messages
-        messages = [
-            {"type": "update", "id": i, "timestamp": datetime.now().isoformat()}
-            for i in range(100)
-        ]
+        messages = [{"type": "update", "id": i, "timestamp": datetime.now().isoformat()} for i in range(100)]
 
         # Test processing performance
         start_time = asyncio.get_event_loop().time()
@@ -353,7 +336,7 @@ class TestWebSocketMessageFormats:
             "progress": 0.75,
             "stage": "document_generation",
             "estimated_completion": datetime.now().isoformat(),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Validate required fields
@@ -372,12 +355,8 @@ class TestWebSocketMessageFormats:
             "simulation_id": "sim-123",
             "error_type": "validation_error",
             "message": "Invalid configuration",
-            "details": {
-                "field": "complexity",
-                "expected": ["low", "medium", "high"],
-                "received": "invalid"
-            },
-            "timestamp": datetime.now().isoformat()
+            "details": {"field": "complexity", "expected": ["low", "medium", "high"], "received": "invalid"},
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Validate error message structure
@@ -396,7 +375,7 @@ class TestWebSocketMessageFormats:
             "progress": 0.6,
             "items_completed": 12,
             "total_items": 20,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Validate progress structure

@@ -1,16 +1,18 @@
-"""Analysis Manager module for CLI service.
+"""
+Analysis Manager module for CLI service.
 
-Provides power-user operations for analysis service including
-analysis runs, reports generation, findings management, and quality metrics.
+Provides power-user operations for analysis service including analysis
+runs, reports generation, findings management, and quality metrics.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
+from rich.prompt import Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
 
 from services.shared.core.constants_new import ServiceNames
+
 from ...base.base_manager import BaseManager
 
 
@@ -32,7 +34,7 @@ class AnalysisManager(BaseManager):
             ("3", "Generate Reports (Confluence, Jira, Custom)"),
             ("4", "Quality Metrics & Statistics"),
             ("5", "Analysis Detectors Management"),
-            ("6", "Integration Analysis (Prompt-based)")
+            ("6", "Integration Analysis (Prompt-based)"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -54,20 +56,24 @@ class AnalysisManager(BaseManager):
         return True
 
     async def analysis_reports_menu(self):
-        """Main analysis and reports menu with enhanced interactive experience."""
+        """Main analysis and reports menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Analysis & Reports", use_interactive=True)
 
     async def run_analysis_menu(self):
         """Run analysis submenu."""
         while True:
             menu = create_menu_table("Run Analysis", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Quality Analysis"),
-                ("2", "Consistency Analysis"),
-                ("3", "Security Analysis"),
-                ("4", "Custom Analysis"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Quality Analysis"),
+                    ("2", "Consistency Analysis"),
+                    ("3", "Security Analysis"),
+                    ("4", "Custom Analysis"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -90,9 +96,7 @@ class AnalysisManager(BaseManager):
         target = await self.select_from_list(["documents", "prompts", "all"]) or "all"
 
         response = await self.api_post_with_status(
-            "analysis-service/analyze",
-            {"type": "quality", "target": target},
-            f"Running quality analysis on {target}"
+            "analysis-service/analyze", {"type": "quality", "target": target}, f"Running quality analysis on {target}"
         )
 
         if response and response.get("analysis_id"):
@@ -101,20 +105,20 @@ class AnalysisManager(BaseManager):
                 response["analysis_id"],
                 "analysis",
                 lambda aid: self.clients.get_json(f"analysis-service/analysis/{aid}"),
-                lambda data: data.get("completed", False)
+                lambda data: data.get("completed", False),
             )
 
     async def run_consistency_analysis(self):
         """Run consistency analysis."""
         try:
-            scope = Prompt.ask("[bold cyan]Analysis scope[/bold cyan]",
-                             choices=["documents", "workflows", "all"], default="all")
+            scope = Prompt.ask(
+                "[bold cyan]Analysis scope[/bold cyan]", choices=["documents", "workflows", "all"], default="all"
+            )
 
             with self.console.status(f"[bold green]Running consistency analysis on {scope}...") as status:
-                response = await self.clients.post_json("analysis-service/analyze", {
-                    "type": "consistency",
-                    "scope": scope
-                })
+                response = await self.clients.post_json(
+                    "analysis-service/analyze", {"type": "consistency", "scope": scope}
+                )
 
             if response.get("analysis_id"):
                 self.console.print(f"[green]✅ Consistency analysis started: {response['analysis_id']}[/green]")
@@ -128,14 +132,14 @@ class AnalysisManager(BaseManager):
     async def run_security_analysis(self):
         """Run security analysis."""
         try:
-            target_type = Prompt.ask("[bold cyan]Target type[/bold cyan]",
-                                   choices=["documents", "prompts", "code", "all"], default="all")
+            target_type = Prompt.ask(
+                "[bold cyan]Target type[/bold cyan]", choices=["documents", "prompts", "code", "all"], default="all"
+            )
 
             with self.console.status(f"[bold green]Running security analysis on {target_type}...") as status:
-                response = await self.clients.post_json("analysis-service/analyze", {
-                    "type": "security",
-                    "target_type": target_type
-                })
+                response = await self.clients.post_json(
+                    "analysis-service/analyze", {"type": "security", "target_type": target_type}
+                )
 
             if response.get("analysis_id"):
                 self.console.print(f"[green]✅ Security analysis started: {response['analysis_id']}[/green]")
@@ -153,13 +157,11 @@ class AnalysisManager(BaseManager):
             parameters = Prompt.ask("[bold cyan]Parameters (JSON)[/bold cyan]", default="{}")
 
             import json
+
             params = json.loads(parameters)
 
             with self.console.status(f"[bold green]Running custom {analysis_type} analysis...") as status:
-                response = await self.clients.post_json("analysis-service/analyze", {
-                    "type": analysis_type,
-                    **params
-                })
+                response = await self.clients.post_json("analysis-service/analyze", {"type": analysis_type, **params})
 
             if response.get("analysis_id"):
                 self.console.print(f"[green]✅ Custom analysis started: {response['analysis_id']}[/green]")
@@ -176,21 +178,24 @@ class AnalysisManager(BaseManager):
             analysis_id,
             "analysis",
             lambda aid: self.clients.get_json(f"analysis-service/analysis/{aid}"),
-            lambda data: data.get("completed", False)
+            lambda data: data.get("completed", False),
         )
 
     async def view_findings_menu(self):
         """View findings submenu."""
         while True:
             menu = create_menu_table("Analysis Findings", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View All Findings"),
-                ("2", "Filter by Severity"),
-                ("3", "Filter by Type"),
-                ("4", "Search Findings"),
-                ("5", "Export Findings"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View All Findings"),
+                    ("2", "Filter by Severity"),
+                    ("3", "Filter by Type"),
+                    ("4", "Search Findings"),
+                    ("5", "Export Findings"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -224,15 +229,18 @@ class AnalysisManager(BaseManager):
                 self.add_finding_row(table, finding)
 
             self.console.print(table)
-            self.console.print(f"[dim]Showing {min(20, len(response['findings']))} of {len(response['findings'])} findings[/dim]")
+            self.console.print(
+                f"[dim]Showing {min(20, len(response['findings']))} of {len(response['findings'])} findings[/dim]"
+            )
         elif response:
             self.display.show_warning("No findings found.")
 
     async def filter_findings_by_severity(self):
         """Filter findings by severity."""
         try:
-            severity = Prompt.ask("[bold cyan]Severity level[/bold cyan]",
-                                choices=["critical", "high", "medium", "low", "info"])
+            severity = Prompt.ask(
+                "[bold cyan]Severity level[/bold cyan]", choices=["critical", "high", "medium", "low", "info"]
+            )
 
             with self.console.status(f"[bold green]Fetching {severity} severity findings...") as status:
                 response = await self.clients.get_json(f"analysis-service/findings?severity={severity}")
@@ -287,20 +295,16 @@ class AnalysisManager(BaseManager):
         table.add_column("Description", style="dim white")
 
         for finding in findings[:15]:  # Show first 15
-            severity_color = {
-                "critical": "red",
-                "high": "red",
-                "medium": "yellow",
-                "low": "green",
-                "info": "blue"
-            }.get(finding.get("severity", "unknown"), "white")
+            severity_color = {"critical": "red", "high": "red", "medium": "yellow", "low": "green", "info": "blue"}.get(
+                finding.get("severity", "unknown"), "white"
+            )
 
             table.add_row(
                 finding.get("id", "N/A")[:8],
                 finding.get("type", "unknown"),
                 f"[{severity_color}]{finding.get('severity', 'unknown')}[/{severity_color}]",
                 finding.get("title", "No title")[:40],
-                finding.get("description", "No description")[:50]
+                finding.get("description", "No description")[:50],
             )
 
         self.console.print(table)
@@ -308,8 +312,9 @@ class AnalysisManager(BaseManager):
     async def export_findings(self):
         """Export findings."""
         try:
-            export_format = Prompt.ask("[bold cyan]Export format[/bold cyan]",
-                                     choices=["json", "csv", "html"], default="json")
+            export_format = Prompt.ask(
+                "[bold cyan]Export format[/bold cyan]", choices=["json", "csv", "html"], default="json"
+            )
             filename = Prompt.ask("[bold cyan]Filename[/bold cyan]", default=f"findings.{export_format}")
 
             with self.console.status(f"[bold green]Exporting findings to {filename}...") as status:
@@ -327,13 +332,16 @@ class AnalysisManager(BaseManager):
         """Generate reports submenu."""
         while True:
             menu = create_menu_table("Report Generation", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Confluence Consolidation Report"),
-                ("2", "Jira Staleness Report"),
-                ("3", "Findings Report"),
-                ("4", "Quality Metrics Report"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Confluence Consolidation Report"),
+                    ("2", "Jira Staleness Report"),
+                    ("3", "Findings Report"),
+                    ("4", "Quality Metrics Report"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -404,14 +412,14 @@ Generated: {report.get('generated_at', 'unknown')}
     async def generate_findings_report(self):
         """Generate findings report."""
         try:
-            report_type = Prompt.ask("[bold cyan]Report type[/bold cyan]",
-                                   choices=["summary", "detailed", "trends"], default="summary")
+            report_type = Prompt.ask(
+                "[bold cyan]Report type[/bold cyan]", choices=["summary", "detailed", "trends"], default="summary"
+            )
 
             with self.console.status(f"[bold green]Generating {report_type} findings report...") as status:
-                response = await self.clients.post_json("analysis-service/reports/generate", {
-                    "type": "findings",
-                    "format": report_type
-                })
+                response = await self.clients.post_json(
+                    "analysis-service/reports/generate", {"type": "findings", "format": report_type}
+                )
 
             if response.get("report_id"):
                 self.console.print(f"[green]✅ Findings report generated: {response['report_id']}[/green]")
@@ -425,9 +433,7 @@ Generated: {report.get('generated_at', 'unknown')}
         """Generate quality metrics report."""
         try:
             with self.console.status("[bold green]Generating quality metrics report...") as status:
-                response = await self.clients.post_json("analysis-service/reports/generate", {
-                    "type": "quality"
-                })
+                response = await self.clients.post_json("analysis-service/reports/generate", {"type": "quality"})
 
             if response.get("report_id"):
                 self.console.print(f"[green]✅ Quality metrics report generated: {response['report_id']}[/green]")
@@ -441,13 +447,16 @@ Generated: {report.get('generated_at', 'unknown')}
         """Quality metrics submenu."""
         while True:
             menu = create_menu_table("Quality Metrics", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Overall Quality Scores"),
-                ("2", "Document Quality Trends"),
-                ("3", "Prompt Quality Metrics"),
-                ("4", "Quality Improvement Recommendations"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Overall Quality Scores"),
+                    ("2", "Document Quality Trends"),
+                    ("3", "Prompt Quality Metrics"),
+                    ("4", "Quality Improvement Recommendations"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -581,13 +590,16 @@ Category Breakdown:
         """Detectors management submenu."""
         while True:
             menu = create_menu_table("Analysis Detectors", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "List Available Detectors"),
-                ("2", "View Detector Details"),
-                ("3", "Enable/Disable Detectors"),
-                ("4", "Detector Performance Stats"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "List Available Detectors"),
+                    ("2", "View Detector Details"),
+                    ("3", "Enable/Disable Detectors"),
+                    ("4", "Detector Performance Stats"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -627,7 +639,7 @@ Category Breakdown:
                         detector.get("name", "unknown"),
                         detector.get("type", "unknown"),
                         f"[{status_color}]{'Enabled' if detector.get('enabled') else 'Disabled'}[/{status_color}]",
-                        detector.get("description", "No description")[:50]
+                        detector.get("description", "No description")[:50],
                     )
 
                 self.console.print(table)
@@ -710,7 +722,7 @@ Performance:
                         str(stat.get("total_runs", 0)),
                         avg_time,
                         success_rate,
-                        str(stat.get("total_findings", 0))
+                        str(stat.get("total_findings", 0)),
                     )
 
                 self.console.print(table)
@@ -724,13 +736,16 @@ Performance:
         """Integration analysis submenu."""
         while True:
             menu = create_menu_table("Integration Analysis", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Natural Language Analysis"),
-                ("2", "Prompt-Based Analysis"),
-                ("3", "Log Analysis"),
-                ("4", "Available Prompt Categories"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Natural Language Analysis"),
+                    ("2", "Prompt-Based Analysis"),
+                    ("3", "Log Analysis"),
+                    ("4", "Available Prompt Categories"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -756,10 +771,9 @@ Performance:
             context = Prompt.ask("[bold cyan]Context (optional)[/bold cyan]", default="")
 
             with self.console.status("[bold green]Running natural language analysis...") as status:
-                response = await self.clients.post_json("analysis-service/integration/natural-language-analysis", {
-                    "query": query,
-                    "context": context
-                })
+                response = await self.clients.post_json(
+                    "analysis-service/integration/natural-language-analysis", {"query": query, "context": context}
+                )
 
             if response.get("analysis"):
                 analysis = response["analysis"]
@@ -796,10 +810,10 @@ Key Insights:
             target_content = Prompt.ask("[bold cyan]Target content[/bold cyan]")
 
             with self.console.status(f"[bold green]Running {prompt_category} analysis...") as status:
-                response = await self.clients.post_json("analysis-service/integration/analyze-with-prompt", {
-                    "prompt_category": prompt_category,
-                    "target_content": target_content
-                })
+                response = await self.clients.post_json(
+                    "analysis-service/integration/analyze-with-prompt",
+                    {"prompt_category": prompt_category, "target_content": target_content},
+                )
 
             if response.get("result"):
                 result = response["result"]
@@ -830,9 +844,9 @@ Recommendations:
             log_content = Prompt.ask("[bold cyan]Log content to analyze[/bold cyan]")
 
             with self.console.status("[bold green]Running log analysis...") as status:
-                response = await self.clients.post_json("analysis-service/integration/log-analysis", {
-                    "log_content": log_content
-                })
+                response = await self.clients.post_json(
+                    "analysis-service/integration/log-analysis", {"log_content": log_content}
+                )
 
             if response.get("analysis"):
                 analysis = response["analysis"]
@@ -847,7 +861,9 @@ Key Findings:
 """
                 if analysis.get("findings"):
                     for finding in analysis["findings"][:10]:  # Show first 10
-                        content += f"  • {finding.get('type', 'unknown')}: {finding.get('description', 'No description')}\n"
+                        content += (
+                            f"  • {finding.get('type', 'unknown')}: {finding.get('description', 'No description')}\n"
+                        )
 
                 print_panel(self.console, content, border_style="red")
             else:
@@ -872,7 +888,7 @@ Key Findings:
                     table.add_row(
                         category.get("name", "unknown"),
                         category.get("description", "No description")[:50],
-                        str(category.get("prompt_count", 0))
+                        str(category.get("prompt_count", 0)),
                     )
 
                 self.console.print(table)

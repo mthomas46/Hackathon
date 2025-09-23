@@ -1,14 +1,15 @@
 """Application Events - Domain event representations for the application layer."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, Any, Optional, List
-from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 
 class EventType(Enum):
     """Application event types."""
+
     ANALYSIS_REQUESTED = "analysis_requested"
     ANALYSIS_COMPLETED = "analysis_completed"
     ANALYSIS_FAILED = "analysis_failed"
@@ -33,18 +34,17 @@ class ApplicationEvent(ABC):
     def to_dict(self) -> Dict[str, Any]:
         """Convert event to dictionary representation."""
         return {
-            'event_id': self.event_id,
-            'event_type': self.event_type.value,
-            'timestamp': self.timestamp.isoformat(),
-            'correlation_id': self.correlation_id,
-            'metadata': self.metadata
+            "event_id": self.event_id,
+            "event_type": self.event_type.value,
+            "timestamp": self.timestamp.isoformat(),
+            "correlation_id": self.correlation_id,
+            "metadata": self.metadata,
         }
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ApplicationEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "ApplicationEvent":
         """Create event from dictionary representation."""
-        pass
 
 
 @dataclass(frozen=True)
@@ -61,27 +61,29 @@ class AnalysisRequestedEvent(ApplicationEvent):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
-        base_dict.update({
-            'document_id': self.document_id,
-            'analysis_type': self.analysis_type,
-            'requested_by': self.requested_by,
-            'priority': self.priority,
-            'configuration': self.configuration
-        })
+        base_dict.update(
+            {
+                "document_id": self.document_id,
+                "analysis_type": self.analysis_type,
+                "requested_by": self.requested_by,
+                "priority": self.priority,
+                "configuration": self.configuration,
+            }
+        )
         return base_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AnalysisRequestedEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "AnalysisRequestedEvent":
         """Create from dictionary."""
         return cls(
-            event_id=data['event_id'],
-            correlation_id=data.get('correlation_id'),
-            metadata=data.get('metadata', {}),
-            document_id=data['document_id'],
-            analysis_type=data['analysis_type'],
-            requested_by=data.get('requested_by'),
-            priority=data.get('priority', 'normal'),
-            configuration=data.get('configuration', {})
+            event_id=data["event_id"],
+            correlation_id=data.get("correlation_id"),
+            metadata=data.get("metadata", {}),
+            document_id=data["document_id"],
+            analysis_type=data["analysis_type"],
+            requested_by=data.get("requested_by"),
+            priority=data.get("priority", "normal"),
+            configuration=data.get("configuration", {}),
         )
 
 
@@ -100,29 +102,31 @@ class AnalysisCompletedEvent(ApplicationEvent):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
-        base_dict.update({
-            'analysis_id': self.analysis_id,
-            'document_id': self.document_id,
-            'analysis_type': self.analysis_type,
-            'result': self.result,
-            'execution_time_seconds': self.execution_time_seconds,
-            'findings_count': self.findings_count
-        })
+        base_dict.update(
+            {
+                "analysis_id": self.analysis_id,
+                "document_id": self.document_id,
+                "analysis_type": self.analysis_type,
+                "result": self.result,
+                "execution_time_seconds": self.execution_time_seconds,
+                "findings_count": self.findings_count,
+            }
+        )
         return base_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AnalysisCompletedEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "AnalysisCompletedEvent":
         """Create from dictionary."""
         return cls(
-            event_id=data['event_id'],
-            correlation_id=data.get('correlation_id'),
-            metadata=data.get('metadata', {}),
-            analysis_id=data['analysis_id'],
-            document_id=data['document_id'],
-            analysis_type=data['analysis_type'],
-            result=data.get('result', {}),
-            execution_time_seconds=data.get('execution_time_seconds', 0.0),
-            findings_count=data.get('findings_count', 0)
+            event_id=data["event_id"],
+            correlation_id=data.get("correlation_id"),
+            metadata=data.get("metadata", {}),
+            analysis_id=data["analysis_id"],
+            document_id=data["document_id"],
+            analysis_type=data["analysis_type"],
+            result=data.get("result", {}),
+            execution_time_seconds=data.get("execution_time_seconds", 0.0),
+            findings_count=data.get("findings_count", 0),
         )
 
 
@@ -141,29 +145,31 @@ class AnalysisFailedEvent(ApplicationEvent):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
-        base_dict.update({
-            'analysis_id': self.analysis_id,
-            'document_id': self.document_id,
-            'analysis_type': self.analysis_type,
-            'error_message': self.error_message,
-            'error_code': self.error_code,
-            'retry_count': self.retry_count
-        })
+        base_dict.update(
+            {
+                "analysis_id": self.analysis_id,
+                "document_id": self.document_id,
+                "analysis_type": self.analysis_type,
+                "error_message": self.error_message,
+                "error_code": self.error_code,
+                "retry_count": self.retry_count,
+            }
+        )
         return base_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'AnalysisFailedEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "AnalysisFailedEvent":
         """Create from dictionary."""
         return cls(
-            event_id=data['event_id'],
-            correlation_id=data.get('correlation_id'),
-            metadata=data.get('metadata', {}),
-            analysis_id=data['analysis_id'],
-            document_id=data['document_id'],
-            analysis_type=data['analysis_type'],
-            error_message=data['error_message'],
-            error_code=data.get('error_code'),
-            retry_count=data.get('retry_count', 0)
+            event_id=data["event_id"],
+            correlation_id=data.get("correlation_id"),
+            metadata=data.get("metadata", {}),
+            analysis_id=data["analysis_id"],
+            document_id=data["document_id"],
+            analysis_type=data["analysis_type"],
+            error_message=data["error_message"],
+            error_code=data.get("error_code"),
+            retry_count=data.get("retry_count", 0),
         )
 
 
@@ -183,31 +189,33 @@ class FindingCreatedEvent(ApplicationEvent):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
-        base_dict.update({
-            'finding_id': self.finding_id,
-            'document_id': self.document_id,
-            'analysis_id': self.analysis_id,
-            'severity': self.severity,
-            'category': self.category,
-            'description': self.description,
-            'confidence': self.confidence
-        })
+        base_dict.update(
+            {
+                "finding_id": self.finding_id,
+                "document_id": self.document_id,
+                "analysis_id": self.analysis_id,
+                "severity": self.severity,
+                "category": self.category,
+                "description": self.description,
+                "confidence": self.confidence,
+            }
+        )
         return base_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'FindingCreatedEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "FindingCreatedEvent":
         """Create from dictionary."""
         return cls(
-            event_id=data['event_id'],
-            correlation_id=data.get('correlation_id'),
-            metadata=data.get('metadata', {}),
-            finding_id=data['finding_id'],
-            document_id=data['document_id'],
-            analysis_id=data['analysis_id'],
-            severity=data['severity'],
-            category=data['category'],
-            description=data['description'],
-            confidence=data.get('confidence', 0.0)
+            event_id=data["event_id"],
+            correlation_id=data.get("correlation_id"),
+            metadata=data.get("metadata", {}),
+            finding_id=data["finding_id"],
+            document_id=data["document_id"],
+            analysis_id=data["analysis_id"],
+            severity=data["severity"],
+            category=data["category"],
+            description=data["description"],
+            confidence=data.get("confidence", 0.0),
         )
 
 
@@ -225,26 +233,28 @@ class DocumentProcessedEvent(ApplicationEvent):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
-        base_dict.update({
-            'document_id': self.document_id,
-            'processing_type': self.processing_type,
-            'word_count': self.word_count,
-            'processing_time_seconds': self.processing_time_seconds,
-            'metadata': self.metadata
-        })
+        base_dict.update(
+            {
+                "document_id": self.document_id,
+                "processing_type": self.processing_type,
+                "word_count": self.word_count,
+                "processing_time_seconds": self.processing_time_seconds,
+                "metadata": self.metadata,
+            }
+        )
         return base_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'DocumentProcessedEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "DocumentProcessedEvent":
         """Create from dictionary."""
         return cls(
-            event_id=data['event_id'],
-            correlation_id=data.get('correlation_id'),
-            metadata=data.get('metadata', {}),
-            document_id=data['document_id'],
-            processing_type=data['processing_type'],
-            word_count=data.get('word_count', 0),
-            processing_time_seconds=data.get('processing_time_seconds', 0.0)
+            event_id=data["event_id"],
+            correlation_id=data.get("correlation_id"),
+            metadata=data.get("metadata", {}),
+            document_id=data["document_id"],
+            processing_type=data["processing_type"],
+            word_count=data.get("word_count", 0),
+            processing_time_seconds=data.get("processing_time_seconds", 0.0),
         )
 
 
@@ -261,25 +271,27 @@ class WorkflowTriggeredEvent(ApplicationEvent):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
-        base_dict.update({
-            'workflow_id': self.workflow_id,
-            'trigger_type': self.trigger_type,
-            'document_ids': self.document_ids,
-            'configuration': self.configuration
-        })
+        base_dict.update(
+            {
+                "workflow_id": self.workflow_id,
+                "trigger_type": self.trigger_type,
+                "document_ids": self.document_ids,
+                "configuration": self.configuration,
+            }
+        )
         return base_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'WorkflowTriggeredEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "WorkflowTriggeredEvent":
         """Create from dictionary."""
         return cls(
-            event_id=data['event_id'],
-            correlation_id=data.get('correlation_id'),
-            metadata=data.get('metadata', {}),
-            workflow_id=data['workflow_id'],
-            trigger_type=data['trigger_type'],
-            document_ids=data.get('document_ids', []),
-            configuration=data.get('configuration', {})
+            event_id=data["event_id"],
+            correlation_id=data.get("correlation_id"),
+            metadata=data.get("metadata", {}),
+            workflow_id=data["workflow_id"],
+            trigger_type=data["trigger_type"],
+            document_ids=data.get("document_ids", []),
+            configuration=data.get("configuration", {}),
         )
 
 
@@ -298,29 +310,31 @@ class ReportGeneratedEvent(ApplicationEvent):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
-        base_dict.update({
-            'report_id': self.report_id,
-            'report_type': self.report_type,
-            'document_ids': self.document_ids,
-            'findings_count': self.findings_count,
-            'file_size_bytes': self.file_size_bytes,
-            'download_url': self.download_url
-        })
+        base_dict.update(
+            {
+                "report_id": self.report_id,
+                "report_type": self.report_type,
+                "document_ids": self.document_ids,
+                "findings_count": self.findings_count,
+                "file_size_bytes": self.file_size_bytes,
+                "download_url": self.download_url,
+            }
+        )
         return base_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ReportGeneratedEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "ReportGeneratedEvent":
         """Create from dictionary."""
         return cls(
-            event_id=data['event_id'],
-            correlation_id=data.get('correlation_id'),
-            metadata=data.get('metadata', {}),
-            report_id=data['report_id'],
-            report_type=data['report_type'],
-            document_ids=data.get('document_ids', []),
-            findings_count=data.get('findings_count', 0),
-            file_size_bytes=data.get('file_size_bytes'),
-            download_url=data.get('download_url')
+            event_id=data["event_id"],
+            correlation_id=data.get("correlation_id"),
+            metadata=data.get("metadata", {}),
+            report_id=data["report_id"],
+            report_type=data["report_type"],
+            document_ids=data.get("document_ids", []),
+            findings_count=data.get("findings_count", 0),
+            file_size_bytes=data.get("file_size_bytes"),
+            download_url=data.get("download_url"),
         )
 
 
@@ -338,25 +352,27 @@ class SystemHealthCheckEvent(ApplicationEvent):
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         base_dict = super().to_dict()
-        base_dict.update({
-            'service_name': self.service_name,
-            'service_version': self.service_version,
-            'health_status': self.health_status,
-            'response_time_ms': self.response_time_ms,
-            'system_metrics': self.system_metrics
-        })
+        base_dict.update(
+            {
+                "service_name": self.service_name,
+                "service_version": self.service_version,
+                "health_status": self.health_status,
+                "response_time_ms": self.response_time_ms,
+                "system_metrics": self.system_metrics,
+            }
+        )
         return base_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'SystemHealthCheckEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "SystemHealthCheckEvent":
         """Create from dictionary."""
         return cls(
-            event_id=data['event_id'],
-            correlation_id=data.get('correlation_id'),
-            metadata=data.get('metadata', {}),
-            service_name=data['service_name'],
-            service_version=data['service_version'],
-            health_status=data['health_status'],
-            response_time_ms=data.get('response_time_ms', 0.0),
-            system_metrics=data.get('system_metrics', {})
+            event_id=data["event_id"],
+            correlation_id=data.get("correlation_id"),
+            metadata=data.get("metadata", {}),
+            service_name=data["service_name"],
+            service_version=data["service_version"],
+            health_status=data["health_status"],
+            response_time_ms=data.get("response_time_ms", 0.0),
+            system_metrics=data.get("system_metrics", {}),
         )

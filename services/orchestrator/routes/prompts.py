@@ -1,21 +1,25 @@
-"""Prompts Routes for Orchestrator Service"""
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, field_validator
+"""Prompts Routes for Orchestrator Service."""
+
 from typing import Optional
 
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, field_validator
+
 router = APIRouter()
+
 
 class PromptUsageRequest(BaseModel):
     prompt_id: str
     input_tokens: Optional[int] = 0
     output_tokens: Optional[int] = 0
 
-    @field_validator('prompt_id')
+    @field_validator("prompt_id")
     @classmethod
     def validate_prompt_id(cls, v):
         if not v:
-            raise ValueError('Prompt ID cannot be empty')
+            raise ValueError("Prompt ID cannot be empty")
         return v
+
 
 @router.post("/prompts/usage")
 async def log_prompt_usage(req: PromptUsageRequest):
@@ -24,8 +28,9 @@ async def log_prompt_usage(req: PromptUsageRequest):
         "status": "logged",
         "prompt_id": req.prompt_id,
         "input_tokens": req.input_tokens,
-        "output_tokens": req.output_tokens
+        "output_tokens": req.output_tokens,
     }
+
 
 @router.get("/prompts/search/{category}/{name}")
 async def search_prompts(category: str, name: str):
@@ -39,8 +44,8 @@ async def search_prompts(category: str, name: str):
                 "id": f"{category}-{name}",
                 "category": category,
                 "name": name,
-                "content": f"Sample prompt for {category}/{name}"
+                "content": f"Sample prompt for {category}/{name}",
             }
         ],
-        "total": 1
+        "total": 1,
     }

@@ -4,10 +4,11 @@ Startup script for Log Collector service
 """
 
 import os
-import sys
 import subprocess
+import sys
 import time
 from pathlib import Path
+
 
 def main():
     """Start Log Collector service."""
@@ -22,25 +23,18 @@ def main():
     # Set PYTHONPATH
     pythonpath = str(project_root)
     env = os.environ.copy()
-    env['PYTHONPATH'] = pythonpath
+    env["PYTHONPATH"] = pythonpath
 
     # Start service
     try:
-        cmd = [
-            sys.executable,
-            "-m", "services.log_collector.main"
-        ]
+        cmd = [sys.executable, "-m", "services.log_collector.main"]
 
         print(f"🔄 Command: {' '.join(cmd)}")
         print(f"📁 Working directory: {os.getcwd()}")
         print(f"🐍 PYTHONPATH: {pythonpath}")
 
         process = subprocess.Popen(
-            cmd,
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            universal_newlines=True
+            cmd, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True
         )
 
         print(f"✅ Log Collector started (PID: {process.pid}) on http://localhost:5080")
@@ -82,6 +76,7 @@ def main():
     except Exception as e:
         print(f"❌ Error starting Log Collector: {e}")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

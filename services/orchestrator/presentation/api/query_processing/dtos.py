@@ -1,8 +1,8 @@
-"""DTOs for Query Processing API"""
+"""DTOs for Query Processing API."""
+
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 
 
 class ProcessQueryRequest(BaseModel):
@@ -13,11 +13,11 @@ class ProcessQueryRequest(BaseModel):
     max_results: Optional[int] = Field(50, ge=1, le=1000)
     include_explanation: bool = Field(True)
 
-    @field_validator('query_text')
+    @field_validator("query_text")
     @classmethod
     def validate_query_text(cls, v):
         if not v.strip():
-            raise ValueError('Query text cannot be empty')
+            raise ValueError("Query text cannot be empty")
         return v.strip()
 
 
@@ -76,10 +76,10 @@ class StructuredQueryRequest(BaseModel):
     sorting: Optional[Dict[str, str]] = None
     pagination: Optional[Dict[str, int]] = None
 
-    @field_validator('query_type')
+    @field_validator("query_type")
     @classmethod
     def validate_query_type(cls, v):
-        valid_types = ['search', 'analytics', 'aggregation', 'filter', 'count']
+        valid_types = ["search", "analytics", "aggregation", "filter", "count"]
         if v not in valid_types:
             raise ValueError(f'Query type must be one of: {", ".join(valid_types)}')
         return v

@@ -1,27 +1,27 @@
-"""Comprehensive tests for ALL Discovery Agent phases and features.
+"""
+Comprehensive tests for ALL Discovery Agent phases and features.
 
-This module provides complete test coverage for all Phase 1-5 implementations
-including security scanning, monitoring, AI tool selection, semantic analysis,
-performance optimization, and orchestrator integration.
+This module provides complete test coverage for all Phase 1-5
+implementations including security scanning, monitoring, AI tool
+selection, semantic analysis, performance optimization, and orchestrator
+integration.
 """
 
-import pytest
-import asyncio
-import json
-from unittest.mock import AsyncMock, patch, MagicMock, mock_open
-from typing import Dict, Any, List
-import tempfile
 import os
+import tempfile
+from typing import Any, Dict, List
+from unittest.mock import MagicMock, patch
+
+import pytest
+from modules.ai_tool_selector import ai_tool_selector
+from modules.monitoring_service import discovery_monitoring_service
+from modules.orchestrator_integration import orchestrator_integration
+from modules.performance_optimizer import performance_optimizer
+from modules.security_scanner import tool_security_scanner
+from modules.semantic_analyzer import semantic_tool_analyzer
 
 # Import all the new modules
-from modules.tool_discovery import tool_discovery_service
-from modules.security_scanner import tool_security_scanner
-from modules.monitoring_service import discovery_monitoring_service
 from modules.tool_registry import tool_registry_storage
-from modules.orchestrator_integration import orchestrator_integration
-from modules.ai_tool_selector import ai_tool_selector
-from modules.semantic_analyzer import semantic_tool_analyzer
-from modules.performance_optimizer import performance_optimizer
 
 
 class TestSecurityScanner:
@@ -36,22 +36,22 @@ class TestSecurityScanner:
                 "service": "test-service",
                 "method": "DELETE",
                 "path": "/api/delete",
-                "description": "Delete resource tool"
+                "description": "Delete resource tool",
             },
             {
                 "name": "test_execute_tool",
                 "service": "test-service",
                 "method": "POST",
                 "path": "/api/execute",
-                "description": "Execute code tool"
+                "description": "Execute code tool",
             },
             {
                 "name": "test_query_tool",
                 "service": "test-service",
                 "method": "POST",
                 "path": "/api/query",
-                "parameters": {"properties": {"query": {"type": "string"}}}
-            }
+                "parameters": {"properties": {"query": {"type": "string"}}},
+            },
         ]
 
     @pytest.mark.asyncio
@@ -59,14 +59,14 @@ class TestSecurityScanner:
         """Test security scanning identifies high-risk tools."""
         delete_tool = sample_tools[0]
 
-        with patch.object(tool_security_scanner, 'client') as mock_client:
+        with patch.object(tool_security_scanner, "client") as mock_client:
             # Mock secure-analyzer response
             mock_response = MagicMock()
             mock_response.status = 200
             mock_response.json.return_value = {
                 "overall_risk": "high",
                 "vulnerabilities": [{"type": "authz_bypass", "severity": "high"}],
-                "recommendations": ["Implement proper authorization"]
+                "recommendations": ["Implement proper authorization"],
             }
             mock_client.post.return_value.__aenter__.return_value = mock_response
 
@@ -82,13 +82,13 @@ class TestSecurityScanner:
         """Test security scanning identifies medium-risk tools."""
         query_tool = sample_tools[2]
 
-        with patch.object(tool_security_scanner, 'client') as mock_client:
+        with patch.object(tool_security_scanner, "client") as mock_client:
             mock_response = MagicMock()
             mock_response.status = 200
             mock_response.json.return_value = {
                 "overall_risk": "medium",
                 "vulnerabilities": [{"type": "sql_injection", "severity": "medium"}],
-                "recommendations": ["Use parameterized queries"]
+                "recommendations": ["Use parameterized queries"],
             }
             mock_client.post.return_value.__aenter__.return_value = mock_response
 
@@ -103,7 +103,7 @@ class TestSecurityScanner:
         """Test security scanning handles service unavailability."""
         delete_tool = sample_tools[0]
 
-        with patch.object(tool_security_scanner, 'client') as mock_client:
+        with patch.object(tool_security_scanner, "client") as mock_client:
             mock_client.post.side_effect = Exception("Connection failed")
 
             result = await tool_security_scanner.scan_tool_security(delete_tool)
@@ -119,25 +119,17 @@ class TestMonitoringService:
     @pytest.fixture
     def discovery_event(self) -> Dict[str, Any]:
         """Sample discovery event for testing."""
-        return {
-            "service_name": "test-service",
-            "health_status": "healthy",
-            "tools_discovered": 5,
-            "response_time": 1.2
-        }
+        return {"service_name": "test-service", "health_status": "healthy", "tools_discovered": 5, "response_time": 1.2}
 
     @pytest.mark.asyncio
     async def test_log_discovery_event(self, discovery_event):
         """Test logging discovery events."""
-        with patch.object(discovery_monitoring_service, 'client') as mock_client:
+        with patch.object(discovery_monitoring_service, "client") as mock_client:
             mock_response = MagicMock()
             mock_response.status = 200
             mock_client.post.return_value.__aenter__.return_value = mock_response
 
-            await discovery_monitoring_service.log_discovery_event(
-                "service_discovery",
-                discovery_event
-            )
+            await discovery_monitoring_service.log_discovery_event("service_discovery", discovery_event)
 
             # Verify event was logged internally
             assert len(discovery_monitoring_service.events) > 0
@@ -148,11 +140,7 @@ class TestMonitoringService:
     @pytest.mark.asyncio
     async def test_monitor_security_scan(self, discovery_event):
         """Test monitoring security scan results."""
-        scan_result = {
-            "tool_name": "test_tool",
-            "risk_level": "high",
-            "vulnerabilities": ["SQL injection"]
-        }
+        scan_result = {"tool_name": "test_tool", "risk_level": "high", "vulnerabilities": ["SQL injection"]}
 
         await discovery_monitoring_service.monitor_security_scan("test_tool", scan_result)
 
@@ -166,12 +154,12 @@ class TestMonitoringService:
     async def test_create_monitoring_dashboard(self):
         """Test creating comprehensive monitoring dashboard."""
         # Add some test data
-        await discovery_monitoring_service.log_discovery_event("service_discovery", {
-            "service_name": "service1", "health_status": "healthy", "tools_discovered": 3
-        })
-        await discovery_monitoring_service.log_discovery_event("service_discovery", {
-            "service_name": "service2", "health_status": "unhealthy", "tools_discovered": 0
-        })
+        await discovery_monitoring_service.log_discovery_event(
+            "service_discovery", {"service_name": "service1", "health_status": "healthy", "tools_discovered": 3}
+        )
+        await discovery_monitoring_service.log_discovery_event(
+            "service_discovery", {"service_name": "service2", "health_status": "unhealthy", "tools_discovered": 0}
+        )
 
         dashboard = await discovery_monitoring_service.create_monitoring_dashboard()
 
@@ -199,24 +187,9 @@ class TestToolRegistry:
     def sample_tools(self) -> List[Dict[str, Any]]:
         """Sample tools for registry testing."""
         return [
-            {
-                "name": "service1_tool1",
-                "service": "service1",
-                "category": "read",
-                "description": "Read tool"
-            },
-            {
-                "name": "service1_tool2",
-                "service": "service1",
-                "category": "create",
-                "description": "Create tool"
-            },
-            {
-                "name": "service2_tool1",
-                "service": "service2",
-                "category": "analysis",
-                "description": "Analysis tool"
-            }
+            {"name": "service1_tool1", "service": "service1", "category": "read", "description": "Read tool"},
+            {"name": "service1_tool2", "service": "service1", "category": "create", "description": "Create tool"},
+            {"name": "service2_tool1", "service": "service2", "category": "analysis", "description": "Analysis tool"},
         ]
 
     @pytest.mark.asyncio
@@ -228,10 +201,7 @@ class TestToolRegistry:
             "timestamp": "2025-01-17T21:30:00Z",
             "services_tested": 2,
             "total_tools_discovered": 3,
-            "services": {
-                "service1": {"tools": sample_tools[:2]},
-                "service2": {"tools": sample_tools[2:]}
-            }
+            "services": {"service1": {"tools": sample_tools[:2]}, "service2": {"tools": sample_tools[2:]}},
         }
 
         await registry.save_discovery_results(discovery_results)
@@ -299,25 +269,27 @@ class TestOrchestratorIntegration:
                 "service": "test-service",
                 "category": "read",
                 "description": "Test read tool",
-                "langraph_ready": {"ready": True, "score": 8}
+                "langraph_ready": {"ready": True, "score": 8},
             },
             {
                 "name": "test_tool_2",
                 "service": "test-service",
                 "category": "create",
                 "description": "Test create tool",
-                "langraph_ready": {"ready": True, "score": 9}
-            }
+                "langraph_ready": {"ready": True, "score": 9},
+            },
         ]
 
     @pytest.mark.asyncio
     async def test_register_tools_success(self, sample_tools):
         """Test successful tool registration with orchestrator."""
-        with patch.object(orchestrator_integration, 'service_client') as mock_client:
+        with patch.object(orchestrator_integration, "service_client") as mock_client:
             mock_response = MagicMock()
             mock_response.status = 200
             mock_response.json.return_value = {"workflow_id": "wf_123", "tool_id": "tool_456"}
-            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = mock_response
+            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
+                mock_response
+            )
 
             result = await orchestrator_integration.register_discovered_tools(sample_tools)
 
@@ -329,6 +301,7 @@ class TestOrchestratorIntegration:
     @pytest.mark.asyncio
     async def test_register_tools_partial_failure(self, sample_tools):
         """Test tool registration with partial failures."""
+
         def mock_post(url, json, **kwargs):
             if "test_tool_1" in json["tool_name"]:
                 # First tool succeeds
@@ -343,7 +316,7 @@ class TestOrchestratorIntegration:
                 mock_resp.text = "Internal server error"
                 return mock_resp
 
-        with patch.object(orchestrator_integration, 'service_client') as mock_client:
+        with patch.object(orchestrator_integration, "service_client") as mock_client:
             mock_client.session.return_value.__aenter__.return_value.post.side_effect = mock_post
 
             result = await orchestrator_integration.register_discovered_tools(sample_tools)
@@ -358,26 +331,26 @@ class TestOrchestratorIntegration:
         workflow_spec = {
             "name": "test_workflow",
             "description": "Test workflow",
-            "steps": [
-                {"step_name": "step1", "tool": "tool1"},
-                {"step_name": "step2", "tool": "tool2"}
-            ],
-            "required_tools": ["tool1", "tool2"]
+            "steps": [{"step_name": "step1", "tool": "tool1"}, {"step_name": "step2", "tool": "tool2"}],
+            "required_tools": ["tool1", "tool2"],
         }
 
-        with patch.object(orchestrator_integration, 'service_client') as mock_client, \
-             patch.object(orchestrator_integration, '_check_tool_availability') as mock_check:
+        with patch.object(orchestrator_integration, "service_client") as mock_client, patch.object(
+            orchestrator_integration, "_check_tool_availability"
+        ) as mock_check:
 
             mock_check.return_value = {
                 "all_available": True,
                 "available_tools": ["tool1", "tool2"],
-                "tool_sources": {"tool1": "service1", "tool2": "service2"}
+                "tool_sources": {"tool1": "service1", "tool2": "service2"},
             }
 
             mock_response = MagicMock()
             mock_response.status = 201
             mock_response.json.return_value = {"workflow_id": "wf_123", "execution_url": "/execute/wf_123"}
-            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = mock_response
+            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
+                mock_response
+            )
 
             result = await orchestrator_integration.create_dynamic_workflow(workflow_spec)
 
@@ -387,15 +360,17 @@ class TestOrchestratorIntegration:
     @pytest.mark.asyncio
     async def test_execute_dynamic_workflow(self):
         """Test executing dynamic workflow."""
-        with patch.object(orchestrator_integration, 'service_client') as mock_client:
+        with patch.object(orchestrator_integration, "service_client") as mock_client:
             mock_response = MagicMock()
             mock_response.status = 200
             mock_response.json.return_value = {
                 "execution_id": "exec_123",
                 "status": "running",
-                "results": {"step1": "completed"}
+                "results": {"step1": "completed"},
             }
-            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = mock_response
+            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
+                mock_response
+            )
 
             result = await orchestrator_integration.execute_dynamic_workflow("test_workflow", {"param1": "value1"})
 
@@ -415,20 +390,20 @@ class TestAIToolSelector:
                 "name": "doc_store_list",
                 "category": "read",
                 "capabilities": ["read", "storage"],
-                "description": "List documents"
+                "description": "List documents",
             },
             {
                 "name": "doc_store_create",
                 "category": "create",
                 "capabilities": ["create", "storage"],
-                "description": "Create document"
+                "description": "Create document",
             },
             {
                 "name": "analyzer_analyze",
                 "category": "analysis",
                 "capabilities": ["analysis", "processing"],
-                "description": "Analyze content"
-            }
+                "description": "Analyze content",
+            },
         ]
 
     @pytest.mark.asyncio
@@ -436,14 +411,16 @@ class TestAIToolSelector:
         """Test AI tool selection for analysis task."""
         task_description = "Analyze all documents in the store"
 
-        with patch.object(ai_tool_selector, 'service_client') as mock_client:
+        with patch.object(ai_tool_selector, "service_client") as mock_client:
             # Mock AI interpreter response
             mock_response = MagicMock()
             mock_response.status = 200
             mock_response.json.return_value = {
                 "interpretation": '{"primary_action": "analyze", "data_types": ["documents"], "capabilities": ["analysis", "read"]}'
             }
-            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = mock_response
+            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
+                mock_response
+            )
 
             result = await ai_tool_selector.select_tools_for_task(task_description, available_tools)
 
@@ -457,8 +434,10 @@ class TestAIToolSelector:
         """Test fallback tool selection when AI analysis fails."""
         task_description = "Create a new document"
 
-        with patch.object(ai_tool_selector, 'service_client') as mock_client:
-            mock_client.session.return_value.__aenter__.return_value.post.side_effect = Exception("AI service unavailable")
+        with patch.object(ai_tool_selector, "service_client") as mock_client:
+            mock_client.session.return_value.__aenter__.return_value.post.side_effect = Exception(
+                "AI service unavailable"
+            )
 
             result = await ai_tool_selector.select_tools_for_task(task_description, available_tools)
 
@@ -491,15 +470,15 @@ class TestSemanticAnalyzer:
                 "category": "analysis",
                 "description": "Analyze document content for insights",
                 "method": "POST",
-                "path": "/analyze"
+                "path": "/analyze",
             },
             {
                 "name": "document_creator",
                 "category": "create",
                 "description": "Create new documents in the store",
                 "method": "POST",
-                "path": "/documents"
-            }
+                "path": "/documents",
+            },
         ]
 
     @pytest.mark.asyncio
@@ -507,13 +486,15 @@ class TestSemanticAnalyzer:
         """Test semantic analysis using AI interpretation."""
         tool = sample_tools[0]
 
-        with patch.object(semantic_tool_analyzer, 'service_client') as mock_client:
+        with patch.object(semantic_tool_analyzer, "service_client") as mock_client:
             mock_response = MagicMock()
             mock_response.status = 200
             mock_response.json.return_value = {
                 "interpretation": '{"semantic_categories": ["content_analysis"], "primary_category": "content_analysis", "capabilities": ["analysis"], "use_cases": ["content_review"]}'
             }
-            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = mock_response
+            mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
+                mock_response
+            )
 
             result = await semantic_tool_analyzer.analyze_tool_semantics(tool)
 
@@ -527,7 +508,7 @@ class TestSemanticAnalyzer:
         """Test rule-based semantic analysis fallback."""
         tool = sample_tools[0]
 
-        with patch.object(semantic_tool_analyzer, 'service_client') as mock_client:
+        with patch.object(semantic_tool_analyzer, "service_client") as mock_client:
             mock_client.session.return_value.__aenter__.return_value.post.side_effect = Exception("AI unavailable")
 
             result = await semantic_tool_analyzer.analyze_tool_semantics(tool)
@@ -544,7 +525,7 @@ class TestSemanticAnalyzer:
         for tool in sample_tools:
             tool["semantic_analysis"] = {
                 "semantic_categories": ["content_analysis" if "analyzer" in tool["name"] else "content_creation"],
-                "capabilities_identified": ["analysis" if "analyzer" in tool["name"] else "creation"]
+                "capabilities_identified": ["analysis" if "analyzer" in tool["name"] else "creation"],
             }
 
         relationships = await semantic_tool_analyzer.analyze_tool_relationships(sample_tools)
@@ -578,13 +559,9 @@ class TestPerformanceOptimizer:
                 {"service": "service2", "response_time": 0.8, "tools_found": 5, "endpoints_found": 8},
                 {"service": "service3", "response_time": 2.5, "tools_found": 6, "endpoints_found": 10},
                 {"service": "service4", "response_time": 0.6, "tools_found": 3, "endpoints_found": 5},
-                {"service": "service5", "response_time": 1.8, "tools_found": 3, "endpoints_found": 4}
+                {"service": "service5", "response_time": 1.8, "tools_found": 3, "endpoints_found": 4},
             ],
-            "summary": {
-                "services_healthy": 4,
-                "tools_discovered": 25,
-                "avg_tools_per_service": 5.0
-            }
+            "summary": {"services_healthy": 4, "tools_discovered": 25, "avg_tools_per_service": 5.0},
         }
 
     @pytest.mark.asyncio
@@ -606,7 +583,7 @@ class TestPerformanceOptimizer:
         tools = [
             {"name": "storage_tool", "category": "storage", "capabilities": ["storage"]},
             {"name": "analysis_tool", "category": "analysis", "capabilities": ["analysis"]},
-            {"name": "combined_tool", "category": "analysis", "capabilities": ["storage", "analysis"]}
+            {"name": "combined_tool", "category": "analysis", "capabilities": ["storage", "analysis"]},
         ]
 
         dependencies = await performance_optimizer.analyze_tool_dependencies(tools)
@@ -651,17 +628,18 @@ class TestAPIEndpoints:
         """Test client for API testing."""
         from fastapi.testclient import TestClient
         from main import app
+
         return TestClient(app)
 
     @pytest.mark.asyncio
     async def test_ecosystem_discovery_endpoint(self, client):
         """Test the ecosystem discovery endpoint."""
-        with patch('main.tool_discovery_service') as mock_service:
+        with patch("main.tool_discovery_service") as mock_service:
             mock_service.discover_ecosystem_tools.return_value = {
                 "services_tested": 3,
                 "healthy_services": 3,
                 "total_tools_discovered": 15,
-                "services": {}
+                "services": {},
             }
 
             response = client.post("/api/v1/discovery/ecosystem")
@@ -674,15 +652,16 @@ class TestAPIEndpoints:
     @pytest.mark.asyncio
     async def test_register_tools_endpoint(self, client):
         """Test the register tools endpoint."""
-        with patch('main.tool_registry_storage') as mock_registry, \
-             patch('main.orchestrator_integration') as mock_orchestrator:
+        with patch("main.tool_registry_storage") as mock_registry, patch(
+            "main.orchestrator_integration"
+        ) as mock_orchestrator:
 
             mock_registry.get_all_tools.return_value = {"service1": [{"name": "tool1"}]}
             mock_orchestrator.register_discovered_tools.return_value = {
                 "total_tools": 1,
                 "registered_tools": 1,
                 "failed_registrations": 0,
-                "details": []
+                "details": [],
             }
 
             response = client.post("/api/v1/orchestrator/register-tools")
@@ -695,14 +674,15 @@ class TestAPIEndpoints:
     @pytest.mark.asyncio
     async def test_semantic_analysis_endpoint(self, client):
         """Test the semantic analysis endpoint."""
-        with patch('main.tool_registry_storage') as mock_registry, \
-             patch('main.semantic_tool_analyzer') as mock_analyzer:
+        with patch("main.tool_registry_storage") as mock_registry, patch(
+            "main.semantic_tool_analyzer"
+        ) as mock_analyzer:
 
             mock_registry.get_all_tools.return_value = {"service1": [{"name": "tool1"}]}
             mock_analyzer.enhance_tool_categorization.return_value = [{"name": "tool1", "semantic_analysis": {}}]
             mock_analyzer.analyze_tool_relationships.return_value = {
                 "relationships_found": 0,
-                "complementary_pairs": []
+                "complementary_pairs": [],
             }
 
             response = client.post("/api/v1/analysis/semantic")
@@ -715,18 +695,16 @@ class TestAPIEndpoints:
     @pytest.mark.asyncio
     async def test_performance_optimization_endpoint(self, client):
         """Test the performance optimization endpoint."""
-        with patch('main.tool_registry_storage') as mock_registry, \
-             patch('main.performance_optimizer') as mock_optimizer:
+        with patch("main.tool_registry_storage") as mock_registry, patch(
+            "main.performance_optimizer"
+        ) as mock_optimizer:
 
             mock_registry.load_discovery_results.return_value = {
-                "run1": {
-                    "performance_metrics": [{"response_time": 1.0}],
-                    "summary": {"tools_discovered": 10}
-                }
+                "run1": {"performance_metrics": [{"response_time": 1.0}], "summary": {"tools_discovered": 10}}
             }
             mock_optimizer.optimize_discovery_workflow.return_value = {
                 "optimizations": {"parallelization_opportunities": []},
-                "performance_summary": {"avg_response_time": 1.0}
+                "performance_summary": {"avg_response_time": 1.0},
             }
 
             response = client.post("/api/v1/optimization/performance")
@@ -744,10 +722,13 @@ class TestIntegrationScenarios:
     async def test_complete_discovery_to_execution_workflow(self):
         """Test the complete workflow from discovery to tool execution."""
         # Mock the entire ecosystem
-        with patch('modules.tool_discovery.tool_discovery_service') as mock_discovery, \
-             patch('modules.tool_registry.tool_registry_storage') as mock_registry, \
-             patch('modules.orchestrator_integration.orchestrator_integration') as mock_orchestrator, \
-             patch('modules.ai_tool_selector.ai_tool_selector') as mock_ai_selector:
+        with patch("modules.tool_discovery.tool_discovery_service") as mock_discovery, patch(
+            "modules.tool_registry.tool_registry_storage"
+        ) as mock_registry, patch(
+            "modules.orchestrator_integration.orchestrator_integration"
+        ) as mock_orchestrator, patch(
+            "modules.ai_tool_selector.ai_tool_selector"
+        ) as mock_ai_selector:
 
             # Step 1: Discovery
             mock_discovery.discover_ecosystem_tools.return_value = {
@@ -756,14 +737,14 @@ class TestIntegrationScenarios:
                 "total_tools_discovered": 12,
                 "services": {
                     "service1": {"tools": [{"name": "tool1", "category": "read"}]},
-                    "service2": {"tools": [{"name": "tool2", "category": "create"}]}
-                }
+                    "service2": {"tools": [{"name": "tool2", "category": "create"}]},
+                },
             }
 
             # Step 2: Registry storage
             mock_registry.get_all_tools.return_value = {
                 "service1": [{"name": "tool1", "category": "read"}],
-                "service2": [{"name": "tool2", "category": "create"}]
+                "service2": [{"name": "tool2", "category": "create"}],
             }
 
             # Step 3: Orchestrator registration
@@ -771,7 +752,7 @@ class TestIntegrationScenarios:
                 "total_tools": 2,
                 "registered_tools": 2,
                 "failed_registrations": 0,
-                "details": []
+                "details": [],
             }
 
             # Step 4: AI workflow creation
@@ -780,21 +761,23 @@ class TestIntegrationScenarios:
                 "selected_tools": [{"name": "tool1"}, {"name": "tool2"}],
                 "task_analysis": {"primary_action": "create"},
                 "confidence_score": 0.85,
-                "reasoning": "Selected optimal tools"
+                "reasoning": "Selected optimal tools",
             }
 
             mock_orchestrator.create_dynamic_workflow.return_value = {
                 "success": True,
                 "workflow_id": "wf_123",
-                "execution_url": "/execute/wf_123"
+                "execution_url": "/execute/wf_123",
             }
 
             # Execute the workflow
-            result = await mock_orchestrator.create_dynamic_workflow({
-                "name": "test_workflow",
-                "description": "Integration test workflow",
-                "required_tools": ["tool1", "tool2"]
-            })
+            result = await mock_orchestrator.create_dynamic_workflow(
+                {
+                    "name": "test_workflow",
+                    "description": "Integration test workflow",
+                    "required_tools": ["tool1", "tool2"],
+                }
+            )
 
             assert result["success"] is True
             assert result["workflow_id"] == "wf_123"
@@ -802,15 +785,16 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_security_monitoring_integration(self):
         """Test integration between security scanning and monitoring."""
-        with patch('modules.security_scanner.tool_security_scanner') as mock_security, \
-             patch('modules.monitoring_service.discovery_monitoring_service') as mock_monitoring:
+        with patch("modules.security_scanner.tool_security_scanner") as mock_security, patch(
+            "modules.monitoring_service.discovery_monitoring_service"
+        ) as mock_monitoring:
 
             # Simulate security scan
             scan_result = {
                 "tool_name": "vulnerable_tool",
                 "scanned": True,
                 "risk_level": "high",
-                "vulnerabilities": [{"type": "sql_injection"}]
+                "vulnerabilities": [{"type": "sql_injection"}],
             }
 
             mock_security.scan_tool_security.return_value = scan_result

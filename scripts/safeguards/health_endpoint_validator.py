@@ -17,19 +17,20 @@ Features:
 Author: Ecosystem Hardening Framework
 """
 
-import json
-import time
 import asyncio
-import aiohttp
-import yaml
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass, field
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
 import logging
-from urllib.parse import urljoin, urlparse
 import statistics
 import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urljoin, urlparse
+
+import aiohttp
+import yaml
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -39,6 +40,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class HealthEndpoint:
     """Represents a health check endpoint"""
+
     service_name: str
     url: str
     expected_status: int = 200
@@ -51,6 +53,7 @@ class HealthEndpoint:
 @dataclass
 class HealthCheckResult:
     """Result of a health check validation"""
+
     endpoint: HealthEndpoint
     success: bool
     response_time: float
@@ -64,6 +67,7 @@ class HealthCheckResult:
 @dataclass
 class ValidationReport:
     """Comprehensive validation report"""
+
     total_endpoints: int
     successful_checks: int
     failed_checks: int
@@ -101,8 +105,15 @@ class HealthEndpointValidator:
 
         # Standard health check patterns
         self.standard_health_fields = [
-            "status", "service", "timestamp", "version", "uptime",
-            "dependencies", "health", "ready", "alive"
+            "status",
+            "service",
+            "timestamp",
+            "version",
+            "uptime",
+            "dependencies",
+            "health",
+            "ready",
+            "alive",
         ]
 
         logger.info("🔍 Health Endpoint Validator initialized")
@@ -121,23 +132,23 @@ class HealthEndpointValidator:
             return []
 
         try:
-            with open(self.docker_compose_path, 'r') as f:
+            with open(self.docker_compose_path, "r") as f:
                 compose_config = yaml.safe_load(f)
 
-            if 'services' not in compose_config:
+            if "services" not in compose_config:
                 logger.error("❌ No services found in Docker Compose configuration")
                 return []
 
             endpoints = []
 
-            for service_name, service_config in compose_config['services'].items():
+            for service_name, service_config in compose_config["services"].items():
                 # Skip Redis as it doesn't have HTTP health endpoints
-                if service_name == 'redis':
+                if service_name == "redis":
                     logger.info(f"ℹ️ Skipping Redis service - uses Redis protocol, not HTTP")
                     continue
 
                 # Extract port mapping
-                ports = service_config.get('ports', [])
+                ports = service_config.get("ports", [])
                 if not ports:
                     logger.warning(f"⚠️ No ports configured for service: {service_name}")
                     continue
@@ -146,10 +157,10 @@ class HealthEndpointValidator:
                 port_mapping = ports[0]
                 if isinstance(port_mapping, str):
                     # Format: "external:internal"
-                    external_port = port_mapping.split(':')[0]
+                    external_port = port_mapping.split(":")[0]
                 elif isinstance(port_mapping, dict):
                     # Format: {"published": external, "target": internal}
-                    external_port = port_mapping.get('published', port_mapping.get('target'))
+                    external_port = port_mapping.get("published", port_mapping.get("target"))
                 else:
                     external_port = port_mapping
 
@@ -168,7 +179,7 @@ class HealthEndpointValidator:
                     url=health_url,
                     expected_fields=self._get_expected_fields(service_name),
                     timeout=self.default_timeout,
-                    retries=self.default_retries
+                    retries=self.default_retries,
                 )
 
                 endpoints.append(endpoint)
@@ -199,7 +210,7 @@ class HealthEndpointValidator:
             "frontend": ["status", "service", "api_connected"],
             "analysis-service": ["status", "service", "models_loaded"],
             "prompt-store": ["status", "service", "database_connected"],
-            "summarizer-hub": ["status", "service", "llm_connected"]
+            "summarizer-hub": ["status", "service", "llm_connected"],
         }
 
         return service_expectations.get(service_name, base_fields)
@@ -240,7 +251,7 @@ class HealthEndpointValidator:
                                 status_code=status_code,
                                 response_body=response_body,
                                 error_message=None if success else "Validation failed",
-                                attempts=attempt + 1
+                                attempts=attempt + 1,
                             )
 
             except aiohttp.ClientError as e:
@@ -253,7 +264,7 @@ class HealthEndpointValidator:
                         status_code=None,
                         response_body=None,
                         error_message=f"Connection error: {str(e)}",
-                        attempts=attempt + 1
+                        attempts=attempt + 1,
                     )
             except Exception as e:
                 if attempt == endpoint.retries - 1:
@@ -265,7 +276,7 @@ class HealthEndpointValidator:
                         status_code=None,
                         response_body=None,
                         error_message=f"Unexpected error: {str(e)}",
-                        attempts=attempt + 1
+                        attempts=attempt + 1,
                     )
 
             # Wait before retry
@@ -280,11 +291,10 @@ class HealthEndpointValidator:
             status_code=None,
             response_body=None,
             error_message="Max retries exceeded",
-            attempts=endpoint.retries
+            attempts=endpoint.retries,
         )
 
-    def _validate_response(self, endpoint: HealthEndpoint, status_code: int,
-                          response_body: Dict[str, Any]) -> bool:
+    def _validate_response(self, endpoint: HealthEndpoint, status_code: int, response_body: Dict[str, Any]) -> bool:
         """
         Validate the health check response.
 
@@ -298,14 +308,15 @@ class HealthEndpointValidator:
         """
         # Check status code
         if status_code != endpoint.expected_status:
-            logger.warning(f"⚠️ Status code mismatch for {endpoint.service_name}: "
-                         f"expected {endpoint.expected_status}, got {status_code}")
+            logger.warning(
+                f"⚠️ Status code mismatch for {endpoint.service_name}: "
+                f"expected {endpoint.expected_status}, got {status_code}"
+            )
             return False
 
         # Check required fields
         if not isinstance(response_body, dict):
-            logger.warning(f"⚠️ Invalid response format for {endpoint.service_name}: "
-                         "expected JSON object")
+            logger.warning(f"⚠️ Invalid response format for {endpoint.service_name}: " "expected JSON object")
             return False
 
         missing_fields = []
@@ -354,14 +365,16 @@ class HealthEndpointValidator:
                 # Create failed result for exceptions
                 endpoint = self.endpoints[i] if i < len(self.endpoints) else None
                 if endpoint:
-                    processed_results.append(HealthCheckResult(
-                        endpoint=endpoint,
-                        success=False,
-                        response_time=0.0,
-                        status_code=None,
-                        response_body=None,
-                        error_message=f"Validation exception: {str(result)}"
-                    ))
+                    processed_results.append(
+                        HealthCheckResult(
+                            endpoint=endpoint,
+                            success=False,
+                            response_time=0.0,
+                            status_code=None,
+                            response_body=None,
+                            error_message=f"Validation exception: {str(result)}",
+                        )
+                    )
             else:
                 processed_results.append(result)
 
@@ -423,7 +436,7 @@ class HealthEndpointValidator:
             availability_percentage=availability_percentage,
             detailed_results=self.results,
             critical_failures=critical_failures,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
         return report
@@ -440,7 +453,9 @@ class HealthEndpointValidator:
 
         # Availability recommendations
         if availability_percentage < 95:
-            recommendations.append("🔴 CRITICAL: Service availability is below 95% - investigate failed services immediately")
+            recommendations.append(
+                "🔴 CRITICAL: Service availability is below 95% - investigate failed services immediately"
+            )
         elif availability_percentage < 99:
             recommendations.append("🟡 WARNING: Service availability is below 99% - monitor closely")
 
@@ -457,11 +472,17 @@ class HealthEndpointValidator:
         for result in self.results:
             if not result.success:
                 if "Connection refused" in str(result.error_message or ""):
-                    recommendations.append(f"🔴 CRITICAL: {result.endpoint.service_name} is not responding - check if service is running")
+                    recommendations.append(
+                        f"🔴 CRITICAL: {result.endpoint.service_name} is not responding - check if service is running"
+                    )
                 elif "timeout" in str(result.error_message or "").lower():
-                    recommendations.append(f"🟡 WARNING: {result.endpoint.service_name} health check timed out - investigate performance")
+                    recommendations.append(
+                        f"🟡 WARNING: {result.endpoint.service_name} health check timed out - investigate performance"
+                    )
                 else:
-                    recommendations.append(f"🟡 WARNING: {result.endpoint.service_name} health check failed - review logs")
+                    recommendations.append(
+                        f"🟡 WARNING: {result.endpoint.service_name} health check failed - review logs"
+                    )
 
         # General recommendations
         if len(self.results) > 0:
@@ -484,7 +505,7 @@ class HealthEndpointValidator:
             availability_percentage=0.0,
             detailed_results=[],
             critical_failures=[],
-            recommendations=["ℹ️ INFO: No health endpoints were discovered or validated"]
+            recommendations=["ℹ️ INFO: No health endpoints were discovered or validated"],
         )
 
     def print_report(self, report: ValidationReport, verbose: bool = True):
@@ -495,9 +516,9 @@ class HealthEndpointValidator:
             report: ValidationReport to print
             verbose: Whether to include detailed results
         """
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("🏥 HEALTH ENDPOINT VALIDATION REPORT")
-        print("="*70)
+        print("=" * 70)
         print(f"📊 Total Endpoints: {report.total_endpoints}")
         print(f"✅ Successful: {report.successful_checks}")
         print(f"❌ Failed: {report.failed_checks}")
@@ -516,16 +537,18 @@ class HealthEndpointValidator:
             for result in report.detailed_results:
                 status = "✅" if result.success else "❌"
                 response_time = f"{result.response_time:.3f}"
-                print(f"  {status} {result.endpoint.service_name:<20} "
-                      f"{response_time:<8} {result.status_code or 'N/A':<6} "
-                      f"{result.attempts} attempts")
+                print(
+                    f"  {status} {result.endpoint.service_name:<20} "
+                    f"{response_time:<8} {result.status_code or 'N/A':<6} "
+                    f"{result.attempts} attempts"
+                )
 
         if report.recommendations:
             print("\n💡 RECOMMENDATIONS:")
             for rec in report.recommendations:
                 print(f"  • {rec}")
 
-        print("="*70)
+        print("=" * 70)
 
     def save_report(self, report: ValidationReport, filename: Optional[str] = None) -> Path:
         """
@@ -565,7 +588,7 @@ class HealthEndpointValidator:
                     "response_body": r.response_body,
                     "error_message": r.error_message,
                     "timestamp": r.timestamp,
-                    "attempts": r.attempts
+                    "attempts": r.attempts,
                 }
                 for r in report.detailed_results
             ],
@@ -574,21 +597,22 @@ class HealthEndpointValidator:
                     "service_name": f.endpoint.service_name,
                     "url": f.endpoint.url,
                     "error_message": f.error_message,
-                    "response_time": f.response_time
+                    "response_time": f.response_time,
                 }
                 for f in report.critical_failures
             ],
-            "recommendations": report.recommendations
+            "recommendations": report.recommendations,
         }
 
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(report_dict, f, indent=2, default=str)
 
         logger.info(f"💾 Report saved to: {report_path}")
         return report_path
 
-    def validate_with_continuous_monitoring(self, duration_minutes: int = 5,
-                                          interval_seconds: int = 30) -> ValidationReport:
+    def validate_with_continuous_monitoring(
+        self, duration_minutes: int = 5, interval_seconds: int = 30
+    ) -> ValidationReport:
         """
         Perform continuous health monitoring for specified duration.
 
@@ -631,14 +655,16 @@ class HealthEndpointValidator:
                 endpoint_idx = i % len(self.endpoints) if self.endpoints else 0
                 endpoint = self.endpoints[endpoint_idx] if endpoint_idx < len(self.endpoints) else None
                 if endpoint:
-                    self.results.append(HealthCheckResult(
-                        endpoint=endpoint,
-                        success=False,
-                        response_time=0.0,
-                        status_code=None,
-                        response_body=None,
-                        error_message=f"Monitoring cycle {cycle_num}: {str(result)}"
-                    ))
+                    self.results.append(
+                        HealthCheckResult(
+                            endpoint=endpoint,
+                            success=False,
+                            response_time=0.0,
+                            status_code=None,
+                            response_body=None,
+                            error_message=f"Monitoring cycle {cycle_num}: {str(result)}",
+                        )
+                    )
             else:
                 self.results.append(result)
 
@@ -655,16 +681,15 @@ def main():
 
     parser = argparse.ArgumentParser(description="Health Endpoint Validator")
     parser.add_argument("--workspace", help="Workspace path")
-    parser.add_argument("--mode", choices=["single", "continuous", "discover"],
-                       default="single", help="Validation mode")
-    parser.add_argument("--duration", type=int, default=5,
-                       help="Duration for continuous monitoring (minutes)")
-    parser.add_argument("--interval", type=int, default=30,
-                       help="Interval between checks for continuous monitoring (seconds)")
-    parser.add_argument("--verbose", action="store_true",
-                       help="Verbose output")
-    parser.add_argument("--save-report", action="store_true",
-                       help="Save validation report to file")
+    parser.add_argument(
+        "--mode", choices=["single", "continuous", "discover"], default="single", help="Validation mode"
+    )
+    parser.add_argument("--duration", type=int, default=5, help="Duration for continuous monitoring (minutes)")
+    parser.add_argument(
+        "--interval", type=int, default=30, help="Interval between checks for continuous monitoring (seconds)"
+    )
+    parser.add_argument("--verbose", action="store_true", help="Verbose output")
+    parser.add_argument("--save-report", action="store_true", help="Save validation report to file")
     parser.add_argument("--report-file", help="Custom report filename")
 
     args = parser.parse_args()
@@ -685,9 +710,7 @@ def main():
         elif args.mode == "continuous":
             # Continuous monitoring
             print(f"🔄 Starting continuous health monitoring for {args.duration} minutes...")
-            report = validator.validate_with_continuous_monitoring(
-                args.duration, args.interval
-            )
+            report = validator.validate_with_continuous_monitoring(args.duration, args.interval)
 
         else:
             # Single validation run

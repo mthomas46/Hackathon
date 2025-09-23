@@ -1,21 +1,10 @@
-# CLI-specific configuration
-# Inherits from shared base_config.yaml
-
-# CLI doesn't expose a port but connects to other services
-# server section omitted as CLI is not a web service
-
-# CLI-specific settings
 cli:
   default_user: ${USER:-cli_user}
   current_user: ${USER:-cli_user}
-
-# Service URLs that CLI connects to
 services:
   prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
   orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
   analysis_service_url: ${ANALYSIS_SERVICE_URL:-http://analysis-service:5020}
-
-# External service configurations
 external:
   github:
     api_base: ${GITHUB_API_BASE:-https://api.github.com}
@@ -26,3 +15,18 @@ external:
   confluence:
     base_url: ${CONFLUENCE_BASE_URL:-https://example.atlassian.net/wiki}
     email: ${CONFLUENCE_EMAIL:-}
+security:
+  enable_ssl: ${SSL_ENABLED:-false}
+  ssl_cert_path: ${SSL_CERT_PATH:-}
+  ssl_key_path: ${SSL_KEY_PATH:-}
+  cors_origins: ${CORS_ORIGINS:-http://localhost:3000}
+  rate_limiting_enabled: ${RATE_LIMITING_ENABLED:-true}
+  max_request_size: ${MAX_REQUEST_SIZE:-10485760}
+  timeout_seconds: ${TIMEOUT_SECONDS:-30}
+  enable_request_logging: ${REQUEST_LOGGING:-false}
+  enable_metrics: ${METRICS_ENABLED:-true}
+development:
+  debug_mode: ${DEBUG_MODE:-false}
+  enable_cors: ${ENABLE_CORS:-true}
+  mock_external_services: ${MOCK_EXTERNAL:-false}
+  log_level: ${LOG_LEVEL:-INFO}

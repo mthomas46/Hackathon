@@ -6,10 +6,10 @@ and reusability across the ecosystem.
 """
 
 import sys
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List, Optional, Tuple
-from datetime import datetime, timedelta
-import asyncio
+from typing import Any, Dict, List, Optional, Tuple
+
 import httpx
 
 # Import from shared infrastructure
@@ -21,7 +21,8 @@ from simulation.infrastructure.monitoring.simulation_monitoring import get_simul
 
 # Import shared health patterns (with fallbacks)
 try:
-    from monitoring.health import HealthStatus, register_health_endpoints
+    from monitoring.health import HealthStatus
+
     # Create simple mock implementations for missing classes
     class HealthCheck:
         pass
@@ -109,11 +110,7 @@ except ImportError:
             self.path = path
 
         async def get_health_status(self) -> Dict[str, Any]:
-            return {
-                "status": "healthy",
-                "timestamp": datetime.now(),
-                "checks": {}
-            }
+            return {"status": "healthy", "timestamp": datetime.now(), "checks": {}}
 
 
 class SimulationHealthChecker(HealthChecker):
@@ -173,14 +170,14 @@ class SimulationHealthChecker(HealthChecker):
             "health_score": health_score,
             "checks": health_results,
             "monitoring": monitoring_snapshot,
-            "recommendations": self._generate_health_recommendations(health_results)
+            "recommendations": self._generate_health_recommendations(health_results),
         }
 
         self.logger.info(
             "Comprehensive health check completed",
             status=overall_status,
             health_score=health_score,
-            duration_seconds=comprehensive_result["duration_seconds"]
+            duration_seconds=comprehensive_result["duration_seconds"],
         )
 
         return comprehensive_result
@@ -227,7 +224,7 @@ class SimulationHealthChecker(HealthChecker):
         results["memory_usage"] = {
             "status": memory_check.status,
             "details": memory_check.details,
-            "timestamp": memory_check.timestamp
+            "timestamp": memory_check.timestamp,
         }
 
         # CPU usage check
@@ -249,7 +246,7 @@ class SimulationHealthChecker(HealthChecker):
         results["cpu_usage"] = {
             "status": cpu_check.status,
             "details": cpu_check.details,
-            "timestamp": cpu_check.timestamp
+            "timestamp": cpu_check.timestamp,
         }
 
         return results
@@ -273,7 +270,7 @@ class SimulationHealthChecker(HealthChecker):
         results["database_connection"] = {
             "status": db_check.status,
             "details": db_check.details,
-            "timestamp": db_check.timestamp
+            "timestamp": db_check.timestamp,
         }
 
         # Database performance check
@@ -296,7 +293,7 @@ class SimulationHealthChecker(HealthChecker):
         results["database_performance"] = {
             "status": perf_check.status,
             "details": perf_check.details,
-            "timestamp": perf_check.timestamp
+            "timestamp": perf_check.timestamp,
         }
 
         return results
@@ -308,7 +305,7 @@ class SimulationHealthChecker(HealthChecker):
             "mock_data_generator": "http://localhost:5002",
             "doc_store": "http://localhost:5003",
             "analysis_service": "http://localhost:5004",
-            "llm_gateway": "http://localhost:5005"
+            "llm_gateway": "http://localhost:5005",
         }
 
         for service_name, service_url in services_to_check.items():
@@ -322,11 +319,7 @@ class SimulationHealthChecker(HealthChecker):
             except Exception as e:
                 check.update_status(HealthStatus.UNHEALTHY, {"error": str(e)})
 
-            results[service_name] = {
-                "status": check.status,
-                "details": check.details,
-                "timestamp": check.timestamp
-            }
+            results[service_name] = {"status": check.status, "details": check.details, "timestamp": check.timestamp}
 
         # Overall ecosystem services check
         ecosystem_check = self.checks["ecosystem_services"]
@@ -335,7 +328,7 @@ class SimulationHealthChecker(HealthChecker):
         if unhealthy_services:
             ecosystem_check.update_status(
                 HealthStatus.UNHEALTHY if len(unhealthy_services) > 2 else HealthStatus.DEGRADED,
-                {"unhealthy_services": unhealthy_services}
+                {"unhealthy_services": unhealthy_services},
             )
         else:
             ecosystem_check.update_status(HealthStatus.HEALTHY, {"all_services_healthy": True})
@@ -343,7 +336,7 @@ class SimulationHealthChecker(HealthChecker):
         results["ecosystem_services"] = {
             "status": ecosystem_check.status,
             "details": ecosystem_check.details,
-            "timestamp": ecosystem_check.timestamp
+            "timestamp": ecosystem_check.timestamp,
         }
 
         return results
@@ -371,7 +364,7 @@ class SimulationHealthChecker(HealthChecker):
         results["simulation_queue"] = {
             "status": queue_check.status,
             "details": queue_check.details,
-            "timestamp": queue_check.timestamp
+            "timestamp": queue_check.timestamp,
         }
 
         # Active simulations check
@@ -393,13 +386,15 @@ class SimulationHealthChecker(HealthChecker):
         results["active_simulations"] = {
             "status": active_check.status,
             "details": active_check.details,
-            "timestamp": active_check.timestamp
+            "timestamp": active_check.timestamp,
         }
 
         # Response times check
         response_check = self.checks["response_times"]
         try:
-            avg_response_time = self.monitoring_service.metrics_collector.get_metric_value("ecosystem_service_response_time") or 0
+            avg_response_time = (
+                self.monitoring_service.metrics_collector.get_metric_value("ecosystem_service_response_time") or 0
+            )
             response_threshold = 2.0  # seconds
 
             if avg_response_time > response_threshold * 3:
@@ -415,13 +410,18 @@ class SimulationHealthChecker(HealthChecker):
         results["response_times"] = {
             "status": response_check.status,
             "details": response_check.details,
-            "timestamp": response_check.timestamp
+            "timestamp": response_check.timestamp,
         }
 
         # Error rates check
         error_check = self.checks["error_rates"]
         try:
-            error_rate = self.monitoring_service.metrics_collector.get_metric_value("error_rate_percent", {"operation_type": "simulation"}) or 0
+            error_rate = (
+                self.monitoring_service.metrics_collector.get_metric_value(
+                    "error_rate_percent", {"operation_type": "simulation"}
+                )
+                or 0
+            )
             error_threshold = 5.0  # %
 
             if error_rate > error_threshold * 4:
@@ -437,7 +437,7 @@ class SimulationHealthChecker(HealthChecker):
         results["error_rates"] = {
             "status": error_check.status,
             "details": error_check.details,
-            "timestamp": error_check.timestamp
+            "timestamp": error_check.timestamp,
         }
 
         return results
@@ -507,14 +507,15 @@ class SimulationHealthEndpoint(HealthEndpoint):
         return await self.health_checker.perform_comprehensive_health_check()
 
     async def get_simple_health_status(self) -> Dict[str, Any]:
-        """Get simple health status for load balancers and external monitoring."""
+        """Get simple health status for load balancers and external
+        monitoring."""
         comprehensive = await self.get_detailed_health_status()
 
         return {
             "status": comprehensive["status"],
             "timestamp": comprehensive["timestamp"],
             "version": "1.0.0",  # Would be dynamic in production
-            "uptime_seconds": 3600  # Would be calculated in production
+            "uptime_seconds": 3600,  # Would be calculated in production
         }
 
     async def get_health_status(self) -> Dict[str, Any]:
@@ -544,8 +545,8 @@ def get_simulation_health_endpoint() -> SimulationHealthEndpoint:
 
 
 __all__ = [
-    'SimulationHealthChecker',
-    'SimulationHealthEndpoint',
-    'get_simulation_health_checker',
-    'get_simulation_health_endpoint'
+    "SimulationHealthChecker",
+    "SimulationHealthEndpoint",
+    "get_simulation_health_checker",
+    "get_simulation_health_endpoint",
 ]

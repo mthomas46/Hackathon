@@ -1,16 +1,19 @@
-"""Core processing logic for bedrock proxy service.
+"""
+Core processing logic for bedrock proxy service.
 
 Handles the main request processing pipeline for AI invoke requests,
-including input sanitization, template detection, and response formatting.
+including input sanitization, template detection, and response
+formatting.
 """
-from typing import Dict, Any, Optional
+
+from typing import Any, Dict, Optional
 
 from .templates import (
+    build_template_sections,
     detect_template_from_prompt,
     generate_default_title,
-    build_template_sections,
     render_markdown,
-    render_text
+    render_text,
 )
 from .utils import sanitize_for_response
 
@@ -24,7 +27,8 @@ def process_invoke_request(
     region: Optional[str] = None,
     **kwargs  # Allow passthrough parameters
 ) -> Dict[str, Any]:
-    """Process an AI invoke request and return a structured response.
+    """
+    Process an AI invoke request and return a structured response.
 
     This function handles the complete pipeline for processing AI invoke requests:
     1. Input sanitization and validation
@@ -90,8 +94,4 @@ def process_invoke_request(
         else render_text(sanitized_title, content_sections)
     )
 
-    return {
-        "output": formatted_body,
-        "model": safe_model,
-        "region": safe_region
-    }
+    return {"output": formatted_body, "model": safe_model, "region": safe_region}

@@ -1,4 +1,5 @@
-"""LLM Gateway Integration Module for Summarizer Hub Service.
+"""
+LLM Gateway Integration Module for Summarizer Hub Service.
 
 Provides integration between the Summarizer Hub and LLM Gateway for:
 - Enhanced summarization using LLM Gateway capabilities
@@ -7,14 +8,13 @@ Provides integration between the Summarizer Hub and LLM Gateway for:
 - Quality enhancement through LLM-powered analysis
 """
 
-import asyncio
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict
 
-from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
 from services.shared.core.config.config import get_config_value
+from services.shared.core.constants_new import ServiceNames
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class LLMGatewayIntegration:
@@ -24,9 +24,11 @@ class LLMGatewayIntegration:
         self.clients = ServiceClients()
         self.llm_gateway_url = get_config_value("LLM_GATEWAY_URL", "http://llm-gateway:5055", section="services")
 
-    async def enhance_summarization_with_llm(self, text: str, original_summary: str,
-                                           summarization_metadata: Dict[str, Any]) -> Dict[str, Any]:
-        """Use LLM Gateway to enhance and improve existing summarization results."""
+    async def enhance_summarization_with_llm(
+        self, text: str, original_summary: str, summarization_metadata: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Use LLM Gateway to enhance and improve existing summarization
+        results."""
         try:
             enhancement_prompt = f"""
 You are an expert at improving technical summaries. Review the following text, its original summary, and metadata, then provide an enhanced version.
@@ -55,7 +57,7 @@ Return only the enhanced summary, no additional explanation.
                 "prompt": enhancement_prompt,
                 "provider": "ollama",  # Use local for cost efficiency
                 "max_tokens": 1000,
-                "temperature": 0.3
+                "temperature": 0.3,
             }
 
             response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
@@ -77,15 +79,15 @@ Return only the enhanced summary, no additional explanation.
                         "tokens_used": response["data"]["tokens_used"],
                         "original_length": original_length,
                         "enhanced_length": enhanced_length,
-                        "improvement_ratio": round(improvement_ratio, 2)
+                        "improvement_ratio": round(improvement_ratio, 2),
                     },
-                    "enhancement_method": "llm_gateway_enhanced"
+                    "enhancement_method": "llm_gateway_enhanced",
                 }
             else:
                 return {
                     "enhanced_summary": original_summary,
                     "error": response.get("message", "LLM Gateway enhancement failed"),
-                    "enhancement_method": "original_fallback"
+                    "enhancement_method": "original_fallback",
                 }
 
         except Exception as e:
@@ -93,28 +95,34 @@ Return only the enhanced summary, no additional explanation.
                 "summarizer_llm_enhancement_error",
                 f"LLM enhancement error: {str(e)}",
                 ServiceNames.SUMMARIZER_HUB,
-                {
-                    "text_length": len(text),
-                    "original_summary_length": len(original_summary),
-                    "error": str(e)
-                }
+                {"text_length": len(text), "original_summary_length": len(original_summary), "error": str(e)},
             )
-            return {
-                "enhanced_summary": original_summary,
-                "error": str(e),
-                "enhancement_method": "error_fallback"
-            }
+            return {"enhanced_summary": original_summary, "error": str(e), "enhancement_method": "error_fallback"}
 
-    async def intelligent_provider_selection_for_summary(self, text: str,
-                                                      summary_requirements: Dict[str, Any]) -> Dict[str, Any]:
-        """Use LLM Gateway to intelligently select the best provider for summarization."""
+    async def intelligent_provider_selection_for_summary(
+        self, text: str, summary_requirements: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Use LLM Gateway to intelligently select the best provider for
+        summarization."""
         try:
             # Analyze text characteristics
             text_length = len(text)
-            is_technical = any(keyword in text.lower() for keyword in [
-                'api', 'function', 'class', 'method', 'algorithm', 'database',
-                'server', 'client', 'protocol', 'architecture', 'framework'
-            ])
+            is_technical = any(
+                keyword in text.lower()
+                for keyword in [
+                    "api",
+                    "function",
+                    "class",
+                    "method",
+                    "algorithm",
+                    "database",
+                    "server",
+                    "client",
+                    "protocol",
+                    "architecture",
+                    "framework",
+                ]
+            )
 
             selection_prompt = f"""
 You are an expert at selecting the best LLM provider for summarization tasks.
@@ -140,7 +148,7 @@ Return a JSON object with keys: recommended_provider, reasoning, confidence_scor
                 "prompt": selection_prompt,
                 "provider": "ollama",  # Use local for meta-decisions
                 "max_tokens": 600,
-                "temperature": 0.2
+                "temperature": 0.2,
             }
 
             response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
@@ -149,6 +157,7 @@ Return a JSON object with keys: recommended_provider, reasoning, confidence_scor
                 llm_response = response["data"]["response"]
                 try:
                     import json
+
                     provider_recommendation = json.loads(llm_response)
                     return {
                         "provider_recommendation": provider_recommendation,
@@ -156,29 +165,29 @@ Return a JSON object with keys: recommended_provider, reasoning, confidence_scor
                         "text_analysis": {
                             "length": text_length,
                             "is_technical": is_technical,
-                            "requirements": summary_requirements
+                            "requirements": summary_requirements,
                         },
-                        "llm_provider": response["data"]["provider"]
+                        "llm_provider": response["data"]["provider"],
                     }
                 except json.JSONDecodeError:
                     return {
                         "provider_recommendation": {
                             "recommended_provider": "ollama",
                             "reasoning": "Fallback to local provider due to parsing error",
-                            "confidence_score": 0.5
+                            "confidence_score": 0.5,
                         },
                         "error": "Failed to parse provider recommendation",
-                        "selection_method": "llm_intelligent_fallback"
+                        "selection_method": "llm_intelligent_fallback",
                     }
             else:
                 return {
                     "provider_recommendation": {
                         "recommended_provider": "ollama",
                         "reasoning": "LLM Gateway request failed, using default",
-                        "confidence_score": 0.3
+                        "confidence_score": 0.3,
                     },
                     "error": response.get("message", "LLM Gateway request failed"),
-                    "selection_method": "gateway_error_fallback"
+                    "selection_method": "gateway_error_fallback",
                 }
 
         except Exception as e:
@@ -186,24 +195,23 @@ Return a JSON object with keys: recommended_provider, reasoning, confidence_scor
                 "summarizer_provider_selection_error",
                 f"Provider selection error: {str(e)}",
                 ServiceNames.SUMMARIZER_HUB,
-                {
-                    "text_length": text_length,
-                    "error": str(e)
-                }
+                {"text_length": text_length, "error": str(e)},
             )
             return {
                 "provider_recommendation": {
                     "recommended_provider": "ollama",
                     "reasoning": f"Error occurred: {str(e)}",
-                    "confidence_score": 0.0
+                    "confidence_score": 0.0,
                 },
                 "error": str(e),
-                "selection_method": "error_fallback"
+                "selection_method": "error_fallback",
             }
 
-    async def quality_assessment_with_llm(self, text: str, summary: str,
-                                        quality_metrics: Dict[str, Any]) -> Dict[str, Any]:
-        """Use LLM Gateway to assess summary quality and provide detailed feedback."""
+    async def quality_assessment_with_llm(
+        self, text: str, summary: str, quality_metrics: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Use LLM Gateway to assess summary quality and provide detailed
+        feedback."""
         try:
             assessment_prompt = f"""
 You are an expert at evaluating summary quality. Assess the following summary against the original text.
@@ -230,12 +238,7 @@ Provide a comprehensive quality assessment including:
 Return your assessment as a JSON object with keys: completeness, accuracy, clarity, conciseness, overall_score, strengths, improvements, suggestions
             """.strip()
 
-            llm_request = {
-                "prompt": assessment_prompt,
-                "provider": "ollama",
-                "max_tokens": 1000,
-                "temperature": 0.2
-            }
+            llm_request = {"prompt": assessment_prompt, "provider": "ollama", "max_tokens": 1000, "temperature": 0.2}
 
             response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
 
@@ -243,23 +246,23 @@ Return your assessment as a JSON object with keys: completeness, accuracy, clari
                 llm_response = response["data"]["response"]
                 try:
                     import json
+
                     quality_assessment = json.loads(llm_response)
 
                     # Calculate weighted overall score
-                    weights = {'completeness': 0.3, 'accuracy': 0.3, 'clarity': 0.2, 'conciseness': 0.2}
+                    weights = {"completeness": 0.3, "accuracy": 0.3, "clarity": 0.2, "conciseness": 0.2}
                     weighted_score = sum(
-                        quality_assessment.get(metric, 5) * weight
-                        for metric, weight in weights.items()
+                        quality_assessment.get(metric, 5) * weight for metric, weight in weights.items()
                     )
 
-                    quality_assessment['weighted_overall_score'] = round(weighted_score, 1)
+                    quality_assessment["weighted_overall_score"] = round(weighted_score, 1)
 
                     return {
                         "quality_assessment": quality_assessment,
                         "assessment_method": "llm_enhanced",
                         "original_metrics": quality_metrics,
                         "llm_provider": response["data"]["provider"],
-                        "assessment_timestamp": datetime.now().isoformat()
+                        "assessment_timestamp": datetime.now().isoformat(),
                     }
 
                 except json.JSONDecodeError:
@@ -270,23 +273,23 @@ Return your assessment as a JSON object with keys: completeness, accuracy, clari
                             "clarity": 5,
                             "conciseness": 5,
                             "overall_score": 5,
-                            "error": "Failed to parse LLM assessment"
+                            "error": "Failed to parse LLM assessment",
                         },
                         "assessment_method": "llm_enhanced_error",
-                        "error": "JSON parsing failed"
+                        "error": "JSON parsing failed",
                     }
             else:
                 return {
                     "quality_assessment": {
-                        "completeness": quality_metrics.get('completeness', 5),
-                        "accuracy": quality_metrics.get('accuracy', 5),
-                        "clarity": quality_metrics.get('clarity', 5),
-                        "conciseness": quality_metrics.get('conciseness', 5),
-                        "overall_score": quality_metrics.get('overall_score', 5),
-                        "error": "LLM Gateway assessment failed"
+                        "completeness": quality_metrics.get("completeness", 5),
+                        "accuracy": quality_metrics.get("accuracy", 5),
+                        "clarity": quality_metrics.get("clarity", 5),
+                        "conciseness": quality_metrics.get("conciseness", 5),
+                        "overall_score": quality_metrics.get("overall_score", 5),
+                        "error": "LLM Gateway assessment failed",
                     },
                     "assessment_method": "original_metrics_fallback",
-                    "error": response.get("message", "LLM Gateway request failed")
+                    "error": response.get("message", "LLM Gateway request failed"),
                 }
 
         except Exception as e:
@@ -294,11 +297,7 @@ Return your assessment as a JSON object with keys: completeness, accuracy, clari
                 "summarizer_quality_assessment_error",
                 f"Quality assessment error: {str(e)}",
                 ServiceNames.SUMMARIZER_HUB,
-                {
-                    "text_length": len(text),
-                    "summary_length": len(summary),
-                    "error": str(e)
-                }
+                {"text_length": len(text), "summary_length": len(summary), "error": str(e)},
             )
             return {
                 "quality_assessment": {
@@ -307,9 +306,9 @@ Return your assessment as a JSON object with keys: completeness, accuracy, clari
                     "clarity": 5,
                     "conciseness": 5,
                     "overall_score": 5,
-                    "error": str(e)
+                    "error": str(e),
                 },
-                "assessment_method": "error_fallback"
+                "assessment_method": "error_fallback",
             }
 
     async def generate_summary_metadata_with_llm(self, text: str, summary: str) -> Dict[str, Any]:
@@ -337,12 +336,7 @@ Generate metadata including:
 Return the metadata as a JSON object with keys: topics, entities, document_type, technical_complexity, target_audience, key_takeaways, related_domains, confidence_score
             """.strip()
 
-            llm_request = {
-                "prompt": metadata_prompt,
-                "provider": "ollama",
-                "max_tokens": 800,
-                "temperature": 0.3
-            }
+            llm_request = {"prompt": metadata_prompt, "provider": "ollama", "max_tokens": 800, "temperature": 0.3}
 
             response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
 
@@ -350,18 +344,19 @@ Return the metadata as a JSON object with keys: topics, entities, document_type,
                 llm_response = response["data"]["response"]
                 try:
                     import json
+
                     metadata = json.loads(llm_response)
 
                     # Add generation metadata
-                    metadata['generated_by'] = 'llm_gateway'
-                    metadata['llm_provider'] = response["data"]["provider"]
-                    metadata['generation_timestamp'] = datetime.now().isoformat()
+                    metadata["generated_by"] = "llm_gateway"
+                    metadata["llm_provider"] = response["data"]["provider"]
+                    metadata["generation_timestamp"] = datetime.now().isoformat()
 
                     return {
                         "summary_metadata": metadata,
                         "generation_method": "llm_enhanced",
                         "text_length": len(text),
-                        "summary_length": len(summary)
+                        "summary_length": len(summary),
                     }
 
                 except json.JSONDecodeError:
@@ -375,10 +370,10 @@ Return the metadata as a JSON object with keys: topics, entities, document_type,
                             "key_takeaways": [],
                             "related_domains": [],
                             "confidence_score": 5,
-                            "error": "Failed to parse LLM metadata"
+                            "error": "Failed to parse LLM metadata",
                         },
                         "generation_method": "llm_enhanced_error",
-                        "error": "JSON parsing failed"
+                        "error": "JSON parsing failed",
                     }
             else:
                 return {
@@ -391,10 +386,10 @@ Return the metadata as a JSON object with keys: topics, entities, document_type,
                         "key_takeaways": [],
                         "related_domains": [],
                         "confidence_score": 5,
-                        "error": "LLM Gateway request failed"
+                        "error": "LLM Gateway request failed",
                     },
                     "generation_method": "gateway_error_fallback",
-                    "error": response.get("message", "LLM Gateway request failed")
+                    "error": response.get("message", "LLM Gateway request failed"),
                 }
 
         except Exception as e:
@@ -402,11 +397,7 @@ Return the metadata as a JSON object with keys: topics, entities, document_type,
                 "summarizer_metadata_generation_error",
                 f"Metadata generation error: {str(e)}",
                 ServiceNames.SUMMARIZER_HUB,
-                {
-                    "text_length": len(text),
-                    "summary_length": len(summary),
-                    "error": str(e)
-                }
+                {"text_length": len(text), "summary_length": len(summary), "error": str(e)},
             )
             return {
                 "summary_metadata": {
@@ -418,9 +409,9 @@ Return the metadata as a JSON object with keys: topics, entities, document_type,
                     "key_takeaways": [],
                     "related_domains": [],
                     "confidence_score": 5,
-                    "error": str(e)
+                    "error": str(e),
                 },
-                "generation_method": "error_fallback"
+                "generation_method": "error_fallback",
             }
 
 

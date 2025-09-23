@@ -10,26 +10,30 @@ and operational excellence.
 import asyncio
 import json
 import time
-from typing import Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List
+
+from services.shared.constants_new import ServiceNames
 
 # Import all enterprise components
 from services.shared.enterprise_error_handling import (
-    enterprise_error_handler, ErrorContext, ErrorSeverity, ErrorCategory,
-    with_error_handling, error_context
-)
-from services.shared.intelligent_caching import (
-    get_service_cache, get_cache_metrics, shutdown_all_caches
+    ErrorCategory,
+    ErrorContext,
+    ErrorSeverity,
+    enterprise_error_handler,
+    error_context,
+    with_error_handling,
 )
 from services.shared.enterprise_integration import (
-    service_registry, WorkflowContext, get_current_workflow_context,
-    create_workflow_context, ServiceMeshClient
+    ServiceMeshClient,
+    WorkflowContext,
+    create_workflow_context,
+    get_current_workflow_context,
+    service_registry,
 )
-from services.shared.operational_excellence import (
-    health_monitor, service_discovery, performance_dashboard
-)
-from services.shared.constants_new import ServiceNames
+from services.shared.intelligent_caching import get_cache_metrics, get_service_cache, shutdown_all_caches
 from services.shared.logging import fire_and_forget
+from services.shared.operational_excellence import health_monitor, performance_dashboard, service_discovery
 
 
 class EnterpriseFeaturesVerifier:
@@ -48,7 +52,7 @@ class EnterpriseFeaturesVerifier:
             "verification_start": self.start_time.isoformat(),
             "features_verified": {},
             "overall_status": "running",
-            "errors": []
+            "errors": [],
         }
 
         try:
@@ -109,27 +113,38 @@ class EnterpriseFeaturesVerifier:
                 service_name=ServiceNames.ANALYSIS_SERVICE,
                 operation="test_operation",
                 severity=ErrorSeverity.MEDIUM,
-                category=ErrorCategory.INTERNAL
+                category=ErrorCategory.INTERNAL,
             )
-            results["tests"]["error_context_creation"] = {"status": "passed", "details": "Error context created successfully"}
+            results["tests"]["error_context_creation"] = {
+                "status": "passed",
+                "details": "Error context created successfully",
+            }
 
             # Test 2: Error Handling with Retry
-            @with_error_handling(ServiceNames.ANALYSIS_SERVICE, "test_with_retry", ErrorSeverity.LOW, ErrorCategory.NETWORK)
+            @with_error_handling(
+                ServiceNames.ANALYSIS_SERVICE, "test_with_retry", ErrorSeverity.LOW, ErrorCategory.NETWORK
+            )
             async def test_error_function():
                 # Simulate an error
                 raise ConnectionError("Simulated network error")
 
             try:
                 await test_error_function()
-                results["tests"]["error_retry_mechanism"] = {"status": "passed", "details": "Error handled with retry mechanism"}
+                results["tests"]["error_retry_mechanism"] = {
+                    "status": "passed",
+                    "details": "Error handled with retry mechanism",
+                }
             except Exception as e:
-                results["tests"]["error_retry_mechanism"] = {"status": "passed", "details": f"Error handled as expected: {str(e)}"}
+                results["tests"]["error_retry_mechanism"] = {
+                    "status": "passed",
+                    "details": f"Error handled as expected: {str(e)}",
+                }
 
             # Test 3: Error Statistics
             error_stats = enterprise_error_handler.get_error_statistics()
             results["tests"]["error_statistics"] = {
                 "status": "passed",
-                "details": f"Error statistics collected: {error_stats.get('total_errors', 0)} total errors"
+                "details": f"Error statistics collected: {error_stats.get('total_errors', 0)} total errors",
             }
 
             # Test 4: Error Recovery Patterns
@@ -140,23 +155,20 @@ class EnterpriseFeaturesVerifier:
                     operation=f"pattern_test_{i}",
                     severity=ErrorSeverity.MEDIUM,
                     category=ErrorCategory.NETWORK,
-                    retry_count=i
+                    retry_count=i,
                 )
-                await enterprise_error_handler.handle_error(
-                    ConnectionError(f"Pattern test error {i}"),
-                    test_context
-                )
+                await enterprise_error_handler.handle_error(ConnectionError(f"Pattern test error {i}"), test_context)
 
             results["tests"]["error_recovery_patterns"] = {
                 "status": "passed",
-                "details": "Error recovery patterns tested successfully"
+                "details": "Error recovery patterns tested successfully",
             }
 
             results["status"] = "passed"
             results["metrics"] = {
-                "total_errors_tracked": error_stats.get('total_errors', 0),
-                "services_with_errors": len(error_stats.get('services', {})),
-                "error_recovery_rate": 85.0  # Mock recovery rate
+                "total_errors_tracked": error_stats.get("total_errors", 0),
+                "services_with_errors": len(error_stats.get("services", {})),
+                "error_recovery_rate": 85.0,  # Mock recovery rate
             }
 
         except Exception as e:
@@ -181,21 +193,21 @@ class EnterpriseFeaturesVerifier:
             set_result = await cache.set(test_key, test_value, ttl_seconds=300)
             results["tests"]["cache_set_operation"] = {
                 "status": "passed" if set_result else "failed",
-                "details": "Cache set operation successful"
+                "details": "Cache set operation successful",
             }
 
             # Get cache entry
             retrieved_value = await cache.get(test_key)
             results["tests"]["cache_get_operation"] = {
                 "status": "passed" if retrieved_value == test_value else "failed",
-                "details": "Cache get operation successful"
+                "details": "Cache get operation successful",
             }
 
             # Test 2: Cache Performance Metrics
             cache_stats = cache.get_cache_stats()
             results["tests"]["cache_performance_metrics"] = {
                 "status": "passed",
-                "details": f"Cache metrics collected: {cache_stats.get('cache_size_items', 0)} items"
+                "details": f"Cache metrics collected: {cache_stats.get('cache_size_items', 0)} items",
             }
 
             # Test 3: Workflow-Aware Caching
@@ -208,7 +220,7 @@ class EnterpriseFeaturesVerifier:
 
             results["tests"]["workflow_aware_caching"] = {
                 "status": "passed" if workflow_retrieved == workflow_data else "failed",
-                "details": "Workflow-aware caching working correctly"
+                "details": "Workflow-aware caching working correctly",
             }
 
             # Test 4: Cache Invalidation
@@ -217,14 +229,14 @@ class EnterpriseFeaturesVerifier:
 
             results["tests"]["cache_invalidation"] = {
                 "status": "passed" if invalidation_result and invalidated_value is None else "failed",
-                "details": "Cache invalidation working correctly"
+                "details": "Cache invalidation working correctly",
             }
 
             results["status"] = "passed"
             results["metrics"] = {
-                "cache_hit_ratio": cache_stats.get('performance', {}).get('hit_ratio', 0),
-                "cache_size_mb": cache_stats.get('total_size_mb', 0),
-                "cache_items": cache_stats.get('cache_size_items', 0)
+                "cache_hit_ratio": cache_stats.get("performance", {}).get("hit_ratio", 0),
+                "cache_size_mb": cache_stats.get("total_size_mb", 0),
+                "cache_items": cache_stats.get("cache_size_items", 0),
             }
 
         except Exception as e:
@@ -242,17 +254,14 @@ class EnterpriseFeaturesVerifier:
             services_registered = len(service_registry.service_endpoints)
             results["tests"]["service_registry"] = {
                 "status": "passed" if services_registered > 0 else "warning",
-                "details": f"Service registry has {services_registered} services registered"
+                "details": f"Service registry has {services_registered} services registered",
             }
 
             # Test 2: Workflow Context
-            workflow_context = create_workflow_context(
-                workflow_id="verification_workflow",
-                user_id="test_user"
-            )
+            workflow_context = create_workflow_context(workflow_id="verification_workflow", user_id="test_user")
             results["tests"]["workflow_context_creation"] = {
                 "status": "passed",
-                "details": f"Workflow context created: {workflow_context.workflow_id}"
+                "details": f"Workflow context created: {workflow_context.workflow_id}",
             }
 
             # Test 3: Service Mesh Client
@@ -260,7 +269,7 @@ class EnterpriseFeaturesVerifier:
             service_mesh_available = True  # Assume available for testing
             results["tests"]["service_mesh_client"] = {
                 "status": "passed" if service_mesh_available else "warning",
-                "details": "Service mesh client framework available"
+                "details": "Service mesh client framework available",
             }
 
             # Test 4: Workflow Context Propagation
@@ -268,20 +277,19 @@ class EnterpriseFeaturesVerifier:
             reconstructed_context = WorkflowContext.from_headers(headers)
 
             context_propagation_working = (
-                reconstructed_context and
-                reconstructed_context.workflow_id == workflow_context.workflow_id
+                reconstructed_context and reconstructed_context.workflow_id == workflow_context.workflow_id
             )
 
             results["tests"]["workflow_context_propagation"] = {
                 "status": "passed" if context_propagation_working else "failed",
-                "details": "Workflow context propagation working correctly"
+                "details": "Workflow context propagation working correctly",
             }
 
             results["status"] = "passed"
             results["metrics"] = {
                 "services_registered": services_registered,
                 "workflow_contexts_created": 1,
-                "service_mesh_clients_available": 1
+                "service_mesh_clients_available": 1,
             }
 
         except Exception as e:
@@ -297,11 +305,11 @@ class EnterpriseFeaturesVerifier:
         try:
             # Test 1: Health Monitoring
             health_status = await health_monitor.get_health_status()
-            services_monitored = len(health_status.get('services', {}))
+            services_monitored = len(health_status.get("services", {}))
 
             results["tests"]["health_monitoring"] = {
                 "status": "passed" if services_monitored > 0 else "warning",
-                "details": f"Health monitoring active for {services_monitored} services"
+                "details": f"Health monitoring active for {services_monitored} services",
             }
 
             # Test 2: Service Discovery
@@ -310,26 +318,26 @@ class EnterpriseFeaturesVerifier:
 
             results["tests"]["service_discovery"] = {
                 "status": "passed" if services_discovered >= 0 else "failed",  # Allow 0 for testing
-                "details": f"Service discovery found {services_discovered} services"
+                "details": f"Service discovery found {services_discovered} services",
             }
 
             # Test 3: Performance Dashboard
             dashboard_data = performance_dashboard.get_dashboard_data(health_monitor)
-            dashboard_services = len(dashboard_data.get('service_health', {}))
+            dashboard_services = len(dashboard_data.get("service_health", {}))
 
             results["tests"]["performance_dashboard"] = {
                 "status": "passed" if dashboard_services > 0 else "warning",
-                "details": f"Performance dashboard tracking {dashboard_services} services"
+                "details": f"Performance dashboard tracking {dashboard_services} services",
             }
 
             # Test 4: Real-time Metrics
-            system_metrics = dashboard_data.get('system_overview', {})
-            memory_usage = system_metrics.get('system_memory_usage_percent', 0)
-            cpu_usage = system_metrics.get('system_cpu_usage_percent', 0)
+            system_metrics = dashboard_data.get("system_overview", {})
+            memory_usage = system_metrics.get("system_memory_usage_percent", 0)
+            cpu_usage = system_metrics.get("system_cpu_usage_percent", 0)
 
             results["tests"]["real_time_metrics"] = {
                 "status": "passed",
-                "details": f"Real-time metrics: Memory {memory_usage:.1f}%, CPU {cpu_usage:.1f}%"
+                "details": f"Real-time metrics: Memory {memory_usage:.1f}%, CPU {cpu_usage:.1f}%",
             }
 
             results["status"] = "passed"
@@ -338,7 +346,7 @@ class EnterpriseFeaturesVerifier:
                 "services_discovered": services_discovered,
                 "dashboard_services": dashboard_services,
                 "system_memory_percent": memory_usage,
-                "system_cpu_percent": cpu_usage
+                "system_cpu_percent": cpu_usage,
             }
 
         except Exception as e:
@@ -354,22 +362,16 @@ class EnterpriseFeaturesVerifier:
         try:
             # Test 1: Workflow Creation and Context Propagation
             workflow_id = f"verification_workflow_{int(time.time())}"
-            workflow_context = create_workflow_context(
-                workflow_id=workflow_id,
-                user_id="verification_user"
-            )
+            workflow_context = create_workflow_context(workflow_id=workflow_id, user_id="verification_user")
 
-            results["tests"]["workflow_creation"] = {
-                "status": "passed",
-                "details": f"Workflow created: {workflow_id}"
-            }
+            results["tests"]["workflow_creation"] = {"status": "passed", "details": f"Workflow created: {workflow_id}"}
 
             # Test 2: Service Integration Points
             # Verify that services can be coordinated through workflows
             integration_points = [
                 ServiceNames.DOCUMENT_STORE,
                 ServiceNames.ANALYSIS_SERVICE,
-                ServiceNames.SUMMARIZER_HUB
+                ServiceNames.SUMMARIZER_HUB,
             ]
 
             workflow_services_available = 0
@@ -380,7 +382,7 @@ class EnterpriseFeaturesVerifier:
 
             results["tests"]["service_integration_points"] = {
                 "status": "passed" if workflow_services_available >= 2 else "warning",
-                "details": f"{workflow_services_available}/{len(integration_points)} workflow services available"
+                "details": f"{workflow_services_available}/{len(integration_points)} workflow services available",
             }
 
             # Test 3: Workflow State Management
@@ -388,14 +390,14 @@ class EnterpriseFeaturesVerifier:
             workflow_state_managed = True  # Assume working for verification
             results["tests"]["workflow_state_management"] = {
                 "status": "passed" if workflow_state_managed else "failed",
-                "details": "Workflow state management functional"
+                "details": "Workflow state management functional",
             }
 
             results["status"] = "passed"
             results["metrics"] = {
                 "workflows_created": 1,
                 "services_integrated": workflow_services_available,
-                "workflow_contexts_managed": 1
+                "workflow_contexts_managed": 1,
             }
 
         except Exception as e:
@@ -423,7 +425,7 @@ class EnterpriseFeaturesVerifier:
             results["benchmarks"]["cache_performance"] = {
                 "status": "passed",
                 "avg_response_time_ms": avg_cache_time * 1000,
-                "operations_tested": len(cache_times)
+                "operations_tested": len(cache_times),
             }
 
             # Benchmark 2: Error Handling Performance
@@ -434,19 +436,16 @@ class EnterpriseFeaturesVerifier:
                     service_name=ServiceNames.ANALYSIS_SERVICE,
                     operation=f"benchmark_error_{i}",
                     severity=ErrorSeverity.LOW,
-                    category=ErrorCategory.INTERNAL
+                    category=ErrorCategory.INTERNAL,
                 )
-                await enterprise_error_handler.handle_error(
-                    ValueError(f"Benchmark error {i}"),
-                    error_context
-                )
+                await enterprise_error_handler.handle_error(ValueError(f"Benchmark error {i}"), error_context)
                 error_times.append(time.time() - start_time)
 
             avg_error_time = sum(error_times) / len(error_times)
             results["benchmarks"]["error_handling_performance"] = {
                 "status": "passed",
                 "avg_response_time_ms": avg_error_time * 1000,
-                "errors_processed": len(error_times)
+                "errors_processed": len(error_times),
             }
 
             # Benchmark 3: Service Mesh Performance
@@ -461,7 +460,7 @@ class EnterpriseFeaturesVerifier:
             results["benchmarks"]["service_mesh_performance"] = {
                 "status": "passed",
                 "avg_response_time_ms": avg_mesh_time * 1000,
-                "operations_tested": len(service_mesh_times)
+                "operations_tested": len(service_mesh_times),
             }
 
             results["status"] = "passed"
@@ -469,7 +468,7 @@ class EnterpriseFeaturesVerifier:
                 "cache_avg_response_time_ms": avg_cache_time * 1000,
                 "error_handling_avg_response_time_ms": avg_error_time * 1000,
                 "service_mesh_avg_response_time_ms": avg_mesh_time * 1000,
-                "total_operations_benchmarked": len(cache_times) + len(error_times) + len(service_mesh_times)
+                "total_operations_benchmarked": len(cache_times) + len(error_times) + len(service_mesh_times),
             }
 
         except Exception as e:
@@ -506,19 +505,14 @@ class EnterpriseFeaturesVerifier:
         print(f"🔧 Features Verified: {len(results['features_verified'])}")
 
         print("\n📋 FEATURE-BY-FEATURE RESULTS:")
-        for feature_name, feature_results in results['features_verified'].items():
-            status = feature_results.get('status', 'unknown')
-            status_icon = {
-                'passed': '✅',
-                'failed': '❌',
-                'warning': '⚠️',
-                'unknown': '❓'
-            }.get(status, '❓')
+        for feature_name, feature_results in results["features_verified"].items():
+            status = feature_results.get("status", "unknown")
+            status_icon = {"passed": "✅", "failed": "❌", "warning": "⚠️", "unknown": "❓"}.get(status, "❓")
 
             print(f"  {status_icon} {feature_name.replace('_', ' ').title()}: {status.upper()}")
 
             # Show key metrics if available
-            metrics = feature_results.get('metrics', {})
+            metrics = feature_results.get("metrics", {})
             if metrics:
                 for metric_name, metric_value in metrics.items():
                     if isinstance(metric_value, float):
@@ -527,7 +521,7 @@ class EnterpriseFeaturesVerifier:
                         print(f"    • {metric_name}: {metric_value}")
 
         # Show errors if any
-        errors = results.get('errors', [])
+        errors = results.get("errors", [])
         if errors:
             print(f"\n❌ ERRORS ENCOUNTERED ({len(errors)}):")
             for error in errors[:5]:  # Show first 5 errors
@@ -552,7 +546,7 @@ async def main():
         verifier.print_verification_summary(results)
 
         # Save results to file
-        with open('/tmp/enterprise_verification_results.json', 'w') as f:
+        with open("/tmp/enterprise_verification_results.json", "w") as f:
             json.dump(results, f, indent=2, default=str)
 
         print("\n💾 Results saved to: /tmp/enterprise_verification_results.json")

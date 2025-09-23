@@ -1,21 +1,18 @@
-"""Event Broadcasting Integration Tests.
+"""
+Event Broadcasting Integration Tests.
 
-This module contains comprehensive tests for event broadcasting functionality,
-including WebSocket connections, event distribution, real-time updates,
-and integration with the simulation event system.
+This module contains comprehensive tests for event broadcasting
+functionality, including WebSocket connections, event distribution,
+real-time updates, and integration with the simulation event system.
 """
 
-import pytest
-import asyncio
 import json
-import time
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import Dict, Any, List, Optional, Callable
-from pathlib import Path
 import sys
-import websockets
-from fastapi.testclient import TestClient
-from fastapi import WebSocket
+import time
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock
+
+import pytest
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -31,7 +28,7 @@ class TestWebSocketConnectionManagement:
 
         websocket_endpoints = [
             "/api/v1/simulations/{simulation_id}/ws",
-            "/api/v1/simulations/{simulation_id}/events/ws"
+            "/api/v1/simulations/{simulation_id}/events/ws",
         ]
 
         # Should have defined WebSocket endpoints
@@ -118,12 +115,7 @@ class TestEventBroadcastingMechanism:
                 client.send_text(message)
 
         # Broadcast test event
-        test_event = {
-            "type": "simulation_progress",
-            "simulation_id": "sim-123",
-            "progress": 75.0,
-            "phase": "execution"
-        }
+        test_event = {"type": "simulation_progress", "simulation_id": "sim-123", "progress": 75.0, "phase": "execution"}
 
         broadcast_event(test_event)
 
@@ -143,7 +135,7 @@ class TestEventBroadcastingMechanism:
         clients_by_simulation = {
             "sim-1": [Mock() for _ in range(3)],
             "sim-2": [Mock() for _ in range(2)],
-            "sim-3": [Mock() for _ in range(4)]
+            "sim-3": [Mock() for _ in range(4)],
         }
 
         def broadcast_to_simulation(simulation_id, event_data):
@@ -170,7 +162,7 @@ class TestEventBroadcastingMechanism:
         event_filters = {
             "client_1": {"event_types": ["progress", "error"]},
             "client_2": {"event_types": ["completion", "warning"]},
-            "client_3": {"event_types": ["*"]}  # All events
+            "client_3": {"event_types": ["*"]},  # All events
         }
 
         clients = {cid: Mock() for cid in event_filters.keys()}
@@ -193,7 +185,7 @@ class TestEventBroadcastingMechanism:
             ("progress", {"type": "progress", "value": 50}),
             ("error", {"type": "error", "message": "Test error"}),
             ("completion", {"type": "completion", "result": "success"}),
-            ("warning", {"type": "warning", "message": "Test warning"})
+            ("warning", {"type": "warning", "message": "Test warning"}),
         ]
 
         for event_type, event_data in events_to_test:
@@ -220,7 +212,7 @@ class TestRealTimeEventUpdates:
                 "simulation_id": simulation_id,
                 "progress": progress,
                 "phase": phase,
-                "timestamp": time.time()
+                "timestamp": time.time(),
             }
 
             message = json.dumps(event)
@@ -257,12 +249,7 @@ class TestRealTimeEventUpdates:
             if timestamp is None:
                 timestamp = time.time()
 
-            metric_data = {
-                "type": "metric",
-                "name": metric_name,
-                "value": value,
-                "timestamp": timestamp
-            }
+            metric_data = {"type": "metric", "name": metric_name, "value": value, "timestamp": timestamp}
 
             metrics_buffer.append(metric_data)
             message = json.dumps(metric_data)
@@ -271,12 +258,7 @@ class TestRealTimeEventUpdates:
                 client.send_text(message)
 
         # Stream various metrics
-        metrics = [
-            ("cpu_usage", 45.2),
-            ("memory_usage", 78.1),
-            ("request_count", 1250),
-            ("error_rate", 0.05)
-        ]
+        metrics = [("cpu_usage", 45.2), ("memory_usage", 78.1), ("request_count", 1250), ("error_rate", 0.05)]
 
         for metric_name, value in metrics:
             stream_metric(metric_name, value)
@@ -321,12 +303,7 @@ class TestRealTimeEventUpdates:
 
         # Buffer some events
         for i in range(50):
-            event = {
-                "type": "test_event",
-                "id": i,
-                "timestamp": time.time() + i * 0.1,
-                "data": f"event_data_{i}"
-            }
+            event = {"type": "test_event", "id": i, "timestamp": time.time() + i * 0.1, "data": f"event_data_{i}"}
             buffer_event(event)
 
         # Replay to clients
@@ -351,8 +328,9 @@ class TestEventBroadcastingIntegration:
     @pytest.mark.asyncio
     async def test_domain_event_broadcasting(self):
         """Test broadcasting domain events to WebSocket clients."""
-        from simulation.domain.events import ProjectCreated, SimulationStarted
         from datetime import datetime
+
+        from simulation.domain.events import ProjectCreated, SimulationStarted
 
         # Mock event publishing
         published_events = []
@@ -365,7 +343,7 @@ class TestEventBroadcastingIntegration:
                 "event_type": event.__class__.__name__,
                 "event_id": event.event_id,
                 "data": event.__dict__,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             published_events.append(event_data)
@@ -375,18 +353,9 @@ class TestEventBroadcastingIntegration:
                 await client.send_text(message)
 
         # Create and publish domain events
-        project_event = ProjectCreated(
-            project_id="proj-123",
-            name="Test Project",
-            complexity="complex",
-            team_size=5
-        )
+        project_event = ProjectCreated(project_id="proj-123", name="Test Project", complexity="complex", team_size=5)
 
-        simulation_event = SimulationStarted(
-            simulation_id="sim-456",
-            project_id="proj-123",
-            estimated_duration_hours=8
-        )
+        simulation_event = SimulationStarted(simulation_id="sim-456", project_id="proj-123", estimated_duration_hours=8)
 
         await publish_event(project_event)
         await publish_event(simulation_event)
@@ -413,14 +382,14 @@ class TestEventBroadcastingIntegration:
                 "type": "project_created",
                 "project_id": e.project_id,
                 "name": e.name,
-                "complexity": e.complexity
+                "complexity": e.complexity,
             },
             "SimulationCompleted": lambda e: {
                 "type": "simulation_completed",
                 "simulation_id": e.simulation_id,
                 "status": e.status,
-                "duration": e.total_duration_hours
-            }
+                "duration": e.total_duration_hours,
+            },
         }
 
         def transform_event(event):
@@ -431,14 +400,9 @@ class TestEventBroadcastingIntegration:
             return None
 
         # Test transformation
-        from simulation.domain.events import ProjectCreated, SimulationCompleted
+        from simulation.domain.events import ProjectCreated
 
-        project_event = ProjectCreated(
-            project_id="proj-123",
-            name="Test Project",
-            complexity="complex",
-            team_size=5
-        )
+        project_event = ProjectCreated(project_id="proj-123", name="Test Project", complexity="complex", team_size=5)
 
         transformed = transform_event(project_event)
 
@@ -508,11 +472,7 @@ class TestBroadcastingPerformance:
 
         # Broadcast many events
         for i in range(num_events):
-            event = {
-                "type": "test_event",
-                "id": i,
-                "timestamp": time.time()
-            }
+            event = {"type": "test_event", "id": i, "timestamp": time.time()}
             broadcast_to_clients(event)
 
         end_time = time.time()
@@ -532,8 +492,9 @@ class TestBroadcastingPerformance:
 
     def test_memory_usage_during_broadcasting(self):
         """Test memory usage during intensive broadcasting."""
-        import psutil
         import os
+
+        import psutil
 
         process = psutil.Process(os.getpid())
 
@@ -545,11 +506,7 @@ class TestBroadcastingPerformance:
         events = []
 
         for i in range(1000):
-            event = {
-                "type": "performance_test",
-                "id": i,
-                "data": [j for j in range(100)]  # Some payload
-            }
+            event = {"type": "performance_test", "id": i, "data": [j for j in range(100)]}  # Some payload
             events.append(event)
 
             # Broadcast to all clients
@@ -587,15 +544,13 @@ class TestBroadcastingPerformance:
             end_time = time.time()
             broadcast_time = end_time - start_time
 
-            scalability_results.append({
-                "clients": num_clients,
-                "time": broadcast_time,
-                "time_per_client": broadcast_time / num_clients
-            })
+            scalability_results.append(
+                {"clients": num_clients, "time": broadcast_time, "time_per_client": broadcast_time / num_clients}
+            )
 
         # Broadcasting time should scale roughly linearly
         for i in range(1, len(scalability_results)):
-            prev_result = scalability_results[i-1]
+            prev_result = scalability_results[i - 1]
             curr_result = scalability_results[i]
 
             # Time per client should be similar (linear scaling)
@@ -645,7 +600,7 @@ class TestBroadcastingReliability:
         # Should have more successful than failed sends
         assert successful_sends > failed_sends
         assert successful_sends == 7  # 7 working clients
-        assert failed_sends == 3   # 3 failing clients
+        assert failed_sends == 3  # 3 failing clients
 
     def test_message_queue_overflow_handling(self):
         """Test handling of message queue overflow."""
@@ -720,11 +675,7 @@ def mock_websocket_clients():
 @pytest.fixture
 def event_broadcast_system():
     """Create event broadcast system for testing."""
-    return {
-        "clients": [],
-        "event_buffer": [],
-        "subscriptions": {}
-    }
+    return {"clients": [], "event_buffer": [], "subscriptions": {}}
 
 
 @pytest.fixture
@@ -735,5 +686,5 @@ def performance_metrics():
         "bytes_transferred": 0,
         "average_latency": 0.0,
         "error_rate": 0.0,
-        "start_time": time.time()
+        "start_time": time.time(),
     }

@@ -1,20 +1,18 @@
-"""LangGraph Service Integration Framework
+"""
+LangGraph Service Integration Framework.
 
-This module provides comprehensive LangGraph integration patterns for all services
-in the ecosystem, enabling seamless workflow orchestration and AI-powered capabilities.
+This module provides comprehensive LangGraph integration patterns for
+all services in the ecosystem, enabling seamless workflow orchestration
+and AI-powered capabilities.
 """
 
-from typing import Dict, Any, List, Optional, Callable
 from abc import ABC, abstractmethod
-import asyncio
-from datetime import datetime
+from typing import Any, Callable, Dict, List
 
 from langchain_core.tools import BaseTool, tool
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.shared.utilities import get_service_client
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import get_service_client
 
 
 class LangGraphServiceIntegration(ABC):
@@ -29,12 +27,10 @@ class LangGraphServiceIntegration(ABC):
     @abstractmethod
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize LangGraph tools for this service."""
-        pass
 
     @abstractmethod
     async def create_service_workflows(self) -> Dict[str, Callable]:
         """Create service-specific workflows."""
-        pass
 
     def get_service_info(self) -> Dict[str, Any]:
         """Get service information for LangGraph context."""
@@ -43,13 +39,12 @@ class LangGraphServiceIntegration(ABC):
             "capabilities": self.get_capabilities(),
             "tools_available": list(self.tools.keys()),
             "workflows_available": list(self.workflows.keys()),
-            "integration_status": "active"
+            "integration_status": "active",
         }
 
     @abstractmethod
     def get_capabilities(self) -> List[str]:
         """Get service capabilities for LangGraph context."""
-        pass
 
 
 class AnalysisServiceIntegration(LangGraphServiceIntegration):
@@ -70,8 +65,8 @@ class AnalysisServiceIntegration(LangGraphServiceIntegration):
                     {
                         "document_id": doc_id,
                         "analysis_types": analysis_types,
-                        "context": {"source": "langgraph_workflow"}
-                    }
+                        "context": {"source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "analysis_result": result}
             except Exception as e:
@@ -97,8 +92,8 @@ class AnalysisServiceIntegration(LangGraphServiceIntegration):
                     {
                         "document_ids": doc_ids,
                         "reference_documents": reference_docs,
-                        "analysis_context": "langgraph_workflow"
-                    }
+                        "analysis_context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "cross_reference_result": result}
             except Exception as e:
@@ -107,7 +102,7 @@ class AnalysisServiceIntegration(LangGraphServiceIntegration):
         self.tools = {
             "analyze_document": analyze_document_tool,
             "get_confidence_score": get_confidence_score_tool,
-            "cross_reference_analysis": cross_reference_analysis_tool
+            "cross_reference_analysis": cross_reference_analysis_tool,
         }
 
         return self.tools
@@ -123,7 +118,7 @@ class AnalysisServiceIntegration(LangGraphServiceIntegration):
             "confidence_scoring",
             "cross_reference_analysis",
             "gap_detection",
-            "consistency_checking"
+            "consistency_checking",
         ]
 
 
@@ -142,11 +137,7 @@ class DocumentStoreIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/documents",
-                    {
-                        "content": content,
-                        "metadata": {**metadata, "source": "langgraph_workflow"},
-                        "source": source
-                    }
+                    {"content": content, "metadata": {**metadata, "source": "langgraph_workflow"}, "source": source},
                 )
                 return {"success": True, "document_id": result.get("id")}
             except Exception as e:
@@ -156,9 +147,7 @@ class DocumentStoreIntegration(LangGraphServiceIntegration):
         async def retrieve_document_tool(doc_id: str) -> Dict[str, Any]:
             """Retrieve a document from the document store."""
             try:
-                result = await self.service_client.get_json(
-                    f"{self.service_name}/api/v1/documents/{doc_id}"
-                )
+                result = await self.service_client.get_json(f"{self.service_name}/api/v1/documents/{doc_id}")
                 return {"success": True, "document": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
@@ -169,10 +158,7 @@ class DocumentStoreIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/search",
-                    {
-                        "query": query,
-                        "filters": {**filters, "source": "langgraph_workflow"}
-                    }
+                    {"query": query, "filters": {**filters, "source": "langgraph_workflow"}},
                 )
                 return {"success": True, "search_results": result}
             except Exception as e:
@@ -193,7 +179,7 @@ class DocumentStoreIntegration(LangGraphServiceIntegration):
             "store_document": store_document_tool,
             "retrieve_document": retrieve_document_tool,
             "search_documents": search_documents_tool,
-            "get_document_relationships": get_document_relationships_tool
+            "get_document_relationships": get_document_relationships_tool,
         }
 
         return self.tools
@@ -208,7 +194,7 @@ class DocumentStoreIntegration(LangGraphServiceIntegration):
             "document_retrieval",
             "document_search",
             "relationship_tracking",
-            "metadata_management"
+            "metadata_management",
         ]
 
 
@@ -232,8 +218,8 @@ class PromptStoreIntegration(LangGraphServiceIntegration):
                         "category": category,
                         "content": content,
                         "variables": variables,
-                        "metadata": {"source": "langgraph_workflow"}
-                    }
+                        "metadata": {"source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "prompt_id": result.get("id")}
             except Exception as e:
@@ -256,10 +242,7 @@ class PromptStoreIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/orchestration/prompts/select",
-                    {
-                        "task_type": task_type,
-                        "context": {**context, "source": "langgraph_workflow"}
-                    }
+                    {"task_type": task_type, "context": {**context, "source": "langgraph_workflow"}},
                 )
                 return {"success": True, "optimal_prompt": result}
             except Exception as e:
@@ -271,10 +254,7 @@ class PromptStoreIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.put_json(
                     f"{self.service_name}/api/v1/prompts/{prompt_id}/performance",
-                    {
-                        "performance_metrics": performance_metrics,
-                        "updated_by": "langgraph_workflow"
-                    }
+                    {"performance_metrics": performance_metrics, "updated_by": "langgraph_workflow"},
                 )
                 return {"success": True, "updated": result}
             except Exception as e:
@@ -284,7 +264,7 @@ class PromptStoreIntegration(LangGraphServiceIntegration):
             "create_prompt": create_prompt_tool,
             "get_prompt": get_prompt_tool,
             "get_optimal_prompt": get_optimal_prompt_tool,
-            "update_prompt_performance": update_prompt_performance_tool
+            "update_prompt_performance": update_prompt_performance_tool,
         }
 
         return self.tools
@@ -299,7 +279,7 @@ class PromptStoreIntegration(LangGraphServiceIntegration):
             "prompt_retrieval",
             "optimal_prompt_selection",
             "performance_tracking",
-            "prompt_optimization"
+            "prompt_optimization",
         ]
 
 
@@ -318,10 +298,7 @@ class InterpreterIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/interpret",
-                    {
-                        "query": query,
-                        "context": {**context, "source": "langgraph_workflow"}
-                    }
+                    {"query": query, "context": {**context, "source": "langgraph_workflow"}},
                 )
                 return {"success": True, "interpretation": result}
             except Exception as e:
@@ -332,11 +309,7 @@ class InterpreterIntegration(LangGraphServiceIntegration):
             """Extract intent from text."""
             try:
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/intent",
-                    {
-                        "text": text,
-                        "analysis_context": "langgraph_workflow"
-                    }
+                    f"{self.service_name}/api/v1/intent", {"text": text, "analysis_context": "langgraph_workflow"}
                 )
                 return {"success": True, "intent": result}
             except Exception as e:
@@ -346,9 +319,7 @@ class InterpreterIntegration(LangGraphServiceIntegration):
         async def get_ecosystem_context_tool() -> Dict[str, Any]:
             """Get current ecosystem context."""
             try:
-                result = await self.service_client.get_json(
-                    f"{self.service_name}/api/v1/ecosystem/context"
-                )
+                result = await self.service_client.get_json(f"{self.service_name}/api/v1/ecosystem/context")
                 return {"success": True, "ecosystem_context": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
@@ -356,7 +327,7 @@ class InterpreterIntegration(LangGraphServiceIntegration):
         self.tools = {
             "interpret_query": interpret_query_tool,
             "extract_intent": extract_intent_tool,
-            "get_ecosystem_context": get_ecosystem_context_tool
+            "get_ecosystem_context": get_ecosystem_context_tool,
         }
 
         return self.tools
@@ -371,7 +342,7 @@ class InterpreterIntegration(LangGraphServiceIntegration):
             "intent_recognition",
             "query_interpretation",
             "ecosystem_context_awareness",
-            "semantic_analysis"
+            "semantic_analysis",
         ]
 
 
@@ -390,11 +361,7 @@ class DiscoveryAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/discover/tools",
-                    {
-                        "service_name": service_name,
-                        "service_url": service_url,
-                        "context": "langgraph_workflow"
-                    }
+                    {"service_name": service_name, "service_url": service_url, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "discovered_tools": result}
             except Exception as e:
@@ -406,11 +373,7 @@ class DiscoveryAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/register/tools",
-                    {
-                        "tools_data": tools_data,
-                        "target": "orchestrator",
-                        "context": "langgraph_workflow"
-                    }
+                    {"tools_data": tools_data, "target": "orchestrator", "context": "langgraph_workflow"},
                 )
                 return {"success": True, "registration_result": result}
             except Exception as e:
@@ -422,10 +385,7 @@ class DiscoveryAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/validate",
-                    {
-                        "service_name": service_name,
-                        "validation_context": "langgraph_integration"
-                    }
+                    {"service_name": service_name, "validation_context": "langgraph_integration"},
                 )
                 return {"success": True, "validation_result": result}
             except Exception as e:
@@ -434,7 +394,7 @@ class DiscoveryAgentIntegration(LangGraphServiceIntegration):
         self.tools = {
             "discover_service_tools": discover_service_tools,
             "register_tools_with_orchestrator": register_tools_with_orchestrator,
-            "validate_service_compatibility": validate_service_compatibility
+            "validate_service_compatibility": validate_service_compatibility,
         }
 
         return self.tools
@@ -449,7 +409,7 @@ class DiscoveryAgentIntegration(LangGraphServiceIntegration):
             "service_introspection",
             "tool_registration",
             "compatibility_validation",
-            "openapi_parsing"
+            "openapi_parsing",
         ]
 
 
@@ -468,11 +428,7 @@ class SourceAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/fetch",
-                    {
-                        "repo_url": repo_url,
-                        "file_path": file_path,
-                        "context": "langgraph_workflow"
-                    }
+                    {"repo_url": repo_url, "file_path": file_path, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "content": result}
             except Exception as e:
@@ -484,10 +440,7 @@ class SourceAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/analyze/structure",
-                    {
-                        "repo_url": repo_url,
-                        "analysis_context": "langgraph_workflow"
-                    }
+                    {"repo_url": repo_url, "analysis_context": "langgraph_workflow"},
                 )
                 return {"success": True, "structure_analysis": result}
             except Exception as e:
@@ -497,9 +450,7 @@ class SourceAgentIntegration(LangGraphServiceIntegration):
         async def get_repository_metadata_tool(repo_url: str) -> Dict[str, Any]:
             """Get repository metadata."""
             try:
-                result = await self.service_client.get_json(
-                    f"{self.service_name}/api/v1/repos/{repo_url}/metadata"
-                )
+                result = await self.service_client.get_json(f"{self.service_name}/api/v1/repos/{repo_url}/metadata")
                 return {"success": True, "metadata": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
@@ -507,7 +458,7 @@ class SourceAgentIntegration(LangGraphServiceIntegration):
         self.tools = {
             "fetch_repository_content": fetch_repository_content_tool,
             "analyze_repository_structure": analyze_repository_structure_tool,
-            "get_repository_metadata": get_repository_metadata_tool
+            "get_repository_metadata": get_repository_metadata_tool,
         }
 
         return self.tools
@@ -522,7 +473,7 @@ class SourceAgentIntegration(LangGraphServiceIntegration):
             "repository_structure_analysis",
             "metadata_extraction",
             "source_code_analysis",
-            "git_operations"
+            "git_operations",
         ]
 
 
@@ -545,8 +496,8 @@ class SummarizerHubIntegration(LangGraphServiceIntegration):
                         "content": content,
                         "summary_type": summary_type,
                         "max_length": max_length,
-                        "context": "langgraph_workflow"
-                    }
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "summary": result}
             except Exception as e:
@@ -561,8 +512,8 @@ class SummarizerHubIntegration(LangGraphServiceIntegration):
                     {
                         "summaries": summaries,
                         "comparison_criteria": comparison_criteria,
-                        "context": "langgraph_workflow"
-                    }
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "comparison_result": result}
             except Exception as e:
@@ -582,7 +533,7 @@ class SummarizerHubIntegration(LangGraphServiceIntegration):
         self.tools = {
             "summarize_content": summarize_content_tool,
             "compare_summaries": compare_summaries_tool,
-            "get_summary_quality_metrics": get_summary_quality_metrics_tool
+            "get_summary_quality_metrics": get_summary_quality_metrics_tool,
         }
 
         return self.tools
@@ -597,7 +548,7 @@ class SummarizerHubIntegration(LangGraphServiceIntegration):
             "multi_model_summaries",
             "summary_comparison",
             "quality_assessment",
-            "summary_optimization"
+            "summary_optimization",
         ]
 
 
@@ -616,11 +567,7 @@ class SecureAnalyzerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/analyze/security",
-                    {
-                        "content": content,
-                        "analysis_scope": analysis_scope,
-                        "context": "langgraph_workflow"
-                    }
+                    {"content": content, "analysis_scope": analysis_scope, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "security_analysis": result}
             except Exception as e:
@@ -632,11 +579,7 @@ class SecureAnalyzerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/scan/vulnerabilities",
-                    {
-                        "content": content,
-                        "vulnerability_types": vulnerability_types,
-                        "context": "langgraph_workflow"
-                    }
+                    {"content": content, "vulnerability_types": vulnerability_types, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "vulnerability_scan": result}
             except Exception as e:
@@ -648,11 +591,7 @@ class SecureAnalyzerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/validate/compliance",
-                    {
-                        "content": content,
-                        "compliance_framework": compliance_framework,
-                        "context": "langgraph_workflow"
-                    }
+                    {"content": content, "compliance_framework": compliance_framework, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "compliance_validation": result}
             except Exception as e:
@@ -661,7 +600,7 @@ class SecureAnalyzerIntegration(LangGraphServiceIntegration):
         self.tools = {
             "analyze_security_risks": analyze_security_risks_tool,
             "scan_for_vulnerabilities": scan_for_vulnerabilities_tool,
-            "validate_security_compliance": validate_security_compliance_tool
+            "validate_security_compliance": validate_security_compliance_tool,
         }
 
         return self.tools
@@ -676,7 +615,7 @@ class SecureAnalyzerIntegration(LangGraphServiceIntegration):
             "vulnerability_scanning",
             "compliance_validation",
             "threat_detection",
-            "security_assessment"
+            "security_assessment",
         ]
 
 
@@ -695,11 +634,7 @@ class CodeAnalyzerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/analyze/codebase",
-                    {
-                        "repo_url": repo_url,
-                        "analysis_types": analysis_types,
-                        "context": "langgraph_workflow"
-                    }
+                    {"repo_url": repo_url, "analysis_types": analysis_types, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "codebase_analysis": result}
             except Exception as e:
@@ -711,10 +646,7 @@ class CodeAnalyzerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/extract/patterns",
-                    {
-                        "code_content": code_content,
-                        "context": "langgraph_workflow"
-                    }
+                    {"code_content": code_content, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "patterns": result}
             except Exception as e:
@@ -726,11 +658,7 @@ class CodeAnalyzerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/generate/documentation",
-                    {
-                        "code_content": code_content,
-                        "doc_type": doc_type,
-                        "context": "langgraph_workflow"
-                    }
+                    {"code_content": code_content, "doc_type": doc_type, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "documentation": result}
             except Exception as e:
@@ -739,7 +667,7 @@ class CodeAnalyzerIntegration(LangGraphServiceIntegration):
         self.tools = {
             "analyze_codebase": analyze_codebase_tool,
             "extract_code_patterns": extract_code_patterns_tool,
-            "generate_code_documentation": generate_code_documentation_tool
+            "generate_code_documentation": generate_code_documentation_tool,
         }
 
         return self.tools
@@ -754,7 +682,7 @@ class CodeAnalyzerIntegration(LangGraphServiceIntegration):
             "pattern_extraction",
             "code_quality_assessment",
             "documentation_generation",
-            "code_metrics_calculation"
+            "code_metrics_calculation",
         ]
 
 
@@ -773,11 +701,7 @@ class ArchitectureDigitizerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/digitize",
-                    {
-                        "image_path": image_path,
-                        "diagram_type": diagram_type,
-                        "context": "langgraph_workflow"
-                    }
+                    {"image_path": image_path, "diagram_type": diagram_type, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "digitized_architecture": result}
             except Exception as e:
@@ -789,26 +713,21 @@ class ArchitectureDigitizerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/extract/components",
-                    {
-                        "diagram_data": diagram_data,
-                        "context": "langgraph_workflow"
-                    }
+                    {"diagram_data": diagram_data, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "components": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def validate_architecture_consistency_tool(components: Dict[str, Any], rules: Dict[str, Any]) -> Dict[str, Any]:
+        async def validate_architecture_consistency_tool(
+            components: Dict[str, Any], rules: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Validate architecture consistency."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/validate/consistency",
-                    {
-                        "components": components,
-                        "rules": rules,
-                        "context": "langgraph_workflow"
-                    }
+                    {"components": components, "rules": rules, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "validation_result": result}
             except Exception as e:
@@ -817,7 +736,7 @@ class ArchitectureDigitizerIntegration(LangGraphServiceIntegration):
         self.tools = {
             "digitize_architecture_diagram": digitize_architecture_diagram_tool,
             "extract_architecture_components": extract_architecture_components_tool,
-            "validate_architecture_consistency": validate_architecture_consistency_tool
+            "validate_architecture_consistency": validate_architecture_consistency_tool,
         }
 
         return self.tools
@@ -832,7 +751,7 @@ class ArchitectureDigitizerIntegration(LangGraphServiceIntegration):
             "component_extraction",
             "consistency_validation",
             "diagram_analysis",
-            "architecture_documentation"
+            "architecture_documentation",
         ]
 
 
@@ -854,8 +773,8 @@ class MemoryAgentIntegration(LangGraphServiceIntegration):
                     {
                         "content": content,
                         "memory_type": memory_type,
-                        "metadata": {**metadata, "source": "langgraph_workflow"}
-                    }
+                        "metadata": {**metadata, "source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "memory_id": result.get("id")}
             except Exception as e:
@@ -867,11 +786,7 @@ class MemoryAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/memory/retrieve",
-                    {
-                        "query": query,
-                        "memory_type": memory_type,
-                        "context": "langgraph_workflow"
-                    }
+                    {"query": query, "memory_type": memory_type, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "retrieved_memories": result}
             except Exception as e:
@@ -883,10 +798,7 @@ class MemoryAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/memory/search",
-                    {
-                        "query": query,
-                        "filters": {**filters, "source": "langgraph_workflow"}
-                    }
+                    {"query": query, "filters": {**filters, "source": "langgraph_workflow"}},
                 )
                 return {"success": True, "search_results": result}
             except Exception as e:
@@ -895,7 +807,7 @@ class MemoryAgentIntegration(LangGraphServiceIntegration):
         self.tools = {
             "store_memory": store_memory_tool,
             "retrieve_memory": retrieve_memory_tool,
-            "search_memory": search_memory_tool
+            "search_memory": search_memory_tool,
         }
 
         return self.tools
@@ -905,13 +817,7 @@ class MemoryAgentIntegration(LangGraphServiceIntegration):
         return {}
 
     def get_capabilities(self) -> List[str]:
-        return [
-            "memory_storage",
-            "memory_retrieval",
-            "memory_search",
-            "context_preservation",
-            "knowledge_management"
-        ]
+        return ["memory_storage", "memory_retrieval", "memory_search", "context_preservation", "knowledge_management"]
 
 
 class NotificationServiceIntegration(LangGraphServiceIntegration):
@@ -929,12 +835,7 @@ class NotificationServiceIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/notifications/send",
-                    {
-                        "message": message,
-                        "recipients": recipients,
-                        "urgency": urgency,
-                        "context": "langgraph_workflow"
-                    }
+                    {"message": message, "recipients": recipients, "urgency": urgency, "context": "langgraph_workflow"},
                 )
                 return {"success": True, "notification_result": result}
             except Exception as e:
@@ -950,8 +851,8 @@ class NotificationServiceIntegration(LangGraphServiceIntegration):
                         "message": message,
                         "recipients": recipients,
                         "schedule_time": schedule_time,
-                        "context": "langgraph_workflow"
-                    }
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "scheduled_notification": result}
             except Exception as e:
@@ -971,7 +872,7 @@ class NotificationServiceIntegration(LangGraphServiceIntegration):
         self.tools = {
             "send_notification": send_notification_tool,
             "schedule_notification": schedule_notification_tool,
-            "get_notification_history": get_notification_history_tool
+            "get_notification_history": get_notification_history_tool,
         }
 
         return self.tools
@@ -986,7 +887,7 @@ class NotificationServiceIntegration(LangGraphServiceIntegration):
             "notification_scheduling",
             "notification_history",
             "user_communication",
-            "alert_management"
+            "alert_management",
         ]
 
 
@@ -1000,7 +901,9 @@ class LogCollectorIntegration(LangGraphServiceIntegration):
         """Initialize log collector tools."""
 
         @tool
-        async def log_workflow_event_tool(workflow_id: str, event_type: str, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        async def log_workflow_event_tool(
+            workflow_id: str, event_type: str, event_data: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Log a workflow event."""
             try:
                 result = await self.service_client.post_json(
@@ -1008,15 +911,17 @@ class LogCollectorIntegration(LangGraphServiceIntegration):
                     {
                         "workflow_id": workflow_id,
                         "event_type": event_type,
-                        "event_data": {**event_data, "source": "langgraph_workflow"}
-                    }
+                        "event_data": {**event_data, "source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "log_result": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def query_workflow_logs_tool(workflow_id: str, time_range: str, filters: Dict[str, Any]) -> Dict[str, Any]:
+        async def query_workflow_logs_tool(
+            workflow_id: str, time_range: str, filters: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Query workflow logs."""
             try:
                 result = await self.service_client.post_json(
@@ -1024,8 +929,8 @@ class LogCollectorIntegration(LangGraphServiceIntegration):
                     {
                         "workflow_id": workflow_id,
                         "time_range": time_range,
-                        "filters": {**filters, "source": "langgraph_workflow"}
-                    }
+                        "filters": {**filters, "source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "log_query_result": result}
             except Exception as e:
@@ -1045,7 +950,7 @@ class LogCollectorIntegration(LangGraphServiceIntegration):
         self.tools = {
             "log_workflow_event": log_workflow_event_tool,
             "query_workflow_logs": query_workflow_logs_tool,
-            "get_workflow_metrics": get_workflow_metrics_tool
+            "get_workflow_metrics": get_workflow_metrics_tool,
         }
 
         return self.tools
@@ -1060,7 +965,7 @@ class LogCollectorIntegration(LangGraphServiceIntegration):
             "log_querying",
             "metrics_collection",
             "performance_monitoring",
-            "audit_trail_management"
+            "audit_trail_management",
         ]
 
 

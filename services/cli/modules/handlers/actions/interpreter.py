@@ -1,8 +1,10 @@
-from typing import Any, Dict, List, Tuple, Callable
-from rich.prompt import Prompt
 import json
+from typing import Any, Callable, List, Tuple
+
+from rich.prompt import Prompt
 
 from services.shared.integrations.clients.clients import ServiceClients
+
 from ...utils.display_helpers import print_kv, print_list
 
 
@@ -145,7 +147,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         for i in range(count):
             console.print(f"\n[bold cyan]Query {i+1}/{count}[/bold cyan]")
             query = Prompt.ask(f"Query {i+1}")
-            queries.append({"query": query, "index": i+1})
+            queries.append({"query": query, "index": i + 1})
 
         console.print(f"\n[bold blue]Processing {count} queries...[/bold blue]")
 
@@ -155,19 +157,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 console.print(f"Processing query {i+1}/{count}: {query_data['query'][:50]}...")
                 url = f"{clients.interpreter_url()}/interpret"
                 result = await clients.post_json(url, {"query": query_data["query"]})
-                results.append({
-                    "index": i+1,
-                    "query": query_data["query"],
-                    "success": True,
-                    "result": result
-                })
+                results.append({"index": i + 1, "query": query_data["query"], "success": True, "result": result})
             except Exception as e:
-                results.append({
-                    "index": i+1,
-                    "query": query_data["query"],
-                    "success": False,
-                    "error": str(e)
-                })
+                results.append({"index": i + 1, "query": query_data["query"], "success": False, "error": str(e)})
 
         # Display results
         console.print(f"\n[bold green]Batch Interpretation Results ({len(results)} queries)[/bold green]")
@@ -203,15 +195,18 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             "find all documents about machine learning",
             "analyze the quality of this documentation",
             "generate a report on system architecture",
-            "compare version 1 and version 2 of the API docs"
+            "compare version 1 and version 2 of the API docs",
         ]
 
         iterations = Prompt.ask("Number of iterations per query", default="3")
         iterations = int(iterations)
 
-        console.print(f"\n[bold blue]Benchmarking {len(test_queries)} queries, {iterations} iterations each...[/bold blue]")
+        console.print(
+            f"\n[bold blue]Benchmarking {len(test_queries)} queries, {iterations} iterations each...[/bold blue]"
+        )
 
         import time
+
         results = []
 
         for query in test_queries:
@@ -233,27 +228,32 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 min_time = min(query_times)
                 max_time = max(query_times)
 
-                results.append({
-                    "query": query[:40],
-                    "avg_time": avg_time,
-                    "min_time": min_time,
-                    "max_time": max_time,
-                    "iterations": len(query_times)
-                })
+                results.append(
+                    {
+                        "query": query[:40],
+                        "avg_time": avg_time,
+                        "min_time": min_time,
+                        "max_time": max_time,
+                        "iterations": len(query_times),
+                    }
+                )
 
         # Display results
         console.print(f"\n[bold green]Benchmark Results ({len(results)} queries)[/bold green]")
         table_data = []
         for result in results:
-            table_data.append([
-                result["query"],
-                f"{result['avg_time']:.3f}s",
-                f"{result['min_time']:.3f}s",
-                f"{result['max_time']:.3f}s",
-                str(result["iterations"])
-            ])
+            table_data.append(
+                [
+                    result["query"],
+                    f"{result['avg_time']:.3f}s",
+                    f"{result['min_time']:.3f}s",
+                    f"{result['max_time']:.3f}s",
+                    str(result["iterations"]),
+                ]
+            )
 
         from rich.table import Table
+
         table = Table(title="Query Interpretation Benchmark")
         table.add_column("Query", style="cyan")
         table.add_column("Avg Time", style="white")
@@ -274,17 +274,12 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         # Core Query Processing
         ("🔍 Interpret query", interpret_query),
         ("⚡ Execute workflow", execute_workflow),
-
         # Discovery & Exploration
         ("📋 List supported intents", list_supported_intents),
-
         # Advanced Query Building
         ("🔨 Build complex query", build_complex_query),
         ("📦 Batch interpret queries", batch_interpret_queries),
-
         # Testing & Diagnostics
         ("🩺 Service health check", test_interpreter_health),
         ("⚡ Benchmark interpretation", benchmark_interpretation),
     ]
-
-

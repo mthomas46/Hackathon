@@ -8,7 +8,7 @@ YELLOW := \033[1;33m
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status
+.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status test-redis test-orchestrator test-discovery-agent test-doc-store test-prompt-store test-interpreter test-llm-gateway test-summarizer-hub test-bedrock-proxy test-github-mcp test-analysis-service test-code-analyzer test-secure-analyzer test-architecture-digitizer test-memory-agent test-notification-service test-source-agent test-cli test-mock-data-generator test-frontend test-simulation-dashboard test-data-services-dashboard test-log-collector test-project-simulation test-core-services test-document-services test-ai-services test-analysis-services test-agent-services test-utility-services test-frontend-services test-simulation-services test-all-services test-infrastructure test-business-logic test-integration-ready perf-test-project-simulation perf-test-analysis-service perf-test-all validate-service-health validate-docker-config validate-test-coverage validate-all test-ci-unit test-ci-integration test-ci-e2e test-ci-performance test-ci-full lint lint-imports lint-format lint-check lint-fix lint-security
 
 help: ## Show this help message
 	@echo "🚀 Hackathon Ecosystem Commands"
@@ -54,6 +54,305 @@ ecosystem-health: ## Check ecosystem health using unified monitoring
 ecosystem-readiness: ## Check production readiness
 	@echo "$(BLUE)🚀 Checking Production Readiness...$(NC)"
 	source $(VENV)/bin/activate && python3 scripts/hardening/production_readiness_validator.py
+
+# Service-Specific Test Targets
+# ============================================================================
+
+# Core Infrastructure Tests
+test-redis: ## Test Redis infrastructure
+	@echo "$(BLUE)🗄️  Testing Redis...$(NC)"
+	docker exec hackathon-redis-1 redis-cli ping | grep -q PONG && echo "$(GREEN)✅ Redis OK$(NC)" || echo "$(RED)❌ Redis Failed$(NC)"
+
+test-orchestrator: ## Test orchestrator service
+	@echo "$(BLUE)🎯 Testing Orchestrator...$(NC)"
+	$(PYTHON) -m pytest services/orchestrator/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Orchestrator tests complete$(NC)"
+
+test-discovery-agent: ## Test discovery agent
+	@echo "$(BLUE)🔍 Testing Discovery Agent...$(NC)"
+	$(PYTHON) -m pytest services/discovery-agent/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Discovery Agent tests complete$(NC)"
+
+# Document Services Tests
+test-doc-store: ## Test document store service
+	@echo "$(BLUE)📄 Testing Document Store...$(NC)"
+	$(PYTHON) -m pytest services/doc_store/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Document Store tests complete$(NC)"
+
+test-prompt-store: ## Test prompt store service
+	@echo "$(BLUE)💭 Testing Prompt Store...$(NC)"
+	$(PYTHON) -m pytest services/prompt_store/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Prompt Store tests complete$(NC)"
+
+test-interpreter: ## Test interpreter service
+	@echo "$(BLUE)🔮 Testing Interpreter...$(NC)"
+	$(PYTHON) -m pytest services/interpreter/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Interpreter tests complete$(NC)"
+
+# AI/ML Services Tests
+test-llm-gateway: ## Test LLM gateway service
+	@echo "$(BLUE)🤖 Testing LLM Gateway...$(NC)"
+	$(PYTHON) -m pytest services/llm-gateway/tests/ -v --tb=short
+	@echo "$(GREEN)✅ LLM Gateway tests complete$(NC)"
+
+test-summarizer-hub: ## Test summarizer hub service
+	@echo "$(BLUE)📝 Testing Summarizer Hub...$(NC)"
+	$(PYTHON) -m pytest services/summarizer-hub/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Summarizer Hub tests complete$(NC)"
+
+test-bedrock-proxy: ## Test bedrock proxy service
+	@echo "$(BLUE)🛡️  Testing Bedrock Proxy...$(NC)"
+	$(PYTHON) -m pytest services/bedrock-proxy/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Bedrock Proxy tests complete$(NC)"
+
+test-github-mcp: ## Test GitHub MCP service
+	@echo "$(BLUE)🐙 Testing GitHub MCP...$(NC)"
+	$(PYTHON) -m pytest services/github-mcp/tests/ -v --tb=short
+	@echo "$(GREEN)✅ GitHub MCP tests complete$(NC)"
+
+# Analysis Services Tests
+test-analysis-service: ## Test analysis service
+	@echo "$(BLUE)🔬 Testing Analysis Service...$(NC)"
+	$(PYTHON) -m pytest services/analysis-service/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Analysis Service tests complete$(NC)"
+
+test-code-analyzer: ## Test code analyzer service
+	@echo "$(BLUE)💻 Testing Code Analyzer...$(NC)"
+	$(PYTHON) -m pytest services/code-analyzer/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Code Analyzer tests complete$(NC)"
+
+test-secure-analyzer: ## Test secure analyzer service
+	@echo "$(BLUE)🔒 Testing Secure Analyzer...$(NC)"
+	$(PYTHON) -m pytest services/secure-analyzer/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Secure Analyzer tests complete$(NC)"
+
+test-architecture-digitizer: ## Test architecture digitizer service
+	@echo "$(BLUE)🏗️  Testing Architecture Digitizer...$(NC)"
+	$(PYTHON) -m pytest services/architecture-digitizer/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Architecture Digitizer tests complete$(NC)"
+
+# Agent Services Tests
+test-memory-agent: ## Test memory agent (Note: may not exist yet)
+	@echo "$(BLUE)🧠 Testing Memory Agent...$(NC)"
+	@if [ -d services/memory-agent/tests ]; then \
+		$(PYTHON) -m pytest services/memory-agent/tests/ -v --tb=short; \
+	else \
+		echo "$(YELLOW)⚠️  Memory Agent tests not found$(NC)"; \
+	fi
+	@echo "$(GREEN)✅ Memory Agent tests complete$(NC)"
+
+test-notification-service: ## Test notification service
+	@echo "$(BLUE)📢 Testing Notification Service...$(NC)"
+	$(PYTHON) -m pytest services/notification-service/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Notification Service tests complete$(NC)"
+
+test-source-agent: ## Test source agent service
+	@echo "$(BLUE)📚 Testing Source Agent...$(NC)"
+	$(PYTHON) -m pytest services/source-agent/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Source Agent tests complete$(NC)"
+
+# Utility Services Tests
+test-cli: ## Test CLI service
+	@echo "$(BLUE)💻 Testing CLI...$(NC)"
+	$(PYTHON) -m pytest services/cli/tests/ -v --tb=short
+	@echo "$(GREEN)✅ CLI tests complete$(NC)"
+
+test-mock-data-generator: ## Test mock data generator service
+	@echo "$(BLUE)🎲 Testing Mock Data Generator...$(NC)"
+	$(PYTHON) -m pytest services/mock-data-generator/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Mock Data Generator tests complete$(NC)"
+
+# Frontend & Dashboard Tests
+test-frontend: ## Test frontend service
+	@echo "$(BLUE)🌐 Testing Frontend...$(NC)"
+	$(PYTHON) -m pytest services/frontend/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Frontend tests complete$(NC)"
+
+test-simulation-dashboard: ## Test simulation dashboard
+	@echo "$(BLUE)📊 Testing Simulation Dashboard...$(NC)"
+	$(PYTHON) -m pytest services/simulation-dashboard/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Simulation Dashboard tests complete$(NC)"
+
+test-data-services-dashboard: ## Test data services dashboard
+	@echo "$(BLUE)📈 Testing Data Services Dashboard...$(NC)"
+	$(PYTHON) -m pytest services/data-services-dashboard/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Data Services Dashboard tests complete$(NC)"
+
+# Logging & Monitoring Tests
+test-log-collector: ## Test log collector service
+	@echo "$(BLUE)📋 Testing Log Collector...$(NC)"
+	$(PYTHON) -m pytest services/log-collector/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Log Collector tests complete$(NC)"
+
+# Project Simulation Tests
+test-project-simulation: ## Test project simulation service
+	@echo "$(BLUE)🚀 Testing Project Simulation...$(NC)"
+	$(PYTHON) -m pytest services/project-simulation/tests/ -v --tb=short
+	@echo "$(GREEN)✅ Project Simulation tests complete$(NC)"
+
+# Combined Service Test Targets
+# ============================================================================
+
+test-core-services: test-redis test-orchestrator test-discovery-agent ## Test all core services
+	@echo "$(GREEN)✅ Core services tests complete$(NC)"
+
+test-document-services: test-doc-store test-prompt-store test-interpreter ## Test all document-related services
+	@echo "$(GREEN)✅ Document services tests complete$(NC)"
+
+test-ai-services: test-llm-gateway test-summarizer-hub test-bedrock-proxy test-github-mcp ## Test all AI/ML services
+	@echo "$(GREEN)✅ AI services tests complete$(NC)"
+
+test-analysis-services: test-analysis-service test-code-analyzer test-secure-analyzer test-architecture-digitizer ## Test all analysis services
+	@echo "$(GREEN)✅ Analysis services tests complete$(NC)"
+
+test-agent-services: test-memory-agent test-notification-service test-source-agent ## Test all agent services
+	@echo "$(GREEN)✅ Agent services tests complete$(NC)"
+
+test-utility-services: test-cli test-mock-data-generator test-log-collector ## Test all utility services
+	@echo "$(GREEN)✅ Utility services tests complete$(NC)"
+
+test-frontend-services: test-frontend test-simulation-dashboard test-data-services-dashboard ## Test all frontend/dashboard services
+	@echo "$(GREEN)✅ Frontend services tests complete$(NC)"
+
+test-simulation-services: test-project-simulation ## Test all simulation services
+	@echo "$(GREEN)✅ Simulation services tests complete$(NC)"
+
+# Comprehensive Test Suites
+# ============================================================================
+
+test-all-services: test-core-services test-document-services test-ai-services test-analysis-services test-agent-services test-utility-services test-frontend-services test-simulation-services ## Run all service tests
+	@echo "$(GREEN)🎉 All service tests completed!$(NC)"
+
+test-infrastructure: test-redis ## Test infrastructure components only
+	@echo "$(GREEN)✅ Infrastructure tests complete$(NC)"
+
+test-business-logic: test-document-services test-ai-services test-analysis-services ## Test business logic services
+	@echo "$(GREEN)✅ Business logic tests complete$(NC)"
+
+test-integration-ready: test-core-services test-document-services test-ai-services ## Test services ready for integration
+	@echo "$(GREEN)✅ Integration-ready tests complete$(NC)"
+
+# Performance Testing Targets
+# ============================================================================
+
+perf-test-project-simulation: ## Run performance tests for project simulation
+	@echo "$(BLUE)⚡ Running Project Simulation Performance Tests...$(NC)"
+	$(PYTHON) -m pytest services/project-simulation/tests/performance/ -v --tb=short -k "perf"
+	@echo "$(GREEN)✅ Performance tests complete$(NC)"
+
+perf-test-analysis-service: ## Run performance tests for analysis service
+	@echo "$(BLUE)⚡ Running Analysis Service Performance Tests...$(NC)"
+	$(PYTHON) -m pytest services/analysis-service/tests/performance/ -v --tb=short -k "perf"
+	@echo "$(GREEN)✅ Performance tests complete$(NC)"
+
+perf-test-all: perf-test-project-simulation perf-test-analysis-service ## Run all performance tests
+	@echo "$(GREEN)⚡ All performance tests completed!$(NC)"
+
+# Validation and Health Check Targets
+# ============================================================================
+
+validate-service-health: ## Validate all services are healthy
+	@echo "$(BLUE)🏥 Validating Service Health...$(NC)"
+	@./scripts/validate_service_health.sh
+	@echo "$(GREEN)✅ Service health validation complete$(NC)"
+
+validate-docker-config: ## Validate Docker configuration
+	@echo "$(BLUE)🐳 Validating Docker Configuration...$(NC)"
+	docker-compose -f docker-compose.dev.yml config --quiet
+	@echo "$(GREEN)✅ Docker configuration is valid$(NC)"
+
+validate-test-coverage: ## Check test coverage across services
+	@echo "$(BLUE)📊 Checking Test Coverage...$(NC)"
+	@./scripts/check_test_coverage.sh
+	@echo "$(GREEN)✅ Test coverage check complete$(NC)"
+
+validate-all: validate-service-health validate-docker-config validate-test-coverage ## Run all validation checks
+	@echo "$(GREEN)✅ All validations passed!$(NC)"
+
+# CI/CD Test Pipeline
+# ============================================================================
+
+test-ci-unit: ## CI unit tests (fast)
+	@echo "$(BLUE)🚀 Running CI Unit Tests...$(NC)"
+	$(PYTHON) -m pytest -x --tb=short -q --disable-warnings \
+		--ignore=services/*/tests/integration/ \
+		--ignore=services/*/tests/e2e/ \
+		--ignore=services/*/tests/performance/
+	@echo "$(GREEN)✅ CI unit tests complete$(NC)"
+
+test-ci-integration: ## CI integration tests
+	@echo "$(BLUE)🔗 Running CI Integration Tests...$(NC)"
+	$(PYTHON) -m pytest -x --tb=short -q --disable-warnings \
+		services/*/tests/integration/
+	@echo "$(GREEN)✅ CI integration tests complete$(NC)"
+
+test-ci-e2e: ## CI end-to-end tests
+	@echo "$(BLUE)🌐 Running CI E2E Tests...$(NC)"
+	$(PYTHON) -m pytest -x --tb=short -q --disable-warnings \
+		services/*/tests/e2e/
+	@echo "$(GREEN)✅ CI E2E tests complete$(NC)"
+
+test-ci-performance: ## CI performance tests
+	@echo "$(BLUE)⚡ Running CI Performance Tests...$(NC)"
+	$(PYTHON) -m pytest -x --tb=short -q --disable-warnings \
+		services/*/tests/performance/
+	@echo "$(GREEN)✅ CI performance tests complete$(NC)"
+
+test-ci-full: test-ci-unit test-ci-integration test-ci-e2e test-ci-performance ## Full CI pipeline
+	@echo "$(GREEN)🎉 Full CI pipeline completed!$(NC)"
+
+# Code Quality & Linting
+# ============================================================================
+
+lint: lint-check ## Run all linting checks (alias for lint-check)
+
+lint-check: ## Run comprehensive linting checks
+	@echo "$(BLUE)🔧 Running comprehensive linting checks...$(NC)"
+	$(PYTHON) -m pip install -q -r requirements-dev.txt
+	@echo "$(YELLOW)🔄 Checking import sorting...$(NC)"
+	isort --profile=black --line-length=120 --check-only --diff services/ scripts/ *.py || (echo "$(RED)❌ Import sorting failed$(NC)" && exit 1)
+	@echo "$(YELLOW)🎨 Checking code formatting...$(NC)"
+	black --line-length=120 --check --diff services/ scripts/ *.py || (echo "$(RED)❌ Code formatting failed$(NC)" && exit 1)
+	@echo "$(YELLOW)🐛 Running linting...$(NC)"
+	flake8 services/ scripts/ *.py --max-line-length=120 --extend-ignore=E203,W503 --max-complexity=10 --count --statistics || (echo "$(RED)❌ Linting failed$(NC)" && exit 1)
+	@echo "$(YELLOW)📝 Checking docstring formatting...$(NC)"
+	docformatter --check --pre-summary-newline --recursive services/ scripts/ *.py || (echo "$(RED)❌ Docstring formatting failed$(NC)" && exit 1)
+	@echo "$(GREEN)✅ All linting checks passed!$(NC)"
+
+lint-fix: ## Automatically fix linting issues
+	@echo "$(BLUE)🔧 Running automatic linting fixes...$(NC)"
+	$(PYTHON) -m pip install -q -r requirements-dev.txt
+	@echo "$(YELLOW)🔄 Fixing import sorting...$(NC)"
+	isort --profile=black --line-length=120 services/ scripts/ *.py
+	@echo "$(YELLOW)🎨 Fixing code formatting...$(NC)"
+	black --line-length=120 services/ scripts/ *.py
+	@echo "$(YELLOW)🐛 Running linting (may show remaining issues)...$(NC)"
+	-flake8 services/ scripts/ *.py --max-line-length=120 --extend-ignore=E203,W503 --max-complexity=10 --count --statistics
+	@echo "$(YELLOW)📝 Fixing docstring formatting...$(NC)"
+	docformatter --in-place --pre-summary-newline --recursive services/ scripts/ *.py
+	@echo "$(GREEN)✅ Automatic fixes completed!$(NC)"
+
+lint-imports: ## Check and fix import sorting only
+	@echo "$(BLUE)🔄 Checking import sorting...$(NC)"
+	$(PYTHON) -m pip install -q isort
+	isort --profile=black --line-length=120 --check-only --diff services/ scripts/ *.py || (echo "$(RED)❌ Import sorting issues found$(NC)" && exit 1)
+	@echo "$(GREEN)✅ Import sorting is correct!$(NC)"
+
+lint-format: ## Check and fix code formatting only
+	@echo "$(BLUE)🎨 Checking code formatting...$(NC)"
+	$(PYTHON) -m pip install -q black
+	black --line-length=120 --check --diff services/ scripts/ *.py || (echo "$(RED)❌ Code formatting issues found$(NC)" && exit 1)
+	@echo "$(GREEN)✅ Code formatting is correct!$(NC)"
+
+lint-security: ## Run security analysis
+	@echo "$(BLUE)🔒 Running security analysis...$(NC)"
+	$(PYTHON) -m pip install -q bandit[toml]
+	bandit -r services/ scripts/ --exclude-dir="*/tests/*,*/test_venv/*" -f json -o security-report.json --exit-zero
+	@echo "$(YELLOW)📊 Security report saved to security-report.json$(NC)"
+	@echo "$(GREEN)✅ Security analysis completed!$(NC)"
+
+# Legacy/Compatibility Targets
+# ============================================================================
 
 ecosystem-test: ## Run comprehensive ecosystem tests
 	@echo "$(BLUE)🧪 Running Ecosystem Tests...$(NC)"

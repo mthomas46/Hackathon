@@ -1,11 +1,13 @@
-"""Prompt versioning repository implementation.
+"""
+Prompt versioning repository implementation.
 
 Handles database operations for prompt versions.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from services.prompt_store.core.entities import PromptVersion
-from services.prompt_store.db.queries import execute_query, serialize_json, deserialize_json
+from services.prompt_store.db.queries import deserialize_json, execute_query, serialize_json
 
 
 class PromptVersioningRepository:
@@ -16,17 +18,19 @@ class PromptVersioningRepository:
 
     def _row_to_entity(self, row: Dict[str, Any]) -> PromptVersion:
         """Convert database row to PromptVersion entity."""
-        return PromptVersion.from_dict({
-            "id": row["id"],
-            "prompt_id": row["prompt_id"],
-            "version": row["version"],
-            "content": row["content"],
-            "variables": deserialize_json(row["variables"]),
-            "change_summary": row["change_summary"],
-            "change_type": row["change_type"],
-            "created_by": row["created_by"],
-            "created_at": row["created_at"]
-        })
+        return PromptVersion.from_dict(
+            {
+                "id": row["id"],
+                "prompt_id": row["prompt_id"],
+                "version": row["version"],
+                "content": row["content"],
+                "variables": deserialize_json(row["variables"]),
+                "change_summary": row["change_summary"],
+                "change_type": row["change_type"],
+                "created_by": row["created_by"],
+                "created_at": row["created_at"],
+            }
+        )
 
     def save(self, entity: PromptVersion) -> PromptVersion:
         """Save prompt version to database."""
@@ -39,7 +43,7 @@ class PromptVersioningRepository:
             "change_summary": entity.change_summary,
             "change_type": entity.change_type,
             "created_by": entity.created_by,
-            "created_at": entity.created_at.isoformat()
+            "created_at": entity.created_at.isoformat(),
         }
 
         columns = list(row.keys())

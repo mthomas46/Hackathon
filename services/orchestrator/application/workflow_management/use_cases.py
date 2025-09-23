@@ -1,16 +1,20 @@
-"""Use Cases for Workflow Management"""
+"""Use Cases for Workflow Management."""
 
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 
-from .commands import *
-from .queries import *
 from ...domain.workflow_management import (
-    Workflow, WorkflowExecution, WorkflowParameter, WorkflowAction,
-    WorkflowId, ExecutionId, ParameterType, ActionType,
-    WorkflowValidator, ParameterResolver, WorkflowExecutor
+    ActionType,
+    ParameterType,
+    Workflow,
+    WorkflowAction,
+    WorkflowExecution,
+    WorkflowParameter,
+    WorkflowValidator,
 )
 from ...shared.application import UseCase
 from ...shared.domain import DomainResult
+from .commands import CreateWorkflowCommand, ExecuteWorkflowCommand
+from .queries import GetWorkflowQuery, ListWorkflowsQuery, GetWorkflowExecutionQuery, ListWorkflowExecutionsQuery
 
 
 class CreateWorkflowUseCase(UseCase):
@@ -24,10 +28,7 @@ class CreateWorkflowUseCase(UseCase):
         try:
             # Create workflow entity
             workflow = Workflow(
-                name=command.name,
-                description=command.description,
-                created_by=command.created_by,
-                tags=command.tags
+                name=command.name, description=command.description, created_by=command.created_by, tags=command.tags
             )
 
             # Add parameters
@@ -39,7 +40,7 @@ class CreateWorkflowUseCase(UseCase):
                     required=param_data.get("required", True),
                     default_value=param_data.get("default_value"),
                     validation_rules=param_data.get("validation_rules", {}),
-                    allowed_values=param_data.get("allowed_values")
+                    allowed_values=param_data.get("allowed_values"),
                 )
                 workflow.add_parameter(param)
 
@@ -52,7 +53,7 @@ class CreateWorkflowUseCase(UseCase):
                     config=action_data["config"],
                     depends_on=action_data.get("depends_on", []),
                     retry_count=action_data.get("retry_count", 0),
-                    timeout_seconds=action_data.get("timeout_seconds", 30)
+                    timeout_seconds=action_data.get("timeout_seconds", 30),
                 )
                 workflow.add_action(action)
 
@@ -94,16 +95,12 @@ class ExecuteWorkflowUseCase(UseCase):
 
             # Create execution
             execution = WorkflowExecution(
-                workflow_id=command.workflow_id,
-                correlation_id=command.correlation_id,
-                trace_id=command.trace_id
+                workflow_id=command.workflow_id, correlation_id=command.correlation_id, trace_id=command.trace_id
             )
 
             # Start execution
             execution.start(
-                parameters=command.parameters,
-                correlation_id=command.correlation_id,
-                trace_id=command.trace_id
+                parameters=command.parameters, correlation_id=command.correlation_id, trace_id=command.trace_id
             )
 
             # Save execution
@@ -149,7 +146,7 @@ class ListWorkflowsUseCase(UseCase):
             status_filter=query.status_filter,
             created_by_filter=query.created_by_filter,
             limit=query.limit,
-            offset=query.offset
+            offset=query.offset,
         )
 
 
@@ -167,7 +164,7 @@ class ListWorkflowExecutionsUseCase(UseCase):
             started_after=query.started_after,
             started_before=query.started_before,
             limit=query.limit,
-            offset=query.offset
+            offset=query.offset,
         )
 
 

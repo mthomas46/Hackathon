@@ -2,10 +2,10 @@
 
 import asyncio
 import uuid
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from services.shared.core.di.services import ILoggerService
 from services.shared.core.logging.logger import get_logger
@@ -13,6 +13,7 @@ from services.shared.core.logging.logger import get_logger
 
 class TaskStatus(Enum):
     """Task execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -55,10 +56,7 @@ class DistributedProcessor:
 
     def register_worker(self, worker_id: str, capabilities: List[str] = None) -> None:
         """Register a worker."""
-        worker = Worker(
-            worker_id=worker_id,
-            capabilities=capabilities or ["generic"]
-        )
+        worker = Worker(worker_id=worker_id, capabilities=capabilities or ["generic"])
         self._workers[worker_id] = worker
 
     def get_available_workers(self) -> List[Worker]:
@@ -67,11 +65,7 @@ class DistributedProcessor:
 
     async def submit_task(self, task_type: str, payload: Dict[str, Any]) -> str:
         """Submit task for processing."""
-        task = Task(
-            task_id=str(uuid.uuid4()),
-            task_type=task_type,
-            payload=payload
-        )
+        task = Task(task_id=str(uuid.uuid4()), task_type=task_type, payload=payload)
 
         self._tasks[task.task_id] = task
 
@@ -94,11 +88,7 @@ class DistributedProcessor:
         if not task:
             return None
 
-        return {
-            "task_id": task.task_id,
-            "status": task.status.value,
-            "assigned_worker": task.assigned_worker
-        }
+        return {"task_id": task.task_id, "status": task.status.value, "assigned_worker": task.assigned_worker}
 
     async def _process_task(self, task: Task, worker: Worker) -> None:
         """Process a task."""

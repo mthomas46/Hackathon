@@ -14,55 +14,55 @@ Responsibilities:
 Dependencies: shared middlewares, httpx for HTTP requests, orchestrator service for registration.
 """
 
-from fastapi import FastAPI, Query, Body
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
-import httpx
 import re
-from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+import httpx
+from fastapi import FastAPI
+from pydantic import BaseModel, Field
+
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.responses.responses import create_error_response, create_success_response
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses.responses import create_success_response, create_error_response
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import setup_common_middleware, attach_self_register
+from services.shared.utilities import attach_self_register, setup_common_middleware
 
-# ============================================================================
-# LOCAL MODULES - Service-specific functionality
-# ============================================================================
-from .modules.shared_utils import (
-    get_orchestrator_url,
-    handle_discovery_error,
-    create_discovery_success_response,
-    build_discovery_context,
-    validate_discovery_request,
-    extract_endpoints_from_spec,
-    fetch_openapi_spec,
-    compute_schema_hash,
-    create_discovery_response,
-    register_with_orchestrator,
-    build_registration_payload
-)
+from .modules.ai_tool_selector import ai_tool_selector
+from .modules.discovery_handler import handle_tool_discovery_request
 
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
 from .modules.models import DiscoverRequest, ToolDiscoveryRequest
+from .modules.monitoring_service import discovery_monitoring_service
+from .modules.orchestrator_integration import orchestrator_integration
+from .modules.performance_optimizer import performance_optimizer
+from .modules.security_scanner import tool_security_scanner
+from .modules.semantic_analyzer import semantic_tool_analyzer
+
+# ============================================================================
+# LOCAL MODULES - Service-specific functionality
+# ============================================================================
+from .modules.shared_utils import (
+    build_discovery_context,
+    build_registration_payload,
+    compute_schema_hash,
+    create_discovery_success_response,
+    extract_endpoints_from_spec,
+    fetch_openapi_spec,
+    handle_discovery_error,
+    register_with_orchestrator,
+    validate_discovery_request,
+)
 
 # ============================================================================
 # PHASE IMPLEMENTATION MODULES - Enhanced capabilities
 # ============================================================================
 from .modules.tool_discovery import tool_discovery_service
-from .modules.security_scanner import tool_security_scanner
-from .modules.monitoring_service import discovery_monitoring_service
 from .modules.tool_registry import tool_registry_storage
-from .modules.discovery_handler import handle_tool_discovery_request
-from .modules.orchestrator_integration import orchestrator_integration
-from .modules.ai_tool_selector import ai_tool_selector
-from .modules.semantic_analyzer import semantic_tool_analyzer
-from .modules.performance_optimizer import performance_optimizer
 
 # Service configuration constants
 SERVICE_NAME = "discovery-agent"
@@ -78,7 +78,7 @@ DEFAULT_PORT = 5045
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
-    description="Service discovery agent for OpenAPI endpoint registration and orchestration"
+    description="Service discovery agent for OpenAPI endpoint registration and orchestration",
 )
 
 # Use common middleware setup and error handlers to reduce duplication across services
@@ -94,8 +94,9 @@ register_health_endpoints(app, ServiceNames.DISCOVERY_AGENT, SERVICE_VERSION)
 # PHASE SERVICE INITIALIZATION - Initialize enhanced phase services
 # ============================================================================
 
+
 def initialize_phase_services():
-    """Initialize all phase services with proper integration"""
+    """Initialize all phase services with proper integration."""
     # Configure tool discovery service with dependencies
     tool_discovery_service.set_security_scanner(tool_security_scanner)
     tool_discovery_service.set_monitoring_service(discovery_monitoring_service)
@@ -107,25 +108,29 @@ def initialize_phase_services():
     print("  📊 Monitoring Service: Configured")
     print("  💾 Registry Storage: Configured")
 
+
 # Initialize services on startup
 initialize_phase_services()
 
 
 @app.post("/discover")
 async def discover(req: DiscoverRequest):
-    """Discover and register OpenAPI endpoints from specification or URL.
+    """
+    Discover and register OpenAPI endpoints from specification or URL.
 
-    Parses OpenAPI specifications to extract service endpoints and optionally
-    registers them with the orchestrator. Supports both inline specs for testing
-    and remote URL fetching for production deployments. Includes dry-run mode
-    for testing without actual registration.
+    Parses OpenAPI specifications to extract service endpoints and
+    optionally registers them with the orchestrator. Supports both
+    inline specs for testing and remote URL fetching for production
+    deployments. Includes dry-run mode for testing without actual
+    registration.
     """
     return await discovery_handler.discover_endpoints(req)
 
 
 @app.post("/discover/tools")
 async def discover_tools(req: ToolDiscoveryRequest):
-    """Discover and register LangGraph tools from service OpenAPI specifications.
+    """
+    Discover and register LangGraph tools from service OpenAPI specifications.
 
     Automatically analyzes service OpenAPI specs to identify operations that can be
     exposed as LangGraph tools. Categorizes tools by functionality and optionally
@@ -141,6 +146,7 @@ async def discover_tools(req: ToolDiscoveryRequest):
 # ============================================================================
 # PHASE 2: COMPREHENSIVE ECOSYSTEM DISCOVERY ENDPOINTS
 # ============================================================================
+
 
 @app.post("/api/v1/discovery/ecosystem")
 async def discover_ecosystem_tools():
@@ -159,86 +165,86 @@ async def discover_ecosystem_tools():
                 "url": "http://localhost:5020",
                 "openapi_path": "/openapi.json",
                 "category": "analysis",
-                "priority": 1
+                "priority": 1,
             },
             "source-agent": {
                 "url": "http://localhost:5000",
                 "openapi_path": "/openapi.json",
                 "category": "integration",
-                "priority": 1
+                "priority": 1,
             },
             "memory-agent": {
                 "url": "http://localhost:5040",
                 "openapi_path": "/openapi.json",
                 "category": "storage",
-                "priority": 1
+                "priority": 1,
             },
             "prompt_store": {
                 "url": "http://localhost:5110",
                 "openapi_path": "/openapi.json",
                 "category": "ai",
-                "priority": 1
+                "priority": 1,
             },
             "github-mcp": {
                 "url": "http://localhost:5072",
                 "openapi_path": "/openapi.json",
                 "category": "integration",
-                "priority": 2
+                "priority": 2,
             },
             "interpreter": {
                 "url": "http://localhost:5120",
                 "openapi_path": "/openapi.json",
                 "category": "execution",
-                "priority": 2
+                "priority": 2,
             },
             "secure-analyzer": {
                 "url": "http://localhost:5070",
                 "openapi_path": "/openapi.json",
                 "category": "security",
-                "priority": 1
+                "priority": 1,
             },
             "summarizer-hub": {
                 "url": "http://localhost:5160",
                 "openapi_path": "/openapi.json",
                 "category": "ai",
-                "priority": 2
+                "priority": 2,
             },
             "doc_store": {
                 "url": "http://localhost:5087",
                 "openapi_path": "/openapi.json",
                 "category": "storage",
-                "priority": 1
+                "priority": 1,
             },
             "orchestrator": {
                 "url": "http://localhost:5099",
                 "openapi_path": "/openapi.json",
                 "category": "orchestration",
-                "priority": 1
+                "priority": 1,
             },
             "architecture-digitizer": {
                 "url": "http://localhost:5105",
                 "openapi_path": "/openapi.json",
                 "category": "analysis",
-                "priority": 3
+                "priority": 3,
             },
             "log-collector": {
                 "url": "http://localhost:5080",
                 "openapi_path": "/openapi.json",
                 "category": "monitoring",
-                "priority": 2
+                "priority": 2,
             },
             "notification-service": {
                 "url": "http://localhost:5095",
                 "openapi_path": "/openapi.json",
                 "category": "communication",
-                "priority": 3
+                "priority": 3,
             },
             "code-analyzer": {
                 "url": "http://localhost:5065",
                 "openapi_path": "/openapi.json",
                 "category": "analysis",
-                "priority": 3
-            }
+                "priority": 3,
+            },
         }
 
         # Run comprehensive discovery
@@ -247,21 +253,18 @@ async def discover_ecosystem_tools():
         # Monitor discovery performance
         await tool_discovery_service.monitor_discovery_performance(results)
 
-        return create_success_response(
-            message="Ecosystem discovery completed successfully",
-            data=results
-        )
+        return create_success_response(message="Ecosystem discovery completed successfully", data=results)
 
     except Exception as e:
         return handle_discovery_error(
-            f"Ecosystem discovery failed: {str(e)}",
-            {"error_type": "ecosystem_discovery_error"}
+            f"Ecosystem discovery failed: {str(e)}", {"error_type": "ecosystem_discovery_error"}
         )
 
 
 # ============================================================================
 # PHASE 5: REGISTRY AND MONITORING ENDPOINTS
 # ============================================================================
+
 
 @app.get("/api/v1/registry/tools")
 async def get_registry_tools(service: Optional[str] = None, category: Optional[str] = None):
@@ -287,21 +290,11 @@ async def get_registry_tools(service: Optional[str] = None, category: Optional[s
 
         return create_success_response(
             message=f"Retrieved {len(tools)} tools from registry",
-            data={
-                "tools": tools,
-                "count": len(tools),
-                "filters": {
-                    "service": service,
-                    "category": category
-                }
-            }
+            data={"tools": tools, "count": len(tools), "filters": {"service": service, "category": category}},
         )
 
     except Exception as e:
-        return handle_discovery_error(
-            f"Registry query failed: {str(e)}",
-            {"error_type": "registry_query_error"}
-        )
+        return handle_discovery_error(f"Registry query failed: {str(e)}", {"error_type": "registry_query_error"})
 
 
 @app.get("/api/v1/monitoring/dashboard")
@@ -314,16 +307,10 @@ async def get_monitoring_dashboard():
     try:
         dashboard = await discovery_monitoring_service.create_monitoring_dashboard()
 
-        return create_success_response(
-            message="Monitoring dashboard generated successfully",
-            data=dashboard
-        )
+        return create_success_response(message="Monitoring dashboard generated successfully", data=dashboard)
 
     except Exception as e:
-        return handle_discovery_error(
-            f"Dashboard generation failed: {str(e)}",
-            {"error_type": "dashboard_error"}
-        )
+        return handle_discovery_error(f"Dashboard generation failed: {str(e)}", {"error_type": "dashboard_error"})
 
 
 @app.get("/api/v1/registry/stats")
@@ -336,21 +323,16 @@ async def get_registry_stats():
     try:
         stats = await tool_registry_storage.get_registry_stats()
 
-        return create_success_response(
-            message="Registry statistics retrieved successfully",
-            data=stats
-        )
+        return create_success_response(message="Registry statistics retrieved successfully", data=stats)
 
     except Exception as e:
-        return handle_discovery_error(
-            f"Registry stats failed: {str(e)}",
-            {"error_type": "stats_error"}
-        )
+        return handle_discovery_error(f"Registry stats failed: {str(e)}", {"error_type": "stats_error"})
 
 
 # ============================================================================
 # PHASE 3: ORCHESTRATOR INTEGRATION ENDPOINTS
 # ============================================================================
+
 
 @app.post("/api/v1/orchestrator/register-tools")
 async def register_tools_with_orchestrator():
@@ -369,7 +351,7 @@ async def register_tools_with_orchestrator():
         if not all_tools:
             return create_success_response(
                 message="No tools found in registry to register",
-                data={"registered_tools": 0, "message": "Run ecosystem discovery first"}
+                data={"registered_tools": 0, "message": "Run ecosystem discovery first"},
             )
 
         # Register tools with orchestrator
@@ -377,13 +359,12 @@ async def register_tools_with_orchestrator():
 
         return create_success_response(
             message=f"Registered {registration_result['registered_tools']} tools with orchestrator",
-            data=registration_result
+            data=registration_result,
         )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Tool registration failed: {str(e)}",
-            {"error_type": "orchestrator_registration_error"}
+            f"Tool registration failed: {str(e)}", {"error_type": "orchestrator_registration_error"}
         )
 
 
@@ -399,10 +380,7 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
         workflow_name = workflow_request.get("name", f"ai_workflow_{len(str(task_description))}")
 
         if not task_description:
-            return handle_discovery_error(
-                "task_description is required",
-                {"error_type": "missing_task_description"}
-            )
+            return handle_discovery_error("task_description is required", {"error_type": "missing_task_description"})
 
         # Get all available tools from registry
         all_tools_data = await tool_registry_storage.get_all_tools()
@@ -412,8 +390,7 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
 
         if not available_tools:
             return handle_discovery_error(
-                "No tools available in registry. Run ecosystem discovery first.",
-                {"error_type": "no_tools_available"}
+                "No tools available in registry. Run ecosystem discovery first.", {"error_type": "no_tools_available"}
             )
 
         # Use AI to select optimal tools
@@ -422,7 +399,7 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
         if not tool_selection["success"]:
             return handle_discovery_error(
                 f"AI tool selection failed: {tool_selection.get('error', 'Unknown error')}",
-                {"error_type": "ai_selection_failed", "fallback_tools": tool_selection.get("fallback_tools", [])}
+                {"error_type": "ai_selection_failed", "fallback_tools": tool_selection.get("fallback_tools", [])},
             )
 
         # Create workflow specification
@@ -433,7 +410,7 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
             "selected_tools": [tool["name"] for tool in tool_selection["selected_tools"]],
             "ai_analysis": tool_selection["task_analysis"],
             "confidence_score": tool_selection["confidence_score"],
-            "reasoning": tool_selection["reasoning"]
+            "reasoning": tool_selection["reasoning"],
         }
 
         # Add workflow steps if AI generated a workflow
@@ -450,20 +427,17 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
                 data={
                     "workflow": workflow_spec,
                     "orchestrator_result": workflow_result,
-                    "tool_selection": tool_selection
-                }
+                    "tool_selection": tool_selection,
+                },
             )
         else:
             return handle_discovery_error(
                 f"Workflow creation failed: {workflow_result.get('error', 'Unknown error')}",
-                {"error_type": "workflow_creation_failed", "tool_selection": tool_selection}
+                {"error_type": "workflow_creation_failed", "tool_selection": tool_selection},
             )
 
     except Exception as e:
-        return handle_discovery_error(
-            f"AI workflow creation failed: {str(e)}",
-            {"error_type": "ai_workflow_error"}
-        )
+        return handle_discovery_error(f"AI workflow creation failed: {str(e)}", {"error_type": "ai_workflow_error"})
 
 
 @app.post("/api/v1/workflows/execute-ai")
@@ -477,29 +451,24 @@ async def execute_ai_workflow(execution_request: Dict[str, Any]):
         parameters = execution_request.get("parameters", {})
 
         if not workflow_name:
-            return handle_discovery_error(
-                "workflow_name is required",
-                {"error_type": "missing_workflow_name"}
-            )
+            return handle_discovery_error("workflow_name is required", {"error_type": "missing_workflow_name"})
 
         # Execute workflow
         execution_result = await orchestrator_integration.execute_dynamic_workflow(workflow_name, parameters)
 
         if execution_result["success"]:
             return create_success_response(
-                message=f"Workflow '{workflow_name}' executed successfully",
-                data=execution_result
+                message=f"Workflow '{workflow_name}' executed successfully", data=execution_result
             )
         else:
             return handle_discovery_error(
                 f"Workflow execution failed: {execution_result.get('error', 'Unknown error')}",
-                {"error_type": "workflow_execution_failed"}
+                {"error_type": "workflow_execution_failed"},
             )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Workflow execution failed: {str(e)}",
-            {"error_type": "workflow_execution_error"}
+            f"Workflow execution failed: {str(e)}", {"error_type": "workflow_execution_error"}
         )
 
 
@@ -526,25 +495,22 @@ async def get_orchestrator_integration_status():
             "registry": registry_stats,
             "ai_selector": {
                 "status": "available",
-                "capabilities": ["task_analysis", "tool_selection", "workflow_generation"]
-            }
+                "capabilities": ["task_analysis", "tool_selection", "workflow_generation"],
+            },
         }
 
-        return create_success_response(
-            message="Orchestrator integration status retrieved",
-            data=integration_status
-        )
+        return create_success_response(message="Orchestrator integration status retrieved", data=integration_status)
 
     except Exception as e:
         return handle_discovery_error(
-            f"Integration status check failed: {str(e)}",
-            {"error_type": "integration_status_error"}
+            f"Integration status check failed: {str(e)}", {"error_type": "integration_status_error"}
         )
 
 
 # ============================================================================
 # PHASE 4: SEMANTIC ANALYSIS ENDPOINTS
 # ============================================================================
+
 
 @app.post("/api/v1/analysis/semantic")
 async def analyze_tools_semantically():
@@ -563,7 +529,7 @@ async def analyze_tools_semantically():
         if not all_tools:
             return create_success_response(
                 message="No tools found in registry for semantic analysis",
-                data={"analyzed_tools": 0, "message": "Run ecosystem discovery first"}
+                data={"analyzed_tools": 0, "message": "Run ecosystem discovery first"},
             )
 
         print(f"🧠 Performing semantic analysis on {len(all_tools)} tools...")
@@ -585,23 +551,23 @@ async def analyze_tools_semantically():
                 "analyzed_tools": len(semantically_enhanced_tools),
                 "relationship_analysis": relationship_analysis,
                 "enhancement_summary": {
-                    "tools_with_semantic_analysis": len([t for t in semantically_enhanced_tools if t.get("semantic_analysis")]),
+                    "tools_with_semantic_analysis": len(
+                        [t for t in semantically_enhanced_tools if t.get("semantic_analysis")]
+                    ),
                     "relationships_found": relationship_analysis.get("relationships_found", 0),
-                    "workflow_suggestions": len(relationship_analysis.get("workflow_suggestions", []))
-                }
-            }
+                    "workflow_suggestions": len(relationship_analysis.get("workflow_suggestions", [])),
+                },
+            },
         )
 
     except Exception as e:
-        return handle_discovery_error(
-            f"Semantic analysis failed: {str(e)}",
-            {"error_type": "semantic_analysis_error"}
-        )
+        return handle_discovery_error(f"Semantic analysis failed: {str(e)}", {"error_type": "semantic_analysis_error"})
 
 
 # ============================================================================
 # PHASE 5: PERFORMANCE OPTIMIZATION ENDPOINTS
 # ============================================================================
+
 
 @app.post("/api/v1/optimization/performance")
 async def optimize_discovery_performance():
@@ -617,16 +583,13 @@ async def optimize_discovery_performance():
         if not discovery_results:
             return create_success_response(
                 message="No discovery results found for optimization analysis",
-                data={"optimizations": [], "message": "Run ecosystem discovery first"}
+                data={"optimizations": [], "message": "Run ecosystem discovery first"},
             )
 
         # Get the most recent discovery run
         latest_run_key = max(discovery_results.keys()) if discovery_results else None
         if not latest_run_key:
-            return handle_discovery_error(
-                "No valid discovery results found",
-                {"error_type": "no_discovery_data"}
-            )
+            return handle_discovery_error("No valid discovery results found", {"error_type": "no_discovery_data"})
 
         latest_results = discovery_results[latest_run_key]
 
@@ -638,16 +601,17 @@ async def optimize_discovery_performance():
             data={
                 "analysis": optimization_analysis,
                 "discovery_run": latest_run_key,
-                "recommendations_count": len(optimization_analysis.get("optimizations", {}).get("parallelization_opportunities", [])) +
-                                       len(optimization_analysis.get("optimizations", {}).get("bottleneck_identification", [])) +
-                                       len(optimization_analysis.get("optimizations", {}).get("resource_optimization", []))
-            }
+                "recommendations_count": len(
+                    optimization_analysis.get("optimizations", {}).get("parallelization_opportunities", [])
+                )
+                + len(optimization_analysis.get("optimizations", {}).get("bottleneck_identification", []))
+                + len(optimization_analysis.get("optimizations", {}).get("resource_optimization", [])),
+            },
         )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Performance optimization failed: {str(e)}",
-            {"error_type": "performance_optimization_error"}
+            f"Performance optimization failed: {str(e)}", {"error_type": "performance_optimization_error"}
         )
 
 
@@ -668,7 +632,7 @@ async def analyze_tool_dependencies():
         if not all_tools:
             return create_success_response(
                 message="No tools found in registry for dependency analysis",
-                data={"dependencies": [], "message": "Run ecosystem discovery first"}
+                data={"dependencies": [], "message": "Run ecosystem discovery first"},
             )
 
         # Analyze tool dependencies
@@ -679,14 +643,13 @@ async def analyze_tool_dependencies():
             data={
                 "dependency_analysis": dependency_analysis,
                 "optimization_opportunities": len(dependency_analysis.get("optimization_opportunities", [])),
-                "independent_tools": len(dependency_analysis.get("independent_tools", []))
-            }
+                "independent_tools": len(dependency_analysis.get("independent_tools", [])),
+            },
         )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Dependency analysis failed: {str(e)}",
-            {"error_type": "dependency_analysis_error"}
+            f"Dependency analysis failed: {str(e)}", {"error_type": "dependency_analysis_error"}
         )
 
 
@@ -703,8 +666,7 @@ async def create_performance_baseline():
 
         if not discovery_results:
             return handle_discovery_error(
-                "No discovery results available for baseline creation",
-                {"error_type": "no_baseline_data"}
+                "No discovery results available for baseline creation", {"error_type": "no_baseline_data"}
             )
 
         # Use the most recent discovery run
@@ -719,15 +681,12 @@ async def create_performance_baseline():
             data={
                 "baseline": baseline,
                 "based_on_discovery_run": latest_run_key,
-                "metrics_tracked": list(baseline.keys())
-            }
+                "metrics_tracked": list(baseline.keys()),
+            },
         )
 
     except Exception as e:
-        return handle_discovery_error(
-            f"Baseline creation failed: {str(e)}",
-            {"error_type": "baseline_creation_error"}
-        )
+        return handle_discovery_error(f"Baseline creation failed: {str(e)}", {"error_type": "baseline_creation_error"})
 
 
 @app.get("/api/v1/optimization/status")
@@ -756,8 +715,8 @@ async def get_optimization_status():
                 "has_discovery_data": bool(latest_run),
                 "has_tools": registry_stats.get("total_tools", 0) > 0,
                 "can_optimize_performance": bool(latest_run and latest_run.get("performance_metrics")),
-                "can_analyze_dependencies": registry_stats.get("total_tools", 0) > 1
-            }
+                "can_analyze_dependencies": registry_stats.get("total_tools", 0) > 1,
+            },
         }
 
         # Add performance summary if available
@@ -766,18 +725,14 @@ async def get_optimization_status():
             optimization_status["performance_summary"] = {
                 "services_tested": summary.get("services_healthy", 0),
                 "tools_discovered": summary.get("tools_discovered", 0),
-                "avg_tools_per_service": summary.get("avg_tools_per_service", 0)
+                "avg_tools_per_service": summary.get("avg_tools_per_service", 0),
             }
 
-        return create_success_response(
-            message="Optimization status retrieved successfully",
-            data=optimization_status
-        )
+        return create_success_response(message="Optimization status retrieved successfully", data=optimization_status)
 
     except Exception as e:
         return handle_discovery_error(
-            f"Optimization status retrieval failed: {str(e)}",
-            {"error_type": "optimization_status_error"}
+            f"Optimization status retrieval failed: {str(e)}", {"error_type": "optimization_status_error"}
         )
 
 
@@ -785,35 +740,40 @@ async def get_optimization_status():
 # ENHANCED ENDPOINTS - New features for ecosystem discovery
 # ============================================================================
 
+
 class BulkDiscoverRequest(BaseModel):
-    """Request model for bulk service discovery"""
+    """Request model for bulk service discovery."""
+
     services: List[Dict[str, str]] = Field(..., description="List of services to discover")
     auto_detect: bool = Field(False, description="Auto-detect services in Docker network")
     include_health_check: bool = Field(True, description="Check service health before discovery")
     dry_run: bool = Field(False, description="Dry run mode for testing")
 
+
 def normalize_service_url(url: str, service_name: str = None) -> str:
-    """Normalize service URL to use Docker internal networking when appropriate"""
+    """Normalize service URL to use Docker internal networking when
+    appropriate."""
     if not url:
         return url
-        
+
     # If it's a localhost URL and we have a service name, try Docker internal URL
     if "localhost" in url or "127.0.0.1" in url:
         if service_name:
             # Extract port from URL
-            port_match = re.search(r':(\d+)', url)
+            port_match = re.search(r":(\d+)", url)
             if port_match:
                 port = port_match.group(1)
                 return f"http://{service_name}:{port}"
-    
+
     return url
+
 
 @app.post("/discover-ecosystem")
 async def discover_ecosystem(request: BulkDiscoverRequest):
-    """Comprehensive ecosystem discovery for multiple services"""
+    """Comprehensive ecosystem discovery for multiple services."""
     try:
         services_to_discover = []
-        
+
         # Auto-detect services if requested
         if request.auto_detect:
             # Known services in Docker network
@@ -834,9 +794,9 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                 {"name": "log_collector", "port": "5062"},
                 {"name": "frontend", "port": "5063"},
                 {"name": "summarizer_hub", "port": "5064"},
-                {"name": "architecture_digitizer", "port": "5065"}
+                {"name": "architecture_digitizer", "port": "5065"},
             ]
-            
+
             for service in known_services:
                 if request.include_health_check:
                     # Check if service is healthy before adding
@@ -845,20 +805,24 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                         async with httpx.AsyncClient(timeout=5.0) as client:
                             response = await client.get(health_url)
                             if response.status_code == 200:
-                                services_to_discover.append({
-                                    "name": service["name"],
-                                    "base_url": f"http://{service['name']}:{service['port']}",
-                                    "openapi_url": f"http://{service['name']}:{service['port']}/openapi.json"
-                                })
+                                services_to_discover.append(
+                                    {
+                                        "name": service["name"],
+                                        "base_url": f"http://{service['name']}:{service['port']}",
+                                        "openapi_url": f"http://{service['name']}:{service['port']}/openapi.json",
+                                    }
+                                )
                     except:
                         continue
                 else:
-                    services_to_discover.append({
-                        "name": service["name"],
-                        "base_url": f"http://{service['name']}:{service['port']}",
-                        "openapi_url": f"http://{service['name']}:{service['port']}/openapi.json"
-                    })
-        
+                    services_to_discover.append(
+                        {
+                            "name": service["name"],
+                            "base_url": f"http://{service['name']}:{service['port']}",
+                            "openapi_url": f"http://{service['name']}:{service['port']}/openapi.json",
+                        }
+                    )
+
         # Add explicitly requested services
         for service in request.services:
             service_data = {
@@ -868,26 +832,26 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
             if "openapi_url" in service:
                 service_data["openapi_url"] = normalize_service_url(service["openapi_url"], service.get("name"))
             services_to_discover.append(service_data)
-        
+
         # Discover all services
         discovery_results = {}
         total_endpoints = 0
         total_tools = 0
         successful_discoveries = 0
         failed_discoveries = []
-        
+
         for service_data in services_to_discover:
             try:
                 discover_request = DiscoverRequest(
                     name=service_data["name"],
                     base_url=service_data["base_url"],
                     openapi_url=service_data.get("openapi_url"),
-                    dry_run=request.dry_run
+                    dry_run=request.dry_run,
                 )
-                
+
                 # Call existing discovery logic
                 result = await handle_discovery_endpoint(discover_request)
-                
+
                 if result.get("success", False):
                     service_result = result["data"]
                     discovery_results[service_data["name"]] = service_result
@@ -895,111 +859,101 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                     total_tools += service_result.get("tools_count", 0)
                     successful_discoveries += 1
                 else:
-                    failed_discoveries.append({
-                        "service": service_data["name"],
-                        "error": result.get("message", "Unknown error")
-                    })
-                    
+                    failed_discoveries.append(
+                        {"service": service_data["name"], "error": result.get("message", "Unknown error")}
+                    )
+
             except Exception as e:
-                failed_discoveries.append({
-                    "service": service_data["name"],
-                    "error": str(e)
-                })
-        
-        return create_success_response({
-            "ecosystem_discovery": {
-                "services_discovered": successful_discoveries,
-                "total_services_attempted": len(services_to_discover),
-                "total_endpoints_discovered": total_endpoints,
-                "total_tools_generated": total_tools,
-                "failed_discoveries": failed_discoveries,
-                "discovery_results": discovery_results,
-                "registry_updated": not request.dry_run
+                failed_discoveries.append({"service": service_data["name"], "error": str(e)})
+
+        return create_success_response(
+            {
+                "ecosystem_discovery": {
+                    "services_discovered": successful_discoveries,
+                    "total_services_attempted": len(services_to_discover),
+                    "total_endpoints_discovered": total_endpoints,
+                    "total_tools_generated": total_tools,
+                    "failed_discoveries": failed_discoveries,
+                    "discovery_results": discovery_results,
+                    "registry_updated": not request.dry_run,
+                }
             }
-        })
-        
+        )
+
     except Exception as e:
         return create_error_response(
             message="Ecosystem discovery failed",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e), "service": ServiceNames.DISCOVERY_AGENT}
+            details={"error": str(e), "service": ServiceNames.DISCOVERY_AGENT},
         )
+
 
 @app.get("/registry/stats")
 async def get_registry_stats():
-    """Get basic registry statistics"""
+    """Get basic registry statistics."""
     try:
         # Basic stats - would be enhanced with actual registry implementation
-        stats = {
-            "total_services": 0,
-            "total_tools": 0,
-            "last_discovery": None,
-            "discovery_runs": 0
-        }
+        stats = {"total_services": 0, "total_tools": 0, "last_discovery": None, "discovery_runs": 0}
         return create_success_response(stats)
-        
+
     except Exception as e:
         return create_error_response(
-            message="Failed to get registry stats",
-            error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e)}
+            message="Failed to get registry stats", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
         )
+
 
 @app.get("/monitoring/dashboard")
 async def get_monitoring_dashboard():
-    """Get basic monitoring dashboard"""
+    """Get basic monitoring dashboard."""
     try:
         dashboard = {
             "dashboard_title": "Discovery Agent Monitoring",
             "service_status": "active",
             "discovery_events_count": 0,
             "recent_discoveries": [],
-            "performance_metrics": {
-                "avg_discovery_time": 0,
-                "success_rate": 100,
-                "total_endpoints_discovered": 0
-            }
+            "performance_metrics": {"avg_discovery_time": 0, "success_rate": 100, "total_endpoints_discovered": 0},
         }
         return create_success_response(dashboard)
-        
+
     except Exception as e:
         return create_error_response(
             message="Failed to create monitoring dashboard",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e)}
+            details={"error": str(e)},
         )
+
 
 # Update the original discover endpoint to use network URL normalization
 original_discover_handler = None
 
+
 async def handle_discovery_endpoint(request: DiscoverRequest):
-    """Enhanced discovery handler with URL normalization"""
+    """Enhanced discovery handler with URL normalization."""
     try:
         # Normalize URLs for Docker networking
         normalized_base_url = normalize_service_url(request.base_url, request.name)
-        normalized_openapi_url = normalize_service_url(request.openapi_url, request.name) if request.openapi_url else None
-        
+        normalized_openapi_url = (
+            normalize_service_url(request.openapi_url, request.name) if request.openapi_url else None
+        )
+
         # Create normalized request
         normalized_request = DiscoverRequest(
             name=request.name,
             base_url=normalized_base_url,
             openapi_url=normalized_openapi_url,
             spec=request.spec,
-            dry_run=request.dry_run
+            dry_run=request.dry_run,
         )
-        
+
         # Use existing discovery logic
         context = build_discovery_context(normalized_request)
         validation_result = validate_discovery_request(context)
-        
+
         if not validation_result["valid"]:
             return handle_discovery_error(
-                context,
-                "Request validation failed",
-                ErrorCodes.VALIDATION_ERROR,
-                validation_result["errors"]
+                context, "Request validation failed", ErrorCodes.VALIDATION_ERROR, validation_result["errors"]
             )
-        
+
         # Fetch spec with improved error handling
         if normalized_request.openapi_url:
             spec = await fetch_openapi_spec(normalized_request.openapi_url, context)
@@ -1016,21 +970,21 @@ async def handle_discovery_endpoint(request: DiscoverRequest):
                                 break
                     except:
                         continue
-                
+
                 if spec is None:
                     return handle_discovery_error(
                         context,
                         f"Failed to fetch OpenAPI spec from {normalized_request.openapi_url}",
                         ErrorCodes.INTERNAL_ERROR,
-                        {"service_name": request.name}
+                        {"service_name": request.name},
                     )
         else:
             spec = normalized_request.spec
-        
+
         # Process discovery
         endpoints = extract_endpoints_from_spec(spec)
         schema_hash = compute_schema_hash(spec)
-        
+
         # Build response
         discovery_data = {
             "service_name": request.name,
@@ -1040,32 +994,28 @@ async def handle_discovery_endpoint(request: DiscoverRequest):
             "tools_count": len(endpoints),  # Simple mapping for now
             "schema_hash": schema_hash,
             "endpoints": endpoints,
-            "dry_run": request.dry_run
+            "dry_run": request.dry_run,
         }
-        
+
         # Register if not dry run
         if not request.dry_run:
             registration_payload = build_registration_payload(discovery_data, context)
             registration_result = await register_with_orchestrator(registration_payload, context)
             discovery_data["registration"] = registration_result
-        
+
         return create_discovery_success_response(discovery_data, context)
-        
+
     except Exception as e:
         return handle_discovery_error(
-            {"service_name": request.name} if hasattr(request, 'name') else {},
+            {"service_name": request.name} if hasattr(request, "name") else {},
             str(e),
             ErrorCodes.INTERNAL_ERROR,
-            {"service": ServiceNames.DISCOVERY_AGENT}
+            {"service": ServiceNames.DISCOVERY_AGENT},
         )
+
 
 if __name__ == "__main__":
     """Run the Discovery Agent service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
 
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")

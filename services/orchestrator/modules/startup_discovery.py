@@ -1,16 +1,18 @@
-"""Ecosystem Startup Tool Discovery Module for Orchestrator Service.
+"""
+Ecosystem Startup Tool Discovery Module for Orchestrator Service.
 
-This module provides automatic tool discovery and registration functionality
-that runs when the ecosystem starts up. It ensures that all services are
-discovered and their LangGraph tools are registered with the orchestrator.
+This module provides automatic tool discovery and registration
+functionality that runs when the ecosystem starts up. It ensures that
+all services are discovered and their LangGraph tools are registered
+with the orchestrator.
 """
 
-import asyncio
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, Optional
+
+from services.shared.core.constants_new import ServiceNames
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.core.constants_new import ServiceNames
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,8 @@ class StartupToolDiscovery:
         self.discovered_tools = {}
 
     async def discover_all_tools(self, dry_run: bool = False) -> Dict[str, Any]:
-        """Discover tools for all ecosystem services during startup.
+        """
+        Discover tools for all ecosystem services during startup.
 
         Args:
             dry_run: If True, only simulate discovery without registration
@@ -37,9 +40,14 @@ class StartupToolDiscovery:
         try:
             # Define all ecosystem services to discover
             ecosystem_services = [
-                "prompt_store", "document_store", "code_analyzer",
-                "summarizer_hub", "analysis_service", "notification_service",
-                "source_agent", "secure_analyzer"
+                "prompt_store",
+                "document_store",
+                "code_analyzer",
+                "summarizer_hub",
+                "analysis_service",
+                "notification_service",
+                "source_agent",
+                "secure_analyzer",
             ]
 
             # Service URL mappings for Docker network
@@ -51,7 +59,7 @@ class StartupToolDiscovery:
                 "analysis_service": "http://llm-analysis-service:5020",
                 "notification_service": "http://llm-notification-service:5210",
                 "source_agent": "http://llm-source-agent:5000",
-                "secure_analyzer": "http://llm-secure-analyzer:5070"
+                "secure_analyzer": "http://llm-secure-analyzer:5070",
             }
 
             results = []
@@ -69,9 +77,7 @@ class StartupToolDiscovery:
                     logger.info(f"🔍 Discovering tools for {service_name}...")
 
                     # Call discovery-agent to discover tools
-                    discovery_result = await self._discover_service_tools(
-                        service_name, service_url, dry_run
-                    )
+                    discovery_result = await self._discover_service_tools(service_name, service_url, dry_run)
 
                     if discovery_result["status"] == "success":
                         tools_count = discovery_result["tools_discovered"]
@@ -89,11 +95,7 @@ class StartupToolDiscovery:
                     error_msg = f"Failed to discover tools for {service_name}: {str(e)}"
                     logger.error(f"❌ {error_msg}")
 
-                    results.append({
-                        "service_name": service_name,
-                        "status": "error",
-                        "error": str(e)
-                    })
+                    results.append({"service_name": service_name, "status": "error", "error": str(e)})
 
             # Create summary
             summary = {
@@ -102,46 +104,35 @@ class StartupToolDiscovery:
                 "failed_discoveries": len(ecosystem_services) - successful_services,
                 "total_tools_discovered": total_tools,
                 "dry_run": dry_run,
-                "timestamp": "2024-01-01T00:00:00Z"  # Will be updated with actual timestamp
+                "timestamp": "2024-01-01T00:00:00Z",  # Will be updated with actual timestamp
             }
 
             # Log final results
             if dry_run:
                 logger.info(f"🔍 DRY RUN: Would discover {total_tools} tools from {successful_services} services")
             else:
-                logger.info(f"🎉 Tool discovery completed: {total_tools} tools registered from {successful_services} services")
+                logger.info(
+                    f"🎉 Tool discovery completed: {total_tools} tools registered from {successful_services} services"
+                )
 
             # Fire and forget logging event
             fire_and_forget(
                 "startup_tool_discovery_completed",
                 f"Ecosystem tool discovery completed: {total_tools} tools from {successful_services} services",
                 ServiceNames.ORCHESTRATOR,
-                {
-                    "summary": summary,
-                    "results": results
-                }
+                {"summary": summary, "results": results},
             )
 
-            return {
-                "summary": summary,
-                "results": results,
-                "discovered_tools": self.discovered_tools
-            }
+            return {"summary": summary, "results": results, "discovered_tools": self.discovered_tools}
 
         except Exception as e:
             error_msg = f"Ecosystem tool discovery failed: {str(e)}"
             logger.error(f"💥 {error_msg}")
 
-            fire_and_forget(
-                "startup_tool_discovery_failed",
-                error_msg,
-                ServiceNames.ORCHESTRATOR,
-                {"error": str(e)}
-            )
+            fire_and_forget("startup_tool_discovery_failed", error_msg, ServiceNames.ORCHESTRATOR, {"error": str(e)})
             raise
 
-    async def _discover_service_tools(self, service_name: str, service_url: str,
-                                    dry_run: bool) -> Dict[str, Any]:
+    async def _discover_service_tools(self, service_name: str, service_url: str, dry_run: bool) -> Dict[str, Any]:
         """Discover tools for a specific service."""
         try:
             # Prepare discovery request
@@ -149,14 +140,11 @@ class StartupToolDiscovery:
                 "service_name": service_name,
                 "service_url": service_url,
                 "tool_categories": None,  # Discover all categories
-                "dry_run": dry_run
+                "dry_run": dry_run,
             }
 
             # Call discovery-agent
-            response = await self.client.post_json(
-                f"{self.discovery_agent_url}/discover/tools",
-                discovery_payload
-            )
+            response = await self.client.post_json(f"{self.discovery_agent_url}/discover/tools", discovery_payload)
 
             if response.get("success"):
                 data = response["data"]
@@ -166,21 +154,17 @@ class StartupToolDiscovery:
                     "tools_discovered": data["tools_discovered"],
                     "categories": data.get("categories", []),
                     "registration_status": data.get("registration_status", "pending"),
-                    "tools": data.get("tools", [])
+                    "tools": data.get("tools", []),
                 }
             else:
                 return {
                     "service_name": service_name,
                     "status": "error",
-                    "error": response.get("message", "Discovery failed")
+                    "error": response.get("message", "Discovery failed"),
                 }
 
         except Exception as e:
-            return {
-                "service_name": service_name,
-                "status": "error",
-                "error": str(e)
-            }
+            return {"service_name": service_name, "status": "error", "error": str(e)}
 
     async def get_discovered_tools(self, service_name: Optional[str] = None) -> Dict[str, Any]:
         """Get discovered tools for a service or all services."""
@@ -188,8 +172,7 @@ class StartupToolDiscovery:
             return self.discovered_tools.get(service_name, {})
         return self.discovered_tools
 
-    async def refresh_tools(self, service_name: Optional[str] = None,
-                           dry_run: bool = False) -> Dict[str, Any]:
+    async def refresh_tools(self, service_name: Optional[str] = None, dry_run: bool = False) -> Dict[str, Any]:
         """Refresh tool discovery for specific service or all services."""
         if service_name:
             # Refresh tools for specific service
@@ -201,7 +184,7 @@ class StartupToolDiscovery:
                 "analysis_service": "http://llm-analysis-service:5020",
                 "notification_service": "http://llm-notification-service:5210",
                 "source_agent": "http://llm-source-agent:5000",
-                "secure_analyzer": "http://llm-secure-analyzer:5070"
+                "secure_analyzer": "http://llm-secure-analyzer:5070",
             }
 
             service_url = service_url_map.get(service_name)
@@ -222,7 +205,8 @@ startup_discovery = StartupToolDiscovery()
 
 
 async def initialize_ecosystem_tools(dry_run: bool = False) -> Dict[str, Any]:
-    """Initialize tool discovery for the entire ecosystem.
+    """
+    Initialize tool discovery for the entire ecosystem.
 
     This function should be called during orchestrator startup to ensure
     all services are discovered and their tools are registered.
@@ -251,7 +235,8 @@ async def initialize_ecosystem_tools(dry_run: bool = False) -> Dict[str, Any]:
 
 
 async def refresh_service_tools(service_name: str, dry_run: bool = False) -> Dict[str, Any]:
-    """Refresh tools for a specific service.
+    """
+    Refresh tools for a specific service.
 
     Args:
         service_name: Name of the service to refresh tools for

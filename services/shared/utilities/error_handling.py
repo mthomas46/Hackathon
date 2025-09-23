@@ -1,4 +1,5 @@
-"""Standardized Error Handling and Exception Classes
+"""
+Standardized Error Handling and Exception Classes.
 
 Comprehensive error handling system used across all services in the ecosystem.
 
@@ -17,25 +18,29 @@ logging, and user experience across the entire ecosystem.
 import os
 import traceback
 from datetime import datetime, timezone
-from typing import Dict, Any, Optional, List, Union
-from fastapi import HTTPException, Request
-from fastapi.responses import JSONResponse
-from pydantic import ValidationError
+from typing import Any, Dict, List, Optional, Union
 
-from ..core.responses.responses import ErrorResponse, ValidationErrorResponse, format_error_details, format_validation_errors
-from ..monitoring.logging import fire_and_forget
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from ..core.responses.responses import (
+    ErrorResponse,
+    ValidationErrorResponse,
+    format_error_details,
+    format_validation_errors,
+)
+from ..monitoring.logging import fire_and_forget
 
 # ============================================================================
 # CUSTOM EXCEPTION CLASSES
 # ============================================================================
 
+
 class ServiceException(Exception):
-    """Base exception class for service-specific errors.
+    """
+    Base exception class for service-specific errors.
 
     All custom exceptions in the ecosystem should inherit from this class
     to ensure consistent error handling, logging, and response formatting.
@@ -47,8 +52,13 @@ class ServiceException(Exception):
         details: Additional error details and context
     """
 
-    def __init__(self, message: str, error_code: str = "internal_error",
-                 status_code: int = 500, details: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        message: str,
+        error_code: str = "internal_error",
+        status_code: int = 500,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(message)
         self.message = message
         self.error_code = error_code
@@ -59,8 +69,7 @@ class ServiceException(Exception):
 class ValidationException(ServiceException):
     """Exception for validation errors."""
 
-    def __init__(self, message: str = "Validation failed",
-                 field_errors: Optional[Dict[str, List[str]]] = None):
+    def __init__(self, message: str = "Validation failed", field_errors: Optional[Dict[str, List[str]]] = None):
         super().__init__(message, "validation_error", 422, {"field_errors": field_errors})
         self.field_errors = field_errors
 
@@ -70,10 +79,7 @@ class NotFoundException(ServiceException):
 
     def __init__(self, resource_type: str, resource_id: str):
         message = f"{resource_type} not found: {resource_id}"
-        super().__init__(message, "not_found", 404, {
-            "resource_type": resource_type,
-            "resource_id": resource_id
-        })
+        super().__init__(message, "not_found", 404, {"resource_type": resource_type, "resource_id": resource_id})
 
 
 class ConflictException(ServiceException):
@@ -102,10 +108,9 @@ class ExternalServiceException(ServiceException):
 
     def __init__(self, service_name: str, original_error: str):
         message = f"External service error: {service_name}"
-        super().__init__(message, "service_unavailable", 503, {
-            "service_name": service_name,
-            "original_error": original_error
-        })
+        super().__init__(
+            message, "service_unavailable", 503, {"service_name": service_name, "original_error": original_error}
+        )
 
 
 class DatabaseException(ServiceException):
@@ -113,15 +118,13 @@ class DatabaseException(ServiceException):
 
     def __init__(self, operation: str, original_error: str):
         message = f"Database operation failed: {operation}"
-        super().__init__(message, "internal_error", 500, {
-            "operation": operation,
-            "original_error": original_error
-        })
+        super().__init__(message, "internal_error", 500, {"operation": operation, "original_error": original_error})
 
 
 # ============================================================================
 # ERROR HANDLING UTILITIES
 # ============================================================================
+
 
 def handle_service_exception(exc: ServiceException, request: Optional[Request] = None) -> JSONResponse:
     """Handle ServiceException and return appropriate JSON response."""
@@ -134,13 +137,10 @@ def handle_service_exception(exc: ServiceException, request: Optional[Request] =
         error_code=exc.error_code,
         details=exc.details,
         request_id=get_request_id(request),
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=error_response.dict()
-    )
+    return JSONResponse(status_code=exc.status_code, content=error_response.dict())
 
 
 def handle_validation_exception(exc: ValidationError, request: Optional[Request] = None) -> JSONResponse:
@@ -161,13 +161,10 @@ def handle_validation_exception(exc: ValidationError, request: Optional[Request]
         error_code="validation_error",
         field_errors=field_errors,
         request_id=get_request_id(request),
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
-    return JSONResponse(
-        status_code=422,
-        content=error_response.dict()
-    )
+    return JSONResponse(status_code=422, content=error_response.dict())
 
 
 def handle_generic_exception(exc: Exception, request: Optional[Request] = None) -> JSONResponse:
@@ -181,17 +178,13 @@ def handle_generic_exception(exc: Exception, request: Optional[Request] = None) 
         error_code="internal_error",
         details=format_error_details(exc) if os.environ.get("DEBUG", "").lower() == "true" else None,
         request_id=get_request_id(request),
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
     )
 
-    return JSONResponse(
-        status_code=500,
-        content=error_response.dict()
-    )
+    return JSONResponse(status_code=500, content=error_response.dict())
 
 
-def log_error(exc: Exception, request: Optional[Request] = None,
-              include_traceback: bool = False):
+def log_error(exc: Exception, request: Optional[Request] = None, include_traceback: bool = False):
     """Log an error with appropriate context."""
     try:
         log_data = {
@@ -207,8 +200,7 @@ def log_error(exc: Exception, request: Optional[Request] = None,
             log_data["traceback"] = traceback.format_exc()
 
         # Use fire_and_forget for async logging
-        fire_and_forget("error", f"Exception occurred: {type(exc).__name__}",
-                       "error_handler", log_data)
+        fire_and_forget("error", f"Exception occurred: {type(exc).__name__}", "error_handler", log_data)
 
     except Exception:
         # Don't let logging errors break the error handler
@@ -218,8 +210,7 @@ def log_error(exc: Exception, request: Optional[Request] = None,
 def get_request_id(request: Optional[Request] = None) -> Optional[str]:
     """Extract request ID from request headers."""
     if request:
-        return (request.headers.get("x-request-id") or
-                request.headers.get("x-correlation-id"))
+        return request.headers.get("x-request-id") or request.headers.get("x-correlation-id")
     return None
 
 
@@ -227,13 +218,13 @@ def get_request_id(request: Optional[Request] = None) -> Optional[str]:
 # HTTP EXCEPTION HELPERS
 # ============================================================================
 
+
 def raise_not_found(resource_type: str, resource_id: str):
     """Raise a standardized not found exception."""
     raise NotFoundException(resource_type, resource_id)
 
 
-def raise_validation_error(message: str = "Validation failed",
-                          field_errors: Optional[Dict[str, List[str]]] = None):
+def raise_validation_error(message: str = "Validation failed", field_errors: Optional[Dict[str, List[str]]] = None):
     """Raise a standardized validation exception."""
     raise ValidationException(message, field_errors)
 
@@ -267,6 +258,7 @@ def raise_database_error(operation: str, original_error: str):
 # VALIDATION HELPERS
 # ============================================================================
 
+
 def validate_required_fields(data: Dict[str, Any], required_fields: List[str]) -> None:
     """Validate that required fields are present in data."""
     missing_fields = []
@@ -277,7 +269,7 @@ def validate_required_fields(data: Dict[str, Any], required_fields: List[str]) -
     if missing_fields:
         raise_validation_error(
             f"Missing required fields: {', '.join(missing_fields)}",
-            {field: ["This field is required"] for field in missing_fields}
+            {field: ["This field is required"] for field in missing_fields},
         )
 
 
@@ -297,9 +289,9 @@ def validate_field_types(data: Dict[str, Any], field_types: Dict[str, type]) -> 
         raise_validation_error("Type validation failed", type_errors)
 
 
-def validate_string_length(value: str, field_name: str,
-                          min_length: Optional[int] = None,
-                          max_length: Optional[int] = None) -> None:
+def validate_string_length(
+    value: str, field_name: str, min_length: Optional[int] = None, max_length: Optional[int] = None
+) -> None:
     """Validate string length constraints."""
     errors = []
 
@@ -313,9 +305,12 @@ def validate_string_length(value: str, field_name: str,
         raise_validation_error(f"Invalid {field_name} length", {field_name: errors})
 
 
-def validate_numeric_range(value: Union[int, float], field_name: str,
-                          min_value: Optional[Union[int, float]] = None,
-                          max_value: Optional[Union[int, float]] = None) -> None:
+def validate_numeric_range(
+    value: Union[int, float],
+    field_name: str,
+    min_value: Optional[Union[int, float]] = None,
+    max_value: Optional[Union[int, float]] = None,
+) -> None:
     """Validate numeric range constraints."""
     errors = []
 
@@ -332,6 +327,7 @@ def validate_numeric_range(value: Union[int, float], field_name: str,
 # ============================================================================
 # FASTAPI EXCEPTION HANDLERS
 # ============================================================================
+
 
 def register_exception_handlers(app):
     """Register global exception handlers on FastAPI app."""
@@ -360,14 +356,15 @@ def register_exception_handlers(app):
                 "message": exc.detail,
                 "error_code": f"http_{exc.status_code}",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "request_id": get_request_id(request)
-            }
+                "request_id": get_request_id(request),
+            },
         )
 
 
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
+
 
 def safe_execute(func, *args, **kwargs):
     """Execute a function safely and handle exceptions."""
@@ -393,9 +390,13 @@ async def safe_execute_async(func, *args, **kwargs):
         raise ServiceException(f"Operation failed: {str(e)}", "internal_error", 500)
 
 
-def create_error_response_dict(message: str, error_code: str = "internal_error",
-                              status_code: int = 500, details: Optional[Dict[str, Any]] = None,
-                              request: Optional[Request] = None) -> Dict[str, Any]:
+def create_error_response_dict(
+    message: str,
+    error_code: str = "internal_error",
+    status_code: int = 500,
+    details: Optional[Dict[str, Any]] = None,
+    request: Optional[Request] = None,
+) -> Dict[str, Any]:
     """Create a standardized error response dictionary."""
     return {
         "success": False,
@@ -404,19 +405,20 @@ def create_error_response_dict(message: str, error_code: str = "internal_error",
         "status_code": status_code,
         "details": details or {},
         "timestamp": datetime.utcnow().isoformat(),
-        "request_id": get_request_id(request)
+        "request_id": get_request_id(request),
     }
 
 
-def create_success_response_dict(message: str = "Operation successful",
-                                data: Any = None, request: Optional[Request] = None) -> Dict[str, Any]:
+def create_success_response_dict(
+    message: str = "Operation successful", data: Any = None, request: Optional[Request] = None
+) -> Dict[str, Any]:
     """Create a standardized success response dictionary."""
     return {
         "success": True,
         "message": message,
         "data": data,
         "timestamp": datetime.utcnow().isoformat(),
-        "request_id": get_request_id(request)
+        "request_id": get_request_id(request),
     }
 
 
@@ -424,19 +426,23 @@ def create_success_response_dict(message: str = "Operation successful",
 # FASTAPI ERROR HANDLERS
 # ============================================================================
 
+
 def install_error_handlers(app: FastAPI) -> None:
     """Install standardized error handlers for FastAPI applications."""
+
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):  # type: ignore
         # Convert errors to serializable format
         errors = []
         for error in exc.errors():
-            errors.append({
-                "type": error.get("type", "validation_error"),
-                "loc": error.get("loc", []),
-                "msg": error.get("msg", str(error)),
-                "input": str(error.get("input", "")) if error.get("input") is not None else None
-            })
+            errors.append(
+                {
+                    "type": error.get("type", "validation_error"),
+                    "loc": error.get("loc", []),
+                    "msg": error.get("msg", str(error)),
+                    "input": str(error.get("input", "")) if error.get("input") is not None else None,
+                }
+            )
 
         return JSONResponse(
             status_code=422,
@@ -452,12 +458,14 @@ def install_error_handlers(app: FastAPI) -> None:
         # Convert errors to serializable format
         errors = []
         for error in exc.errors():
-            errors.append({
-                "type": error.get("type", "validation_error"),
-                "loc": error.get("loc", []),
-                "msg": error.get("msg", str(error)),
-                "input": str(error.get("input", "")) if error.get("input") is not None else None
-            })
+            errors.append(
+                {
+                    "type": error.get("type", "validation_error"),
+                    "loc": error.get("loc", []),
+                    "msg": error.get("msg", str(error)),
+                    "input": str(error.get("input", "")) if error.get("input") is not None else None,
+                }
+            )
 
         return JSONResponse(
             status_code=422,
@@ -475,6 +483,7 @@ def install_error_handlers(app: FastAPI) -> None:
             message = str(exc)
             # Test JSON serialization
             import json
+
             json.dumps(message)
         except (TypeError, ValueError):
             message = f"Validation error: {type(exc).__name__}"

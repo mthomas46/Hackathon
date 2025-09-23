@@ -292,7 +292,7 @@ class TestDocStoreIntegration:
                 filtered_data = _get_response_data(filtered_response)
                 if "items" in filtered_data:
                     assert isinstance(filtered_data["items"], list)
-        except:
+        except Exception:
             pass  # Quality filtering may not be available in all environments
 
         # Skip remaining assertions if filtering failed

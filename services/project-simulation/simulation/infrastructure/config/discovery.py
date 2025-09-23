@@ -5,13 +5,13 @@ environment, with fallback mechanisms and service availability detection.
 """
 
 import asyncio
-import socket
-import aiohttp
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
-from .config_manager import get_config
+import aiohttp
+
 from ..logging import get_simulation_logger
+from .config_manager import get_config
 
 
 class ServiceDiscoveryError(Exception):
@@ -44,7 +44,7 @@ class ServiceHealth:
             "last_checked": self.last_checked.isoformat() if self.last_checked else None,
             "response_time": self.response_time,
             "error_message": self.error_message,
-            "version": self.version
+            "version": self.version,
         }
 
 
@@ -218,7 +218,7 @@ class LocalServiceDiscovery:
             "unhealthy_services": unhealthy_services,
             "discovery_running": self._running,
             "discovery_interval": self.discovery_interval,
-            "last_check": asyncio.get_event_loop().time() if self._running else None
+            "last_check": asyncio.get_event_loop().time() if self._running else None,
         }
 
 
@@ -307,7 +307,7 @@ class PortScanner:
             "rabbitmq": 5672,
             "ollama": 11434,
             "mailhog_smtp": 1025,
-            "mailhog_web": 8025
+            "mailhog_web": 8025,
         }
 
         # This would need to be implemented asynchronously
@@ -358,14 +358,14 @@ def get_service_health_summary() -> Dict[str, Any]:
 
 
 __all__ = [
-    'LocalServiceDiscovery',
-    'FallbackServiceClient',
-    'PortScanner',
-    'ServiceDiscoveryError',
-    'get_service_discovery',
-    'start_service_discovery',
-    'stop_service_discovery',
-    'get_service_url',
-    'is_service_available',
-    'get_service_health_summary'
+    "LocalServiceDiscovery",
+    "FallbackServiceClient",
+    "PortScanner",
+    "ServiceDiscoveryError",
+    "get_service_discovery",
+    "start_service_discovery",
+    "stop_service_discovery",
+    "get_service_url",
+    "is_service_available",
+    "get_service_health_summary",
 ]

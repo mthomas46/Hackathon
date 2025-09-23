@@ -2,17 +2,18 @@
 
 from dataclasses import dataclass
 
-from ...domain.entities import Finding, DocumentId
+from ...domain.entities import DocumentId, Finding
+from ...domain.exceptions import DocumentNotFoundException
 from ...domain.services import FindingService
 from ...domain.validation import FindingValidator
-from ...domain.exceptions import DocumentNotFoundException
-from ...infrastructure.repositories import FindingRepository, DocumentRepository
-from ..dto import CreateFindingRequest, FindingResponse
+from ...infrastructure.repositories import DocumentRepository, FindingRepository
+from ..dto import FindingResponse
 
 
 @dataclass
 class CreateFindingCommand:
     """Command for creating a finding."""
+
     document_id: str
     analysis_id: str
     title: str
@@ -28,6 +29,7 @@ class CreateFindingCommand:
 @dataclass
 class CreateFindingResult:
     """Result of finding creation."""
+
     finding: Finding
     is_valid: bool
     validation_errors: list[str]
@@ -36,11 +38,13 @@ class CreateFindingResult:
 class CreateFindingUseCase:
     """Use case for creating findings."""
 
-    def __init__(self,
-                 finding_service: FindingService,
-                 finding_validator: FindingValidator,
-                 finding_repository: FindingRepository,
-                 document_repository: DocumentRepository):
+    def __init__(
+        self,
+        finding_service: FindingService,
+        finding_validator: FindingValidator,
+        finding_repository: FindingRepository,
+        document_repository: DocumentRepository,
+    ):
         """Initialize use case with dependencies."""
         self.finding_service = finding_service
         self.finding_validator = finding_validator
@@ -65,16 +69,14 @@ class CreateFindingUseCase:
                 category=command.category,
                 confidence=command.confidence,
                 location=command.location,
-                suggestion=command.suggestion
+                suggestion=command.suggestion,
             )
 
             # Validate finding
             validation_result = self.finding_validator.validate(finding)
             if not validation_result.is_valid:
                 return CreateFindingResult(
-                    finding=finding,
-                    is_valid=False,
-                    validation_errors=[error for error in validation_result.errors]
+                    finding=finding, is_valid=False, validation_errors=[error for error in validation_result.errors]
                 )
 
             # Check business rules
@@ -83,11 +85,7 @@ class CreateFindingUseCase:
             # Save finding
             await self.finding_repository.save(finding)
 
-            return CreateFindingResult(
-                finding=finding,
-                is_valid=True,
-                validation_errors=[]
-            )
+            return CreateFindingResult(finding=finding, is_valid=True, validation_errors=[])
 
         except Exception as e:
             # Log error and re-raise
@@ -99,18 +97,20 @@ class CreateFindingUseCase:
         # Check for duplicate findings (simplified - in real app this would be more sophisticated)
         existing_findings = await self.finding_repository.get_by_document_id(finding.document_id.value)
         for existing in existing_findings:
-            if (existing.title == finding.title and
-                existing.category == finding.category and
-                existing.analysis_id == finding.analysis_id):
+            if (
+                existing.title == finding.title
+                and existing.category == finding.category
+                and existing.analysis_id == finding.analysis_id
+            ):
                 # Allow similar findings if they're from different analyses
                 # This is a simplified rule - in practice, you'd have more sophisticated deduplication
                 pass
 
         # Ensure confidence is reasonable for severity
-        if finding.severity.value == 'critical' and finding.confidence < 0.9:
+        if finding.severity.value == "critical" and finding.confidence < 0.9:
             print(f"Warning: Critical finding with low confidence: {finding.confidence}")
 
-        if finding.severity.value == 'info' and finding.confidence > 0.9:
+        if finding.severity.value == "info" and finding.confidence > 0.9:
             print(f"Warning: Info finding with high confidence: {finding.confidence}")
 
     def to_response(self, result: CreateFindingResult) -> FindingResponse:

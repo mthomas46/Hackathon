@@ -1,19 +1,18 @@
-"""WebSocket Client for Real-Time Simulation Updates.
+"""
+WebSocket Client for Real-Time Simulation Updates.
 
-This module provides WebSocket client functionality for receiving real-time
-updates from the project-simulation service, including progress updates,
-event notifications, and ecosystem status changes.
+This module provides WebSocket client functionality for receiving real-
+time updates from the project-simulation service, including progress
+updates, event notifications, and ecosystem status changes.
 """
 
 import asyncio
 import json
-from typing import Dict, Any, List, Optional, Callable, Set
-from datetime import datetime
-import threading
-import time
+from typing import Any, Callable, Dict, Optional, Set
 
 try:
     import websockets
+
     WEBSOCKETS_AVAILABLE = True
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
@@ -24,7 +23,7 @@ from infrastructure.logging.logger import get_dashboard_logger
 
 class WebSocketClientError(Exception):
     """Base exception for WebSocket client errors."""
-    pass
+
 
 
 class WebSocketClient:
@@ -155,17 +154,11 @@ class WebSocketClient:
 
     async def subscribe_to_simulation(self, simulation_id: str) -> None:
         """Subscribe to updates for a specific simulation."""
-        await self.send_message({
-            "type": "subscribe",
-            "simulation_id": simulation_id
-        })
+        await self.send_message({"type": "subscribe", "simulation_id": simulation_id})
 
     async def unsubscribe_from_simulation(self, simulation_id: str) -> None:
         """Unsubscribe from updates for a specific simulation."""
-        await self.send_message({
-            "type": "unsubscribe",
-            "simulation_id": simulation_id
-        })
+        await self.send_message({"type": "unsubscribe", "simulation_id": simulation_id})
 
     async def send_ping(self) -> None:
         """Send a ping message."""
@@ -177,19 +170,13 @@ class WebSocketClient:
             while self.connected and self.websocket:
                 try:
                     # Receive message with timeout
-                    message_raw = await asyncio.wait_for(
-                        self.websocket.recv(),
-                        timeout=self.config.message_timeout
-                    )
+                    message_raw = await asyncio.wait_for(self.websocket.recv(), timeout=self.config.message_timeout)
 
                     # Parse message
                     message_data = json.loads(message_raw)
                     message_type = message_data.get("type", "unknown")
 
-                    self.logger.log_websocket_message(
-                        message_type,
-                        message_data.get("simulation_id")
-                    )
+                    self.logger.log_websocket_message(message_type, message_data.get("simulation_id"))
 
                     # Handle message
                     await self._handle_message(message_data)
@@ -332,7 +319,7 @@ class SimulationWebSocketManager:
         client = self.get_client(simulation_id)
 
         # Import here to avoid circular imports
-        from pages.monitor import handle_simulation_progress, handle_simulation_event, handle_websocket_connected
+        from pages.monitor import handle_simulation_event, handle_simulation_progress, handle_websocket_connected
 
         # Setup message handlers
         client.add_message_handler("simulation_progress", handle_simulation_progress)
@@ -362,7 +349,9 @@ class SimulationWebSocketManager:
             # Start auto-reconnect
             client.start_auto_reconnect(simulation_id)
 
-            self.logger.info(f"Real-time updates started for {'simulation ' + simulation_id if simulation_id else 'system'}")
+            self.logger.info(
+                f"Real-time updates started for {'simulation ' + simulation_id if simulation_id else 'system'}"
+            )
             return True
 
         except Exception as e:
@@ -377,7 +366,9 @@ class SimulationWebSocketManager:
         # Disconnect
         asyncio.create_task(client.disconnect())
 
-        self.logger.info(f"Real-time updates stopped for {'simulation ' + simulation_id if simulation_id else 'system'}")
+        self.logger.info(
+            f"Real-time updates stopped for {'simulation ' + simulation_id if simulation_id else 'system'}"
+        )
 
 
 # Global WebSocket manager instance

@@ -1,6 +1,7 @@
 """Workflow Models - Workflow-triggered analysis request and response models."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from pydantic import Field
 
 from .base import BaseModel
@@ -8,6 +9,7 @@ from .base import BaseModel
 
 class WorkflowEventRequest(BaseModel):
     """Request for workflow event processing."""
+
     event_type: str = Field(..., description="Type of workflow event")
     event_data: Dict[str, Any] = Field(..., description="Event data payload")
     trigger_conditions: Optional[Dict[str, Any]] = Field(None, description="Trigger conditions")
@@ -16,6 +18,7 @@ class WorkflowEventRequest(BaseModel):
 
 class WorkflowEventResponse(BaseModel):
     """Response for workflow event processing."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     event_type: str = Field(..., description="Type of event processed")
     triggered_analyses: List[str] = Field(default_factory=list, description="Triggered analysis IDs")
@@ -27,12 +30,14 @@ class WorkflowEventResponse(BaseModel):
 
 class WorkflowStatusRequest(BaseModel):
     """Request for workflow status."""
+
     workflow_id: str = Field(..., description="Workflow ID to check")
     include_history: Optional[bool] = Field(False, description="Include workflow history")
 
 
 class WorkflowStatusResponse(BaseModel):
     """Response for workflow status."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     workflow_id: str = Field(..., description="Workflow ID")
     status: str = Field(..., description="Workflow status")
@@ -46,6 +51,7 @@ class WorkflowStatusResponse(BaseModel):
 
 class WorkflowQueueStatusResponse(BaseModel):
     """Response for workflow queue status."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     queue_length: int = Field(..., description="Current queue length")
     processing_rate_per_minute: float = Field(..., description="Processing rate")
@@ -57,6 +63,7 @@ class WorkflowQueueStatusResponse(BaseModel):
 
 class WebhookConfigRequest(BaseModel):
     """Request for webhook configuration."""
+
     url: str = Field(..., description="Webhook URL")
     events: List[str] = Field(..., description="Events to trigger webhook")
     secret: Optional[str] = Field(None, description="Webhook secret")
@@ -65,6 +72,7 @@ class WebhookConfigRequest(BaseModel):
 
 class WebhookConfigResponse(BaseModel):
     """Response for webhook configuration."""
+
     analysis_id: str = Field(..., description="Unique analysis identifier")
     webhook_id: str = Field(..., description="Webhook ID")
     url: str = Field(..., description="Configured webhook URL")

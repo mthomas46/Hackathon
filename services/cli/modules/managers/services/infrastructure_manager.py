@@ -1,14 +1,15 @@
-"""Infrastructure Manager module for CLI service.
+"""
+Infrastructure Manager module for CLI service.
 
 Provides power-user operations for infrastructure monitoring including
 Redis, DLQ, sagas, tracing, and system infrastructure management.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
+from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
 
 from ...base.base_manager import BaseManager
 
@@ -20,7 +21,8 @@ class InfrastructureManager(BaseManager):
         super().__init__(console, clients, cache)
 
     async def infrastructure_menu(self):
-        """Main infrastructure management menu with enhanced interactive experience."""
+        """Main infrastructure management menu with enhanced interactive
+        experience."""
         await self.run_menu_loop("Infrastructure Management", use_interactive=True)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -31,11 +33,15 @@ class InfrastructureManager(BaseManager):
             ("3", "Saga Orchestration Monitoring"),
             ("4", "Distributed Tracing"),
             ("5", "Event History & Replay"),
-            ("6", "Infrastructure Health Dashboard")
+            ("6", "Infrastructure Health Dashboard"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.redis_operations_menu()
         elif choice == "2":
@@ -56,15 +62,18 @@ class InfrastructureManager(BaseManager):
         """Redis operations submenu."""
         while True:
             menu = create_menu_table("Redis Operations", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Redis Info"),
-                ("2", "Monitor Pub/Sub Channels"),
-                ("3", "Key Space Analysis"),
-                ("4", "Redis Performance Metrics"),
-                ("5", "Clear Redis Keys"),
-                ("6", "Redis Configuration"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Redis Info"),
+                    ("2", "Monitor Pub/Sub Channels"),
+                    ("3", "Key Space Analysis"),
+                    ("4", "Redis Performance Metrics"),
+                    ("5", "Clear Redis Keys"),
+                    ("6", "Redis Configuration"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -149,12 +158,16 @@ Channel Activity (last 5 minutes):
 """
                 if pubsub.get("recent_activity"):
                     for activity in pubsub["recent_activity"]:
-                        content += f"  {activity.get('channel', 'unknown')}: {activity.get('message_count', 0)} messages\n"
+                        content += (
+                            f"  {activity.get('channel', 'unknown')}: {activity.get('message_count', 0)} messages\n"
+                        )
 
                 content += f"\nActive Channels:\n"
                 if pubsub.get("channels"):
                     for channel in pubsub["channels"][:10]:  # Show first 10
-                        content += f"  • {channel.get('name', 'unknown')}: {channel.get('subscriber_count', 0)} subscribers\n"
+                        content += (
+                            f"  • {channel.get('name', 'unknown')}: {channel.get('subscriber_count', 0)} subscribers\n"
+                        )
                     if len(pubsub["channels"]) > 10:
                         content += f"  ... and {len(pubsub['channels']) - 10} more channels\n"
 
@@ -172,7 +185,9 @@ Channel Activity (last 5 minutes):
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="100")
 
             with self.console.status(f"[bold green]Analyzing keys matching '{pattern}'...") as status:
-                response = await self.clients.get_json(f"orchestrator/infrastructure/redis/keys?pattern={pattern}&limit={limit}")
+                response = await self.clients.get_json(
+                    f"orchestrator/infrastructure/redis/keys?pattern={pattern}&limit={limit}"
+                )
 
             if response.get("key_analysis"):
                 analysis = response["key_analysis"]
@@ -253,9 +268,9 @@ Expired Keys: {perf.get('expired_keys', 0)}
 
             if confirm:
                 with self.console.status(f"[bold green]Deleting keys matching '{pattern}'...") as status:
-                    response = await self.clients.post_json("orchestrator/infrastructure/redis/clear", {
-                        "pattern": pattern
-                    })
+                    response = await self.clients.post_json(
+                        "orchestrator/infrastructure/redis/clear", {"pattern": pattern}
+                    )
 
                 if response.get("deleted_count"):
                     self.console.print(f"[green]✅ Deleted {response['deleted_count']} keys[/green]")
@@ -280,7 +295,7 @@ Expired Keys: {perf.get('expired_keys', 0)}
                 # Group config by category
                 categories = {}
                 for key, value in config.items():
-                    category = key.split('_')[0] if '_' in key else 'general'
+                    category = key.split("_")[0] if "_" in key else "general"
                     if category not in categories:
                         categories[category] = []
                     categories[category].append((key, value))
@@ -304,14 +319,17 @@ Expired Keys: {perf.get('expired_keys', 0)}
         """DLQ management submenu."""
         while True:
             menu = create_menu_table("Dead Letter Queue Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View DLQ Statistics"),
-                ("2", "Browse DLQ Messages"),
-                ("3", "Retry Failed Messages"),
-                ("4", "Clear DLQ Messages"),
-                ("5", "DLQ Configuration"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View DLQ Statistics"),
+                    ("2", "Browse DLQ Messages"),
+                    ("3", "Retry Failed Messages"),
+                    ("4", "Clear DLQ Messages"),
+                    ("5", "DLQ Configuration"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -402,7 +420,7 @@ Retry Statistics:
                         msg.get("queue", "unknown"),
                         msg.get("failure_reason", "unknown")[:30],
                         str(msg.get("retry_count", 0)),
-                        f"{msg.get('age_hours', 0):.1f}"
+                        f"{msg.get('age_hours', 0):.1f}",
                     )
 
                 self.console.print(table)
@@ -424,7 +442,9 @@ Retry Statistics:
             if message_ids and message_ids != "all":
                 retry_config["message_ids"] = [id.strip() for id in message_ids.split(",")]
 
-            confirm = Confirm.ask(f"[bold yellow]This will retry {'all' if message_ids == 'all' else len(retry_config.get('message_ids', []))} failed messages. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will retry {'all' if message_ids == 'all' else len(retry_config.get('message_ids', []))} failed messages. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Retrying failed messages...") as status:
@@ -447,7 +467,9 @@ Details:
                             status_icon = "✅" if detail.get("success") else "❌"
                             content += f"  {status_icon} {detail.get('message_id', 'unknown')[:8]}: {detail.get('result', 'unknown')}\n"
 
-                    print_panel(self.console, content, border_style="green" if result.get('success_rate', 0) > 50 else "red")
+                    print_panel(
+                        self.console, content, border_style="green" if result.get("success_rate", 0) > 50 else "red"
+                    )
                 else:
                     self.console.print("[red]❌ Retry operation failed[/red]")
             else:
@@ -463,9 +485,12 @@ Details:
             criteria = Prompt.ask("[bold cyan]Clear criteria (JSON)[/bold cyan]", default='{"age_hours": {"$gt": 24}}')
 
             import json
+
             clear_criteria = json.loads(criteria)
 
-            confirm = Confirm.ask(f"[bold red]This will permanently delete DLQ messages matching the criteria. Continue?[/bold red]")
+            confirm = Confirm.ask(
+                f"[bold red]This will permanently delete DLQ messages matching the criteria. Continue?[/bold red]"
+            )
 
             if confirm:
                 clear_config = {"criteria": clear_criteria}
@@ -524,13 +549,16 @@ Monitoring:
         """Saga orchestration monitoring submenu."""
         while True:
             menu = create_menu_table("Saga Orchestration Monitoring", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Active Sagas"),
-                ("2", "Saga Statistics"),
-                ("3", "Failed Saga Recovery"),
-                ("4", "Saga Configuration"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Active Sagas"),
+                    ("2", "Saga Statistics"),
+                    ("3", "Failed Saga Recovery"),
+                    ("4", "Saga Configuration"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -571,7 +599,7 @@ Monitoring:
                         "running": "yellow",
                         "waiting": "blue",
                         "compensating": "red",
-                        "completed": "green"
+                        "completed": "green",
                     }.get(saga.get("status", "unknown"), "white")
 
                     table.add_row(
@@ -579,7 +607,7 @@ Monitoring:
                         saga.get("type", "unknown"),
                         f"[{status_color}]{saga.get('status', 'unknown')}[/{status_color}]",
                         str(saga.get("total_steps", 0)),
-                        progress
+                        progress,
                     )
 
                 self.console.print(table)
@@ -654,9 +682,11 @@ Details:
                 if result.get("details"):
                     for detail in result["details"]:
                         status_icon = "✅" if detail.get("success") else "❌"
-                        content += f"  {status_icon} {detail.get('step', 'unknown')}: {detail.get('result', 'unknown')}\n"
+                        content += (
+                            f"  {status_icon} {detail.get('step', 'unknown')}: {detail.get('result', 'unknown')}\n"
+                        )
 
-                print_panel(self.console, content, border_style="green" if result.get('successful') else "red")
+                print_panel(self.console, content, border_style="green" if result.get("successful") else "red")
             else:
                 self.console.print("[red]❌ Saga recovery failed[/red]")
 
@@ -701,13 +731,16 @@ Monitoring:
         """Distributed tracing submenu."""
         while True:
             menu = create_menu_table("Distributed Tracing", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Tracing Statistics"),
-                ("2", "View Trace Details"),
-                ("3", "Search Traces"),
-                ("4", "Tracing Configuration"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Tracing Statistics"),
+                    ("2", "View Trace Details"),
+                    ("3", "Search Traces"),
+                    ("4", "Tracing Configuration"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -812,15 +845,20 @@ Service Timeline:
     async def search_traces(self):
         """Search traces."""
         try:
-            search_criteria = Prompt.ask("[bold cyan]Search criteria (JSON)[/bold cyan]",
-                                       default='{"status": "error", "duration_ms": {"$gt": 1000}}')
+            search_criteria = Prompt.ask(
+                "[bold cyan]Search criteria (JSON)[/bold cyan]",
+                default='{"status": "error", "duration_ms": {"$gt": 1000}}',
+            )
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="20")
 
             import json
+
             criteria = json.loads(search_criteria)
 
             with self.console.status("[bold green]Searching traces...") as status:
-                response = await self.clients.get_json(f"orchestrator/infrastructure/tracing/search?criteria={json.dumps(criteria)}&limit={limit}")
+                response = await self.clients.get_json(
+                    f"orchestrator/infrastructure/tracing/search?criteria={json.dumps(criteria)}&limit={limit}"
+                )
 
             if response.get("traces"):
                 table = Table(title="Trace Search Results")
@@ -831,13 +869,17 @@ Service Timeline:
                 table.add_column("Started", style="blue")
 
                 for trace in response["traces"]:
-                    status_color = "green" if trace.get("status") == "completed" else "red" if trace.get("status") == "error" else "yellow"
+                    status_color = (
+                        "green"
+                        if trace.get("status") == "completed"
+                        else "red" if trace.get("status") == "error" else "yellow"
+                    )
                     table.add_row(
                         trace.get("id", "N/A")[:8],
                         f"[{status_color}]{trace.get('status', 'unknown')}[/{status_color}]",
                         f"{trace.get('duration_ms', 0):.2f}ms",
-                        str(len(trace.get('services', []))),
-                        trace.get("start_time", "unknown")[:19]
+                        str(len(trace.get("services", []))),
+                        trace.get("start_time", "unknown")[:19],
                     )
 
                 self.console.print(table)
@@ -890,13 +932,16 @@ Tags:
         """Event history and replay submenu."""
         while True:
             menu = create_menu_table("Event History & Replay", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Event History"),
-                ("2", "Search Events"),
-                ("3", "Replay Events"),
-                ("4", "Event Statistics"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Event History"),
+                    ("2", "Search Events"),
+                    ("3", "Replay Events"),
+                    ("4", "Event Statistics"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -937,7 +982,7 @@ Tags:
                         event.get("id", "N/A")[:8],
                         event.get("event_type", "unknown"),
                         event.get("aggregate_id", "N/A")[:8],
-                        event.get("timestamp", "unknown")[:19]
+                        event.get("timestamp", "unknown")[:19],
                     )
 
                 self.console.print(table)
@@ -991,7 +1036,7 @@ Tags:
                 event.get("event_type", "unknown"),
                 event.get("aggregate_id", "N/A")[:8],
                 event_data,
-                event.get("timestamp", "unknown")[:19]
+                event.get("timestamp", "unknown")[:19],
             )
 
         self.console.print(table)
@@ -1007,9 +1052,9 @@ Tags:
 
             if confirm:
                 with self.console.status("[bold green]Replaying events...") as status:
-                    response = await self.clients.post_json("orchestrator/infrastructure/events/replay", {
-                        "event_ids": event_id_list
-                    })
+                    response = await self.clients.post_json(
+                        "orchestrator/infrastructure/events/replay", {"event_ids": event_id_list}
+                    )
 
                 if response.get("replay_result"):
                     result = response["replay_result"]
@@ -1027,7 +1072,7 @@ Details:
                             status_icon = "✅" if detail.get("success") else "❌"
                             content += f"  {status_icon} {detail.get('event_id', 'unknown')[:8]}: {detail.get('result', 'unknown')}\n"
 
-                    print_panel(self.console, content, border_style="green" if result.get('failed', 0) == 0 else "red")
+                    print_panel(self.console, content, border_style="green" if result.get("failed", 0) == 0 else "red")
                 else:
                     self.console.print("[red]❌ Event replay failed[/red]")
             else:
@@ -1102,7 +1147,7 @@ Storage:
             content += "[bold red]Dead Letter Queue:[/bold red]\n"
             if dlq_response.get("dlq_stats"):
                 dlq = dlq_response["dlq_stats"]
-                total_msgs = dlq.get('total_messages', 0)
+                total_msgs = dlq.get("total_messages", 0)
                 status = "✅ Healthy" if total_msgs < 100 else "⚠️ High" if total_msgs < 1000 else "❌ Critical"
                 content += f"  Status: {status} ({total_msgs} messages)\n"
                 content += f"  Processed Today: {dlq.get('processed_today', 0)}\n"
@@ -1114,7 +1159,7 @@ Storage:
             content += "[bold cyan]Saga Orchestration:[/bold cyan]\n"
             if saga_response.get("saga_stats"):
                 saga = saga_response["saga_stats"]
-                success_rate = saga.get('success_rate_percent', 0)
+                success_rate = saga.get("success_rate_percent", 0)
                 status = "✅ Healthy" if success_rate > 95 else "⚠️ Degraded" if success_rate > 80 else "❌ Critical"
                 content += f"  Status: {status} ({success_rate:.1f}% success rate)\n"
                 content += f"  Active Sagas: {saga.get('active_sagas', 0)}\n"
@@ -1127,7 +1172,7 @@ Storage:
             content += "[bold purple]Distributed Tracing:[/bold purple]\n"
             if tracing_response.get("tracing_stats"):
                 tracing = tracing_response["tracing_stats"]
-                error_rate = tracing.get('error_rate_percent', 0)
+                error_rate = tracing.get("error_rate_percent", 0)
                 status = "✅ Healthy" if error_rate < 5 else "⚠️ Issues" if error_rate < 15 else "❌ Problems"
                 content += f"  Status: {status} ({error_rate:.1f}% error rate)\n"
                 content += f"  Active Traces: {tracing.get('active_traces', 0)}\n"

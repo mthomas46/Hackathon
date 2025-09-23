@@ -1,7 +1,7 @@
-"""Natural Language Query Value Object"""
+"""Natural Language Query Value Object."""
 
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
 
@@ -15,7 +15,7 @@ class NaturalLanguageQuery:
         session_id: Optional[str] = None,
         context: Optional[Dict[str, Any]] = None,
         timestamp: Optional[datetime] = None,
-        query_id: Optional[str] = None
+        query_id: Optional[str] = None,
     ):
         self._query_id = query_id or str(uuid4())
         self._query = query.strip()
@@ -96,7 +96,7 @@ class NaturalLanguageQuery:
             "query_length": self.query_length,
             "word_count": self.word_count,
             "has_context": self.has_context,
-            "is_conversational": self.is_conversational
+            "is_conversational": self.is_conversational,
         }
 
         if self._user_id:

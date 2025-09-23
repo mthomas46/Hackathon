@@ -4,15 +4,9 @@ This module contains unit tests for document type validation, structure,
 and generation patterns in the content generation system.
 """
 
-import pytest
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock, patch
 from datetime import datetime, timedelta
 
-from simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, DocumentType, DocumentMetadata, DocumentId
-)
-from enum import Enum
+from simulation.domain.value_objects import DocumentId, DocumentMetadata, DocumentType
 
 
 def get_all_document_types():
@@ -36,7 +30,7 @@ class TestDocumentTypeValidation:
             "DEPLOYMENT_GUIDE",
             "MAINTENANCE_DOCS",
             "CHANGE_LOG",
-            "TEAM_RETROSPECTIVE"
+            "TEAM_RETROSPECTIVE",
         ]
 
         # Check that all actual document types exist
@@ -44,15 +38,36 @@ class TestDocumentTypeValidation:
             assert hasattr(DocumentType, doc_type), f"Missing document type: {doc_type}"
 
     def test_extended_document_type_coverage(self):
-        """Test that all expected document types are available in the service."""
+        """Test that all expected document types are available in the
+        service."""
         expected_types = [
-            "CONFLUENCE_PAGE", "JIRA_TICKET", "GITHUB_PR", "GITHUB_ISSUE",
-            "SLACK_MESSAGE", "EMAIL", "MEETING_NOTES", "REQUIREMENTS_DOC",
-            "DESIGN_DOC", "ARCHITECTURE_DOC", "TEST_PLAN", "ACCEPTANCE_CRITERIA",
-            "CODE_REVIEW", "RUNBOOK", "INCIDENT_REPORT", "ROADMAP",
-            "STATUS_REPORT", "RETROSPECTIVE", "WIKI_PAGE", "API_DOCUMENTATION",
-            "DATABASE_SCHEMA", "CONFIGURATION_FILE", "LOG_FILE", "METRICS_REPORT",
-            "PERFORMANCE_REPORT", "SECURITY_AUDIT", "COMPLIANCE_REPORT"
+            "CONFLUENCE_PAGE",
+            "JIRA_TICKET",
+            "GITHUB_PR",
+            "GITHUB_ISSUE",
+            "SLACK_MESSAGE",
+            "EMAIL",
+            "MEETING_NOTES",
+            "REQUIREMENTS_DOC",
+            "DESIGN_DOC",
+            "ARCHITECTURE_DOC",
+            "TEST_PLAN",
+            "ACCEPTANCE_CRITERIA",
+            "CODE_REVIEW",
+            "RUNBOOK",
+            "INCIDENT_REPORT",
+            "ROADMAP",
+            "STATUS_REPORT",
+            "RETROSPECTIVE",
+            "WIKI_PAGE",
+            "API_DOCUMENTATION",
+            "DATABASE_SCHEMA",
+            "CONFIGURATION_FILE",
+            "LOG_FILE",
+            "METRICS_REPORT",
+            "PERFORMANCE_REPORT",
+            "SECURITY_AUDIT",
+            "COMPLIANCE_REPORT",
         ]
 
         # Test that all expected types exist in the enum
@@ -84,11 +99,7 @@ class TestDocumentTypeValidation:
     def test_document_type_categories(self):
         """Test document type categorization."""
         # Define expected categories
-        communication_docs = [
-            DocumentType.SLACK_MESSAGE,
-            DocumentType.EMAIL,
-            DocumentType.MEETING_NOTES
-        ]
+        communication_docs = [DocumentType.SLACK_MESSAGE, DocumentType.EMAIL, DocumentType.MEETING_NOTES]
 
         project_docs = [
             DocumentType.PROJECT_REQUIREMENTS,
@@ -97,7 +108,7 @@ class TestDocumentTypeValidation:
             DocumentType.ROADMAP,
             DocumentType.STATUS_REPORT,
             DocumentType.CHANGE_LOG,
-            DocumentType.TEAM_RETROSPECTIVE
+            DocumentType.TEAM_RETROSPECTIVE,
         ]
 
         technical_docs = [
@@ -110,7 +121,7 @@ class TestDocumentTypeValidation:
             DocumentType.DATABASE_SCHEMA,
             DocumentType.CODE_REVIEW,
             DocumentType.DEPLOYMENT_GUIDE,
-            DocumentType.CODE_REVIEW_COMMENTS
+            DocumentType.CODE_REVIEW_COMMENTS,
         ]
 
         # Verify categorization logic
@@ -145,7 +156,7 @@ class TestDocumentTypeValidation:
             DocumentType.DEPLOYMENT_GUIDE: ".md",
             DocumentType.MAINTENANCE_DOCS: ".md",
             DocumentType.CHANGE_LOG: ".md",
-            DocumentType.TEAM_RETROSPECTIVE: ".md"
+            DocumentType.TEAM_RETROSPECTIVE: ".md",
         }
 
         # Add expected document types
@@ -159,7 +170,7 @@ class TestDocumentTypeValidation:
             DocumentType.API_DOCUMENTATION: ".yaml",
             DocumentType.DATABASE_SCHEMA: ".sql",
             DocumentType.CONFIGURATION_FILE: ".yaml",
-            DocumentType.LOG_FILE: ".log"
+            DocumentType.LOG_FILE: ".log",
         }
 
         extension_map.update(expected_extensions)
@@ -188,7 +199,7 @@ class TestDocumentMetadataValidation:
             created_at=datetime.now(),
             tags=["test", "documentation"],
             word_count=500,
-            complexity_score=0.7
+            complexity_score=0.7,
         )
 
         assert metadata.type == DocumentType.PROJECT_REQUIREMENTS
@@ -210,7 +221,7 @@ class TestDocumentMetadataValidation:
             created_at=datetime.now(),
             tags=["bug", "high-priority"],
             word_count=200,
-            complexity_score=0.8
+            complexity_score=0.8,
         )
 
         # Verify all fields are properly set
@@ -231,7 +242,7 @@ class TestDocumentMetadataValidation:
             author="user@example.com",
             created_at=past_date,
             tags=["meeting"],
-            word_count=300
+            word_count=300,
         )
 
         # Test age calculation (this would be a method on DocumentMetadata)
@@ -249,7 +260,7 @@ class TestDocumentMetadataValidation:
             created_at=datetime.now(),
             tags=["architecture", "design", "system"],
             word_count=800,
-            complexity_score=0.9
+            complexity_score=0.9,
         )
 
         # Test tag matching logic
@@ -276,11 +287,7 @@ class TestDocumentStructureValidation:
             "space": "Engineering",
             "parent_page": "Project Documentation",
             "labels": ["requirements", "project"],
-            "metadata": {
-                "author": "product@example.com",
-                "created": datetime.now().isoformat(),
-                "version": "1.2"
-            }
+            "metadata": {"author": "product@example.com", "created": datetime.now().isoformat(), "version": "1.2"},
         }
 
         # Validate required fields
@@ -310,8 +317,8 @@ class TestDocumentStructureValidation:
             "metadata": {
                 "created": datetime.now().isoformat(),
                 "updated": datetime.now().isoformat(),
-                "story_points": 8
-            }
+                "story_points": 8,
+            },
         }
 
         # Validate required JIRA fields
@@ -331,14 +338,8 @@ class TestDocumentStructureValidation:
             "number": 123,
             "title": "feat: Add user authentication",
             "body": "## Description\nThis PR implements user authentication...\n\n## Changes\n- Added login endpoint\n- Added JWT tokens",
-            "head": {
-                "ref": "feature/auth",
-                "repo": {"name": "my-project"}
-            },
-            "base": {
-                "ref": "main",
-                "repo": {"name": "my-project"}
-            },
+            "head": {"ref": "feature/auth", "repo": {"name": "my-project"}},
+            "base": {"ref": "main", "repo": {"name": "my-project"}},
             "user": {"login": "developer"},
             "state": "open",
             "labels": ["enhancement", "backend"],
@@ -349,8 +350,8 @@ class TestDocumentStructureValidation:
                 "updated_at": datetime.now().isoformat(),
                 "commits": 5,
                 "additions": 120,
-                "deletions": 15
-            }
+                "deletions": 15,
+            },
         }
 
         # Validate GitHub PR structure
@@ -371,11 +372,7 @@ class TestDocumentStructureValidation:
             "cc": ["manager@example.com"],
             "body": "Dear Team,\n\nHere's the weekly status update...\n\nBest regards,\nProject Manager",
             "attachments": ["status_report.pdf", "burndown_chart.png"],
-            "metadata": {
-                "sent_at": datetime.now().isoformat(),
-                "importance": "normal",
-                "sensitivity": "normal"
-            }
+            "metadata": {"sent_at": datetime.now().isoformat(), "importance": "normal", "sensitivity": "normal"},
         }
 
         # Validate email structure
@@ -396,26 +393,26 @@ class TestDocumentStructureValidation:
             "attendees": [
                 {"name": "Alice Johnson", "role": "Product Owner"},
                 {"name": "Bob Smith", "role": "Scrum Master"},
-                {"name": "Charlie Brown", "role": "Developer"}
+                {"name": "Charlie Brown", "role": "Developer"},
             ],
-            "agenda": [
-                "Sprint retrospective",
-                "Sprint planning",
-                "Capacity planning"
-            ],
+            "agenda": ["Sprint retrospective", "Sprint planning", "Capacity planning"],
             "discussion_points": [
                 {"topic": "Sprint velocity", "notes": "Team velocity increased by 15%"},
-                {"topic": "Blockers", "notes": "No major blockers identified"}
+                {"topic": "Blockers", "notes": "No major blockers identified"},
             ],
             "action_items": [
-                {"description": "Update sprint board", "assignee": "Bob Smith", "due_date": (datetime.now() + timedelta(days=7)).isoformat()},
-                {"description": "Refine user stories", "assignee": "Alice Johnson", "due_date": (datetime.now() + timedelta(days=3)).isoformat()}
+                {
+                    "description": "Update sprint board",
+                    "assignee": "Bob Smith",
+                    "due_date": (datetime.now() + timedelta(days=7)).isoformat(),
+                },
+                {
+                    "description": "Refine user stories",
+                    "assignee": "Alice Johnson",
+                    "due_date": (datetime.now() + timedelta(days=3)).isoformat(),
+                },
             ],
-            "metadata": {
-                "meeting_type": "sprint_planning",
-                "duration_minutes": 90,
-                "recorded_by": "Bob Smith"
-            }
+            "metadata": {"meeting_type": "sprint_planning", "duration_minutes": 90, "recorded_by": "Bob Smith"},
         }
 
         # Validate meeting notes structure
@@ -436,7 +433,7 @@ class TestDocumentTypeRelationships:
             DocumentType.PROJECT_REQUIREMENTS: [DocumentType.USER_STORY, DocumentType.TECHNICAL_DESIGN],
             DocumentType.TECHNICAL_DESIGN: [DocumentType.ARCHITECTURE_DIAGRAM, DocumentType.CODE_REVIEW_COMMENTS],
             DocumentType.TEST_SCENARIOS: [DocumentType.CODE_REVIEW_COMMENTS, DocumentType.USER_STORY],
-            DocumentType.CHANGE_LOG: [DocumentType.TEAM_RETROSPECTIVE, DocumentType.MAINTENANCE_DOCS]
+            DocumentType.CHANGE_LOG: [DocumentType.TEAM_RETROSPECTIVE, DocumentType.MAINTENANCE_DOCS],
         }
 
         # Validate relationship structure
@@ -456,7 +453,7 @@ class TestDocumentTypeRelationships:
             DocumentType.CODE_REVIEW_COMMENTS,
             DocumentType.TEST_SCENARIOS,
             DocumentType.DEPLOYMENT_GUIDE,
-            DocumentType.CHANGE_LOG
+            DocumentType.CHANGE_LOG,
         ]
 
         # Validate workflow sequence
@@ -471,7 +468,7 @@ class TestDocumentTypeRelationships:
             DocumentType.TECHNICAL_DESIGN: [DocumentType.USER_STORY, DocumentType.CODE_REVIEW_COMMENTS],
             DocumentType.DEPLOYMENT_GUIDE: [DocumentType.ARCHITECTURE_DIAGRAM, DocumentType.TEST_SCENARIOS],
             DocumentType.MAINTENANCE_DOCS: [DocumentType.CHANGE_LOG, DocumentType.TEAM_RETROSPECTIVE],
-            DocumentType.CODE_REVIEW_COMMENTS: [DocumentType.CODE_REVIEW_COMMENTS, DocumentType.TEST_SCENARIOS]
+            DocumentType.CODE_REVIEW_COMMENTS: [DocumentType.CODE_REVIEW_COMMENTS, DocumentType.TEST_SCENARIOS],
         }
 
         # Validate dependency structure
@@ -492,7 +489,7 @@ class TestDocumentQualityValidation:
             {"criteria": "has_content", "weight": 0.3, "passed": True},
             {"criteria": "proper_formatting", "weight": 0.2, "passed": False},
             {"criteria": "complete_metadata", "weight": 0.15, "passed": True},
-            {"criteria": "spelling_grammar", "weight": 0.15, "passed": True}
+            {"criteria": "spelling_grammar", "weight": 0.15, "passed": True},
         ]
 
         # Calculate quality score
@@ -509,7 +506,7 @@ class TestDocumentQualityValidation:
             DocumentType.PROJECT_REQUIREMENTS: ["title", "content", "author", "created_date"],
             DocumentType.USER_STORY: ["summary", "description", "assignee", "priority"],
             DocumentType.TECHNICAL_DESIGN: ["title", "body", "assignees", "labels"],
-            DocumentType.CHANGE_LOG: ["subject", "from", "to", "body"]
+            DocumentType.CHANGE_LOG: ["subject", "from", "to", "body"],
         }
 
         # Test completeness for a JIRA ticket
@@ -517,7 +514,7 @@ class TestDocumentQualityValidation:
             "summary": "Implement login feature",
             "description": "Detailed description...",
             "assignee": "dev@example.com",
-            "priority": "High"
+            "priority": "High",
         }
 
         required_fields = completeness_requirements[DocumentType.USER_STORY]
@@ -553,6 +550,7 @@ class TestDocumentQualityValidation:
         # Test JSON format
         json_content = '{"name": "test", "version": "1.0", "active": true}'
         import json
+
         parsed = json.loads(json_content)
         assert parsed["name"] == "test"
         assert parsed["active"] == True
@@ -568,10 +566,7 @@ class TestDocumentGenerationPatterns:
             "type": DocumentType.PROJECT_REQUIREMENTS.value,
             "title": "{project_name} - {document_type}",
             "content": "# {title}\n\n## Overview\n{document_description}\n\n## Details\n{document_content}",
-            "metadata": {
-                "template_version": "1.0",
-                "generated_at": "{timestamp}"
-            }
+            "metadata": {"template_version": "1.0", "generated_at": "{timestamp}"},
         }
 
         # Apply template variables
@@ -581,7 +576,7 @@ class TestDocumentGenerationPatterns:
             "document_description": "This document outlines the requirements...",
             "document_content": "Detailed requirements here...",
             "timestamp": datetime.now().isoformat(),
-            "title": "E-commerce Platform - Requirements"  # Add the title variable
+            "title": "E-commerce Platform - Requirements",  # Add the title variable
         }
 
         # Simulate template application
@@ -589,7 +584,7 @@ class TestDocumentGenerationPatterns:
         generated_content = template["content"].format(
             title=variables["title"],  # Pass title explicitly
             document_description=variables["document_description"],
-            document_content=variables["document_content"]
+            document_content=variables["document_content"],
         )
 
         assert "E-commerce Platform" in generated_title
@@ -604,24 +599,14 @@ class TestDocumentGenerationPatterns:
             "type": DocumentType.TEAM_RETROSPECTIVE.value,
             "title": "Sprint Planning",
             "content": "Meeting content here...",
-            "metadata": {}
+            "metadata": {},
         }
 
         # Define context to inject
         context = {
-            "project": {
-                "name": "Web App Project",
-                "phase": "Development",
-                "sprint": 15
-            },
-            "team": {
-                "size": 8,
-                "scrum_master": "Alice Johnson"
-            },
-            "meeting": {
-                "date": datetime.now().date().isoformat(),
-                "duration": 90
-            }
+            "project": {"name": "Web App Project", "phase": "Development", "sprint": 15},
+            "team": {"size": 8, "scrum_master": "Alice Johnson"},
+            "meeting": {"date": datetime.now().date().isoformat(), "duration": 90},
         }
 
         # Inject context into document
@@ -639,21 +624,9 @@ class TestDocumentGenerationPatterns:
 
         # Personalize for different audiences
         audiences = {
-            "developer": {
-                "topic": "API implementation",
-                "tone": "technical",
-                "detail_level": "high"
-            },
-            "manager": {
-                "topic": "project timeline",
-                "tone": "business",
-                "detail_level": "medium"
-            },
-            "stakeholder": {
-                "topic": "business benefits",
-                "tone": "executive",
-                "detail_level": "low"
-            }
+            "developer": {"topic": "API implementation", "tone": "technical", "detail_level": "high"},
+            "manager": {"topic": "project timeline", "tone": "business", "detail_level": "medium"},
+            "stakeholder": {"topic": "business benefits", "tone": "executive", "detail_level": "low"},
         }
 
         # Generate personalized content

@@ -1,8 +1,11 @@
-"""Mock implementations for GitHub MCP tools.
+"""
+Mock implementations for GitHub MCP tools.
 
 Contains mock implementations for all supported GitHub tools.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi import HTTPException
 
 
@@ -41,8 +44,7 @@ class MockImplementations:
         state = args.get("state", "open")
         return {
             "items": [
-                {"number": n, "title": f"PR {n}", "state": state, "head": {"ref": f"feature-{n}"}}
-                for n in range(1, 4)
+                {"number": n, "title": f"PR {n}", "state": state, "head": {"ref": f"feature-{n}"}} for n in range(1, 4)
             ],
             "repo": f"{owner}/{repo}",
         }
@@ -68,12 +70,7 @@ index 111..222 100644
         """Mock implementation for github.search_issues."""
         q = str(args.get("q", ""))
         limit = int(args.get("limit", 3))
-        return {
-            "items": [
-                {"number": i, "title": f"Issue {i} about {q}", "state": "open"}
-                for i in range(1, limit + 1)
-            ]
-        }
+        return {"items": [{"number": i, "title": f"Issue {i} about {q}", "state": "open"} for i in range(1, limit + 1)]}
 
     @staticmethod
     def list_workflows(args: Dict[str, Any]) -> Dict[str, Any]:
@@ -104,19 +101,15 @@ index 111..222 100644
                 "title": args.get("title", ""),
                 "html_url": f"https://github.com/{args.get('owner','org')}/{args.get('repo','repo')}/issues/1",
             },
-            "status": "created"
+            "status": "created",
         }
 
     @staticmethod
     def add_issue_comment(args: Dict[str, Any]) -> Dict[str, Any]:
         """Mock implementation for github.add_issue_comment."""
         return {
-            "comment": {
-                "id": 1001,
-                "issue_number": args.get("issue_number", 1),
-                "body": args.get("comment", "")
-            },
-            "status": "created"
+            "comment": {"id": 1001, "issue_number": args.get("issue_number", 1), "body": args.get("comment", "")},
+            "status": "created",
         }
 
     @staticmethod

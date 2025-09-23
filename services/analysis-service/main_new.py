@@ -7,62 +7,65 @@ Original file: 2,753 lines with 53+ endpoints mixed with business logic
 New file: ~200 lines with clean separation of concerns and proper architecture
 """
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os
+
+from services.shared.core.constants_new import ServiceNames
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses import create_success_response, create_error_response
-from services.shared.utilities.error_handling import ServiceException, install_error_handlers
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities.utilities import utc_now, generate_id, setup_common_middleware, attach_self_register
+from services.shared.utilities.error_handling import install_error_handlers
+from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
 
 # ============================================================================
 # CONTROLLERS - Clean separation of endpoint responsibilities
 # ============================================================================
 # Temporarily using absolute imports for local development
 try:
+    from .presentation.compatibility_layer import register_compatibility_endpoints
     from .presentation.controllers import (
         AnalysisController,
-        RemediationController,
-        WorkflowController,
-        RepositoryController,
         DistributedController,
-        ReportsController,
         FindingsController,
         IntegrationController,
-        PRConfidenceController
+        PRConfidenceController,
+        RemediationController,
+        ReportsController,
+        RepositoryController,
+        WorkflowController,
     )
-    from .presentation.compatibility_layer import register_compatibility_endpoints
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
+    from presentation.compatibility_layer import register_compatibility_endpoints
     from presentation.controllers import (
         AnalysisController,
-        RemediationController,
-        WorkflowController,
-        RepositoryController,
         DistributedController,
-        ReportsController,
         FindingsController,
         IntegrationController,
-        PRConfidenceController
+        PRConfidenceController,
+        RemediationController,
+        ReportsController,
+        RepositoryController,
+        WorkflowController,
     )
-    from presentation.compatibility_layer import register_compatibility_endpoints
 
 # ============================================================================
+from .application.use_cases import PerformAnalysisUseCase
+from .domain.factories import DocumentFactory, FindingFactory
+from .domain.services import AnalysisService, DocumentService, FindingService
+from .infrastructure.config import InfrastructureConfig
+
 # DEPENDENCY INJECTION - Clean dependency management
 # ============================================================================
-from .infrastructure.repositories import SQLiteDocumentRepository, SQLiteAnalysisRepository, SQLiteFindingRepository
-from .infrastructure.config import InfrastructureConfig
-from .application.use_cases import PerformAnalysisUseCase
-from .domain.services import DocumentService, AnalysisService, FindingService
-from .domain.factories import DocumentFactory, FindingFactory
+from .infrastructure.repositories import SQLiteAnalysisRepository, SQLiteDocumentRepository, SQLiteFindingRepository
 
 
 def create_application() -> FastAPI:
@@ -87,7 +90,7 @@ def create_application() -> FastAPI:
         """,
         version=SERVICE_VERSION,
         docs_url="/docs",
-        redoc_url="/redoc"
+        redoc_url="/redoc",
     )
 
     # ============================================================================
@@ -117,7 +120,7 @@ def create_application() -> FastAPI:
     perform_analysis_use_case = PerformAnalysisUseCase(
         analysis_service=analysis_service,
         document_repository=document_repository,
-        analysis_repository=analysis_repository
+        analysis_repository=analysis_repository,
     )
 
     # ============================================================================
@@ -128,7 +131,7 @@ def create_application() -> FastAPI:
         perform_analysis_use_case=perform_analysis_use_case,
         document_repository=document_repository,
         analysis_repository=analysis_repository,
-        analysis_service=analysis_service
+        analysis_service=analysis_service,
     )
 
     remediation_controller = RemediationController()
@@ -165,7 +168,7 @@ def create_application() -> FastAPI:
         app.include_router(
             controller.get_router(),
             prefix=prefix,
-            tags=[controller.__class__.__name__.replace('Controller', '').lower()]
+            tags=[controller.__class__.__name__.replace("Controller", "").lower()],
         )
 
     # ============================================================================
@@ -241,11 +244,7 @@ if __name__ == "__main__":
     print("🔄 Alternative Docs: http://localhost:{port}/redoc")
 
     uvicorn.run(
-        "main_new:app",
-        host=host,
-        port=port,
-        reload=True,  # Enable auto-reload for development
-        log_level="info"
+        "main_new:app", host=host, port=port, reload=True, log_level="info"  # Enable auto-reload for development
     )
 
 
@@ -266,13 +265,7 @@ SERVICE_METADATA = {
         "Workflow integration",
         "Cross-repository analysis",
         "Automated remediation",
-        "Real-time monitoring"
+        "Real-time monitoring",
     ],
-    "dependencies": [
-        "Document Store",
-        "Prompt Store",
-        "Interpreter",
-        "Source Agent",
-        "Orchestrator"
-    ]
+    "dependencies": ["Document Store", "Prompt Store", "Interpreter", "Source Agent", "Orchestrator"],
 }

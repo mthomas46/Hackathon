@@ -1,20 +1,20 @@
 """Handlers Package - Analysis handlers with dependency injection."""
 
-from .base_handler import BaseAnalysisHandler, AnalysisResult, HandlerRegistry, handler_registry
-from .factory import HandlerFactory, get_handler_factory, create_handler, initialize_handlers
+from .base_handler import AnalysisResult, BaseAnalysisHandler, HandlerRegistry, handler_registry
+from .cross_repository_handler import CrossRepositoryAnalysisHandler
+from .distributed_handler import DistributedAnalysisHandler
+from .factory import HandlerFactory, create_handler, get_handler_factory, initialize_handlers
+from .impact_handler import ChangeImpactAnalysisHandler
+from .maintenance_handler import MaintenanceAnalysisHandler
+from .quality_handler import QualityAnalysisHandler
+from .remediation_handler import RemediationHandler
+from .risk_handler import RiskAnalysisHandler
 
 # Handler classes
 from .semantic_handler import SemanticAnalysisHandler
 from .sentiment_handler import SentimentAnalysisHandler
-from .quality_handler import QualityAnalysisHandler
 from .trend_handler import TrendAnalysisHandler
-from .risk_handler import RiskAnalysisHandler
-from .maintenance_handler import MaintenanceAnalysisHandler
-from .impact_handler import ChangeImpactAnalysisHandler
-from .remediation_handler import RemediationHandler
 from .workflow_handler import WorkflowAnalysisHandler
-from .distributed_handler import DistributedAnalysisHandler
-from .cross_repository_handler import CrossRepositoryAnalysisHandler
 
 __all__ = [
     # Base components
@@ -22,13 +22,11 @@ __all__ = [
     "AnalysisResult",
     "HandlerRegistry",
     "handler_registry",
-
     # Factory components
     "HandlerFactory",
     "get_handler_factory",
     "create_handler",
     "initialize_handlers",
-
     # Handler classes
     "SemanticAnalysisHandler",
     "SentimentAnalysisHandler",

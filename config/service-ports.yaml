@@ -62,8 +62,8 @@ agent_services:
     description: "Memory and context management"
     
   discovery_agent:
-    internal_port: 5050
-    external_port: 5050
+    internal_port: 5045
+    external_port: 5045
     description: "Service discovery and registry"
     
   source_agent:
@@ -126,6 +126,11 @@ simulation_services:
     internal_port: 8501
     external_port: 8501
     description: "Interactive simulation dashboard"
+
+  data_services_dashboard:
+    internal_port: 8502
+    external_port: 8502
+    description: "Unified data services management dashboard"
 
 # Web Services
 web_services:

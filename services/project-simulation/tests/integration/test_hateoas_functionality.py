@@ -1,13 +1,13 @@
-"""Integration Tests for HATEOAS Functionality.
+"""
+Integration Tests for HATEOAS Functionality.
 
-This module contains comprehensive tests for Hypermedia as the Engine of Application State (HATEOAS)
-implementation. Tests cover API discoverability, link relations, and hypermedia-driven navigation.
+This module contains comprehensive tests for Hypermedia as the Engine of
+Application State (HATEOAS) implementation. Tests cover API
+discoverability, link relations, and hypermedia-driven navigation.
 """
 
-import pytest
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock, patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -26,14 +26,7 @@ class TestAPIDiscovery:
         links = data["_links"]
 
         # Essential API links
-        essential_links = [
-            "self",
-            "health",
-            "simulations",
-            "config",
-            "documentation",
-            "openapi"
-        ]
+        essential_links = ["self", "health", "simulations", "config", "documentation", "openapi"]
 
         for link in essential_links:
             assert link in links, f"Missing essential link: {link}"
@@ -59,16 +52,17 @@ class TestAPIDiscovery:
             assert "v1" in versions
 
     def test_api_discovery_provides_deprecation_warnings(self, test_client):
-        """Test that API discovery provides deprecation warnings for older versions."""
+        """Test that API discovery provides deprecation warnings for older
+        versions."""
         # This would test deprecation notices for API versions
-        pass
 
 
 class TestResourceNavigation:
     """Test cases for resource navigation and link relations."""
 
     def test_simulation_collection_provides_complete_navigation(self, test_client):
-        """Test that simulation collection provides complete navigation links."""
+        """Test that simulation collection provides complete navigation
+        links."""
         response = test_client.get("/api/v1/simulations")
 
         assert response.status_code == 200
@@ -92,12 +86,15 @@ class TestResourceNavigation:
     def test_simulation_resource_provides_relationship_links(self, test_client):
         """Test that simulation resource provides relationship links."""
         # Create a simulation first
-        create_response = test_client.post("/api/v1/simulations", json={
-            "name": "HATEOAS Test",
-            "description": "Testing relationship links",
-            "project_type": "web_application",
-            "complexity": "medium"
-        })
+        create_response = test_client.post(
+            "/api/v1/simulations",
+            json={
+                "name": "HATEOAS Test",
+                "description": "Testing relationship links",
+                "project_type": "web_application",
+                "complexity": "medium",
+            },
+        )
 
         if create_response.status_code == 201:
             simulation_data = create_response.json()
@@ -117,10 +114,10 @@ class TestResourceNavigation:
             relationship_links = [
                 "self",
                 "collection",  # Link back to collection
-                "execute",     # Action to execute simulation
-                "reports",     # Related reports
-                "events",      # Related events
-                "logs"         # Related logs
+                "execute",  # Action to execute simulation
+                "reports",  # Related reports
+                "events",  # Related events
+                "logs",  # Related logs
             ]
 
             for link in relationship_links:
@@ -129,12 +126,15 @@ class TestResourceNavigation:
     def test_action_links_include_http_methods(self, test_client):
         """Test that action links include appropriate HTTP methods."""
         # Create a simulation
-        create_response = test_client.post("/api/v1/simulations", json={
-            "name": "Method Test",
-            "description": "Testing HTTP methods in links",
-            "project_type": "web_application",
-            "complexity": "medium"
-        })
+        create_response = test_client.post(
+            "/api/v1/simulations",
+            json={
+                "name": "Method Test",
+                "description": "Testing HTTP methods in links",
+                "project_type": "web_application",
+                "complexity": "medium",
+            },
+        )
 
         if create_response.status_code == 201:
             simulation_data = create_response.json()
@@ -215,7 +215,7 @@ class TestLinkRelationSemantics:
                         collection_href = collection_links["self"]["href"]
                         item_collection_href = item_links["collection"]["href"]
                         # Normalize URLs for comparison
-                        assert collection_href.split('?')[0] == item_collection_href.split('?')[0]
+                        assert collection_href.split("?")[0] == item_collection_href.split("?")[0]
 
 
 class TestHATEOASWorkflows:
@@ -234,12 +234,15 @@ class TestHATEOASWorkflows:
         assert collection_response.status_code == 200
 
         # 3. Create a new simulation
-        create_response = test_client.post("/api/v1/simulations", json={
-            "name": "Workflow Test",
-            "description": "Testing HATEOAS workflow",
-            "project_type": "web_application",
-            "complexity": "medium"
-        })
+        create_response = test_client.post(
+            "/api/v1/simulations",
+            json={
+                "name": "Workflow Test",
+                "description": "Testing HATEOAS workflow",
+                "project_type": "web_application",
+                "complexity": "medium",
+            },
+        )
 
         if create_response.status_code == 201:
             simulation_data = create_response.json()
@@ -299,7 +302,6 @@ class TestHATEOASContentNegotiation:
     def test_api_provides_format_negotiation_links(self, test_client):
         """Test that API provides links for different content formats."""
         # This would test links like ?format=json, ?format=html, etc.
-        pass
 
 
 class TestHATEOASCaching:
@@ -379,7 +381,8 @@ class TestHATEOASPerformance:
     """Test cases for HATEOAS performance and optimization."""
 
     def test_link_generation_is_efficient(self, test_client):
-        """Test that link generation doesn't significantly impact response time."""
+        """Test that link generation doesn't significantly impact response
+        time."""
         import time
 
         # Measure response time with links
@@ -398,9 +401,9 @@ class TestHATEOASPerformance:
             assert "_links" in data
 
     def test_link_validation_doesnt_impact_performance(self, test_client):
-        """Test that link validation doesn't significantly impact performance."""
+        """Test that link validation doesn't significantly impact
+        performance."""
         # This would test the performance impact of link validation
-        pass
 
 
 # Fixtures
@@ -408,4 +411,5 @@ class TestHATEOASPerformance:
 def test_client():
     """Create test client for API testing."""
     from main import app
+
     return TestClient(app)

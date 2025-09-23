@@ -1,17 +1,19 @@
-"""Log caching and streaming infrastructure for Frontend service.
+"""
+Log caching and streaming infrastructure for Frontend service.
 
 Provides caching for log data from the log collector service and
 supports real-time log streaming for visualization and troubleshooting.
 """
-from typing import Dict, Any, List, Optional, AsyncGenerator
+
 import asyncio
-import json
-from datetime import datetime, timedelta
 from collections import defaultdict
-import httpx
+from datetime import datetime, timedelta
+from typing import Any, AsyncGenerator, Dict, List, Optional
+
 
 from services.shared.utilities import utc_now
-from .shared_utils import get_log_collector_url, get_frontend_clients
+
+from .shared_utils import get_frontend_clients, get_log_collector_url
 
 
 class LogCache:
@@ -34,11 +36,7 @@ class LogCache:
             self._logs = self._logs[excess:]
 
     def get_recent_logs(
-        self,
-        service: Optional[str] = None,
-        level: Optional[str] = None,
-        limit: int = 100,
-        since: Optional[str] = None
+        self, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100, since: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """Get recent logs with optional filtering."""
         filtered_logs = self._logs
@@ -55,9 +53,12 @@ class LogCache:
         # Filter by timestamp
         if since:
             try:
-                since_dt = datetime.fromisoformat(since.replace('Z', '+00:00'))
-                filtered_logs = [log for log in filtered_logs
-                               if datetime.fromisoformat(log.get("timestamp", "").replace('Z', '+00:00')) > since_dt]
+                since_dt = datetime.fromisoformat(since.replace("Z", "+00:00"))
+                filtered_logs = [
+                    log
+                    for log in filtered_logs
+                    if datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00")) > since_dt
+                ]
             except (ValueError, AttributeError):
                 pass  # Invalid timestamp format, ignore filter
 
@@ -78,13 +79,7 @@ class LogCache:
     def get_log_summary(self) -> Dict[str, Any]:
         """Get a summary of cached logs."""
         if not self._logs:
-            return {
-                "total_logs": 0,
-                "services": [],
-                "levels": [],
-                "time_range": None,
-                "last_log_time": None
-            }
+            return {"total_logs": 0, "services": [], "levels": [], "time_range": None, "last_log_time": None}
 
         services = set()
         levels = set()
@@ -95,7 +90,7 @@ class LogCache:
             levels.add(log.get("level", "unknown"))
 
             try:
-                ts = datetime.fromisoformat(log.get("timestamp", "").replace('Z', '+00:00'))
+                ts = datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00"))
                 timestamps.append(ts)
             except (ValueError, AttributeError):
                 pass
@@ -107,7 +102,7 @@ class LogCache:
             time_range = {
                 "start": min_time.isoformat(),
                 "end": max_time.isoformat(),
-                "duration_seconds": (max_time - min_time).total_seconds()
+                "duration_seconds": (max_time - min_time).total_seconds(),
             }
 
         last_log_time = max(timestamps).isoformat() if timestamps else None
@@ -117,7 +112,7 @@ class LogCache:
             "services": sorted(list(services)),
             "levels": sorted(list(levels)),
             "time_range": time_range,
-            "last_log_time": last_log_time
+            "last_log_time": last_log_time,
         }
 
     def clear_cache(self) -> None:
@@ -132,9 +127,7 @@ log_cache = LogCache()
 
 
 async def fetch_logs_from_collector(
-    service: Optional[str] = None,
-    level: Optional[str] = None,
-    limit: int = 100
+    service: Optional[str] = None, level: Optional[str] = None, limit: int = 100
 ) -> List[Dict[str, Any]]:
     """Fetch logs from the log collector service."""
     try:
@@ -179,9 +172,7 @@ async def fetch_log_stats_from_collector() -> Dict[str, Any]:
 
 
 async def stream_logs(
-    service: Optional[str] = None,
-    level: Optional[str] = None,
-    poll_interval: int = 5
+    service: Optional[str] = None, level: Optional[str] = None, poll_interval: int = 5
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """Stream logs in real-time by polling the log collector."""
     last_timestamp = None
@@ -196,7 +187,7 @@ async def stream_logs(
                 new_logs = []
                 for log in logs:
                     try:
-                        log_ts = datetime.fromisoformat(log.get("timestamp", "").replace('Z', '+00:00'))
+                        log_ts = datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00"))
                         if log_ts > last_timestamp:
                             new_logs.append(log)
                     except (ValueError, AttributeError):
@@ -207,7 +198,7 @@ async def stream_logs(
             if logs:
                 try:
                     latest_ts = max(
-                        datetime.fromisoformat(log.get("timestamp", "").replace('Z', '+00:00'))
+                        datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00"))
                         for log in logs
                         if log.get("timestamp")
                     )
@@ -233,7 +224,7 @@ def get_cached_logs_data() -> Dict[str, Any]:
         "logs": log_cache.get_recent_logs(limit=200),  # Return last 200 logs
         "stats": log_cache.get_stats(),
         "summary": log_cache.get_log_summary(),
-        "last_updated": utc_now().isoformat()
+        "last_updated": utc_now().isoformat(),
     }
 
 
@@ -248,7 +239,7 @@ def analyze_log_patterns(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
         "services_active": set(),
         "levels_distribution": defaultdict(int),
         "recent_errors": [],
-        "frequent_messages": defaultdict(int)
+        "frequent_messages": defaultdict(int),
     }
 
     recent_cutoff = utc_now() - timedelta(minutes=5)
@@ -265,13 +256,11 @@ def analyze_log_patterns(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
         # Check for recent errors
         if level in ("error", "fatal") and timestamp:
             try:
-                log_time = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                log_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                 if log_time > recent_cutoff:
-                    patterns["recent_errors"].append({
-                        "service": service,
-                        "message": message[:100],
-                        "timestamp": timestamp
-                    })
+                    patterns["recent_errors"].append(
+                        {"service": service, "message": message[:100], "timestamp": timestamp}
+                    )
             except (ValueError, AttributeError):
                 pass
 
@@ -300,7 +289,4 @@ def analyze_log_patterns(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
     if len(patterns["services_active"]) < 3:
         insights.append("Limited service activity detected")
 
-    return {
-        "patterns": patterns,
-        "insights": insights
-    }
+    return {"patterns": patterns, "insights": insights}

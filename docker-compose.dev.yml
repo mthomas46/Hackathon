@@ -1,315 +1,298 @@
-# =============================================================================
-# DOCKER COMPOSE - DEVELOPMENT ENVIRONMENT
-# =============================================================================
-# Comprehensive development setup for the LLM Documentation Ecosystem
-#
-# Services included:
-# - Core Infrastructure: Redis, PostgreSQL (optional)
-# - Core Services: orchestrator, doc_store, analysis-service, source-agent, frontend
-# - AI Services: summarizer-hub, bedrock-proxy, github-mcp
-# - Agent Services: memory-agent, discovery-agent, notification-service
-# - Utility Services: prompt-store, interpreter, cli
-# - Analysis Services: code-analyzer, secure-analyzer, log-collector
-#
-# Use profiles to control which services start:
-#   docker-compose --profile core up              # Core services only
-#   docker-compose --profile development up       # Development services
-#   docker-compose --profile ai_services up       # AI/ML services
-#   docker-compose --profile tooling up           # CLI and tooling
-#
-# Individual Services:
-# Each service can run independently with its own dependencies:
-#   cd services/{service-name} && docker-compose up
-#
-# Configuration:
-# - Unified config.yml at project root
-# - Service-specific configs in services/*/config.yaml
-# - Environment variables override defaults
-# =============================================================================
-
-
 services:
-  # ============================================================================
-  # INFRASTRUCTURE SERVICES
-  # ============================================================================
-
-  # Redis - In-memory data store and cache
   redis:
     build: ./services/redis
     ports:
-      - "6379:6379"
+    - 6379:6379
     volumes:
-      - redis_data:/data
+    - redis_data:/data
     environment:
-      SERVICE_NAME: redis
+    - SERVICE_NAME=redis
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+      - CMD
+      - redis-cli
+      - ping
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
+    restart: unless-stopped
     profiles:
-      - core
-      - development
-      - ai_services
-      - production
-
-  # PostgreSQL - Production database (optional, uncomment to enable)
-  # postgres:
-  #   image: postgres:15-alpine
-  #   environment:
-  #     PYTHONPATH: /app
-  #     POSTGRES_DB: doc_consistency
-  #     POSTGRES_USER: doc_user
-  #     POSTGRES_PASSWORD: doc_password
-  #     POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #     - ./infrastructure/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-  #   ports:
-  #     - "5432:5432"
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U doc_user -d doc_consistency"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 3
-  #   profiles:
-  #     - production
-
-  # ============================================================================
-  # CORE SERVICES
-  # ============================================================================
-
-  # Orchestrator - Central coordination service
+    - core
+    - development
+    - ai_services
+    - production
   orchestrator:
     build:
       context: .
       dockerfile: services/orchestrator/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5099
     ports:
-      - "5099:5099"
+    - 5099:5099
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5099/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5099/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    restart: unless-stopped
     profiles:
-      - core
-      - ai_services
-
-  # Document Store - Document storage and retrieval
+    - core
+    - ai_services
   doc_store:
     build:
       context: .
       dockerfile: services/doc_store/Dockerfile
     volumes:
-      - doc_store_data:/app/data
+    - doc_store_data:/app/data
+    - doc_store_logs:/app/logs
     environment:
-      - PYTHONPATH=/app
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5010
     ports:
-      - "5087:5010"
+    - 5087:5010
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5010/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5010/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    restart: unless-stopped
     profiles:
-      - core
-      - ai_services
-
-  # Analysis Service - Document analysis and consistency checking
+    - core
+    - ai_services
+    - development
   analysis-service:
     build:
       context: .
       dockerfile: services/analysis-service/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
-      - SERVICE_PORT=5020
-      # DDD-specific environment variables
-      - DDD_ARCHITECTURE=true
-      - DDD_CONFIG_FILE=config/ddd_config.yaml
+    - PYTHONPATH=/app
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5020
+    - DDD_ARCHITECTURE=true
+    - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
-      - "5080:5020"
+    - 5080:5020
     depends_on:
       redis:
         condition: service_healthy
       doc_store:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5020/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - core
-      - ai_services
-
-  # Source Agent - Data ingestion from various sources
+    - core
+    - ai_services
+    restart: unless-stopped
   source-agent:
     container_name: hackathon-source-agent-1
     build:
       context: .
       dockerfile: services/source-agent/Dockerfile
     ports:
-      - "5085:5070"
+    - 5085:5070
     environment:
-      SERVICE_PORT: '5070'
-      DOC_STORE_URL: http://doc_store:5010
+    - SERVICE_PORT=5070
+    - DOC_STORE_URL=http://doc_store:5010
+    - PYTHONPATH=/app
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5070/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5070/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - core
-      - development
-      - production
+    - core
+    - development
+    - production
     restart: unless-stopped
-
-  # Frontend - Web interface
   frontend:
     build:
       context: .
       dockerfile: services/frontend/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - REDIS_HOST=redis
+    - SERVICE_PORT=3000
     ports:
-      - "3000:3000"
+    - 3000:3000
     depends_on:
       orchestrator:
         condition: service_started
       analysis-service:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:3000/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - core
-
-  # ============================================================================
-  # AI/ML SERVICES
-  # ============================================================================
-
-  # Ollama - Local LLM inference engine
+    - core
+    - ai_services
+    restart: unless-stopped
   ollama:
     build: ./services/ollama
     ports:
-      - "11434:11434"
+    - 11434:11434
     volumes:
-      - ollama_data:/root/.ollama
+    - ollama_data:/root/.ollama
+    - ollama_logs:/app/logs
     environment:
-      - OLLAMA_HOST=0.0.0.0
-      - SERVICE_NAME=ollama
+    - OLLAMA_HOST=0.0.0.0
+    - SERVICE_NAME=ollama
+    - PYTHONPATH=/app
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=11434
     profiles:
-      - ai_services
+    - ai_services
     restart: unless-stopped
-
-  # Summarizer Hub - AI-powered summarization service
   summarizer-hub:
     build:
       context: .
       dockerfile: services/summarizer-hub/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - OLLAMA_HOST=http://host.docker.internal:11434
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - OLLAMA_HOST=http://host.docker.internal:11434
+    - ENVIRONMENT=development
+    - REDIS_HOST=redis
+    - SERVICE_PORT=5160
     ports:
-      - "5160:5160"
+    - 5160:5160
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5160/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5160/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - ai_services
-
-  # Architecture Digitizer - Diagram normalization service
+    - ai_services
+    restart: unless-stopped
   architecture-digitizer:
     build:
       context: .
       dockerfile: services/architecture-digitizer/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - REDIS_HOST=redis
+    - SERVICE_PORT=5105
     ports:
-      - "5105:5105"
+    - 5105:5105
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5105/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5105/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - ai_services
-
-  # Bedrock Proxy - AWS Bedrock API proxy
+    - ai_services
+    restart: unless-stopped
   bedrock-proxy:
     build:
       context: .
       dockerfile: services/bedrock-proxy/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
-      - SERVICE_PORT=5060
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5060
+    - REDIS_HOST=redis
     ports:
-      - "5060:7090"
+    - 5060:7090
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5060/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5060/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - ai_services
-
-  # LLM Gateway - Unified access to all LLM providers
+    - ai_services
+    restart: unless-stopped
   llm-gateway:
     build:
       context: .
       dockerfile: services/llm-gateway/Dockerfile
     volumes:
-      - llm_gateway_cache:/app/cache
+    - llm_gateway_cache:/app/cache
     environment:
-      - PYTHONPATH=/app
-      - SERVICE_NAME=llm-gateway
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
-      # LLM Provider Configuration
-      - OLLAMA_ENDPOINT=http://ollama:11434
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - BEDROCK_ENDPOINT=http://bedrock-proxy:5060/invoke
-      - GROK_API_KEY=${GROK_API_KEY:-}
-      # Security Configuration
-      - SENSITIVE_KEYWORDS=password,secret,token,key,credential,confidential,internal
-      - SENSITIVITY_THRESHOLD=0.7
-      - SECURE_ONLY_MODELS=ollama,bedrock
-      - ALL_PROVIDERS=bedrock,ollama,openai,anthropic,grok
-      # Caching Configuration
-      - CACHE_MAX_SIZE=1000
-      - CACHE_DEFAULT_TTL=3600
-      - CACHE_CLEANUP_INTERVAL=300
-      # Rate Limiting Configuration
-      - RATE_LIMIT_REQUESTS_PER_MINUTE=60
-      - RATE_LIMIT_REQUESTS_PER_HOUR=1000
-      - RATE_LIMIT_TOKENS_PER_MINUTE=50000
-      - RATE_LIMIT_BURST_LIMIT=10
-      - RATE_LIMIT_COOLDOWN_SECONDS=60
+    - PYTHONPATH=/app
+    - SERVICE_NAME=llm-gateway
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - OLLAMA_ENDPOINT=http://ollama:11434
+    - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    - BEDROCK_ENDPOINT=http://bedrock-proxy:5060/invoke
+    - GROK_API_KEY=${GROK_API_KEY:-}
+    - SENSITIVE_KEYWORDS=password,secret,token,key,credential,confidential,internal
+    - SENSITIVITY_THRESHOLD=0.7
+    - SECURE_ONLY_MODELS=ollama,bedrock
+    - ALL_PROVIDERS=bedrock,ollama,openai,anthropic,grok
+    - CACHE_MAX_SIZE=1000
+    - CACHE_DEFAULT_TTL=3600
+    - CACHE_CLEANUP_INTERVAL=300
+    - RATE_LIMIT_REQUESTS_PER_MINUTE=60
+    - RATE_LIMIT_REQUESTS_PER_HOUR=1000
+    - RATE_LIMIT_TOKENS_PER_MINUTE=50000
+    - RATE_LIMIT_BURST_LIMIT=10
+    - RATE_LIMIT_COOLDOWN_SECONDS=60
+    - SERVICE_PORT=5055
     ports:
-      - "5055:5055"
+    - 5055:5055
     depends_on:
       redis:
         condition: service_healthy
@@ -318,27 +301,32 @@ services:
       ollama:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5055/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5055/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - ai_services
-
-  # Mock Data Generator - LLM-integrated mock data generation
+    - ai_services
+    restart: unless-stopped
   mock-data-generator:
     build:
       context: .
       dockerfile: services/mock-data-generator/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - SERVICE_NAME=mock-data-generator
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
-      - LLM_GATEWAY_URL=http://llm-gateway:5055
-      - DOC_STORE_URL=http://doc_store:5087
+    - PYTHONPATH=/app
+    - SERVICE_NAME=mock-data-generator
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - LLM_GATEWAY_URL=http://llm-gateway:5055
+    - DOC_STORE_URL=http://doc_store:5087
+    - SERVICE_PORT=5065
     ports:
-      - "5065:5065"
+    - 5065:5065
     depends_on:
       llm-gateway:
         condition: service_healthy
@@ -347,151 +335,176 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5065/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5065/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - ai_services
-
-  # GitHub MCP - GitHub Model Context Protocol service
+    - ai_services
+    restart: unless-stopped
   github-mcp:
     build:
       context: .
       dockerfile: services/github-mcp/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
-      - SERVICE_PORT=5030
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5030
+    - REDIS_HOST=redis
     ports:
-      - "5030:5072"
+    - 5030:5072
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5030/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5030/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - ai_services
-
-  # ============================================================================
-  # AGENT SERVICES
-  # ============================================================================
-
-  # Memory Agent - Conversation memory and context management
+    - ai_services
+    restart: unless-stopped
   memory-agent:
     build:
       context: .
       dockerfile: services/memory-agent/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5040
     ports:
-      - "5090:5040"
+    - 5090:5040
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5090/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5040/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - development
-
-  # Discovery Agent - Service discovery and registration
+    - development
+    restart: unless-stopped
   discovery-agent:
     build:
       context: .
       dockerfile: services/discovery-agent/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - REDIS_HOST=redis
+    - SERVICE_PORT=5045
     ports:
-      - "5045:5045"
+    - 5045:5045
     volumes:
-      - ./services/discovery-agent:/app/services/discovery_agent
-      - ./services/shared:/app/services/shared
-      - ./config.yml:/app/config.yml
-      - ./config:/app/config
+    - ./services/discovery-agent:/app/services/discovery_agent
+    - ./services/shared:/app/services/shared
+    - ./config.yml:/app/config.yml
+    - ./config:/app/config
     depends_on:
       orchestrator:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5045/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5045/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - development
-
-  # Notification Service - Notification delivery and management
+    - core
+    - development
+    restart: unless-stopped
   notification-service:
     build:
       context: .
       dockerfile: services/notification-service/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
-      - SERVICE_PORT=5020
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5020
+    - REDIS_HOST=redis
     ports:
-      - "5130:5020"
+    - 5130:5020
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5020/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5020/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - core
-      - development
-      - production
+    - core
+    - development
+    - production
     restart: unless-stopped
-
-  # ============================================================================
-  # UTILITY SERVICES
-  # ============================================================================
-
-  # Prompt Store - Centralized prompt management
   prompt_store:
     build:
       context: .
       dockerfile: services/prompt_store/Dockerfile
     volumes:
-      - prompt_store_data:/app/data
-      - ./config.yml:/app/config.yml:ro
-      - ./services/prompt_store/config.yaml:/app/services/prompt_store/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    - prompt_store_data:/app/data
+    - ./config.yml:/app/config.yml:ro
+    - ./services/prompt_store/config.yaml:/app/services/prompt_store/config.yaml:ro
+    - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    - prompt_store_logs:/app/logs
     environment:
-      - PYTHONPATH=/app
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5110
     ports:
-      - "5110:5110"
+    - 5110:5110
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5110/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5110/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - ai_services
-
-  # Interpreter - Natural language processing and interpretation
+    - ai_services
+    restart: unless-stopped
   interpreter:
     build:
       context: .
       dockerfile: services/interpreter/Dockerfile
     volumes:
-      - ./config.yml:/app/config.yml:ro
-      - ./services/interpreter/config.yaml:/app/services/interpreter/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    - ./config.yml:/app/config.yml:ro
+    - ./services/interpreter/config.yaml:/app/services/interpreter/config.yaml:ro
+    - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - REDIS_HOST=redis
+    - SERVICE_PORT=5120
     ports:
-      - "5120:5120"
+    - 5120:5120
     depends_on:
       prompt_store:
         condition: service_started
@@ -500,25 +513,30 @@ services:
       analysis-service:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5120/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5120/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - ai_services
-
-  # CLI - Command line interface
+    - ai_services
+    restart: unless-stopped
   cli:
     build:
       context: .
       dockerfile: services/cli/Dockerfile
     volumes:
-      - ./config.yml:/app/config.yml:ro
-      - ./services/cli/config.yaml:/app/services/cli/config.yaml:ro
-      - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
+    - ./config.yml:/app/config.yml:ro
+    - ./services/cli/config.yaml:/app/services/cli/config.yaml:ro
+    - ./services/shared/config.yaml:/app/services/shared/config.yaml:ro
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - REDIS_HOST=redis
     depends_on:
       prompt_store:
         condition: service_started
@@ -526,44 +544,37 @@ services:
         condition: service_started
       analysis-service:
         condition: service_started
-    command: ["sleep", "infinity"]  # Keep container running for interactive use
+    command:
+    - sleep
+    - infinity
     profiles:
-      - tooling
-
-  # ============================================================================
-  # SIMULATION SERVICES
-  # ============================================================================
-
-  # Project Simulation Service - AI-powered project simulation engine
+    - tooling
+    restart: unless-stopped
   project-simulation:
     build:
       context: .
       dockerfile: services/project-simulation/Dockerfile
     volumes:
-      - ./services/project-simulation/sample_config.yaml:/app/sample_config.yaml:ro
-      - simulation_data:/app/data
-      - simulation_logs:/app/logs
+    - ./services/project-simulation/sample_config.yaml:/app/sample_config.yaml:ro
+    - simulation_data:/app/data
+    - simulation_logs:/app/logs
     environment:
-      - PYTHONPATH=/app
-      - SERVICE_NAME=project-simulation
-      - REDIS_HOST=redis
-      - ENVIRONMENT=development
-      - SERVICE_PORT=5075
-      # LLM Integration
-      - LLM_GATEWAY_URL=http://llm-gateway:5055
-      - MOCK_DATA_GENERATOR_URL=http://mock-data-generator:5065
-      - DOC_STORE_URL=http://doc_store:5087
-      - ANALYSIS_SERVICE_URL=http://analysis-service:5080
-      # Orchestration
-      - ORCHESTRATOR_URL=http://orchestrator:5099
-      - NOTIFICATION_SERVICE_URL=http://notification-service:5130
-      # Logging
-      - LOG_COLLECTOR_URL=http://log-collector:5080
-      # DDD Architecture
-      - DDD_ARCHITECTURE=true
-      - DDD_CONFIG_FILE=config/ddd_config.yaml
+    - PYTHONPATH=/app
+    - SERVICE_NAME=project-simulation
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5075
+    - LLM_GATEWAY_URL=http://llm-gateway:5055
+    - MOCK_DATA_GENERATOR_URL=http://mock-data-generator:5065
+    - DOC_STORE_URL=http://doc_store:5087
+    - ANALYSIS_SERVICE_URL=http://analysis-service:5080
+    - ORCHESTRATOR_URL=http://orchestrator:5099
+    - NOTIFICATION_SERVICE_URL=http://notification-service:5130
+    - LOG_COLLECTOR_URL=http://log-collector:5080
+    - DDD_ARCHITECTURE=true
+    - DDD_CONFIG_FILE=config/ddd_config.yaml
     ports:
-      - "5075:5075"
+    - 5075:5075
     depends_on:
       redis:
         condition: service_healthy
@@ -580,48 +591,50 @@ services:
       notification-service:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5075/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5075/health
       interval: 30s
       timeout: 15s
       retries: 3
       start_period: 60s
     profiles:
-      - simulation
-      - development
-      - production
+    - simulation
+    - development
+    - production
+    - ai_services
     restart: unless-stopped
-
-  # Simulation Dashboard - Interactive web dashboard for project simulations
   simulation-dashboard:
     build:
       context: .
       dockerfile: services/simulation-dashboard/Dockerfile
     volumes:
-      - ./services/simulation-dashboard/config.example.env:/app/config.example.env:ro
-      - dashboard_cache:/app/cache
-      - dashboard_logs:/app/logs
+    - ./services/simulation-dashboard/config.example.env:/app/config.example.env:ro
+    - dashboard_cache:/app/cache
+    - dashboard_logs:/app/logs
     environment:
-      - PYTHONPATH=/app
-      - SERVICE_NAME=simulation-dashboard
-      - DASHBOARD_ENVIRONMENT=development
-      - DASHBOARD_DEBUG=false
-      - DASHBOARD_PORT=8501
-      - DASHBOARD_HOST=0.0.0.0
-      # Simulation Service Connection
-      - DASHBOARD_SIMULATION_SERVICE_HOST=project-simulation
-      - DASHBOARD_SIMULATION_SERVICE_PORT=5075
-      # Optional Ecosystem Services
-      - DASHBOARD_ANALYSIS_SERVICE_URL=http://analysis-service:5080
-      - DASHBOARD_HEALTH_SERVICE_URL=http://notification-service:5130
-      # WebSocket Configuration
-      - DASHBOARD_WEBSOCKET_ENABLED=true
-      - DASHBOARD_WEBSOCKET_RECONNECT_ATTEMPTS=5
-      - DASHBOARD_WEBSOCKET_HEARTBEAT_INTERVAL=30.0
-      # Performance Configuration
-      - DASHBOARD_PERFORMANCE_ENABLE_COMPRESSION=true
-      - DASHBOARD_PERFORMANCE_MAX_CONCURRENT_REQUESTS=10
+    - PYTHONPATH=/app
+    - SERVICE_NAME=simulation-dashboard
+    - DASHBOARD_ENVIRONMENT=development
+    - DASHBOARD_DEBUG=false
+    - DASHBOARD_PORT=8501
+    - DASHBOARD_HOST=0.0.0.0
+    - DASHBOARD_SIMULATION_SERVICE_HOST=project-simulation
+    - DASHBOARD_SIMULATION_SERVICE_PORT=5075
+    - DASHBOARD_ANALYSIS_SERVICE_URL=http://analysis-service:5080
+    - DASHBOARD_HEALTH_SERVICE_URL=http://notification-service:5130
+    - DASHBOARD_WEBSOCKET_ENABLED=true
+    - DASHBOARD_WEBSOCKET_RECONNECT_ATTEMPTS=5
+    - DASHBOARD_WEBSOCKET_HEARTBEAT_INTERVAL=30.0
+    - DASHBOARD_PERFORMANCE_ENABLE_COMPRESSION=true
+    - DASHBOARD_PERFORMANCE_MAX_CONCURRENT_REQUESTS=10
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=8501
     ports:
-      - "8501:8501"
+    - 8501:8501
     depends_on:
       project-simulation:
         condition: service_healthy
@@ -630,132 +643,171 @@ services:
       notification-service:
         condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8501/health
       interval: 45s
       timeout: 20s
       retries: 3
       start_period: 90s
     profiles:
-      - simulation
-      - development
-      - production
+    - simulation
+    - development
+    - production
+    - ai_services
     restart: unless-stopped
 
-  # ============================================================================
-  # ANALYSIS SERVICES
-  # ============================================================================
+  data-services-dashboard:
+    build:
+      context: .
+      dockerfile: services/data-services-dashboard/Dockerfile
+    volumes:
+    - data_dashboard_cache:/app/cache
+    - data_dashboard_logs:/app/logs
+    environment:
+    - PYTHONPATH=/app
+    - SERVICE_NAME=data-services-dashboard
+    - DASHBOARD_ENVIRONMENT=development
+    - DASHBOARD_DEBUG=false
+    - DASHBOARD_PORT=8502
+    - DASHBOARD_HOST=0.0.0.0
+    - MEMORY_AGENT_URL=http://memory-agent:5040
+    - PROMPT_STORE_URL=http://prompt_store:5110
+    - DOCUMENT_STORE_URL=http://doc_store:5010
+    - REDIS_HOST=redis
+    - ENVIRONMENT=development
+    - SERVICE_PORT=8502
+    ports:
+    - 8502:8502
+    depends_on:
+      memory-agent:
+        condition: service_healthy
+      prompt_store:
+        condition: service_healthy
+      doc_store:
+        condition: service_healthy
+    healthcheck:
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:8502/
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    profiles:
+    - development
+    - ai_services
+    restart: unless-stopped
 
-  # Code Analyzer - Code analysis and security scanning
   code-analyzer:
     build:
       context: .
       dockerfile: services/code-analyzer/Dockerfile
     environment:
-      SERVICE_PORT: '5025'
-      PYTHONPATH: '/app'
-      ENVIRONMENT: 'development'
+    - SERVICE_PORT=5025
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - REDIS_HOST=redis
     ports:
-      - "5025:5025"
+    - 5025:5025
     depends_on:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5025/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5025/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - production
-
-  # Secure Analyzer - Content security and policy enforcement
+    - production
+    restart: unless-stopped
   secure-analyzer:
     build:
       context: .
       dockerfile: services/secure-analyzer/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
-      - SERVICE_PORT=5100
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5100
+    - REDIS_HOST=redis
     ports:
-      - "5100:5070"
+    - 5100:5070
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5100/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5070/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - production
-
-  # Log Collector - Centralized logging service
+    - production
+    restart: unless-stopped
   log-collector:
     build:
       context: .
       dockerfile: services/log-collector/Dockerfile
     environment:
-      - PYTHONPATH=/app
-      - ENVIRONMENT=development
-      - SERVICE_PORT=5040
+    - PYTHONPATH=/app
+    - ENVIRONMENT=development
+    - SERVICE_PORT=5040
+    - REDIS_HOST=redis
     ports:
-      - "5040:5080"
+    - 5040:5080
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5040/health"]
+      test:
+      - CMD
+      - curl
+      - -f
+      - http://localhost:5080/health
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
     profiles:
-      - production
-
-# ============================================================================
-# VOLUMES
-# ============================================================================
-
+    - production
+    restart: unless-stopped
 volumes:
-  # Redis persistence volume
   redis_data:
     driver: local
-
-  # PostgreSQL data volume (uncomment if using PostgreSQL)
-  # postgres_data:
-  #   driver: local
-
-  # Document store SQLite database volume
   doc_store_data:
     driver: local
-
-  # Prompt store data volume
+  doc_store_logs:
+    driver: local
   prompt_store_data:
     driver: local
-
-  # LLM Gateway cache volume
   llm_gateway_cache:
     driver: local
-
-  # Ollama models and data volume
   ollama_data:
     driver: local
-
-  # Simulation service data volumes
   simulation_data:
     driver: local
-
   simulation_logs:
     driver: local
-
-  # Dashboard service data volumes
   dashboard_cache:
     driver: local
-
   dashboard_logs:
     driver: local
-
-# ============================================================================
-# NETWORKS
-# ============================================================================
-
+  ollama_logs:
+    driver: local
+  prompt_store_logs:
+    driver: local
+  data_dashboard_cache:
+    driver: local
+  data_dashboard_logs:
+    driver: local
 networks:
-  # Main development network
   default:
     name: doc-ecosystem-dev
     driver: bridge
-
-

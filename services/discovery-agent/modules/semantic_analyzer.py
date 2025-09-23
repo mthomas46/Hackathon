@@ -1,11 +1,13 @@
-"""Semantic Analysis Module for Discovery Agent service.
+"""
+Semantic Analysis Module for Discovery Agent service.
 
-This module provides Phase 4 semantic analysis capabilities using LLM
-to intelligently categorize and analyze discovered tools.
+This module provides Phase 4 semantic analysis capabilities using LLM to
+intelligently categorize and analyze discovered tools.
 """
 
 import re
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List
+
 try:
     from services.shared.clients import ServiceClients
 except ImportError:
@@ -14,7 +16,7 @@ except ImportError:
 
 
 class SemanticToolAnalyzer:
-    """Semantic analyzer for tool categorization and analysis using LLM"""
+    """Semantic analyzer for tool categorization and analysis using LLM."""
 
     def __init__(self, interpreter_url: str = "http://localhost:5120"):
         self.interpreter_url = interpreter_url
@@ -25,47 +27,47 @@ class SemanticToolAnalyzer:
             "content_generation": {
                 "keywords": ["generate", "create", "produce", "build", "construct"],
                 "capabilities": ["text_generation", "content_creation", "synthesis"],
-                "use_cases": ["writing", "creation", "synthesis"]
+                "use_cases": ["writing", "creation", "synthesis"],
             },
             "content_analysis": {
                 "keywords": ["analyze", "review", "evaluate", "assess", "examine"],
                 "capabilities": ["analysis", "evaluation", "assessment"],
-                "use_cases": ["quality_check", "review", "validation"]
+                "use_cases": ["quality_check", "review", "validation"],
             },
             "data_processing": {
                 "keywords": ["process", "transform", "convert", "format", "clean"],
                 "capabilities": ["data_transformation", "formatting", "processing"],
-                "use_cases": ["data_prep", "transformation", "cleaning"]
+                "use_cases": ["data_prep", "transformation", "cleaning"],
             },
             "storage_management": {
                 "keywords": ["store", "save", "retrieve", "persist", "archive"],
                 "capabilities": ["data_storage", "retrieval", "persistence"],
-                "use_cases": ["data_management", "archival", "backup"]
+                "use_cases": ["data_management", "archival", "backup"],
             },
             "communication": {
                 "keywords": ["send", "notify", "alert", "message", "contact"],
                 "capabilities": ["messaging", "notification", "communication"],
-                "use_cases": ["alerting", "notification", "messaging"]
+                "use_cases": ["alerting", "notification", "messaging"],
             },
             "search_retrieval": {
                 "keywords": ["search", "find", "query", "lookup", "discover"],
                 "capabilities": ["search", "retrieval", "querying"],
-                "use_cases": ["information_retrieval", "search", "lookup"]
+                "use_cases": ["information_retrieval", "search", "lookup"],
             },
             "ai_interaction": {
                 "keywords": ["prompt", "llm", "ai", "model", "inference"],
                 "capabilities": ["ai_interaction", "prompting", "model_usage"],
-                "use_cases": ["ai_tasks", "prompt_engineering", "model_interaction"]
+                "use_cases": ["ai_tasks", "prompt_engineering", "model_interaction"],
             },
             "system_operations": {
                 "keywords": ["execute", "run", "command", "system", "infrastructure"],
                 "capabilities": ["execution", "system_interaction", "infrastructure"],
-                "use_cases": ["automation", "system_tasks", "infrastructure"]
-            }
+                "use_cases": ["automation", "system_tasks", "infrastructure"],
+            },
         }
 
     async def analyze_tool_semantics(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform semantic analysis of a tool using LLM understanding"""
+        """Perform semantic analysis of a tool using LLM understanding."""
 
         semantic_analysis = {
             "tool_name": tool["name"],
@@ -77,7 +79,7 @@ class SemanticToolAnalyzer:
             "capabilities_identified": [],
             "use_cases_identified": [],
             "relationships": {},
-            "llm_analysis": None
+            "llm_analysis": None,
         }
 
         # Use LLM for semantic analysis
@@ -101,7 +103,7 @@ class SemanticToolAnalyzer:
         return semantic_analysis
 
     async def _perform_llm_semantic_analysis(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Use LLM to perform semantic analysis of the tool"""
+        """Use LLM to perform semantic analysis of the tool."""
 
         analysis_prompt = f"""
         Analyze the following API tool and provide semantic understanding:
@@ -130,37 +132,24 @@ class SemanticToolAnalyzer:
             async with self.service_client.session() as session:
                 url = f"{self.interpreter_url}/interpret"
 
-                payload = {
-                    "query": analysis_prompt,
-                    "context": "tool_semantic_analysis",
-                    "response_format": "json"
-                }
+                payload = {"query": analysis_prompt, "context": "tool_semantic_analysis", "response_format": "json"}
 
                 async with session.post(url, json=payload, timeout=20) as response:
                     if response.status == 200:
                         result = await response.json()
-                        return {
-                            "success": True,
-                            "analysis": result.get("interpretation", "")
-                        }
+                        return {"success": True, "analysis": result.get("interpretation", "")}
                     else:
-                        return {
-                            "success": False,
-                            "error": f"Interpreter returned {response.status}"
-                        }
+                        return {"success": False, "error": f"Interpreter returned {response.status}"}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
     def _parse_llm_semantic_response(self, llm_response: str) -> Dict[str, Any]:
-        """Parse LLM semantic analysis response"""
+        """Parse LLM semantic analysis response."""
 
         try:
             # Try to extract JSON from response
-            json_match = re.search(r'\{.*\}', llm_response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", llm_response, re.DOTALL)
             if json_match:
                 parsed = json.loads(json_match.group())
                 return {
@@ -170,7 +159,7 @@ class SemanticToolAnalyzer:
                     "use_cases_identified": parsed.get("use_cases", []),
                     "semantic_description": parsed.get("description", ""),
                     "relationships": parsed.get("relationships", {}),
-                    "complexity_score": parsed.get("complexity_score", 5)
+                    "complexity_score": parsed.get("complexity_score", 5),
                 }
         except:
             pass
@@ -183,11 +172,11 @@ class SemanticToolAnalyzer:
             "use_cases_identified": ["general_use"],
             "semantic_description": "Tool purpose could not be determined semantically",
             "relationships": {},
-            "complexity_score": 5
+            "complexity_score": 5,
         }
 
     def _rule_based_semantic_analysis(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Rule-based semantic analysis as fallback"""
+        """Rule-based semantic analysis as fallback."""
 
         tool_name = tool.get("name", "").lower()
         description = tool.get("description", "").lower()
@@ -215,12 +204,14 @@ class SemanticToolAnalyzer:
                 score += 3
 
             if score >= 2:
-                semantic_matches.append({
-                    "category": sem_category,
-                    "score": score,
-                    "capabilities": category_data["capabilities"],
-                    "use_cases": category_data["use_cases"]
-                })
+                semantic_matches.append(
+                    {
+                        "category": sem_category,
+                        "score": score,
+                        "capabilities": category_data["capabilities"],
+                        "use_cases": category_data["use_cases"],
+                    }
+                )
 
         # Sort by score and select top matches
         semantic_matches.sort(key=lambda x: x["score"], reverse=True)
@@ -243,11 +234,11 @@ class SemanticToolAnalyzer:
             "use_cases_identified": use_cases,
             "semantic_description": f"Tool appears to be related to {primary_category.replace('_', ' ')} based on keyword analysis",
             "relationships": {},
-            "complexity_score": min(len(tool.get("parameters", {}).get("properties", {})), 10)
+            "complexity_score": min(len(tool.get("parameters", {}).get("properties", {})), 10),
         }
 
     def _calculate_semantic_confidence(self, semantic_analysis: Dict[str, Any]) -> float:
-        """Calculate confidence score for semantic analysis"""
+        """Calculate confidence score for semantic analysis."""
 
         confidence = 0.0
 
@@ -275,14 +266,14 @@ class SemanticToolAnalyzer:
         return min(confidence, 1.0)
 
     async def analyze_tool_relationships(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Analyze relationships between tools using semantic understanding"""
+        """Analyze relationships between tools using semantic understanding."""
 
         relationship_analysis = {
             "tool_count": len(tools),
             "relationships_found": 0,
             "relationship_types": {},
             "complementary_pairs": [],
-            "workflow_suggestions": []
+            "workflow_suggestions": [],
         }
 
         print(f"🔗 Analyzing relationships between {len(tools)} tools...")
@@ -303,13 +294,15 @@ class SemanticToolAnalyzer:
                         relationship_analysis["relationship_types"][rel_type] = 0
                     relationship_analysis["relationship_types"][rel_type] += 1
 
-                    relationship_analysis["complementary_pairs"].append({
-                        "tool1": tool1["name"],
-                        "tool2": tool2["name"],
-                        "relationship": rel_type,
-                        "strength": relationship["strength"],
-                        "description": relationship["description"]
-                    })
+                    relationship_analysis["complementary_pairs"].append(
+                        {
+                            "tool1": tool1["name"],
+                            "tool2": tool2["name"],
+                            "relationship": rel_type,
+                            "strength": relationship["strength"],
+                            "description": relationship["description"],
+                        }
+                    )
 
         # Generate workflow suggestions
         relationship_analysis["workflow_suggestions"] = self._generate_workflow_suggestions(
@@ -319,7 +312,7 @@ class SemanticToolAnalyzer:
         return relationship_analysis
 
     async def _analyze_tool_pair_relationship(self, tool1: Dict[str, Any], tool2: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze relationship between two tools"""
+        """Analyze relationship between two tools."""
 
         # Get semantic information
         sem1 = tool1.get("semantic_analysis", {})
@@ -341,7 +334,7 @@ class SemanticToolAnalyzer:
             ({"search_retrieval"}, {"content_analysis"}, "retrieval_to_analysis"),
             ({"data_processing"}, {"storage_management"}, "processing_to_storage"),
             ({"ai_interaction"}, {"content_analysis"}, "ai_to_analysis"),
-            ({"content_analysis"}, {"communication"}, "analysis_to_notification")
+            ({"content_analysis"}, {"communication"}, "analysis_to_notification"),
         ]
 
         for input_cats, output_cats, rel_type in sequential_patterns:
@@ -350,14 +343,14 @@ class SemanticToolAnalyzer:
                     "has_relationship": True,
                     "relationship_type": rel_type,
                     "strength": 0.8,
-                    "description": f"{tool1['name']} output can be analyzed/processed by {tool2['name']}"
+                    "description": f"{tool1['name']} output can be analyzed/processed by {tool2['name']}",
                 }
             elif (categories1 & output_cats) and (categories2 & input_cats):
                 return {
                     "has_relationship": True,
                     "relationship_type": rel_type,
                     "strength": 0.8,
-                    "description": f"{tool2['name']} output can be analyzed/processed by {tool1['name']}"
+                    "description": f"{tool2['name']} output can be analyzed/processed by {tool1['name']}",
                 }
 
         # Check for complementary capabilities
@@ -366,7 +359,7 @@ class SemanticToolAnalyzer:
                 "has_relationship": True,
                 "relationship_type": "complementary_capabilities",
                 "strength": 0.6,
-                "description": f"Both tools share capabilities: {', '.join(capabilities1 & capabilities2)}"
+                "description": f"Both tools share capabilities: {', '.join(capabilities1 & capabilities2)}",
             }
 
         # Check for same use case (potential alternatives)
@@ -375,18 +368,18 @@ class SemanticToolAnalyzer:
                 "has_relationship": True,
                 "relationship_type": "alternative_implementations",
                 "strength": 0.4,
-                "description": f"Both tools serve similar use cases: {', '.join(use_cases1 & use_cases2)}"
+                "description": f"Both tools serve similar use cases: {', '.join(use_cases1 & use_cases2)}",
             }
 
         return {
             "has_relationship": False,
             "relationship_type": "none",
             "strength": 0.0,
-            "description": "No significant relationship detected"
+            "description": "No significant relationship detected",
         }
 
     def _generate_workflow_suggestions(self, complementary_pairs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Generate workflow suggestions based on tool relationships"""
+        """Generate workflow suggestions based on tool relationships."""
 
         suggestions = []
 
@@ -406,14 +399,14 @@ class SemanticToolAnalyzer:
                     "description": f"Multi-step workflow using {rel_type.replace('_', ' ')}",
                     "tools_involved": list(set([p["tool1"] for p in pairs] + [p["tool2"] for p in pairs])),
                     "estimated_steps": len(pairs) + 1,
-                    "complexity": "medium" if len(pairs) <= 3 else "high"
+                    "complexity": "medium" if len(pairs) <= 3 else "high",
                 }
                 suggestions.append(suggestion)
 
         return suggestions
 
     async def enhance_tool_categorization(self, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Enhance tool categorization using semantic analysis"""
+        """Enhance tool categorization using semantic analysis."""
 
         enhanced_tools = []
 

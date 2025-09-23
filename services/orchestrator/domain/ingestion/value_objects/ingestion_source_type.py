@@ -1,4 +1,4 @@
-"""Ingestion Source Type Value Object"""
+"""Ingestion Source Type Value Object."""
 
 from enum import Enum
 
@@ -6,16 +6,16 @@ from enum import Enum
 class IngestionSourceType(Enum):
     """Enumeration of supported ingestion source types."""
 
-    GITHUB = "github"              # GitHub repositories and issues
-    GITLAB = "gitlab"             # GitLab repositories and issues
-    JIRA = "jira"                 # JIRA issue tracking
-    CONFLUENCE = "confluence"     # Confluence documentation
-    FILESYSTEM = "filesystem"     # Local file system
-    WEB = "web"                   # Web URLs and content
-    DATABASE = "database"         # Database tables and queries
-    API = "api"                   # REST API endpoints
-    EMAIL = "email"               # Email messages and attachments
-    SLACK = "slack"               # Slack channels and messages
+    GITHUB = "github"  # GitHub repositories and issues
+    GITLAB = "gitlab"  # GitLab repositories and issues
+    JIRA = "jira"  # JIRA issue tracking
+    CONFLUENCE = "confluence"  # Confluence documentation
+    FILESYSTEM = "filesystem"  # Local file system
+    WEB = "web"  # Web URLs and content
+    DATABASE = "database"  # Database tables and queries
+    API = "api"  # REST API endpoints
+    EMAIL = "email"  # Email messages and attachments
+    SLACK = "slack"  # Slack channels and messages
 
     @property
     def requires_authentication(self) -> bool:
@@ -27,7 +27,7 @@ class IngestionSourceType(Enum):
             IngestionSourceType.CONFLUENCE,
             IngestionSourceType.DATABASE,
             IngestionSourceType.API,
-            IngestionSourceType.SLACK
+            IngestionSourceType.SLACK,
         }
         return self in authenticated_sources
 
@@ -40,7 +40,7 @@ class IngestionSourceType(Enum):
             IngestionSourceType.JIRA,
             IngestionSourceType.CONFLUENCE,
             IngestionSourceType.DATABASE,
-            IngestionSourceType.SLACK
+            IngestionSourceType.SLACK,
         }
         return self in incremental_sources
 
@@ -62,7 +62,7 @@ class IngestionSourceType(Enum):
             IngestionSourceType.DATABASE: ["tables", "queries", "reports"],
             IngestionSourceType.API: ["json", "xml", "data_feeds"],
             IngestionSourceType.EMAIL: ["messages", "attachments", "threads"],
-            IngestionSourceType.SLACK: ["messages", "files", "threads"]
+            IngestionSourceType.SLACK: ["messages", "files", "threads"],
         }
         return content_types.get(self, [])
 

@@ -1,11 +1,14 @@
-"""Base handler for API endpoint operations.
+"""
+Base handler for API endpoint operations.
 
 Provides common HTTP response patterns and error handling.
 """
+
 import asyncio
 from abc import ABC
-from typing import Dict, Any, Optional
-from services.shared.core.responses.responses import create_success_response, create_error_response
+from typing import Any, Dict
+
+from services.shared.core.responses.responses import create_error_response, create_success_response
 from services.shared.utilities.error_handling import ServiceException
 
 
@@ -24,10 +27,7 @@ class BaseHandler(ABC):
             if asyncio.iscoroutine(result):
                 result = await result
 
-            return create_success_response(
-                f"Operation completed successfully",
-                result
-            )
+            return create_success_response(f"Operation completed successfully", result)
 
         except ServiceException as e:
             return create_error_response(str(e), e.error_code)

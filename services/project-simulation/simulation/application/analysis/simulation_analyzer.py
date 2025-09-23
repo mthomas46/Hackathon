@@ -1,16 +1,17 @@
 """
 Simulation Analyzer for processing and analyzing simulation data.
-Following DDD principles with clean separation of concerns.
-Integrates with ecosystem services for comprehensive analysis.
+
+Following DDD principles with clean separation of concerns. Integrates
+with ecosystem services for comprehensive analysis.
 """
 
-import time
-import httpx
-import os
 import json
-from typing import List, Dict, Any, Optional
+import os
+import time
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+import httpx
 from simulation.domain.analysis.analysis_result import AnalysisResult, AnalysisType
 
 
@@ -28,15 +29,15 @@ class SimulationAnalyzer:
         # Multiple indicators for Docker environment
         docker_indicators = [
             # Check for Docker-specific files
-            os.path.exists('/.dockerenv'),
+            os.path.exists("/.dockerenv"),
             # Check for container-specific cgroup
-            os.path.exists('/proc/1/cgroup') and 'docker' in open('/proc/1/cgroup').read(),
+            os.path.exists("/proc/1/cgroup") and "docker" in open("/proc/1/cgroup").read(),
             # Check environment variables
-            (os.getenv('DOCKER_CONTAINER') or '').lower() in ('true', '1', 'yes'),
+            (os.getenv("DOCKER_CONTAINER") or "").lower() in ("true", "1", "yes"),
             # Check for Docker host
-            os.getenv('DOCKER_HOST') is not None,
+            os.getenv("DOCKER_HOST") is not None,
             # Check hostname pattern (common in Docker)
-            (os.getenv('HOSTNAME') or '').startswith('docker-')
+            (os.getenv("HOSTNAME") or "").startswith("docker-"),
         ]
 
         return any(docker_indicators)
@@ -46,22 +47,16 @@ class SimulationAnalyzer:
         # Base service configurations for different environments
         # Ports based on docker-compose.dev.yml configuration
         service_configs = {
-            "summarizer_hub": {
-                "docker": "http://summarizer-hub:5160",
-                "local": "http://localhost:5160"
-            },
+            "summarizer_hub": {"docker": "http://summarizer-hub:5160", "local": "http://localhost:5160"},
             "doc_store": {
                 "docker": "http://doc-store:5010",  # Internal Docker port
-                "local": "http://localhost:5087"    # External Docker port for local access
+                "local": "http://localhost:5087",  # External Docker port for local access
             },
             "analysis_service": {
                 "docker": "http://analysis-service:5020",  # Internal Docker port
-                "local": "http://localhost:5080"           # External Docker port for local access
+                "local": "http://localhost:5080",  # External Docker port for local access
             },
-            "code_analyzer": {
-                "docker": "http://code-analyzer:5025",
-                "local": "http://localhost:5025"
-            }
+            "code_analyzer": {"docker": "http://code-analyzer:5025", "local": "http://localhost:5025"},
         }
 
         # Determine environment
@@ -87,24 +82,25 @@ class SimulationAnalyzer:
             "is_docker_environment": self._is_docker_environment,
             "environment_type": "docker" if self._is_docker_environment else "local",
             "service_urls": self.service_urls,
-            "hostname": os.getenv('HOSTNAME', 'unknown'),
+            "hostname": os.getenv("HOSTNAME", "unknown"),
             "docker_indicators": {
-                "dockerenv_file": os.path.exists('/.dockerenv'),
-                "docker_cgroup": os.path.exists('/proc/1/cgroup') and 'docker' in open('/proc/1/cgroup').read() if os.path.exists('/proc/1/cgroup') else False,
-                "docker_env_var": os.getenv('DOCKER_CONTAINER', '').lower() in ('true', '1', 'yes'),
-                "docker_host": os.getenv('DOCKER_HOST') is not None,
-                "docker_hostname": os.getenv('HOSTNAME', '').startswith('docker-') if os.getenv('HOSTNAME') else False
-            }
+                "dockerenv_file": os.path.exists("/.dockerenv"),
+                "docker_cgroup": (
+                    os.path.exists("/proc/1/cgroup") and "docker" in open("/proc/1/cgroup").read()
+                    if os.path.exists("/proc/1/cgroup")
+                    else False
+                ),
+                "docker_env_var": os.getenv("DOCKER_CONTAINER", "").lower() in ("true", "1", "yes"),
+                "docker_host": os.getenv("DOCKER_HOST") is not None,
+                "docker_hostname": os.getenv("HOSTNAME", "").startswith("docker-") if os.getenv("HOSTNAME") else False,
+            },
         }
 
     async def analyze_documents(self, simulation_id: str, documents: List[Dict[str, Any]]) -> AnalysisResult:
         """Analyze documents in the simulation using ecosystem services."""
         start_time = time.time()
 
-        result = AnalysisResult(
-            simulation_id=simulation_id,
-            analysis_type=AnalysisType.DOCUMENT_ANALYSIS
-        )
+        result = AnalysisResult(simulation_id=simulation_id, analysis_type=AnalysisType.DOCUMENT_ANALYSIS)
 
         result.add_metric("document_count", len(documents))
 
@@ -112,7 +108,9 @@ class SimulationAnalyzer:
             result.add_finding("No documents found in simulation")
         else:
             # Get recommendations report from summarizer-hub
-            recommendations_report = await self._get_recommendations_report_from_summarizer_hub(simulation_id, documents)
+            recommendations_report = await self._get_recommendations_report_from_summarizer_hub(
+                simulation_id, documents
+            )
             if recommendations_report:
                 result.add_metric("recommendations_report_id", recommendations_report["report_id"])
                 result.add_metric("recommendations_summary", recommendations_report["summary"])
@@ -149,7 +147,9 @@ class SimulationAnalyzer:
                 quality_scores.append(quality_score)
 
             result.add_metric("document_types", doc_types)
-            result.add_metric("average_quality_score", sum(quality_scores) / len(quality_scores) if quality_scores else 0)
+            result.add_metric(
+                "average_quality_score", sum(quality_scores) / len(quality_scores) if quality_scores else 0
+            )
 
             # Enhanced quality checks using ecosystem insights
             if len(doc_types) < 3:
@@ -168,10 +168,7 @@ class SimulationAnalyzer:
         """Analyze project timeline."""
         start_time = time.time()
 
-        result = AnalysisResult(
-            simulation_id=simulation_id,
-            analysis_type=AnalysisType.TIMELINE_ANALYSIS
-        )
+        result = AnalysisResult(simulation_id=simulation_id, analysis_type=AnalysisType.TIMELINE_ANALYSIS)
 
         if len(timeline) == 0:
             result.add_finding("No timeline defined")
@@ -206,10 +203,7 @@ class SimulationAnalyzer:
         """Analyze team dynamics and composition."""
         start_time = time.time()
 
-        result = AnalysisResult(
-            simulation_id=simulation_id,
-            analysis_type=AnalysisType.TEAM_DYNAMICS
-        )
+        result = AnalysisResult(simulation_id=simulation_id, analysis_type=AnalysisType.TEAM_DYNAMICS)
 
         result.add_metric("team_size", len(team_members))
 
@@ -255,10 +249,7 @@ class SimulationAnalyzer:
         """Perform risk assessment on simulation."""
         start_time = time.time()
 
-        result = AnalysisResult(
-            simulation_id=simulation_id,
-            analysis_type=AnalysisType.RISK_ASSESSMENT
-        )
+        result = AnalysisResult(simulation_id=simulation_id, analysis_type=AnalysisType.RISK_ASSESSMENT)
 
         # Analyze various risk factors
         risk_factors = []
@@ -318,10 +309,7 @@ class SimulationAnalyzer:
         """Analyze cost-benefit aspects of simulation."""
         start_time = time.time()
 
-        result = AnalysisResult(
-            simulation_id=simulation_id,
-            analysis_type=AnalysisType.COST_BENEFIT_ANALYSIS
-        )
+        result = AnalysisResult(simulation_id=simulation_id, analysis_type=AnalysisType.COST_BENEFIT_ANALYSIS)
 
         # Extract cost data
         budget = cost_data.get("budget", 0)
@@ -335,7 +323,9 @@ class SimulationAnalyzer:
         total_estimated_cost = total_team_cost + total_infrastructure_cost
 
         result.add_metric("total_estimated_cost", total_estimated_cost)
-        result.add_metric("team_cost_percentage", (total_team_cost / total_estimated_cost) * 100 if total_estimated_cost > 0 else 0)
+        result.add_metric(
+            "team_cost_percentage", (total_team_cost / total_estimated_cost) * 100 if total_estimated_cost > 0 else 0
+        )
 
         # Budget analysis
         if budget > 0:
@@ -359,7 +349,9 @@ class SimulationAnalyzer:
 
         return result
 
-    async def perform_comprehensive_analysis(self, simulation_id: str, simulation_data: Dict[str, Any]) -> List[AnalysisResult]:
+    async def perform_comprehensive_analysis(
+        self, simulation_id: str, simulation_data: Dict[str, Any]
+    ) -> List[AnalysisResult]:
         """Perform comprehensive analysis of all simulation aspects."""
         results = []
 
@@ -397,7 +389,9 @@ class SimulationAnalyzer:
     # RECOMMENDATIONS REPORT MANAGEMENT
     # ============================================================================
 
-    async def _get_recommendations_report_from_summarizer_hub(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    async def _get_recommendations_report_from_summarizer_hub(
+        self, simulation_id: str, documents: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """Get recommendations report from summarizer-hub and store it."""
         try:
             # Get recommendations from summarizer-hub
@@ -418,18 +412,15 @@ class SimulationAnalyzer:
                     "priority_breakdown": {
                         "high": len([r for r in recommendations if r.get("priority") == "high"]),
                         "medium": len([r for r in recommendations if r.get("priority") == "medium"]),
-                        "low": len([r for r in recommendations if r.get("priority") == "low"])
-                    }
-                }
+                        "low": len([r for r in recommendations if r.get("priority") == "low"]),
+                    },
+                },
             }
 
             # Store report in doc-store
             report_id = await self._store_recommendations_report(report_data)
 
-            return {
-                "report_id": report_id,
-                "summary": report_data["summary"]
-            }
+            return {"report_id": report_id, "summary": report_data["summary"]}
 
         except Exception as e:
             print(f"Error getting recommendations report: {e}")
@@ -438,15 +429,15 @@ class SimulationAnalyzer:
     async def _get_recommendations_from_summarizer_hub(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Get recommendations from summarizer-hub service."""
         try:
-            summarizer_url = self.service_urls.get('summarizer_hub', 'http://localhost:5160')
+            summarizer_url = self.service_urls.get("summarizer_hub", "http://localhost:5160")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{summarizer_url}/api/v1/recommendations",
                     json={
                         "documents": documents,
-                        "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"]
-                    }
+                        "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"],
+                    },
                 )
 
                 if response.status_code == 200:
@@ -464,7 +455,9 @@ class SimulationAnalyzer:
             print(f"Error communicating with Summarizer Hub: {e}")
             return []
 
-    async def _get_analysis_report_from_analysis_service(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    async def _get_analysis_report_from_analysis_service(
+        self, simulation_id: str, documents: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """Get comprehensive analysis report from analysis-service."""
         try:
             # Request analysis report generation from analysis-service
@@ -476,19 +469,18 @@ class SimulationAnalyzer:
             # Store the received report in doc-store
             report_id = await self._store_received_analysis_report(analysis_report, simulation_id)
 
-            return {
-                "report_id": report_id,
-                "summary": analysis_report.get("summary", {})
-            }
+            return {"report_id": report_id, "summary": analysis_report.get("summary", {})}
 
         except Exception as e:
             print(f"Error getting analysis report from analysis-service: {e}")
             return None
 
-    async def _request_analysis_report_from_service(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    async def _request_analysis_report_from_service(
+        self, simulation_id: str, documents: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """Request a complete analysis report from analysis-service."""
         try:
-            analysis_url = self.service_urls.get('analysis_service', 'http://localhost:5020')
+            analysis_url = self.service_urls.get("analysis_service", "http://localhost:5020")
 
             async with httpx.AsyncClient(timeout=60.0) as client:  # Longer timeout for report generation
                 response = await client.post(
@@ -498,8 +490,8 @@ class SimulationAnalyzer:
                         "documents": documents,
                         "report_type": "comprehensive_simulation_analysis",
                         "include_markdown": True,
-                        "include_json": True
-                    }
+                        "include_json": True,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -535,8 +527,8 @@ class SimulationAnalyzer:
                 "metadata": {
                     "document_count": report_data["documents_analyzed"],
                     "recommendations_count": report_data["summary"]["total_recommendations"],
-                    "report_type": "simulation_recommendations"
-                }
+                    "report_type": "simulation_recommendations",
+                },
             }
 
             # Store in doc-store
@@ -620,9 +612,7 @@ class SimulationAnalyzer:
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
-                    f"{doc_store_url}/api/documents",
-                    json=document,
-                    headers={"Content-Type": "application/json"}
+                    f"{doc_store_url}/api/documents", json=document, headers={"Content-Type": "application/json"}
                 )
 
                 if response.status_code not in [200, 201]:
@@ -645,8 +635,8 @@ class SimulationAnalyzer:
                 "metadata": {
                     "parent_report_id": report_id,
                     "format": "markdown",
-                    "report_type": "simulation_recommendations"
-                }
+                    "report_type": "simulation_recommendations",
+                },
             }
 
             await self._save_to_doc_store(md_document)
@@ -664,11 +654,11 @@ class SimulationAnalyzer:
             simulation = await simulation_repo.find_by_id(simulation_id)
             if simulation:
                 # Add report linkage to simulation metadata
-                if not hasattr(simulation, 'metadata') or simulation.metadata is None:
+                if not hasattr(simulation, "metadata") or simulation.metadata is None:
                     simulation.metadata = {}
 
-                simulation.metadata['recommendations_report_id'] = report_id
-                simulation.metadata['recommendations_report_timestamp'] = datetime.now().isoformat()
+                simulation.metadata["recommendations_report_id"] = report_id
+                simulation.metadata["recommendations_report_timestamp"] = datetime.now().isoformat()
 
                 # Save updated simulation
                 await simulation_repo.save(simulation)
@@ -684,7 +674,9 @@ class SimulationAnalyzer:
         """Store a pre-generated analysis report from analysis-service."""
         try:
             # Use the report ID from the analysis-service or generate one
-            report_id = analysis_report.get("report_id", f"analysis_report_{simulation_id}_{int(datetime.now().timestamp())}")
+            report_id = analysis_report.get(
+                "report_id", f"analysis_report_{simulation_id}_{int(datetime.now().timestamp())}"
+            )
 
             # Store JSON version in doc-store
             json_content = {
@@ -699,8 +691,8 @@ class SimulationAnalyzer:
                     "source": "analysis-service",
                     "report_type": "simulation_analysis",
                     "documents_analyzed": analysis_report.get("documents_analyzed", 0),
-                    **analysis_report.get("metadata", {})
-                }
+                    **analysis_report.get("metadata", {}),
+                },
             }
 
             # Store in doc-store
@@ -721,7 +713,6 @@ class SimulationAnalyzer:
             print(f"Error storing received analysis report: {e}")
             raise
 
-
     async def _link_analysis_report_to_simulation(self, report_id: str, simulation_id: str) -> None:
         """Link the analysis report to the simulation run data."""
         try:
@@ -732,11 +723,11 @@ class SimulationAnalyzer:
             simulation = await simulation_repo.find_by_id(simulation_id)
             if simulation:
                 # Add analysis report linkage to simulation metadata
-                if not hasattr(simulation, 'metadata') or simulation.metadata is None:
+                if not hasattr(simulation, "metadata") or simulation.metadata is None:
                     simulation.metadata = {}
 
-                simulation.metadata['analysis_report_id'] = report_id
-                simulation.metadata['analysis_report_timestamp'] = datetime.now().isoformat()
+                simulation.metadata["analysis_report_id"] = report_id
+                simulation.metadata["analysis_report_timestamp"] = datetime.now().isoformat()
 
                 # Save updated simulation
                 await simulation_repo.save(simulation)
@@ -752,18 +743,24 @@ class SimulationAnalyzer:
         """Get simulation repository instance."""
         # This would be injected via DI in a real implementation
         from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+
         return SQLiteSimulationRepository()
 
     # ============================================================================
     # TIMELINE-BASED DOCUMENT PLACEMENT
     # ============================================================================
 
-    async def place_documents_on_timeline(self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any]) -> Dict[str, Any]:
-        """Place documents on the simulation timeline based on timestamps and relevance.
+    async def place_documents_on_timeline(
+        self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Place documents on the simulation timeline based on timestamps and
+        relevance.
 
-        This method organizes documents chronologically within the simulation timeline,
-        associating them with relevant phases and milestones based on their creation/update dates
-        and content analysis.
+        This method organizes documents chronologically within the
+        simulation timeline, associating them with relevant phases and
+        milestones based on their creation/update dates and content
+        analysis.
         """
         try:
             # Parse timeline phases
@@ -776,7 +773,7 @@ class SimulationAnalyzer:
                         "start_date": phase_data.get("start_date"),
                         "end_date": phase_data.get("end_date"),
                         "planned_end_date": phase_data.get("planned_end_date"),
-                        "status": phase_data.get("status", "pending")
+                        "status": phase_data.get("status", "pending"),
                     }
                     timeline_phases.append(phase)
 
@@ -787,7 +784,9 @@ class SimulationAnalyzer:
             phase_documents = self._group_documents_by_phases(document_placements, timeline_phases)
 
             # Generate timeline placement report
-            placement_report = await self._generate_timeline_placement_report(simulation_id, phase_documents, timeline_phases)
+            placement_report = await self._generate_timeline_placement_report(
+                simulation_id, phase_documents, timeline_phases
+            )
 
             return {
                 "simulation_id": simulation_id,
@@ -795,7 +794,7 @@ class SimulationAnalyzer:
                 "total_documents": len(documents),
                 "placed_documents": len(document_placements),
                 "phase_breakdown": phase_documents,
-                "placement_report": placement_report
+                "placement_report": placement_report,
             }
 
         except Exception as e:
@@ -805,10 +804,12 @@ class SimulationAnalyzer:
                 "error": str(e),
                 "timeline_phases": 0,
                 "total_documents": len(documents),
-                "placed_documents": 0
+                "placed_documents": 0,
             }
 
-    async def _analyze_document_timestamps(self, documents: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def _analyze_document_timestamps(
+        self, documents: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Analyze document timestamps and determine timeline placement."""
 
         placements = []
@@ -846,7 +847,7 @@ class SimulationAnalyzer:
                         "timeline_phase": relevant_phase["id"],
                         "phase_name": relevant_phase["name"],
                         "placement_reason": self._determine_placement_reason(primary_date, relevant_phase),
-                        "relevance_score": self._calculate_timeline_relevance(primary_date, relevant_phase)
+                        "relevance_score": self._calculate_timeline_relevance(primary_date, relevant_phase),
                     }
                     placements.append(placement)
 
@@ -865,18 +866,12 @@ class SimulationAnalyzer:
 
         try:
             # Try ISO format first
-            return datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            return datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
         except (ValueError, AttributeError):
             pass
 
         # Try common timestamp formats
-        formats = [
-            "%Y-%m-%d %H:%M:%S",
-            "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%d",
-            "%m/%d/%Y %H:%M:%S",
-            "%m/%d/%Y"
-        ]
+        formats = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d", "%m/%d/%Y %H:%M:%S", "%m/%d/%Y"]
 
         for fmt in formats:
             try:
@@ -887,7 +882,9 @@ class SimulationAnalyzer:
         print(f"Could not parse timestamp: {timestamp_str}")
         return None
 
-    def _find_relevant_timeline_phase(self, doc_date: datetime, timeline_phases: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    def _find_relevant_timeline_phase(
+        self, doc_date: datetime, timeline_phases: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """Find the most relevant timeline phase for a document date."""
         if not timeline_phases:
             return None
@@ -897,7 +894,9 @@ class SimulationAnalyzer:
 
         for phase in timeline_phases:
             start_date = self._parse_timestamp(phase.get("start_date"))
-            end_date = self._parse_timestamp(phase.get("end_date")) or self._parse_timestamp(phase.get("planned_end_date"))
+            end_date = self._parse_timestamp(phase.get("end_date")) or self._parse_timestamp(
+                phase.get("planned_end_date")
+            )
 
             if start_date and end_date:
                 if start_date <= doc_date <= end_date:
@@ -906,7 +905,7 @@ class SimulationAnalyzer:
         # If no overlapping phases, find the closest phase
         if not relevant_phases:
             closest_phase = None
-            min_distance = float('inf')
+            min_distance = float("inf")
 
             for phase in timeline_phases:
                 start_date = self._parse_timestamp(phase.get("start_date"))
@@ -927,7 +926,8 @@ class SimulationAnalyzer:
         return relevant_phases[0] if relevant_phases else None
 
     def _determine_placement_reason(self, doc_date: datetime, phase: Dict[str, Any]) -> str:
-        """Determine why a document was placed in a particular timeline phase."""
+        """Determine why a document was placed in a particular timeline
+        phase."""
         start_date = self._parse_timestamp(phase.get("start_date"))
         end_date = self._parse_timestamp(phase.get("end_date")) or self._parse_timestamp(phase.get("planned_end_date"))
 
@@ -965,7 +965,9 @@ class SimulationAnalyzer:
 
         return 0.5  # Default relevance
 
-    def _group_documents_by_phases(self, document_placements: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    def _group_documents_by_phases(
+        self, document_placements: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]]
+    ) -> Dict[str, Dict[str, Any]]:
         """Group documents by timeline phases."""
         phase_groups = {}
 
@@ -978,8 +980,8 @@ class SimulationAnalyzer:
                 "avg_relevance": 0.0,
                 "date_range": {
                     "start": phase.get("start_date"),
-                    "end": phase.get("end_date") or phase.get("planned_end_date")
-                }
+                    "end": phase.get("end_date") or phase.get("planned_end_date"),
+                },
             }
 
         # Group documents
@@ -997,7 +999,9 @@ class SimulationAnalyzer:
 
         return phase_groups
 
-    async def _generate_timeline_placement_report(self, simulation_id: str, phase_documents: Dict[str, Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _generate_timeline_placement_report(
+        self, simulation_id: str, phase_documents: Dict[str, Dict[str, Any]], timeline_phases: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Generate a comprehensive timeline placement report."""
         try:
             # Calculate summary statistics
@@ -1012,7 +1016,7 @@ class SimulationAnalyzer:
                         "phase_id": phase_id,
                         "phase_name": phase_data["phase_name"],
                         "document_count": phase_data["document_count"],
-                        "avg_relevance": phase_data["avg_relevance"]
+                        "avg_relevance": phase_data["avg_relevance"],
                     }
                     phase_performance.append(performance)
 
@@ -1026,20 +1030,18 @@ class SimulationAnalyzer:
                 "total_documents_placed": total_documents,
                 "phase_performance": phase_performance,
                 "timeline_coverage": phases_with_documents / len(timeline_phases) if timeline_phases else 0,
-                "recommendations": self._generate_timeline_recommendations(phase_documents, timeline_phases)
+                "recommendations": self._generate_timeline_recommendations(phase_documents, timeline_phases),
             }
 
             return report
 
         except Exception as e:
             print(f"Error generating timeline placement report: {e}")
-            return {
-                "simulation_id": simulation_id,
-                "error": str(e),
-                "total_documents_placed": 0
-            }
+            return {"simulation_id": simulation_id, "error": str(e), "total_documents_placed": 0}
 
-    def _generate_timeline_recommendations(self, phase_documents: Dict[str, Dict[str, Any]], timeline_phases: List[Dict[str, Any]]) -> List[str]:
+    def _generate_timeline_recommendations(
+        self, phase_documents: Dict[str, Dict[str, Any]], timeline_phases: List[Dict[str, Any]]
+    ) -> List[str]:
         """Generate recommendations based on timeline document placement."""
         recommendations = []
 
@@ -1061,10 +1063,16 @@ class SimulationAnalyzer:
                 low_relevance_phases.append(phase_data["phase_name"])
 
         if low_relevance_phases:
-            recommendations.append(f"Review document placement for phases with low relevance: {', '.join(low_relevance_phases[:3])}")
+            recommendations.append(
+                f"Review document placement for phases with low relevance: {', '.join(low_relevance_phases[:3])}"
+            )
 
         # Check timeline coverage
-        coverage = sum(1 for phase in phase_documents.values() if phase["document_count"] > 0) / len(phase_documents) if phase_documents else 0
+        coverage = (
+            sum(1 for phase in phase_documents.values() if phase["document_count"] > 0) / len(phase_documents)
+            if phase_documents
+            else 0
+        )
 
         if coverage < 0.5:
             recommendations.append("Timeline coverage is low. Consider expanding documentation across more phases.")
@@ -1078,8 +1086,12 @@ class SimulationAnalyzer:
     # COMPREHENSIVE SUMMARY REPORT GENERATION
     # ============================================================================
 
-    async def generate_comprehensive_summary_report(self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Generate a comprehensive summary report combining recommendations and analysis.
+    async def generate_comprehensive_summary_report(
+        self, simulation_id: str, documents: List[Dict[str, Any]], timeline: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """
+        Generate a comprehensive summary report combining recommendations and
+        analysis.
 
         This method creates a unified report that combines:
         - Recommendations from summarizer-hub
@@ -1094,7 +1106,9 @@ class SimulationAnalyzer:
             print(f"Generating comprehensive summary report for simulation {simulation_id}")
 
             # Step 1: Get recommendations from summarizer-hub
-            recommendations_report = await self._get_recommendations_report_from_summarizer_hub(simulation_id, documents)
+            recommendations_report = await self._get_recommendations_report_from_summarizer_hub(
+                simulation_id, documents
+            )
 
             # Step 2: Get analysis report from analysis-service
             analysis_report = await self._get_analysis_report_from_analysis_service(simulation_id, documents)
@@ -1106,11 +1120,7 @@ class SimulationAnalyzer:
 
             # Step 4: Combine all reports into comprehensive summary
             comprehensive_report = await self._combine_reports_into_summary(
-                simulation_id,
-                recommendations_report,
-                analysis_report,
-                timeline_placement,
-                documents
+                simulation_id, recommendations_report, analysis_report, timeline_placement, documents
             )
 
             # Step 5: Store the comprehensive report
@@ -1122,36 +1132,38 @@ class SimulationAnalyzer:
                 "comprehensive_report_id": comprehensive_report.get("report_id"),
                 "sections_included": list(comprehensive_report.keys()),
                 "total_documents": len(documents),
-                "processing_timestamp": datetime.now().isoformat()
+                "processing_timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
             print(f"Error generating comprehensive summary report: {e}")
-            return {
-                "simulation_id": simulation_id,
-                "error": str(e),
-                "report_generated": False
-            }
+            return {"simulation_id": simulation_id, "error": str(e), "report_generated": False}
 
-    async def _get_recommendations_report_from_summarizer_hub(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    async def _get_recommendations_report_from_summarizer_hub(
+        self, simulation_id: str, documents: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """Get recommendations report from summarizer-hub service."""
         try:
             # Prepare documents for summarizer-hub
             docs_for_analysis = []
             for doc in documents:
                 if "content" in doc and doc["content"]:
-                    docs_for_analysis.append({
-                        "id": doc.get("id", ""),
-                        "content": doc["content"],
-                        "title": doc.get("title", ""),
-                        "type": doc.get("type", "document")
-                    })
+                    docs_for_analysis.append(
+                        {
+                            "id": doc.get("id", ""),
+                            "content": doc["content"],
+                            "title": doc.get("title", ""),
+                            "type": doc.get("type", "document"),
+                        }
+                    )
 
             if not docs_for_analysis:
                 return None
 
             # Request recommendations from summarizer-hub
-            recommendations_result = await self._request_recommendations_from_summarizer_hub(simulation_id, docs_for_analysis)
+            recommendations_result = await self._request_recommendations_from_summarizer_hub(
+                simulation_id, docs_for_analysis
+            )
 
             if recommendations_result:
                 return {
@@ -1160,7 +1172,7 @@ class SimulationAnalyzer:
                     "consolidation_suggestions": recommendations_result.get("consolidation_suggestions", []),
                     "duplicate_analysis": recommendations_result.get("duplicate_analysis", []),
                     "outdated_analysis": recommendations_result.get("outdated_analysis", []),
-                    "quality_improvements": recommendations_result.get("quality_improvements", [])
+                    "quality_improvements": recommendations_result.get("quality_improvements", []),
                 }
 
             return None
@@ -1169,19 +1181,23 @@ class SimulationAnalyzer:
             print(f"Error getting recommendations from summarizer-hub: {e}")
             return None
 
-    async def _get_analysis_report_from_analysis_service(self, simulation_id: str, documents: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    async def _get_analysis_report_from_analysis_service(
+        self, simulation_id: str, documents: List[Dict[str, Any]]
+    ) -> Optional[Dict[str, Any]]:
         """Get analysis report from analysis-service."""
         try:
             # Prepare documents for analysis-service
             docs_for_analysis = []
             for doc in documents:
                 if "content" in doc and doc["content"]:
-                    docs_for_analysis.append({
-                        "id": doc.get("id", ""),
-                        "content": doc["content"],
-                        "title": doc.get("title", ""),
-                        "type": doc.get("type", "document")
-                    })
+                    docs_for_analysis.append(
+                        {
+                            "id": doc.get("id", ""),
+                            "content": doc["content"],
+                            "title": doc.get("title", ""),
+                            "type": doc.get("type", "document"),
+                        }
+                    )
 
             if not docs_for_analysis:
                 return None
@@ -1196,8 +1212,8 @@ class SimulationAnalyzer:
                     "summary_statistics": analysis_result.get("report", {}).get("summary", {}),
                     "processing_metadata": {
                         "documents_processed": analysis_result.get("documents_processed", 0),
-                        "processing_time": analysis_result.get("processing_time", "completed")
-                    }
+                        "processing_time": analysis_result.get("processing_time", "completed"),
+                    },
                 }
 
             return None
@@ -1206,7 +1222,14 @@ class SimulationAnalyzer:
             print(f"Error getting analysis from analysis-service: {e}")
             return None
 
-    async def _combine_reports_into_summary(self, simulation_id: str, recommendations: Optional[Dict], analysis: Optional[Dict], timeline: Optional[Dict], documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _combine_reports_into_summary(
+        self,
+        simulation_id: str,
+        recommendations: Optional[Dict],
+        analysis: Optional[Dict],
+        timeline: Optional[Dict],
+        documents: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
         """Combine all reports into a comprehensive summary."""
         try:
             # Generate unique report ID
@@ -1221,7 +1244,7 @@ class SimulationAnalyzer:
                 "simulation_id": simulation_id,
                 "generated_at": datetime.now().isoformat(),
                 "executive_summary": executive_summary,
-                "sections": {}
+                "sections": {},
             }
 
             # Add recommendations section
@@ -1233,7 +1256,7 @@ class SimulationAnalyzer:
                     "duplicate_issues": len(recommendations.get("duplicate_analysis", [])),
                     "outdated_documents": len(recommendations.get("outdated_analysis", [])),
                     "quality_improvements": len(recommendations.get("quality_improvements", [])),
-                    "details": recommendations
+                    "details": recommendations,
                 }
 
             # Add analysis section
@@ -1244,7 +1267,7 @@ class SimulationAnalyzer:
                     "average_quality_score": analysis["summary_statistics"].get("average_quality_score", 0),
                     "documents_with_issues": analysis["summary_statistics"].get("documents_with_issues", 0),
                     "total_issues_found": analysis["summary_statistics"].get("total_issues_found", 0),
-                    "details": analysis
+                    "details": analysis,
                 }
 
             # Add timeline section
@@ -1255,7 +1278,7 @@ class SimulationAnalyzer:
                     "timeline_coverage": timeline.get("placement_report", {}).get("timeline_coverage", 0),
                     "phase_breakdown": timeline.get("phase_breakdown", {}),
                     "recommendations": timeline.get("placement_report", {}).get("recommendations", []),
-                    "details": timeline
+                    "details": timeline,
                 }
 
             # Overall Assessment
@@ -1272,17 +1295,23 @@ class SimulationAnalyzer:
                 "report_id": f"error_{simulation_id}_{int(datetime.now().timestamp())}",
                 "simulation_id": simulation_id,
                 "error": str(e),
-                "sections": {}
+                "sections": {},
             }
 
-    def _generate_executive_summary(self, recommendations: Optional[Dict], analysis: Optional[Dict], timeline: Optional[Dict], documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _generate_executive_summary(
+        self,
+        recommendations: Optional[Dict],
+        analysis: Optional[Dict],
+        timeline: Optional[Dict],
+        documents: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
         """Generate executive summary from all report data."""
         summary = {
             "total_documents": len(documents),
             "processing_completed": datetime.now().isoformat(),
             "key_findings": [],
             "critical_issues": 0,
-            "improvement_opportunities": 0
+            "improvement_opportunities": 0,
         }
 
         # Analyze recommendations
@@ -1337,7 +1366,7 @@ class SimulationAnalyzer:
             "risk_level": "unknown",
             "strengths": [],
             "weaknesses": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
         scores = []
@@ -1351,7 +1380,9 @@ class SimulationAnalyzer:
 
             if rec_section["total_recommendations"] > 10:
                 risk_factors += 1
-                assessment["weaknesses"].append("High number of recommendations indicates significant improvement needs")
+                assessment["weaknesses"].append(
+                    "High number of recommendations indicates significant improvement needs"
+                )
             else:
                 assessment["strengths"].append("Manageable number of recommendations")
 
@@ -1404,45 +1435,50 @@ class SimulationAnalyzer:
         if "recommendations" in sections:
             rec_section = sections["recommendations"]
             for rec in rec_section["details"].get("recommendations", []):
-                action_items.append({
-                    "type": "recommendation",
-                    "priority": rec.get("priority", "medium"),
-                    "description": rec.get("description", ""),
-                    "category": rec.get("type", "general"),
-                    "estimated_effort": rec.get("estimated_effort", "medium")
-                })
+                action_items.append(
+                    {
+                        "type": "recommendation",
+                        "priority": rec.get("priority", "medium"),
+                        "description": rec.get("description", ""),
+                        "category": rec.get("type", "general"),
+                        "estimated_effort": rec.get("estimated_effort", "medium"),
+                    }
+                )
 
         # Extract from analysis issues
         if "analysis" in sections:
             analysis_section = sections["analysis"]
             for result in analysis_section["details"].get("quality_analysis", []):
                 if result.get("issues_found", 0) > 0:
-                    action_items.append({
-                        "type": "quality_fix",
-                        "priority": "high" if result.get("quality_score", 0) < 0.5 else "medium",
-                        "description": f"Fix quality issues in document {result.get('document_id', '')}",
-                        "category": "quality",
-                        "estimated_effort": "low" if len(result.get("issues", [])) <= 2 else "medium"
-                    })
+                    action_items.append(
+                        {
+                            "type": "quality_fix",
+                            "priority": "high" if result.get("quality_score", 0) < 0.5 else "medium",
+                            "description": f"Fix quality issues in document {result.get('document_id', '')}",
+                            "category": "quality",
+                            "estimated_effort": "low" if len(result.get("issues", [])) <= 2 else "medium",
+                        }
+                    )
 
         # Extract from timeline recommendations
         if "timeline" in sections:
             timeline_section = sections["timeline"]
             for rec in timeline_section.get("recommendations", []):
-                action_items.append({
-                    "type": "timeline_optimization",
-                    "priority": "medium",
-                    "description": rec,
-                    "category": "organization",
-                    "estimated_effort": "low"
-                })
+                action_items.append(
+                    {
+                        "type": "timeline_optimization",
+                        "priority": "medium",
+                        "description": rec,
+                        "category": "organization",
+                        "estimated_effort": "low",
+                    }
+                )
 
         # Sort by priority
         priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
         action_items.sort(key=lambda x: priority_order.get(x["priority"], 4))
 
         return action_items[:10]  # Return top 10 action items
-
 
     async def _store_comprehensive_summary_report(self, simulation_id: str, report: Dict[str, Any]) -> None:
         """Store the comprehensive summary report in doc-store."""
@@ -1462,7 +1498,7 @@ class SimulationAnalyzer:
             await self._store_document_in_doc_store(md_doc_id, markdown_content, "markdown", "comprehensive_summary")
 
             # Link reports to simulation
-            await self._link_report_to_simulation(simulation_id, report['report_id'], "comprehensive_summary")
+            await self._link_report_to_simulation(simulation_id, report["report_id"], "comprehensive_summary")
 
             print(f"Stored comprehensive summary report for simulation {simulation_id}")
 
@@ -1577,14 +1613,13 @@ class SimulationAnalyzer:
             md_lines.append("")
 
             for i, item in enumerate(action_items[:10], 1):  # Top 10
-                priority_emoji = {
-                    "critical": "🚨",
-                    "high": "🔴",
-                    "medium": "🟡",
-                    "low": "🟢"
-                }.get(item.get("priority", "medium"), "🟡")
+                priority_emoji = {"critical": "🚨", "high": "🔴", "medium": "🟡", "low": "🟢"}.get(
+                    item.get("priority", "medium"), "🟡"
+                )
 
-                md_lines.append(f"{i}. {priority_emoji} **{item.get('priority', 'medium').title()}** - {item.get('description', '')}")
+                md_lines.append(
+                    f"{i}. {priority_emoji} **{item.get('priority', 'medium').title()}** - {item.get('description', '')}"
+                )
                 md_lines.append(f"   - Category: {item.get('category', 'general')}")
                 md_lines.append(f"   - Effort: {item.get('estimated_effort', 'medium')}")
                 md_lines.append("")
@@ -1594,16 +1629,15 @@ class SimulationAnalyzer:
         if suggested_tickets:
             md_lines.append("## 🎫 Suggested Jira Tickets")
             md_lines.append("")
-            md_lines.append("Based on the analysis findings, the following Jira tickets are recommended to address identified issues:")
+            md_lines.append(
+                "Based on the analysis findings, the following Jira tickets are recommended to address identified issues:"
+            )
             md_lines.append("")
 
             for i, ticket in enumerate(suggested_tickets, 1):
-                priority_emoji = {
-                    "Critical": "🚨",
-                    "High": "🔴",
-                    "Medium": "🟡",
-                    "Low": "🟢"
-                }.get(ticket.get("priority", "Medium"), "🟡")
+                priority_emoji = {"Critical": "🚨", "High": "🔴", "Medium": "🟡", "Low": "🟢"}.get(
+                    ticket.get("priority", "Medium"), "🟡"
+                )
 
                 md_lines.append(f"### {i}. {priority_emoji} {ticket.get('summary', '')}")
                 md_lines.append("")
@@ -1658,7 +1692,8 @@ class SimulationAnalyzer:
     # ============================================================================
 
     async def analyze_pull_request(self, simulation_id: str, pr_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze pull request changes via the analysis service.
+        """
+        Analyze pull request changes via the analysis service.
 
         This method delegates PR analysis to the specialized analysis service,
         maintaining clean separation of concerns and leveraging the analysis
@@ -1675,10 +1710,7 @@ class SimulationAnalyzer:
             print(f"Delegating PR analysis to analysis service for simulation {simulation_id}")
 
             # Prepare request for analysis service
-            analysis_request = {
-                "simulation_id": simulation_id,
-                "pull_request": pr_data
-            }
+            analysis_request = {"simulation_id": simulation_id, "pull_request": pr_data}
 
             # Call analysis service PR analysis endpoint
             analysis_result = await self._request_pr_analysis_from_service(simulation_id, analysis_request)
@@ -1693,33 +1725,31 @@ class SimulationAnalyzer:
                     "pr_health_score": analysis_result.get("health_score", 0),
                     "risk_level": analysis_result.get("risk_level", "unknown"),
                     "refactoring_suggestions_count": len(analysis_result.get("refactoring_suggestions", [])),
-                    "recommendations_count": len(analysis_result.get("recommendations", []))
+                    "recommendations_count": len(analysis_result.get("recommendations", [])),
                 }
             else:
                 return {
                     "simulation_id": simulation_id,
                     "analysis_completed": False,
-                    "error": "Failed to get analysis from analysis service"
+                    "error": "Failed to get analysis from analysis service",
                 }
 
         except Exception as e:
             print(f"Error analyzing pull request: {e}")
-            return {
-                "simulation_id": simulation_id,
-                "analysis_completed": False,
-                "error": str(e)
-            }
+            return {"simulation_id": simulation_id, "analysis_completed": False, "error": str(e)}
 
-    async def _request_pr_analysis_from_service(self, simulation_id: str, analysis_request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def _request_pr_analysis_from_service(
+        self, simulation_id: str, analysis_request: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """Request PR analysis from the analysis service."""
         try:
-            analysis_service_url = self.service_urls.get('analysis_service', 'http://localhost:5020')
+            analysis_service_url = self.service_urls.get("analysis_service", "http://localhost:5020")
 
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
                     f"{analysis_service_url}/analyze/pull-request",
                     json=analysis_request,
-                    headers={"Content-Type": "application/json"}
+                    headers={"Content-Type": "application/json"},
                 )
 
                 if response.status_code == 200:
@@ -1817,7 +1847,6 @@ class SimulationAnalyzer:
 
         return "\n".join(md_lines)
 
-
     # ============================================================================
     # ECOSYSTEM SERVICE INTEGRATION METHODS
     # ============================================================================
@@ -1834,18 +1863,16 @@ class SimulationAnalyzer:
                         "id": doc.get("id", f"doc_{i}"),
                         "content": doc.get("content", ""),
                         "type": doc.get("type", "unknown"),
-                        "title": doc.get("title", "")
+                        "title": doc.get("title", ""),
                     }
                     for i, doc in enumerate(documents[:5])  # Limit to first 5 documents
                 ],
                 "analysis_type": "comprehensive",
-                "include_recommendations": True
+                "include_recommendations": True,
             }
 
             response = await self.http_client.post(
-                summarizer_url,
-                json=analysis_request,
-                headers={"Content-Type": "application/json"}
+                summarizer_url, json=analysis_request, headers={"Content-Type": "application/json"}
             )
 
             if response.status_code == 200:
@@ -1865,13 +1892,11 @@ class SimulationAnalyzer:
 
             analysis_request = {
                 "document_ids": [doc.get("id") for doc in documents if doc.get("id")],
-                "analysis_type": "quality_check"
+                "analysis_type": "quality_check",
             }
 
             response = await self.http_client.post(
-                doc_store_url,
-                json=analysis_request,
-                headers={"Content-Type": "application/json"}
+                doc_store_url, json=analysis_request, headers={"Content-Type": "application/json"}
             )
 
             if response.status_code == 200:
@@ -1882,15 +1907,15 @@ class SimulationAnalyzer:
         except Exception:
             return None
 
-    async def _analyze_with_analysis_service(self, data: Dict[str, Any], analysis_type: str) -> Optional[Dict[str, Any]]:
+    async def _analyze_with_analysis_service(
+        self, data: Dict[str, Any], analysis_type: str
+    ) -> Optional[Dict[str, Any]]:
         """Analyze data using the general analysis service."""
         try:
             analysis_url = f"{self.service_urls['analysis_service']}/api/v1/analyze/{analysis_type}"
 
             response = await self.http_client.post(
-                analysis_url,
-                json=data,
-                headers={"Content-Type": "application/json"}
+                analysis_url, json=data, headers={"Content-Type": "application/json"}
             )
 
             if response.status_code == 200:
@@ -1906,15 +1931,10 @@ class SimulationAnalyzer:
         try:
             code_analyzer_url = f"{self.service_urls['code_analyzer']}/api/v1/analyze"
 
-            analysis_request = {
-                "code": code_content,
-                "analysis_type": "quality_metrics"
-            }
+            analysis_request = {"code": code_content, "analysis_type": "quality_metrics"}
 
             response = await self.http_client.post(
-                code_analyzer_url,
-                json=analysis_request,
-                headers={"Content-Type": "application/json"}
+                code_analyzer_url, json=analysis_request, headers={"Content-Type": "application/json"}
             )
 
             if response.status_code == 200:
@@ -1944,7 +1964,7 @@ class SimulationAnalyzer:
             "findings": findings,
             "recommendations": recommendations,
             "analysis_method": "fallback",
-            "confidence": 0.6
+            "confidence": 0.6,
         }
 
     async def _get_service_health_status(self, service_name: str) -> bool:

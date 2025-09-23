@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 """
-Deep Service Integration Audit & Framework
+Deep Service Integration Audit & Framework.
 
-This module provides comprehensive evaluation and deep integration planning
-for all services in the ecosystem, with detailed audit results and integration patterns.
+This module provides comprehensive evaluation and deep integration
+planning for all services in the ecosystem, with detailed audit results
+and integration patterns.
 """
 
 import asyncio
 import json
-from typing import Dict, Any, List, Optional, Callable, Type, Union, Set
+from typing import Dict, Any, List
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
-import inspect
-import os
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
 
 
 class IntegrationDepth(Enum):

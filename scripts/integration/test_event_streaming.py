@@ -6,16 +6,19 @@ Standalone test for the real-time event streaming capabilities.
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
 
 # Import event streaming directly
 from services.shared.event_streaming import (
-    EventStreamProcessor, StreamEvent, EventSubscription,
-    EventType, EventPriority
+    EventPriority,
+    EventStreamProcessor,
+    EventSubscription,
+    EventType,
+    StreamEvent,
 )
 
 
@@ -39,9 +42,7 @@ async def test_event_streaming_standalone():
 
     # Subscribe to stream
     subscription = EventSubscription(
-        subscriber_service="test_service",
-        event_pattern="test_*",
-        handler_function=test_event_handler
+        subscriber_service="test_service", event_pattern="test_*", handler_function=test_event_handler
     )
 
     await processor.subscribe_to_stream("system_events", subscription)
@@ -52,21 +53,21 @@ async def test_event_streaming_standalone():
             source_service="analysis-service",
             event_name="test_document_processed",
             event_type=EventType.BUSINESS,
-            payload={"document_id": "doc123", "processing_time": 1.5, "quality_score": 0.92}
+            payload={"document_id": "doc123", "processing_time": 1.5, "quality_score": 0.92},
         ),
         StreamEvent(
             source_service="doc_store",
             event_name="test_document_stored",
             event_type=EventType.SYSTEM,
-            payload={"document_id": "doc456", "size_bytes": 1024, "storage_location": "primary"}
+            payload={"document_id": "doc456", "size_bytes": 1024, "storage_location": "primary"},
         ),
         StreamEvent(
             source_service="orchestrator",
             event_name="test_workflow_completed",
             event_type=EventType.BUSINESS,
             priority=EventPriority.HIGH,
-            payload={"workflow_id": "wf789", "status": "success", "execution_time": 45.2}
-        )
+            payload={"workflow_id": "wf789", "status": "success", "execution_time": 45.2},
+        ),
     ]
 
     print("\n🚀 Publishing test events...")
@@ -88,18 +89,18 @@ async def test_event_streaming_standalone():
     print(f"   • Total Events Processed: {stats['total_events_processed']}")
 
     # Show correlation statistics
-    correlation_stats = stats['correlation_statistics']
+    correlation_stats = stats["correlation_statistics"]
     print(f"   • Correlation Rules: {correlation_stats['total_rules']}")
     print(f"   • Correlated Events Detected: {correlation_stats['total_correlations_detected']}")
 
     # Show stream details
     print("\n📋 Stream Details:")
-    for stream_name, details in stats['stream_details'].items():
+    for stream_name, details in stats["stream_details"].items():
         print(f"   • {stream_name}:")
         print(f"     - Events: {details['total_events']}")
         print(f"     - Subscribers: {details['subscribers']}")
-        if details['processing_metrics']:
-            metrics = details['processing_metrics']
+        if details["processing_metrics"]:
+            metrics = details["processing_metrics"]
             print(f"     - Processed: {metrics['events_processed']}")
             print(".2f")
             print(".2f")

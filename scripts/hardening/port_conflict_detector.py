@@ -5,41 +5,50 @@ Comprehensive port management and conflict resolution
 """
 
 import json
-import yaml
-import subprocess
-import socket
+import logging
 import re
-from typing import Dict, List, Any, Set, Tuple, Optional
+import socket
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-import logging
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+import yaml
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class PortInfo:
     """Port information container"""
+
     service_name: str
     external_port: int
     internal_port: int
     protocol: str = "tcp"
     interface: str = "0.0.0.0"
 
+
 @dataclass
 class PortConflict:
     """Port conflict information"""
+
     port: int
     conflicting_services: List[str]
     severity: str
     resolution_suggestion: str
 
+
 class PortConflictDetector:
     """Comprehensive port conflict detection and validation system"""
 
-    def __init__(self, docker_compose_file: str = "docker-compose.dev.yml",
-                 port_registry_file: str = "config/standardized/port_registry.json"):
+    def __init__(
+        self,
+        docker_compose_file: str = "docker-compose.dev.yml",
+        port_registry_file: str = "config/standardized/port_registry.json",
+    ):
         self.docker_compose_file = Path(docker_compose_file)
         self.port_registry_file = Path(port_registry_file)
         self.ports_in_use: Set[int] = set()
@@ -51,7 +60,7 @@ class PortConflictDetector:
     def load_docker_compose_config(self) -> Dict[str, Any]:
         """Load and parse docker-compose configuration"""
         try:
-            with open(self.docker_compose_file, 'r') as f:
+            with open(self.docker_compose_file, "r") as f:
                 return yaml.safe_load(f)
         except Exception as e:
             logger.error(f"Failed to load docker-compose file: {e}")
@@ -60,7 +69,7 @@ class PortConflictDetector:
     def load_port_registry(self) -> Dict[str, Any]:
         """Load port registry configuration"""
         try:
-            with open(self.port_registry_file, 'r') as f:
+            with open(self.port_registry_file, "r") as f:
                 return json.load(f)
         except Exception as e:
             logger.warning(f"Failed to load port registry: {e}")
@@ -70,12 +79,12 @@ class PortConflictDetector:
         """Extract port mappings from docker-compose configuration"""
         service_ports = {}
 
-        if 'services' not in compose_config:
+        if "services" not in compose_config:
             return service_ports
 
-        for service_name, service_config in compose_config['services'].items():
-            if 'ports' in service_config:
-                ports = service_config['ports']
+        for service_name, service_config in compose_config["services"].items():
+            if "ports" in service_config:
+                ports = service_config["ports"]
                 if isinstance(ports, list):
                     for port_mapping in ports:
                         port_info = self._parse_port_mapping(port_mapping, service_name)
@@ -88,7 +97,7 @@ class PortConflictDetector:
     def _parse_port_mapping(self, port_mapping: str, service_name: str) -> Optional[PortInfo]:
         """Parse docker-compose port mapping string"""
         # Handle formats like "5087:5010", "5087:5010/tcp", "127.0.0.1:5087:5010"
-        parts = port_mapping.split('/')
+        parts = port_mapping.split("/")
 
         if len(parts) > 1:
             protocol = parts[1]
@@ -98,10 +107,10 @@ class PortConflictDetector:
         port_part = parts[0]
 
         # Handle IP:external:internal format
-        if port_part.count(':') == 2:
-            _, external_port, internal_port = port_part.split(':')
-        elif port_part.count(':') == 1:
-            external_port, internal_port = port_part.split(':')
+        if port_part.count(":") == 2:
+            _, external_port, internal_port = port_part.split(":")
+        elif port_part.count(":") == 1:
+            external_port, internal_port = port_part.split(":")
         else:
             # Single port (usually internal only)
             internal_port = port_part
@@ -112,7 +121,7 @@ class PortConflictDetector:
                 service_name=service_name,
                 external_port=int(external_port),
                 internal_port=int(internal_port),
-                protocol=protocol
+                protocol=protocol,
             )
         except ValueError:
             logger.warning(f"Invalid port mapping for {service_name}: {port_mapping}")
@@ -124,23 +133,18 @@ class PortConflictDetector:
 
         try:
             # Use netstat to check listening ports
-            result = subprocess.run(
-                ['netstat', '-tlnp'],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
+            result = subprocess.run(["netstat", "-tlnp"], capture_output=True, text=True, timeout=10)
 
             if result.returncode == 0:
-                lines = result.stdout.split('\n')
+                lines = result.stdout.split("\n")
                 for line in lines[2:]:  # Skip header lines
                     if line.strip():
                         parts = line.split()
                         if len(parts) >= 4:
                             local_address = parts[3]
-                            if ':' in local_address:
+                            if ":" in local_address:
                                 try:
-                                    port = int(local_address.split(':')[-1])
+                                    port = int(local_address.split(":")[-1])
                                     ports_in_use.add(port)
                                 except ValueError:
                                     continue
@@ -156,18 +160,15 @@ class PortConflictDetector:
 
         try:
             result = subprocess.run(
-                ['docker', 'ps', '--format', '{{.Ports}}'],
-                capture_output=True,
-                text=True,
-                timeout=10
+                ["docker", "ps", "--format", "{{.Ports}}"], capture_output=True, text=True, timeout=10
             )
 
             if result.returncode == 0:
-                lines = result.stdout.split('\n')
+                lines = result.stdout.split("\n")
                 for line in lines:
                     if line.strip():
                         # Extract port numbers from Docker port mappings
-                        port_matches = re.findall(r':(\d+)->', line)
+                        port_matches = re.findall(r":(\d+)->", line)
                         for match in port_matches:
                             try:
                                 ports_in_use.add(int(match))
@@ -193,12 +194,14 @@ class PortConflictDetector:
         # Find service-to-service conflicts
         for port, services in port_to_services.items():
             if len(services) > 1:
-                conflicts.append(PortConflict(
-                    port=port,
-                    conflicting_services=services,
-                    severity="high",
-                    resolution_suggestion=f"Reassign one service to use a different external port. Suggested ports: {self._suggest_available_ports(port)}"
-                ))
+                conflicts.append(
+                    PortConflict(
+                        port=port,
+                        conflicting_services=services,
+                        severity="high",
+                        resolution_suggestion=f"Reassign one service to use a different external port. Suggested ports: {self._suggest_available_ports(port)}",
+                    )
+                )
 
         # Check for conflicts with system ports
         system_ports = self.check_system_ports_in_use()
@@ -206,19 +209,23 @@ class PortConflictDetector:
 
         for service_name, port_info in self.service_ports.items():
             if port_info.external_port in system_ports:
-                conflicts.append(PortConflict(
-                    port=port_info.external_port,
-                    conflicting_services=[service_name, "system_process"],
-                    severity="critical",
-                    resolution_suggestion=f"Port {port_info.external_port} is in use by system. Use: {self._suggest_available_ports(port_info.external_port)}"
-                ))
+                conflicts.append(
+                    PortConflict(
+                        port=port_info.external_port,
+                        conflicting_services=[service_name, "system_process"],
+                        severity="critical",
+                        resolution_suggestion=f"Port {port_info.external_port} is in use by system. Use: {self._suggest_available_ports(port_info.external_port)}",
+                    )
+                )
             elif port_info.external_port in docker_ports:
-                conflicts.append(PortConflict(
-                    port=port_info.external_port,
-                    conflicting_services=[service_name, "docker_container"],
-                    severity="high",
-                    resolution_suggestion=f"Port {port_info.external_port} is used by another container. Use: {self._suggest_available_ports(port_info.external_port)}"
-                ))
+                conflicts.append(
+                    PortConflict(
+                        port=port_info.external_port,
+                        conflicting_services=[service_name, "docker_container"],
+                        severity="high",
+                        resolution_suggestion=f"Port {port_info.external_port} is used by another container. Use: {self._suggest_available_ports(port_info.external_port)}",
+                    )
+                )
 
         return conflicts
 
@@ -255,8 +262,8 @@ class PortConflictDetector:
         for service_name, port_info in self.service_ports.items():
             if service_name in port_registry:
                 registry_info = port_registry[service_name]
-                registry_external = registry_info.get('external_port')
-                registry_internal = registry_info.get('internal_port')
+                registry_external = registry_info.get("external_port")
+                registry_internal = registry_info.get("internal_port")
 
                 if port_info.external_port != registry_external:
                     warnings.append(
@@ -322,36 +329,32 @@ class PortConflictDetector:
                 "critical_conflicts": len([c for c in self.conflicts if c.severity == "critical"]),
                 "high_conflicts": len([c for c in self.conflicts if c.severity == "high"]),
                 "warnings": len(self.warnings),
-                "recommendations": len(self.recommendations)
+                "recommendations": len(self.recommendations),
             },
             "conflicts": [
                 {
                     "port": c.port,
                     "severity": c.severity,
                     "services": c.conflicting_services,
-                    "suggestion": c.resolution_suggestion
+                    "suggestion": c.resolution_suggestion,
                 }
                 for c in self.conflicts
             ],
             "warnings": self.warnings,
             "recommendations": self.recommendations,
             "service_ports": {
-                name: {
-                    "external": info.external_port,
-                    "internal": info.internal_port,
-                    "protocol": info.protocol
-                }
+                name: {"external": info.external_port, "internal": info.internal_port, "protocol": info.protocol}
                 for name, info in self.service_ports.items()
-            }
+            },
         }
 
         return report
 
     def print_report(self, report: Dict[str, Any]):
         """Print comprehensive analysis report"""
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("🔍 PORT CONFLICT DETECTION AND VALIDATION REPORT")
-        print("="*80)
+        print("=" * 80)
 
         summary = report["summary"]
         print(f"\n📊 SUMMARY")
@@ -383,7 +386,7 @@ class PortConflictDetector:
         for service, ports in report["service_ports"].items():
             print(f"  {service}: {ports['external']} → {ports['internal']} ({ports['protocol']})")
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
 
     def export_conflict_resolution_script(self, conflicts: List[PortConflict]) -> str:
         """Generate a script to resolve detected conflicts"""
@@ -393,22 +396,26 @@ class PortConflictDetector:
             "# Generated by Port Conflict Detector",
             "",
             "echo '🔧 Resolving port conflicts...'",
-            ""
+            "",
         ]
 
         for conflict in conflicts:
             if conflict.severity in ["critical", "high"]:
-                script_lines.extend([
-                    f"# Resolving conflict on port {conflict.port}",
-                    f"echo 'Resolving port {conflict.port} conflict...'",
-                    "# Add your resolution commands here",
-                    ""
-                ])
+                script_lines.extend(
+                    [
+                        f"# Resolving conflict on port {conflict.port}",
+                        f"echo 'Resolving port {conflict.port} conflict...'",
+                        "# Add your resolution commands here",
+                        "",
+                    ]
+                )
 
-        script_lines.extend([
-            "echo '✅ Port conflict resolution complete'",
-            "echo 'Remember to update port_registry.json if you change ports'"
-        ])
+        script_lines.extend(
+            [
+                "echo '✅ Port conflict resolution complete'",
+                "echo 'Remember to update port_registry.json if you change ports'",
+            ]
+        )
 
         return "\n".join(script_lines)
 

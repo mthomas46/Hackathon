@@ -1,13 +1,16 @@
-"""Relationships service.
+"""
+Relationships service.
 
-Contains business logic for prompt relationships and semantic connections.
+Contains business logic for prompt relationships and semantic
+connections.
 """
 
-from typing import List, Dict, Any, Optional
-from services.prompt_store.domain.relationships.repository import RelationshipsRepository
+from typing import Any, Dict, List, Optional
+
 from services.prompt_store.domain.prompts.service import PromptService
+from services.prompt_store.domain.relationships.repository import RelationshipsRepository
 from services.prompt_store.infrastructure.cache import prompt_store_cache
-from services.shared.utilities import generate_id, utc_now
+from services.shared.utilities import utc_now
 
 
 class RelationshipsService:
@@ -17,8 +20,9 @@ class RelationshipsService:
         self.repo = RelationshipsRepository()
         self.prompt_service = PromptService()
 
-    async def create_relationship(self, source_prompt_id: str, relationship_data: Dict[str, Any],
-                                user_id: str = "api_user") -> Dict[str, Any]:
+    async def create_relationship(
+        self, source_prompt_id: str, relationship_data: Dict[str, Any], user_id: str = "api_user"
+    ) -> Dict[str, Any]:
         """Create a new relationship between prompts."""
 
         # Validate that both prompts exist
@@ -41,7 +45,7 @@ class RelationshipsService:
             relationship_type=relationship_data["relationship_type"],
             strength=relationship_data.get("strength", 1.0),
             metadata=relationship_data.get("metadata", {}),
-            created_by=user_id
+            created_by=user_id,
         )
 
         # Invalidate caches
@@ -54,7 +58,7 @@ class RelationshipsService:
             "relationship_type": relationship.relationship_type,
             "strength": relationship.strength,
             "created_at": relationship.created_at.isoformat(),
-            "created_by": user_id
+            "created_by": user_id,
         }
 
     def get_relationships_for_prompt(self, prompt_id: str, direction: str = "both") -> Dict[str, Any]:
@@ -78,7 +82,7 @@ class RelationshipsService:
                 "strength": rel.strength,
                 "metadata": rel.metadata,
                 "created_at": rel.created_at.isoformat(),
-                "created_by": rel.created_by
+                "created_by": rel.created_by,
             }
 
             if rel.source_prompt_id == prompt_id:
@@ -92,11 +96,12 @@ class RelationshipsService:
             "prompt_id": prompt_id,
             "outgoing_relationships": outgoing,
             "incoming_relationships": incoming,
-            "total_relationships": len(relationships)
+            "total_relationships": len(relationships),
         }
 
-    def update_relationship_strength(self, relationship_id: str, new_strength: float,
-                                   user_id: str = "api_user") -> Dict[str, Any]:
+    def update_relationship_strength(
+        self, relationship_id: str, new_strength: float, user_id: str = "api_user"
+    ) -> Dict[str, Any]:
         """Update the strength of a relationship."""
 
         success = self.repo.update_relationship_strength(relationship_id, new_strength)
@@ -107,7 +112,7 @@ class RelationshipsService:
             "relationship_id": relationship_id,
             "new_strength": new_strength,
             "updated_by": user_id,
-            "updated_at": utc_now().isoformat()
+            "updated_at": utc_now().isoformat(),
         }
 
     def delete_relationship(self, relationship_id: str, user_id: str = "api_user") -> Dict[str, Any]:
@@ -123,7 +128,7 @@ class RelationshipsService:
             "relationship_id": relationship_id,
             "deleted": True,
             "deleted_by": user_id,
-            "deleted_at": utc_now().isoformat()
+            "deleted_at": utc_now().isoformat(),
         }
 
     def get_relationship_graph(self, prompt_id: str, depth: int = 2) -> Dict[str, Any]:
@@ -141,12 +146,14 @@ class RelationshipsService:
         for node in graph["nodes"]:
             prompt_details = self.prompt_service.get_entity(node["id"])
             if prompt_details:
-                enhanced_nodes.append({
-                    "id": node["id"],
-                    "name": prompt_details.name,
-                    "category": prompt_details.category,
-                    "lifecycle_status": prompt_details.lifecycle_status
-                })
+                enhanced_nodes.append(
+                    {
+                        "id": node["id"],
+                        "name": prompt_details.name,
+                        "category": prompt_details.category,
+                        "lifecycle_status": prompt_details.lifecycle_status,
+                    }
+                )
 
         return {
             "root_prompt_id": prompt_id,
@@ -154,7 +161,7 @@ class RelationshipsService:
             "edges": graph["edges"],
             "depth": depth,
             "total_nodes": len(enhanced_nodes),
-            "total_edges": len(graph["edges"])
+            "total_edges": len(graph["edges"]),
         }
 
     def get_relationship_types_count(self) -> Dict[str, Any]:
@@ -167,11 +174,12 @@ class RelationshipsService:
             "relationship_counts": counts,
             "total_relationships": total_relationships,
             "valid_types": list(self.repo.VALID_RELATIONSHIP_TYPES),
-            "last_updated": utc_now().isoformat()
+            "last_updated": utc_now().isoformat(),
         }
 
-    def find_related_prompts(self, prompt_id: str, relationship_types: Optional[List[str]] = None,
-                           min_strength: float = 0.0) -> Dict[str, Any]:
+    def find_related_prompts(
+        self, prompt_id: str, relationship_types: Optional[List[str]] = None, min_strength: float = 0.0
+    ) -> Dict[str, Any]:
         """Find prompts related to the given prompt with optional filtering."""
 
         # Validate prompt exists
@@ -196,27 +204,25 @@ class RelationshipsService:
             related_id = rel.target_prompt_id if rel.source_prompt_id == prompt_id else rel.source_prompt_id
             related_prompt = self.prompt_service.get_entity(related_id)
             if related_prompt:
-                related_prompts.append({
-                    "prompt_id": related_id,
-                    "name": related_prompt.name,
-                    "category": related_prompt.category,
-                    "relationship_type": rel.relationship_type,
-                    "strength": rel.strength,
-                    "direction": "outgoing" if rel.source_prompt_id == prompt_id else "incoming"
-                })
+                related_prompts.append(
+                    {
+                        "prompt_id": related_id,
+                        "name": related_prompt.name,
+                        "category": related_prompt.category,
+                        "relationship_type": rel.relationship_type,
+                        "strength": rel.strength,
+                        "direction": "outgoing" if rel.source_prompt_id == prompt_id else "incoming",
+                    }
+                )
 
         return {
             "source_prompt_id": prompt_id,
             "related_prompts": related_prompts,
             "total_related": len(related_prompts),
-            "filters": {
-                "relationship_types": relationship_types,
-                "min_strength": min_strength
-            }
+            "filters": {"relationship_types": relationship_types, "min_strength": min_strength},
         }
 
-    def validate_relationship_creation(self, source_id: str, target_id: str,
-                                     relationship_type: str) -> Dict[str, Any]:
+    def validate_relationship_creation(self, source_id: str, target_id: str, relationship_type: str) -> Dict[str, Any]:
         """Validate if a relationship can be created."""
 
         issues = []
@@ -249,7 +255,7 @@ class RelationshipsService:
             "issues": issues,
             "source_prompt_id": source_id,
             "target_prompt_id": target_id,
-            "relationship_type": relationship_type
+            "relationship_type": relationship_type,
         }
 
     async def _invalidate_relationship_caches(self, prompt_id_1: str, prompt_id_2: str) -> None:

@@ -1,13 +1,17 @@
-"""Request and response models for Interpreter service.
+"""
+Request and response models for Interpreter service.
 
 Contains all Pydantic models used for API requests and responses.
 """
-from typing import Optional, Dict, Any, List
+
+from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel
 
 
 class UserQuery(BaseModel):
     """User query model."""
+
     query: str
     user_id: Optional[str] = None
     context: Optional[Dict[str, Any]] = None
@@ -16,6 +20,7 @@ class UserQuery(BaseModel):
 
 class InterpretedIntent(BaseModel):
     """Interpreted intent from user query."""
+
     intent: str
     confidence: float
     entities: Dict[str, Any]
@@ -25,6 +30,7 @@ class InterpretedIntent(BaseModel):
 
 class WorkflowStep(BaseModel):
     """Workflow step definition."""
+
     step_id: str
     service: str
     action: str
@@ -34,6 +40,7 @@ class WorkflowStep(BaseModel):
 
 class InterpretedWorkflow(BaseModel):
     """Complete interpreted workflow."""
+
     workflow_id: str
     steps: List[WorkflowStep]
     estimated_duration: int  # seconds

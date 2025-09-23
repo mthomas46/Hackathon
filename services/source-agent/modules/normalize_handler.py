@@ -1,19 +1,19 @@
-"""Data normalization handler for Source Agent service.
+"""
+Data normalization handler for Source Agent service.
 
 Handles the complex logic for normalizing data from different sources.
 """
-from typing import Dict, Any, Optional
 
-from services.shared.core.models.models import Document
-from services.shared.utilities import stable_hash
+from typing import Any, Dict, Optional
+
 from services.shared.envelopes import DocumentEnvelope
+from services.shared.utilities import stable_hash
 
-from .document_builders import build_jira_doc, build_confluence_doc
+from .document_builders import build_confluence_doc, build_jira_doc
 from .shared_utils import (
+    build_source_agent_context,
     create_base_document,
-    handle_source_agent_error,
     create_source_agent_success_response,
-    build_source_agent_context
 )
 
 
@@ -36,19 +36,15 @@ class NormalizeHandler:
                     "type": "pull_request",
                     "state": pr_data.get("state"),
                     "merged": pr_data.get("merged"),
-                    "owner": pr_data.get("user", {}).get("login")
-                }
+                    "owner": pr_data.get("user", {}).get("login"),
+                },
             )
             doc.source_id = str(pr_data.get("number"))
             doc.content_hash = stable_hash(content)
             doc.url = pr_data.get("html_url", "")
             doc.project = pr_data.get("base", {}).get("repo", {}).get("full_name", "")
 
-            envelope = DocumentEnvelope(
-                id=f"env:{doc.id}",
-                correlation_id=correlation_id,
-                document=doc.model_dump()
-            )
+            envelope = DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
             return envelope
 
         elif data.get("type") == "readme":
@@ -61,13 +57,9 @@ class NormalizeHandler:
                 id=f"github:readme:{stable_hash(content)[:8]}",
                 title=title,
                 content=content,
-                metadata={"type": "readme", "url": readme.get("html_url")}
+                metadata={"type": "readme", "url": readme.get("html_url")},
             )
-            return DocumentEnvelope(
-                id=f"env:{doc.id}",
-                correlation_id=correlation_id,
-                document=doc.model_dump()
-            )
+            return DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
 
         else:
             # Generic normalization for arbitrary GitHub-derived content
@@ -78,13 +70,9 @@ class NormalizeHandler:
                 id=f"github:doc:{stable_hash(title + content)[:8]}",
                 title=title,
                 content=content,
-                metadata=data.get("metadata") or {}
+                metadata=data.get("metadata") or {},
             )
-            return DocumentEnvelope(
-                id=f"env:{doc.id}",
-                correlation_id=correlation_id,
-                document=doc.model_dump()
-            )
+            return DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
 
     @staticmethod
     def normalize_jira_data(data: Dict[str, Any], correlation_id: Optional[str] = None) -> Optional[DocumentEnvelope]:
@@ -92,24 +80,18 @@ class NormalizeHandler:
         if data.get("key"):
             # Jira issue normalization
             doc = build_jira_doc(data["key"], data)
-            return DocumentEnvelope(
-                id=f"env:{doc.id}",
-                correlation_id=correlation_id,
-                document=doc.model_dump()
-            )
+            return DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
         return None
 
     @staticmethod
-    def normalize_confluence_data(data: Dict[str, Any], correlation_id: Optional[str] = None) -> Optional[DocumentEnvelope]:
+    def normalize_confluence_data(
+        data: Dict[str, Any], correlation_id: Optional[str] = None
+    ) -> Optional[DocumentEnvelope]:
         """Normalize Confluence data."""
         if data.get("id"):
             # Confluence page normalization
             doc = build_confluence_doc(data["id"], data)
-            return DocumentEnvelope(
-                id=f"env:{doc.id}",
-                correlation_id=correlation_id,
-                document=doc.model_dump()
-            )
+            return DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
         return None
 
     @staticmethod
@@ -134,10 +116,8 @@ class NormalizeHandler:
             return create_source_agent_success_response("normalized", {"envelope": envelope_dict}, **context)
         else:
             from fastapi import HTTPException
-            raise HTTPException(
-                status_code=400,
-                detail="Unable to normalize data"
-            )
+
+            raise HTTPException(status_code=400, detail="Unable to normalize data")
 
 
 # Create singleton instance

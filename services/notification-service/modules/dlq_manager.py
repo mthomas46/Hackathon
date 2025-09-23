@@ -1,7 +1,7 @@
 """Dead letter queue management for notification service."""
 
 import time
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 class DLQManager:
@@ -10,17 +10,9 @@ class DLQManager:
     def __init__(self):
         self._dlq: List[Dict[str, Any]] = []
 
-    def add_failed_notification(
-        self,
-        payload: Dict[str, Any],
-        error: str
-    ) -> None:
+    def add_failed_notification(self, payload: Dict[str, Any], error: str) -> None:
         """Add a failed notification to the dead letter queue."""
-        entry = {
-            "payload": payload,
-            "error": error,
-            "ts": time.time()
-        }
+        entry = {"payload": payload, "error": error, "ts": time.time()}
         self._dlq.append(entry)
 
     def get_dlq_entries(self, limit: int = 50) -> List[Dict[str, Any]]:
@@ -38,7 +30,11 @@ class DLQManager:
         self._dlq.clear()
 
     def prune_old_entries(self, max_age_seconds: int = 86400) -> int:
-        """Remove entries older than max_age_seconds. Returns count of removed entries."""
+        """
+        Remove entries older than max_age_seconds.
+
+        Returns count of removed entries.
+        """
         cutoff_time = time.time() - max_age_seconds
         old_count = len(self._dlq)
         self._dlq = [entry for entry in self._dlq if entry.get("ts", 0) > cutoff_time]

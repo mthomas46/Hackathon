@@ -1,5 +1,5 @@
 """
-Event Streaming and Real-time Features
+Event Streaming and Real-time Features.
 
 Event-driven architecture and real-time communication capabilities.
 """

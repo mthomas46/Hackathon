@@ -1,11 +1,11 @@
 """Document Analysis Manager for CLI operations."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
-from rich.prompt import Prompt, Confirm
+from rich.prompt import Prompt
 
 from ...base.base_manager import BaseManager
-from ...formatters.display_utils import DisplayManager
 
 
 class DocumentAnalysisManager(BaseManager):
@@ -22,7 +22,7 @@ class DocumentAnalysisManager(BaseManager):
             ("3", "Analyze by Source Type"),
             ("4", "Configure Analysis Detectors"),
             ("5", "Analysis Templates"),
-            ("b", "Back to Analysis & Reports")
+            ("b", "Back to Analysis & Reports"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
@@ -62,10 +62,7 @@ class DocumentAnalysisManager(BaseManager):
                 selected_detectors = detector_choices  # Use all if none selected
 
             # Perform analysis
-            analysis_request = {
-                "targets": [doc_id],
-                "detectors": selected_detectors
-            }
+            analysis_request = {"targets": [doc_id], "detectors": selected_detectors}
 
             with self.console.status("[bold green]Analyzing document...") as status:
                 response = await self.clients.post_json("analysis-service/analyze", analysis_request)
@@ -107,10 +104,7 @@ class DocumentAnalysisManager(BaseManager):
                 selected_detectors = detector_choices
 
             # Perform bulk analysis
-            analysis_request = {
-                "criteria": criteria,
-                "detectors": selected_detectors
-            }
+            analysis_request = {"criteria": criteria, "detectors": selected_detectors}
 
             with self.console.status("[bold green]Analyzing documents...") as status:
                 response = await self.clients.post_json("analysis-service/analyze/bulk", analysis_request)
@@ -139,10 +133,7 @@ class DocumentAnalysisManager(BaseManager):
             detectors = await self._get_detectors_for_source(source_type)
 
             # Perform analysis
-            analysis_request = {
-                "source_type": source_type,
-                "detectors": detectors
-            }
+            analysis_request = {"source_type": source_type, "detectors": detectors}
 
             with self.console.status(f"[bold green]Analyzing {source_type} documents...") as status:
                 response = await self.clients.post_json("analysis-service/analyze/by-source", analysis_request)
@@ -167,11 +158,7 @@ class DocumentAnalysisManager(BaseManager):
                 enabled = "[green]YES[/green]" if config.get("enabled", True) else "[red]NO[/red]"
                 table_data.append([name, config.get("description", ""), enabled])
 
-            self.display.show_table(
-                "Available Analysis Detectors",
-                ["Detector", "Description", "Enabled"],
-                table_data
-            )
+            self.display.show_table("Available Analysis Detectors", ["Detector", "Description", "Enabled"], table_data)
 
             # Allow configuration
             detector_to_configure = await self.select_from_list(list(detectors.keys()), "Select detector to configure")
@@ -184,9 +171,13 @@ class DocumentAnalysisManager(BaseManager):
                 current_state = config.get("enabled", True)
                 new_state = not current_state
 
-                if await self.confirm_action(f"{'Enable' if new_state else 'Disable'} detector '{detector_to_configure}'?"):
+                if await self.confirm_action(
+                    f"{'Enable' if new_state else 'Disable'} detector '{detector_to_configure}'?"
+                ):
                     # In a real implementation, this would update the detector configuration
-                    self.display.show_success(f"Detector '{detector_to_configure}' {'enabled' if new_state else 'disabled'}")
+                    self.display.show_success(
+                        f"Detector '{detector_to_configure}' {'enabled' if new_state else 'disabled'}"
+                    )
 
         except Exception as e:
             self.display.show_error(f"Error configuring detectors: {e}")
@@ -202,17 +193,9 @@ class DocumentAnalysisManager(BaseManager):
 
             table_data = []
             for name, template in templates.items():
-                table_data.append([
-                    name,
-                    template.get("description", ""),
-                    str(len(template.get("detectors", [])))
-                ])
+                table_data.append([name, template.get("description", ""), str(len(template.get("detectors", [])))])
 
-            self.display.show_table(
-                "Analysis Templates",
-                ["Template", "Description", "Detectors"],
-                table_data
-            )
+            self.display.show_table("Analysis Templates", ["Template", "Description", "Detectors"], table_data)
 
         except Exception as e:
             self.display.show_error(f"Error loading analysis templates: {e}")
@@ -254,16 +237,18 @@ class DocumentAnalysisManager(BaseManager):
             if findings:
                 findings_data = []
                 for finding in findings[:10]:  # Show first 10
-                    findings_data.append([
-                        finding.get("type", ""),
-                        finding.get("severity", "").upper(),
-                        finding.get("description", "")[:50]
-                    ])
+                    findings_data.append(
+                        [
+                            finding.get("type", ""),
+                            finding.get("severity", "").upper(),
+                            finding.get("description", "")[:50],
+                        ]
+                    )
 
                 self.display.show_table(
                     f"Detailed Findings - {first_result.get('document_id', 'Unknown')}",
                     ["Type", "Severity", "Description"],
-                    findings_data
+                    findings_data,
                 )
 
     async def _get_available_detectors(self) -> Dict[str, Dict[str, Any]]:
@@ -273,23 +258,19 @@ class DocumentAnalysisManager(BaseManager):
             "consistency": {
                 "description": "Checks document consistency and formatting",
                 "enabled": True,
-                "category": "quality"
+                "category": "quality",
             },
             "security": {
                 "description": "Scans for security vulnerabilities and sensitive data",
                 "enabled": True,
-                "category": "security"
+                "category": "security",
             },
-            "syntax": {
-                "description": "Validates code syntax and structure",
-                "enabled": True,
-                "category": "code"
-            },
+            "syntax": {"description": "Validates code syntax and structure", "enabled": True, "category": "code"},
             "dependencies": {
                 "description": "Analyzes dependency relationships and imports",
                 "enabled": False,
-                "category": "code"
-            }
+                "category": "code",
+            },
         }
 
     async def _select_multiple_detectors(self, detectors: List[str]) -> List[str]:
@@ -321,7 +302,7 @@ class DocumentAnalysisManager(BaseManager):
             "file": ["consistency", "syntax", "dependencies"],
             "web": ["consistency", "security"],
             "database": ["consistency"],
-            "git": ["consistency", "syntax", "dependencies"]
+            "git": ["consistency", "syntax", "dependencies"],
         }
 
         return detector_mapping.get(source_type, ["consistency"])
@@ -331,14 +312,14 @@ class DocumentAnalysisManager(BaseManager):
         return {
             "security_audit": {
                 "description": "Comprehensive security analysis",
-                "detectors": ["security", "consistency"]
+                "detectors": ["security", "consistency"],
             },
             "code_review": {
                 "description": "Code quality and syntax review",
-                "detectors": ["syntax", "dependencies", "consistency"]
+                "detectors": ["syntax", "dependencies", "consistency"],
             },
             "documentation_check": {
                 "description": "Documentation consistency and quality",
-                "detectors": ["consistency"]
-            }
+                "detectors": ["consistency"],
+            },
         }

@@ -1,26 +1,25 @@
 """Tests for Application Validators."""
 
+from unittest.mock import AsyncMock, Mock
+
 import pytest
-from unittest.mock import Mock, AsyncMock
-from datetime import datetime, timezone
-from typing import Dict, Any, List
 
 from ...application.validators.base_validator import (
-    BaseValidator, ValidationResult, ValidationError, ValidationSeverity
+    BaseValidator,
+    ValidationError,
+    ValidationResult,
+    ValidationSeverity,
 )
 from ...application.validators.business_validators import (
-    DocumentBusinessValidator, AnalysisBusinessValidator, FindingBusinessValidator
+    AnalysisBusinessValidator,
+    DocumentBusinessValidator,
+    FindingBusinessValidator,
 )
-from ...application.validators.command_validators import (
-    CreateDocumentCommandValidator, PerformAnalysisCommandValidator
-)
-from ...application.validators.query_validators import (
-    GetDocumentQueryValidator, GetDocumentsQueryValidator
-)
+from ...application.validators.command_validators import CreateDocumentCommandValidator, PerformAnalysisCommandValidator
+from ...application.validators.query_validators import GetDocumentQueryValidator, GetDocumentsQueryValidator
 from ...application.validators.validation_pipeline import ValidationPipeline
-
-from ...domain.entities.document import Document, DocumentStatus
 from ...domain.entities.analysis import Analysis, AnalysisStatus
+from ...domain.entities.document import Document
 from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence
@@ -43,23 +42,21 @@ class TestBaseValidator:
         assert len(result.warnings) == 0
 
         # Test with errors
-        result.add_error(ValidationError(
-            message="Test error",
-            code="TEST_ERROR",
-            severity=ValidationSeverity.ERROR,
-            field="test_field"
-        ))
+        result.add_error(
+            ValidationError(
+                message="Test error", code="TEST_ERROR", severity=ValidationSeverity.ERROR, field="test_field"
+            )
+        )
 
         assert result.is_valid is False
         assert len(result.errors) == 1
 
         # Test with warnings
-        result.add_warning(ValidationError(
-            message="Test warning",
-            code="TEST_WARNING",
-            severity=ValidationSeverity.WARNING,
-            field="test_field"
-        ))
+        result.add_warning(
+            ValidationError(
+                message="Test warning", code="TEST_WARNING", severity=ValidationSeverity.WARNING, field="test_field"
+            )
+        )
 
         assert len(result.warnings) == 1
 
@@ -71,7 +68,7 @@ class TestBaseValidator:
             severity=ValidationSeverity.ERROR,
             field="test_field",
             value="invalid_value",
-            metadata={"additional": "info"}
+            metadata={"additional": "info"},
         )
 
         assert error.message == "Test error message"
@@ -98,9 +95,7 @@ class TestDocumentBusinessValidator:
 
     def test_validator_creation(self, mock_document_repository):
         """Test creating document business validator."""
-        validator = DocumentBusinessValidator(
-            document_repository=mock_document_repository
-        )
+        validator = DocumentBusinessValidator(document_repository=mock_document_repository)
 
         assert validator.document_repository == mock_document_repository
 
@@ -110,12 +105,7 @@ class TestDocumentBusinessValidator:
         # Create a large document
         large_content = "x" * (15 * 1024 * 1024)  # 15MB
 
-        document = Document(
-            id='large-doc',
-            title='Large Document',
-            content=large_content,
-            repository_id='repo-123'
-        )
+        document = Document(id="large-doc", title="Large Document", content=large_content, repository_id="repo-123")
 
         validator = DocumentBusinessValidator()
 
@@ -134,15 +124,12 @@ class TestDocumentBusinessValidator:
     async def test_validate_normal_document(self):
         """Test validation of normal-sized documents."""
         document = Document(
-            id='normal-doc',
-            title='Normal Document',
-            content='This is normal content',
-            repository_id='repo-123'
+            id="normal-doc", title="Normal Document", content="This is normal content", repository_id="repo-123"
         )
 
         # Mock attributes
         document.content = Mock()
-        document.content.text = 'This is normal content'
+        document.content.text = "This is normal content"
         document.word_count = 50
 
         validator = DocumentBusinessValidator()
@@ -158,21 +145,14 @@ class TestDocumentBusinessValidator:
         """Test validation of duplicate titles."""
         # Setup mock repository
         existing_doc = Mock()
-        existing_doc.id = 'existing-doc'
-        existing_doc.title = 'Duplicate Title'
+        existing_doc.id = "existing-doc"
+        existing_doc.title = "Duplicate Title"
 
         mock_document_repository.find_by_title = AsyncMock(return_value=[existing_doc])
 
-        document = Document(
-            id='new-doc',
-            title='Duplicate Title',
-            content='New content',
-            repository_id='repo-123'
-        )
+        document = Document(id="new-doc", title="Duplicate Title", content="New content", repository_id="repo-123")
 
-        validator = DocumentBusinessValidator(
-            document_repository=mock_document_repository
-        )
+        validator = DocumentBusinessValidator(document_repository=mock_document_repository)
 
         result = await validator.validate(document)
 
@@ -192,14 +172,10 @@ class TestAnalysisBusinessValidator:
     @pytest.mark.asyncio
     async def test_validate_analysis_with_results(self):
         """Test validation of analysis with results."""
-        analysis = Analysis(
-            id='analysis-123',
-            document_id='doc-123',
-            analysis_type=AnalysisType.SEMANTIC_SIMILARITY
-        )
+        analysis = Analysis(id="analysis-123", document_id="doc-123", analysis_type=AnalysisType.SEMANTIC_SIMILARITY)
 
         # Set up analysis with results
-        analysis.results = {'similarity_score': 0.85}
+        analysis.results = {"similarity_score": 0.85}
         analysis.confidence = Confidence(0.85)
 
         validator = AnalysisBusinessValidator()
@@ -213,10 +189,10 @@ class TestAnalysisBusinessValidator:
     async def test_validate_analysis_without_results(self):
         """Test validation of analysis without results."""
         analysis = Analysis(
-            id='analysis-123',
-            document_id='doc-123',
+            id="analysis-123",
+            document_id="doc-123",
             analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
-            status=AnalysisStatus.PENDING
+            status=AnalysisStatus.PENDING,
         )
 
         validator = AnalysisBusinessValidator()
@@ -230,10 +206,10 @@ class TestAnalysisBusinessValidator:
     async def test_validate_failed_analysis(self):
         """Test validation of failed analysis."""
         analysis = Analysis(
-            id='analysis-123',
-            document_id='doc-123',
+            id="analysis-123",
+            document_id="doc-123",
             analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
-            status=AnalysisStatus.FAILED
+            status=AnalysisStatus.FAILED,
         )
 
         analysis.error_message = "Analysis failed"
@@ -258,14 +234,14 @@ class TestFindingBusinessValidator:
     async def test_validate_high_severity_finding(self):
         """Test validation of high severity finding."""
         finding = Finding(
-            id='finding-123',
-            analysis_id='analysis-123',
-            document_id='doc-123',
-            title='Critical Security Issue',
-            description='Found critical vulnerability',
+            id="finding-123",
+            analysis_id="analysis-123",
+            document_id="doc-123",
+            title="Critical Security Issue",
+            description="Found critical vulnerability",
             severity=FindingSeverity.HIGH,
             confidence=Confidence(0.9),
-            category='security'
+            category="security",
         )
 
         validator = FindingBusinessValidator()
@@ -282,14 +258,14 @@ class TestFindingBusinessValidator:
     async def test_validate_low_confidence_finding(self):
         """Test validation of low confidence finding."""
         finding = Finding(
-            id='finding-123',
-            analysis_id='analysis-123',
-            document_id='doc-123',
-            title='Potential Issue',
-            description='Might be an issue',
+            id="finding-123",
+            analysis_id="analysis-123",
+            document_id="doc-123",
+            title="Potential Issue",
+            description="Might be an issue",
             severity=FindingSeverity.MEDIUM,
             confidence=Confidence(0.3),  # Low confidence
-            category='code_quality'
+            category="code_quality",
         )
 
         validator = FindingBusinessValidator()
@@ -310,20 +286,13 @@ class TestCommandValidators:
         validator = CreateDocumentCommandValidator()
 
         # Valid command
-        valid_command = {
-            'title': 'Test Document',
-            'content': 'Test content',
-            'repository_id': 'repo-123'
-        }
+        valid_command = {"title": "Test Document", "content": "Test content", "repository_id": "repo-123"}
 
         result = validator.validate(valid_command)
         assert result.is_valid
 
         # Invalid command - missing required fields
-        invalid_command = {
-            'title': '',  # Empty title
-            'content': 'Test content'
-        }
+        invalid_command = {"title": "", "content": "Test content"}  # Empty title
 
         result = validator.validate(invalid_command)
         assert not result.is_valid
@@ -334,20 +303,13 @@ class TestCommandValidators:
         validator = PerformAnalysisCommandValidator()
 
         # Valid command
-        valid_command = {
-            'document_id': 'doc-123',
-            'analysis_type': 'semantic_similarity',
-            'priority': 'normal'
-        }
+        valid_command = {"document_id": "doc-123", "analysis_type": "semantic_similarity", "priority": "normal"}
 
         result = validator.validate(valid_command)
         assert result.is_valid
 
         # Invalid command - invalid analysis type
-        invalid_command = {
-            'document_id': 'doc-123',
-            'analysis_type': 'invalid_type'
-        }
+        invalid_command = {"document_id": "doc-123", "analysis_type": "invalid_type"}
 
         result = validator.validate(invalid_command)
         assert not result.is_valid
@@ -361,18 +323,13 @@ class TestQueryValidators:
         validator = GetDocumentQueryValidator()
 
         # Valid query
-        valid_query = {
-            'document_id': 'doc-123',
-            'include_metadata': True
-        }
+        valid_query = {"document_id": "doc-123", "include_metadata": True}
 
         result = validator.validate(valid_query)
         assert result.is_valid
 
         # Invalid query - missing document_id
-        invalid_query = {
-            'include_metadata': True
-        }
+        invalid_query = {"include_metadata": True}
 
         result = validator.validate(invalid_query)
         assert not result.is_valid
@@ -382,20 +339,13 @@ class TestQueryValidators:
         validator = GetDocumentsQueryValidator()
 
         # Valid query
-        valid_query = {
-            'repository_id': 'repo-123',
-            'limit': 50,
-            'offset': 0
-        }
+        valid_query = {"repository_id": "repo-123", "limit": 50, "offset": 0}
 
         result = validator.validate(valid_query)
         assert result.is_valid
 
         # Invalid query - negative limit
-        invalid_query = {
-            'repository_id': 'repo-123',
-            'limit': -1
-        }
+        invalid_query = {"repository_id": "repo-123", "limit": -1}
 
         result = validator.validate(invalid_query)
         assert not result.is_valid
@@ -415,10 +365,10 @@ class TestValidationPipeline:
         pipeline = ValidationPipeline()
         validator = Mock()
 
-        pipeline.add_validator('test', validator)
+        pipeline.add_validator("test", validator)
 
-        assert 'test' in pipeline._validators
-        assert pipeline._validators['test'] == validator
+        assert "test" in pipeline._validators
+        assert pipeline._validators["test"] == validator
 
     @pytest.mark.asyncio
     async def test_pipeline_execution(self):
@@ -429,10 +379,10 @@ class TestValidationPipeline:
         mock_validator = Mock()
         mock_validator.validate = AsyncMock(return_value=ValidationResult())
 
-        pipeline.add_validator('mock', mock_validator)
+        pipeline.add_validator("mock", mock_validator)
 
         # Execute pipeline
-        data = {'test': 'data'}
+        data = {"test": "data"}
         result = await pipeline.validate(data)
 
         # Assert
@@ -447,17 +397,15 @@ class TestValidationPipeline:
         # Mock validator that returns errors
         mock_validator = Mock()
         error_result = ValidationResult()
-        error_result.add_error(ValidationError(
-            message="Validation failed",
-            code="VALIDATION_ERROR",
-            severity=ValidationSeverity.ERROR
-        ))
+        error_result.add_error(
+            ValidationError(message="Validation failed", code="VALIDATION_ERROR", severity=ValidationSeverity.ERROR)
+        )
         mock_validator.validate = AsyncMock(return_value=error_result)
 
-        pipeline.add_validator('mock', mock_validator)
+        pipeline.add_validator("mock", mock_validator)
 
         # Execute pipeline
-        data = {'test': 'data'}
+        data = {"test": "data"}
         result = await pipeline.validate(data)
 
         # Assert
@@ -476,18 +424,16 @@ class TestValidationPipeline:
         # Second validator - fails
         validator2 = Mock()
         error_result = ValidationResult()
-        error_result.add_error(ValidationError(
-            message="Second validation failed",
-            code="SECOND_ERROR",
-            severity=ValidationSeverity.ERROR
-        ))
+        error_result.add_error(
+            ValidationError(message="Second validation failed", code="SECOND_ERROR", severity=ValidationSeverity.ERROR)
+        )
         validator2.validate = AsyncMock(return_value=error_result)
 
-        pipeline.add_validator('first', validator1)
-        pipeline.add_validator('second', validator2)
+        pipeline.add_validator("first", validator1)
+        pipeline.add_validator("second", validator2)
 
         # Execute pipeline
-        data = {'test': 'data'}
+        data = {"test": "data"}
         result = await pipeline.validate(data)
 
         # Assert
@@ -513,27 +459,18 @@ class TestValidatorIntegration:
         doc_validator = DocumentBusinessValidator()
         analysis_validator = AnalysisBusinessValidator()
 
-        pipeline.add_validator('document', doc_validator)
-        pipeline.add_validator('analysis', analysis_validator)
+        pipeline.add_validator("document", doc_validator)
+        pipeline.add_validator("analysis", analysis_validator)
 
         # Create test data
-        document = Document(
-            id='test-doc',
-            title='Test Document',
-            content='Test content',
-            repository_id='repo-123'
-        )
+        document = Document(id="test-doc", title="Test Document", content="Test content", repository_id="repo-123")
 
         # Mock document attributes
         document.content = Mock()
-        document.content.text = 'Test content'
+        document.content.text = "Test content"
         document.word_count = 2
 
-        analysis = Analysis(
-            id='test-analysis',
-            document_id='test-doc',
-            analysis_type=AnalysisType.SEMANTIC_SIMILARITY
-        )
+        analysis = Analysis(id="test-analysis", document_id="test-doc", analysis_type=AnalysisType.SEMANTIC_SIMILARITY)
 
         # Test document validation
         doc_result = await pipeline.validate(document)
@@ -552,29 +489,25 @@ class TestValidatorIntegration:
         class ErrorValidator(BaseValidator):
             async def validate(self, data):
                 result = ValidationResult()
-                result.add_error(ValidationError(
-                    message="Test error",
-                    code="TEST_ERROR",
-                    severity=ValidationSeverity.ERROR
-                ))
+                result.add_error(
+                    ValidationError(message="Test error", code="TEST_ERROR", severity=ValidationSeverity.ERROR)
+                )
                 return result
 
         # Create validator that produces warnings
         class WarningValidator(BaseValidator):
             async def validate(self, data):
                 result = ValidationResult()
-                result.add_warning(ValidationError(
-                    message="Test warning",
-                    code="TEST_WARNING",
-                    severity=ValidationSeverity.WARNING
-                ))
+                result.add_warning(
+                    ValidationError(message="Test warning", code="TEST_WARNING", severity=ValidationSeverity.WARNING)
+                )
                 return result
 
-        pipeline.add_validator('error', ErrorValidator())
-        pipeline.add_validator('warning', WarningValidator())
+        pipeline.add_validator("error", ErrorValidator())
+        pipeline.add_validator("warning", WarningValidator())
 
         # Execute validation
-        data = {'test': 'data'}
+        data = {"test": "data"}
         result = await pipeline.validate(data)
 
         # Assert aggregation
@@ -593,12 +526,12 @@ class TestValidatorIntegration:
         for i in range(5):
             validator = Mock()
             validator.validate = AsyncMock(return_value=ValidationResult())
-            pipeline.add_validator(f'validator_{i}', validator)
+            pipeline.add_validator(f"validator_{i}", validator)
 
         # Measure execution time
         start_time = time.time()
 
-        data = {'test': 'data'}
+        data = {"test": "data"}
         result = await pipeline.validate(data)
 
         end_time = time.time()

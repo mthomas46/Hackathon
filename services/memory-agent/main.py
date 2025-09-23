@@ -14,79 +14,66 @@ Responsibilities:
 
 Dependencies: shared middlewares, Redis for event pub/sub, shared models and utilities.
 """
-from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import List, Optional, Any, Dict
+
 import asyncio
 import os
+import time
 from contextlib import asynccontextmanager
-from datetime import timedelta
+from typing import Optional
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from services.shared.core.constants_new import ServiceNames
+from services.shared.core.models.models import MemoryItem
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses.responses import create_success_response
-from services.shared.utilities.error_handling import ServiceException
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import utc_now, setup_common_middleware, attach_self_register
-from services.shared.core.models.models import MemoryItem
-from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities.logging_client import get_log_collector_client
+from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
 
 try:
     import redis.asyncio as aioredis  # type: ignore
 except Exception:
     aioredis = None
 
+# Global logger client instance
+logger_client = None
+
 # ============================================================================
 # LOCAL MODULES - Service-specific functionality
 # ============================================================================
 try:
+    from .modules.memory_ops import get_memory_stats, list_memory_items, put_memory_item
     from .modules.shared_utils import (
-        get_memory_max_items,
-        get_memory_ttl_seconds,
-        get_redis_url,
-        handle_memory_agent_error,
-        create_memory_agent_success_response,
         build_memory_agent_context,
-        create_memory_item,
-        serialize_memory_value,
-        deserialize_memory_value,
-        cleanup_expired_memory_items,
-        get_memory_stats_summary,
+        create_memory_agent_success_response,
+        handle_memory_agent_error,
         validate_memory_item,
-        extract_endpoint_from_text
     )
-    from .modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.shared_utils import (
-        get_memory_max_items,
-        get_memory_ttl_seconds,
-        get_redis_url,
         handle_memory_agent_error,
         create_memory_agent_success_response,
         build_memory_agent_context,
-        create_memory_item,
-        serialize_memory_value,
-        deserialize_memory_value,
-        cleanup_expired_memory_items,
-        get_memory_stats_summary,
         validate_memory_item,
-        extract_endpoint_from_text
     )
-    from modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats, cleanup_expired_items
+    from modules.memory_ops import put_memory_item, list_memory_items, get_memory_stats
+
 from .modules.event_processor import event_processor
+
+# Import global memory state from dedicated module to avoid circular dependencies
 
 # ============================================================================
 # GLOBAL STATE MANAGEMENT - Centralized memory state
 # ============================================================================
 
-# Import global memory state from dedicated module to avoid circular dependencies
-from .modules.memory_state import _memory
 
 # Service configuration constants
 SERVICE_NAME = "memory-agent"
@@ -101,14 +88,43 @@ _event_task = None
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
     """Lifespan context manager for memory agent startup/shutdown."""
-    global _event_task
+    global _event_task, logger_client
+
     try:
+        # Initialize logger client
+        try:
+            logger_client = await get_log_collector_client(ServiceNames.MEMORY_AGENT)
+            if logger_client:
+                await logger_client.log_business_event(
+                    "memory_agent_startup",
+                    {
+                        "version": SERVICE_VERSION,
+                        "redis_enabled": aioredis is not None,
+                        "memory_persistence": True,
+                        "ttl_enabled": True,
+                        "event_streaming": True,
+                    },
+                )
+                await logger_client.log_info(
+                    "Memory Agent service started",
+                    {"redis_available": aioredis is not None, "memory_management": True, "event_streaming": True},
+                )
+        except Exception as e:
+            print(f"Failed to initialize log collector client: {e}")
+
         # Initialize Redis and start event processing
         if await event_processor.initialize_redis():
             await event_processor.subscribe_to_channels()
             _event_task = asyncio.create_task(event_processor.process_events())
         yield
     finally:
+        # Log shutdown
+        if logger_client:
+            try:
+                await logger_client.log_info("Memory Agent service shutting down")
+            except Exception:
+                pass
+
         if _event_task:
             _event_task.cancel()
 
@@ -122,7 +138,7 @@ app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Memory agent service for storing operational context and event summaries",
-    lifespan=_lifespan
+    lifespan=_lifespan,
 )
 
 # Use common middleware setup and error handlers to reduce duplication across services
@@ -130,6 +146,7 @@ setup_common_middleware(app, ServiceNames.MEMORY_AGENT)
 
 # Auto-register with orchestrator
 attach_self_register(app, ServiceNames.MEMORY_AGENT)
+
 
 # Custom memory-specific health endpoint
 @app.get("/health")
@@ -146,7 +163,7 @@ async def memory_health():
             "memory_capacity": stats.get("max_items", 0),
             "memory_usage_percent": stats.get("usage_percent", 0),
             "ttl_seconds": stats.get("ttl_seconds", 0),
-            "description": "Memory agent operational with active memory management"
+            "description": "Memory agent operational with active memory management",
         }
     except Exception as e:
         return {
@@ -154,12 +171,13 @@ async def memory_health():
             "service": SERVICE_NAME,
             "version": SERVICE_VERSION,
             "error": str(e),
-            "description": "Memory agent experiencing issues"
+            "description": "Memory agent experiencing issues",
         }
 
 
 class PutMemoryRequest(BaseModel):
-    """Request model for storing memory items.
+    """
+    Request model for storing memory items.
 
     Contains a single memory item to be stored in the memory agent's
     operational context storage with TTL-based expiration.
@@ -172,37 +190,184 @@ class PutMemoryRequest(BaseModel):
 @app.post("/memory/put")
 async def put_memory(req: PutMemoryRequest):
     """Store a memory item with validation and error handling."""
+    start_time = time.time()
+    request_id = f"mem_put_{int(time.time() * 1000)}"
+
     try:
+        # Log memory storage start
+        if logger_client:
+            await logger_client.log_business_event(
+                "memory_item_storage_started",
+                {
+                    "request_id": request_id,
+                    "item_type": getattr(req.item, "type", None),
+                    "item_key": getattr(req.item, "key", None),
+                    "has_summary": bool(getattr(req.item, "summary", None)),
+                    "data_size": len(str(getattr(req.item, "data", {}))),
+                },
+            )
+
+            await logger_client.log_info(
+                "Storing memory item",
+                {
+                    "request_id": request_id,
+                    "item_type": getattr(req.item, "type", None),
+                    "has_key": bool(getattr(req.item, "key", None)),
+                },
+            )
+
         # Validate memory item
         validate_memory_item(req.item)
 
         result = put_memory_item(req.item)
+        response_time = time.time() - start_time
+
+        # Log successful storage
+        if logger_client:
+            await logger_client.log_business_event(
+                "memory_item_stored",
+                {
+                    "request_id": request_id,
+                    "item_type": getattr(req.item, "type", None),
+                    "item_key": getattr(req.item, "key", None),
+                    "total_memory_items": result.get("count", 1),
+                    "response_time_seconds": response_time,
+                    "success": True,
+                },
+            )
+
+            await logger_client.log_performance_metric(
+                "memory_storage",
+                response_time,
+                {"request_id": request_id, "item_type": getattr(req.item, "type", None), "storage_success": True},
+            )
 
         context = build_memory_agent_context("store", item_count=result.get("count", 1))
         context = {k: v for k, v in context.items() if k in ["request_id"]}
         return create_memory_agent_success_response("stored", result, **context)
 
     except Exception as e:
-        context = {"item_type": getattr(req.item, 'type', None)}
+        error_time = time.time() - start_time
+
+        # Log storage failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Memory item storage failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "item_type": getattr(req.item, "type", None),
+                    "item_key": getattr(req.item, "key", None),
+                    "error_type": type(e).__name__,
+                    "response_time_seconds": error_time,
+                },
+                error=e,
+            )
+
+            await logger_client.log_business_event(
+                "memory_item_storage_failed",
+                {
+                    "request_id": request_id,
+                    "item_type": getattr(req.item, "type", None),
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
+
+        context = {"item_type": getattr(req.item, "type", None)}
         return handle_memory_agent_error("store memory item", e, **context)
 
 
 @app.get("/memory/list")
 async def list_memory(type: Optional[str] = None, key: Optional[str] = None, limit: int = 100):
     """List memory items with filtering and pagination."""
+    start_time = time.time()
+    request_id = f"mem_list_{int(time.time() * 1000)}"
+
     try:
+        # Log memory retrieval start
+        if logger_client:
+            await logger_client.log_business_event(
+                "memory_items_retrieval_started",
+                {
+                    "request_id": request_id,
+                    "filter_type": type,
+                    "filter_key": key,
+                    "limit": limit,
+                    "has_filters": bool(type or key),
+                },
+            )
+
+            await logger_client.log_info(
+                "Retrieving memory items",
+                {"request_id": request_id, "filter_type": type, "has_key_filter": bool(key), "limit": limit},
+            )
+
         items = list_memory_items(type, key, limit)
         result = {"items": [m.model_dump() for m in items]}
+        response_time = time.time() - start_time
+
+        # Log successful retrieval
+        if logger_client:
+            await logger_client.log_business_event(
+                "memory_items_retrieved",
+                {
+                    "request_id": request_id,
+                    "filter_type": type,
+                    "filter_key": key,
+                    "limit": limit,
+                    "items_returned": len(items),
+                    "response_time_seconds": response_time,
+                    "success": True,
+                },
+            )
+
+            await logger_client.log_performance_metric(
+                "memory_retrieval",
+                response_time,
+                {
+                    "request_id": request_id,
+                    "filter_type": type,
+                    "items_returned": len(items),
+                    "retrieval_success": True,
+                },
+            )
 
         context = build_memory_agent_context("list", memory_type=type, item_count=len(items), limit=limit)
         context = {k: v for k, v in context.items() if k in ["request_id"]}
         return create_memory_agent_success_response("retrieved", result, **context)
 
     except Exception as e:
+        error_time = time.time() - start_time
+
+        # Log retrieval failure
+        if logger_client:
+            await logger_client.log_error(
+                f"Memory items retrieval failed: {str(e)}",
+                {
+                    "request_id": request_id,
+                    "filter_type": type,
+                    "filter_key": key,
+                    "limit": limit,
+                    "error_type": type(e).__name__,
+                    "response_time_seconds": error_time,
+                },
+                error=e,
+            )
+
+            await logger_client.log_business_event(
+                "memory_items_retrieval_failed",
+                {
+                    "request_id": request_id,
+                    "filter_type": type,
+                    "error_type": type(e).__name__,
+                    "error_message": str(e),
+                    "response_time_seconds": error_time,
+                },
+            )
+
         context = {"memory_type": type, "key": key}
         return handle_memory_agent_error("list memory items", e, **context)
-
-
 
 
 ## Lifespan handles startup
@@ -211,11 +376,5 @@ async def list_memory(type: Optional[str] = None, key: Optional[str] = None, lim
 if __name__ == "__main__":
     """Run the Memory Agent service directly."""
     import uvicorn
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
 
-
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")

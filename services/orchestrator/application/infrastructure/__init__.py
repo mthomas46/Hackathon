@@ -1,4 +1,4 @@
-"""Infrastructure Application Layer"""
+"""Infrastructure Application Layer."""
 
 from .commands import *
 from .queries import *

@@ -1,18 +1,17 @@
-"""API Documentation Validation Tests.
+"""
+API Documentation Validation Tests.
 
-This module contains comprehensive tests for validating API documentation,
-including OpenAPI spec compliance, endpoint documentation completeness,
-and documentation generation accuracy.
+This module contains comprehensive tests for validating API
+documentation, including OpenAPI spec compliance, endpoint documentation
+completeness, and documentation generation accuracy.
 """
 
-import pytest
 import json
-import yaml
-from pathlib import Path
 import sys
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock
-import re
+from pathlib import Path
+
+import pytest
+import yaml
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -30,7 +29,7 @@ class TestOpenAPISpecification:
             Path(__file__).parent.parent.parent / "docs" / "openapi.yaml",
             Path(__file__).parent.parent.parent / "docs" / "openapi.json",
             Path(__file__).parent.parent.parent / "swagger.yaml",
-            Path(__file__).parent.parent.parent / "swagger.json"
+            Path(__file__).parent.parent.parent / "swagger.json",
         ]
 
         spec_files = [path for path in possible_paths if path.exists()]
@@ -43,22 +42,17 @@ class TestOpenAPISpecification:
                 "info": {
                     "title": "Project Simulation Service API",
                     "version": "1.0.0",
-                    "description": "API for project simulation and analysis"
+                    "description": "API for project simulation and analysis",
                 },
                 "paths": {
                     "/api/v1/simulations": {
-                        "get": {
-                            "summary": "List simulations",
-                            "responses": {
-                                "200": {"description": "Success"}
-                            }
-                        }
+                        "get": {"summary": "List simulations", "responses": {"200": {"description": "Success"}}}
                     }
-                }
+                },
             }
 
             spec_path = Path(__file__).parent.parent.parent / "openapi.json"
-            with open(spec_path, 'w') as f:
+            with open(spec_path, "w") as f:
                 json.dump(basic_spec, f, indent=2)
 
             spec_files = [spec_path]
@@ -72,8 +66,8 @@ class TestOpenAPISpecification:
         if not spec_path.exists():
             pytest.skip("OpenAPI spec not found")
 
-        with open(spec_path, 'r') as f:
-            if spec_path.suffix == '.yaml':
+        with open(spec_path, "r") as f:
+            if spec_path.suffix == ".yaml":
                 spec = yaml.safe_load(f)
             else:
                 spec = json.load(f)
@@ -105,7 +99,7 @@ class TestOpenAPISpecification:
         if not spec_path.exists():
             pytest.skip("OpenAPI spec not found")
 
-        with open(spec_path, 'r') as f:
+        with open(spec_path, "r") as f:
             spec = json.load(f)
 
         paths = spec["paths"]
@@ -144,7 +138,7 @@ class TestOpenAPISpecification:
         if not spec_path.exists():
             pytest.skip("OpenAPI spec not found")
 
-        with open(spec_path, 'r') as f:
+        with open(spec_path, "r") as f:
             spec = json.load(f)
 
         # Check for schemas section
@@ -190,7 +184,7 @@ class TestEndpointDocumentation:
             {"path": "/api/v1/simulations", "method": "POST", "summary": "Create new simulation"},
             {"path": "/api/v1/simulations/{id}", "method": "GET", "summary": "Get simulation details"},
             {"path": "/api/v1/simulations/{id}/execute", "method": "POST", "summary": ""},
-            {"path": "/api/v1/health", "method": "GET", "summary": "Health check endpoint"}
+            {"path": "/api/v1/health", "method": "GET", "summary": "Health check endpoint"},
         ]
 
         incomplete_summaries = []
@@ -212,14 +206,10 @@ class TestEndpointDocumentation:
                 "query": [
                     {"name": "status", "type": "string", "description": "Filter by simulation status"},
                     {"name": "limit", "type": "integer", "description": "Maximum number of results"},
-                    {"name": "offset", "type": "integer", "description": ""}
+                    {"name": "offset", "type": "integer", "description": ""},
                 ]
             },
-            "/api/v1/simulations/{id}": {
-                "path": [
-                    {"name": "id", "type": "string", "description": "Simulation ID"}
-                ]
-            }
+            "/api/v1/simulations/{id}": {"path": [{"name": "id", "type": "string", "description": "Simulation ID"}]},
         }
 
         parameter_issues = []
@@ -240,12 +230,12 @@ class TestEndpointDocumentation:
             "/api/v1/simulations": {
                 "200": {"description": "Success", "schema": "SimulationList"},
                 "400": {"description": "", "schema": "Error"},
-                "500": {"description": "Internal server error", "schema": "Error"}
+                "500": {"description": "Internal server error", "schema": "Error"},
             },
             "/api/v1/simulations/{id}": {
                 "200": {"description": "Simulation details", "schema": "Simulation"},
-                "404": {"description": "Simulation not found", "schema": "Error"}
-            }
+                "404": {"description": "Simulation not found", "schema": "Error"},
+            },
         }
 
         response_issues = []
@@ -276,10 +266,10 @@ class TestDocumentationGeneration:
             "endpoints": [
                 {"path": "/api/v1/simulations", "methods": ["GET", "POST"]},
                 {"path": "/api/v1/simulations/{id}", "methods": ["GET", "PUT", "DELETE"]},
-                {"path": "/api/v1/health", "methods": ["GET"]}
+                {"path": "/api/v1/health", "methods": ["GET"]},
             ],
             "models": ["Simulation", "SimulationCreate", "Error"],
-            "tags": ["simulations", "health"]
+            "tags": ["simulations", "health"],
         }
 
         # Simulate generating documentation
@@ -288,7 +278,7 @@ class TestDocumentationGeneration:
             "version": "1.0.0",
             "endpoints_count": len(mock_api_structure["endpoints"]),
             "models_count": len(mock_api_structure["models"]),
-            "tags": mock_api_structure["tags"]
+            "tags": mock_api_structure["tags"],
         }
 
         # Validate generated documentation
@@ -306,7 +296,7 @@ class TestDocumentationGeneration:
             "Create new simulation",
             "get simulation details",  # Inconsistent capitalization
             "Delete simulation",  # Missing article
-            "Health check endpoint"
+            "Health check endpoint",
         ]
 
         format_issues = []
@@ -336,7 +326,7 @@ class TestDocumentationGeneration:
             "endpoints_with_responses": 7,
             "endpoints_with_examples": 3,
             "total_models": 5,
-            "documented_models": 4
+            "documented_models": 4,
         }
 
         # Calculate completeness scores
@@ -348,11 +338,11 @@ class TestDocumentationGeneration:
 
         # Overall completeness score
         overall_score = (
-            endpoint_completeness * 0.3 +
-            param_completeness * 0.2 +
-            response_completeness * 0.2 +
-            example_completeness * 0.15 +
-            model_completeness * 0.15
+            endpoint_completeness * 0.3
+            + param_completeness * 0.2
+            + response_completeness * 0.2
+            + example_completeness * 0.15
+            + model_completeness * 0.15
         )
 
         # Should have reasonable completeness
@@ -365,6 +355,7 @@ class TestDocumentationGeneration:
         print("✅ Documentation completeness score validated")
         print(".2f")
 
+
 class TestInteractiveDocumentation:
     """Test interactive documentation features."""
 
@@ -376,7 +367,7 @@ class TestInteractiveDocumentation:
             "request_examples": True,
             "response_examples": False,  # Missing
             "authentication_docs": True,
-            "parameter_validation": True
+            "parameter_validation": True,
         }
 
         missing_features = [k for k, v in interactive_features.items() if not v]
@@ -392,7 +383,7 @@ class TestInteractiveDocumentation:
         search_index = {
             "simulations": ["list", "create", "get", "update", "delete"],
             "health": ["check", "status", "metrics"],
-            "documents": ["generate", "store", "retrieve", "analyze"]
+            "documents": ["generate", "store", "retrieve", "analyze"],
         }
 
         # Test search functionality
@@ -411,16 +402,17 @@ class TestInteractiveDocumentation:
         # Test various searches
         search_tests = [
             ("simul", "simulations"),  # Partial category match
-            ("create", "create"),      # Exact term match
-            ("health", "health"),      # Exact category match
-            ("xyz", [])               # No match
+            ("create", "create"),  # Exact term match
+            ("health", "health"),  # Exact category match
+            ("xyz", []),  # No match
         ]
 
         for query, expected_category in search_tests:
             results = search_docs(query)
             if expected_category:
-                assert any(expected_category in result for result in results), \
-                    f"Search for '{query}' should return {expected_category} results"
+                assert any(
+                    expected_category in result for result in results
+                ), f"Search for '{query}' should return {expected_category} results"
             else:
                 assert len(results) == 0, f"Search for '{query}' should return no results"
 
@@ -432,21 +424,21 @@ class TestInteractiveDocumentation:
         doc_versions = [
             {"version": "1.0.0", "endpoints": 5, "last_updated": "2024-01-01"},
             {"version": "1.1.0", "endpoints": 8, "last_updated": "2024-02-01"},
-            {"version": "1.2.0", "endpoints": 10, "last_updated": "2024-03-01"}
+            {"version": "1.2.0", "endpoints": 10, "last_updated": "2024-03-01"},
         ]
 
         # Validate version progression
         for i in range(1, len(doc_versions)):
-            prev_version = doc_versions[i-1]
+            prev_version = doc_versions[i - 1]
             curr_version = doc_versions[i]
 
             # Endpoints should not decrease
-            assert curr_version["endpoints"] >= prev_version["endpoints"], \
-                f"Version {curr_version['version']} has fewer endpoints than {prev_version['version']}"
+            assert (
+                curr_version["endpoints"] >= prev_version["endpoints"]
+            ), f"Version {curr_version['version']} has fewer endpoints than {prev_version['version']}"
 
             # Versions should be chronological
-            assert curr_version["last_updated"] > prev_version["last_updated"], \
-                f"Version dates not chronological"
+            assert curr_version["last_updated"] > prev_version["last_updated"], f"Version dates not chronological"
 
         print("✅ Documentation versioning validated")
 
@@ -460,14 +452,14 @@ class TestDocumentationQualityMetrics:
             "This endpoint retrieves a list of all simulations in the system.",
             "Create new sim.",  # Too short
             "This is a very long documentation string that goes on and on with unnecessary details that make it hard to read and understand quickly.",  # Too long
-            "Get simulation by ID."
+            "Get simulation by ID.",
         ]
 
         readability_scores = []
 
         for doc in sample_docs:
             words = len(doc.split())
-            sentences = len([s for s in doc.split('.') if s.strip()])
+            sentences = len([s for s in doc.split(".") if s.strip()])
 
             # Simple readability metrics
             if words == 0:
@@ -494,27 +486,10 @@ class TestDocumentationQualityMetrics:
         """Test documentation coverage across the API."""
         # Simulate API coverage analysis
         api_coverage = {
-            "endpoints": {
-                "total": 15,
-                "documented": 12,
-                "partially_documented": 2,
-                "undocumented": 1
-            },
-            "parameters": {
-                "total": 45,
-                "documented": 38,
-                "undocumented": 7
-            },
-            "responses": {
-                "total": 60,
-                "documented": 52,
-                "undocumented": 8
-            },
-            "models": {
-                "total": 8,
-                "documented": 7,
-                "undocumented": 1
-            }
+            "endpoints": {"total": 15, "documented": 12, "partially_documented": 2, "undocumented": 1},
+            "parameters": {"total": 45, "documented": 38, "undocumented": 7},
+            "responses": {"total": 60, "documented": 52, "undocumented": 8},
+            "models": {"total": 8, "documented": 7, "undocumented": 1},
         }
 
         # Calculate coverage percentages
@@ -525,10 +500,7 @@ class TestDocumentationQualityMetrics:
 
         # Overall coverage
         overall_coverage = (
-            endpoint_coverage * 0.4 +
-            parameter_coverage * 0.3 +
-            response_coverage * 0.2 +
-            model_coverage * 0.1
+            endpoint_coverage * 0.4 + parameter_coverage * 0.3 + response_coverage * 0.2 + model_coverage * 0.1
         )
 
         # Should have good coverage
@@ -547,42 +519,32 @@ def mock_openapi_spec():
         "info": {
             "title": "Project Simulation Service API",
             "version": "1.0.0",
-            "description": "API for project simulation and analysis"
+            "description": "API for project simulation and analysis",
         },
         "paths": {
             "/api/v1/simulations": {
                 "get": {
                     "summary": "List simulations",
-                    "parameters": [
-                        {"name": "status", "in": "query", "schema": {"type": "string"}}
-                    ],
-                    "responses": {
-                        "200": {"description": "Success"},
-                        "400": {"description": "Bad request"}
-                    }
+                    "parameters": [{"name": "status", "in": "query", "schema": {"type": "string"}}],
+                    "responses": {"200": {"description": "Success"}, "400": {"description": "Bad request"}},
                 },
                 "post": {
                     "summary": "Create simulation",
                     "requestBody": {
                         "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SimulationCreate"}}}
                     },
-                    "responses": {
-                        "201": {"description": "Created"}
-                    }
-                }
+                    "responses": {"201": {"description": "Created"}},
+                },
             }
         },
         "components": {
             "schemas": {
                 "SimulationCreate": {
                     "type": "object",
-                    "properties": {
-                        "name": {"type": "string"},
-                        "type": {"type": "string"}
-                    }
+                    "properties": {"name": {"type": "string"}, "type": {"type": "string"}},
                 }
             }
-        }
+        },
     }
 
 
@@ -594,7 +556,7 @@ def documentation_metrics():
         "readability_score": 0.78,
         "consistency_score": 0.92,
         "coverage_score": 0.88,
-        "overall_quality": 0.86
+        "overall_quality": 0.86,
     }
 
 
@@ -605,5 +567,5 @@ def api_endpoint_inventory():
         {"path": "/api/v1/simulations", "methods": ["GET", "POST"], "documented": True},
         {"path": "/api/v1/simulations/{id}", "methods": ["GET", "PUT", "DELETE"], "documented": True},
         {"path": "/api/v1/health", "methods": ["GET"], "documented": True},
-        {"path": "/api/v1/docs", "methods": ["GET"], "documented": False}
+        {"path": "/api/v1/docs", "methods": ["GET"], "documented": False},
     ]

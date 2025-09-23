@@ -1,11 +1,12 @@
-"""Circuit breaker implementation for secure analyzer service.
-
-Provides fault tolerance by temporarily stopping requests to failing services
-to prevent cascade failures and allow recovery time.
 """
-import time
+Circuit breaker implementation for secure analyzer service.
+
+Provides fault tolerance by temporarily stopping requests to failing
+services to prevent cascade failures and allow recovery time.
+"""
+
 import os
-from typing import Optional
+import time
 from contextlib import asynccontextmanager
 
 # Default configuration values
@@ -14,19 +15,17 @@ DEFAULT_CIRCUIT_BREAKER_TIMEOUT = 60
 
 
 class CircuitBreaker:
-    """Circuit breaker for fault tolerance and cascade failure prevention.
+    """
+    Circuit breaker for fault tolerance and cascade failure prevention.
 
-    Implements the circuit breaker pattern to protect against cascading failures
-    by temporarily opening the circuit when failure thresholds are exceeded,
-    allowing downstream services time to recover.
+    Implements the circuit breaker pattern to protect against cascading
+    failures by temporarily opening the circuit when failure thresholds
+    are exceeded, allowing downstream services time to recover.
     """
 
-    def __init__(
-        self,
-        max_failures: int = 5,
-        timeout_seconds: int = 60
-    ):
-        """Initialize circuit breaker with configurable thresholds.
+    def __init__(self, max_failures: int = 5, timeout_seconds: int = 60):
+        """
+        Initialize circuit breaker with configurable thresholds.
 
         Args:
             max_failures: Number of consecutive failures before opening circuit
@@ -39,7 +38,8 @@ class CircuitBreaker:
         self.is_circuit_open = False
 
     def is_open(self) -> bool:
-        """Check if the circuit breaker is currently open.
+        """
+        Check if the circuit breaker is currently open.
 
         Returns:
             True if circuit is open (requests should be rejected)
@@ -69,14 +69,20 @@ class CircuitBreaker:
 
 # Global circuit breaker instance with environment-configurable settings
 circuit_breaker = CircuitBreaker(
-    max_failures=int(os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES", str(DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES))),
-    timeout_seconds=int(os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT", str(DEFAULT_CIRCUIT_BREAKER_TIMEOUT)))
+    max_failures=int(
+        os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES", str(DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES))
+    ),
+    timeout_seconds=int(
+        os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT", str(DEFAULT_CIRCUIT_BREAKER_TIMEOUT))
+    ),
 )
 
 
 @asynccontextmanager
 async def operation_timeout_context(operation_name: str, timeout_seconds: int = 30):
-    """Context manager for operation timeouts with automatic circuit breaker management.
+    """
+    Context manager for operation timeouts with automatic circuit breaker
+    management.
 
     Provides timing, logging, and circuit breaker state management for operations.
     Automatically records failures and resets circuit breaker on success.

@@ -1,4 +1,5 @@
-"""Service Integration Module for LLM Gateway Service.
+"""
+Service Integration Module for LLM Gateway Service.
 
 Handles comprehensive integration with all ecosystem services including:
 - doc_store: Document storage and retrieval
@@ -13,17 +14,15 @@ Handles comprehensive integration with all ecosystem services including:
 - analysis-service: Document analysis and consistency checking
 """
 
-import asyncio
-from typing import Dict, Any, List, Optional, Union
-from datetime import datetime
+from typing import Any, Dict
 
 from services.shared.clients import ServiceClients
-from services.shared.constants_new import ServiceNames, ErrorCodes
-from services.shared.logging import fire_and_forget
 from services.shared.config import get_config_value
+from services.shared.constants_new import ServiceNames
+from services.shared.logging import fire_and_forget
 from services.shared.utilities import utc_now
 
-from .models import LLMQuery, GatewayResponse
+from .models import GatewayResponse, LLMQuery
 
 
 class ServiceIntegrations:
@@ -38,15 +37,33 @@ class ServiceIntegrations:
         """Initialize service endpoint mappings."""
         return {
             ServiceNames.DOC_STORE: get_config_value("DOC_STORE_URL", "http://doc_store:5087", section="services"),
-            ServiceNames.PROMPT_STORE: get_config_value("PROMPT_STORE_URL", "http://prompt-store:5110", section="services"),
-            ServiceNames.MEMORY_AGENT: get_config_value("MEMORY_AGENT_URL", "http://memory-agent:5040", section="services"),
-            ServiceNames.INTERPRETER: get_config_value("INTERPRETER_URL", "http://interpreter:5120", section="services"),
-            ServiceNames.ORCHESTRATOR: get_config_value("ORCHESTRATOR_URL", "http://orchestrator:5099", section="services"),
-            ServiceNames.SUMMARIZER_HUB: get_config_value("SUMMARIZER_HUB_URL", "http://summarizer-hub:5060", section="services"),
-            ServiceNames.SECURE_ANALYZER: get_config_value("SECURE_ANALYZER_URL", "http://secure-analyzer:5070", section="services"),
-            ServiceNames.CODE_ANALYZER: get_config_value("CODE_ANALYZER_URL", "http://code-analyzer:5085", section="services"),
-            ServiceNames.ARCHITECTURE_DIGITIZER: get_config_value("ARCHITECTURE_DIGITIZER_URL", "http://architecture-digitizer:5105", section="services"),
-            ServiceNames.ANALYSIS_SERVICE: get_config_value("ANALYSIS_SERVICE_URL", "http://analysis-service:5020", section="services"),
+            ServiceNames.PROMPT_STORE: get_config_value(
+                "PROMPT_STORE_URL", "http://prompt-store:5110", section="services"
+            ),
+            ServiceNames.MEMORY_AGENT: get_config_value(
+                "MEMORY_AGENT_URL", "http://memory-agent:5040", section="services"
+            ),
+            ServiceNames.INTERPRETER: get_config_value(
+                "INTERPRETER_URL", "http://interpreter:5120", section="services"
+            ),
+            ServiceNames.ORCHESTRATOR: get_config_value(
+                "ORCHESTRATOR_URL", "http://orchestrator:5099", section="services"
+            ),
+            ServiceNames.SUMMARIZER_HUB: get_config_value(
+                "SUMMARIZER_HUB_URL", "http://summarizer-hub:5060", section="services"
+            ),
+            ServiceNames.SECURE_ANALYZER: get_config_value(
+                "SECURE_ANALYZER_URL", "http://secure-analyzer:5070", section="services"
+            ),
+            ServiceNames.CODE_ANALYZER: get_config_value(
+                "CODE_ANALYZER_URL", "http://code-analyzer:5085", section="services"
+            ),
+            ServiceNames.ARCHITECTURE_DIGITIZER: get_config_value(
+                "ARCHITECTURE_DIGITIZER_URL", "http://architecture-digitizer:5105", section="services"
+            ),
+            ServiceNames.ANALYSIS_SERVICE: get_config_value(
+                "ANALYSIS_SERVICE_URL", "http://analysis-service:5020", section="services"
+            ),
         }
 
     async def initialize_integrations(self):
@@ -65,7 +82,7 @@ class ServiceIntegrations:
                 "llm_gateway_integrations_initialized",
                 f"LLM Gateway integrations initialized: {len(connectivity_results)} services connected",
                 ServiceNames.LLM_GATEWAY,
-                {"connectivity_results": connectivity_results}
+                {"connectivity_results": connectivity_results},
             )
 
             return connectivity_results
@@ -75,7 +92,7 @@ class ServiceIntegrations:
                 "llm_gateway_integration_error",
                 f"Failed to initialize integrations: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"error": str(e)}
+                {"error": str(e)},
             )
             raise
 
@@ -95,7 +112,7 @@ class ServiceIntegrations:
                     "llm_gateway_connectivity_test_failed",
                     f"Connectivity test failed for {service_name}: {str(e)}",
                     ServiceNames.LLM_GATEWAY,
-                    {"service": service_name, "endpoint": endpoint, "error": str(e)}
+                    {"service": service_name, "endpoint": endpoint, "error": str(e)},
                 )
 
         return connectivity_results
@@ -118,7 +135,7 @@ class ServiceIntegrations:
                     "security_filtering",
                     "response_caching",
                     "rate_limiting",
-                    "metrics_collection"
+                    "metrics_collection",
                 ],
                 "endpoints": {
                     "query": "/query",
@@ -126,12 +143,12 @@ class ServiceIntegrations:
                     "embeddings": "/embeddings",
                     "stream": "/stream",
                     "providers": "/providers",
-                    "metrics": "/metrics"
+                    "metrics": "/metrics",
                 },
                 "supported_providers": ["ollama", "openai", "anthropic", "bedrock", "grok"],
                 "security_features": ["content_filtering", "provider_routing", "audit_logging"],
                 "performance_features": ["response_caching", "load_balancing", "rate_limiting"],
-                "registered_at": utc_now().isoformat()
+                "registered_at": utc_now().isoformat(),
             }
 
             registration_url = f"{orchestrator_url}/services/register"
@@ -142,14 +159,14 @@ class ServiceIntegrations:
                     "llm_gateway_registered_with_orchestrator",
                     "LLM Gateway successfully registered with orchestrator",
                     ServiceNames.LLM_GATEWAY,
-                    {"capabilities_count": len(capabilities["capabilities"])}
+                    {"capabilities_count": len(capabilities["capabilities"])},
                 )
             else:
                 fire_and_forget(
                     "llm_gateway_orchestrator_registration_failed",
                     "Failed to register with orchestrator",
                     ServiceNames.LLM_GATEWAY,
-                    {"response": response}
+                    {"response": response},
                 )
 
         except Exception as e:
@@ -157,7 +174,7 @@ class ServiceIntegrations:
                 "llm_gateway_orchestrator_registration_error",
                 f"Error registering with orchestrator: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"error": str(e)}
+                {"error": str(e)},
             )
 
     async def _cache_service_capabilities(self):
@@ -176,14 +193,14 @@ class ServiceIntegrations:
                         "name": service_name,
                         "endpoint": endpoint,
                         "capabilities": ["basic"],
-                        "last_updated": utc_now().isoformat()
+                        "last_updated": utc_now().isoformat(),
                     }
 
             fire_and_forget(
                 "llm_gateway_capabilities_cached",
                 f"Cached capabilities for {len(self.integration_cache)} services",
                 ServiceNames.LLM_GATEWAY,
-                {"cached_services": list(self.integration_cache.keys())}
+                {"cached_services": list(self.integration_cache.keys())},
             )
 
         except Exception as e:
@@ -191,7 +208,7 @@ class ServiceIntegrations:
                 "llm_gateway_capabilities_cache_error",
                 f"Error caching service capabilities: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"error": str(e)}
+                {"error": str(e)},
             )
 
     # ============================================================================
@@ -213,8 +230,8 @@ class ServiceIntegrations:
                         "llm_provider": kwargs.get("provider"),
                         "tokens_used": kwargs.get("tokens_used"),
                         "processing_time": kwargs.get("processing_time"),
-                        "timestamp": utc_now().isoformat()
-                    }
+                        "timestamp": utc_now().isoformat(),
+                    },
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -238,7 +255,7 @@ class ServiceIntegrations:
                 "llm_gateway_doc_store_integration_error",
                 f"Doc Store integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -250,10 +267,7 @@ class ServiceIntegrations:
             if operation == "get_optimized":
                 # Get optimized prompt for task
                 url = f"{endpoint}/prompts/optimized"
-                data = {
-                    "task_type": kwargs.get("task_type"),
-                    "context": kwargs.get("context", {})
-                }
+                data = {"task_type": kwargs.get("task_type"), "context": kwargs.get("context", {})}
                 response = await self.clients.post_json(url, data)
                 return response
 
@@ -263,7 +277,7 @@ class ServiceIntegrations:
                 data = {
                     "content": kwargs.get("content"),
                     "category": kwargs.get("category", "llm_gateway"),
-                    "variables": kwargs.get("variables", [])
+                    "variables": kwargs.get("variables", []),
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -280,7 +294,7 @@ class ServiceIntegrations:
                 "llm_gateway_prompt_store_integration_error",
                 f"Prompt Store integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -299,13 +313,13 @@ class ServiceIntegrations:
                         "prompt": kwargs.get("prompt"),
                         "response": kwargs.get("response"),
                         "provider": kwargs.get("provider"),
-                        "context": kwargs.get("context", {})
+                        "context": kwargs.get("context", {}),
                     },
                     "metadata": {
                         "tokens_used": kwargs.get("tokens_used"),
                         "processing_time": kwargs.get("processing_time"),
-                        "timestamp": utc_now().isoformat()
-                    }
+                        "timestamp": utc_now().isoformat(),
+                    },
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -330,7 +344,7 @@ class ServiceIntegrations:
                 "llm_gateway_memory_agent_integration_error",
                 f"Memory Agent integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -345,7 +359,7 @@ class ServiceIntegrations:
                 data = {
                     "query": kwargs.get("query"),
                     "context": kwargs.get("context", {}),
-                    "user_id": kwargs.get("user_id")
+                    "user_id": kwargs.get("user_id"),
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -356,7 +370,7 @@ class ServiceIntegrations:
                 data = {
                     "query": kwargs.get("query"),
                     "available_services": kwargs.get("available_services", []),
-                    "context": kwargs.get("context", {})
+                    "context": kwargs.get("context", {}),
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -364,10 +378,7 @@ class ServiceIntegrations:
             elif operation == "extract_entities":
                 # Extract entities from text
                 url = f"{endpoint}/extract/entities"
-                data = {
-                    "text": kwargs.get("text"),
-                    "entity_types": kwargs.get("entity_types", [])
-                }
+                data = {"text": kwargs.get("text"), "entity_types": kwargs.get("entity_types", [])}
                 response = await self.clients.post_json(url, data)
                 return response
 
@@ -376,7 +387,7 @@ class ServiceIntegrations:
                 "llm_gateway_interpreter_integration_error",
                 f"Interpreter integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -391,7 +402,7 @@ class ServiceIntegrations:
                 data = {
                     "workflow_type": kwargs.get("workflow_type", "llm_processing"),
                     "parameters": kwargs.get("parameters", {}),
-                    "context": kwargs.get("context", {})
+                    "context": kwargs.get("context", {}),
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -402,7 +413,7 @@ class ServiceIntegrations:
                 data = {
                     "workflow_name": kwargs.get("workflow_name"),
                     "workflow_definition": kwargs.get("workflow_definition"),
-                    "required_services": ["llm-gateway"]
+                    "required_services": ["llm-gateway"],
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -418,7 +429,7 @@ class ServiceIntegrations:
                 "llm_gateway_orchestrator_integration_error",
                 f"Orchestrator integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -437,7 +448,7 @@ class ServiceIntegrations:
                 data = {
                     "text": kwargs.get("text"),
                     "providers": kwargs.get("providers", ["ollama"]),
-                    "prompt": kwargs.get("prompt")
+                    "prompt": kwargs.get("prompt"),
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -453,7 +464,7 @@ class ServiceIntegrations:
                 "llm_gateway_summarizer_hub_integration_error",
                 f"Summarizer Hub integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -465,20 +476,14 @@ class ServiceIntegrations:
             if operation == "analyze_security":
                 # Analyze content for security issues
                 url = f"{endpoint}/detect"
-                data = {
-                    "content": kwargs.get("content"),
-                    "keywords": kwargs.get("keywords", [])
-                }
+                data = {"content": kwargs.get("content"), "keywords": kwargs.get("keywords", [])}
                 response = await self.clients.post_json(url, data)
                 return response
 
             elif operation == "get_secure_providers":
                 # Get security recommendations for providers
                 url = f"{endpoint}/suggest"
-                data = {
-                    "content": kwargs.get("content"),
-                    "providers": kwargs.get("providers", [])
-                }
+                data = {"content": kwargs.get("content"), "providers": kwargs.get("providers", [])}
                 response = await self.clients.post_json(url, data)
                 return response
 
@@ -487,7 +492,7 @@ class ServiceIntegrations:
                 "llm_gateway_secure_analyzer_integration_error",
                 f"Secure Analyzer integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -502,7 +507,7 @@ class ServiceIntegrations:
                 data = {
                     "code": kwargs.get("code"),
                     "language": kwargs.get("language"),
-                    "analysis_type": kwargs.get("analysis_type", "comprehensive")
+                    "analysis_type": kwargs.get("analysis_type", "comprehensive"),
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -519,7 +524,7 @@ class ServiceIntegrations:
                 "llm_gateway_code_analyzer_integration_error",
                 f"Code Analyzer integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -534,7 +539,7 @@ class ServiceIntegrations:
                 data = {
                     "content": kwargs.get("content"),
                     "format": kwargs.get("format", "text"),
-                    "extract_relationships": kwargs.get("extract_relationships", True)
+                    "extract_relationships": kwargs.get("extract_relationships", True),
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -551,7 +556,7 @@ class ServiceIntegrations:
                 "llm_gateway_architecture_digitizer_integration_error",
                 f"Architecture Digitizer integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -566,7 +571,7 @@ class ServiceIntegrations:
                 data = {
                     "content": kwargs.get("content"),
                     "analysis_type": "consistency",
-                    "thresholds": kwargs.get("thresholds", {})
+                    "thresholds": kwargs.get("thresholds", {}),
                 }
                 response = await self.clients.post_json(url, data)
                 return response
@@ -583,7 +588,7 @@ class ServiceIntegrations:
                 "llm_gateway_analysis_service_integration_error",
                 f"Analysis Service integration error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"operation": operation, "error": str(e)}
+                {"operation": operation, "error": str(e)},
             )
             return {"error": str(e)}
 
@@ -596,29 +601,20 @@ class ServiceIntegrations:
 
         # Step 1: Interpret query with Interpreter service
         interpretation = await self.integrate_with_interpreter(
-            "interpret_query",
-            query=query.prompt,
-            context=query.context,
-            user_id=query.user_id
+            "interpret_query", query=query.prompt, context=query.context, user_id=query.user_id
         )
 
         # Step 2: Get optimized prompt from Prompt Store
         optimized_prompt = await self.integrate_with_prompt_store(
-            "get_optimized",
-            task_type=interpretation.get("intent", "general"),
-            context=query.context
+            "get_optimized", task_type=interpretation.get("intent", "general"), context=query.context
         )
 
         # Step 3: Retrieve relevant context from Memory Agent
-        conversation_context = await self.integrate_with_memory_agent(
-            "retrieve_context",
-            user_id=query.user_id
-        )
+        conversation_context = await self.integrate_with_memory_agent("retrieve_context", user_id=query.user_id)
 
         # Step 4: Analyze security with Secure Analyzer
         security_analysis = await self.integrate_with_secure_analyzer(
-            "analyze_security",
-            content=query.prompt + (query.context or "")
+            "analyze_security", content=query.prompt + (query.context or "")
         )
 
         # Step 5: Execute LLM query with enhanced context
@@ -630,11 +626,11 @@ class ServiceIntegrations:
                 **(query.context or {}),
                 "conversation_history": conversation_context.get("history", []),
                 "security_analysis": security_analysis,
-                "interpretation": interpretation
+                "interpretation": interpretation,
             },
             user_id=query.user_id,
             temperature=query.temperature,
-            max_tokens=query.max_tokens
+            max_tokens=query.max_tokens,
         )
 
         # This would return the actual LLM response
@@ -644,7 +640,7 @@ class ServiceIntegrations:
             provider="integrated",
             tokens_used=150,
             processing_time=2.5,
-            correlation_id=f"enhanced-{int(utc_now().timestamp())}"
+            correlation_id=f"enhanced-{int(utc_now().timestamp())}",
         )
 
     async def get_service_health_status(self) -> Dict[str, Any]:
@@ -659,20 +655,22 @@ class ServiceIntegrations:
                     "status": "healthy" if response.get("status") == "healthy" else "unhealthy",
                     "endpoint": endpoint,
                     "response_time": response.get("response_time", 0),
-                    "last_checked": utc_now().isoformat()
+                    "last_checked": utc_now().isoformat(),
                 }
             except Exception as e:
                 health_status[service_name] = {
                     "status": "error",
                     "endpoint": endpoint,
                     "error": str(e),
-                    "last_checked": utc_now().isoformat()
+                    "last_checked": utc_now().isoformat(),
                 }
 
         return {
-            "overall_status": "healthy" if all(s["status"] == "healthy" for s in health_status.values()) else "degraded",
+            "overall_status": (
+                "healthy" if all(s["status"] == "healthy" for s in health_status.values()) else "degraded"
+            ),
             "services": health_status,
             "total_services": len(health_status),
             "healthy_services": sum(1 for s in health_status.values() if s["status"] == "healthy"),
-            "timestamp": utc_now().isoformat()
+            "timestamp": utc_now().isoformat(),
         }

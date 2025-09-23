@@ -15,59 +15,59 @@ Responsibilities:
 Dependencies: Intent recognizer, workflow builder, shared utilities for NLP processing.
 """
 
-import re
-from typing import Dict, Any, List, Optional
-from fastapi import FastAPI
-from pydantic import BaseModel
+from typing import Any, Dict, List
+
 import aiohttp
+from fastapi import FastAPI
+
+from services.shared.core.constants_new import ErrorCodes, ServiceNames
+from services.shared.core.responses.responses import create_success_response
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.core.responses.responses import create_success_response
-from services.shared.core.constants_new import ServiceNames, ErrorCodes
-from services.shared.utilities import setup_common_middleware, attach_self_register
-
+from services.shared.utilities import attach_self_register, setup_common_middleware
 
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
 try:
-    from .modules.models import UserQuery, InterpretedIntent, InterpretedWorkflow, WorkflowStep
-    from .modules.query_handlers import query_handlers
     from .modules.list_handlers import list_handlers
+    from .modules.models import InterpretedIntent, UserQuery
+    from .modules.query_handlers import query_handlers
 except ImportError:
     # Fallback for when running as script
-    import sys
     import os
+    import sys
+
     sys.path.insert(0, os.path.dirname(__file__))
-    from modules.models import UserQuery, InterpretedIntent, InterpretedWorkflow, WorkflowStep
-    from modules.query_handlers import query_handlers
     from modules.list_handlers import list_handlers
+    from modules.models import InterpretedIntent, UserQuery
+    from modules.query_handlers import query_handlers
 
 # ============================================================================
 # ENHANCED CAPABILITIES - Ecosystem-aware modules with orchestrator integration
 # ============================================================================
 try:
+    from .modules.conversation_memory import conversation_memory
     from .modules.ecosystem_context import ecosystem_context
     from .modules.orchestrator_integration import orchestrator_integration
-    from .modules.workflow_dispatcher import workflow_dispatcher
-    from .modules.conversation_memory import conversation_memory
-    from .modules.query_preprocessor import query_preprocessor
-    from .modules.workflow_execution_engine import workflow_execution_engine
     from .modules.output_generator import output_generator
+    from .modules.query_preprocessor import query_preprocessor
+    from .modules.workflow_dispatcher import workflow_dispatcher
+    from .modules.workflow_execution_engine import workflow_execution_engine
 except ImportError:
     # Enhanced modules for ecosystem integration
-    from modules.ecosystem_context import ecosystem_context
-    from modules.orchestrator_integration import orchestrator_integration
-    from modules.workflow_dispatcher import workflow_dispatcher
     from modules.conversation_memory import conversation_memory
-    from modules.query_preprocessor import query_preprocessor
-    from modules.workflow_execution_engine import workflow_execution_engine
+    from modules.ecosystem_context import ecosystem_context
+    from modules.langgraph_discovery import langgraph_discovery
+    from modules.orchestrator_integration import orchestrator_integration
     from modules.output_generator import output_generator
     from modules.prompt_engineering import prompt_engineer
-    from modules.langgraph_discovery import langgraph_discovery
+    from modules.query_preprocessor import query_preprocessor
+    from modules.workflow_dispatcher import workflow_dispatcher
+    from modules.workflow_execution_engine import workflow_execution_engine
 
 # Service configuration constants
 SERVICE_NAME = "interpreter"
@@ -83,7 +83,7 @@ DEFAULT_PORT = 5120
 app = FastAPI(
     title=SERVICE_TITLE,
     description="Natural language processing service for user query interpretation and workflow generation",
-    version=SERVICE_VERSION
+    version=SERVICE_VERSION,
 )
 
 # Use common middleware setup and error handlers to reduce duplication across services
@@ -101,31 +101,37 @@ register_health_endpoints(app, ServiceNames.INTERPRETER, SERVICE_VERSION)
 # API ENDPOINTS
 # ============================================================================
 
+
 @app.post("/interpret", response_model=InterpretedIntent)
 async def interpret_query(query: UserQuery):
-    """Interpret user query and return intent with workflow.
+    """
+    Interpret user query and return intent with workflow.
 
-    Processes natural language queries to extract intent, entities, and generate
-    structured workflows. Includes confidence scoring and fallback handling for
-    ambiguous queries with optional session and user context.
+    Processes natural language queries to extract intent, entities, and
+    generate structured workflows. Includes confidence scoring and
+    fallback handling for ambiguous queries with optional session and
+    user context.
     """
     return await query_handlers.handle_interpret_query(query)
 
+
 @app.post("/execute")
 async def execute_workflow(query: UserQuery):
-    """Interpret query and execute the resulting workflow.
+    """
+    Interpret query and execute the resulting workflow.
 
-    Interprets the user query and immediately executes the generated workflow
-    across multiple services. Provides end-to-end processing from natural language
-    to completed operations with detailed execution results.
+    Interprets the user query and immediately executes the generated
+    workflow across multiple services. Provides end-to-end processing
+    from natural language to completed operations with detailed
+    execution results.
     """
     return await query_handlers.handle_execute_workflow(query)
 
 
-
 @app.get("/intents")
 async def list_supported_intents():
-    """List all supported intents and examples.
+    """
+    List all supported intents and examples.
 
     Returns comprehensive information about all supported query intents,
     including example queries, entity extraction patterns, and workflow
@@ -138,9 +144,11 @@ async def list_supported_intents():
 # ENHANCED NATURAL LANGUAGE ENDPOINTS - New ecosystem-aware capabilities
 # ============================================================================
 
+
 @app.post("/natural-query")
 async def process_natural_query(query: UserQuery):
-    """Process natural language query with full ecosystem context.
+    """
+    Process natural language query with full ecosystem context.
 
     This enhanced endpoint provides:
     - Ecosystem-aware intent recognition
@@ -174,35 +182,31 @@ async def process_natural_query(query: UserQuery):
                 "detected_capabilities": detected_capabilities,
                 "available_workflows": await langgraph_discovery.get_workflow_suggestions(
                     query.query, interpretation.intent
-                )
+                ),
             },
             "langgraph_workflows": {
                 "best_match": langgraph_match,
-                "available_count": len(langgraph_discovery.discovered_workflows)
+                "available_count": len(langgraph_discovery.discovered_workflows),
             },
-            "processing_metadata": {
-                "ecosystem_aware": True,
-                "langgraph_enabled": True,
-                "prompt_engineered": True
-            }
+            "processing_metadata": {"ecosystem_aware": True, "langgraph_enabled": True, "prompt_engineered": True},
         }
 
         return create_success_response(
-            "Natural language query processed with full ecosystem context",
-            enhanced_response
+            "Natural language query processed with full ecosystem context", enhanced_response
         )
 
     except Exception as e:
         return create_error_response(
             "Failed to process natural language query",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e), "query": query.query}
+            details={"error": str(e), "query": query.query},
         )
 
 
 @app.post("/execute-natural-workflow")
 async def execute_natural_workflow(query: UserQuery):
-    """Execute natural language query as a complete workflow.
+    """
+    Execute natural language query as a complete workflow.
 
     This endpoint:
     1. Interprets the natural language query
@@ -241,7 +245,7 @@ async def execute_natural_workflow(query: UserQuery):
                 execution_result = {
                     "status": "validation_failed",
                     "validation_errors": validation,
-                    "workflow_name": workflow_name
+                    "workflow_name": workflow_name,
                 }
         else:
             # Fallback to traditional workflow execution
@@ -257,26 +261,24 @@ async def execute_natural_workflow(query: UserQuery):
             "processing_summary": {
                 "total_services_involved": len(data["ecosystem_context"]["detected_services"]),
                 "workflows_available": len(data["ecosystem_context"]["available_workflows"]),
-                "execution_success": execution_result.get("status") == "success" if execution_result else False
-            }
+                "execution_success": execution_result.get("status") == "success" if execution_result else False,
+            },
         }
 
-        return create_success_response(
-            "Natural workflow execution completed",
-            enhanced_result
-        )
+        return create_success_response("Natural workflow execution completed", enhanced_result)
 
     except Exception as e:
         return create_error_response(
             "Failed to execute natural workflow",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e), "query": query.query}
+            details={"error": str(e), "query": query.query},
         )
 
 
 @app.get("/ecosystem/capabilities")
 async def get_ecosystem_capabilities():
-    """Get comprehensive ecosystem capabilities for natural language processing.
+    """
+    Get comprehensive ecosystem capabilities for natural language processing.
 
     Returns detailed information about:
     - Available services and their capabilities
@@ -299,7 +301,9 @@ async def get_ecosystem_capabilities():
             "services": services,
             "workflows": {
                 "traditional": traditional_workflows,
-                "langgraph": langgraph_workflows.get("workflows", {}) if langgraph_workflows.get("status") == "success" else {}
+                "langgraph": (
+                    langgraph_workflows.get("workflows", {}) if langgraph_workflows.get("status") == "success" else {}
+                ),
             },
             "tools": orchestrator_tools,
             "terminology": ecosystem_context.project_context.get("terminology", {}),
@@ -308,28 +312,26 @@ async def get_ecosystem_capabilities():
             "metadata": {
                 "total_services": len(services),
                 "traditional_workflows": len(traditional_workflows),
-                "langgraph_workflows": langgraph_workflows.get("count", 0) if langgraph_workflows.get("status") == "success" else 0,
+                "langgraph_workflows": (
+                    langgraph_workflows.get("count", 0) if langgraph_workflows.get("status") == "success" else 0
+                ),
                 "available_tools": len(orchestrator_tools) if orchestrator_tools else 0,
-                "last_updated": "2024-01-01T00:00:00Z"  # Would be dynamic in real implementation
-            }
+                "last_updated": "2024-01-01T00:00:00Z",  # Would be dynamic in real implementation
+            },
         }
 
-        return create_success_response(
-            "Ecosystem capabilities retrieved successfully",
-            capabilities_response
-        )
+        return create_success_response("Ecosystem capabilities retrieved successfully", capabilities_response)
 
     except Exception as e:
         return create_error_response(
-            "Failed to retrieve ecosystem capabilities",
-            error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e)}
+            "Failed to retrieve ecosystem capabilities", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
         )
 
 
 @app.post("/workflows/discover")
 async def discover_workflows():
-    """Discover all available workflows in the ecosystem.
+    """
+    Discover all available workflows in the ecosystem.
 
     Returns comprehensive information about:
     - Traditional workflows (rule-based)
@@ -350,32 +352,33 @@ async def discover_workflows():
             "traditional_workflows": {
                 "workflows": traditional_workflows,
                 "count": len(traditional_workflows),
-                "status": "success"
+                "status": "success",
             },
             "summary": {
-                "total_langgraph_workflows": langgraph_result.get("count", 0) if langgraph_result.get("status") == "success" else 0,
+                "total_langgraph_workflows": (
+                    langgraph_result.get("count", 0) if langgraph_result.get("status") == "success" else 0
+                ),
                 "total_traditional_workflows": len(traditional_workflows),
-                "total_workflows": (langgraph_result.get("count", 0) if langgraph_result.get("status") == "success" else 0) + len(traditional_workflows),
-                "discovery_status": "completed"
-            }
+                "total_workflows": (
+                    langgraph_result.get("count", 0) if langgraph_result.get("status") == "success" else 0
+                )
+                + len(traditional_workflows),
+                "discovery_status": "completed",
+            },
         }
 
-        return create_success_response(
-            "Workflow discovery completed successfully",
-            discovery_response
-        )
+        return create_success_response("Workflow discovery completed successfully", discovery_response)
 
     except Exception as e:
         return create_error_response(
-            "Failed to discover workflows",
-            error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e)}
+            "Failed to discover workflows", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
         )
 
 
 @app.post("/prompt/translate")
 async def translate_prompt(query: UserQuery):
-    """Translate natural language query into structured workflow prompt.
+    """
+    Translate natural language query into structured workflow prompt.
 
     Uses advanced prompt engineering to:
     1. Understand the natural language query
@@ -392,10 +395,7 @@ async def translate_prompt(query: UserQuery):
 
         # Use prompt engineering to translate
         translation = await prompt_engineer.translate_query_to_workflow(
-            query.query,
-            interpretation.intent,
-            interpretation.entities,
-            ecosystem_data
+            query.query, interpretation.intent, interpretation.entities, ecosystem_data
         )
 
         # Prepare response
@@ -407,25 +407,22 @@ async def translate_prompt(query: UserQuery):
                 "suggested_workflow": translation.get("workflow_type"),
                 "confidence": translation.get("confidence", 0),
                 "services_needed": translation.get("services", []),
-                "estimated_complexity": "high" if len(translation.get("services", [])) > 2 else "medium"
+                "estimated_complexity": "high" if len(translation.get("services", [])) > 2 else "medium",
             },
             "prompt_metadata": {
                 "translation_method": translation.get("translation_method", "unknown"),
                 "ecosystem_awareness": True,
-                "optimization_applied": True
-            }
+                "optimization_applied": True,
+            },
         }
 
-        return create_success_response(
-            "Query translated to workflow prompt successfully",
-            prompt_response
-        )
+        return create_success_response("Query translated to workflow prompt successfully", prompt_response)
 
     except Exception as e:
         return create_error_response(
             "Failed to translate query to workflow prompt",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e), "query": query.query}
+            details={"error": str(e), "query": query.query},
         )
 
 
@@ -433,13 +430,15 @@ async def translate_prompt(query: UserQuery):
 # ENHANCED ECOSYSTEM INTEGRATION ENDPOINTS
 # ============================================================================
 
+
 @app.post("/natural-query")
 async def process_natural_query(query_data: UserQuery):
-    """Enhanced natural language query processing with ecosystem context.
-    
+    """
+    Enhanced natural language query processing with ecosystem context.
+
     This endpoint provides comprehensive natural language processing with:
     - Advanced query preprocessing and normalization
-    - Ecosystem-aware intent recognition  
+    - Ecosystem-aware intent recognition
     - Intelligent workflow dispatch
     - Conversation memory integration
     - Real-time workflow execution
@@ -449,42 +448,46 @@ async def process_natural_query(query_data: UserQuery):
         preprocessing_result = await query_preprocessor.preprocess_query(
             query_data.query, query_data.user_id, query_data.context
         )
-        
+
         # Enhanced intent recognition with ecosystem context
         intent_result = await query_handlers.handle_query_interpretation(query_data)
-        
+
         # Dispatch to appropriate workflow with orchestrator integration
         dispatch_result = await workflow_dispatcher.dispatch_query(
             preprocessing_result["processed_query"],
             intent_result.intent,
             intent_result.entities,
             query_data.user_id,
-            query_data.context
+            query_data.context,
         )
-        
-        return create_success_response({
-            "original_query": query_data.query,
-            "preprocessing": preprocessing_result,
-            "interpretation": {
-                "intent": intent_result.intent,
-                "confidence": intent_result.confidence,
-                "entities": intent_result.entities
-            },
-            "workflow_dispatch": dispatch_result,
-            "ecosystem_context": await ecosystem_context.get_service_capabilities(),
-            "processing_timestamp": datetime.utcnow().isoformat()
-        })
-        
+
+        return create_success_response(
+            {
+                "original_query": query_data.query,
+                "preprocessing": preprocessing_result,
+                "interpretation": {
+                    "intent": intent_result.intent,
+                    "confidence": intent_result.confidence,
+                    "entities": intent_result.entities,
+                },
+                "workflow_dispatch": dispatch_result,
+                "ecosystem_context": await ecosystem_context.get_service_capabilities(),
+                "processing_timestamp": datetime.utcnow().isoformat(),
+            }
+        )
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "fallback_response": "I encountered an issue processing your query. Please try rephrasing or contact support.",
-            "suggestions": [
-                "Try using simpler language",
-                "Be more specific about what you want to accomplish",
-                "Mention which service you'd like to use"
-            ]
-        })
+        return create_success_response(
+            {
+                "error": str(e),
+                "fallback_response": "I encountered an issue processing your query. Please try rephrasing or contact support.",
+                "suggestions": [
+                    "Try using simpler language",
+                    "Be more specific about what you want to accomplish",
+                    "Mention which service you'd like to use",
+                ],
+            }
+        )
 
 
 @app.post("/execute-workflow")
@@ -494,31 +497,33 @@ async def execute_workflow_endpoint(execution_request: dict):
         user_id = execution_request.get("user_id")
         execution_plan = execution_request.get("execution_plan", {})
         priority = execution_request.get("priority", "normal")
-        
+
         # Execute workflow through enhanced execution engine
-        execution_result = await workflow_execution_engine.execute_workflow(
-            execution_plan, user_id, None, priority
-        )
-        
-        return create_success_response({
-            "execution_result": execution_result,
-            "execution_metadata": {
-                "engine_version": "2.0",
-                "orchestrator_integrated": True,
-                "monitoring_enabled": True
+        execution_result = await workflow_execution_engine.execute_workflow(execution_plan, user_id, None, priority)
+
+        return create_success_response(
+            {
+                "execution_result": execution_result,
+                "execution_metadata": {
+                    "engine_version": "2.0",
+                    "orchestrator_integrated": True,
+                    "monitoring_enabled": True,
+                },
             }
-        })
-        
+        )
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "execution_status": "failed",
-            "recovery_suggestions": [
-                "Check that all required parameters are provided",
-                "Verify service availability",
-                "Try again with simplified parameters"
-            ]
-        })
+        return create_success_response(
+            {
+                "error": str(e),
+                "execution_status": "failed",
+                "recovery_suggestions": [
+                    "Check that all required parameters are provided",
+                    "Verify service availability",
+                    "Try again with simplified parameters",
+                ],
+            }
+        )
 
 
 @app.get("/ecosystem/capabilities")
@@ -527,69 +532,69 @@ async def get_ecosystem_capabilities():
     try:
         capabilities = await ecosystem_context.get_service_capabilities()
         workflows = workflow_dispatcher.get_all_workflows()
-        
-        return create_success_response({
-            "services": capabilities,
-            "workflows": workflows,
-            "total_services": len(capabilities),
-            "total_workflows": workflows["total_count"],
-            "workflow_categories": workflows["categories"],
-            "ecosystem_status": "active",
-            "last_updated": datetime.utcnow().isoformat(),
-            "metadata": {
-                "discovery_agent_integrated": True,
-                "orchestrator_connected": True,
-                "conversation_memory_enabled": True,
-                "langgraph_workflows_available": True
+
+        return create_success_response(
+            {
+                "services": capabilities,
+                "workflows": workflows,
+                "total_services": len(capabilities),
+                "total_workflows": workflows["total_count"],
+                "workflow_categories": workflows["categories"],
+                "ecosystem_status": "active",
+                "last_updated": datetime.utcnow().isoformat(),
+                "metadata": {
+                    "discovery_agent_integrated": True,
+                    "orchestrator_connected": True,
+                    "conversation_memory_enabled": True,
+                    "langgraph_workflows_available": True,
+                },
             }
-        })
-        
+        )
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "fallback_capabilities": {
-                "basic_interpretation": True,
-                "workflow_execution": True,
-                "error_handling": True
+        return create_success_response(
+            {
+                "error": str(e),
+                "fallback_capabilities": {
+                    "basic_interpretation": True,
+                    "workflow_execution": True,
+                    "error_handling": True,
+                },
             }
-        })
+        )
 
 
 @app.post("/workflows/discover")
 async def discover_workflows():
-    """Discover available workflows from orchestrator and LangGraph integration."""
+    """Discover available workflows from orchestrator and LangGraph
+    integration."""
     try:
         # Discover traditional workflows
         traditional_workflows = await orchestrator_integration.discover_available_workflows()
-        
+
         # Discover LangGraph workflows
         langgraph_workflows = await langgraph_discovery.discover_langgraph_workflows()
-        
+
         # Get workflow dispatcher information
         dispatcher_workflows = workflow_dispatcher.get_all_workflows()
-        
-        return create_success_response({
-            "traditional_workflows": traditional_workflows,
-            "langgraph_workflows": langgraph_workflows,
-            "dispatcher_workflows": dispatcher_workflows,
-            "total_discovered": (
-                len(traditional_workflows.get("workflows", {})) +
-                len(langgraph_workflows.get("workflows", {})) +
-                dispatcher_workflows["total_count"]
-            ),
-            "discovery_timestamp": datetime.utcnow().isoformat(),
-            "summary": {
-                "orchestrator_integrated": True,
-                "langgraph_enabled": True,
-                "intelligent_dispatch": True
+
+        return create_success_response(
+            {
+                "traditional_workflows": traditional_workflows,
+                "langgraph_workflows": langgraph_workflows,
+                "dispatcher_workflows": dispatcher_workflows,
+                "total_discovered": (
+                    len(traditional_workflows.get("workflows", {}))
+                    + len(langgraph_workflows.get("workflows", {}))
+                    + dispatcher_workflows["total_count"]
+                ),
+                "discovery_timestamp": datetime.utcnow().isoformat(),
+                "summary": {"orchestrator_integrated": True, "langgraph_enabled": True, "intelligent_dispatch": True},
             }
-        })
-        
+        )
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "fallback_workflows": workflow_dispatcher.get_all_workflows()
-        })
+        return create_success_response({"error": str(e), "fallback_workflows": workflow_dispatcher.get_all_workflows()})
 
 
 @app.get("/execution/{execution_id}/status")
@@ -598,13 +603,9 @@ async def get_execution_status(execution_id: str):
     try:
         status = await workflow_execution_engine.get_execution_status(execution_id)
         return create_success_response(status)
-        
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "execution_id": execution_id,
-            "status": "error"
-        })
+        return create_success_response({"error": str(e), "execution_id": execution_id, "status": "error"})
 
 
 @app.get("/health/ecosystem")
@@ -631,42 +632,40 @@ async def get_ecosystem_health():
 
         health_status = "healthy" if health_score > 0.7 else "degraded" if health_score > 0.4 else "unhealthy"
 
-        return create_success_response({
-            "ecosystem_health": {
-                "overall_status": health_status,
-                "health_score": max(health_score, 0.0),
-                "orchestrator_health": orchestrator_health,
-                "services_available": len(service_capabilities),
-                "execution_success_rate": execution_metrics["success_rate"],
-                "active_executions": execution_metrics["active_executions"]
-            },
-            "component_status": {
-                "interpreter": "healthy",
-                "orchestrator": "connected" if orchestrator_health.get("healthy") else "disconnected",
-                "workflow_dispatcher": "operational",
-                "conversation_memory": "active",
-                "execution_engine": "operational"
-            },
-            "health_check_timestamp": datetime.utcnow().isoformat()
-        })
+        return create_success_response(
+            {
+                "ecosystem_health": {
+                    "overall_status": health_status,
+                    "health_score": max(health_score, 0.0),
+                    "orchestrator_health": orchestrator_health,
+                    "services_available": len(service_capabilities),
+                    "execution_success_rate": execution_metrics["success_rate"],
+                    "active_executions": execution_metrics["active_executions"],
+                },
+                "component_status": {
+                    "interpreter": "healthy",
+                    "orchestrator": "connected" if orchestrator_health.get("healthy") else "disconnected",
+                    "workflow_dispatcher": "operational",
+                    "conversation_memory": "active",
+                    "execution_engine": "operational",
+                },
+                "health_check_timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
     except Exception as e:
-        return create_success_response({
-            "ecosystem_health": {
-                "overall_status": "error",
-                "health_score": 0.0,
-                "error": str(e)
-            },
-            "component_status": {
-                "interpreter": "healthy",
-                "error_details": str(e)
+        return create_success_response(
+            {
+                "ecosystem_health": {"overall_status": "error", "health_score": 0.0, "error": str(e)},
+                "component_status": {"interpreter": "healthy", "error_details": str(e)},
             }
-        })
+        )
 
 
 # ============================================================================
 # END-TO-END WORKFLOW EXECUTION ENDPOINTS
 # ============================================================================
+
 
 @app.post("/execute-query")
 async def execute_query_endpoint(request: dict):
@@ -678,17 +677,10 @@ async def execute_query_endpoint(request: dict):
         filename_prefix = request.get("filename_prefix")
 
         if not query:
-            return create_success_response({
-                "error": "Query is required",
-                "status": "failed"
-            })
+            return create_success_response({"error": "Query is required", "status": "failed"})
 
         # Step 1: Process natural language query
-        query_data = UserQuery(
-            query=query,
-            user_id=user_id,
-            context=request.get("context", {})
-        )
+        query_data = UserQuery(query=query, user_id=user_id, context=request.get("context", {}))
 
         preprocessing_result = await query_preprocessor.preprocess_query(
             query_data.query, query_data.user_id, query_data.context
@@ -702,71 +694,72 @@ async def execute_query_endpoint(request: dict):
             intent_result.intent,
             intent_result.entities,
             query_data.user_id,
-            query_data.context
+            query_data.context,
         )
 
         # Step 3: Execute workflow through orchestrator
         if dispatch_result.get("workflow_name"):
             workflow_result = await orchestrator_integration.execute_workflow(
-                dispatch_result["workflow_name"],
-                dispatch_result.get("parameters", {}),
-                user_id,
-                output_format
+                dispatch_result["workflow_name"], dispatch_result.get("parameters", {}), user_id, output_format
             )
 
             # Step 4: Generate output file
             if workflow_result.get("status") == "completed":
-                output_info = await output_generator.generate_output(
-                    workflow_result,
-                    output_format,
-                    filename_prefix
-                )
+                output_info = await output_generator.generate_output(workflow_result, output_format, filename_prefix)
 
                 # Step 5: Update conversation memory
                 await conversation_memory.update_conversation(
                     user_id, query, dispatch_result["workflow_name"], workflow_result
                 )
 
-                return create_success_response({
-                    "execution_id": workflow_result["execution_id"],
-                    "query": query,
-                    "workflow_executed": dispatch_result["workflow_name"],
-                    "status": "completed",
-                    "output": output_info,
-                    "workflow_result": workflow_result,
-                    "processing_pipeline": {
-                        "preprocessing": preprocessing_result,
-                        "intent_recognition": {
-                            "intent": intent_result.intent,
-                            "confidence": intent_result.confidence,
-                            "entities": intent_result.entities
+                return create_success_response(
+                    {
+                        "execution_id": workflow_result["execution_id"],
+                        "query": query,
+                        "workflow_executed": dispatch_result["workflow_name"],
+                        "status": "completed",
+                        "output": output_info,
+                        "workflow_result": workflow_result,
+                        "processing_pipeline": {
+                            "preprocessing": preprocessing_result,
+                            "intent_recognition": {
+                                "intent": intent_result.intent,
+                                "confidence": intent_result.confidence,
+                                "entities": intent_result.entities,
+                            },
+                            "workflow_dispatch": dispatch_result,
                         },
-                        "workflow_dispatch": dispatch_result
                     }
-                })
+                )
             else:
-                return create_success_response({
-                    "execution_id": workflow_result.get("execution_id"),
-                    "query": query,
-                    "status": "failed", 
-                    "error": workflow_result.get("error", "Workflow execution failed"),
-                    "workflow_attempted": dispatch_result["workflow_name"]
-                })
+                return create_success_response(
+                    {
+                        "execution_id": workflow_result.get("execution_id"),
+                        "query": query,
+                        "status": "failed",
+                        "error": workflow_result.get("error", "Workflow execution failed"),
+                        "workflow_attempted": dispatch_result["workflow_name"],
+                    }
+                )
         else:
-            return create_success_response({
-                "query": query,
-                "status": "no_workflow",
-                "message": "Could not determine appropriate workflow for query",
-                "suggestions": dispatch_result.get("suggestions", [])
-            })
+            return create_success_response(
+                {
+                    "query": query,
+                    "status": "no_workflow",
+                    "message": "Could not determine appropriate workflow for query",
+                    "suggestions": dispatch_result.get("suggestions", []),
+                }
+            )
 
     except Exception as e:
-        return create_success_response({
-            "query": request.get("query", ""),
-            "status": "error",
-            "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        })
+        return create_success_response(
+            {
+                "query": request.get("query", ""),
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
 
 @app.post("/workflows/execute-direct")
@@ -780,10 +773,7 @@ async def execute_workflow_direct(request: dict):
         filename_prefix = request.get("filename_prefix")
 
         if not workflow_name:
-            return create_success_response({
-                "error": "workflow_name is required",
-                "status": "failed"
-            })
+            return create_success_response({"error": "workflow_name is required", "status": "failed"})
 
         # Execute workflow
         workflow_result = await orchestrator_integration.execute_workflow(
@@ -792,31 +782,31 @@ async def execute_workflow_direct(request: dict):
 
         # Generate output if successful
         if workflow_result.get("status") == "completed":
-            output_info = await output_generator.generate_output(
-                workflow_result, output_format, filename_prefix
+            output_info = await output_generator.generate_output(workflow_result, output_format, filename_prefix)
+
+            return create_success_response(
+                {
+                    "execution_id": workflow_result["execution_id"],
+                    "workflow_name": workflow_name,
+                    "status": "completed",
+                    "output": output_info,
+                    "workflow_result": workflow_result,
+                }
+            )
+        else:
+            return create_success_response(
+                {
+                    "execution_id": workflow_result.get("execution_id"),
+                    "workflow_name": workflow_name,
+                    "status": "failed",
+                    "error": workflow_result.get("error", "Workflow execution failed"),
+                }
             )
 
-            return create_success_response({
-                "execution_id": workflow_result["execution_id"],
-                "workflow_name": workflow_name,
-                "status": "completed",
-                "output": output_info,
-                "workflow_result": workflow_result
-            })
-        else:
-            return create_success_response({
-                "execution_id": workflow_result.get("execution_id"),
-                "workflow_name": workflow_name,
-                "status": "failed",
-                "error": workflow_result.get("error", "Workflow execution failed")
-            })
-
     except Exception as e:
-        return create_success_response({
-            "workflow_name": request.get("workflow_name"),
-            "status": "error",
-            "error": str(e)
-        })
+        return create_success_response(
+            {"workflow_name": request.get("workflow_name"), "status": "error", "error": str(e)}
+        )
 
 
 @app.get("/outputs/download/{file_id}")
@@ -824,102 +814,96 @@ async def download_output_file(file_id: str):
     """Download generated output file."""
     try:
         from fastapi.responses import FileResponse
-        
+
         file_info = await output_generator.get_file_info(file_id)
-        
+
         if not file_info:
-            return create_success_response({
-                "error": "File not found",
-                "file_id": file_id
-            })
+            return create_success_response({"error": "File not found", "file_id": file_id})
 
         return FileResponse(
-            path=file_info["filepath"],
-            filename=file_info["filename"],
-            media_type="application/octet-stream"
+            path=file_info["filepath"], filename=file_info["filename"], media_type="application/octet-stream"
         )
 
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "file_id": file_id
-        })
+        return create_success_response({"error": str(e), "file_id": file_id})
 
 
 @app.get("/outputs/formats")
 async def get_supported_formats():
     """Get list of supported output formats."""
-    return create_success_response({
-        "supported_formats": output_generator.get_supported_formats(),
-        "format_descriptions": {
-            "json": "Structured JSON data with complete results",
-            "pdf": "Formatted PDF report with visualizations",
-            "csv": "Comma-separated values for data analysis",
-            "markdown": "Markdown formatted documentation",
-            "zip": "Archive containing multiple format variants",
-            "txt": "Plain text summary report"
+    return create_success_response(
+        {
+            "supported_formats": output_generator.get_supported_formats(),
+            "format_descriptions": {
+                "json": "Structured JSON data with complete results",
+                "pdf": "Formatted PDF report with visualizations",
+                "csv": "Comma-separated values for data analysis",
+                "markdown": "Markdown formatted documentation",
+                "zip": "Archive containing multiple format variants",
+                "txt": "Plain text summary report",
+            },
         }
-    })
+    )
 
 
 @app.get("/workflows/templates")
 async def get_workflow_templates():
     """Get available workflow templates."""
-    return create_success_response({
-        "templates": orchestrator_integration.get_workflow_templates(),
-        "total_templates": len(orchestrator_integration.get_workflow_templates())
-    })
+    return create_success_response(
+        {
+            "templates": orchestrator_integration.get_workflow_templates(),
+            "total_templates": len(orchestrator_integration.get_workflow_templates()),
+        }
+    )
 
 
 # ============================================================================
 # DOCUMENT PROVENANCE AND WORKFLOW TRACKING ENDPOINTS
 # ============================================================================
 
+
 @app.get("/documents/{document_id}/provenance")
 async def get_document_provenance(document_id: str):
-    """Get comprehensive provenance information for a workflow-generated document."""
+    """Get comprehensive provenance information for a workflow-generated
+    document."""
     try:
         # Get document metadata from doc_store
         doc_store_url = "http://doc-store:5087"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{doc_store_url}/documents/{document_id}") as response:
                 if response.status == 200:
                     doc_data = await response.json()
-                    
+
                     # Extract provenance from metadata
                     provenance = doc_data.get("metadata", {}).get("workflow_provenance", {})
                     execution_metadata = doc_data.get("metadata", {}).get("execution_metadata", {})
-                    
-                    return create_success_response({
-                        "document_id": document_id,
-                        "provenance": provenance,
-                        "execution_metadata": execution_metadata,
-                        "document_info": {
-                            "title": doc_data.get("metadata", {}).get("title"),
-                            "format": doc_data.get("metadata", {}).get("format"),
-                            "created_at": doc_data.get("metadata", {}).get("generated_at"),
-                            "author": doc_data.get("metadata", {}).get("author"),
-                            "category": doc_data.get("metadata", {}).get("category")
-                        },
-                        "workflow_chain": {
-                            "services_used": provenance.get("services_chain", []),
-                            "prompts_used": provenance.get("prompts_used", []),
-                            "data_lineage": provenance.get("data_lineage", {}),
-                            "quality_metrics": provenance.get("quality_metrics", {})
+
+                    return create_success_response(
+                        {
+                            "document_id": document_id,
+                            "provenance": provenance,
+                            "execution_metadata": execution_metadata,
+                            "document_info": {
+                                "title": doc_data.get("metadata", {}).get("title"),
+                                "format": doc_data.get("metadata", {}).get("format"),
+                                "created_at": doc_data.get("metadata", {}).get("generated_at"),
+                                "author": doc_data.get("metadata", {}).get("author"),
+                                "category": doc_data.get("metadata", {}).get("category"),
+                            },
+                            "workflow_chain": {
+                                "services_used": provenance.get("services_chain", []),
+                                "prompts_used": provenance.get("prompts_used", []),
+                                "data_lineage": provenance.get("data_lineage", {}),
+                                "quality_metrics": provenance.get("quality_metrics", {}),
+                            },
                         }
-                    })
+                    )
                 else:
-                    return create_success_response({
-                        "error": "Document not found",
-                        "document_id": document_id
-                    })
-                    
+                    return create_success_response({"error": "Document not found", "document_id": document_id})
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "document_id": document_id
-        })
+        return create_success_response({"error": str(e), "document_id": document_id})
 
 
 @app.get("/workflows/{execution_id}/trace")
@@ -928,31 +912,27 @@ async def get_workflow_execution_trace(execution_id: str):
     try:
         # Get execution details from orchestrator integration
         execution_status = await orchestrator_integration.get_execution_status(execution_id)
-        
+
         if execution_status.get("status") == "not_found":
-            return create_success_response({
-                "error": "Execution not found",
-                "execution_id": execution_id
-            })
-        
+            return create_success_response({"error": "Execution not found", "execution_id": execution_id})
+
         # Get associated documents
         documents = await _get_documents_by_execution_id(execution_id)
-        
-        return create_success_response({
-            "execution_id": execution_id,
-            "execution_details": execution_status,
-            "generated_documents": documents,
-            "trace_metadata": {
-                "total_documents": len(documents),
-                "trace_generated_at": datetime.utcnow().isoformat()
+
+        return create_success_response(
+            {
+                "execution_id": execution_id,
+                "execution_details": execution_status,
+                "generated_documents": documents,
+                "trace_metadata": {
+                    "total_documents": len(documents),
+                    "trace_generated_at": datetime.utcnow().isoformat(),
+                },
             }
-        })
-        
+        )
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "execution_id": execution_id
-        })
+        return create_success_response({"error": str(e), "execution_id": execution_id})
 
 
 @app.get("/documents/by-workflow/{workflow_name}")
@@ -961,101 +941,88 @@ async def get_documents_by_workflow(workflow_name: str, limit: int = 50):
     try:
         # Query doc_store for workflow-generated documents
         doc_store_url = "http://doc-store:5087"
-        
-        query_params = {
-            "category": "workflow_output",
-            "tags": f"workflow_{workflow_name}",
-            "limit": limit
-        }
-        
+
+        query_params = {"category": "workflow_output", "tags": f"workflow_{workflow_name}", "limit": limit}
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{doc_store_url}/documents/search", params=query_params) as response:
                 if response.status == 200:
                     doc_results = await response.json()
-                    
+
                     documents = []
                     for doc in doc_results.get("documents", []):
-                        documents.append({
-                            "document_id": doc.get("id"),
-                            "title": doc.get("metadata", {}).get("title"),
-                            "format": doc.get("metadata", {}).get("format"),
-                            "created_at": doc.get("metadata", {}).get("generated_at"),
-                            "execution_id": doc.get("metadata", {}).get("execution_metadata", {}).get("execution_id"),
-                            "author": doc.get("metadata", {}).get("author"),
-                            "quality_score": doc.get("metadata", {}).get("quality_score"),
-                            "size_bytes": len(doc.get("content", "")),
-                            "download_url": f"/documents/download/{doc.get('id')}"
-                        })
-                    
-                    return create_success_response({
-                        "workflow_name": workflow_name,
-                        "documents": documents,
-                        "total_found": len(documents),
-                        "query_limit": limit
-                    })
+                        documents.append(
+                            {
+                                "document_id": doc.get("id"),
+                                "title": doc.get("metadata", {}).get("title"),
+                                "format": doc.get("metadata", {}).get("format"),
+                                "created_at": doc.get("metadata", {}).get("generated_at"),
+                                "execution_id": doc.get("metadata", {})
+                                .get("execution_metadata", {})
+                                .get("execution_id"),
+                                "author": doc.get("metadata", {}).get("author"),
+                                "quality_score": doc.get("metadata", {}).get("quality_score"),
+                                "size_bytes": len(doc.get("content", "")),
+                                "download_url": f"/documents/download/{doc.get('id')}",
+                            }
+                        )
+
+                    return create_success_response(
+                        {
+                            "workflow_name": workflow_name,
+                            "documents": documents,
+                            "total_found": len(documents),
+                            "query_limit": limit,
+                        }
+                    )
                 else:
-                    return create_success_response({
-                        "error": "Failed to query doc_store",
-                        "workflow_name": workflow_name,
-                        "documents": []
-                    })
-                    
+                    return create_success_response(
+                        {"error": "Failed to query doc_store", "workflow_name": workflow_name, "documents": []}
+                    )
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "workflow_name": workflow_name,
-            "documents": []
-        })
+        return create_success_response({"error": str(e), "workflow_name": workflow_name, "documents": []})
 
 
 @app.get("/documents/{document_id}/download")
 async def download_document_from_doc_store(document_id: str):
     """Download a document from doc_store with proper headers."""
     try:
-        from fastapi.responses import Response
         import base64
-        
+
+        from fastapi.responses import Response
+
         # Get document from doc_store
         doc_store_url = "http://doc-store:5087"
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{doc_store_url}/documents/{document_id}") as response:
                 if response.status == 200:
                     doc_data = await response.json()
-                    
+
                     content = doc_data.get("content", "")
                     metadata = doc_data.get("metadata", {})
-                    
+
                     # Handle content encoding
                     if metadata.get("content_encoding") == "base64":
                         content_bytes = base64.b64decode(content)
                     else:
-                        content_bytes = content.encode('utf-8')
-                    
+                        content_bytes = content.encode("utf-8")
+
                     # Get content type and filename
                     content_type = metadata.get("content_type", "application/octet-stream")
                     filename = metadata.get("filename", f"document_{document_id}")
-                    
-                    headers = {
-                        "Content-Disposition": f"attachment; filename={filename}",
-                        "Content-Type": content_type
-                    }
-                    
-                    return Response(
-                        content=content_bytes,
-                        headers=headers
-                    )
+
+                    headers = {"Content-Disposition": f"attachment; filename={filename}", "Content-Type": content_type}
+
+                    return Response(content=content_bytes, headers=headers)
                 else:
-                    return create_success_response({
-                        "error": "Document not found in doc_store",
-                        "document_id": document_id
-                    })
-                    
+                    return create_success_response(
+                        {"error": "Document not found in doc_store", "document_id": document_id}
+                    )
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "document_id": document_id
-        })
+        return create_success_response({"error": str(e), "document_id": document_id})
 
 
 @app.get("/workflows/executions/recent")
@@ -1065,70 +1032,69 @@ async def get_recent_workflow_executions(limit: int = 20):
         # Get recent executions from orchestrator integration
         execution_metrics = await orchestrator_integration.get_execution_metrics()
         recent_executions = orchestrator_integration.execution_history[-limit:]
-        
+
         executions_with_docs = []
         for execution in recent_executions:
             execution_id = execution.get("execution_id")
             documents = await _get_documents_by_execution_id(execution_id)
-            
-            executions_with_docs.append({
-                "execution_id": execution_id,
-                "workflow_name": execution.get("workflow_name"),
-                "status": execution.get("status"),
-                "timestamp": execution.get("timestamp"),
-                "user_id": execution.get("user_id"),
-                "execution_time": execution.get("execution_time"),
-                "documents_generated": len(documents),
-                "documents": documents[:3]  # First 3 documents
-            })
-        
-        return create_success_response({
-            "recent_executions": executions_with_docs,
-            "total_executions": len(executions_with_docs),
-            "execution_metrics": execution_metrics,
-            "query_limit": limit
-        })
-        
+
+            executions_with_docs.append(
+                {
+                    "execution_id": execution_id,
+                    "workflow_name": execution.get("workflow_name"),
+                    "status": execution.get("status"),
+                    "timestamp": execution.get("timestamp"),
+                    "user_id": execution.get("user_id"),
+                    "execution_time": execution.get("execution_time"),
+                    "documents_generated": len(documents),
+                    "documents": documents[:3],  # First 3 documents
+                }
+            )
+
+        return create_success_response(
+            {
+                "recent_executions": executions_with_docs,
+                "total_executions": len(executions_with_docs),
+                "execution_metrics": execution_metrics,
+                "query_limit": limit,
+            }
+        )
+
     except Exception as e:
-        return create_success_response({
-            "error": str(e),
-            "recent_executions": []
-        })
+        return create_success_response({"error": str(e), "recent_executions": []})
 
 
 async def _get_documents_by_execution_id(execution_id: str) -> List[Dict[str, Any]]:
     """Helper function to get documents generated by a specific execution."""
     try:
         doc_store_url = "http://doc-store:5087"
-        
+
         # Search for documents with this execution_id in metadata
-        query_params = {
-            "category": "workflow_output",
-            "execution_id": execution_id,
-            "limit": 100
-        }
-        
+        query_params = {"category": "workflow_output", "execution_id": execution_id, "limit": 100}
+
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{doc_store_url}/documents/search", params=query_params) as response:
                 if response.status == 200:
                     doc_results = await response.json()
-                    
+
                     documents = []
                     for doc in doc_results.get("documents", []):
-                        documents.append({
-                            "document_id": doc.get("id"),
-                            "title": doc.get("metadata", {}).get("title"),
-                            "format": doc.get("metadata", {}).get("format"),
-                            "filename": doc.get("metadata", {}).get("filename"),
-                            "size_bytes": len(doc.get("content", "")),
-                            "created_at": doc.get("metadata", {}).get("generated_at"),
-                            "download_url": f"/documents/download/{doc.get('id')}"
-                        })
-                    
+                        documents.append(
+                            {
+                                "document_id": doc.get("id"),
+                                "title": doc.get("metadata", {}).get("title"),
+                                "format": doc.get("metadata", {}).get("format"),
+                                "filename": doc.get("metadata", {}).get("filename"),
+                                "size_bytes": len(doc.get("content", "")),
+                                "created_at": doc.get("metadata", {}).get("generated_at"),
+                                "download_url": f"/documents/download/{doc.get('id')}",
+                            }
+                        )
+
                     return documents
                 else:
                     return []
-                    
+
     except Exception:
         return []
 
@@ -1136,10 +1102,6 @@ async def _get_documents_by_execution_id(execution_id: str) -> List[Dict[str, An
 if __name__ == "__main__":
     """Run the Interpreter service directly."""
     import uvicorn
+
     print("🚀 Starting Interpreter Service...")
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=DEFAULT_PORT,
-        log_level="info"
-    )
+    uvicorn.run(app, host="0.0.0.0", port=DEFAULT_PORT, log_level="info")

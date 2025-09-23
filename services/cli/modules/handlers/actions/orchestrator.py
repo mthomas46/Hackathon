@@ -1,10 +1,12 @@
-from typing import Any, Dict, List, Tuple, Callable
-from rich.prompt import Prompt
 import socket
+from typing import Any, Callable, List, Tuple
 
-from services.shared.integrations.clients.clients import ServiceClients
-from ...utils.display_helpers import print_kv, print_list
+from rich.prompt import Prompt
+
 from services.shared.core.config.config import get_config_value
+from services.shared.integrations.clients.clients import ServiceClients
+
+from ...utils.display_helpers import print_kv, print_list
 
 
 def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
@@ -53,5 +55,3 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("View config (effective)", config_effective),
         ("Probe Redis connectivity", redis_connectivity),
     ]
-
-

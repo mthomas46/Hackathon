@@ -1,7 +1,9 @@
-"""Peers Routes for Orchestrator Service"""
+"""Peers Routes for Orchestrator Service."""
+
 from fastapi import APIRouter
 
 router = APIRouter()
+
 
 @router.get("/peers")
 async def list_peers():
@@ -10,7 +12,7 @@ async def list_peers():
         "peers": [
             {"name": "doc_store", "url": "http://doc_store:8080", "status": "healthy"},
             {"name": "analyzer", "url": "http://analyzer:8080", "status": "healthy"},
-            {"name": "interpreter", "url": "http://interpreter:8080", "status": "healthy"}
+            {"name": "interpreter", "url": "http://interpreter:8080", "status": "healthy"},
         ],
-        "total": 3
+        "total": 3,
     }

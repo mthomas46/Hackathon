@@ -1,13 +1,13 @@
 """Base formatter class for CLI display formatting."""
 
-from typing import Dict, Any, List, Optional, Tuple
 from abc import ABC, abstractmethod
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.text import Text
+from typing import Any, Dict, List, Optional
+
 from rich.columns import Columns
+from rich.console import Console
 from rich.layout import Layout
+from rich.panel import Panel
+from rich.table import Table
 
 from ..formatters.display_utils import DisplayManager
 
@@ -43,8 +43,7 @@ class BaseFormatter(ABC):
             table.add_row(*["[dim]...[/dim]"] * len(rows[0]))
             table.add_row(*[f"[dim]+{len(rows) - max_rows} more[/dim]"] + [""] * (len(rows[0]) - 1))
 
-    def show_panel(self, content: str, title: Optional[str] = None,
-                   border_style: str = "blue", expand: bool = False):
+    def show_panel(self, content: str, title: Optional[str] = None, border_style: str = "blue", expand: bool = False):
         """Show content in a styled panel."""
         panel = Panel(content, title=title, border_style=border_style, expand=expand)
         self.console.print(panel)
@@ -118,12 +117,10 @@ class BaseFormatter(ABC):
     @abstractmethod
     def format_service_status(self, service_name: str, status_data: Dict[str, Any]) -> str:
         """Format service status information."""
-        pass
 
     @abstractmethod
     def format_operation_result(self, operation: str, result: Any) -> str:
         """Format operation result for display."""
-        pass
 
     def show_table(self, title: str, headers: List[str], data: List[List[str]]):
         """Show data in a table format."""

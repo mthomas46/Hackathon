@@ -1,15 +1,18 @@
-"""Consolidated orchestration utilities for distributed operations.
-
-Combines event ordering, dead letter queue, saga patterns, and event replay.
 """
-import time
-import json
-import uuid
+Consolidated orchestration utilities for distributed operations.
+
+Combines event ordering, dead letter queue, saga patterns, and event
+replay.
+"""
+
 import asyncio
-from typing import Dict, Any, List, Optional, Callable, Awaitable
-from dataclasses import dataclass, asdict
-from enum import Enum
+import json
 import logging
+import time
+import uuid
+from dataclasses import asdict, dataclass
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     import redis.asyncio as aioredis
@@ -20,6 +23,7 @@ except ImportError:
         aioredis = None
 
 logger = logging.getLogger(__name__)
+
 
 # Event Ordering
 class EventPriority(Enum):
@@ -49,9 +53,7 @@ class EventOrderer:
         self._seen_events: Dict[str, float] = {}
 
     def create_event_metadata(
-        self,
-        priority: EventPriority = EventPriority.NORMAL,
-        correlation_id: Optional[str] = None
+        self, priority: EventPriority = EventPriority.NORMAL, correlation_id: Optional[str] = None
     ) -> EventMetadata:
         self._sequence_counter += 1
         sequence_id = f"{self.service_name}:{int(time.time() * 1000)}:{self._sequence_counter}"
@@ -61,7 +63,7 @@ class EventOrderer:
             timestamp=time.time(),
             priority=priority,
             correlation_id=correlation_id,
-            source_service=self.service_name
+            source_service=self.service_name,
         )
 
     def is_duplicate(self, event_id: str, ttl_seconds: int = 300) -> bool:
@@ -80,14 +82,10 @@ def create_ordered_event(
     payload: Dict[str, Any],
     orderer: EventOrderer,
     priority: EventPriority = EventPriority.NORMAL,
-    correlation_id: Optional[str] = None
+    correlation_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     metadata = orderer.create_event_metadata(priority, correlation_id)
-    return {
-        "event_type": event_type,
-        "payload": payload,
-        "metadata": asdict(metadata)
-    }
+    return {"event_type": event_type, "payload": payload, "metadata": asdict(metadata)}
 
 
 # Dead Letter Queue
@@ -123,7 +121,7 @@ class DeadLetterQueue:
         retry_key: str = "dlq:retry_queue",
         max_retries: int = 3,
         base_delay: float = 1.0,
-        max_delay: float = 300.0
+        max_delay: float = 300.0,
     ):
         self.redis_host = redis_host
         self.dlq_key = dlq_key
@@ -147,7 +145,7 @@ class DeadLetterQueue:
         payload: Dict[str, Any],
         metadata: Dict[str, Any],
         failure_reason: str,
-        retry_policy: RetryPolicy = RetryPolicy.EXPONENTIAL_BACKOFF
+        retry_policy: RetryPolicy = RetryPolicy.EXPONENTIAL_BACKOFF,
     ) -> None:
         redis = await self._get_redis()
         dlq_entry = DLQEntry(
@@ -161,7 +159,7 @@ class DeadLetterQueue:
             max_retries=self.max_retries,
             retry_policy=retry_policy,
             next_retry_at=self._calculate_next_retry(0, retry_policy),
-            dlq_timestamp=time.time()
+            dlq_timestamp=time.time(),
         )
         await redis.hset(self.dlq_key, event_id, json.dumps(asdict(dlq_entry)))
         if dlq_entry.retry_count < dlq_entry.max_retries:
@@ -178,7 +176,7 @@ class DeadLetterQueue:
             delay = self.base_delay * (retry_count + 1)
             return now + min(delay, self.max_delay)
         elif policy == RetryPolicy.EXPONENTIAL_BACKOFF:
-            delay = self.base_delay * (2 ** retry_count)
+            delay = self.base_delay * (2**retry_count)
             return now + min(delay, self.max_delay)
         else:
             return now + self.base_delay
@@ -211,9 +209,7 @@ class DeadLetterQueue:
         except Exception as e:
             dlq_entry.retry_count += 1
             if dlq_entry.retry_count < dlq_entry.max_retries:
-                dlq_entry.next_retry_at = self._calculate_next_retry(
-                    dlq_entry.retry_count, dlq_entry.retry_policy
-                )
+                dlq_entry.next_retry_at = self._calculate_next_retry(dlq_entry.retry_count, dlq_entry.retry_policy)
                 await redis.hset(self.dlq_key, event_id, json.dumps(asdict(dlq_entry)))
                 await redis.zadd(self.retry_key, {event_id: dlq_entry.next_retry_at})
                 logger.warning(f"Retry {dlq_entry.retry_count} failed for event {event_id}: {e}")
@@ -289,15 +285,11 @@ class SagaOrchestrator:
                 payload=step_data["payload"],
                 compensation=step_data["compensation"],
                 compensation_payload=step_data["compensation_payload"],
-                max_retries=step_data.get("max_retries", 3)
+                max_retries=step_data.get("max_retries", 3),
             )
             saga_steps.append(step)
         saga = SagaTransaction(
-            saga_id=saga_id,
-            correlation_id=correlation_id,
-            steps=saga_steps,
-            created_at=now,
-            updated_at=now
+            saga_id=saga_id, correlation_id=correlation_id, steps=saga_steps, created_at=now, updated_at=now
         )
         redis = await self._get_redis()
         await redis.hset(self.saga_key, saga_id, json.dumps(asdict(saga)))
@@ -335,7 +327,7 @@ class EventReplayManager:
         redis_host: str = "redis",
         events_key: str = "events:persistent",
         max_events: int = 10000,
-        retention_days: int = 30
+        retention_days: int = 30,
     ):
         self.redis_host = redis_host
         self.events_key = events_key
@@ -357,7 +349,7 @@ class EventReplayManager:
         payload: Dict[str, Any],
         metadata: Dict[str, Any],
         correlation_id: Optional[str] = None,
-        source_service: Optional[str] = None
+        source_service: Optional[str] = None,
     ) -> str:
         event_id = str(uuid.uuid4())
         now = time.time()
@@ -369,7 +361,7 @@ class EventReplayManager:
             metadata=metadata,
             timestamp=now,
             correlation_id=correlation_id,
-            source_service=source_service
+            source_service=source_service,
         )
         redis = await self._get_redis()
         await redis.hset(self.events_key, event_id, json.dumps(asdict(event)))
@@ -381,7 +373,7 @@ class EventReplayManager:
         correlation_id: Optional[str] = None,
         start_time: Optional[float] = None,
         end_time: Optional[float] = None,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[str]:
         redis = await self._get_redis()
         all_events = await redis.hgetall(self.events_key)
@@ -464,29 +456,29 @@ class DocConsistencySaga:
                 "action": "POST /ingest",
                 "payload": {"source": "github", "correlation_id": correlation_id},
                 "compensation": "POST /ingest/rollback",
-                "compensation_payload": {"source": "github", "correlation_id": correlation_id}
+                "compensation_payload": {"source": "github", "correlation_id": correlation_id},
             },
             {
                 "service_name": "jira-agent",
                 "action": "POST /ingest",
                 "payload": {"source": "jira", "correlation_id": correlation_id},
                 "compensation": "POST /ingest/rollback",
-                "compensation_payload": {"source": "jira", "correlation_id": correlation_id}
+                "compensation_payload": {"source": "jira", "correlation_id": correlation_id},
             },
             {
                 "service_name": "confluence-agent",
                 "action": "POST /ingest",
                 "payload": {"source": "confluence", "correlation_id": correlation_id},
                 "compensation": "POST /ingest/rollback",
-                "compensation_payload": {"source": "confluence", "correlation_id": correlation_id}
+                "compensation_payload": {"source": "confluence", "correlation_id": correlation_id},
             },
             {
                 "service_name": "consistency-engine",
                 "action": "POST /analyze",
                 "payload": {"correlation_id": correlation_id},
                 "compensation": "POST /analyze/rollback",
-                "compensation_payload": {"correlation_id": correlation_id}
-            }
+                "compensation_payload": {"correlation_id": correlation_id},
+            },
         ]
 
     @staticmethod
@@ -498,6 +490,6 @@ class DocConsistencySaga:
                 "action": "POST /reports/findings/notify-owners",
                 "payload": {"findings": findings, "correlation_id": correlation_id},
                 "compensation": "POST /reports/findings/notify-owners/rollback",
-                "compensation_payload": {"findings": findings, "correlation_id": correlation_id}
+                "compensation_payload": {"findings": findings, "correlation_id": correlation_id},
             }
         ]

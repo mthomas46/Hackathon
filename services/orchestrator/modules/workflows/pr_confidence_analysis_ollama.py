@@ -1,31 +1,27 @@
 """
 PR Confidence Analysis Workflow with Ollama LLM Integration.
 
-Enhanced version that uses local Ollama LLM for real AI analysis
-instead of simulation methods.
+Enhanced version that uses local Ollama LLM for real AI analysis instead
+of simulation methods.
 """
 
-import asyncio
 import json
-import httpx
-from typing import Dict, Any, List
-from langgraph.graph import StateGraph, END
 from datetime import datetime
+from typing import Any, Dict
+
+import httpx
+from langgraph.graph import END, StateGraph
 
 from ..langgraph.state import WorkflowState
 from ..langgraph.tools import (
-    store_document_tool,
-    search_documents_tool,
-    analyze_document_tool,
-    get_optimal_prompt_tool,
     send_notification_tool,
-    ingest_github_repo_tool,
-    ingest_jira_issues_tool
+    store_document_tool,
 )
 
 # Ollama configuration
 OLLAMA_BASE_URL = "http://localhost:11434"
 OLLAMA_MODEL = "llama3.2:3b"  # or "codellama", "mistral", etc.
+
 
 class OllamaLLMClient:
     """Client for interacting with local Ollama LLM."""
@@ -49,8 +45,8 @@ class OllamaLLMClient:
                     "options": {
                         "num_predict": max_tokens,
                         "temperature": 0.3,  # Lower temperature for more consistent analysis
-                    }
-                }
+                    },
+                },
             )
 
             if response.status_code == 200:
@@ -163,10 +159,10 @@ Consider enterprise software standards and best practices in your assessment.
             "overall_score": 0.7,
             "acceptance_criteria_coverage": {
                 "basic_functionality": {"status": "implemented", "confidence": 0.8},
-                "error_handling": {"status": "partial", "confidence": 0.6}
+                "error_handling": {"status": "partial", "confidence": 0.6},
             },
             "gaps": ["Detailed analysis unavailable due to LLM error"],
-            "recommendations": ["Manual review recommended"]
+            "recommendations": ["Manual review recommended"],
         }
 
     def _fallback_documentation_analysis(self, pr_content: str, doc_content: str) -> Dict[str, Any]:
@@ -175,19 +171,19 @@ Consider enterprise software standards and best practices in your assessment.
             "consistency_score": 0.75,
             "issues": ["Detailed analysis unavailable due to LLM error"],
             "recommendations": ["Manual documentation review recommended"],
-            "overall_assessment": "Manual review required"
+            "overall_assessment": "Manual review required",
         }
 
     def _fallback_confidence_assessment(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
         """Fallback confidence assessment."""
-        avg_score = (analysis_data.get('requirements_score', 0) + analysis_data.get('documentation_score', 0)) / 2
+        avg_score = (analysis_data.get("requirements_score", 0) + analysis_data.get("documentation_score", 0)) / 2
         return {
             "overall_confidence": avg_score,
             "confidence_level": "medium" if avg_score >= 0.6 else "low",
             "risk_assessment": "medium",
             "approval_recommendation": "review_required",
             "rationale": "Automated analysis encountered issues, manual review recommended",
-            "critical_concerns": ["LLM analysis failed - manual verification needed"]
+            "critical_concerns": ["LLM analysis failed - manual verification needed"],
         }
 
 
@@ -248,10 +244,12 @@ class PRConfidenceAnalysisWorkflowOllama:
         )
 
         state["context"]["requirements_alignment"] = alignment_analysis
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Requirements alignment analysis: {alignment_analysis['overall_score']:.1%} alignment with {len(alignment_analysis['gaps'])} gaps identified"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Requirements alignment analysis: {alignment_analysis['overall_score']:.1%} alignment with {len(alignment_analysis['gaps'])} gaps identified",
+            }
+        )
 
         return state
 
@@ -271,10 +269,12 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         state["context"]["documentation_consistency"] = consistency_analysis
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Documentation consistency analysis: {consistency_analysis['overall_score']:.1%} consistency with {len(consistency_analysis['issues'])} issues identified"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Documentation consistency analysis: {consistency_analysis['overall_score']:.1%} consistency with {len(consistency_analysis['issues'])} issues identified",
+            }
+        )
 
         return state
 
@@ -295,10 +295,12 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         state["context"]["cross_reference_results"] = cross_reference_results
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Cross-reference analysis: {cross_reference_results.overall_alignment_score:.1%} alignment, {len(cross_reference_results.identified_gaps)} gaps, {len(cross_reference_results.consistency_issues)} issues, risk: {cross_reference_results.risk_assessment.upper()}"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Cross-reference analysis: {cross_reference_results.overall_alignment_score:.1%} alignment, {len(cross_reference_results.identified_gaps)} gaps, {len(cross_reference_results.consistency_issues)} issues, risk: {cross_reference_results.risk_assessment.upper()}",
+            }
+        )
 
         return state
 
@@ -320,10 +322,12 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         state["context"]["confidence_score"] = confidence_score
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Confidence assessment: {confidence_score.confidence_level.value.upper()} confidence ({confidence_score.overall_score:.1%}) - {confidence_score.approval_recommendation.value.replace('_', ' ').title()}"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Confidence assessment: {confidence_score.confidence_level.value.upper()} confidence ({confidence_score.overall_score:.1%}) - {confidence_score.approval_recommendation.value.replace('_', ' ').title()}",
+            }
+        )
 
         return state
 
@@ -340,7 +344,7 @@ class PRConfidenceAnalysisWorkflowOllama:
             "jira_ticket": "PROJ-456",
             "related_docs": ["API_AUTH_DOCS", "SECURITY_GUIDE"],
             "files_changed": ["src/auth/oauth2_client.py", "src/auth/middleware.py"],
-            "diff_summary": "+250 lines, -50 lines"
+            "diff_summary": "+250 lines, -50 lines",
         }
 
     async def _simulate_jira_ingestion(self, ticket_id: str) -> Dict[str, Any]:
@@ -352,10 +356,10 @@ class PRConfidenceAnalysisWorkflowOllama:
             "acceptance_criteria": [
                 "User can authenticate with OAuth2 provider",
                 "API validates OAuth2 tokens",
-                "Token refresh mechanism implemented"
+                "Token refresh mechanism implemented",
             ],
             "story_points": 8,
-            "priority": "High"
+            "priority": "High",
         }
 
     async def _simulate_confluence_ingestion(self, page_id: str) -> Dict[str, Any]:
@@ -364,7 +368,7 @@ class PRConfidenceAnalysisWorkflowOllama:
             "id": page_id,
             "title": "Authentication API Documentation",
             "content": "OAuth2 implementation guide with endpoints and security requirements.",
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
     async def identify_gaps_and_risks_node(self, state: WorkflowState) -> WorkflowState:
@@ -380,9 +384,7 @@ class PRConfidenceAnalysisWorkflowOllama:
         from .analysis.pr_gap_detector import pr_gap_detector
 
         # Detect gaps using advanced analysis
-        detected_gaps = pr_gap_detector.detect_gaps(
-            pr_data, jira_data, confluence_docs, cross_reference_results
-        )
+        detected_gaps = pr_gap_detector.detect_gaps(pr_data, jira_data, confluence_docs, cross_reference_results)
 
         # Get gap summary
         gap_summary = pr_gap_detector.get_gap_summary(detected_gaps)
@@ -394,10 +396,12 @@ class PRConfidenceAnalysisWorkflowOllama:
         blocking_gaps = [gap for gap in detected_gaps if gap.blocking_approval]
         state["context"]["blocking_gaps"] = blocking_gaps
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Advanced gap analysis completed: {len(detected_gaps)} gaps found, {len(blocking_gaps)} blocking"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Advanced gap analysis completed: {len(detected_gaps)} gaps found, {len(blocking_gaps)} blocking",
+            }
+        )
 
         return state
 
@@ -417,27 +421,26 @@ class PRConfidenceAnalysisWorkflowOllama:
             recommendations.append(gap.recommendation)
 
         # Confidence-based recommendations
-        confidence_level = confidence_score.get('confidence_level', 'medium')
-        if confidence_level == 'low':
+        confidence_level = confidence_score.get("confidence_level", "medium")
+        if confidence_level == "low":
             recommendations.append("Schedule additional code review with senior developers")
             recommendations.append("Consider breaking PR into smaller, focused changes")
-        elif confidence_level == 'medium':
+        elif confidence_level == "medium":
             recommendations.append("Additional testing recommended before approval")
             recommendations.append("Documentation review suggested")
 
         # Cross-reference based recommendations
-        if cross_reference_results.get('overall_alignment_score', 1.0) < 0.7:
+        if cross_reference_results.get("overall_alignment_score", 1.0) < 0.7:
             recommendations.append("Review requirements alignment with product owner")
 
-        if cross_reference_results.get('risk_assessment') == 'high':
+        if cross_reference_results.get("risk_assessment") == "high":
             recommendations.append("Security and architecture review recommended")
 
         state["context"]["recommendations"] = recommendations
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Generated {len(recommendations)} comprehensive recommendations"
-        })
+        state["messages"].append(
+            {"role": "assistant", "content": f"Generated {len(recommendations)} comprehensive recommendations"}
+        )
 
         return state
 
@@ -459,9 +462,13 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         # Generate comprehensive report
         report = pr_report_generator.generate_report(
-            pr_data, jira_data, confluence_docs,
-            cross_reference_results, confidence_score,
-            detected_gaps, analysis_duration
+            pr_data,
+            jira_data,
+            confluence_docs,
+            cross_reference_results,
+            confidence_score,
+            detected_gaps,
+            analysis_duration,
         )
 
         # Save reports to files
@@ -477,17 +484,19 @@ class PRConfidenceAnalysisWorkflowOllama:
                 "type": "pr_confidence_report",
                 "pr_id": pr_data.get("id"),
                 "workflow_id": state["run_id"],
-                "confidence_score": confidence_score.get('overall_score', 0),
-                "confidence_level": confidence_score.get('confidence_level', 'medium'),
-                "approval_recommendation": confidence_score.get('approval_recommendation', 'review_required')
+                "confidence_score": confidence_score.get("overall_score", 0),
+                "confidence_level": confidence_score.get("confidence_level", "medium"),
+                "approval_recommendation": confidence_score.get("approval_recommendation", "review_required"),
             },
-            source="orchestrator"
+            source="orchestrator",
         )
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Comprehensive report generated and saved to {saved_files['html_report']}"
-        })
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Comprehensive report generated and saved to {saved_files['html_report']}",
+            }
+        )
 
         return state
 
@@ -503,11 +512,11 @@ class PRConfidenceAnalysisWorkflowOllama:
         blocking_gaps = state["context"].get("blocking_gaps", [])
 
         # Prepare notification content
-        confidence_level = confidence_score.get('confidence_level', 'medium')
-        approval_rec = confidence_score.get('approval_recommendation', 'review_required')
+        confidence_level = confidence_score.get("confidence_level", "medium")
+        approval_rec = confidence_score.get("approval_recommendation", "review_required")
 
-        html_report_url = report_files.get('html_report', 'N/A')
-        json_report_url = report_files.get('json_report', 'N/A')
+        html_report_url = report_files.get("html_report", "N/A")
+        json_report_url = report_files.get("json_report", "N/A")
 
         # Create detailed notification message
         message_parts = [
@@ -515,7 +524,7 @@ class PRConfidenceAnalysisWorkflowOllama:
             f"Recommendation: {approval_rec.replace('_', ' ').title()}",
             f"Confidence Level: {confidence_level.upper()}",
             f"Gaps Found: {len(detected_gaps)} ({len(blocking_gaps)} blocking)",
-            f"Reports Available: {html_report_url}"
+            f"Reports Available: {html_report_url}",
         ]
 
         if blocking_gaps:
@@ -524,7 +533,7 @@ class PRConfidenceAnalysisWorkflowOllama:
         message = "\\n".join(message_parts)
 
         # Determine notification urgency
-        urgency = "high" if confidence_level in ['low', 'critical'] or blocking_gaps else "normal"
+        urgency = "high" if confidence_level in ["low", "critical"] or blocking_gaps else "normal"
 
         # Send notification to PR author
         await send_notification_tool(
@@ -538,24 +547,23 @@ class PRConfidenceAnalysisWorkflowOllama:
                 "html_report": html_report_url,
                 "json_report": json_report_url,
                 "gaps_count": len(detected_gaps),
-                "blocking_gaps": len(blocking_gaps)
-            }
+                "blocking_gaps": len(blocking_gaps),
+            },
         )
 
         # Send notification to tech lead/product manager
-        if confidence_level in ['low', 'critical'] or blocking_gaps:
+        if confidence_level in ["low", "critical"] or blocking_gaps:
             lead_message = f"URGENT: PR {pr_data.get('id')} requires immediate attention\\n{message}"
             await send_notification_tool(
                 message=lead_message,
                 recipient="tech_lead",
                 urgency="high",
-                additional_data=final_report.__dict__ if final_report else {}
+                additional_data=final_report.__dict__ if final_report else {},
             )
 
-        state["messages"].append({
-            "role": "assistant",
-            "content": f"Comprehensive notifications sent with report links (urgency: {urgency})"
-        })
+        state["messages"].append(
+            {"role": "assistant", "content": f"Comprehensive notifications sent with report links (urgency: {urgency})"}
+        )
 
         return state
 
@@ -570,7 +578,7 @@ class PRConfidenceAnalysisWorkflowOllama:
             "jira_ticket": "PROJ-456",
             "related_docs": ["API_AUTH_DOCS", "SECURITY_GUIDE"],
             "files_changed": ["src/auth/oauth2_client.py", "src/auth/middleware.py"],
-            "diff_summary": "+250 lines, -50 lines"
+            "diff_summary": "+250 lines, -50 lines",
         }
 
     async def _simulate_jira_ingestion(self, ticket_id: str) -> Dict[str, Any]:
@@ -582,10 +590,10 @@ class PRConfidenceAnalysisWorkflowOllama:
             "acceptance_criteria": [
                 "User can authenticate with OAuth2 provider",
                 "API validates OAuth2 tokens",
-                "Token refresh mechanism implemented"
+                "Token refresh mechanism implemented",
             ],
             "story_points": 8,
-            "priority": "High"
+            "priority": "High",
         }
 
     async def _simulate_confluence_ingestion(self, page_id: str) -> Dict[str, Any]:
@@ -594,7 +602,7 @@ class PRConfidenceAnalysisWorkflowOllama:
             "id": page_id,
             "title": "Authentication API Documentation",
             "content": "OAuth2 implementation guide with endpoints and security requirements.",
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
 

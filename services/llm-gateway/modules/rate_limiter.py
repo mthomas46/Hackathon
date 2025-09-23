@@ -1,23 +1,26 @@
-"""Rate Limiter Module for LLM Gateway Service.
+"""
+Rate Limiter Module for LLM Gateway Service.
 
-Implements intelligent rate limiting to prevent abuse, manage costs, and ensure
-fair usage across different users and providers. Supports multiple rate limiting
-strategies including token bucket, sliding window, and provider-specific limits.
+Implements intelligent rate limiting to prevent abuse, manage costs, and
+ensure fair usage across different users and providers. Supports
+multiple rate limiting strategies including token bucket, sliding
+window, and provider-specific limits.
 """
 
 import time
-from collections import defaultdict, deque
-from typing import Dict, Any, Optional, List
+from collections import deque
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from services.shared.config import get_config_value
-from services.shared.logging import fire_and_forget
 from services.shared.constants_new import ServiceNames
+from services.shared.logging import fire_and_forget
 
 
 @dataclass
 class RateLimitRule:
     """Represents a rate limiting rule."""
+
     requests_per_minute: int
     requests_per_hour: int
     tokens_per_minute: int
@@ -28,10 +31,11 @@ class RateLimitRule:
 @dataclass
 class UserRateLimit:
     """Rate limit state for a user."""
+
     user_id: str
     rule: RateLimitRule
     request_times: deque = None  # Sliding window of request timestamps
-    token_usage: deque = None    # Sliding window of token usage
+    token_usage: deque = None  # Sliding window of token usage
     burst_count: int = 0
     last_request_time: float = 0.0
     cooldown_until: float = 0.0
@@ -60,7 +64,7 @@ class RateLimiter:
             requests_per_hour=int(get_config_value("RATE_LIMIT_REQUESTS_PER_HOUR", "1000", section="rate_limiting")),
             tokens_per_minute=int(get_config_value("RATE_LIMIT_TOKENS_PER_MINUTE", "50000", section="rate_limiting")),
             burst_limit=int(get_config_value("RATE_LIMIT_BURST_LIMIT", "10", section="rate_limiting")),
-            cooldown_seconds=int(get_config_value("RATE_LIMIT_COOLDOWN_SECONDS", "60", section="rate_limiting"))
+            cooldown_seconds=int(get_config_value("RATE_LIMIT_COOLDOWN_SECONDS", "60", section="rate_limiting")),
         )
 
         # Provider-specific rate limits
@@ -77,40 +81,39 @@ class RateLimiter:
                 requests_per_hour=2000,
                 tokens_per_minute=100000,
                 burst_limit=20,
-                cooldown_seconds=30
+                cooldown_seconds=30,
             ),
             "openai": RateLimitRule(
                 requests_per_minute=50,
                 requests_per_hour=500,
                 tokens_per_minute=40000,
                 burst_limit=5,
-                cooldown_seconds=60
+                cooldown_seconds=60,
             ),
             "anthropic": RateLimitRule(
                 requests_per_minute=50,
                 requests_per_hour=500,
                 tokens_per_minute=40000,
                 burst_limit=5,
-                cooldown_seconds=60
+                cooldown_seconds=60,
             ),
             "bedrock": RateLimitRule(
                 requests_per_minute=30,
                 requests_per_hour=300,
                 tokens_per_minute=20000,
                 burst_limit=3,
-                cooldown_seconds=120
+                cooldown_seconds=120,
             ),
             "grok": RateLimitRule(
                 requests_per_minute=60,
                 requests_per_hour=1000,
                 tokens_per_minute=50000,
                 burst_limit=10,
-                cooldown_seconds=45
-            )
+                cooldown_seconds=45,
+            ),
         }
 
-    async def check_rate_limit(self, user_id: str, provider: str = "default",
-                              tokens_requested: int = 0) -> bool:
+    async def check_rate_limit(self, user_id: str, provider: str = "default", tokens_requested: int = 0) -> bool:
         """Check if a request should be allowed based on rate limits."""
         try:
             # Get applicable rule
@@ -131,11 +134,7 @@ class RateLimiter:
                     "llm_gateway_rate_limit_cooldown",
                     f"User {user_id} in cooldown for {remaining_cooldown} seconds",
                     ServiceNames.LLM_GATEWAY,
-                    {
-                        "user_id": user_id,
-                        "remaining_cooldown": remaining_cooldown,
-                        "provider": provider
-                    }
+                    {"user_id": user_id, "remaining_cooldown": remaining_cooldown, "provider": provider},
                 )
                 return False
 
@@ -158,8 +157,8 @@ class RateLimiter:
                         {
                             "user_id": user_id,
                             "burst_count": user_limit.burst_count,
-                            "cooldown_seconds": rule.cooldown_seconds
-                        }
+                            "cooldown_seconds": rule.cooldown_seconds,
+                        },
                     )
                     return False
             else:
@@ -177,8 +176,7 @@ class RateLimiter:
 
             # Check token limits
             if tokens_requested > 0:
-                recent_tokens = sum(tokens for _, tokens in user_limit.token_usage
-                                  if current_time - _ < 60)
+                recent_tokens = sum(tokens for _, tokens in user_limit.token_usage if current_time - _ < 60)
                 if recent_tokens + tokens_requested > rule.tokens_per_minute:
                     return False
 
@@ -201,11 +199,7 @@ class RateLimiter:
                 "llm_gateway_rate_limit_error",
                 f"Rate limit check error for user {user_id}: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {
-                    "user_id": user_id,
-                    "provider": provider,
-                    "error": str(e)
-                }
+                {"user_id": user_id, "provider": provider, "error": str(e)},
             )
             return True
 
@@ -272,7 +266,7 @@ class RateLimiter:
                 "llm_gateway_global_tracking_error",
                 f"Global tracking error: {str(e)}",
                 ServiceNames.LLM_GATEWAY,
-                {"error": str(e)}
+                {"error": str(e)},
             )
 
     def set_special_rule(self, user_id: str, rule: RateLimitRule):
@@ -288,9 +282,9 @@ class RateLimiter:
                 "rule": {
                     "requests_per_minute": rule.requests_per_minute,
                     "requests_per_hour": rule.requests_per_hour,
-                    "tokens_per_minute": rule.tokens_per_minute
-                }
-            }
+                    "tokens_per_minute": rule.tokens_per_minute,
+                },
+            },
         )
 
     def remove_special_rule(self, user_id: str):
@@ -302,7 +296,7 @@ class RateLimiter:
                 "llm_gateway_special_rule_removed",
                 f"Special rate limit rule removed for user {user_id}",
                 ServiceNames.LLM_GATEWAY,
-                {"user_id": user_id}
+                {"user_id": user_id},
             )
 
     def get_user_status(self, user_id: str) -> Dict[str, Any]:
@@ -315,19 +309,17 @@ class RateLimiter:
                 "requests_this_hour": 0,
                 "tokens_this_minute": 0,
                 "burst_count": 0,
-                "cooldown_remaining": 0
+                "cooldown_remaining": 0,
             }
 
         user_limit = self.user_limits[user_id]
         current_time = time.time()
 
         # Calculate current usage
-        requests_this_minute = sum(1 for t in user_limit.request_times
-                                 if current_time - t < 60)
+        requests_this_minute = sum(1 for t in user_limit.request_times if current_time - t < 60)
         requests_this_hour = len(user_limit.request_times)  # Already limited to 1 hour
 
-        tokens_this_minute = sum(tokens for _, tokens in user_limit.token_usage
-                               if current_time - _ < 60)
+        tokens_this_minute = sum(tokens for _, tokens in user_limit.token_usage if current_time - _ < 60)
 
         cooldown_remaining = max(0, int(user_limit.cooldown_until - current_time))
 
@@ -351,18 +343,18 @@ class RateLimiter:
                 "requests_per_minute": rule.requests_per_minute,
                 "requests_per_hour": rule.requests_per_hour,
                 "tokens_per_minute": rule.tokens_per_minute,
-                "burst_limit": rule.burst_limit
+                "burst_limit": rule.burst_limit,
             },
             "current_usage": {
                 "requests_this_minute": requests_this_minute,
                 "requests_this_hour": requests_this_hour,
                 "tokens_this_minute": tokens_this_minute,
-                "burst_count": user_limit.burst_count
+                "burst_count": user_limit.burst_count,
             },
             "limits": {
                 "cooldown_remaining": cooldown_remaining,
-                "next_request_allowed": user_limit.cooldown_until if cooldown_remaining > 0 else 0
-            }
+                "next_request_allowed": user_limit.cooldown_until if cooldown_remaining > 0 else 0,
+            },
         }
 
     async def get_status(self) -> Dict[str, Any]:
@@ -378,14 +370,11 @@ class RateLimiter:
                 "global_tokens_last_minute": sum(tokens for _, tokens in self.global_tokens),
                 "active_users": len(self.user_limits),
                 "special_rules_count": len(self.special_rules),
-                "timestamp": current_time
+                "timestamp": current_time,
             }
 
         except Exception as e:
-            return {
-                "error": f"Failed to get status: {str(e)}",
-                "timestamp": time.time()
-            }
+            return {"error": f"Failed to get status: {str(e)}", "timestamp": time.time()}
 
     def reset_user_limits(self, user_id: Optional[str] = None):
         """Reset rate limits for a user or all users."""
@@ -396,16 +385,12 @@ class RateLimiter:
                     "llm_gateway_user_limits_reset",
                     f"Rate limits reset for user {user_id}",
                     ServiceNames.LLM_GATEWAY,
-                    {"user_id": user_id}
+                    {"user_id": user_id},
                 )
         else:
             self.user_limits.clear()
             self.special_rules.clear()
-            fire_and_forget(
-                "llm_gateway_all_limits_reset",
-                "All user rate limits reset",
-                ServiceNames.LLM_GATEWAY
-            )
+            fire_and_forget("llm_gateway_all_limits_reset", "All user rate limits reset", ServiceNames.LLM_GATEWAY)
 
     def get_rate_limit_violations(self, hours: int = 24) -> List[Dict[str, Any]]:
         """Get rate limit violations from the last N hours."""
@@ -418,12 +403,14 @@ class RateLimiter:
         for user_id, user_limit in self.user_limits.items():
             # Check for cooldowns in the time period
             if user_limit.cooldown_until > cutoff_time:
-                violations.append({
-                    "type": "user_cooldown",
-                    "user_id": user_id,
-                    "timestamp": user_limit.cooldown_until,
-                    "reason": "Exceeded burst limit"
-                })
+                violations.append(
+                    {
+                        "type": "user_cooldown",
+                        "user_id": user_id,
+                        "timestamp": user_limit.cooldown_until,
+                        "reason": "Exceeded burst limit",
+                    }
+                )
 
         # Could also check for other violation patterns
         # (high request rates, unusual patterns, etc.)

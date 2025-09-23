@@ -1,10 +1,13 @@
-"""Document service for business logic operations.
+"""
+Document service for business logic operations.
 
 Handles document validation, processing, and business rules.
 """
-from typing import Dict, Any, Optional, List
-from ...core.service import BaseService
+
+from typing import Any, Dict, List, Optional
+
 from ...core.entities import Document
+from ...core.service import BaseService
 from .repository import DocumentRepository
 
 
@@ -20,7 +23,7 @@ class DocumentService(BaseService[Document]):
 
     def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> Document:
         """Create document from data."""
-        content = data.get('content', '')
+        content = data.get("content", "")
         if not content or not content.strip():
             raise ValueError("Document content cannot be empty")
 
@@ -36,23 +39,24 @@ class DocumentService(BaseService[Document]):
             id=entity_id,
             content=content,
             content_hash=content_hash,
-            metadata=data.get('metadata', {}),
-            correlation_id=data.get('correlation_id')
+            metadata=data.get("metadata", {}),
+            correlation_id=data.get("correlation_id"),
         )
 
-    def create_document(self, content: str, metadata: Optional[Dict[str, Any]] = None,
-                       document_id: Optional[str] = None, correlation_id: Optional[str] = None) -> Document:
+    def create_document(
+        self,
+        content: str,
+        metadata: Optional[Dict[str, Any]] = None,
+        document_id: Optional[str] = None,
+        correlation_id: Optional[str] = None,
+    ) -> Document:
         """Create a new document with validation."""
-        data = {
-            'content': content,
-            'metadata': metadata or {},
-            'correlation_id': correlation_id
-        }
+        data = {"content": content, "metadata": metadata or {}, "correlation_id": correlation_id}
         return self.create_entity(data, document_id)
 
     def update_metadata(self, document_id: str, metadata: Dict[str, Any]) -> None:
         """Update document metadata."""
-        self.update_entity(document_id, {'metadata': metadata})
+        self.update_entity(document_id, {"metadata": metadata})
 
     def search_documents(self, query: str, limit: int = 50) -> Dict[str, Any]:
         """Search documents by content."""
@@ -67,7 +71,7 @@ class DocumentService(BaseService[Document]):
             "has_more": len(results) == limit,  # Simple heuristic
             "query": query,
             "limit": limit,
-            "search_time": 0.0  # Placeholder
+            "search_time": 0.0,  # Placeholder
         }
 
     def get_quality_metrics(self, limit: int = 1000) -> Dict[str, Any]:
@@ -76,8 +80,8 @@ class DocumentService(BaseService[Document]):
 
         # Aggregate quality statistics
         total = len(metrics)
-        stale_count = sum(1 for m in metrics if 'stale' in m.get('flags', []))
-        redundant_count = sum(1 for m in metrics if 'redundant' in m.get('flags', []))
+        stale_count = sum(1 for m in metrics if "stale" in m.get("flags", []))
+        redundant_count = sum(1 for m in metrics if "redundant" in m.get("flags", []))
 
         return {
             "items": metrics,
@@ -85,7 +89,7 @@ class DocumentService(BaseService[Document]):
             "stale_count": stale_count,
             "redundant_count": redundant_count,
             "stale_percentage": (stale_count / total * 100) if total > 0 else 0,
-            "redundant_percentage": (redundant_count / total * 100) if total > 0 else 0
+            "redundant_percentage": (redundant_count / total * 100) if total > 0 else 0,
         }
 
     def get_related_documents(self, correlation_id: str) -> list[Dict[str, Any]]:
@@ -101,7 +105,8 @@ class DocumentService(BaseService[Document]):
         return self.repository.get_by_metadata_field("original_prompt_id", prompt_id)
 
     def get_prompts_with_documents(self) -> Dict[str, List[Document]]:
-        """Get all prompt IDs that have generated documents, with their documents."""
+        """Get all prompt IDs that have generated documents, with their
+        documents."""
         documents = self.repository.get_by_metadata_field_exists("original_prompt_id")
         prompt_docs = {}
         for doc in documents:
@@ -118,17 +123,17 @@ class DocumentService(BaseService[Document]):
             raise ValueError("Metadata must be a dictionary")
 
         # Check for reserved keys
-        reserved_keys = {'id', 'content', 'content_hash', 'created_at', 'updated_at'}
+        reserved_keys = {"id", "content", "content_hash", "created_at", "updated_at"}
         for key in reserved_keys:
             if key in metadata:
                 raise ValueError(f"Metadata cannot contain reserved key: {key}")
 
         # Validate specific metadata fields if present
-        if 'views' in metadata and not isinstance(metadata['views'], int):
+        if "views" in metadata and not isinstance(metadata["views"], int):
             raise ValueError("Views must be an integer")
 
-        if 'unique_views' in metadata and not isinstance(metadata['unique_views'], int):
+        if "unique_views" in metadata and not isinstance(metadata["unique_views"], int):
             raise ValueError("Unique views must be an integer")
 
-        if 'watchers' in metadata and not isinstance(metadata['watchers'], int):
+        if "watchers" in metadata and not isinstance(metadata["watchers"], int):
             raise ValueError("Watchers must be an integer")

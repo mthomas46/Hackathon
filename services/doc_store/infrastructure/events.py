@@ -1,18 +1,21 @@
-"""Event system for Doc Store service.
+"""
+Event system for Doc Store service.
 
 Provides event emission, subscription, and notification capabilities.
 """
+
 import asyncio
-import json
-from typing import Dict, Any, List, Optional, Callable, Awaitable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Awaitable, Callable, Dict, List, Optional
+
 from services.shared.utilities import utc_now
 
 
 @dataclass
 class Event:
     """Event data structure."""
+
     id: str
     event_type: str
     entity_type: str
@@ -36,7 +39,7 @@ class Event:
             "entity_id": self.entity_id,
             "user_id": self.user_id,
             "data": self.data,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }
 
 
@@ -99,8 +102,14 @@ class NotificationManager:
         self.event_history: List[Event] = []
         self.max_history = 1000
 
-    async def emit_event(self, event_type: str, entity_type: str, entity_id: str,
-                        user_id: Optional[str] = None, data: Optional[Dict[str, Any]] = None) -> str:
+    async def emit_event(
+        self,
+        event_type: str,
+        entity_type: str,
+        entity_id: str,
+        user_id: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """Emit an event and return event ID."""
         import uuid
 
@@ -110,21 +119,27 @@ class NotificationManager:
             entity_type=entity_type,
             entity_id=entity_id,
             user_id=user_id,
-            data=data or {}
+            data=data or {},
         )
 
         # Store in history
         self.event_history.append(event)
         if len(self.event_history) > self.max_history:
-            self.event_history = self.event_history[-self.max_history:]
+            self.event_history = self.event_history[-self.max_history :]
 
         # Emit event
         await self.event_emitter.emit(event)
 
         return event.id
 
-    def register_webhook(self, webhook_id: str, url: str, events: List[str],
-                        secret: Optional[str] = None, headers: Optional[Dict[str, str]] = None) -> None:
+    def register_webhook(
+        self,
+        webhook_id: str,
+        url: str,
+        events: List[str],
+        secret: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> None:
         """Register a webhook."""
         self.webhooks[webhook_id] = {
             "url": url,
@@ -132,7 +147,7 @@ class NotificationManager:
             "secret": secret,
             "headers": headers or {},
             "is_active": True,
-            "created_at": utc_now().isoformat()
+            "created_at": utc_now().isoformat(),
         }
 
     def unregister_webhook(self, webhook_id: str) -> None:
@@ -159,7 +174,7 @@ class NotificationManager:
             "event_id": event.id,
             "delivered": delivered,
             "failed": failed,
-            "total_webhooks": len([w for w in self.webhooks.values() if w["is_active"]])
+            "total_webhooks": len([w for w in self.webhooks.values() if w["is_active"]]),
         }
 
     def get_event_history(self, event_type: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
@@ -180,7 +195,7 @@ class NotificationManager:
             "total_webhooks": total,
             "active_webhooks": active,
             "inactive_webhooks": total - active,
-            "total_events": len(self.event_history)
+            "total_events": len(self.event_history),
         }
 
 

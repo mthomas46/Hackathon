@@ -11,25 +11,22 @@ Implements advanced real-time collaboration capabilities with:
 """
 
 import asyncio
-import json
-import uuid
-import time
-import hashlib
-from typing import Dict, Any, List, Optional, Callable, Type, Union, Set
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
-from collections import defaultdict, deque
-import threading
 import random
+import uuid
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Set
 
 from services.shared.core.constants_new import ServiceNames
-from services.shared.monitoring.logging import fire_and_forget
 from services.shared.intelligent_caching import get_service_cache
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class CollaborationMode(Enum):
     """Collaboration modes."""
+
     VIEW_ONLY = "view_only"
     COMMENT_ONLY = "comment_only"
     EDIT_RESTRICTED = "edit_restricted"
@@ -38,6 +35,7 @@ class CollaborationMode(Enum):
 
 class UserPresence(Enum):
     """User presence states."""
+
     ONLINE = "online"
     AWAY = "away"
     OFFLINE = "offline"
@@ -46,6 +44,7 @@ class UserPresence(Enum):
 
 class OperationType(Enum):
     """Operational transform types."""
+
     INSERT = "insert"
     DELETE = "delete"
     UPDATE = "update"
@@ -55,6 +54,7 @@ class OperationType(Enum):
 @dataclass
 class UserSession:
     """User session information."""
+
     user_id: str
     session_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     username: str = ""
@@ -86,13 +86,14 @@ class UserSession:
             "presence": self.presence.value,
             "last_activity": self.last_activity.isoformat(),
             "current_document": self.current_document,
-            "cursor_position": self.cursor_position
+            "cursor_position": self.cursor_position,
         }
 
 
 @dataclass
 class OperationalTransform:
     """Operational transform for collaborative editing."""
+
     operation_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
     document_id: str
@@ -116,11 +117,11 @@ class OperationalTransform:
             "position": self.position,
             "content": self.content,
             "timestamp": self.timestamp.isoformat(),
-            "version": self.version
+            "version": self.version,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'OperationalTransform':
+    def from_dict(cls, data: Dict[str, Any]) -> "OperationalTransform":
         """Create from dictionary."""
         return cls(
             operation_id=data["operation_id"],
@@ -130,10 +131,10 @@ class OperationalTransform:
             position=data["position"],
             content=data.get("content"),
             timestamp=datetime.fromisoformat(data["timestamp"]),
-            version=data.get("version", 0)
+            version=data.get("version", 0),
         )
 
-    def transform_against(self, other: 'OperationalTransform') -> 'OperationalTransform':
+    def transform_against(self, other: "OperationalTransform") -> "OperationalTransform":
         """Transform this operation against another operation."""
         if self.operation_type == OperationType.INSERT and other.operation_type == OperationType.INSERT:
             if self.position <= other.position:
@@ -143,7 +144,7 @@ class OperationalTransform:
                     operation_type=self.operation_type,
                     position=self.position,
                     content=self.content,
-                    parent_operation=self.operation_id
+                    parent_operation=self.operation_id,
                 )
             else:
                 return OperationalTransform(
@@ -152,7 +153,7 @@ class OperationalTransform:
                     operation_type=self.operation_type,
                     position=self.position + len(other.content or ""),
                     content=self.content,
-                    parent_operation=self.operation_id
+                    parent_operation=self.operation_id,
                 )
         elif self.operation_type == OperationType.DELETE and other.operation_type == OperationType.DELETE:
             # Handle delete-delete conflicts
@@ -165,7 +166,7 @@ class OperationalTransform:
                     operation_type=self.operation_type,
                     position=self.position - 1,
                     content=self.content,
-                    parent_operation=self.operation_id
+                    parent_operation=self.operation_id,
                 )
             else:
                 # Same position - one delete wins
@@ -178,6 +179,7 @@ class OperationalTransform:
 @dataclass
 class CollaborativeDocument:
     """Collaborative document state."""
+
     document_id: str
     content: str = ""
     version: int = 0
@@ -198,23 +200,16 @@ class CollaborativeDocument:
         if operation.operation_type == OperationType.INSERT:
             if operation.content and 0 <= operation.position <= len(self.content):
                 self.content = (
-                    self.content[:operation.position] +
-                    operation.content +
-                    self.content[operation.position:]
+                    self.content[: operation.position] + operation.content + self.content[operation.position :]
                 )
         elif operation.operation_type == OperationType.DELETE:
             if 0 <= operation.position < len(self.content):
-                self.content = (
-                    self.content[:operation.position] +
-                    self.content[operation.position + 1:]
-                )
+                self.content = self.content[: operation.position] + self.content[operation.position + 1 :]
         elif operation.operation_type == OperationType.UPDATE:
             if operation.content and 0 <= operation.position < len(self.content):
                 # Simple character update
                 self.content = (
-                    self.content[:operation.position] +
-                    operation.content[0] +
-                    self.content[operation.position + 1:]
+                    self.content[: operation.position] + operation.content[0] + self.content[operation.position + 1 :]
                 )
 
         self.version += 1
@@ -253,7 +248,8 @@ class CollaborativeDocument:
 @dataclass
 class ActivityEvent:
     """Real-time activity event."""
-    event_id: str = field(default_factory=lambda: str(uuid.uuid4())
+
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     event_type: str = ""
     user_id: str = ""
     document_id: Optional[str] = None
@@ -268,13 +264,14 @@ class ActivityEvent:
             "user_id": self.user_id,
             "document_id": self.document_id,
             "details": self.details,
-            "timestamp": self.timestamp.isoformat()
+            "timestamp": self.timestamp.isoformat(),
         }
 
 
 @dataclass
 class AICollaborationSuggestion:
     """AI-powered collaboration suggestion."""
+
     suggestion_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     document_id: str
     user_id: str
@@ -302,7 +299,7 @@ class AICollaborationSuggestion:
             "created_at": self.created_at.isoformat(),
             "viewed": self.viewed,
             "accepted": self.accepted,
-            "rejected": self.rejected
+            "rejected": self.rejected,
         }
 
 
@@ -323,33 +320,24 @@ class RealTimeCollaborationEngine:
 
         self.cache = get_service_cache(ServiceNames.FRONTEND)
 
-    async def create_user_session(self, user_id: str, username: str,
-                                client_info: Dict[str, Any] = None) -> UserSession:
+    async def create_user_session(self, user_id: str, username: str, client_info: Dict[str, Any] = None) -> UserSession:
         """Create a new user session."""
-        session = UserSession(
-            user_id=user_id,
-            username=username,
-            client_info=client_info or {}
-        )
+        session = UserSession(user_id=user_id, username=username, client_info=client_info or {})
 
         self.active_sessions[session.session_id] = session
         self.user_sessions[user_id].add(session.session_id)
 
         # Broadcast user joined event
         await self.broadcast_activity_event(
-            ActivityEvent(
-                event_type="user_joined",
-                user_id=user_id,
-                details={"username": username}
-            )
+            ActivityEvent(event_type="user_joined", user_id=user_id, details={"username": username})
         )
 
         # Cache session
-        await self.cache.set(f"session_{session.session_id}", {
-            "user_id": session.user_id,
-            "username": session.username,
-            "created_at": session.last_activity.isoformat()
-        }, ttl_seconds=3600)
+        await self.cache.set(
+            f"session_{session.session_id}",
+            {"user_id": session.user_id, "username": session.username, "created_at": session.last_activity.isoformat()},
+            ttl_seconds=3600,
+        )
 
         fire_and_forget("info", f"Created session for user {user_id}", ServiceNames.FRONTEND)
         return session
@@ -363,10 +351,7 @@ class RealTimeCollaborationEngine:
 
         # Get or create document
         if document_id not in self.documents:
-            self.documents[document_id] = CollaborativeDocument(
-                document_id=document_id,
-                owner_id=session.user_id
-            )
+            self.documents[document_id] = CollaborativeDocument(document_id=document_id, owner_id=session.user_id)
 
         document = self.documents[document_id]
 
@@ -384,7 +369,7 @@ class RealTimeCollaborationEngine:
                 event_type="user_joined_document",
                 user_id=session.user_id,
                 document_id=document_id,
-                details={"username": session.username}
+                details={"username": session.username},
             )
         )
 
@@ -407,11 +392,7 @@ class RealTimeCollaborationEngine:
 
             # Broadcast user left document event
             await self.broadcast_activity_event(
-                ActivityEvent(
-                    event_type="user_left_document",
-                    user_id=session.user_id,
-                    document_id=document_id
-                )
+                ActivityEvent(event_type="user_left_document", user_id=session.user_id, document_id=document_id)
             )
 
     async def apply_operation(self, operation: OperationalTransform) -> bool:
@@ -443,8 +424,7 @@ class RealTimeCollaborationEngine:
         # Clean up old pending operations
         current_time = datetime.now()
         document.pending_operations = [
-            op for op in document.pending_operations
-            if (current_time - op.timestamp) < timedelta(seconds=30)
+            op for op in document.pending_operations if (current_time - op.timestamp) < timedelta(seconds=30)
         ]
 
         return True
@@ -458,10 +438,7 @@ class RealTimeCollaborationEngine:
         # Send to all active users except the originator
         for user_id in document.active_users:
             if user_id != operation.user_id:
-                await self.send_to_user(user_id, {
-                    "type": "operation",
-                    "operation": operation.to_dict()
-                })
+                await self.send_to_user(user_id, {"type": "operation", "operation": operation.to_dict()})
 
     async def broadcast_activity_event(self, event: ActivityEvent):
         """Broadcast activity event to all active users."""
@@ -470,13 +447,11 @@ class RealTimeCollaborationEngine:
         # Send to all active sessions
         for session in self.active_sessions.values():
             if session.is_active():
-                await self.send_to_session(session.session_id, {
-                    "type": "activity_event",
-                    "event": event.to_dict()
-                })
+                await self.send_to_session(session.session_id, {"type": "activity_event", "event": event.to_dict()})
 
-    async def update_user_presence(self, session_id: str, presence: UserPresence,
-                                 cursor_position: Dict[str, int] = None):
+    async def update_user_presence(
+        self, session_id: str, presence: UserPresence, cursor_position: Dict[str, int] = None
+    ):
         """Update user presence and cursor position."""
         if session_id not in self.active_sessions:
             return
@@ -494,10 +469,7 @@ class RealTimeCollaborationEngine:
                 ActivityEvent(
                     event_type="presence_changed",
                     user_id=session.user_id,
-                    details={
-                        "presence": presence.value,
-                        "username": session.username
-                    }
+                    details={"presence": presence.value, "username": session.username},
                 )
             )
 
@@ -507,12 +479,15 @@ class RealTimeCollaborationEngine:
             if document:
                 for user_id in document.active_users:
                     if user_id != session.user_id:
-                        await self.send_to_user(user_id, {
-                            "type": "cursor_update",
-                            "user_id": session.user_id,
-                            "document_id": session.current_document,
-                            "cursor_position": cursor_position
-                        })
+                        await self.send_to_user(
+                            user_id,
+                            {
+                                "type": "cursor_update",
+                                "user_id": session.user_id,
+                                "document_id": session.current_document,
+                                "cursor_position": cursor_position,
+                            },
+                        )
 
     async def generate_ai_suggestion(self, document_id: str, user_id: str) -> Optional[AICollaborationSuggestion]:
         """Generate AI-powered collaboration suggestion."""
@@ -530,7 +505,7 @@ class RealTimeCollaborationEngine:
             suggestion_type=random.choice(suggestion_types),
             content="Consider improving the clarity of this section by adding more specific examples.",
             position=random.randint(0, len(document.content)),
-            confidence_score=random.uniform(0.7, 0.95)
+            confidence_score=random.uniform(0.7, 0.95),
         )
 
         # Store suggestion
@@ -576,7 +551,7 @@ class RealTimeCollaborationEngine:
             "version": document.version,
             "last_modified": document.last_modified.isoformat(),
             "active_users": list(document.active_users),
-            "collaborators": list(document.collaborators)
+            "collaborators": list(document.collaborators),
         }
 
     def get_active_users(self, document_id: str = None) -> List[Dict[str, Any]]:
@@ -626,7 +601,7 @@ class RealTimeCollaborationEngine:
             "total_users": len(self.user_sessions),
             "active_users": len([s for s in self.active_sessions.values() if s.is_active()]),
             "total_operations": sum(len(doc.operation_history) for doc in self.documents.values()),
-            "ai_suggestions_generated": sum(len(suggestions) for suggestions in self.ai_suggestions.values())
+            "ai_suggestions_generated": sum(len(suggestions) for suggestions in self.ai_suggestions.values()),
         }
 
 
@@ -669,9 +644,7 @@ async def test_realtime_collaboration():
     users = []
     for i in range(3):
         user = await realtime_collaboration.create_user_session(
-            user_id=f"user_{i+1}",
-            username=f"User {i+1}",
-            client_info={"browser": "Chrome", "platform": "Web"}
+            user_id=f"user_{i+1}", username=f"User {i+1}", client_info={"browser": "Chrome", "platform": "Web"}
         )
         users.append(user)
         print(f"   ✅ Created session for {user.username} ({user.session_id[:8]}...)")
@@ -698,7 +671,7 @@ async def test_realtime_collaboration():
         document_id=doc_id,
         operation_type=OperationType.INSERT,
         position=0,
-        content=test_content
+        content=test_content,
     )
 
     success = await realtime_collaboration.apply_operation(op1)
@@ -710,7 +683,7 @@ async def test_realtime_collaboration():
         document_id=doc_id,
         operation_type=OperationType.INSERT,
         position=len(test_content),
-        content=" Additional content added by User 2."
+        content=" Additional content added by User 2.",
     )
 
     success = await realtime_collaboration.apply_operation(op2)
@@ -719,16 +692,12 @@ async def test_realtime_collaboration():
     # Update user presence
     print("\n👀 Updating user presence...")
     await realtime_collaboration.update_user_presence(
-        users[0].session_id,
-        UserPresence.TYPING,
-        {"line": 1, "column": 10}
+        users[0].session_id, UserPresence.TYPING, {"line": 1, "column": 10}
     )
     print("   ✅ User 1 presence updated to typing")
 
     await realtime_collaboration.update_user_presence(
-        users[1].session_id,
-        UserPresence.ONLINE,
-        {"line": 2, "column": 5}
+        users[1].session_id, UserPresence.ONLINE, {"line": 2, "column": 5}
     )
     print("   ✅ User 2 presence updated to online")
 
@@ -741,23 +710,23 @@ async def test_realtime_collaboration():
         print(f"   Confidence: {suggestion.confidence_score:.2f}")
 
     # Get document state
-    print("
-📊 Getting document state..."    doc_state = realtime_collaboration.get_document_state(doc_id)
+    print("\n📊 Getting document state...")
+    doc_state = realtime_collaboration.get_document_state(doc_id)
     if doc_state:
         print(f"   Document version: {doc_state['version']}")
         print(f"   Active users: {len(doc_state['active_users'])}")
         print(f"   Content length: {len(doc_state['content'])}")
 
     # Get active users
-    print("
-👥 Getting active users..."    active_users = realtime_collaboration.get_active_users(doc_id)
+    print("\n👥 Getting active users...")
+    active_users = realtime_collaboration.get_active_users(doc_id)
     print(f"   Active users in document: {len(active_users)}")
     for user in active_users:
         print(f"   • {user['username']} ({user['presence']})")
 
     # Get collaboration statistics
-    print("
-📈 Collaboration Statistics:"    stats = realtime_collaboration.get_collaboration_statistics()
+    print("\n📈 Collaboration Statistics:")
+    stats = realtime_collaboration.get_collaboration_statistics()
     print(f"   • Active sessions: {stats['active_sessions']}")
     print(f"   • Active documents: {stats['active_documents']}")
     print(f"   • Total users: {stats['total_users']}")

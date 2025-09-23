@@ -8,19 +8,24 @@ without complex dependencies that can cause validation issues.
 
 import asyncio
 import json
-import sys
 import os
+import sys
 import time
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
+
+from services.orchestrator.modules.workflow_management.models import (
+    ActionType,
+    ParameterType,
+    WorkflowAction,
+    WorkflowExecutionStatus,
+    WorkflowParameter,
+    WorkflowStatus,
+)
 
 # Import workflow management components
 from services.orchestrator.modules.workflow_management.service import WorkflowManagementService
-from services.orchestrator.modules.workflow_management.models import (
-    WorkflowParameter, WorkflowAction, ParameterType, ActionType,
-    WorkflowStatus, WorkflowExecutionStatus
-)
 
 
 async def demo_workflow_management():
@@ -41,33 +46,24 @@ async def demo_workflow_management():
             "description": "A simple workflow that sends notifications",
             "tags": ["demo", "notification", "simple"],
             "parameters": [
-                {
-                    "name": "message",
-                    "type": "string",
-                    "description": "Message to send",
-                    "required": True
-                },
+                {"name": "message", "type": "string", "description": "Message to send", "required": True},
                 {
                     "name": "priority",
                     "type": "string",
                     "description": "Notification priority",
                     "required": False,
                     "default_value": "normal",
-                    "allowed_values": ["low", "normal", "high"]
-                }
+                    "allowed_values": ["low", "normal", "high"],
+                },
             ],
             "actions": [
                 {
                     "action_type": "notification",
                     "name": "Send Notification",
                     "description": "Send the notification message",
-                    "config": {
-                        "message": "{{message}}",
-                        "channels": ["console"],
-                        "priority": "{{priority}}"
-                    }
+                    "config": {"message": "{{message}}", "channels": ["console"], "priority": "{{priority}}"},
                 }
-            ]
+            ],
         }
 
         success, message, workflow = await workflow_service.create_workflow(workflow_data, "demo_user")
@@ -92,10 +88,7 @@ async def demo_workflow_management():
     # Demo 2: Execute the workflow
     print("🚀 DEMO 2: Executing the workflow...")
     try:
-        execution_params = {
-            "message": "Hello from Workflow Management Demo!",
-            "priority": "high"
-        }
+        execution_params = {"message": "Hello from Workflow Management Demo!", "priority": "high"}
 
         success, message, execution = await workflow_service.execute_workflow(
             workflow_id, execution_params, "demo_user"
@@ -153,7 +146,9 @@ async def demo_workflow_management():
         print(f"   • Total Workflows: {stats.get('workflows', {}).get('total_workflows', 0)}")
         print(f"   • Active Workflows: {stats.get('workflows', {}).get('active_workflows', 0)}")
         print(f"   • Total Executions: {stats.get('executions', {}).get('total_executions', 0)}")
-        print(f"   • Success Rate: {stats.get('executions', {}).get('total_executions', 0) and (stats.get('executions', {}).get('completed_executions', 0) / stats.get('executions', {}).get('total_executions', 0) * 100):.1f}%")
+        print(
+            f"   • Success Rate: {stats.get('executions', {}).get('total_executions', 0) and (stats.get('executions', {}).get('completed_executions', 0) / stats.get('executions', {}).get('total_executions', 0) * 100):.1f}%"
+        )
 
     except Exception as e:
         print(f"❌ Demo 4 failed: {e}")
@@ -165,7 +160,7 @@ async def demo_workflow_management():
     try:
         updates = {
             "description": "Updated demo workflow with enhanced description",
-            "tags": ["demo", "notification", "simple", "updated"]
+            "tags": ["demo", "notification", "simple", "updated"],
         }
 
         success, message = await workflow_service.update_workflow(workflow_id, updates, "demo_user")
@@ -214,24 +209,24 @@ async def demo_workflow_management():
     print("📋 Usage Examples:")
     print()
     print("1. Create a workflow:")
-    print('   POST /workflows')
-    print('   {')
+    print("   POST /workflows")
+    print("   {")
     print('     "name": "My Workflow",')
     print('     "description": "Workflow description",')
     print('     "parameters": [')
     print('       {"name": "input", "type": "string", "required": true}')
-    print('     ],')
+    print("     ],")
     print('     "actions": [')
     print('       {"action_type": "notification", "name": "Notify", "config": {"message": "Hello"}}')
-    print('     ]')
-    print('   }')
+    print("     ]")
+    print("   }")
     print()
     print("2. Execute a workflow:")
-    print('   POST /workflows/{workflow_id}/execute')
+    print("   POST /workflows/{workflow_id}/execute")
     print('   {"parameters": {"input": "test value"}}')
     print()
     print("3. List workflows with filtering:")
-    print('   GET /workflows?status=active&created_by=user&name_contains=document')
+    print("   GET /workflows?status=active&created_by=user&name_contains=document")
     print()
     print("🎉 WORKFLOW MANAGEMENT INFRASTRUCTURE READY!")
     print("   • Create parameterized workflows via API")
@@ -251,7 +246,8 @@ async def demo_api_usage():
     print("=" * 50)
 
     print("1. Creating a parameterized workflow:")
-    print("""
+    print(
+        """
     curl -X POST http://localhost:5080/workflows \\
          -H "Content-Type: application/json" \\
          -d '{
@@ -293,10 +289,12 @@ async def demo_api_usage():
              }
            ]
          }'
-    """)
+    """
+    )
 
     print("2. Executing the workflow:")
-    print("""
+    print(
+        """
     curl -X POST http://localhost:5080/workflows/{workflow_id}/execute \\
          -H "Content-Type: application/json" \\
          -d '{
@@ -305,20 +303,26 @@ async def demo_api_usage():
              "analysis_type": "quality"
            }
          }'
-    """)
+    """
+    )
 
     print("3. Monitoring execution:")
-    print("""
+    print(
+        """
     curl http://localhost:5080/workflows/executions/{execution_id}
-    """)
+    """
+    )
 
     print("4. Listing workflows:")
-    print("""
+    print(
+        """
     curl "http://localhost:5080/workflows?status=active&limit=10"
-    """)
+    """
+    )
 
 
 if __name__ == "__main__":
+
     async def main():
         # Run main demo
         await demo_workflow_management()

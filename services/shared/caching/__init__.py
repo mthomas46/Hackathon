@@ -1,7 +1,8 @@
 """
-Intelligent Caching System
+Intelligent Caching System.
 
-Advanced caching capabilities with intelligent invalidation and performance monitoring.
+Advanced caching capabilities with intelligent invalidation and
+performance monitoring.
 """
 
 from .intelligent_caching import *

@@ -1,4 +1,4 @@
-"""Query Confidence Value Object"""
+"""Query Confidence Value Object."""
 
 from enum import Enum
 
@@ -6,10 +6,10 @@ from enum import Enum
 class QueryConfidence(Enum):
     """Enumeration of query interpretation confidence levels."""
 
-    VERY_LOW = "very_low"      # < 30% - High uncertainty, requires clarification
-    LOW = "low"               # 30-50% - Moderate uncertainty, suggest alternatives
-    MEDIUM = "medium"         # 50-70% - Reasonable confidence, proceed with caution
-    HIGH = "high"            # 70-85% - Good confidence, proceed normally
+    VERY_LOW = "very_low"  # < 30% - High uncertainty, requires clarification
+    LOW = "low"  # 30-50% - Moderate uncertainty, suggest alternatives
+    MEDIUM = "medium"  # 50-70% - Reasonable confidence, proceed with caution
+    HIGH = "high"  # 70-85% - Good confidence, proceed normally
     VERY_HIGH = "very_high"  # 85%+ - High confidence, execute directly
 
     @property
@@ -20,7 +20,7 @@ class QueryConfidence(Enum):
             QueryConfidence.LOW: (0.3, 0.5),
             QueryConfidence.MEDIUM: (0.5, 0.7),
             QueryConfidence.HIGH: (0.7, 0.85),
-            QueryConfidence.VERY_HIGH: (0.85, 1.0)
+            QueryConfidence.VERY_HIGH: (0.85, 1.0),
         }
         return ranges[self]
 
@@ -31,7 +31,8 @@ class QueryConfidence(Enum):
 
     @property
     def can_auto_execute(self) -> bool:
-        """Check if query can be automatically executed at this confidence level."""
+        """Check if query can be automatically executed at this confidence
+        level."""
         return self == QueryConfidence.VERY_HIGH
 
     @property
@@ -47,12 +48,12 @@ class QueryConfidence(Enum):
             QueryConfidence.LOW: "high",
             QueryConfidence.MEDIUM: "medium",
             QueryConfidence.HIGH: "low",
-            QueryConfidence.VERY_HIGH: "minimal"
+            QueryConfidence.VERY_HIGH: "minimal",
         }
         return risk_levels[self]
 
     @classmethod
-    def from_score(cls, score: float) -> 'QueryConfidence':
+    def from_score(cls, score: float) -> "QueryConfidence":
         """Determine confidence level from numeric score (0.0 to 1.0)."""
         if not 0.0 <= score <= 1.0:
             raise ValueError("Score must be between 0.0 and 1.0")
@@ -66,4 +67,4 @@ class QueryConfidence(Enum):
         return QueryConfidence.VERY_HIGH
 
     def __str__(self) -> str:
-        return self.value.replace('_', ' ').title()
+        return self.value.replace("_", " ").title()

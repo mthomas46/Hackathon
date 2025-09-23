@@ -1,4 +1,4 @@
-"""Approval Recommendation Value Object"""
+"""Approval Recommendation Value Object."""
 
 from enum import Enum
 
@@ -6,11 +6,11 @@ from enum import Enum
 class ApprovalRecommendation(Enum):
     """Enumeration of approval recommendations."""
 
-    APPROVE = "approve"                    # Ready for approval
+    APPROVE = "approve"  # Ready for approval
     APPROVE_WITH_CONDITIONS = "approve_with_conditions"  # Approve with specific requirements
-    REVIEW_REQUIRED = "review_required"    # Requires additional review
-    REJECT = "reject"                     # Should not be approved
-    ESCALATE = "escalate"                 # Requires higher-level review
+    REVIEW_REQUIRED = "review_required"  # Requires additional review
+    REJECT = "reject"  # Should not be approved
+    ESCALATE = "escalate"  # Requires higher-level review
 
     @property
     def description(self) -> str:
@@ -20,7 +20,7 @@ class ApprovalRecommendation(Enum):
             ApprovalRecommendation.APPROVE_WITH_CONDITIONS: "Can be approved with specific conditions met",
             ApprovalRecommendation.REVIEW_REQUIRED: "Requires additional review before approval",
             ApprovalRecommendation.REJECT: "Should not be approved due to critical issues",
-            ApprovalRecommendation.ESCALATE: "Requires review by senior stakeholders"
+            ApprovalRecommendation.ESCALATE: "Requires review by senior stakeholders",
         }
         return descriptions[self]
 
@@ -32,7 +32,7 @@ class ApprovalRecommendation(Enum):
             ApprovalRecommendation.ESCALATE: 4,
             ApprovalRecommendation.REVIEW_REQUIRED: 3,
             ApprovalRecommendation.APPROVE_WITH_CONDITIONS: 2,
-            ApprovalRecommendation.APPROVE: 1
+            ApprovalRecommendation.APPROVE: 1,
         }
         return priorities[self]
 
@@ -42,8 +42,8 @@ class ApprovalRecommendation(Enum):
         return self in (
             ApprovalRecommendation.REJECT,
             ApprovalRecommendation.ESCALATE,
-            ApprovalRecommendation.REVIEW_REQUIRED
+            ApprovalRecommendation.REVIEW_REQUIRED,
         )
 
     def __str__(self) -> str:
-        return self.value.replace('_', ' ').title()
+        return self.value.replace("_", " ").title()

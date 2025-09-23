@@ -1,28 +1,21 @@
-"""Code Analyzer Manager module for CLI service.
+"""
+Code Analyzer Manager module for CLI service.
 
-Provides power-user operations for code analyzer including
-code analysis, security scanning, style checking, and analysis history.
+Provides power-user operations for code analyzer including code
+analysis, security scanning, style checking, and analysis history.
 """
 
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.panel import Panel
-from rich.text import Text
-import json
-import os
 import asyncio
+import os
 import subprocess
+from typing import Any, Dict, List, Optional
+
+from rich.console import Console
+from rich.prompt import Confirm, Prompt
+from rich.table import Table
 
 from ...base.base_manager import BaseManager
-from ...shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    log_cli_metrics
-)
+from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 
 
 class CodeAnalyzerManager(BaseManager):
@@ -39,11 +32,15 @@ class CodeAnalyzerManager(BaseManager):
             ("3", "Git Integration (Patch analysis, CI/CD)"),
             ("4", "Security Scanning (Vulnerability detection, secret scanning)"),
             ("5", "Style Management (Programming standards, examples)"),
-            ("6", "Analysis History & Reporting")
+            ("6", "Analysis History & Reporting"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         # Basic implementation - just show error for now
         self.display.show_error("Feature not yet implemented")
         return True
@@ -52,16 +49,19 @@ class CodeAnalyzerManager(BaseManager):
         """Main code analyzer menu."""
         while True:
             menu = create_menu_table("Code Analyzer Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Code Analysis (Endpoint extraction, pattern analysis)"),
-                ("2", "File & Repository Analysis"),
-                ("3", "Git Integration (Patch analysis, CI/CD)"),
-                ("4", "Security Scanning (Vulnerability detection, secret scanning)"),
-                ("5", "Style Management (Programming standards, examples)"),
-                ("6", "Analysis History & Reporting"),
-                ("7", "Code Analyzer Health & Configuration"),
-                ("b", "Back to Main Menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Code Analysis (Endpoint extraction, pattern analysis)"),
+                    ("2", "File & Repository Analysis"),
+                    ("3", "Git Integration (Patch analysis, CI/CD)"),
+                    ("4", "Security Scanning (Vulnerability detection, secret scanning)"),
+                    ("5", "Style Management (Programming standards, examples)"),
+                    ("6", "Analysis History & Reporting"),
+                    ("7", "Code Analyzer Health & Configuration"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -89,14 +89,17 @@ class CodeAnalyzerManager(BaseManager):
         """Code analysis submenu."""
         while True:
             menu = create_menu_table("Code Analysis", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Analyze Code Snippet"),
-                ("2", "Analyze with Custom Style Examples"),
-                ("3", "Interactive Code Analysis"),
-                ("4", "Batch Code Analysis"),
-                ("5", "Language-Specific Analysis"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Analyze Code Snippet"),
+                    ("2", "Analyze with Custom Style Examples"),
+                    ("3", "Interactive Code Analysis"),
+                    ("4", "Batch Code Analysis"),
+                    ("5", "Language-Specific Analysis"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -144,7 +147,7 @@ class CodeAnalyzerManager(BaseManager):
                 "language": language if language else None,
                 "repo": repo if repo else None,
                 "path": path if path else None,
-                "correlation_id": correlation_id if correlation_id else None
+                "correlation_id": correlation_id if correlation_id else None,
             }
 
             with self.console.status("[bold green]Analyzing code for endpoints and patterns...[/bold green]") as status:
@@ -183,7 +186,7 @@ class CodeAnalyzerManager(BaseManager):
         analysis_content = document.get("content", "")
         if analysis_content and "(no endpoints)" not in analysis_content:
             content += f"\n[bold cyan]Extracted Endpoints:[/bold cyan]\n"
-            endpoints = [line.strip() for line in analysis_content.split('\n') if line.strip()]
+            endpoints = [line.strip() for line in analysis_content.split("\n") if line.strip()]
             for endpoint in endpoints:
                 content += f"• {endpoint}\n"
         else:
@@ -219,18 +222,14 @@ class CodeAnalyzerManager(BaseManager):
             # Create custom style example
             style_example = {
                 "language": language,
-                "snippet": "def good_function_name(param1, param2):\n    \"\"\"Good docstring\"\"\"\n    return param1 + param2",
+                "snippet": 'def good_function_name(param1, param2):\n    """Good docstring"""\n    return param1 + param2',
                 "title": "Good Function Style",
                 "description": "Example of proper function naming and documentation",
                 "purpose": "style_guidance",
-                "tags": ["functions", "naming", "documentation"]
+                "tags": ["functions", "naming", "documentation"],
             }
 
-            analysis_request = {
-                "content": code,
-                "language": language,
-                "style_examples": [style_example]
-            }
+            analysis_request = {"content": code, "language": language, "style_examples": [style_example]}
 
             with self.console.status("[bold green]Analyzing code with custom style...[/bold green]") as status:
                 response = await self.clients.post_json("code-analyzer/analyze/text", analysis_request)
@@ -262,7 +261,11 @@ class CodeAnalyzerManager(BaseManager):
                     document = response.get("document", {})
                     content = document.get("content", "")
                     if content and "(no endpoints)" not in content:
-                        endpoints = [line.strip() for line in content.split('\n') if line.strip() and line.strip() != "(no endpoints)"]
+                        endpoints = [
+                            line.strip()
+                            for line in content.split("\n")
+                            if line.strip() and line.strip() != "(no endpoints)"
+                        ]
                         if endpoints:
                             self.console.print(f"[green]✅ Found {len(endpoints)} endpoint(s):[/green]")
                             for endpoint in endpoints[:3]:  # Show first 3
@@ -319,10 +322,7 @@ class CodeAnalyzerManager(BaseManager):
                 self.console.print("[red]No code provided[/red]")
                 return
 
-            analysis_request = {
-                "content": code,
-                "language": selected_lang
-            }
+            analysis_request = {"content": code, "language": selected_lang}
 
             with self.console.status(f"[bold green]Analyzing {selected_lang} code...[/bold green]") as status:
                 response = await self.clients.post_json("code-analyzer/analyze/text", analysis_request)
@@ -339,14 +339,17 @@ class CodeAnalyzerManager(BaseManager):
         """File and repository analysis submenu."""
         while True:
             menu = create_menu_table("File & Repository Analysis", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Analyze Single File"),
-                ("2", "Analyze Directory/Repository"),
-                ("3", "Analyze File with Dependencies"),
-                ("4", "Repository Endpoint Inventory"),
-                ("5", "Cross-File Analysis"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Analyze Single File"),
+                    ("2", "Analyze Directory/Repository"),
+                    ("3", "Analyze File with Dependencies"),
+                    ("4", "Repository Endpoint Inventory"),
+                    ("5", "Cross-File Analysis"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -381,7 +384,7 @@ class CodeAnalyzerManager(BaseManager):
                 self.console.print("[red]File too large for analysis (max 100KB)[/red]")
                 return
 
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             if not content.strip():
@@ -391,17 +394,17 @@ class CodeAnalyzerManager(BaseManager):
             # Detect language from file extension
             _, ext = os.path.splitext(file_path)
             language_map = {
-                '.py': 'python',
-                '.js': 'javascript',
-                '.ts': 'typescript',
-                '.java': 'java',
-                '.go': 'go',
-                '.rs': 'rust',
-                '.cpp': 'cpp',
-                '.cc': 'cpp',
-                '.cxx': 'cpp',
-                '.c': 'c',
-                '.cs': 'csharp'
+                ".py": "python",
+                ".js": "javascript",
+                ".ts": "typescript",
+                ".java": "java",
+                ".go": "go",
+                ".rs": "rust",
+                ".cpp": "cpp",
+                ".cc": "cpp",
+                ".cxx": "cpp",
+                ".c": "c",
+                ".cs": "csharp",
             }
             language = language_map.get(ext.lower())
 
@@ -409,7 +412,7 @@ class CodeAnalyzerManager(BaseManager):
                 "content": content,
                 "language": language,
                 "path": file_path,
-                "repo": os.path.basename(os.path.dirname(file_path)) if os.path.dirname(file_path) else None
+                "repo": os.path.basename(os.path.dirname(file_path)) if os.path.dirname(file_path) else None,
             }
 
             with self.console.status(f"[bold green]Analyzing {os.path.basename(file_path)}...[/bold green]") as status:
@@ -436,11 +439,11 @@ class CodeAnalyzerManager(BaseManager):
             import glob
 
             # Find code files
-            extensions = ['*.py', '*.js', '*.ts', '*.java', '*.go', '*.rs', '*.cpp', '*.cc', '*.cxx', '*.c', '*.cs']
+            extensions = ["*.py", "*.js", "*.ts", "*.java", "*.go", "*.rs", "*.cpp", "*.cc", "*.cxx", "*.c", "*.cs"]
             code_files = []
 
             for ext in extensions:
-                code_files.extend(glob.glob(os.path.join(directory, '**', ext), recursive=True))
+                code_files.extend(glob.glob(os.path.join(directory, "**", ext), recursive=True))
 
             if not code_files:
                 self.console.print("[yellow]No code files found in directory[/yellow]")
@@ -469,15 +472,12 @@ class CodeAnalyzerManager(BaseManager):
                         if total_size + file_size > 500000:  # Total limit
                             break
 
-                        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                             content = f.read()
 
                         if content.strip():
                             rel_path = os.path.relpath(file_path, directory)
-                            file_items.append({
-                                "path": rel_path,
-                                "content": content
-                            })
+                            file_items.append({"path": rel_path, "content": content})
                             total_size += file_size
 
                     except Exception as e:
@@ -490,7 +490,7 @@ class CodeAnalyzerManager(BaseManager):
                 analysis_request = {
                     "files": file_items,
                     "repo": os.path.basename(directory),
-                    "language": None  # Mixed languages
+                    "language": None,  # Mixed languages
                 }
 
                 with self.console.status(f"[bold green]Analyzing {len(file_items)} files...[/bold green]") as status:
@@ -536,14 +536,17 @@ class CodeAnalyzerManager(BaseManager):
         """Git integration submenu."""
         while True:
             menu = create_menu_table("Git Integration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Analyze Git Diff/Patch"),
-                ("2", "Pre-commit Hook Analysis"),
-                ("3", "CI/CD Pipeline Integration"),
-                ("4", "Branch Comparison Analysis"),
-                ("5", "Git History Analysis"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Analyze Git Diff/Patch"),
+                    ("2", "Pre-commit Hook Analysis"),
+                    ("3", "CI/CD Pipeline Integration"),
+                    ("4", "Branch Comparison Analysis"),
+                    ("5", "Git History Analysis"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -568,7 +571,7 @@ class CodeAnalyzerManager(BaseManager):
         try:
             # Try to get current git diff
             try:
-                result = subprocess.run(['git', 'diff', '--cached'], capture_output=True, text=True, cwd='.')
+                result = subprocess.run(["git", "diff", "--cached"], capture_output=True, text=True, cwd=".")
                 patch_content = result.stdout
             except:
                 patch_content = ""
@@ -591,14 +594,16 @@ class CodeAnalyzerManager(BaseManager):
             analysis_request = {
                 "patch": patch_content,
                 "repo": "current",
-                "correlation_id": f"git-patch-{int(asyncio.get_event_loop().time() * 1000)}"
+                "correlation_id": f"git-patch-{int(asyncio.get_event_loop().time() * 1000)}",
             }
 
             with self.console.status("[bold green]Analyzing git patch...[/bold green]") as status:
                 response = await self.clients.post_json("code-analyzer/analyze/patch", analysis_request)
 
             if response:
-                await self.display_patch_analysis_results(response, patch_content[:200] + "..." if len(patch_content) > 200 else patch_content)
+                await self.display_patch_analysis_results(
+                    response, patch_content[:200] + "..." if len(patch_content) > 200 else patch_content
+                )
             else:
                 self.console.print("[red]❌ Failed to analyze patch[/red]")
 
@@ -672,14 +677,17 @@ class CodeAnalyzerManager(BaseManager):
         """Security scanning submenu."""
         while True:
             menu = create_menu_table("Security Scanning", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Scan Code for Security Issues"),
-                ("2", "Scan for Sensitive Information"),
-                ("3", "Custom Keyword Scanning"),
-                ("4", "Security Audit Report"),
-                ("5", "Vulnerability Assessment"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Scan Code for Security Issues"),
+                    ("2", "Scan for Sensitive Information"),
+                    ("3", "Custom Keyword Scanning"),
+                    ("4", "Security Audit Report"),
+                    ("5", "Vulnerability Assessment"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -803,10 +811,7 @@ class CodeAnalyzerManager(BaseManager):
 
             keywords = [k.strip() for k in keywords_input.split(",") if k.strip()]
 
-            scan_request = {
-                "content": content,
-                "keywords": keywords
-            }
+            scan_request = {"content": content, "keywords": keywords}
 
             with self.console.status("[bold green]Scanning with custom keywords...[/bold green]") as status:
                 response = await self.clients.post_json("code-analyzer/scan/secure", scan_request)
@@ -841,14 +846,17 @@ class CodeAnalyzerManager(BaseManager):
         """Style management submenu."""
         while True:
             menu = create_menu_table("Style Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Style Examples"),
-                ("2", "Add Style Example"),
-                ("3", "Import Style Examples"),
-                ("4", "Language-Specific Styles"),
-                ("5", "Style Compliance Checking"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Style Examples"),
+                    ("2", "Add Style Example"),
+                    ("3", "Import Style Examples"),
+                    ("4", "Language-Specific Styles"),
+                    ("5", "Style Compliance Checking"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -893,11 +901,7 @@ class CodeAnalyzerManager(BaseManager):
                     for example in examples:
                         snippet = example.get("snippet", "")
                         preview = snippet[:50] + "..." if len(snippet) > 50 else snippet
-                        table.add_row(
-                            example.get("language", "unknown"),
-                            example.get("title", "Untitled"),
-                            preview
-                        )
+                        table.add_row(example.get("language", "unknown"), example.get("title", "Untitled"), preview)
 
                     self.console.print(table)
                 else:
@@ -926,7 +930,7 @@ class CodeAnalyzerManager(BaseManager):
                 "snippet": snippet,
                 "description": description if description else None,
                 "purpose": purpose if purpose else None,
-                "tags": tags if tags else None
+                "tags": tags if tags else None,
             }
 
             style_request = {"items": [style_example]}
@@ -974,14 +978,17 @@ class CodeAnalyzerManager(BaseManager):
         """Analysis history and reporting submenu."""
         while True:
             menu = create_menu_table("Analysis History & Reporting", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Analysis History"),
-                ("2", "Search Analysis Results"),
-                ("3", "Generate Analysis Report"),
-                ("4", "Export Analysis Data"),
-                ("5", "Analysis Trends & Metrics"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Analysis History"),
+                    ("2", "Search Analysis Results"),
+                    ("3", "Generate Analysis Report"),
+                    ("4", "Export Analysis Data"),
+                    ("5", "Analysis Trends & Metrics"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -1050,14 +1057,17 @@ class CodeAnalyzerManager(BaseManager):
         """Code analyzer health and configuration submenu."""
         while True:
             menu = create_menu_table("Code Analyzer Health & Configuration", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Service Health"),
-                ("2", "Rate Limiting Status"),
-                ("3", "Configuration Settings"),
-                ("4", "Performance Metrics"),
-                ("5", "Service Logs"),
-                ("b", "Back")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Service Health"),
+                    ("2", "Rate Limiting Status"),
+                    ("3", "Configuration Settings"),
+                    ("4", "Performance Metrics"),
+                    ("5", "Service Logs"),
+                    ("b", "Back"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -1152,7 +1162,9 @@ class CodeAnalyzerManager(BaseManager):
 
             if response:
                 content = analyze_request.get("content", "")
-                await self.display_code_analysis_results(response, content[:200] + "..." if len(content) > 200 else content)
+                await self.display_code_analysis_results(
+                    response, content[:200] + "..." if len(content) > 200 else content
+                )
             else:
                 self.console.print("[red]❌ Code analysis failed[/red]")
 
@@ -1167,7 +1179,9 @@ class CodeAnalyzerManager(BaseManager):
 
             if response:
                 content = scan_request.get("content", "")
-                await self.display_security_scan_results(response, content[:200] + "..." if len(content) > 200 else content)
+                await self.display_security_scan_results(
+                    response, content[:200] + "..." if len(content) > 200 else content
+                )
             else:
                 self.console.print("[red]❌ Security scan failed[/red]")
 

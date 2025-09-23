@@ -1,8 +1,9 @@
-"""DTOs for Health Monitoring API"""
+"""DTOs for Health Monitoring API."""
+
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 
 
 class HealthCheckRequest(BaseModel):

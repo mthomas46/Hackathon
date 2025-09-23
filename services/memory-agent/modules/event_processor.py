@@ -1,23 +1,19 @@
-"""Event processing for Memory Agent service.
+"""
+Event processing for Memory Agent service.
 
 Handles Redis pub/sub event subscription and processing.
 """
+
 import json
-from typing import Dict, Any, List
-import asyncio
+from typing import Any, Dict
 
 try:
     import redis.asyncio as aioredis  # type: ignore
 except Exception:
     aioredis = None
 
-from .shared_utils import (
-    get_memory_max_items,
-    get_memory_ttl_seconds,
-    create_memory_item,
-    extract_endpoint_from_text
-)
 from .memory_state import _memory
+from .shared_utils import create_memory_item, extract_endpoint_from_text, get_memory_max_items, get_memory_ttl_seconds
 
 
 class EventProcessor:
@@ -36,6 +32,7 @@ class EventProcessor:
 
         try:
             from .shared_utils import get_redis_url
+
             self.redis_url = get_redis_url()
             self.client = aioredis.from_url(self.redis_url)
             self.pubsub = self.client.pubsub()
@@ -122,11 +119,7 @@ class EventProcessor:
             value={"channel": channel, "payload": payload},
             item_type=kind,
             ttl_seconds=get_memory_ttl_seconds(),
-            metadata={
-                "source": "redis_event",
-                "channel": channel,
-                "summary": summary
-            }
+            metadata={"source": "redis_event", "channel": channel, "summary": summary},
         )
 
     def _update_endpoint_index_from_payload(self, payload: Dict[str, Any]) -> None:

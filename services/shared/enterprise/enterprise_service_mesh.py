@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
 """
-Enterprise Service Mesh Implementation
+Enterprise Service Mesh Implementation.
 
-Comprehensive service mesh with mTLS, authentication, authorization,
-and traffic management for Phase 1 implementation.
+Comprehensive service mesh with mTLS, authentication, authorization, and
+traffic management for Phase 1 implementation.
 """
 
 import asyncio
-import json
-import uuid
-import time
 import hashlib
 import secrets
-from typing import Dict, Any, List, Optional, Callable, Type, Union, Set
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
+import time
+import uuid
 from collections import defaultdict, deque
-import threading
-import functools
-import base64
-import hmac
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 try:
     import jwt
@@ -29,16 +24,14 @@ except ImportError:
 
 try:
     import cryptography
-    from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric import rsa
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.asymmetric import padding
 except ImportError:
     cryptography = None
 
 
 class ServiceMeshProtocol(Enum):
     """Service mesh communication protocols."""
+
     HTTP = "http"
     HTTPS = "https"
     GRPC = "grpc"
@@ -47,6 +40,7 @@ class ServiceMeshProtocol(Enum):
 
 class AuthenticationMethod(Enum):
     """Authentication methods supported."""
+
     JWT = "jwt"
     MTLS = "mtls"
     API_KEY = "api_key"
@@ -56,6 +50,7 @@ class AuthenticationMethod(Enum):
 
 class AuthorizationLevel(Enum):
     """Authorization levels."""
+
     NONE = "none"
     READ = "read"
     WRITE = "write"
@@ -65,6 +60,7 @@ class AuthorizationLevel(Enum):
 @dataclass
 class ServiceIdentity:
     """Service identity for mutual TLS."""
+
     service_name: str
     service_version: str = "1.0.0"
     environment: str = "production"
@@ -98,13 +94,14 @@ class ServiceIdentity:
             "issued_at": self.issued_at.isoformat(),
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "status": self.status,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 @dataclass
 class ServiceEndpoint:
     """Service endpoint configuration."""
+
     service_name: str
     endpoint_path: str
     methods: List[str] = field(default_factory=lambda: ["GET"])
@@ -128,13 +125,14 @@ class ServiceEndpoint:
             "timeout_seconds": self.timeout_seconds,
             "circuit_breaker_enabled": self.circuit_breaker_enabled,
             "retry_policy": self.retry_policy,
-            "health_check_path": self.health_check_path
+            "health_check_path": self.health_check_path,
         }
 
 
 @dataclass
 class ServiceMeshRequest:
     """Service mesh request context."""
+
     request_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     source_service: str = ""
     target_service: str = ""
@@ -166,6 +164,7 @@ class ServiceMeshRequest:
 @dataclass
 class TrafficMetrics:
     """Traffic metrics for monitoring."""
+
     service_name: str
     endpoint_path: str
     total_requests: int = 0
@@ -213,10 +212,7 @@ class CertificateAuthority:
         """Initialize the Certificate Authority."""
         if cryptography:
             # Generate CA private key
-            self.ca_private_key = rsa.generate_private_key(
-                public_exponent=65537,
-                key_size=2048
-            )
+            self.ca_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
             # Generate CA certificate (simplified)
             self.ca_certificate = "SIMULATED_CA_CERTIFICATE"
@@ -231,7 +227,7 @@ class CertificateAuthority:
             service_name=service_name,
             expires_at=datetime.now() + timedelta(days=validity_days),
             certificate="SIMULATED_CERTIFICATE",
-            public_key="SIMULATED_PUBLIC_KEY"
+            public_key="SIMULATED_PUBLIC_KEY",
         )
 
         self.certificates[service_identity.service_id] = service_identity
@@ -262,8 +258,7 @@ class JWTAuthenticator:
         self.issued_tokens: Dict[str, Dict[str, Any]] = {}
         self.revoked_tokens: Set[str] = set()
 
-    def issue_token(self, service_name: str, permissions: List[str],
-                   expires_in_hours: int = 24) -> str:
+    def issue_token(self, service_name: str, permissions: List[str], expires_in_hours: int = 24) -> str:
         """Issue a JWT token for a service."""
         if not jwt:
             # Mock JWT for environments without PyJWT
@@ -272,7 +267,7 @@ class JWTAuthenticator:
                 "service_name": service_name,
                 "permissions": permissions,
                 "issued_at": datetime.now(),
-                "expires_at": datetime.now() + timedelta(hours=expires_in_hours)
+                "expires_at": datetime.now() + timedelta(hours=expires_in_hours),
             }
             return f"mock_jwt_{token_id}"
 
@@ -281,7 +276,7 @@ class JWTAuthenticator:
             "service_name": service_name,
             "permissions": permissions,
             "iat": int(time.time()),
-            "exp": int((datetime.now() + timedelta(hours=expires_in_hours)).timestamp())
+            "exp": int((datetime.now() + timedelta(hours=expires_in_hours)).timestamp()),
         }
 
         token = jwt.encode(payload, self.secret_key, algorithm="HS256")
@@ -337,8 +332,7 @@ class AuthorizationEngine:
         """Grant permission to a service for a resource."""
         self.permissions[service_name][resource] = level
 
-    def check_permission(self, service_name: str, resource: str,
-                        required_level: AuthorizationLevel) -> bool:
+    def check_permission(self, service_name: str, resource: str, required_level: AuthorizationLevel) -> bool:
         """Check if service has required permission level."""
         if service_name not in self.permissions:
             return False
@@ -350,7 +344,7 @@ class AuthorizationEngine:
             AuthorizationLevel.NONE: 0,
             AuthorizationLevel.READ: 1,
             AuthorizationLevel.WRITE: 2,
-            AuthorizationLevel.ADMIN: 3
+            AuthorizationLevel.ADMIN: 3,
         }
 
         return hierarchy.get(granted_level, 0) >= hierarchy.get(required_level, 0)
@@ -407,7 +401,8 @@ class RateLimiter:
 
 
 class EnterpriseServiceMesh:
-    """Enterprise Service Mesh with comprehensive security and traffic management."""
+    """Enterprise Service Mesh with comprehensive security and traffic
+    management."""
 
     def __init__(self):
         self.ca = CertificateAuthority()
@@ -427,7 +422,7 @@ class EnterpriseServiceMesh:
             "traffic_encryption": True,
             "rate_limiting_enabled": True,
             "circuit_breakers_enabled": True,
-            "observability_enabled": True
+            "observability_enabled": True,
         }
 
     async def initialize_mesh(self):
@@ -488,7 +483,7 @@ class EnterpriseServiceMesh:
             methods=["POST"],
             authorization_level=AuthorizationLevel.WRITE,
             rate_limit=100,
-            timeout_seconds=60
+            timeout_seconds=60,
         )
 
         # Doc Store endpoints
@@ -498,7 +493,7 @@ class EnterpriseServiceMesh:
             methods=["GET", "POST", "PUT", "DELETE"],
             authorization_level=AuthorizationLevel.WRITE,
             rate_limit=500,
-            timeout_seconds=30
+            timeout_seconds=30,
         )
 
         # Prompt Store endpoints
@@ -508,7 +503,7 @@ class EnterpriseServiceMesh:
             methods=["GET", "POST", "PUT"],
             authorization_level=AuthorizationLevel.WRITE,
             rate_limit=200,
-            timeout_seconds=30
+            timeout_seconds=30,
         )
 
         # Orchestrator endpoints
@@ -518,7 +513,7 @@ class EnterpriseServiceMesh:
             methods=["GET", "POST", "PUT"],
             authorization_level=AuthorizationLevel.ADMIN,
             rate_limit=50,
-            timeout_seconds=120
+            timeout_seconds=120,
         )
 
         print(f"🔗 Configured {len(self.endpoints)} service endpoints")
@@ -531,31 +526,22 @@ class EnterpriseServiceMesh:
             "analysis-service": [
                 ("documents", AuthorizationLevel.READ),
                 ("reports", AuthorizationLevel.WRITE),
-                ("analysis", AuthorizationLevel.WRITE)
+                ("analysis", AuthorizationLevel.WRITE),
             ],
-            "doc_store": [
-                ("documents", AuthorizationLevel.WRITE),
-                ("storage", AuthorizationLevel.ADMIN)
-            ],
-            "prompt_store": [
-                ("prompts", AuthorizationLevel.WRITE),
-                ("optimization", AuthorizationLevel.WRITE)
-            ],
+            "doc_store": [("documents", AuthorizationLevel.WRITE), ("storage", AuthorizationLevel.ADMIN)],
+            "prompt_store": [("prompts", AuthorizationLevel.WRITE), ("optimization", AuthorizationLevel.WRITE)],
             "orchestrator": [
                 ("workflows", AuthorizationLevel.ADMIN),
                 ("coordination", AuthorizationLevel.ADMIN),
                 ("documents", AuthorizationLevel.READ),
-                ("analysis", AuthorizationLevel.WRITE)
+                ("analysis", AuthorizationLevel.WRITE),
             ],
             "interpreter": [
                 ("nlp", AuthorizationLevel.WRITE),
                 ("interpretation", AuthorizationLevel.WRITE),
-                ("documents", AuthorizationLevel.READ)
+                ("documents", AuthorizationLevel.READ),
             ],
-            "source_agent": [
-                ("documents", AuthorizationLevel.WRITE),
-                ("data_ingestion", AuthorizationLevel.WRITE)
-            ]
+            "source_agent": [("documents", AuthorizationLevel.WRITE), ("data_ingestion", AuthorizationLevel.WRITE)],
         }
 
         for service_name, permissions in permissions_map.items():
@@ -568,12 +554,12 @@ class EnterpriseServiceMesh:
         """Configure rate limiting for endpoints."""
 
         rate_limits = {
-            "/analyze": 100,      # 100 requests per minute
-            "/documents": 500,    # 500 requests per minute
-            "/prompts": 200,      # 200 requests per minute
-            "/workflows": 50,     # 50 requests per minute
-            "/interpret": 150,    # 150 requests per minute
-            "/sync": 300          # 300 requests per minute
+            "/analyze": 100,  # 100 requests per minute
+            "/documents": 500,  # 500 requests per minute
+            "/prompts": 200,  # 200 requests per minute
+            "/workflows": 50,  # 50 requests per minute
+            "/interpret": 150,  # 150 requests per minute
+            "/sync": 300,  # 300 requests per minute
         }
 
         for endpoint_path, limit in rate_limits.items():
@@ -598,8 +584,7 @@ class EnterpriseServiceMesh:
 
             if not auth_result["success"]:
                 return self._create_error_response(
-                    "Authentication failed",
-                    auth_result.get("error", "Unknown authentication error")
+                    "Authentication failed", auth_result.get("error", "Unknown authentication error")
                 )
 
             request.authenticated = True
@@ -612,8 +597,7 @@ class EnterpriseServiceMesh:
 
             if not authz_result["success"]:
                 return self._create_error_response(
-                    "Authorization failed",
-                    authz_result.get("error", "Insufficient permissions")
+                    "Authorization failed", authz_result.get("error", "Insufficient permissions")
                 )
 
             request.authorized = True
@@ -621,16 +605,10 @@ class EnterpriseServiceMesh:
 
             # Step 3: Rate Limiting
             request.add_processing_step("Checking rate limits")
-            rate_limit_ok = self.rate_limiter.check_limit(
-                request.target_service,
-                request.endpoint_path
-            )
+            rate_limit_ok = self.rate_limiter.check_limit(request.target_service, request.endpoint_path)
 
             if not rate_limit_ok:
-                return self._create_error_response(
-                    "Rate limit exceeded",
-                    "Too many requests. Please try again later."
-                )
+                return self._create_error_response("Rate limit exceeded", "Too many requests. Please try again later.")
 
             # Step 4: Traffic Metrics
             request.add_processing_step("Recording metrics")
@@ -646,8 +624,7 @@ class EnterpriseServiceMesh:
             metrics_key = f"{request.target_service}:{request.endpoint_path}"
             if metrics_key not in self.traffic_metrics:
                 self.traffic_metrics[metrics_key] = TrafficMetrics(
-                    service_name=request.target_service,
-                    endpoint_path=request.endpoint_path
+                    service_name=request.target_service, endpoint_path=request.endpoint_path
                 )
 
             self.traffic_metrics[metrics_key].update_metrics(processing_time, True)
@@ -675,11 +652,7 @@ class EnterpriseServiceMesh:
             token_data = self.jwt_auth.validate_token(token)
 
             if token_data:
-                return {
-                    "success": True,
-                    "identity": token_data["service_name"],
-                    "method": AuthenticationMethod.JWT
-                }
+                return {"success": True, "identity": token_data["service_name"], "method": AuthenticationMethod.JWT}
 
         # Check for mTLS certificate
         client_cert = request.headers.get("X-Client-Certificate")
@@ -690,13 +663,10 @@ class EnterpriseServiceMesh:
                     return {
                         "success": True,
                         "identity": service_identity.service_name,
-                        "method": AuthenticationMethod.MTLS
+                        "method": AuthenticationMethod.MTLS,
                     }
 
-        return {
-            "success": False,
-            "error": "No valid authentication credentials provided"
-        }
+        return {"success": False, "error": "No valid authentication credentials provided"}
 
     async def _authorize_request(self, request: ServiceMeshRequest) -> Dict[str, Any]:
         """Authorize the authenticated request."""
@@ -716,20 +686,15 @@ class EnterpriseServiceMesh:
 
         # Check authorization
         authorized = self.auth_engine.check_permission(
-            request.authenticated_identity,
-            endpoint.endpoint_path,
-            endpoint.authorization_level
+            request.authenticated_identity, endpoint.endpoint_path, endpoint.authorization_level
         )
 
         if authorized:
-            return {
-                "success": True,
-                "level": endpoint.authorization_level
-            }
+            return {"success": True, "level": endpoint.authorization_level}
         else:
             return {
                 "success": False,
-                "error": f"Insufficient permissions for {endpoint.authorization_level.value} access"
+                "error": f"Insufficient permissions for {endpoint.authorization_level.value} access",
             }
 
     async def _forward_request(self, request: ServiceMeshRequest) -> Dict[str, Any]:
@@ -745,37 +710,21 @@ class EnterpriseServiceMesh:
             return {
                 "status": "success",
                 "message": "Document analysis completed",
-                "results": {"findings": 5, "quality_score": 0.85}
+                "results": {"findings": 5, "quality_score": 0.85},
             }
         elif target_service == "doc_store" and "/documents" in endpoint_path:
-            return {
-                "status": "success",
-                "message": "Document operation completed",
-                "document_id": str(uuid.uuid4())
-            }
+            return {"status": "success", "message": "Document operation completed", "document_id": str(uuid.uuid4())}
         elif target_service == "prompt_store" and "/prompts" in endpoint_path:
-            return {
-                "status": "success",
-                "message": "Prompt operation completed",
-                "prompt_id": str(uuid.uuid4())
-            }
+            return {"status": "success", "message": "Prompt operation completed", "prompt_id": str(uuid.uuid4())}
         else:
-            return {
-                "status": "success",
-                "message": f"Request processed by {target_service}",
-                "endpoint": endpoint_path
-            }
+            return {"status": "success", "message": f"Request processed by {target_service}", "endpoint": endpoint_path}
 
     def _create_error_response(self, error_type: str, message: str) -> Dict[str, Any]:
         """Create a standardized error response."""
         return {
             "status": "error",
-            "error": {
-                "type": error_type,
-                "message": message,
-                "timestamp": datetime.now().isoformat()
-            },
-            "mesh_processed": True
+            "error": {"type": error_type, "message": message, "timestamp": datetime.now().isoformat()},
+            "mesh_processed": True,
         }
 
     def get_mesh_status(self) -> Dict[str, Any]:
@@ -788,13 +737,15 @@ class EnterpriseServiceMesh:
             "traffic_metrics": {
                 key: {
                     "total_requests": metrics.total_requests,
-                    "success_rate": (metrics.successful_requests / metrics.total_requests) if metrics.total_requests > 0 else 0,
-                    "average_response_time": metrics.average_response_time
+                    "success_rate": (
+                        (metrics.successful_requests / metrics.total_requests) if metrics.total_requests > 0 else 0
+                    ),
+                    "average_response_time": metrics.average_response_time,
                 }
                 for key, metrics in self.traffic_metrics.items()
             },
             "rate_limits": dict(self.rate_limiter.limits),
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
     def get_service_certificate(self, service_name: str) -> Optional[ServiceIdentity]:
@@ -856,14 +807,14 @@ async def test_service_mesh():
             "source": "orchestrator",
             "target": "analysis-service",
             "endpoint": "/analyze",
-            "headers": {"Authorization": "Bearer mock_jwt_test"}
+            "headers": {"Authorization": "Bearer mock_jwt_test"},
         },
         {
             "source": "frontend",
             "target": "doc_store",
             "endpoint": "/documents",
-            "headers": {"Authorization": "Bearer mock_jwt_test"}
-        }
+            "headers": {"Authorization": "Bearer mock_jwt_test"},
+        },
     ]
 
     for i, req_data in enumerate(test_requests, 1):
@@ -873,7 +824,7 @@ async def test_service_mesh():
             source_service=req_data["source"],
             target_service=req_data["target"],
             endpoint_path=req_data["endpoint"],
-            headers=req_data["headers"]
+            headers=req_data["headers"],
         )
 
         response = await enterprise_service_mesh.process_request(request)

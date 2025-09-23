@@ -285,3 +285,28 @@ ci: lint test ## Run CI pipeline locally
 
 # Default target
 .DEFAULT_GOAL := help
+
+
+.PHONY: security-scan
+security-scan: ## Run security scan on dependencies
+	@echo "$(BLUE)🔒 Running security scan...$(NC)"
+	@if command -v safety >/dev/null 2>&1; then 		safety check --full-report; 	else 		echo "$(YELLOW)⚠️  safety not installed. Install with: pip install safety$(NC)"; 	fi
+
+.PHONY: audit-dependencies
+audit-dependencies: ## Audit Python dependencies for vulnerabilities
+	@echo "$(BLUE)📦 Auditing dependencies...$(NC)"
+	@if command -v pip-audit >/dev/null 2>&1; then 		pip-audit; 	else 		echo "$(YELLOW)⚠️  pip-audit not installed. Install with: pip install pip-audit$(NC)"; 	fi
+
+.PHONY: lint-security
+lint-security: ## Run security-focused linting
+	@echo "$(BLUE)🛡️  Running security linting...$(NC)"
+	@if command -v bandit >/dev/null 2>&1; then 		bandit -r . -f txt; 	else 		echo "$(YELLOW)⚠️  bandit not installed. Install with: pip install bandit$(NC)"; 	fi
+
+.PHONY: security-check
+security-check: security-scan audit-dependencies lint-security ## Run all security checks
+	@echo "$(GREEN)✅ Security checks completed$(NC)"
+
+.PHONY: ci-security
+ci-security: security-check test ## CI pipeline with security checks
+	@echo "$(BLUE)🔄 Running CI with security...$(NC)"
+	@echo "$(GREEN)✅ CI security pipeline complete$(NC)"

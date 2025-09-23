@@ -1,12 +1,16 @@
-"""Ingestion Domain Layer"""
+"""Ingestion Domain Layer."""
 
-from .value_objects import *
 from .services import *
+from .value_objects import *
 
 __all__ = [
     # Value Objects
-    'IngestionSourceType', 'IngestionStatus',
-    'IngestionRequest', 'IngestionResult', 'DocumentMetadata',
+    "IngestionSourceType",
+    "IngestionStatus",
+    "IngestionRequest",
+    "IngestionResult",
+    "DocumentMetadata",
     # Services
-    'IngestionOrchestratorService', 'DocumentProcessorService'
+    "IngestionOrchestratorService",
+    "DocumentProcessorService",
 ]

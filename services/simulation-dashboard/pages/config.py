@@ -1,20 +1,21 @@
-"""Configuration Page.
+"""
+Configuration Page.
 
 This module provides the configuration and settings page for managing
 service connections, health monitoring, and system settings.
 """
 
-import streamlit as st
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
-import psutil
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict
+
+import plotly.graph_objects as go
+import psutil
+import streamlit as st
+from infrastructure.config.config import get_config
+from plotly.subplots import make_subplots
 
 from services.clients.simulation_client import SimulationClient
-from infrastructure.config.config import get_config
 
 
 def render_config_page():
@@ -23,12 +24,9 @@ def render_config_page():
     st.markdown("Manage service connections, monitor system health, and configure dashboard settings.")
 
     # Create tabs for different configuration sections
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "🔗 Service Connections",
-        "🏥 Health Dashboard",
-        "📊 System Resources",
-        "⚙️ Settings"
-    ])
+    tab1, tab2, tab3, tab4 = st.tabs(
+        ["🔗 Service Connections", "🏥 Health Dashboard", "📊 System Resources", "⚙️ Settings"]
+    )
 
     with tab1:
         render_service_connections()
@@ -61,7 +59,7 @@ def render_service_connections():
         if st.button("🔍 Test Connection", key="test_sim_connection"):
             with st.spinner("Testing connection..."):
                 health_status = test_simulation_service_health()
-                if health_status['healthy']:
+                if health_status["healthy"]:
                     st.success("✅ Simulation service is healthy")
                     st.metric("Response Time", f"{health_status['response_time']}ms")
                 else:
@@ -76,7 +74,7 @@ def render_service_connections():
             if st.button("🔍 Test Connection", key="test_analysis_connection"):
                 with st.spinner("Testing connection..."):
                     health_status = test_analysis_service_health(analysis_host, analysis_port)
-                    if health_status['healthy']:
+                    if health_status["healthy"]:
                         st.success("✅ Analysis service is healthy")
                         st.metric("Response Time", f"{health_status['response_time']}ms")
                     else:
@@ -101,9 +99,9 @@ def render_health_dashboard():
     with col1:
         # Overall system health
         overall_health = get_overall_system_health()
-        if overall_health['status'] == 'healthy':
+        if overall_health["status"] == "healthy":
             st.metric("Overall Health", "✅ Healthy")
-        elif overall_health['status'] == 'warning':
+        elif overall_health["status"] == "warning":
             st.metric("Overall Health", "⚠️ Warning")
         else:
             st.metric("Overall Health", "❌ Issues")
@@ -152,23 +150,27 @@ def render_system_resources():
     # Get current system stats
     cpu_percent = psutil.cpu_percent(interval=1)
     memory = psutil.virtual_memory()
-    disk = psutil.disk_usage('/')
+    disk = psutil.disk_usage("/")
 
     with col1:
         st.metric("CPU Usage", ".1f")
         # CPU gauge
-        fig_cpu = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=cpu_percent,
-            title={'text': "CPU"},
-            gauge={'axis': {'range': [0, 100]},
-                   'bar': {'color': "darkblue"},
-                   'steps': [
-                       {'range': [0, 60], 'color': "lightgreen"},
-                       {'range': [60, 80], 'color': "yellow"},
-                       {'range': [80, 100], 'color': "red"}
-                   ]}
-        ))
+        fig_cpu = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=cpu_percent,
+                title={"text": "CPU"},
+                gauge={
+                    "axis": {"range": [0, 100]},
+                    "bar": {"color": "darkblue"},
+                    "steps": [
+                        {"range": [0, 60], "color": "lightgreen"},
+                        {"range": [60, 80], "color": "yellow"},
+                        {"range": [80, 100], "color": "red"},
+                    ],
+                },
+            )
+        )
         fig_cpu.update_layout(height=200)
         st.plotly_chart(fig_cpu, use_container_width=True)
 
@@ -176,18 +178,22 @@ def render_system_resources():
         memory_percent = memory.percent
         st.metric("Memory Usage", ".1f")
         # Memory gauge
-        fig_mem = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=memory_percent,
-            title={'text': "Memory"},
-            gauge={'axis': {'range': [0, 100]},
-                   'bar': {'color': "darkgreen"},
-                   'steps': [
-                       {'range': [0, 70], 'color': "lightgreen"},
-                       {'range': [70, 85], 'color': "yellow"},
-                       {'range': [85, 100], 'color': "red"}
-                   ]}
-        ))
+        fig_mem = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=memory_percent,
+                title={"text": "Memory"},
+                gauge={
+                    "axis": {"range": [0, 100]},
+                    "bar": {"color": "darkgreen"},
+                    "steps": [
+                        {"range": [0, 70], "color": "lightgreen"},
+                        {"range": [70, 85], "color": "yellow"},
+                        {"range": [85, 100], "color": "red"},
+                    ],
+                },
+            )
+        )
         fig_mem.update_layout(height=200)
         st.plotly_chart(fig_mem, use_container_width=True)
 
@@ -195,18 +201,22 @@ def render_system_resources():
         disk_percent = disk.percent
         st.metric("Disk Usage", ".1f")
         # Disk gauge
-        fig_disk = go.Figure(go.Indicator(
-            mode="gauge+number",
-            value=disk_percent,
-            title={'text': "Disk"},
-            gauge={'axis': {'range': [0, 100]},
-                   'bar': {'color': "darkorange"},
-                   'steps': [
-                       {'range': [0, 80], 'color': "lightgreen"},
-                       {'range': [80, 90], 'color': "yellow"},
-                       {'range': [90, 100], 'color': "red"}
-                   ]}
-        ))
+        fig_disk = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=disk_percent,
+                title={"text": "Disk"},
+                gauge={
+                    "axis": {"range": [0, 100]},
+                    "bar": {"color": "darkorange"},
+                    "steps": [
+                        {"range": [0, 80], "color": "lightgreen"},
+                        {"range": [80, 90], "color": "yellow"},
+                        {"range": [90, 100], "color": "red"},
+                    ],
+                },
+            )
+        )
         fig_disk.update_layout(height=200)
         st.plotly_chart(fig_disk, use_container_width=True)
 
@@ -237,18 +247,11 @@ def render_dashboard_settings():
 
     col1, col2 = st.columns(2)
     with col1:
-        theme = st.selectbox(
-            "Theme",
-            options=["Light", "Dark", "Auto"],
-            help="Choose dashboard theme"
-        )
+        theme = st.selectbox("Theme", options=["Light", "Dark", "Auto"], help="Choose dashboard theme")
 
     with col2:
         font_size = st.selectbox(
-            "Font Size",
-            options=["Small", "Medium", "Large"],
-            index=1,
-            help="Choose default font size"
+            "Font Size", options=["Small", "Medium", "Large"], index=1, help="Choose default font size"
         )
 
     # Performance settings
@@ -261,7 +264,7 @@ def render_dashboard_settings():
             min_value=5,
             max_value=300,
             value=30,
-            help="How often to refresh data automatically"
+            help="How often to refresh data automatically",
         )
 
     with col2:
@@ -270,24 +273,20 @@ def render_dashboard_settings():
             min_value=10,
             max_value=100,
             value=50,
-            help="Maximum number of items to display per page"
+            help="Maximum number of items to display per page",
         )
 
     # Notification settings
     st.markdown("#### 🔔 Notifications")
 
-    enable_notifications = st.checkbox(
-        "Enable Notifications",
-        value=True,
-        help="Enable dashboard notifications"
-    )
+    enable_notifications = st.checkbox("Enable Notifications", value=True, help="Enable dashboard notifications")
 
     if enable_notifications:
         notification_types = st.multiselect(
             "Notification Types",
             options=["Simulation Completed", "Errors", "Warnings", "Service Health Changes"],
             default=["Simulation Completed", "Errors"],
-            help="Choose which notifications to receive"
+            help="Choose which notifications to receive",
         )
 
     # Data management
@@ -305,17 +304,20 @@ def render_dashboard_settings():
     # Save settings
     st.markdown("---")
     if st.button("💾 Save Settings", type="primary", use_container_width=True):
-        save_dashboard_settings({
-            'theme': theme,
-            'font_size': font_size,
-            'refresh_rate': refresh_rate,
-            'max_items': max_items,
-            'enable_notifications': enable_notifications,
-            'notification_types': notification_types if enable_notifications else []
-        })
+        save_dashboard_settings(
+            {
+                "theme": theme,
+                "font_size": font_size,
+                "refresh_rate": refresh_rate,
+                "max_items": max_items,
+                "enable_notifications": enable_notifications,
+                "notification_types": notification_types if enable_notifications else [],
+            }
+        )
 
 
 # Helper functions
+
 
 def test_simulation_service_health() -> Dict[str, Any]:
     """Test simulation service health."""
@@ -327,16 +329,9 @@ def test_simulation_service_health() -> Dict[str, Any]:
         result = client.get_health()
         response_time = int((time.time() - start_time) * 1000)
 
-        return {
-            'healthy': result.get('status') == 'healthy',
-            'response_time': response_time
-        }
+        return {"healthy": result.get("status") == "healthy", "response_time": response_time}
     except Exception as e:
-        return {
-            'healthy': False,
-            'response_time': 0,
-            'error': str(e)
-        }
+        return {"healthy": False, "response_time": 0, "error": str(e)}
 
 
 def test_analysis_service_health(host: str, port: str) -> Dict[str, Any]:
@@ -344,45 +339,41 @@ def test_analysis_service_health(host: str, port: str) -> Dict[str, Any]:
     try:
         # This would implement actual health check for analysis service
         return {
-            'healthy': False,  # Placeholder
-            'response_time': 0,
-            'message': 'Analysis service health check not implemented'
+            "healthy": False,  # Placeholder
+            "response_time": 0,
+            "message": "Analysis service health check not implemented",
         }
     except Exception as e:
-        return {
-            'healthy': False,
-            'response_time': 0,
-            'error': str(e)
-        }
+        return {"healthy": False, "response_time": 0, "error": str(e)}
 
 
 def render_ecosystem_services_status():
     """Render ecosystem services status overview."""
     services = [
         {
-            'name': 'Simulation Service',
-            'status': 'healthy',
-            'response_time': 45,
-            'last_check': datetime.now() - timedelta(seconds=30)
+            "name": "Simulation Service",
+            "status": "healthy",
+            "response_time": 45,
+            "last_check": datetime.now() - timedelta(seconds=30),
         },
         {
-            'name': 'Analysis Service',
-            'status': 'unhealthy',
-            'response_time': None,
-            'last_check': datetime.now() - timedelta(minutes=5)
+            "name": "Analysis Service",
+            "status": "unhealthy",
+            "response_time": None,
+            "last_check": datetime.now() - timedelta(minutes=5),
         },
         {
-            'name': 'Health Monitoring',
-            'status': 'healthy',
-            'response_time': 23,
-            'last_check': datetime.now() - timedelta(seconds=15)
+            "name": "Health Monitoring",
+            "status": "healthy",
+            "response_time": 23,
+            "last_check": datetime.now() - timedelta(seconds=15),
         },
         {
-            'name': 'WebSocket Service',
-            'status': 'healthy',
-            'response_time': 12,
-            'last_check': datetime.now() - timedelta(seconds=5)
-        }
+            "name": "WebSocket Service",
+            "status": "healthy",
+            "response_time": 12,
+            "last_check": datetime.now() - timedelta(seconds=5),
+        },
     ]
 
     for service in services:
@@ -392,21 +383,21 @@ def render_ecosystem_services_status():
             st.write(f"**{service['name']}**")
 
         with col2:
-            if service['status'] == 'healthy':
+            if service["status"] == "healthy":
                 st.success("✅")
-            elif service['status'] == 'warning':
+            elif service["status"] == "warning":
                 st.warning("⚠️")
             else:
                 st.error("❌")
 
         with col3:
-            if service['response_time']:
+            if service["response_time"]:
                 st.metric("Response", f"{service['response_time']}ms")
             else:
                 st.caption("N/A")
 
         with col4:
-            time_diff = datetime.now() - service['last_check']
+            time_diff = datetime.now() - service["last_check"]
             if time_diff.seconds < 60:
                 st.caption(f"{time_diff.seconds}s ago")
             else:
@@ -416,12 +407,7 @@ def render_ecosystem_services_status():
 def get_overall_system_health() -> Dict[str, Any]:
     """Get overall system health status."""
     # Mock implementation - in real system this would aggregate all service health
-    return {
-        'status': 'healthy',
-        'services_healthy': 3,
-        'services_total': 4,
-        'last_check': datetime.now()
-    }
+    return {"status": "healthy", "services_healthy": 3, "services_total": 4, "last_check": datetime.now()}
 
 
 def count_active_services() -> int:
@@ -458,32 +444,32 @@ def render_service_health_details():
     """Render detailed service health information."""
     services = [
         {
-            'name': 'Project Simulation Service',
-            'status': 'healthy',
-            'uptime': '2h 15m',
-            'cpu_usage': 23.5,
-            'memory_usage': 45.2,
-            'active_connections': 12,
-            'last_error': None
+            "name": "Project Simulation Service",
+            "status": "healthy",
+            "uptime": "2h 15m",
+            "cpu_usage": 23.5,
+            "memory_usage": 45.2,
+            "active_connections": 12,
+            "last_error": None,
         },
         {
-            'name': 'Analysis Service',
-            'status': 'unhealthy',
-            'uptime': '0h 0m',
-            'cpu_usage': 0.0,
-            'memory_usage': 0.0,
-            'active_connections': 0,
-            'last_error': 'Connection timeout'
+            "name": "Analysis Service",
+            "status": "unhealthy",
+            "uptime": "0h 0m",
+            "cpu_usage": 0.0,
+            "memory_usage": 0.0,
+            "active_connections": 0,
+            "last_error": "Connection timeout",
         },
         {
-            'name': 'WebSocket Service',
-            'status': 'healthy',
-            'uptime': '2h 15m',
-            'cpu_usage': 5.2,
-            'memory_usage': 12.8,
-            'active_connections': 3,
-            'last_error': None
-        }
+            "name": "WebSocket Service",
+            "status": "healthy",
+            "uptime": "2h 15m",
+            "cpu_usage": 5.2,
+            "memory_usage": 12.8,
+            "active_connections": 3,
+            "last_error": None,
+        },
     ]
 
     for service in services:
@@ -491,9 +477,9 @@ def render_service_health_details():
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                st.metric("Status", service['status'].title())
-                st.metric("Uptime", service['uptime'])
-                if service['last_error']:
+                st.metric("Status", service["status"].title())
+                st.metric("Uptime", service["uptime"])
+                if service["last_error"]:
                     st.error(f"Last Error: {service['last_error']}")
 
             with col2:
@@ -501,8 +487,8 @@ def render_service_health_details():
                 st.metric("Memory Usage", ".1f")
 
             with col3:
-                st.metric("Active Connections", service['active_connections'])
-                if service['status'] == 'healthy':
+                st.metric("Active Connections", service["active_connections"])
+                if service["status"] == "healthy":
                     st.success("Service is operating normally")
                 else:
                     st.error("Service is not responding")
@@ -512,24 +498,22 @@ def render_health_trends():
     """Render health trends over time."""
     # Mock health trend data
     hours = [f"{i}:00" for i in range(24)]
-    health_scores = [85, 87, 82, 89, 91, 88, 93, 90, 87, 89, 92, 88,
-                     85, 87, 82, 89, 91, 88, 93, 90, 87, 89, 92, 88]
+    health_scores = [85, 87, 82, 89, 91, 88, 93, 90, 87, 89, 92, 88, 85, 87, 82, 89, 91, 88, 93, 90, 87, 89, 92, 88]
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=hours,
-        y=health_scores,
-        mode='lines+markers',
-        name='Health Score',
-        line=dict(color='green', width=2),
-        marker=dict(size=6)
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=hours,
+            y=health_scores,
+            mode="lines+markers",
+            name="Health Score",
+            line=dict(color="green", width=2),
+            marker=dict(size=6),
+        )
+    )
 
     fig.update_layout(
-        title="System Health Score (Last 24 Hours)",
-        xaxis_title="Time",
-        yaxis_title="Health Score (%)",
-        height=300
+        title="System Health Score (Last 24 Hours)", xaxis_title="Time", yaxis_title="Health Score (%)", height=300
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -539,40 +523,40 @@ def render_health_alerts():
     """Render health alerts and notifications."""
     alerts = [
         {
-            'type': 'info',
-            'message': 'All services are operating normally',
-            'timestamp': datetime.now() - timedelta(minutes=5)
+            "type": "info",
+            "message": "All services are operating normally",
+            "timestamp": datetime.now() - timedelta(minutes=5),
         },
         {
-            'type': 'warning',
-            'message': 'Analysis service is not responding',
-            'timestamp': datetime.now() - timedelta(minutes=15)
+            "type": "warning",
+            "message": "Analysis service is not responding",
+            "timestamp": datetime.now() - timedelta(minutes=15),
         },
         {
-            'type': 'success',
-            'message': 'WebSocket connections restored',
-            'timestamp': datetime.now() - timedelta(hours=1)
-        }
+            "type": "success",
+            "message": "WebSocket connections restored",
+            "timestamp": datetime.now() - timedelta(hours=1),
+        },
     ]
 
     for alert in alerts:
         col1, col2, col3 = st.columns([1, 4, 1])
 
         with col1:
-            if alert['type'] == 'success':
+            if alert["type"] == "success":
                 st.success("✅")
-            elif alert['type'] == 'warning':
+            elif alert["type"] == "warning":
                 st.warning("⚠️")
-            elif alert['type'] == 'error':
+            elif alert["type"] == "error":
                 st.error("❌")
             else:
                 st.info("ℹ️")
 
         with col2:
-            st.write(alert['message'])
+            st.write(alert["message"])
 
         with col3:
-            time_diff = datetime.now() - alert['timestamp']
+            time_diff = datetime.now() - alert["timestamp"]
             if time_diff.seconds < 3600:
                 st.caption(f"{time_diff.seconds // 60}m ago")
             else:
@@ -586,25 +570,13 @@ def render_resource_usage_trends():
     cpu_usage = [23, 25, 22, 28, 24, 26, 23, 29, 25, 27, 24, 26]
     memory_usage = [45, 47, 44, 49, 46, 48, 45, 50, 47, 49, 46, 48]
 
-    fig = make_subplots(rows=2, cols=1,
-                       subplot_titles=('CPU Usage (%)', 'Memory Usage (%)'),
-                       shared_xaxes=True)
+    fig = make_subplots(rows=2, cols=1, subplot_titles=("CPU Usage (%)", "Memory Usage (%)"), shared_xaxes=True)
 
-    fig.add_trace(go.Scatter(
-        x=times,
-        y=cpu_usage,
-        mode='lines',
-        name='CPU',
-        line=dict(color='blue')
-    ), row=1, col=1)
+    fig.add_trace(go.Scatter(x=times, y=cpu_usage, mode="lines", name="CPU", line=dict(color="blue")), row=1, col=1)
 
-    fig.add_trace(go.Scatter(
-        x=times,
-        y=memory_usage,
-        mode='lines',
-        name='Memory',
-        line=dict(color='green')
-    ), row=2, col=1)
+    fig.add_trace(
+        go.Scatter(x=times, y=memory_usage, mode="lines", name="Memory", line=dict(color="green")), row=2, col=1
+    )
 
     fig.update_layout(height=400, showlegend=False)
     fig.update_xaxes(title_text="Time")

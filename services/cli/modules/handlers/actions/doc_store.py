@@ -1,8 +1,10 @@
-from typing import Any, Dict, List, Tuple, Callable
-from rich.prompt import Prompt
 import json
+from typing import Any, Callable, List, Tuple
+
+from rich.prompt import Prompt
 
 from services.shared.integrations.clients.clients import ServiceClients
+
 from ...utils.display_helpers import print_kv, print_list, save_data
 
 
@@ -23,6 +25,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         content = Prompt.ask("Content")
         metadata_raw = Prompt.ask("Metadata JSON (optional)", default="{}")
         import json
+
         try:
             metadata = json.loads(metadata_raw) if metadata_raw else {}
         except Exception:
@@ -43,9 +46,12 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
     async def db_probe():
         import time as _t
+
         temp_id = f"cli:{int(_t.time())}"
         create_url = f"{clients.doc_store_url()}/documents"
-        created = await clients.post_json(create_url, {"id": temp_id, "content": "cli-db-probe", "metadata": {"source": "cli"}})
+        created = await clients.post_json(
+            create_url, {"id": temp_id, "content": "cli-db-probe", "metadata": {"source": "cli"}}
+        )
         get_url = f"{clients.doc_store_url()}/documents/{created.get('id', temp_id)}"
         fetched = await clients.get_json(get_url)
         print_kv(console, "DB Probe", {"created": created.get("id"), "fetched": bool(fetched)})
@@ -204,10 +210,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             except:
                 metadata = {}
 
-            documents.append({
-                "content": content,
-                "metadata": metadata
-            })
+            documents.append({"content": content, "metadata": metadata})
 
         payload = {"documents": documents}
         url = f"{clients.doc_store_url()}/bulk/documents"
@@ -239,11 +242,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         secret = Prompt.ask("Secret (optional)", default="")
         secret = secret if secret else None
 
-        payload = {
-            "name": name,
-            "url": url_input,
-            "events": events
-        }
+        payload = {"name": name, "url": url_input, "events": events}
         if secret:
             payload["secret"] = secret
 
@@ -263,11 +262,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         user_id = Prompt.ask("User ID (optional)", default="")
         user_id = user_id if user_id else None
 
-        payload = {
-            "event_type": event_type,
-            "entity_type": entity_type,
-            "entity_id": entity_id
-        }
+        payload = {"event_type": event_type, "entity_type": entity_type, "entity_id": entity_id}
         if user_id:
             payload["user_id"] = user_id
 
@@ -358,13 +353,16 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             return
 
         url = f"{clients.doc_store_url()}/lifecycle/policies"
-        data = await clients.post_json(url, {
-            "name": name,
-            "description": description,
-            "conditions": conditions,
-            "actions": actions,
-            "priority": int(priority)
-        })
+        data = await clients.post_json(
+            url,
+            {
+                "name": name,
+                "description": description,
+                "conditions": conditions,
+                "actions": actions,
+                "priority": int(priority),
+            },
+        )
         print_kv(console, f"Policy Created: {name}", data)
 
     async def transition_document_phase():
@@ -374,10 +372,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         reason = Prompt.ask("Reason for transition")
 
         url = f"{clients.doc_store_url()}/documents/{doc_id}/lifecycle/transition"
-        data = await clients.post_json(url, {
-            "new_phase": new_phase,
-            "reason": reason
-        })
+        data = await clients.post_json(url, {"new_phase": new_phase, "reason": reason})
         print_kv(console, f"Phase Transition for {doc_id}", data)
 
     async def get_document_lifecycle():
@@ -445,11 +440,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         max_depth = Prompt.ask("Maximum path depth", default="3")
 
         url = f"{clients.doc_store_url()}/relationships/paths"
-        params = {
-            "start_id": start_id,
-            "end_id": end_id,
-            "max_depth": int(max_depth)
-        }
+        params = {"start_id": start_id, "end_id": end_id, "max_depth": int(max_depth)}
         data = await clients.get_json(url, params=params)
         print_kv(console, f"Paths from {start_id} to {end_id}", data)
 
@@ -487,10 +478,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             return
 
         url = f"{clients.doc_store_url()}/documents/{doc_id}/metadata"
-        data = await clients.patch_json(url, {
-            "metadata": metadata,
-            "update_type": update_type
-        })
+        data = await clients.patch_json(url, {"metadata": metadata, "update_type": update_type})
         print_kv(console, f"Metadata Updated for {doc_id}", data)
 
     async def delete_document():
@@ -514,45 +502,37 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("✏️  Create document", put_document),
         ("🗑️  Delete document", delete_document),
         ("🔄 Update document metadata", update_document_metadata),
-
         # Bulk Operations
         ("📦 Bulk create documents", bulk_create_documents),
         ("📊 Monitor bulk operation", monitor_bulk_operation),
         ("📋 List bulk operations", list_bulk_operations),
         ("❌ Cancel bulk operation", cancel_bulk_operation),
-
         # Quality & Analytics
         ("⭐ List quality signals", quality),
         ("📈 View analytics (detailed)", view_analytics),
         ("📊 View analytics summary", view_analytics_summary),
-
         # Tagging System
         ("🏷️  View document tags", view_document_tags),
         ("✨ Tag document", tag_document_cli),
         ("🔍 Search by tags", search_by_tags),
         ("📈 View tag statistics", tag_statistics),
-
         # Versioning
         ("📚 View document versions", view_document_versions),
         ("⚖️  Compare document versions", compare_versions),
         ("⏪ Rollback document to version", rollback_document),
-
         # Relationships
         ("🔗 View document relationships", view_relationships),
         ("🛤️  Find relationship paths", find_relationship_paths),
         ("📊 View graph statistics", view_graph_statistics),
-
         # Lifecycle Management
         ("📋 Create lifecycle policy", create_lifecycle_policy),
         ("🔄 Transition document phase", transition_document_phase),
         ("📊 Get document lifecycle", get_document_lifecycle),
-
         # Cache Management
         ("📈 View cache stats", view_cache_stats),
         ("🗑️  Invalidate cache", invalidate_cache),
         ("🔥 Warmup cache", warmup_cache),
         ("⚡ Optimize cache", optimize_cache),
-
         # Notifications & Webhooks
         ("🔗 Register webhook", register_webhook),
         ("📋 List webhooks", list_webhooks),
@@ -562,11 +542,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("🧪 Test webhook", test_webhook),
         ("📢 Send notification", send_notification),
         ("👥 Resolve owners", resolve_owners),
-
         # Utilities
         ("⚙️  View config (effective)", config_effective),
         ("🗃️  DB probe (write/read)", db_probe),
         ("💾 Download document", download_document),
     ]
-
-

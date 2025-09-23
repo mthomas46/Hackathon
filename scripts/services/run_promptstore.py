@@ -5,8 +5,8 @@ Provides easy startup with proper configuration and environment setup.
 """
 
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 # Add project root to Python path
@@ -20,18 +20,18 @@ from services.shared.config import get_config_value
 def setup_environment():
     """Set up environment variables for the service."""
     # Set default database path if not set
-    if 'PROMPT_STORE_DB' not in os.environ:
-        os.environ['PROMPT_STORE_DB'] = '../../data/prompt_store.db'
+    if "PROMPT_STORE_DB" not in os.environ:
+        os.environ["PROMPT_STORE_DB"] = "../../data/prompt_store.db"
 
     # Set port from config or default
-    if 'PROMPT_STORE_PORT' not in os.environ:
+    if "PROMPT_STORE_PORT" not in os.environ:
         port = get_config_value("port", 5110, section="server", env_key="PROMPT_STORE_PORT")
-        os.environ['PROMPT_STORE_PORT'] = str(port)
+        os.environ["PROMPT_STORE_PORT"] = str(port)
 
     # Set other common environment variables
     env_vars = {
-        'PYTHONPATH': str(project_root),
-        'PROMPT_STORE_ENV': os.environ.get('PROMPT_STORE_ENV', 'development'),
+        "PYTHONPATH": str(project_root),
+        "PROMPT_STORE_ENV": os.environ.get("PROMPT_STORE_ENV", "development"),
     }
 
     for key, value in env_vars.items():
@@ -48,9 +48,7 @@ def run_service():
     print(f"   🌍 Environment: {os.environ.get('PROMPT_STORE_ENV')}")
 
     # Run as module from project root to avoid relative import issues
-    cmd = [
-        sys.executable, '-m', 'services.prompt_store.main'
-    ]
+    cmd = [sys.executable, "-m", "services.prompt_store.main"]
 
     try:
         subprocess.run(cmd, cwd=project_root, check=True)
@@ -73,7 +71,7 @@ def run_with_reload():
     print(f"   📁 Database: {os.environ.get('PROMPT_STORE_DB')}")
     print(f"   🔌 Port: {os.environ.get('PROMPT_STORE_PORT')}")
 
-    port = int(os.environ.get('PROMPT_STORE_PORT', 5110))
+    port = int(os.environ.get("PROMPT_STORE_PORT", 5110))
 
     uvicorn.run(
         "services.prompt_store.main:app",
@@ -81,7 +79,7 @@ def run_with_reload():
         port=port,
         reload=True,
         reload_dirs=[str(project_root / "services" / "prompt_store")],
-        log_level="info"
+        log_level="info",
     )
 
 

@@ -1,8 +1,10 @@
-from typing import Any, Dict, List, Tuple, Callable
+from typing import Any, Callable, Dict, List, Tuple
+
 from rich.prompt import Prompt
 
 from services.shared.integrations.clients.clients import ServiceClients
-from ...utils.display_helpers import print_kv, print_list, save_data
+
+from ...utils.display_helpers import print_kv, print_list
 
 
 def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
@@ -35,5 +37,3 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("Get prompt", get_prompt),
         ("Create prompt", create_prompt),
     ]
-
-

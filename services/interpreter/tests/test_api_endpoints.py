@@ -1,10 +1,9 @@
 """API endpoint tests for Interpreter Service."""
 
-import pytest
-import httpx
 import asyncio
 import json
-from typing import Dict, Any
+
+import httpx
 
 
 class TestSampleDocumentsAPI:
@@ -110,7 +109,7 @@ class TestSampleDocumentsAPI:
 
             test_query = {
                 "query": "Create a banking application with user authentication",
-                "context": {"demo_mode": True}
+                "context": {"demo_mode": True},
             }
 
             response = await self.client.post("/documents/sample/context", json=test_query)
@@ -148,11 +147,7 @@ class TestSampleDocumentsAPI:
             html_content = response.text
 
             # Check if our endpoints are in the docs
-            endpoints_to_check = [
-                "/documents/sample",
-                "/documents/sample/types",
-                "/documents/sample/context"
-            ]
+            endpoints_to_check = ["/documents/sample", "/documents/sample/types", "/documents/sample/context"]
 
             for endpoint in endpoints_to_check:
                 if endpoint in html_content:
@@ -175,15 +170,22 @@ class TestDirectImportInContainer:
         print("\nTesting direct import in container...")
 
         import subprocess
-        import sys
 
         try:
             # Test the import directly in the container
-            result = subprocess.run([
-                "docker", "exec", "hackathon-interpreter-1",
-                "python", "-c",
-                "from services.interpreter.modules.sample_documents import sample_documents; print('Import successful')"
-            ], capture_output=True, text=True, timeout=10)
+            result = subprocess.run(
+                [
+                    "docker",
+                    "exec",
+                    "hackathon-interpreter-1",
+                    "python",
+                    "-c",
+                    "from services.interpreter.modules.sample_documents import sample_documents; print('Import successful')",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
 
             if result.returncode == 0:
                 print("✓ Direct import in container successful")
@@ -223,9 +225,10 @@ async def run_api_tests():
         # Try to restart the service
         print("\n🔄 Attempting to restart interpreter service...")
         import subprocess
-        result = subprocess.run([
-            "docker-compose", "-f", "docker-compose.dev.yml", "restart", "interpreter"
-        ], capture_output=True, text=True)
+
+        result = subprocess.run(
+            ["docker-compose", "-f", "docker-compose.dev.yml", "restart", "interpreter"], capture_output=True, text=True
+        )
 
         if result.returncode == 0:
             print("✓ Service restarted successfully")
@@ -252,6 +255,7 @@ def run_all_tests():
     print("1. Running sample documents unit tests...")
     try:
         from test_sample_documents import run_all_tests as run_sample_tests
+
         run_sample_tests()
     except Exception as e:
         print(f"✗ Sample documents tests failed: {e}")

@@ -4,22 +4,28 @@
 Validates that the quality degradation detector works correctly.
 """
 
-import sys
 import os
+import sys
 from datetime import datetime, timedelta
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
 def test_quality_degradation_detector_import():
     """Test that the quality degradation detector module can be imported."""
     try:
-        from services.analysis_service.modules.quality_degradation_detector import QualityDegradationDetector, detect_document_degradation
+        from services.analysis_service.modules.quality_degradation_detector import (
+            QualityDegradationDetector,
+            detect_document_degradation,
+        )
+
         print("✅ Quality degradation detector module imported successfully")
         return True
     except ImportError as e:
         print(f"❌ Failed to import quality degradation detector module: {e}")
         return False
+
 
 def test_quality_degradation_detector_initialization():
     """Test that the quality degradation detector can be initialized."""
@@ -35,6 +41,7 @@ def test_quality_degradation_detector_initialization():
         print(f"❌ Failed to initialize quality degradation detector: {e}")
         return False
 
+
 def test_extract_quality_metrics():
     """Test extraction of quality metrics from analysis history."""
     try:
@@ -46,26 +53,26 @@ def test_extract_quality_metrics():
         base_date = datetime.now()
         analysis_history = [
             {
-                'timestamp': (base_date - timedelta(days=60)).isoformat(),
-                'quality_score': 0.85,
-                'total_findings': 3,
-                'sentiment_score': 0.8,
-                'readability_score': 0.88
+                "timestamp": (base_date - timedelta(days=60)).isoformat(),
+                "quality_score": 0.85,
+                "total_findings": 3,
+                "sentiment_score": 0.8,
+                "readability_score": 0.88,
             },
             {
-                'timestamp': (base_date - timedelta(days=30)).isoformat(),
-                'quality_score': 0.78,
-                'total_findings': 7,
-                'sentiment_score': 0.75,
-                'readability_score': 0.82
+                "timestamp": (base_date - timedelta(days=30)).isoformat(),
+                "quality_score": 0.78,
+                "total_findings": 7,
+                "sentiment_score": 0.75,
+                "readability_score": 0.82,
             },
             {
-                'timestamp': base_date.isoformat(),
-                'quality_score': 0.72,
-                'total_findings': 10,
-                'sentiment_score': 0.7,
-                'readability_score': 0.78
-            }
+                "timestamp": base_date.isoformat(),
+                "quality_score": 0.72,
+                "total_findings": 10,
+                "sentiment_score": 0.7,
+                "readability_score": 0.78,
+            },
         ]
 
         metrics_df = detector._extract_quality_metrics(analysis_history)
@@ -81,6 +88,7 @@ def test_extract_quality_metrics():
         print(f"❌ Quality metrics extraction failed: {e}")
         return False
 
+
 def test_trend_analysis_calculation():
     """Test trend analysis calculation."""
     try:
@@ -91,30 +99,15 @@ def test_trend_analysis_calculation():
         # Create sample quality scores with degrading trend
         base_date = datetime.now()
         analysis_history = [
-            {
-                'timestamp': (base_date - timedelta(days=60)).isoformat(),
-                'quality_score': 0.85
-            },
-            {
-                'timestamp': (base_date - timedelta(days=45)).isoformat(),
-                'quality_score': 0.82
-            },
-            {
-                'timestamp': (base_date - timedelta(days=30)).isoformat(),
-                'quality_score': 0.78
-            },
-            {
-                'timestamp': (base_date - timedelta(days=15)).isoformat(),
-                'quality_score': 0.74
-            },
-            {
-                'timestamp': base_date.isoformat(),
-                'quality_score': 0.70
-            }
+            {"timestamp": (base_date - timedelta(days=60)).isoformat(), "quality_score": 0.85},
+            {"timestamp": (base_date - timedelta(days=45)).isoformat(), "quality_score": 0.82},
+            {"timestamp": (base_date - timedelta(days=30)).isoformat(), "quality_score": 0.78},
+            {"timestamp": (base_date - timedelta(days=15)).isoformat(), "quality_score": 0.74},
+            {"timestamp": base_date.isoformat(), "quality_score": 0.70},
         ]
 
         metrics_df = detector._extract_quality_metrics(analysis_history)
-        quality_scores = metrics_df['quality_score']
+        quality_scores = metrics_df["quality_score"]
         trend_analysis = detector._calculate_trend_analysis(quality_scores)
 
         print("✅ Trend analysis calculation working")
@@ -128,6 +121,7 @@ def test_trend_analysis_calculation():
         print(f"❌ Trend analysis calculation failed: {e}")
         return False
 
+
 def test_volatility_analysis():
     """Test volatility analysis calculation."""
     try:
@@ -138,38 +132,17 @@ def test_volatility_analysis():
         # Create sample data with increasing volatility
         base_date = datetime.now()
         analysis_history = [
-            {
-                'timestamp': (base_date - timedelta(days=60)).isoformat(),
-                'quality_score': 0.85
-            },
-            {
-                'timestamp': (base_date - timedelta(days=50)).isoformat(),
-                'quality_score': 0.84
-            },
-            {
-                'timestamp': (base_date - timedelta(days=40)).isoformat(),
-                'quality_score': 0.86
-            },
-            {
-                'timestamp': (base_date - timedelta(days=30)).isoformat(),
-                'quality_score': 0.78
-            },
-            {
-                'timestamp': (base_date - timedelta(days=20)).isoformat(),
-                'quality_score': 0.82
-            },
-            {
-                'timestamp': (base_date - timedelta(days=10)).isoformat(),
-                'quality_score': 0.70
-            },
-            {
-                'timestamp': base_date.isoformat(),
-                'quality_score': 0.75
-            }
+            {"timestamp": (base_date - timedelta(days=60)).isoformat(), "quality_score": 0.85},
+            {"timestamp": (base_date - timedelta(days=50)).isoformat(), "quality_score": 0.84},
+            {"timestamp": (base_date - timedelta(days=40)).isoformat(), "quality_score": 0.86},
+            {"timestamp": (base_date - timedelta(days=30)).isoformat(), "quality_score": 0.78},
+            {"timestamp": (base_date - timedelta(days=20)).isoformat(), "quality_score": 0.82},
+            {"timestamp": (base_date - timedelta(days=10)).isoformat(), "quality_score": 0.70},
+            {"timestamp": base_date.isoformat(), "quality_score": 0.75},
         ]
 
         metrics_df = detector._extract_quality_metrics(analysis_history)
-        quality_scores = metrics_df['quality_score']
+        quality_scores = metrics_df["quality_score"]
         volatility_analysis = detector._calculate_volatility_analysis(quality_scores)
 
         print("✅ Volatility analysis working")
@@ -183,6 +156,7 @@ def test_volatility_analysis():
         print(f"❌ Volatility analysis failed: {e}")
         return False
 
+
 def test_degradation_events_detection():
     """Test degradation events detection."""
     try:
@@ -193,30 +167,15 @@ def test_degradation_events_detection():
         # Create sample data with a sharp degradation event
         base_date = datetime.now()
         analysis_history = [
-            {
-                'timestamp': (base_date - timedelta(days=60)).isoformat(),
-                'quality_score': 0.85
-            },
-            {
-                'timestamp': (base_date - timedelta(days=45)).isoformat(),
-                'quality_score': 0.83
-            },
-            {
-                'timestamp': (base_date - timedelta(days=30)).isoformat(),
-                'quality_score': 0.81
-            },
-            {
-                'timestamp': (base_date - timedelta(days=15)).isoformat(),
-                'quality_score': 0.60  # Sharp degradation
-            },
-            {
-                'timestamp': base_date.isoformat(),
-                'quality_score': 0.58
-            }
+            {"timestamp": (base_date - timedelta(days=60)).isoformat(), "quality_score": 0.85},
+            {"timestamp": (base_date - timedelta(days=45)).isoformat(), "quality_score": 0.83},
+            {"timestamp": (base_date - timedelta(days=30)).isoformat(), "quality_score": 0.81},
+            {"timestamp": (base_date - timedelta(days=15)).isoformat(), "quality_score": 0.60},  # Sharp degradation
+            {"timestamp": base_date.isoformat(), "quality_score": 0.58},
         ]
 
         metrics_df = detector._extract_quality_metrics(analysis_history)
-        quality_scores = metrics_df['quality_score']
+        quality_scores = metrics_df["quality_score"]
         degradation_events = detector._detect_degradation_events(quality_scores, threshold=-0.15)
 
         print("✅ Degradation events detection working")
@@ -233,6 +192,7 @@ def test_degradation_events_detection():
         print(f"❌ Degradation events detection failed: {e}")
         return False
 
+
 def test_degradation_severity_assessment():
     """Test degradation severity assessment."""
     try:
@@ -241,30 +201,13 @@ def test_degradation_severity_assessment():
         detector = QualityDegradationDetector()
 
         # Create mock analysis results
-        trend_analysis = {
-            'slope': -0.005,
-            'confidence': 0.85,
-            'trend_direction': 'degrading'
-        }
+        trend_analysis = {"slope": -0.005, "confidence": 0.85, "trend_direction": "degrading"}
 
-        volatility_analysis = {
-            'current_volatility': 0.08,
-            'baseline_volatility': 0.04,
-            'volatility_ratio': 2.0
-        }
+        volatility_analysis = {"current_volatility": 0.08, "baseline_volatility": 0.04, "volatility_ratio": 2.0}
 
-        degradation_events = [
-            {
-                'score_change': -0.2,
-                'percent_change': -0.25,
-                'severity': 'critical'
-            }
-        ]
+        degradation_events = [{"score_change": -0.2, "percent_change": -0.25, "severity": "critical"}]
 
-        finding_trend = {
-            'slope': 0.3,
-            'trend_direction': 'increasing'
-        }
+        finding_trend = {"slope": 0.3, "trend_direction": "increasing"}
 
         severity_assessment = detector._assess_degradation_severity(
             trend_analysis, volatility_analysis, degradation_events, finding_trend
@@ -276,13 +219,14 @@ def test_degradation_severity_assessment():
         print(f"   Requires attention: {severity_assessment['requires_attention']}")
         print(f"   Severity factors: {len(severity_assessment['severity_factors'])}")
 
-        for factor in severity_assessment['severity_factors']:
+        for factor in severity_assessment["severity_factors"]:
             print(f"     - {factor['factor']}: {factor['severity']} severity")
 
         return True
     except Exception as e:
         print(f"❌ Degradation severity assessment failed: {e}")
         return False
+
 
 def test_alert_generation():
     """Test alert generation for degradation."""
@@ -293,14 +237,14 @@ def test_alert_generation():
 
         # Test critical severity alert
         severity_assessment = {
-            'overall_severity': 'critical',
-            'severity_score': 0.85,
-            'severity_factors': [
-                {'factor': 'trend_slope', 'severity': 'critical', 'description': 'Steep negative trend'}
-            ]
+            "overall_severity": "critical",
+            "severity_score": 0.85,
+            "severity_factors": [
+                {"factor": "trend_slope", "severity": "critical", "description": "Steep negative trend"}
+            ],
         }
 
-        trend_analysis = {'slope': -0.01, 'confidence': 0.9}
+        trend_analysis = {"slope": -0.01, "confidence": 0.9}
 
         alerts = detector._generate_degradation_alerts(severity_assessment, trend_analysis)
 
@@ -319,6 +263,7 @@ def test_alert_generation():
         print(f"❌ Alert generation failed: {e}")
         return False
 
+
 async def test_full_quality_degradation_detection():
     """Test the complete quality degradation detection pipeline."""
     try:
@@ -330,61 +275,61 @@ async def test_full_quality_degradation_detection():
         base_date = datetime.now()
         analysis_history = [
             {
-                'timestamp': (base_date - timedelta(days=90)).isoformat(),
-                'quality_score': 0.88,
-                'total_findings': 2,
-                'sentiment_score': 0.85,
-                'readability_score': 0.90
+                "timestamp": (base_date - timedelta(days=90)).isoformat(),
+                "quality_score": 0.88,
+                "total_findings": 2,
+                "sentiment_score": 0.85,
+                "readability_score": 0.90,
             },
             {
-                'timestamp': (base_date - timedelta(days=75)).isoformat(),
-                'quality_score': 0.86,
-                'total_findings': 3,
-                'sentiment_score': 0.83,
-                'readability_score': 0.88
+                "timestamp": (base_date - timedelta(days=75)).isoformat(),
+                "quality_score": 0.86,
+                "total_findings": 3,
+                "sentiment_score": 0.83,
+                "readability_score": 0.88,
             },
             {
-                'timestamp': (base_date - timedelta(days=60)).isoformat(),
-                'quality_score': 0.84,
-                'total_findings': 4,
-                'sentiment_score': 0.81,
-                'readability_score': 0.86
+                "timestamp": (base_date - timedelta(days=60)).isoformat(),
+                "quality_score": 0.84,
+                "total_findings": 4,
+                "sentiment_score": 0.81,
+                "readability_score": 0.86,
             },
             {
-                'timestamp': (base_date - timedelta(days=45)).isoformat(),
-                'quality_score': 0.81,
-                'total_findings': 6,
-                'sentiment_score': 0.79,
-                'readability_score': 0.84
+                "timestamp": (base_date - timedelta(days=45)).isoformat(),
+                "quality_score": 0.81,
+                "total_findings": 6,
+                "sentiment_score": 0.79,
+                "readability_score": 0.84,
             },
             {
-                'timestamp': (base_date - timedelta(days=30)).isoformat(),
-                'quality_score': 0.78,
-                'total_findings': 8,
-                'sentiment_score': 0.76,
-                'readability_score': 0.81
+                "timestamp": (base_date - timedelta(days=30)).isoformat(),
+                "quality_score": 0.78,
+                "total_findings": 8,
+                "sentiment_score": 0.76,
+                "readability_score": 0.81,
             },
             {
-                'timestamp': (base_date - timedelta(days=15)).isoformat(),
-                'quality_score': 0.74,
-                'total_findings': 9,
-                'sentiment_score': 0.73,
-                'readability_score': 0.78
+                "timestamp": (base_date - timedelta(days=15)).isoformat(),
+                "quality_score": 0.74,
+                "total_findings": 9,
+                "sentiment_score": 0.73,
+                "readability_score": 0.78,
             },
             {
-                'timestamp': base_date.isoformat(),
-                'quality_score': 0.70,
-                'total_findings': 12,
-                'sentiment_score': 0.70,
-                'readability_score': 0.75
-            }
+                "timestamp": base_date.isoformat(),
+                "quality_score": 0.70,
+                "total_findings": 12,
+                "sentiment_score": 0.70,
+                "readability_score": 0.75,
+            },
         ]
 
         result = await detector.detect_quality_degradation(
             document_id="degrading_document",
             analysis_history=analysis_history,
             baseline_period_days=60,
-            alert_threshold=0.05
+            alert_threshold=0.05,
         )
 
         print("✅ Full quality degradation detection pipeline working")
@@ -398,14 +343,14 @@ async def test_full_quality_degradation_detection():
         print(f"   Alerts generated: {len(result['alerts'])}")
         print(f"   Processing time: {result['processing_time']:.2f}s")
 
-        if result['alerts']:
+        if result["alerts"]:
             print(f"   Alert details:")
-            for alert in result['alerts']:
+            for alert in result["alerts"]:
                 print(f"     - {alert['severity'].upper()} PRIORITY: {alert['message']}")
 
-        if result['recommendations']:
+        if result["recommendations"]:
             print(f"   Key recommendations:")
-            for i, rec in enumerate(result['recommendations'][:3]):
+            for i, rec in enumerate(result["recommendations"][:3]):
                 print(f"     {i+1}. {rec}")
 
         return True
@@ -413,12 +358,14 @@ async def test_full_quality_degradation_detection():
         print(f"❌ Full quality degradation detection failed: {e}")
         return False
 
+
 def test_main_app_import():
     """Test that the main app can be imported with quality degradation detection endpoints."""
     try:
         from services.analysis_service.main import app
-        routes = [route.path for route in app.routes if hasattr(route, 'path')]
-        degradation_routes = [r for r in routes if 'degradation' in r]
+
+        routes = [route.path for route in app.routes if hasattr(route, "path")]
+        degradation_routes = [r for r in routes if "degradation" in r]
 
         print("✅ Main app imported successfully")
         print(f"✅ Found {len(degradation_routes)} quality degradation detection routes:")
@@ -429,6 +376,7 @@ def test_main_app_import():
     except Exception as e:
         print(f"❌ Failed to import main app: {e}")
         return False
+
 
 def main():
     """Run all tests."""
@@ -454,8 +402,9 @@ def main():
     for test in tests:
         print(f"\n🧪 Running {test.__name__}...")
         try:
-            if test.__name__ == 'test_full_quality_degradation_detection':
+            if test.__name__ == "test_full_quality_degradation_detection":
                 import asyncio
+
                 result = asyncio.run(test())
             else:
                 result = test()
@@ -474,6 +423,7 @@ def main():
     else:
         print("⚠️  Some tests failed. Check the output above for details.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

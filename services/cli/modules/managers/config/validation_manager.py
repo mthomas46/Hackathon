@@ -1,13 +1,11 @@
 """Configuration Validation Manager for CLI operations."""
 
-from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
-import json
+from typing import Any, Dict, List, Tuple
+
 import yaml
-import re
 
 from ...base.base_manager import BaseManager
-from ...formatters.display_utils import DisplayManager
 
 
 class ValidationManager(BaseManager):
@@ -19,11 +17,15 @@ class ValidationManager(BaseManager):
             ("1", "Validate YAML Syntax"),
             ("2", "Check Configuration Consistency"),
             ("3", "Validate Environment Variables"),
-            ("4", "Run Full Validation Suite")
+            ("4", "Run Full Validation Suite"),
         ]
 
     async def handle_choice(self, choice: str) -> bool:
-        """Handle a menu choice. Return True to continue, False to exit."""
+        """
+        Handle a menu choice.
+
+        Return True to continue, False to exit.
+        """
         if choice == "1":
             await self.validate_yaml_syntax()
         elif choice == "2":
@@ -48,19 +50,17 @@ class ValidationManager(BaseManager):
                     validation_results.append(result)
 
             # Display results
-            valid_count = sum(1 for r in validation_results if r['valid'])
+            valid_count = sum(1 for r in validation_results if r["valid"])
             total_count = len(validation_results)
 
             table_data = []
             for result in validation_results:
-                status = "✅ Valid" if result['valid'] else "❌ Invalid"
-                message = "OK" if result['valid'] else result.get('error', 'Unknown error')
-                table_data.append([result['file'], status, message])
+                status = "✅ Valid" if result["valid"] else "❌ Invalid"
+                message = "OK" if result["valid"] else result.get("error", "Unknown error")
+                table_data.append([result["file"], status, message])
 
             self.display.show_table(
-                f"YAML Syntax Validation ({valid_count}/{total_count} valid)",
-                ["File", "Status", "Message"],
-                table_data
+                f"YAML Syntax Validation ({valid_count}/{total_count} valid)", ["File", "Status", "Message"], table_data
             )
 
             if valid_count == total_count:
@@ -92,13 +92,15 @@ class ValidationManager(BaseManager):
             # Display issues
             table_data = []
             for issue in consistency_issues:
-                severity = "🔴 Critical" if issue['severity'] == 'critical' else "🟡 Warning" if issue['severity'] == 'warning' else "ℹ️ Info"
-                table_data.append([issue['service'], severity, issue['issue'], issue.get('suggestion', '')])
+                severity = (
+                    "🔴 Critical"
+                    if issue["severity"] == "critical"
+                    else "🟡 Warning" if issue["severity"] == "warning" else "ℹ️ Info"
+                )
+                table_data.append([issue["service"], severity, issue["issue"], issue.get("suggestion", "")])
 
             self.display.show_table(
-                "Configuration Consistency Issues",
-                ["Service", "Severity", "Issue", "Suggestion"],
-                table_data
+                "Configuration Consistency Issues", ["Service", "Severity", "Issue", "Suggestion"], table_data
             )
 
         except Exception as e:
@@ -119,24 +121,22 @@ class ValidationManager(BaseManager):
             health_results = await self._perform_configuration_health_check()
 
             # Overall health score
-            healthy_items = sum(1 for result in health_results.values() if result[0] == 'healthy')
+            healthy_items = sum(1 for result in health_results.values() if result[0] == "healthy")
             total_items = len(health_results)
 
             health_score = (healthy_items / total_items * 100) if total_items > 0 else 0
 
-            self.display.show_info(f"Configuration Health Score: {health_score:.1f}% ({healthy_items}/{total_items} healthy)")
+            self.display.show_info(
+                f"Configuration Health Score: {health_score:.1f}% ({healthy_items}/{total_items} healthy)"
+            )
 
             # Display detailed results
             table_data = []
             for check_name, (status, message) in health_results.items():
-                status_icon = "✅" if status == 'healthy' else "❌" if status == 'unhealthy' else "⚠️"
+                status_icon = "✅" if status == "healthy" else "❌" if status == "unhealthy" else "⚠️"
                 table_data.append([check_name, f"{status_icon} {status}", message])
 
-            self.display.show_table(
-                "Configuration Health Check Results",
-                ["Check", "Status", "Details"],
-                table_data
-            )
+            self.display.show_table("Configuration Health Check Results", ["Check", "Status", "Details"], table_data)
 
             if health_score >= 90:
                 self.display.show_success("Configuration health is excellent!")
@@ -153,44 +153,40 @@ class ValidationManager(BaseManager):
         config_files = []
 
         # Common extensions
-        extensions = ['*.yaml', '*.yml', '*.json', '*.toml', '*.ini']
+        extensions = ["*.yaml", "*.yml", "*.json", "*.toml", "*.ini"]
 
         # Search in common directories
         search_dirs = [
-            Path('config'),
-            Path('services'),
-            Path('infrastructure'),
-            Path('.'),
+            Path("config"),
+            Path("services"),
+            Path("infrastructure"),
+            Path("."),
         ]
 
         for search_dir in search_dirs:
             if search_dir.exists():
                 for ext in extensions:
-                    config_files.extend(search_dir.glob(f'**/{ext}'))
+                    config_files.extend(search_dir.glob(f"**/{ext}"))
 
         # Remove duplicates and sort
         return sorted(list(set(config_files)))
 
     async def _validate_yaml_file(self, file_path: Path) -> Dict[str, Any]:
         """Validate a single YAML file."""
-        result = {
-            'file': str(file_path),
-            'valid': False,
-            'error': None
-        }
+        result = {"file": str(file_path), "valid": False, "error": None}
 
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Try to parse as YAML
             yaml.safe_load(content)
-            result['valid'] = True
+            result["valid"] = True
 
         except yaml.YAMLError as e:
-            result['error'] = str(e)
+            result["error"] = str(e)
         except Exception as e:
-            result['error'] = f"Unexpected error: {e}"
+            result["error"] = f"Unexpected error: {e}"
 
         return result
 
@@ -207,8 +203,8 @@ class ValidationManager(BaseManager):
             for config_file in config_files:
                 # Extract service name from path
                 parts = config_file.parts
-                if 'services' in parts:
-                    service_index = parts.index('services')
+                if "services" in parts:
+                    service_index = parts.index("services")
                     if service_index + 1 < len(parts):
                         service_name = parts[service_index + 1]
                         if service_name not in service_configs:
@@ -218,33 +214,39 @@ class ValidationManager(BaseManager):
             # Check for missing required configurations
             for service_name, configs in service_configs.items():
                 # Check if service has a main config file
-                has_main_config = any('config.yaml' in str(c) or f'{service_name}.yaml' in str(c) for c in configs)
+                has_main_config = any("config.yaml" in str(c) or f"{service_name}.yaml" in str(c) for c in configs)
                 if not has_main_config:
-                    issues.append({
-                        'service': service_name,
-                        'severity': 'warning',
-                        'issue': 'Missing main configuration file',
-                        'suggestion': f'Create config.yaml or {service_name}.yaml'
-                    })
+                    issues.append(
+                        {
+                            "service": service_name,
+                            "severity": "warning",
+                            "issue": "Missing main configuration file",
+                            "suggestion": f"Create config.yaml or {service_name}.yaml",
+                        }
+                    )
 
                 # Check for duplicate configurations
                 config_names = [c.name for c in configs]
                 duplicates = set([name for name in config_names if config_names.count(name) > 1])
                 if duplicates:
-                    issues.append({
-                        'service': service_name,
-                        'severity': 'warning',
-                        'issue': f'Duplicate configuration files: {", ".join(duplicates)}',
-                        'suggestion': 'Consolidate duplicate configurations'
-                    })
+                    issues.append(
+                        {
+                            "service": service_name,
+                            "severity": "warning",
+                            "issue": f'Duplicate configuration files: {", ".join(duplicates)}',
+                            "suggestion": "Consolidate duplicate configurations",
+                        }
+                    )
 
         except Exception as e:
-            issues.append({
-                'service': 'system',
-                'severity': 'error',
-                'issue': f'Error during consistency check: {e}',
-                'suggestion': 'Review configuration structure'
-            })
+            issues.append(
+                {
+                    "service": "system",
+                    "severity": "error",
+                    "issue": f"Error during consistency check: {e}",
+                    "suggestion": "Review configuration structure",
+                }
+            )
 
         return issues
 
@@ -258,39 +260,39 @@ class ValidationManager(BaseManager):
             yaml_issues = 0
 
             for config_file in config_files:
-                if config_file.suffix in ['.yaml', '.yml']:
+                if config_file.suffix in [".yaml", ".yml"]:
                     result = await self._validate_yaml_file(config_file)
-                    if not result['valid']:
+                    if not result["valid"]:
                         yaml_issues += 1
 
-            health_results['yaml_syntax'] = (
-                'healthy' if yaml_issues == 0 else 'unhealthy',
-                f"{len(config_files)} files checked, {yaml_issues} syntax errors"
+            health_results["yaml_syntax"] = (
+                "healthy" if yaml_issues == 0 else "unhealthy",
+                f"{len(config_files)} files checked, {yaml_issues} syntax errors",
             )
 
             # Check for required configurations
-            required_configs = ['config/config.yaml', 'config/app.yaml']
+            required_configs = ["config/config.yaml", "config/app.yaml"]
             missing_configs = []
 
             for required_config in required_configs:
                 if not Path(required_config).exists():
                     missing_configs.append(required_config)
 
-            health_results['required_configs'] = (
-                'healthy' if not missing_configs else 'unhealthy',
-                f"Missing: {', '.join(missing_configs)}" if missing_configs else "All required configs present"
+            health_results["required_configs"] = (
+                "healthy" if not missing_configs else "unhealthy",
+                f"Missing: {', '.join(missing_configs)}" if missing_configs else "All required configs present",
             )
 
             # Check environment variables
             env_issues = await self._check_environment_health()
-            health_results['environment_variables'] = env_issues
+            health_results["environment_variables"] = env_issues
 
             # Check service configurations
             service_issues = await self._check_service_configurations()
-            health_results['service_configurations'] = service_issues
+            health_results["service_configurations"] = service_issues
 
         except Exception as e:
-            health_results['health_check_error'] = ('unhealthy', f"Health check failed: {e}")
+            health_results["health_check_error"] = ("unhealthy", f"Health check failed: {e}")
 
         return health_results
 
@@ -298,7 +300,7 @@ class ValidationManager(BaseManager):
         """Check environment variable health."""
         try:
             # Check for critical environment variables
-            critical_vars = ['ENVIRONMENT']
+            critical_vars = ["ENVIRONMENT"]
             missing_critical = []
 
             for var in critical_vars:
@@ -306,36 +308,42 @@ class ValidationManager(BaseManager):
                     missing_critical.append(var)
 
             if missing_critical:
-                return 'unhealthy', f"Missing critical variables: {', '.join(missing_critical)}"
+                return "unhealthy", f"Missing critical variables: {', '.join(missing_critical)}"
             else:
-                return 'healthy', "Critical environment variables are set"
+                return "healthy", "Critical environment variables are set"
 
         except Exception as e:
-            return 'unhealthy', f"Environment check failed: {e}"
+            return "unhealthy", f"Environment check failed: {e}"
 
     async def _check_service_configurations(self) -> Tuple[str, str]:
         """Check service configuration health."""
         try:
-            services_dir = Path('services')
+            services_dir = Path("services")
             if not services_dir.exists():
-                return 'unhealthy', "Services directory not found"
+                return "unhealthy", "Services directory not found"
 
             service_dirs = [d for d in services_dir.iterdir() if d.is_dir()]
             configured_services = 0
 
             for service_dir in service_dirs:
-                config_files = list(service_dir.glob('*.yaml')) + list(service_dir.glob('config/*.yaml'))
+                config_files = list(service_dir.glob("*.yaml")) + list(service_dir.glob("config/*.yaml"))
                 if config_files:
                     configured_services += 1
 
             health_percentage = (configured_services / len(service_dirs) * 100) if service_dirs else 0
 
             if health_percentage >= 80:
-                return 'healthy', f"{configured_services}/{len(service_dirs)} services configured"
+                return "healthy", f"{configured_services}/{len(service_dirs)} services configured"
             elif health_percentage >= 50:
-                return 'warning', f"{configured_services}/{len(service_dirs)} services configured - some missing configs"
+                return (
+                    "warning",
+                    f"{configured_services}/{len(service_dirs)} services configured - some missing configs",
+                )
             else:
-                return 'unhealthy', f"{configured_services}/{len(service_dirs)} services configured - many missing configs"
+                return (
+                    "unhealthy",
+                    f"{configured_services}/{len(service_dirs)} services configured - many missing configs",
+                )
 
         except Exception as e:
-            return 'unhealthy', f"Service configuration check failed: {e}"
+            return "unhealthy", f"Service configuration check failed: {e}"

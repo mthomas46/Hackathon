@@ -4,19 +4,26 @@ This module contains integration tests for typed client adapters for all
 21+ ecosystem services, testing client functionality and error handling.
 """
 
-import pytest
-import httpx
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any, Optional
+from unittest.mock import Mock, patch
 
+import httpx
+import pytest
+from simulation.domain.value_objects import ECOSYSTEM_SERVICES, ServiceEndpoint, ServiceHealth
 from simulation.infrastructure.clients.ecosystem_clients import (
-    EcosystemServiceClient, EcosystemServiceRegistry,
-    DocStoreClient, MockDataGeneratorClient, OrchestratorClient,
-    AnalysisServiceClient, LlmGatewayClient, PromptStoreClient,
-    SummarizerHubClient, NotificationServiceClient, SourceAgentClient,
-    CodeAnalyzerClient, get_ecosystem_client, get_ecosystem_service_registry
+    AnalysisServiceClient,
+    CodeAnalyzerClient,
+    DocStoreClient,
+    EcosystemServiceClient,
+    EcosystemServiceRegistry,
+    LlmGatewayClient,
+    MockDataGeneratorClient,
+    NotificationServiceClient,
+    OrchestratorClient,
+    PromptStoreClient,
+    SourceAgentClient,
+    SummarizerHubClient,
+    get_ecosystem_client,
 )
-from simulation.domain.value_objects import ServiceEndpoint, ServiceHealth, ECOSYSTEM_SERVICES
 
 
 class TestEcosystemServiceClientBase:
@@ -94,9 +101,10 @@ class TestDocStoreClient:
     @pytest.fixture
     async def docstore_client(self):
         """Create DocStore client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="doc_store", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="doc_store", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = DocStoreClient()
             yield client
             await client._client.aclose()
@@ -105,11 +113,9 @@ class TestDocStoreClient:
     async def test_docstore_store_document(self, docstore_client):
         """Test storing a document in DocStore."""
         # Use httpbin.org for testing
-        response = await docstore_client.post_json("/post", {
-            "title": "Test Document",
-            "content": "Test content",
-            "metadata": {"type": "test"}
-        })
+        response = await docstore_client.post_json(
+            "/post", {"title": "Test Document", "content": "Test content", "metadata": {"type": "test"}}
+        )
 
         assert response is not None
         # In real integration, this would return a document ID
@@ -139,9 +145,10 @@ class TestMockDataGeneratorClient:
     @pytest.fixture
     async def mockgen_client(self):
         """Create Mock Data Generator client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="mock_data_generator", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="mock_data_generator", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = MockDataGeneratorClient()
             yield client
             await client._client.aclose()
@@ -149,11 +156,7 @@ class TestMockDataGeneratorClient:
     @pytest.mark.asyncio
     async def test_mockgen_generate_project_documents(self, mockgen_client):
         """Test generating project documents."""
-        request_data = {
-            "project_type": "web_application",
-            "team_size": 5,
-            "complexity": "medium"
-        }
+        request_data = {"project_type": "web_application", "team_size": 5, "complexity": "medium"}
 
         response = await mockgen_client.generate_project_documents(request_data)
 
@@ -163,11 +166,7 @@ class TestMockDataGeneratorClient:
     @pytest.mark.asyncio
     async def test_mockgen_generate_timeline_events(self, mockgen_client):
         """Test generating timeline events."""
-        request_data = {
-            "project_id": "test-123",
-            "duration_weeks": 8,
-            "team_size": 3
-        }
+        request_data = {"project_id": "test-123", "duration_weeks": 8, "team_size": 3}
 
         response = await mockgen_client.generate_timeline_events(request_data)
 
@@ -177,10 +176,7 @@ class TestMockDataGeneratorClient:
     @pytest.mark.asyncio
     async def test_mockgen_generate_team_activities(self, mockgen_client):
         """Test generating team activities."""
-        request_data = {
-            "team_members": ["dev1", "dev2", "qa1"],
-            "duration_days": 30
-        }
+        request_data = {"team_members": ["dev1", "dev2", "qa1"], "duration_days": 30}
 
         response = await mockgen_client.generate_team_activities(request_data)
 
@@ -194,9 +190,10 @@ class TestOrchestratorClient:
     @pytest.fixture
     async def orchestrator_client(self):
         """Create Orchestrator client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="orchestrator", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="orchestrator", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = OrchestratorClient()
             yield client
             await client._client.aclose()
@@ -204,11 +201,7 @@ class TestOrchestratorClient:
     @pytest.mark.asyncio
     async def test_orchestrator_create_workflow(self, orchestrator_client):
         """Test creating a workflow."""
-        workflow_config = {
-            "name": "test_workflow",
-            "steps": ["step1", "step2"],
-            "services": ["service1", "service2"]
-        }
+        workflow_config = {"name": "test_workflow", "steps": ["step1", "step2"], "services": ["service1", "service2"]}
 
         response = await orchestrator_client.post_json("/workflows", workflow_config)
 
@@ -243,9 +236,10 @@ class TestAnalysisServiceClient:
     @pytest.fixture
     async def analysis_client(self):
         """Create Analysis Service client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="analysis_service", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="analysis_service", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = AnalysisServiceClient()
             yield client
             await client._client.aclose()
@@ -255,7 +249,7 @@ class TestAnalysisServiceClient:
         """Test analyzing documents."""
         documents = [
             {"id": "doc1", "content": "Test content 1", "type": "requirements"},
-            {"id": "doc2", "content": "Test content 2", "type": "design"}
+            {"id": "doc2", "content": "Test content 2", "type": "design"},
         ]
 
         response = await analysis_client.analyze_documents(documents)
@@ -266,11 +260,7 @@ class TestAnalysisServiceClient:
     @pytest.mark.asyncio
     async def test_analysis_generate_insights(self, analysis_client):
         """Test generating insights from analysis data."""
-        analysis_data = {
-            "documents_analyzed": 5,
-            "patterns_found": ["pattern1", "pattern2"],
-            "quality_score": 0.85
-        }
+        analysis_data = {"documents_analyzed": 5, "patterns_found": ["pattern1", "pattern2"], "quality_score": 0.85}
 
         response = await analysis_client.generate_insights(analysis_data)
 
@@ -284,9 +274,10 @@ class TestLlmGatewayClient:
     @pytest.fixture
     async def llm_client(self):
         """Create LLM Gateway client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="llm_gateway", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="llm_gateway", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = LlmGatewayClient()
             yield client
             await client._client.aclose()
@@ -319,9 +310,10 @@ class TestPromptStoreClient:
     @pytest.fixture
     async def prompt_client(self):
         """Create Prompt Store client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="prompt_store", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="prompt_store", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = PromptStoreClient()
             yield client
             await client._client.aclose()
@@ -329,11 +321,9 @@ class TestPromptStoreClient:
     @pytest.mark.asyncio
     async def test_prompt_store_prompt(self, prompt_client):
         """Test storing a prompt."""
-        response = await prompt_client.post_json("/prompts", {
-            "name": "test_prompt",
-            "content": "Test prompt content",
-            "category": "test"
-        })
+        response = await prompt_client.post_json(
+            "/prompts", {"name": "test_prompt", "content": "Test prompt content", "category": "test"}
+        )
 
         assert response is not None
 
@@ -353,9 +343,10 @@ class TestSummarizerHubClient:
     @pytest.fixture
     async def summarizer_client(self):
         """Create Summarizer Hub client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="summarizer_hub", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="summarizer_hub", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = SummarizerHubClient()
             yield client
             await client._client.aclose()
@@ -388,9 +379,10 @@ class TestNotificationServiceClient:
     @pytest.fixture
     async def notification_client(self):
         """Create Notification Service client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="notification_service", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="notification_service", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = NotificationServiceClient()
             yield client
             await client._client.aclose()
@@ -399,9 +391,7 @@ class TestNotificationServiceClient:
     async def test_notification_send_notification(self, notification_client):
         """Test sending a notification."""
         response = await notification_client.send_notification(
-            recipient="test@example.com",
-            message="Test notification",
-            notification_type="info"
+            recipient="test@example.com", message="Test notification", notification_type="info"
         )
 
         assert response is not None
@@ -411,8 +401,7 @@ class TestNotificationServiceClient:
     async def test_notification_default_type(self, notification_client):
         """Test sending notification with default type."""
         response = await notification_client.send_notification(
-            recipient="test@example.com",
-            message="Test notification"
+            recipient="test@example.com", message="Test notification"
         )
 
         assert response is not None
@@ -425,9 +414,10 @@ class TestSourceAgentClient:
     @pytest.fixture
     async def source_client(self):
         """Create Source Agent client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="source_agent", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="source_agent", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = SourceAgentClient()
             yield client
             await client._client.aclose()
@@ -449,9 +439,10 @@ class TestCodeAnalyzerClient:
     @pytest.fixture
     async def code_client(self):
         """Create Code Analyzer client for testing."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="code_analyzer", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="code_analyzer", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = CodeAnalyzerClient()
             yield client
             await client._client.aclose()
@@ -474,9 +465,10 @@ class TestEcosystemServiceRegistryIntegration:
     @pytest.mark.asyncio
     async def test_registry_get_client(self):
         """Test getting clients from registry."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="test_service", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="test_service", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             registry = EcosystemServiceRegistry()
 
             client = registry.get_client("test_service")
@@ -495,10 +487,13 @@ class TestEcosystemServiceRegistryIntegration:
     @pytest.mark.asyncio
     async def test_registry_get_all_clients(self):
         """Test getting all clients from registry."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="service1", endpoint=ServiceEndpoint("http://httpbin.org")),
-            Mock(name="service2", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [
+                Mock(name="service1", endpoint=ServiceEndpoint("http://httpbin.org")),
+                Mock(name="service2", endpoint=ServiceEndpoint("http://httpbin.org")),
+            ],
+        ):
             registry = EcosystemServiceRegistry()
 
             all_clients = registry.get_all_clients()
@@ -510,10 +505,13 @@ class TestEcosystemServiceRegistryIntegration:
     @pytest.mark.asyncio
     async def test_registry_health_check_all_services(self):
         """Test checking health of all services."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="service1", endpoint=ServiceEndpoint("http://httpbin.org")),
-            Mock(name="service2", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [
+                Mock(name="service1", endpoint=ServiceEndpoint("http://httpbin.org")),
+                Mock(name="service2", endpoint=ServiceEndpoint("http://httpbin.org")),
+            ],
+        ):
             registry = EcosystemServiceRegistry()
 
             health_status = await registry.check_all_services_health()
@@ -533,9 +531,10 @@ class TestGlobalClientFunctions:
 
     def test_get_ecosystem_client_existing(self):
         """Test getting existing ecosystem client."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="doc_store", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [Mock(name="doc_store", endpoint=ServiceEndpoint("http://httpbin.org"))],
+        ):
             client = get_ecosystem_client("doc_store")
             assert client is not None
             assert isinstance(client, EcosystemServiceClient)
@@ -547,13 +546,16 @@ class TestGlobalClientFunctions:
 
     def test_convenience_client_functions(self):
         """Test convenience client functions."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="doc_store", endpoint=ServiceEndpoint("http://httpbin.org")),
-            Mock(name="mock_data_generator", endpoint=ServiceEndpoint("http://httpbin.org")),
-            Mock(name="orchestrator", endpoint=ServiceEndpoint("http://httpbin.org")),
-            Mock(name="analysis_service", endpoint=ServiceEndpoint("http://httpbin.org")),
-            Mock(name="llm_gateway", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [
+                Mock(name="doc_store", endpoint=ServiceEndpoint("http://httpbin.org")),
+                Mock(name="mock_data_generator", endpoint=ServiceEndpoint("http://httpbin.org")),
+                Mock(name="orchestrator", endpoint=ServiceEndpoint("http://httpbin.org")),
+                Mock(name="analysis_service", endpoint=ServiceEndpoint("http://httpbin.org")),
+                Mock(name="llm_gateway", endpoint=ServiceEndpoint("http://httpbin.org")),
+            ],
+        ):
             # Test convenience functions
             doc_client = get_ecosystem_client("doc_store")
             mock_client = get_ecosystem_client("mock_data_generator")
@@ -561,9 +563,9 @@ class TestGlobalClientFunctions:
             analysis_client = get_ecosystem_client("analysis_service")
             llm_client = get_ecosystem_client("llm_gateway")
 
-            assert all(client is not None for client in [
-                doc_client, mock_client, orch_client, analysis_client, llm_client
-            ])
+            assert all(
+                client is not None for client in [doc_client, mock_client, orch_client, analysis_client, llm_client]
+            )
 
 
 @pytest.mark.integration
@@ -573,11 +575,14 @@ class TestEcosystemClientsIntegrationSuite:
     @pytest.mark.asyncio
     async def test_multiple_clients_concurrent_requests(self):
         """Test multiple clients making concurrent requests."""
-        with patch('simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES', [
-            Mock(name="service1", endpoint=ServiceEndpoint("http://httpbin.org")),
-            Mock(name="service2", endpoint=ServiceEndpoint("http://httpbin.org")),
-            Mock(name="service3", endpoint=ServiceEndpoint("http://httpbin.org"))
-        ]):
+        with patch(
+            "simulation.infrastructure.clients.ecosystem_clients.ECOSYSTEM_SERVICES",
+            [
+                Mock(name="service1", endpoint=ServiceEndpoint("http://httpbin.org")),
+                Mock(name="service2", endpoint=ServiceEndpoint("http://httpbin.org")),
+                Mock(name="service3", endpoint=ServiceEndpoint("http://httpbin.org")),
+            ],
+        ):
             registry = EcosystemServiceRegistry()
 
             async def make_request(service_name: str):
@@ -587,11 +592,7 @@ class TestEcosystemClientsIntegrationSuite:
                 return None
 
             # Make concurrent requests
-            tasks = [
-                make_request("service1"),
-                make_request("service2"),
-                make_request("service3")
-            ]
+            tasks = [make_request("service1"), make_request("service2"), make_request("service3")]
 
             results = await asyncio.gather(*tasks)
 
@@ -675,12 +676,27 @@ class TestEcosystemClientsIntegrationSuite:
         service_names = [service.name for service in ECOSYSTEM_SERVICES]
 
         expected_services = [
-            "doc_store", "prompt_store", "analysis_service", "llm_gateway",
-            "orchestrator", "mock_data_generator", "source_agent", "code_analyzer",
-            "github_mcp", "bedrock_proxy", "summarizer_hub", "notification_service",
-            "frontend", "discovery_agent", "log_collector", "redis", "ollama",
-            "architecture_digitizer", "interpreter", "memory_agent",
-            "secure_analyzer"
+            "doc_store",
+            "prompt_store",
+            "analysis_service",
+            "llm_gateway",
+            "orchestrator",
+            "mock_data_generator",
+            "source_agent",
+            "code_analyzer",
+            "github_mcp",
+            "bedrock_proxy",
+            "summarizer_hub",
+            "notification_service",
+            "frontend",
+            "discovery_agent",
+            "log_collector",
+            "redis",
+            "ollama",
+            "architecture_digitizer",
+            "interpreter",
+            "memory_agent",
+            "secure_analyzer",
         ]
 
         for expected_service in expected_services:
@@ -689,5 +705,5 @@ class TestEcosystemClientsIntegrationSuite:
         # Verify all services have valid endpoints
         for service in ECOSYSTEM_SERVICES:
             assert service.endpoint is not None
-            assert service.endpoint.url.startswith(('http://', 'https://'))
+            assert service.endpoint.url.startswith(("http://", "https://"))
             assert service.required_for_simulation in [True, False]

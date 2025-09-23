@@ -10,32 +10,38 @@ Comprehensive test suite for Phase 2 advanced orchestration features:
 """
 
 import asyncio
-import sys
 import os
+import sys
 import time
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
+
+from services.frontend.modules.realtime_interface import (
+    OperationalTransform,
+    OperationType,
+    RealTimeCollaborationEngine,
+    test_realtime_collaboration,
+)
 
 # Import Phase 2 modules
 from services.interpreter.modules.advanced_nlp_engine import (
-    ConversationMemoryManager, AdvancedIntentRecognizer,
-    MultiModalProcessor, test_advanced_nlp
+    AdvancedIntentRecognizer,
+    ConversationMemoryManager,
+    MultiModalProcessor,
+    test_advanced_nlp,
 )
-
 from services.source_agent.modules.intelligent_ingestion import (
-    IntelligentIngestionEngine, DataIngestionJob, DataSource,
-    test_intelligent_ingestion
+    DataIngestionJob,
+    DataSource,
+    IntelligentIngestionEngine,
+    test_intelligent_ingestion,
 )
-
 from services.summarizer_hub.modules.multi_model_summarization import (
-    MultiModelSummarizer, SummarizationRequest, ContentType,
-    test_multi_model_summarization
-)
-
-from services.frontend.modules.realtime_interface import (
-    RealTimeCollaborationEngine, OperationalTransform, OperationType,
-    test_realtime_collaboration
+    ContentType,
+    MultiModelSummarizer,
+    SummarizationRequest,
+    test_multi_model_summarization,
 )
 
 
@@ -52,7 +58,7 @@ async def run_phase2_integration_test():
         "source_agent": {"passed": False, "duration": 0, "details": {}},
         "summarizer_hub": {"passed": False, "duration": 0, "details": {}},
         "frontend": {"passed": False, "duration": 0, "details": {}},
-        "integration": {"passed": False, "duration": 0, "details": {}}
+        "integration": {"passed": False, "duration": 0, "details": {}},
     }
 
     # Test 1: Interpreter - Advanced NLP Engine
@@ -70,8 +76,8 @@ async def run_phase2_integration_test():
                 "conversation_memory": True,
                 "intent_recognition": True,
                 "multi_modal_processing": True,
-                "context_awareness": True
-            }
+                "context_awareness": True,
+            },
         }
         print("✅ Interpreter test completed successfully")
     except Exception as e:
@@ -95,8 +101,8 @@ async def run_phase2_integration_test():
                 "predictive_ingestion": True,
                 "conflict_resolution": True,
                 "change_detection": True,
-                "quality_assessment": True
-            }
+                "quality_assessment": True,
+            },
         }
         print("✅ Source Agent test completed successfully")
     except Exception as e:
@@ -120,8 +126,8 @@ async def run_phase2_integration_test():
                 "ensemble_summarization": True,
                 "quality_evaluation": True,
                 "model_selection": True,
-                "consensus_building": True
-            }
+                "consensus_building": True,
+            },
         }
         print("✅ Summarizer Hub test completed successfully")
     except Exception as e:
@@ -145,8 +151,8 @@ async def run_phase2_integration_test():
                 "operational_transforms": True,
                 "user_presence": True,
                 "ai_suggestions": True,
-                "activity_broadcasting": True
-            }
+                "activity_broadcasting": True,
+            },
         }
         print("✅ Frontend test completed successfully")
     except Exception as e:
@@ -170,8 +176,8 @@ async def run_phase2_integration_test():
                 "end_to_end_workflow": True,
                 "service_coordination": True,
                 "data_flow": True,
-                "error_handling": True
-            }
+                "error_handling": True,
+            },
         }
         print("✅ Integration test completed successfully")
     except Exception as e:
@@ -210,9 +216,7 @@ async def run_integration_workflow_test():
     # Test 2: Data ingestion from source agent
     print("   2. Testing intelligent data ingestion...")
     job_id = await ingestion_engine.create_ingestion_job(
-        DataSource.GITHUB,
-        {"repository": "test/repo", "branch": "main"},
-        {"target": "doc_store"}
+        DataSource.GITHUB, {"repository": "test/repo", "branch": "main"}, {"target": "doc_store"}
     )
 
     result = await ingestion_engine.execute_ingestion_job(job_id)
@@ -229,9 +233,7 @@ async def run_integration_workflow_test():
     """
 
     request = SummarizationRequest(
-        content=test_content.strip(),
-        content_type=ContentType.TECHNICAL_DOC,
-        strategy=SummarizationStrategy.ENSEMBLE
+        content=test_content.strip(), content_type=ContentType.TECHNICAL_DOC, strategy=SummarizationStrategy.ENSEMBLE
     )
 
     summary_result = await summarizer.summarize_content(request)
@@ -241,9 +243,7 @@ async def run_integration_workflow_test():
 
     # Test 4: Real-time collaboration
     print("   4. Testing real-time collaboration...")
-    user_session = await collaboration_engine.create_user_session(
-        "integration_user", "Test User"
-    )
+    user_session = await collaboration_engine.create_user_session("integration_user", "Test User")
 
     success = await collaboration_engine.join_document(user_session.session_id, "integration_doc")
     assert success, "Failed to join collaborative document"
@@ -255,7 +255,7 @@ async def run_integration_workflow_test():
         document_id="integration_doc",
         operation_type=OperationType.INSERT,
         position=0,
-        content="Integration test content"
+        content="Integration test content",
     )
 
     success = await collaboration_engine.apply_operation(operation)
@@ -348,7 +348,7 @@ async def generate_phase2_test_report(test_results: Dict[str, Any], total_durati
         "Cross-service integration workflows",
         "Operational transforms for conflict-free editing",
         "AI-powered collaboration suggestions",
-        "Predictive ingestion optimization"
+        "Predictive ingestion optimization",
     ]
 
     for feature in features_tested:

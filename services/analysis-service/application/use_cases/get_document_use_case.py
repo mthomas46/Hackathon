@@ -1,23 +1,25 @@
 """Get Document Use Case."""
 
-from typing import Optional
 from dataclasses import dataclass
+from typing import Optional
 
 from ...domain.entities import Document
 from ...domain.exceptions import DocumentNotFoundException
 from ...infrastructure.repositories import DocumentRepository
-from ..dto import GetDocumentsRequest, DocumentResponse, DocumentListResponse
+from ..dto import DocumentListResponse, DocumentResponse
 
 
 @dataclass
 class GetDocumentQuery:
     """Query for getting a single document."""
+
     document_id: str
 
 
 @dataclass
 class GetDocumentsQuery:
     """Query for getting multiple documents."""
+
     author: Optional[str] = None
     tags: Optional[list] = None
     repository_id: Optional[str] = None
@@ -28,6 +30,7 @@ class GetDocumentsQuery:
 @dataclass
 class DocumentQueryResult:
     """Result of document query."""
+
     documents: list[Document]
     total_count: int
     has_more: bool
@@ -63,19 +66,14 @@ class GetDocumentUseCase:
 
         has_more = end_idx < total_count
 
-        return DocumentQueryResult(
-            documents=paginated_documents,
-            total_count=total_count,
-            has_more=has_more
-        )
+        return DocumentQueryResult(documents=paginated_documents, total_count=total_count, has_more=has_more)
 
     def _apply_filters(self, documents: list[Document], query: GetDocumentsQuery) -> list[Document]:
         """Apply filters to document list."""
         filtered = documents
 
         if query.author:
-            filtered = [d for d in filtered if d.metadata.author and
-                       query.author.lower() in d.metadata.author.lower()]
+            filtered = [d for d in filtered if d.metadata.author and query.author.lower() in d.metadata.author.lower()]
 
         if query.tags:
             filtered = [d for d in filtered if any(tag in d.metadata.tags for tag in query.tags)]
@@ -93,16 +91,12 @@ class GetDocumentUseCase:
         """Convert query result to list response DTO."""
         document_responses = [DocumentResponse.from_domain(doc) for doc in result.documents]
 
-        filters = {
-            'author': query.author,
-            'tags': query.tags,
-            'repository_id': query.repository_id
-        }
+        filters = {"author": query.author, "tags": query.tags, "repository_id": query.repository_id}
 
         return DocumentListResponse.create(
             documents=document_responses,
             total=result.total_count,
             page=(query.offset // query.limit) + 1,
             page_size=query.limit,
-            filters=filters
+            filters=filters,
         )

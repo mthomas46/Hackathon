@@ -494,7 +494,7 @@ class TestRedisPerformanceMetrics:
             for i in range(9):
                 try:
                     await redis_manager_instance.set_cache(f"error_test_{i}", f"value_{i}")
-                except:
+                except Exception:
                     pass  # Expected failures
 
             metrics = redis_manager_instance.get_metrics()

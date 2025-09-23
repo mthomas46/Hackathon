@@ -5,25 +5,24 @@ comprehensive health monitoring for the simulation service and its ecosystem dep
 """
 
 import sys
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
-import asyncio
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
-from simulation.infrastructure.logging import get_simulation_logger
 from simulation.infrastructure.health.simulation_health import get_simulation_health_checker
-from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
 from simulation.infrastructure.integration.service_discovery import get_ecosystem_health
+from simulation.infrastructure.logging import get_simulation_logger
+from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
 
 # Import shared health patterns (with fallbacks)
 try:
-    from shared.health.registry import HealthIndicatorRegistry
-    from shared.health.reporter import HealthReporter
     from shared.health.alerts import HealthAlertManager
     from shared.health.metrics import HealthMetricsCollector
+    from shared.health.registry import HealthIndicatorRegistry
+    from shared.health.reporter import HealthReporter
 except ImportError:
     # Fallback implementations
     class HealthIndicatorRegistry:
@@ -44,7 +43,7 @@ except ImportError:
             return {
                 "timestamp": datetime.now(),
                 "indicators": indicators,
-                "overall_status": "healthy" if all(indicators.values()) else "unhealthy"
+                "overall_status": "healthy" if all(indicators.values()) else "unhealthy",
             }
 
     class HealthAlertManager:
@@ -63,7 +62,8 @@ except ImportError:
 
 
 class SimulationHealthMonitoringIntegration:
-    """Integration layer for simulation health monitoring with shared infrastructure."""
+    """Integration layer for simulation health monitoring with shared
+    infrastructure."""
 
     def __init__(self):
         """Initialize health monitoring integration."""
@@ -85,7 +85,8 @@ class SimulationHealthMonitoringIntegration:
         self.logger.info("Simulation health monitoring integration initialized")
 
     def _register_health_indicators(self):
-        """Register simulation-specific health indicators with shared registry."""
+        """Register simulation-specific health indicators with shared
+        registry."""
         # Register core simulation indicators
         self.indicator_registry.register("simulation_engine", self._check_simulation_engine)
         self.indicator_registry.register("ecosystem_services", self._check_ecosystem_services)
@@ -113,7 +114,7 @@ class SimulationHealthMonitoringIntegration:
             combined_health = {
                 "simulation_service": simulation_health,
                 "ecosystem_services": ecosystem_health,
-                "integration_status": self._check_integration_status(simulation_health, ecosystem_health)
+                "integration_status": self._check_integration_status(simulation_health, ecosystem_health),
             }
 
             # Generate report using shared reporter
@@ -136,14 +137,14 @@ class SimulationHealthMonitoringIntegration:
                 "integration_health": combined_health["integration_status"],
                 "alerts": alerts,
                 "metrics": metrics,
-                "recommendations": self._generate_health_recommendations(health_report, alerts)
+                "recommendations": self._generate_health_recommendations(health_report, alerts),
             }
 
             self.logger.info(
                 "Integrated health check completed",
                 status=integrated_report["overall_status"],
                 health_score=integrated_report["health_score"],
-                alerts_count=len(alerts)
+                alerts_count=len(alerts),
             )
 
             return integrated_report
@@ -156,16 +157,19 @@ class SimulationHealthMonitoringIntegration:
                 "error": str(e),
                 "simulation_health": {},
                 "ecosystem_health": {},
-                "alerts": [{"level": "critical", "message": f"Health check failed: {str(e)}"}]
+                "alerts": [{"level": "critical", "message": f"Health check failed: {str(e)}"}],
             }
 
-    def _check_integration_status(self, simulation_health: Dict[str, Any], ecosystem_health: Dict[str, Any]) -> Dict[str, Any]:
-        """Check integration status between simulation and ecosystem services."""
+    def _check_integration_status(
+        self, simulation_health: Dict[str, Any], ecosystem_health: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Check integration status between simulation and ecosystem
+        services."""
         integration_status = {
             "data_flow": "unknown",
             "service_communication": "unknown",
             "dependency_satisfaction": "unknown",
-            "overall_integration": "unknown"
+            "overall_integration": "unknown",
         }
 
         try:
@@ -215,15 +219,11 @@ class SimulationHealthMonitoringIntegration:
                 "status": status,
                 "active_simulations": active_simulations,
                 "error_rate": error_rate,
-                "last_check": datetime.now()
+                "last_check": datetime.now(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now()}
 
     async def _check_ecosystem_services(self) -> Dict[str, Any]:
         """Check ecosystem services health."""
@@ -246,15 +246,11 @@ class SimulationHealthMonitoringIntegration:
                 "healthy_services": healthy_services,
                 "total_services": total_services,
                 "health_percentage": health_percentage,
-                "last_check": datetime.now()
+                "last_check": datetime.now(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now()}
 
     async def _check_performance_metrics(self) -> Dict[str, Any]:
         """Check performance metrics health."""
@@ -275,15 +271,11 @@ class SimulationHealthMonitoringIntegration:
                 "status": status,
                 "average_response_time": avg_response_time,
                 "current_throughput": throughput,
-                "last_check": datetime.now()
+                "last_check": datetime.now(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now()}
 
     async def _check_resource_usage(self) -> Dict[str, Any]:
         """Check resource usage health."""
@@ -312,15 +304,11 @@ class SimulationHealthMonitoringIntegration:
                 "memory_usage_mb": memory_usage,
                 "memory_percentage": memory_percentage,
                 "cpu_usage_percent": cpu_usage,
-                "last_check": datetime.now()
+                "last_check": datetime.now(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now()}
 
     async def _check_database_health(self) -> Dict[str, Any]:
         """Check database health."""
@@ -332,15 +320,11 @@ class SimulationHealthMonitoringIntegration:
                 "connection_pool_size": 10,
                 "active_connections": 3,
                 "response_time_ms": 5,
-                "last_check": datetime.now()
+                "last_check": datetime.now(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now()}
 
     async def _check_external_services(self) -> Dict[str, Any]:
         """Check external services health."""
@@ -368,17 +352,15 @@ class SimulationHealthMonitoringIntegration:
                 "status": status,
                 "critical_services": critical_health,
                 "unhealthy_critical_count": unhealthy_critical,
-                "last_check": datetime.now()
+                "last_check": datetime.now(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "last_check": datetime.now()
-            }
+            return {"status": "unhealthy", "error": str(e), "last_check": datetime.now()}
 
-    def _generate_health_recommendations(self, health_report: Dict[str, Any], alerts: List[Dict[str, Any]]) -> List[str]:
+    def _generate_health_recommendations(
+        self, health_report: Dict[str, Any], alerts: List[Dict[str, Any]]
+    ) -> List[str]:
         """Generate health recommendations based on report and alerts."""
         recommendations = []
 
@@ -424,20 +406,16 @@ class SimulationHealthMonitoringIntegration:
                     "health_trend": [],  # Would contain historical data
                     "service_status": self._format_service_status(integrated_report),
                     "performance_metrics": self._format_performance_metrics(integrated_report),
-                    "alert_summary": self._format_alert_summary(integrated_report)
+                    "alert_summary": self._format_alert_summary(integrated_report),
                 },
-                "recommendations": integrated_report.get("recommendations", [])
+                "recommendations": integrated_report.get("recommendations", []),
             }
 
             return dashboard_data
 
         except Exception as e:
             self.logger.error("Failed to generate dashboard data", error=str(e))
-            return {
-                "timestamp": datetime.now(),
-                "overall_status": "error",
-                "error": str(e)
-            }
+            return {"timestamp": datetime.now(), "overall_status": "error", "error": str(e)}
 
     def _format_service_status(self, report: Dict[str, Any]) -> Dict[str, Any]:
         """Format service status for dashboard."""
@@ -448,13 +426,13 @@ class SimulationHealthMonitoringIntegration:
             "simulation_service": {
                 "status": simulation_health.get("status", "unknown"),
                 "uptime": "99.9%",
-                "response_time": "45ms"
+                "response_time": "45ms",
             },
             "ecosystem_services": {
                 "healthy": ecosystem_health.get("healthy_services", 0),
                 "total": ecosystem_health.get("total_services", 0),
-                "health_percentage": ecosystem_health.get("health_percentage", 0)
-            }
+                "health_percentage": ecosystem_health.get("health_percentage", 0),
+            },
         }
 
     def _format_performance_metrics(self, report: Dict[str, Any]) -> Dict[str, Any]:
@@ -465,7 +443,7 @@ class SimulationHealthMonitoringIntegration:
             "response_time": simulation_health.get("performance_summary", {}).get("average_response_time", 0),
             "throughput": simulation_health.get("performance_summary", {}).get("current_active_simulations", 0),
             "error_rate": simulation_health.get("performance_summary", {}).get("error_rate_percent", 0),
-            "memory_usage": simulation_health.get("resource_usage", {}).get("memory_usage_mb", 0)
+            "memory_usage": simulation_health.get("resource_usage", {}).get("memory_usage_mb", 0),
         }
 
     def _format_alert_summary(self, report: Dict[str, Any]) -> Dict[str, Any]:
@@ -474,13 +452,13 @@ class SimulationHealthMonitoringIntegration:
         alert_counts = {
             "critical": len([a for a in alerts if a.get("level") == "critical"]),
             "warning": len([a for a in alerts if a.get("level") == "warning"]),
-            "info": len([a for a in alerts if a.get("level") == "info"])
+            "info": len([a for a in alerts if a.get("level") == "info"]),
         }
 
         return {
             "total_alerts": len(alerts),
             "alert_counts": alert_counts,
-            "recent_alerts": alerts[-5:]  # Last 5 alerts
+            "recent_alerts": alerts[-5:],  # Last 5 alerts
         }
 
 
@@ -496,7 +474,4 @@ def get_simulation_health_integration() -> SimulationHealthMonitoringIntegration
     return _simulation_health_integration
 
 
-__all__ = [
-    'SimulationHealthMonitoringIntegration',
-    'get_simulation_health_integration'
-]
+__all__ = ["SimulationHealthMonitoringIntegration", "get_simulation_health_integration"]

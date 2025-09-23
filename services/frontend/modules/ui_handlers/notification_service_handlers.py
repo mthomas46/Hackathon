@@ -1,19 +1,20 @@
-"""Notification Service UI handlers for Frontend service.
+"""
+Notification Service UI handlers for Frontend service.
 
 Handles notification service visualization, including owner resolution,
 notification delivery monitoring, and dead letter queue management.
 """
-from typing import Dict, Any
+
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from ..notification_service_monitor import notification_service_monitor
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    get_frontend_clients,
+    handle_frontend_error,
+)
 
 
 class NotificationServiceUIHandlers:
@@ -37,7 +38,7 @@ class NotificationServiceUIHandlers:
                 "notification_stats": status_data.get("notification_stats", {}),
                 "recent_notifications": notification_history,
                 "recent_resolutions": resolution_history,
-                "last_updated": status_data.get("last_updated", "Never")
+                "last_updated": status_data.get("last_updated", "Never"),
             }
 
             html = """
@@ -835,4 +836,8 @@ class NotificationServiceUIHandlers:
 """
             return create_html_response(html, "Notification Service Dashboard")
         except Exception as e:
-            return handle_frontend_error("render notification service dashboard", e, **build_frontend_context("render_notification_service_dashboard"))
+            return handle_frontend_error(
+                "render notification service dashboard",
+                e,
+                **build_frontend_context("render_notification_service_dashboard")
+            )

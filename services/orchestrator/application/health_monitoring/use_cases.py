@@ -1,15 +1,12 @@
-"""Use Cases for Health Monitoring"""
+"""Use Cases for Health Monitoring."""
 
-from typing import Dict, Any
+from typing import Any, Dict
 
-
-from .commands import *
-from .queries import *
-from ...domain.health_monitoring import (
-    SystemHealth, ServiceHealth, HealthCheckService, SystemMonitoringService
-)
-from ...shared.domain import DomainResult
+from ...domain.health_monitoring import HealthCheckService, ServiceHealth, SystemHealth, SystemMonitoringService
 from ...shared.application import UseCase
+from ...shared.domain import DomainResult
+from .commands import CheckSystemHealthCommand, CheckServiceHealthCommand, RegisterHealthCheckCommand, UpdateSystemMetricsCommand
+from .queries import GetSystemHealthQuery, GetServiceHealthQuery, GetSystemInfoQuery, GetSystemMetricsQuery, GetSystemConfigQuery, CheckSystemReadinessQuery, ListWorkflowsQuery
 
 
 class CheckSystemHealthUseCase(UseCase):
@@ -22,8 +19,7 @@ class CheckSystemHealthUseCase(UseCase):
         """Execute the check system health use case."""
         try:
             system_health = await self.system_monitoring_service.perform_system_health_check(
-                timeout_seconds=command.timeout_seconds,
-                include_metrics=command.include_metrics
+                timeout_seconds=command.timeout_seconds, include_metrics=command.include_metrics
             )
             return DomainResult.success_result(system_health, "System health check completed")
         except Exception as e:
@@ -40,8 +36,7 @@ class CheckServiceHealthUseCase(UseCase):
         """Execute the check service health use case."""
         try:
             service_health = await self.health_check_service.check_service_health(
-                command.service_name,
-                command.timeout_seconds
+                command.service_name, command.timeout_seconds
             )
             return DomainResult.success_result(service_health, f"Health check completed for {command.service_name}")
         except Exception as e:
@@ -58,8 +53,7 @@ class GetSystemHealthUseCase(UseCase):
         """Execute the get system health use case."""
         try:
             system_health = await self.system_monitoring_service.perform_system_health_check(
-                timeout_seconds=query.timeout_seconds,
-                include_metrics=query.include_metrics
+                timeout_seconds=query.timeout_seconds, include_metrics=query.include_metrics
             )
             return DomainResult.success_result(system_health, "System health retrieved successfully")
         except Exception as e:
@@ -76,8 +70,7 @@ class GetServiceHealthUseCase(UseCase):
         """Execute the get service health use case."""
         try:
             service_health = await self.system_monitoring_service.get_service_health_details(
-                query.service_name,
-                query.timeout_seconds
+                query.service_name, query.timeout_seconds
             )
             return DomainResult.success_result(service_health, f"Service health retrieved for {query.service_name}")
         except Exception as e:
@@ -142,11 +135,7 @@ class CheckSystemReadinessUseCase(UseCase):
             result = {
                 "status": "ready" if is_ready else "not_ready",
                 "timestamp": "2024-01-01T00:00:00Z",  # Would use real timestamp
-                "checks": {
-                    "database": "ready",
-                    "redis": "ready",
-                    "services": "ready"
-                }
+                "checks": {"database": "ready", "redis": "ready", "services": "ready"},
             }
             return DomainResult.success_result(result, "Readiness check completed")
         except Exception as e:
@@ -154,7 +143,8 @@ class CheckSystemReadinessUseCase(UseCase):
 
 
 class ListWorkflowsUseCase(UseCase):
-    """Use case for listing available workflows (migrated from old health handlers)."""
+    """Use case for listing available workflows (migrated from old health
+    handlers)."""
 
     def __init__(self):
         # This would typically inject a workflow repository
@@ -171,7 +161,7 @@ class ListWorkflowsUseCase(UseCase):
                     "description": "Ingest documents from various sources",
                     "steps": ["validate_source", "extract_content", "store_documents"],
                     "required_services": ["source-agent", "doc_store"],
-                    "estimated_duration": 300
+                    "estimated_duration": 300,
                 },
                 {
                     "id": "consistency_analysis",
@@ -179,7 +169,7 @@ class ListWorkflowsUseCase(UseCase):
                     "description": "Analyze documentation for consistency issues",
                     "steps": ["fetch_documents", "analyze_patterns", "generate_report"],
                     "required_services": ["doc_store", "analysis-service"],
-                    "estimated_duration": 600
+                    "estimated_duration": 600,
                 },
                 {
                     "id": "quality_assessment",
@@ -187,8 +177,8 @@ class ListWorkflowsUseCase(UseCase):
                     "description": "Assess overall documentation quality",
                     "steps": ["collect_metrics", "analyze_quality", "generate_insights"],
                     "required_services": ["doc_store", "analysis-service"],
-                    "estimated_duration": 450
-                }
+                    "estimated_duration": 450,
+                },
             ]
 
             # Apply pagination (simplified)

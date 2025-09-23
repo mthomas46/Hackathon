@@ -1,16 +1,18 @@
-"""Workflow UI handlers for Frontend service.
+"""
+Workflow UI handlers for Frontend service.
 
 Handles workflow and job status visualization.
 """
-from typing import Dict, Any
+
+
 from fastapi.responses import HTMLResponse
 
 from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
+    build_frontend_context,
     create_html_response,
+    fetch_service_data,
+    get_frontend_clients,
     handle_frontend_error,
-    build_frontend_context
 )
 
 
@@ -455,4 +457,6 @@ class WorkflowUIHandlers:
 """
             return create_html_response(html, "Workflow & Job Status")
         except Exception as e:
-            return handle_frontend_error("render workflows status", e, **build_frontend_context("render_workflows_status"))
+            return handle_frontend_error(
+                "render workflows status", e, **build_frontend_context("render_workflows_status")
+            )

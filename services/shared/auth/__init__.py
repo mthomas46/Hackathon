@@ -1,5 +1,5 @@
 """
-Authentication and Authorization
+Authentication and Authorization.
 
 Security-related utilities for authentication and authorization.
 """

@@ -1,20 +1,21 @@
 """Create Document Use Case."""
 
-from typing import Optional
 from dataclasses import dataclass
+from typing import Optional
 
-from ...domain.entities import Document, DocumentId
-from ...domain.services import DocumentService
-from ...domain.factories import DocumentFactory
-from ...domain.validation import DocumentValidator
+from ...domain.entities import Document
 from ...domain.exceptions import DocumentValidationException
+from ...domain.factories import DocumentFactory
+from ...domain.services import DocumentService
+from ...domain.validation import DocumentValidator
 from ...infrastructure.repositories import DocumentRepository
-from ..dto import CreateDocumentRequest, DocumentResponse
+from ..dto import DocumentResponse
 
 
 @dataclass
 class CreateDocumentCommand:
     """Command for creating a document."""
+
     title: str
     content: str
     format: str = "markdown"
@@ -26,6 +27,7 @@ class CreateDocumentCommand:
 @dataclass
 class CreateDocumentResult:
     """Result of document creation."""
+
     document: Document
     is_valid: bool
     validation_errors: list[str]
@@ -34,11 +36,13 @@ class CreateDocumentResult:
 class CreateDocumentUseCase:
     """Use case for creating documents."""
 
-    def __init__(self,
-                 document_service: DocumentService,
-                 document_factory: DocumentFactory,
-                 document_validator: DocumentValidator,
-                 document_repository: DocumentRepository):
+    def __init__(
+        self,
+        document_service: DocumentService,
+        document_factory: DocumentFactory,
+        document_validator: DocumentValidator,
+        document_repository: DocumentRepository,
+    ):
         """Initialize use case with dependencies."""
         self.document_service = document_service
         self.document_factory = document_factory
@@ -55,25 +59,21 @@ class CreateDocumentUseCase:
                 content_format=command.format,
                 author=command.author,
                 tags=command.tags,
-                repository_id=command.repository_id
+                repository_id=command.repository_id,
             )
 
             # Validate document
             validation_result = self.document_validator.validate(document)
             if not validation_result.is_valid:
                 return CreateDocumentResult(
-                    document=document,
-                    is_valid=False,
-                    validation_errors=[error for error in validation_result.errors]
+                    document=document, is_valid=False, validation_errors=[error for error in validation_result.errors]
                 )
 
             # Validate for creation
             creation_validation = self.document_validator.validate_for_creation(document)
             if not creation_validation.is_valid:
                 return CreateDocumentResult(
-                    document=document,
-                    is_valid=False,
-                    validation_errors=[error for error in creation_validation.errors]
+                    document=document, is_valid=False, validation_errors=[error for error in creation_validation.errors]
                 )
 
             # Check business rules
@@ -82,11 +82,7 @@ class CreateDocumentUseCase:
             # Save document
             await self.document_repository.save(document)
 
-            return CreateDocumentResult(
-                document=document,
-                is_valid=True,
-                validation_errors=[]
-            )
+            return CreateDocumentResult(document=document, is_valid=True, validation_errors=[])
 
         except Exception as e:
             # Log error and re-raise
@@ -98,11 +94,12 @@ class CreateDocumentUseCase:
         # Check for duplicate titles (simplified - in real app this would be more sophisticated)
         existing_docs = await self.document_repository.get_all()
         for existing_doc in existing_docs:
-            if (existing_doc.title.lower() == document.title.lower() and
-                existing_doc.metadata.author == document.metadata.author):
+            if (
+                existing_doc.title.lower() == document.title.lower()
+                and existing_doc.metadata.author == document.metadata.author
+            ):
                 raise DocumentValidationException(
-                    document.id.value,
-                    ["Document with same title and author already exists"]
+                    document.id.value, ["Document with same title and author already exists"]
                 )
 
         # Check repository exists if specified

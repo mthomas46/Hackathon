@@ -2,10 +2,9 @@
 
 import asyncio
 import sqlite3
-from typing import Any, Dict, List, Optional, Union
-from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from .connection_pool import ConnectionPool, ConnectionPoolConfig, PooledConnection
+from .connection_pool import ConnectionPool, ConnectionPoolConfig
 
 
 class DatabaseConnectionPool(ConnectionPool):
@@ -19,38 +18,30 @@ class DatabaseConnectionPool(ConnectionPool):
     @abstractmethod
     async def create_connection(self) -> Any:
         """Create a database connection."""
-        pass
 
     @abstractmethod
     async def validate_connection(self, connection: Any) -> bool:
         """Validate database connection."""
-        pass
 
     @abstractmethod
     async def close_connection(self, connection: Any) -> None:
         """Close database connection."""
-        pass
 
 
 class SQLiteConnectionPool(DatabaseConnectionPool):
     """SQLite connection pool implementation."""
 
-    def __init__(
-        self,
-        config: ConnectionPoolConfig,
-        database_path: str,
-        pragmas: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self, config: ConnectionPoolConfig, database_path: str, pragmas: Optional[Dict[str, Any]] = None):
         """Initialize SQLite connection pool."""
         connection_string = f"sqlite:///{database_path}"
         super().__init__(config, connection_string)
         self.database_path = database_path
         self.pragmas = pragmas or {
-            'foreign_keys': 'ON',
-            'journal_mode': 'WAL',
-            'synchronous': 'NORMAL',
-            'cache_size': '-64000',  # 64MB cache
-            'temp_store': 'MEMORY'
+            "foreign_keys": "ON",
+            "journal_mode": "WAL",
+            "synchronous": "NORMAL",
+            "cache_size": "-64000",  # 64MB cache
+            "temp_store": "MEMORY",
         }
 
     async def create_connection(self) -> sqlite3.Connection:
@@ -60,9 +51,7 @@ class SQLiteConnectionPool(DatabaseConnectionPool):
 
         def _create_conn():
             conn = sqlite3.connect(
-                self.database_path,
-                isolation_level=None,  # We'll manage transactions manually
-                check_same_thread=False
+                self.database_path, isolation_level=None, check_same_thread=False  # We'll manage transactions manually
             )
 
             # Apply pragmas
@@ -116,7 +105,7 @@ class SQLiteConnectionPool(DatabaseConnectionPool):
                     else:
                         cursor.execute(query)
 
-                    if query.strip().upper().startswith(('SELECT', 'PRAGMA')):
+                    if query.strip().upper().startswith(("SELECT", "PRAGMA")):
                         return cursor.fetchall()
                     else:
                         pooled_conn.connection.commit()
@@ -156,7 +145,7 @@ class PostgreSQLConnectionPool(DatabaseConnectionPool):
         user: str = "",
         password: str = "",
         ssl_mode: str = "prefer",
-        connection_timeout: int = 30
+        connection_timeout: int = 30,
     ):
         """Initialize PostgreSQL connection pool."""
         connection_string = f"postgresql://{user}:{password}@{host}:{port}/{database}"
@@ -173,6 +162,7 @@ class PostgreSQLConnectionPool(DatabaseConnectionPool):
         # Import psycopg2 here to make it optional
         try:
             import psycopg2
+
             self.psycopg2 = psycopg2
         except ImportError:
             raise ImportError("psycopg2 is required for PostgreSQL connection pooling")
@@ -189,7 +179,7 @@ class PostgreSQLConnectionPool(DatabaseConnectionPool):
                 user=self.user,
                 password=self.password,
                 sslmode=self.ssl_mode,
-                connect_timeout=self.connection_timeout
+                connect_timeout=self.connection_timeout,
             )
 
         return await loop.run_in_executor(None, _create_conn)
@@ -231,7 +221,7 @@ class PostgreSQLConnectionPool(DatabaseConnectionPool):
                 cursor = pooled_conn.connection.cursor()
                 try:
                     cursor.execute(query, params or ())
-                    if query.strip().upper().startswith('SELECT'):
+                    if query.strip().upper().startswith("SELECT"):
                         return cursor.fetchall()
                     else:
                         pooled_conn.connection.commit()
@@ -271,7 +261,7 @@ class MySQLConnectionPool(DatabaseConnectionPool):
         user: str = "",
         password: str = "",
         charset: str = "utf8mb4",
-        autocommit: bool = False
+        autocommit: bool = False,
     ):
         """Initialize MySQL connection pool."""
         connection_string = f"mysql://{user}:{password}@{host}:{port}/{database}"
@@ -288,6 +278,7 @@ class MySQLConnectionPool(DatabaseConnectionPool):
         # Import pymysql here to make it optional
         try:
             import pymysql
+
             self.pymysql = pymysql
         except ImportError:
             raise ImportError("pymysql is required for MySQL connection pooling")
@@ -304,7 +295,7 @@ class MySQLConnectionPool(DatabaseConnectionPool):
                 user=self.user,
                 password=self.password,
                 charset=self.charset,
-                autocommit=self.autocommit
+                autocommit=self.autocommit,
             )
 
         return await loop.run_in_executor(None, _create_conn)
@@ -347,7 +338,7 @@ class MySQLConnectionPool(DatabaseConnectionPool):
                 cursor = pooled_conn.connection.cursor()
                 try:
                     cursor.execute(query, params or ())
-                    if query.strip().upper().startswith('SELECT'):
+                    if query.strip().upper().startswith("SELECT"):
                         return cursor.fetchall()
                     else:
                         pooled_conn.connection.commit()
@@ -380,9 +371,7 @@ class DatabasePoolFactory:
 
     @staticmethod
     def create_sqlite_pool(
-        database_path: str,
-        config: Optional[ConnectionPoolConfig] = None,
-        **kwargs
+        database_path: str, config: Optional[ConnectionPoolConfig] = None, **kwargs
     ) -> SQLiteConnectionPool:
         """Create SQLite connection pool."""
         if config is None:
@@ -391,75 +380,56 @@ class DatabasePoolFactory:
 
     @staticmethod
     def create_postgresql_pool(
-        host: str,
-        database: str,
-        user: str,
-        password: str,
-        config: Optional[ConnectionPoolConfig] = None,
-        **kwargs
+        host: str, database: str, user: str, password: str, config: Optional[ConnectionPoolConfig] = None, **kwargs
     ) -> PostgreSQLConnectionPool:
         """Create PostgreSQL connection pool."""
         if config is None:
             config = ConnectionPoolConfig()
-        return PostgreSQLConnectionPool(
-            config, host, database=database, user=user, password=password, **kwargs
-        )
+        return PostgreSQLConnectionPool(config, host, database=database, user=user, password=password, **kwargs)
 
     @staticmethod
     def create_mysql_pool(
-        host: str,
-        database: str,
-        user: str,
-        password: str,
-        config: Optional[ConnectionPoolConfig] = None,
-        **kwargs
+        host: str, database: str, user: str, password: str, config: Optional[ConnectionPoolConfig] = None, **kwargs
     ) -> MySQLConnectionPool:
         """Create MySQL connection pool."""
         if config is None:
             config = ConnectionPoolConfig()
-        return MySQLConnectionPool(
-            config, host, database=database, user=user, password=password, **kwargs
-        )
+        return MySQLConnectionPool(config, host, database=database, user=user, password=password, **kwargs)
 
     @staticmethod
     def create_pool_from_url(
-        connection_url: str,
-        config: Optional[ConnectionPoolConfig] = None
+        connection_url: str, config: Optional[ConnectionPoolConfig] = None
     ) -> DatabaseConnectionPool:
         """Create database pool from connection URL."""
         if config is None:
             config = ConnectionPoolConfig()
 
         # Parse connection URL
-        if connection_url.startswith('sqlite:///'):
-            database_path = connection_url.replace('sqlite:///', '')
+        if connection_url.startswith("sqlite:///"):
+            database_path = connection_url.replace("sqlite:///", "")
             return SQLiteConnectionPool(config, database_path)
 
-        elif connection_url.startswith('postgresql://') or connection_url.startswith('postgres://'):
+        elif connection_url.startswith("postgresql://") or connection_url.startswith("postgres://"):
             # Simple URL parsing (in production, use a proper URL parser)
             # postgres://user:password@host:port/database
-            url_parts = connection_url.replace('postgresql://', '').replace('postgres://', '')
-            if '@' in url_parts:
-                auth_part, rest = url_parts.split('@', 1)
-                user, password = auth_part.split(':', 1)
-                if ':' in rest:
-                    host_port, database = rest.split('/', 1)
-                    host, port = host_port.split(':', 1)
-                    return PostgreSQLConnectionPool(
-                        config, host, int(port), database, user, password
-                    )
+            url_parts = connection_url.replace("postgresql://", "").replace("postgres://", "")
+            if "@" in url_parts:
+                auth_part, rest = url_parts.split("@", 1)
+                user, password = auth_part.split(":", 1)
+                if ":" in rest:
+                    host_port, database = rest.split("/", 1)
+                    host, port = host_port.split(":", 1)
+                    return PostgreSQLConnectionPool(config, host, int(port), database, user, password)
 
-        elif connection_url.startswith('mysql://'):
+        elif connection_url.startswith("mysql://"):
             # mysql://user:password@host:port/database
-            url_parts = connection_url.replace('mysql://', '')
-            if '@' in url_parts:
-                auth_part, rest = url_parts.split('@', 1)
-                user, password = auth_part.split(':', 1)
-                if ':' in rest:
-                    host_port, database = rest.split('/', 1)
-                    host, port = host_port.split(':', 1)
-                    return MySQLConnectionPool(
-                        config, host, int(port), database, user, password
-                    )
+            url_parts = connection_url.replace("mysql://", "")
+            if "@" in url_parts:
+                auth_part, rest = url_parts.split("@", 1)
+                user, password = auth_part.split(":", 1)
+                if ":" in rest:
+                    host_port, database = rest.split("/", 1)
+                    host, port = host_port.split(":", 1)
+                    return MySQLConnectionPool(config, host, int(port), database, user, password)
 
         raise ValueError(f"Unsupported database URL: {connection_url}")

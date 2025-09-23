@@ -1,14 +1,14 @@
-"""Unit Tests for Timeline Analysis in Summarizer Hub Service.
+"""
+Unit Tests for Timeline Analysis in Summarizer Hub Service.
 
-This module contains unit tests for timeline analysis functionality
-that was moved from the simulation service to the summarizer-hub service.
+This module contains unit tests for timeline analysis functionality that
+was moved from the simulation service to the summarizer-hub service.
 """
 
-import pytest
-from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock
-from typing import Dict, Any, List
+from datetime import datetime
+from typing import Any, Dict, List
 
+import pytest
 from main import SimpleSummarizer
 
 
@@ -29,21 +29,21 @@ class TestTimelineAnalysis:
                 "title": "Early Planning Document",
                 "content": "This is a planning document for the project",
                 "dateCreated": "2024-01-01T10:00:00Z",
-                "dateUpdated": "2024-01-02T10:00:00Z"
+                "dateUpdated": "2024-01-02T10:00:00Z",
             },
             {
                 "id": "doc2",
                 "title": "Development Guide",
                 "content": "This guide covers development implementation and coding practices",
                 "dateCreated": "2024-01-15T10:00:00Z",
-                "dateUpdated": "2024-01-20T10:00:00Z"
+                "dateUpdated": "2024-01-20T10:00:00Z",
             },
             {
                 "id": "doc3",
                 "title": "Testing Documentation",
                 "content": "Quality assurance and testing procedures",
-                "dateCreated": "2024-02-01T10:00:00Z"
-            }
+                "dateCreated": "2024-02-01T10:00:00Z",
+            },
         ]
 
     @pytest.fixture
@@ -51,24 +51,9 @@ class TestTimelineAnalysis:
         """Create sample timeline for testing."""
         return {
             "phases": [
-                {
-                    "id": "phase1",
-                    "name": "Planning",
-                    "start_week": 0,
-                    "duration_weeks": 2
-                },
-                {
-                    "id": "phase2",
-                    "name": "Development",
-                    "start_week": 2,
-                    "duration_weeks": 4
-                },
-                {
-                    "id": "phase3",
-                    "name": "Testing",
-                    "start_week": 6,
-                    "duration_weeks": 2
-                }
+                {"id": "phase1", "name": "Planning", "start_week": 0, "duration_weeks": 2},
+                {"id": "phase2", "name": "Development", "start_week": 2, "duration_weeks": 4},
+                {"id": "phase3", "name": "Testing", "start_week": 6, "duration_weeks": 2},
             ]
         }
 
@@ -98,13 +83,7 @@ class TestTimelineAnalysis:
 
     def test_analyze_document_timeline_placement_timestamp_match(self, summarizer, sample_timeline):
         """Test document placement based on timestamp matching."""
-        documents = [
-            {
-                "id": "doc1",
-                "title": "Planning Doc",
-                "dateUpdated": "2024-01-01T10:00:00Z"
-            }
-        ]
+        documents = [{"id": "doc1", "title": "Planning Doc", "dateUpdated": "2024-01-01T10:00:00Z"}]
 
         placements = summarizer._analyze_document_timeline_placement(documents, sample_timeline["phases"])
 
@@ -120,7 +99,7 @@ class TestTimelineAnalysis:
             {
                 "id": "doc1",
                 "title": "Development Guide",
-                "content": "This document covers development and implementation practices"
+                "content": "This document covers development and implementation practices",
             }
         ]
 
@@ -158,7 +137,7 @@ class TestTimelineAnalysis:
         document = {
             "id": "dev_guide",
             "title": "Development Guide",
-            "content": "This guide covers implementation, coding, and development practices"
+            "content": "This guide covers implementation, coding, and development practices",
         }
 
         phases = sample_timeline["phases"]
@@ -173,7 +152,7 @@ class TestTimelineAnalysis:
         placements = [
             {"placement_phase": "Planning", "relevance_score": 0.8},
             {"placement_phase": "Development", "relevance_score": 0.9},
-            {"placement_phase": "Testing", "relevance_score": 0.7}
+            {"placement_phase": "Testing", "relevance_score": 0.7},
         ]
 
         recommendations = summarizer._generate_timeline_recommendations(placements, sample_timeline["phases"], 0.9)
@@ -199,9 +178,7 @@ class TestTimelineAnalysis:
 
     def test_identify_timeline_gaps_no_documents(self, summarizer, sample_timeline):
         """Test identifying timeline gaps when phases have no documents."""
-        placements = [
-            {"placement_phase": "Planning", "relevance_score": 0.8}
-        ]
+        placements = [{"placement_phase": "Planning", "relevance_score": 0.8}]
 
         gaps = summarizer._identify_timeline_gaps(placements, sample_timeline["phases"])
 
@@ -211,11 +188,12 @@ class TestTimelineAnalysis:
         assert len(high_severity_gaps) >= 1
 
     def test_identify_timeline_gaps_insufficient_coverage(self, summarizer, sample_timeline):
-        """Test identifying timeline gaps when phases have insufficient documents."""
+        """Test identifying timeline gaps when phases have insufficient
+        documents."""
         placements = [
             {"placement_phase": "Planning", "relevance_score": 0.8},
             {"placement_phase": "Development", "relevance_score": 0.9},
-            {"placement_phase": "Testing", "relevance_score": 0.7}
+            {"placement_phase": "Testing", "relevance_score": 0.7},
         ]
 
         gaps = summarizer._identify_timeline_gaps(placements, sample_timeline["phases"])
@@ -246,12 +224,7 @@ class TestTimelineAnalysis:
 
     def test_parse_timestamp_various_formats(self, summarizer):
         """Test parsing various timestamp formats."""
-        test_cases = [
-            "2024-01-01T10:00:00",
-            "2024-01-01T10:00:00Z",
-            "2024-01-01T10:00:00+00:00",
-            "2024-01-01"
-        ]
+        test_cases = ["2024-01-01T10:00:00", "2024-01-01T10:00:00Z", "2024-01-01T10:00:00+00:00", "2024-01-01"]
 
         for timestamp_str in test_cases:
             result = summarizer._parse_timestamp(timestamp_str)
@@ -261,27 +234,15 @@ class TestTimelineAnalysis:
     def test_group_documents_by_phases(self, summarizer):
         """Test grouping documents by timeline phases."""
         document_placements = [
-            {
-                "document_id": "doc1",
-                "placement_phase": "Planning",
-                "relevance_score": 0.8
-            },
-            {
-                "document_id": "doc2",
-                "placement_phase": "Planning",
-                "relevance_score": 0.9
-            },
-            {
-                "document_id": "doc3",
-                "placement_phase": "Development",
-                "relevance_score": 0.7
-            }
+            {"document_id": "doc1", "placement_phase": "Planning", "relevance_score": 0.8},
+            {"document_id": "doc2", "placement_phase": "Planning", "relevance_score": 0.9},
+            {"document_id": "doc3", "placement_phase": "Development", "relevance_score": 0.7},
         ]
 
         timeline_phases = [
             {"name": "Planning", "start_week": 0, "duration_weeks": 2},
             {"name": "Development", "start_week": 2, "duration_weeks": 4},
-            {"name": "Testing", "start_week": 6, "duration_weeks": 2}
+            {"name": "Testing", "start_week": 6, "duration_weeks": 2},
         ]
 
         grouped = summarizer._group_documents_by_phases(document_placements, timeline_phases)
@@ -299,7 +260,7 @@ class TestTimelineAnalysis:
         placements = [
             {"placement_phase": "Planning", "relevance_score": 0.8},
             {"placement_phase": "Development", "relevance_score": 0.9},
-            {"placement_phase": "Testing", "relevance_score": 0.7}
+            {"placement_phase": "Testing", "relevance_score": 0.7},
         ]
 
         recommendations = summarizer._generate_timeline_recommendations(placements, sample_timeline["phases"], 1.0)
@@ -327,7 +288,8 @@ class TestTimelineAnalysis:
 
 
 class TestTimelineAnalysisIntegration:
-    """Integration tests for timeline analysis with full recommendation generation."""
+    """Integration tests for timeline analysis with full recommendation
+    generation."""
 
     @pytest.fixture
     def summarizer(self):
@@ -342,27 +304,25 @@ class TestTimelineAnalysisIntegration:
                 "id": "doc1",
                 "title": "Planning Document",
                 "content": "Project planning and requirements gathering",
-                "dateCreated": "2024-01-01T10:00:00Z"
+                "dateCreated": "2024-01-01T10:00:00Z",
             },
             {
                 "id": "doc2",
                 "title": "Development Guide",
                 "content": "Implementation and coding practices",
-                "dateCreated": "2024-01-15T10:00:00Z"
-            }
+                "dateCreated": "2024-01-15T10:00:00Z",
+            },
         ]
 
         timeline = {
             "phases": [
                 {"name": "Planning", "start_week": 0, "duration_weeks": 2},
-                {"name": "Development", "start_week": 2, "duration_weeks": 4}
+                {"name": "Development", "start_week": 2, "duration_weeks": 4},
             ]
         }
 
         result = await summarizer.generate_recommendations(
-            documents=documents,
-            timeline=timeline,
-            include_jira_suggestions=True
+            documents=documents, timeline=timeline, include_jira_suggestions=True
         )
 
         # Verify all expected fields are present
@@ -383,13 +343,7 @@ class TestTimelineAnalysisIntegration:
     @pytest.mark.asyncio
     async def test_generate_recommendations_without_timeline(self, summarizer):
         """Test recommendation generation without timeline data."""
-        documents = [
-            {
-                "id": "doc1",
-                "title": "General Document",
-                "content": "Some documentation content"
-            }
-        ]
+        documents = [{"id": "doc1", "title": "General Document", "content": "Some documentation content"}]
 
         result = await summarizer.generate_recommendations(documents=documents)
 
@@ -408,21 +362,21 @@ class TestTimelineAnalysisIntegration:
                 "title": "Project Planning Document",
                 "content": "This document covers project planning, requirements, and initial setup",
                 "dateCreated": "2024-01-01T10:00:00Z",
-                "dateUpdated": "2024-01-02T10:00:00Z"
+                "dateUpdated": "2024-01-02T10:00:00Z",
             },
             {
                 "id": "dev_guide",
                 "title": "Development Implementation Guide",
                 "content": "Guide for implementing features, coding standards, and development practices",
                 "dateCreated": "2024-01-10T10:00:00Z",
-                "dateUpdated": "2024-01-15T10:00:00Z"
+                "dateUpdated": "2024-01-15T10:00:00Z",
             },
             {
                 "id": "testing_doc",
                 "title": "Testing Procedures",
                 "content": "Quality assurance, testing strategies, and validation procedures",
-                "dateCreated": "2024-01-20T10:00:00Z"
-            }
+                "dateCreated": "2024-01-20T10:00:00Z",
+            },
         ]
 
         timeline = {
@@ -432,29 +386,29 @@ class TestTimelineAnalysisIntegration:
                     "name": "Planning",
                     "start_week": 0,
                     "duration_weeks": 2,
-                    "description": "Requirements gathering and project planning"
+                    "description": "Requirements gathering and project planning",
                 },
                 {
                     "id": "development",
                     "name": "Development",
                     "start_week": 2,
                     "duration_weeks": 6,
-                    "description": "Implementation and coding"
+                    "description": "Implementation and coding",
                 },
                 {
                     "id": "testing",
                     "name": "Testing",
                     "start_week": 8,
                     "duration_weeks": 2,
-                    "description": "Quality assurance and testing"
+                    "description": "Quality assurance and testing",
                 },
                 {
                     "id": "deployment",
                     "name": "Deployment",
                     "start_week": 10,
                     "duration_weeks": 1,
-                    "description": "Production deployment and release"
-                }
+                    "description": "Production deployment and release",
+                },
             ]
         }
 
@@ -463,7 +417,7 @@ class TestTimelineAnalysisIntegration:
             documents=documents,
             recommendation_types=["consolidation", "quality", "outdated"],
             timeline=timeline,
-            include_jira_suggestions=True
+            include_jira_suggestions=True,
         )
 
         # Verify comprehensive results

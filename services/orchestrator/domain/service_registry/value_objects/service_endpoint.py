@@ -1,4 +1,4 @@
-"""Service Endpoint Value Object"""
+"""Service Endpoint Value Object."""
 
 from typing import Optional
 
@@ -18,10 +18,10 @@ class ServiceEndpoint:
         if not self._method:
             raise ValueError("HTTP method cannot be empty")
 
-        if not self._path or not self._path.startswith('/'):
+        if not self._path or not self._path.startswith("/"):
             raise ValueError("Path must be non-empty and start with '/'")
 
-        valid_methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
+        valid_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
         if self._method not in valid_methods:
             raise ValueError(f"Invalid HTTP method: {self._method}")
 
@@ -54,9 +54,7 @@ class ServiceEndpoint:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ServiceEndpoint):
             return NotImplemented
-        return (self._method == other._method and
-                self._path == other._path and
-                self._description == other._description)
+        return self._method == other._method and self._path == other._path and self._description == other._description
 
     def __hash__(self) -> int:
         return hash((self._method, self._path, self._description))

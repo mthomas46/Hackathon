@@ -1,13 +1,14 @@
-"""Workflow Action Entity"""
+"""Workflow Action Entity."""
 
-from typing import Dict, Any, Optional, List
+import uuid
 from dataclasses import dataclass, field
 from enum import Enum
-import uuid
+from typing import Any, Dict, List, Optional
 
 
 class ActionType(Enum):
     """Types of actions that can be executed in a workflow."""
+
     SERVICE_CALL = "service_call"
     PROMPT_EXECUTION = "prompt_execution"
     CONDITIONAL_BRANCH = "conditional_branch"
@@ -53,13 +54,14 @@ class WorkflowAction:
             raise ValueError("Timeout must be positive")
 
     def can_execute(self, previous_results: Dict[str, Any]) -> bool:
-        """Check if this action can be executed based on conditions and dependencies."""
+        """Check if this action can be executed based on conditions and
+        dependencies."""
         # Check dependencies
         for dep_id in self.depends_on:
             if dep_id not in previous_results:
                 return False
             dep_result = previous_results[dep_id]
-            if hasattr(dep_result, 'status') and dep_result.status != 'completed':
+            if hasattr(dep_result, "status") and dep_result.status != "completed":
                 return False
 
         # Check condition if present
@@ -100,5 +102,5 @@ class WorkflowAction:
             "retry_delay": self.retry_delay,
             "timeout_seconds": self.timeout_seconds,
             "on_error": self.on_error,
-            "continue_on_error": self.continue_on_error
+            "continue_on_error": self.continue_on_error,
         }

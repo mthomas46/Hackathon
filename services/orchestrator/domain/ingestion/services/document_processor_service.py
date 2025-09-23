@@ -1,8 +1,8 @@
-"""Document Processor Service Domain Service"""
+"""Document Processor Service Domain Service."""
 
-from typing import Dict, Any, Optional, List
 import hashlib
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.document_metadata import DocumentMetadata
 from ..value_objects.ingestion_source_type import IngestionSourceType
@@ -14,14 +14,14 @@ class DocumentProcessorService:
     def __init__(self):
         """Initialize document processor service."""
         self._supported_formats = {
-            'text/plain': ['.txt', '.rst'],
-            'text/markdown': ['.md'],
-            'text/html': ['.html', '.htm'],
-            'application/json': ['.json'],
-            'application/xml': ['.xml'],
-            'application/pdf': ['.pdf'],
-            'application/msword': ['.doc'],
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+            "text/plain": [".txt", ".rst"],
+            "text/markdown": [".md"],
+            "text/html": [".html", ".htm"],
+            "application/json": [".json"],
+            "application/xml": [".xml"],
+            "application/pdf": [".pdf"],
+            "application/msword": [".doc"],
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
         }
 
     def extract_metadata(
@@ -30,7 +30,7 @@ class DocumentProcessorService:
         source_url: str,
         raw_content: bytes,
         source_type: IngestionSourceType,
-        additional_metadata: Optional[Dict[str, Any]] = None
+        additional_metadata: Optional[Dict[str, Any]] = None,
     ) -> DocumentMetadata:
         """
         Extract metadata from document content.
@@ -74,7 +74,7 @@ class DocumentProcessorService:
             created_at=created_at,
             author=author,
             tags=tags,
-            custom_metadata=additional_metadata or {}
+            custom_metadata=additional_metadata or {},
         )
 
     def _detect_content_type(self, source_url: str, raw_content: bytes) -> str:
@@ -87,50 +87,51 @@ class DocumentProcessorService:
 
         # Try to detect from content
         try:
-            content_str = raw_content[:100].decode('utf-8', errors='ignore').lower()
+            content_str = raw_content[:100].decode("utf-8", errors="ignore").lower()
 
-            if content_str.startswith('<?xml'):
-                return 'application/xml'
-            elif content_str.startswith('{') or content_str.startswith('['):
-                return 'application/json'
-            elif '<html' in content_str or '<!doctype html' in content_str:
-                return 'text/html'
-            elif content_str.startswith('%pdf'):
-                return 'application/pdf'
+            if content_str.startswith("<?xml"):
+                return "application/xml"
+            elif content_str.startswith("{") or content_str.startswith("["):
+                return "application/json"
+            elif "<html" in content_str or "<!doctype html" in content_str:
+                return "text/html"
+            elif content_str.startswith("%pdf"):
+                return "application/pdf"
 
         except UnicodeDecodeError:
             pass
 
         # Default to plain text
-        return 'text/plain'
+        return "text/plain"
 
     def _extract_title(self, raw_content: bytes, content_type: str, source_url: str) -> Optional[str]:
         """Extract document title from content."""
         try:
-            if content_type == 'text/html':
-                content_str = raw_content.decode('utf-8', errors='ignore')
+            if content_type == "text/html":
+                content_str = raw_content.decode("utf-8", errors="ignore")
                 # Look for title tag
                 import re
-                title_match = re.search(r'<title[^>]*>([^<]+)</title>', content_str, re.IGNORECASE)
+
+                title_match = re.search(r"<title[^>]*>([^<]+)</title>", content_str, re.IGNORECASE)
                 if title_match:
                     return title_match.group(1).strip()
 
-            elif content_type in ['text/plain', 'text/markdown']:
-                content_str = raw_content.decode('utf-8', errors='ignore')
-                lines = content_str.split('\n', 10)  # First 10 lines
+            elif content_type in ["text/plain", "text/markdown"]:
+                content_str = raw_content.decode("utf-8", errors="ignore")
+                lines = content_str.split("\n", 10)  # First 10 lines
 
                 for line in lines:
                     line = line.strip()
                     if line and len(line) > 10 and len(line) < 200:
                         # Look for lines that look like titles
-                        if not line.startswith(('#', '-', '=', '1.', '*', '- ')):
+                        if not line.startswith(("#", "-", "=", "1.", "*", "- ")):
                             return line
 
             # Fallback to filename from URL
-            if '/' in source_url:
-                filename = source_url.split('/')[-1]
-                if '.' in filename:
-                    return filename.rsplit('.', 1)[0].replace('_', ' ').replace('-', ' ').title()
+            if "/" in source_url:
+                filename = source_url.split("/")[-1]
+                if "." in filename:
+                    return filename.rsplit(".", 1)[0].replace("_", " ").replace("-", " ").title()
 
         except (UnicodeDecodeError, AttributeError):
             pass
@@ -146,8 +147,13 @@ class DocumentProcessorService:
 
         # Look for common timestamp fields
         timestamp_fields = [
-            'last_modified', 'modified_at', 'updated_at', 'last_updated',
-            'created_at', 'created', 'date_created'
+            "last_modified",
+            "modified_at",
+            "updated_at",
+            "last_updated",
+            "created_at",
+            "created",
+            "date_created",
         ]
 
         for field in timestamp_fields:
@@ -156,15 +162,15 @@ class DocumentProcessorService:
                 if isinstance(value, str):
                     try:
                         # Try to parse ISO format
-                        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
-                        if 'modified' in field or 'updated' in field:
+                        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                        if "modified" in field or "updated" in field:
                             last_modified = parsed
                         else:
                             created_at = parsed
                     except ValueError:
                         pass
                 elif isinstance(value, datetime):
-                    if 'modified' in field or 'updated' in field:
+                    if "modified" in field or "updated" in field:
                         last_modified = value
                     else:
                         created_at = value
@@ -173,7 +179,7 @@ class DocumentProcessorService:
 
     def _extract_author(self, metadata: Dict[str, Any]) -> Optional[str]:
         """Extract author information from metadata."""
-        author_fields = ['author', 'creator', 'owner', 'user', 'submitted_by']
+        author_fields = ["author", "creator", "owner", "user", "submitted_by"]
 
         for field in author_fields:
             if field in metadata:
@@ -183,7 +189,9 @@ class DocumentProcessorService:
 
         return None
 
-    def _generate_tags(self, source_type: IngestionSourceType, content_type: str, metadata: Dict[str, Any]) -> List[str]:
+    def _generate_tags(
+        self, source_type: IngestionSourceType, content_type: str, metadata: Dict[str, Any]
+    ) -> List[str]:
         """Generate tags for the document."""
         tags = []
 
@@ -191,25 +199,25 @@ class DocumentProcessorService:
         tags.append(f"source:{source_type.value}")
 
         # Content type tags
-        if content_type.startswith('text/'):
-            tags.append('content:text')
-        elif content_type.startswith('application/'):
-            tags.append('content:structured')
+        if content_type.startswith("text/"):
+            tags.append("content:text")
+        elif content_type.startswith("application/"):
+            tags.append("content:structured")
 
         # Size-based tags
-        if 'size' in metadata:
-            size = metadata['size']
+        if "size" in metadata:
+            size = metadata["size"]
             if isinstance(size, (int, float)):
                 if size < 1024:
-                    tags.append('size:small')
+                    tags.append("size:small")
                 elif size < 1024 * 1024:
-                    tags.append('size:medium')
+                    tags.append("size:medium")
                 else:
-                    tags.append('size:large')
+                    tags.append("size:large")
 
         # Custom tags from metadata
-        if 'tags' in metadata and isinstance(metadata['tags'], list):
-            tags.extend(metadata['tags'])
+        if "tags" in metadata and isinstance(metadata["tags"], list):
+            tags.extend(metadata["tags"])
 
         return list(set(tags))  # Remove duplicates
 
@@ -244,10 +252,10 @@ class DocumentProcessorService:
             issues.append("Missing title or document identifier")
 
         return {
-            'valid': len(issues) == 0,
-            'issues': issues,
-            'warnings': [],  # Could add warnings for non-critical issues
-            'checksum_verified': metadata.checksum == calculated_checksum if metadata.checksum else None
+            "valid": len(issues) == 0,
+            "issues": issues,
+            "warnings": [],  # Could add warnings for non-critical issues
+            "checksum_verified": metadata.checksum == calculated_checksum if metadata.checksum else None,
         }
 
     def enrich_metadata(self, metadata: DocumentMetadata, additional_data: Dict[str, Any]) -> DocumentMetadata:
@@ -262,16 +270,16 @@ class DocumentProcessorService:
             DocumentMetadata: Enriched metadata
         """
         # Add enrichment timestamp
-        metadata.set_custom_metadata('enriched_at', datetime.utcnow().isoformat())
+        metadata.set_custom_metadata("enriched_at", datetime.utcnow().isoformat())
 
         # Add any additional tags
-        if 'tags' in additional_data:
-            for tag in additional_data['tags']:
+        if "tags" in additional_data:
+            for tag in additional_data["tags"]:
                 metadata.add_tag(tag)
 
         # Add processing information
-        if 'processing_info' in additional_data:
-            metadata.set_custom_metadata('processing', additional_data['processing_info'])
+        if "processing_info" in additional_data:
+            metadata.set_custom_metadata("processing", additional_data["processing_info"])
 
         return metadata
 
@@ -288,30 +296,30 @@ class DocumentProcessorService:
         categories = []
 
         # Content-based categorization
-        if metadata.content_type == 'text/plain':
-            categories.append('documentation')
-        elif metadata.content_type == 'application/json':
-            categories.append('data')
-        elif metadata.content_type in ['application/pdf', 'application/msword']:
-            categories.append('document')
+        if metadata.content_type == "text/plain":
+            categories.append("documentation")
+        elif metadata.content_type == "application/json":
+            categories.append("data")
+        elif metadata.content_type in ["application/pdf", "application/msword"]:
+            categories.append("document")
 
         # Source-based categorization
-        if 'github' in metadata.source_url.lower():
-            categories.extend(['code', 'repository'])
-        elif 'jira' in metadata.source_url.lower():
-            categories.extend(['issue', 'tracking'])
-        elif 'confluence' in metadata.source_url.lower():
-            categories.extend(['wiki', 'knowledge'])
+        if "github" in metadata.source_url.lower():
+            categories.extend(["code", "repository"])
+        elif "jira" in metadata.source_url.lower():
+            categories.extend(["issue", "tracking"])
+        elif "confluence" in metadata.source_url.lower():
+            categories.extend(["wiki", "knowledge"])
 
         # Size-based categorization
         if metadata.file_size:
             if metadata.file_size < 1024:
-                categories.append('small')
+                categories.append("small")
             elif metadata.file_size > 1024 * 1024:
-                categories.append('large')
+                categories.append("large")
 
         return {
-            'primary_category': categories[0] if categories else 'unknown',
-            'all_categories': categories,
-            'confidence': min(0.9, 0.5 + len(categories) * 0.1)  # Higher confidence with more categories
+            "primary_category": categories[0] if categories else "unknown",
+            "all_categories": categories,
+            "confidence": min(0.9, 0.5 + len(categories) * 0.1),  # Higher confidence with more categories
         }

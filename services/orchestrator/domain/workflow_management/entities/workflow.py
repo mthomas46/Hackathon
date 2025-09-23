@@ -1,17 +1,18 @@
-"""Workflow Entity"""
+"""Workflow Entity."""
 
-from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from ..value_objects.workflow_id import WorkflowId
-from .workflow_parameter import WorkflowParameter
 from .workflow_action import WorkflowAction
+from .workflow_parameter import WorkflowParameter
 
 
 class WorkflowStatus(Enum):
     """Workflow definition status."""
+
     DRAFT = "draft"
     ACTIVE = "active"
     ARCHIVED = "archived"
@@ -39,7 +40,6 @@ class Workflow:
         """Validate workflow after initialization."""
         # Only validate required fields if they are explicitly set (not defaults)
         # Domain validation will handle comprehensive validation
-        pass
 
         # Validate parameter names are unique
         param_names = [p.name for p in self.parameters]
@@ -142,5 +142,5 @@ class Workflow:
             "status": self.status.value,
             "tags": self.tags,
             "parameters": [p.to_dict() for p in self.parameters],
-            "actions": [a.to_dict() for a in self.actions]
+            "actions": [a.to_dict() for a in self.actions],
         }

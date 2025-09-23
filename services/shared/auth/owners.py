@@ -1,14 +1,16 @@
-from typing import Dict, Any, Optional, List
 import os
 import re
+from typing import Any, Dict, List, Optional
+
 from ..integrations.clients import ServiceClients  # type: ignore
 
 
 def extract_owner_from_metadata(meta: Dict[str, Any] | None) -> Dict[str, Optional[str]]:
-    """Extract owner hints from a document metadata dictionary.
+    """
+    Extract owner hints from a document metadata dictionary.
 
-    Looks for keys like owner, code_owner, repo_owner, jira_assignee, jira_reporter,
-    confluence_last_updated_by.
+    Looks for keys like owner, code_owner, repo_owner, jira_assignee,
+    jira_reporter, confluence_last_updated_by.
     """
     meta = meta or {}
     sl = (meta.get("source_link") or {}) if isinstance(meta, dict) else {}
@@ -25,7 +27,8 @@ def extract_owner_from_metadata(meta: Dict[str, Any] | None) -> Dict[str, Option
 
 
 def merge_owner_hints(*hint_maps: Dict[str, Optional[str]]) -> List[str]:
-    """Merge multiple owner hint maps into a unique ordered list of targets.
+    """
+    Merge multiple owner hint maps into a unique ordered list of targets.
 
     Priority: owner -> code_owner -> repo_owner -> jira_assignee -> jira_reporter -> confluence_last_updated_by
     """
@@ -51,7 +54,8 @@ def merge_owner_hints(*hint_maps: Dict[str, Optional[str]]) -> List[str]:
 
 
 def parse_codeowners(text: str) -> Dict[str, List[str]]:
-    """Parse a CODEOWNERS file into a mapping of glob -> owners.
+    """
+    Parse a CODEOWNERS file into a mapping of glob -> owners.
 
     Lines: "path pattern" then one or more owners (@user or team).
     Comments and blanks ignored. Very small subset parser sufficient for heuristics.
@@ -82,7 +86,8 @@ def owners_for_path_from_codeowners(mapping: Dict[str, List[str]], path: str) ->
 
 
 async def try_fetch_codeowners(owner: str, repo: str, branch: str = "main") -> Optional[str]:
-    """Try to fetch CODEOWNERS via raw URL if configured.
+    """
+    Try to fetch CODEOWNERS via raw URL if configured.
 
     Environment overrides:
     - GITHUB_RAW_BASE (default https://raw.githubusercontent.com)
@@ -91,6 +96,7 @@ async def try_fetch_codeowners(owner: str, repo: str, branch: str = "main") -> O
     raw = os.environ.get("GITHUB_RAW_BASE", "https://raw.githubusercontent.com")
     candidates = [f".github/CODEOWNERS", f"CODEOWNERS"]
     import httpx  # fallback path for raw text when ServiceClients returns JSON
+
     async with httpx.AsyncClient(timeout=10) as client:
         for p in candidates:
             url = f"{raw}/{owner}/{repo}/{branch}/{p}"
@@ -104,8 +110,11 @@ async def try_fetch_codeowners(owner: str, repo: str, branch: str = "main") -> O
 
 
 async def derive_github_owners(owner: str, repo: str, path: str) -> List[str]:
-    """Best-effort CODEOWNERS lookup for a path.
-    Returns list of owners without '@'."""
+    """
+    Best-effort CODEOWNERS lookup for a path.
+
+    Returns list of owners without '@'.
+    """
     try:
         text = await try_fetch_codeowners(owner, repo)
         if not text:
@@ -116,13 +125,13 @@ async def derive_github_owners(owner: str, repo: str, path: str) -> List[str]:
         return []
 
 
-
 def merge_codeowners_with_blame(
     codeowners_mapping: Dict[str, List[str]],
     file_path: str,
     blame_authors: List[str],
 ) -> List[str]:
-    """Merge CODEOWNERS owners for a path with git blame authors.
+    """
+    Merge CODEOWNERS owners for a path with git blame authors.
 
     Priority: CODEOWNERS pattern owners first (latest match), then blame authors.
     Dedupe while preserving order.
@@ -135,5 +144,3 @@ def merge_codeowners_with_blame(
             seen.add(o)
             out.append(o)
     return out[:20]
-
-

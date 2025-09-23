@@ -1,12 +1,14 @@
-"""AI-Powered Tool Selection Module for Discovery Agent service.
+"""
+AI-Powered Tool Selection Module for Discovery Agent service.
 
-This module provides Phase 3 AI-powered tool selection and multi-service workflow
-generation using intelligent analysis of tool capabilities and requirements.
+This module provides Phase 3 AI-powered tool selection and multi-service
+workflow generation using intelligent analysis of tool capabilities and
+requirements.
 """
 
-import asyncio
 import re
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List
+
 try:
     from services.shared.clients import ServiceClients
 except ImportError:
@@ -15,15 +17,18 @@ except ImportError:
 
 
 class AIToolSelector:
-    """AI-powered tool selection and workflow generation"""
+    """AI-powered tool selection and workflow generation."""
 
     def __init__(self, interpreter_url: str = "http://localhost:5120"):
         self.interpreter_url = interpreter_url
         self.service_client = ServiceClients()
         self.tool_knowledge_base = {}
 
-    async def select_tools_for_task(self, task_description: str, available_tools: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Use AI to select optimal tools for a given task
+    async def select_tools_for_task(
+        self, task_description: str, available_tools: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """
+        Use AI to select optimal tools for a given task.
 
         Args:
             task_description: Natural language description of the task
@@ -53,18 +58,18 @@ class AIToolSelector:
                 "selected_tools": selected_tools,
                 "workflow": workflow,
                 "confidence_score": self._calculate_selection_confidence(selected_tools, task_analysis),
-                "reasoning": self._generate_selection_reasoning(selected_tools, task_analysis)
+                "reasoning": self._generate_selection_reasoning(selected_tools, task_analysis),
             }
 
         except Exception as e:
             return {
                 "success": False,
                 "error": f"AI tool selection failed: {str(e)}",
-                "fallback_tools": self._fallback_tool_selection(task_description, available_tools)
+                "fallback_tools": self._fallback_tool_selection(task_description, available_tools),
             }
 
     async def _analyze_task_requirements(self, task_description: str) -> Dict[str, Any]:
-        """Analyze task requirements using AI interpretation"""
+        """Analyze task requirements using AI interpretation."""
 
         analysis_prompt = f"""
         Analyze the following task and identify key requirements:
@@ -98,7 +103,7 @@ class AIToolSelector:
             return self._rule_based_task_analysis(task_description)
 
     def _rule_based_task_analysis(self, task_description: str) -> Dict[str, Any]:
-        """Fallback rule-based task analysis"""
+        """Fallback rule-based task analysis."""
         task_lower = task_description.lower()
 
         analysis = {
@@ -106,7 +111,7 @@ class AIToolSelector:
             "data_types": [],
             "capabilities": [],
             "steps": [],
-            "success_criteria": []
+            "success_criteria": [],
         }
 
         # Determine primary action
@@ -143,10 +148,10 @@ class AIToolSelector:
         return analysis
 
     def _parse_task_analysis(self, ai_response: str) -> Dict[str, Any]:
-        """Parse AI response into structured task analysis"""
+        """Parse AI response into structured task analysis."""
         try:
             # Try to extract JSON from AI response
-            json_match = re.search(r'\{.*\}', ai_response, re.DOTALL)
+            json_match = re.search(r"\{.*\}", ai_response, re.DOTALL)
             if json_match:
                 parsed = json.loads(json_match.group())
                 return parsed
@@ -160,35 +165,39 @@ class AIToolSelector:
             "capabilities": ["ai"],
             "steps": ["analyze", "process", "generate"],
             "success_criteria": ["task_completed"],
-            "ai_analysis": ai_response
+            "ai_analysis": ai_response,
         }
 
-    async def _score_tools_for_task(self, task_analysis: Dict[str, Any], tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Score each tool for suitability to the task"""
+    async def _score_tools_for_task(
+        self, task_analysis: Dict[str, Any], tools: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Score each tool for suitability to the task."""
         scored_tools = []
 
         for tool in tools:
             score = await self._calculate_tool_score(tool, task_analysis)
-            scored_tools.append({
-                "tool": tool,
-                "score": score["total_score"],
-                "breakdown": score,
-                "reasoning": self._generate_tool_reasoning(tool, score, task_analysis)
-            })
+            scored_tools.append(
+                {
+                    "tool": tool,
+                    "score": score["total_score"],
+                    "breakdown": score,
+                    "reasoning": self._generate_tool_reasoning(tool, score, task_analysis),
+                }
+            )
 
         # Sort by score descending
         scored_tools.sort(key=lambda x: x["score"], reverse=True)
         return scored_tools
 
     async def _calculate_tool_score(self, tool: Dict[str, Any], task_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Calculate comprehensive score for tool suitability"""
+        """Calculate comprehensive score for tool suitability."""
         score = {
             "total_score": 0,
             "action_match": 0,
             "data_type_match": 0,
             "capability_match": 0,
             "readiness_score": 0,
-            "category_bonus": 0
+            "category_bonus": 0,
         }
 
         # Action match scoring (0-30 points)
@@ -200,7 +209,7 @@ class AIToolSelector:
             "read": ["GET"],
             "update": ["PUT", "PATCH"],
             "delete": ["DELETE"],
-            "analyze": ["POST", "GET"]  # Analysis can use various methods
+            "analyze": ["POST", "GET"],  # Analysis can use various methods
         }
 
         if primary_action in action_mapping and tool_method in action_mapping[primary_action]:
@@ -215,7 +224,7 @@ class AIToolSelector:
         data_type_mapping = {
             "documents": ["storage", "analysis", "document"],
             "prompts": ["ai", "prompt", "intelligence"],
-            "code": ["execution", "analysis", "code"]
+            "code": ["execution", "analysis", "code"],
         }
 
         for data_type in required_data_types:
@@ -230,7 +239,7 @@ class AIToolSelector:
         capability_keywords = {
             "ai": ["ai", "llm", "intelligence", "prompt"],
             "storage": ["storage", "document", "memory"],
-            "analysis": ["analysis", "validate", "check"]
+            "analysis": ["analysis", "validate", "check"],
         }
 
         for capability in required_capabilities:
@@ -250,18 +259,22 @@ class AIToolSelector:
             score["category_bonus"] = 10
 
         # Calculate total
-        score["total_score"] = sum([
-            score["action_match"],
-            score["data_type_match"],
-            score["capability_match"],
-            score["readiness_score"],
-            score["category_bonus"]
-        ])
+        score["total_score"] = sum(
+            [
+                score["action_match"],
+                score["data_type_match"],
+                score["capability_match"],
+                score["readiness_score"],
+                score["category_bonus"],
+            ]
+        )
 
         return score
 
-    def _generate_tool_reasoning(self, tool: Dict[str, Any], score: Dict[str, Any], task_analysis: Dict[str, Any]) -> str:
-        """Generate human-readable reasoning for tool selection"""
+    def _generate_tool_reasoning(
+        self, tool: Dict[str, Any], score: Dict[str, Any], task_analysis: Dict[str, Any]
+    ) -> str:
+        """Generate human-readable reasoning for tool selection."""
         reasons = []
 
         if score["action_match"] > 0:
@@ -281,8 +294,10 @@ class AIToolSelector:
 
         return "; ".join(reasons) if reasons else "No strong matches found"
 
-    def _select_optimal_tools(self, scored_tools: List[Dict[str, Any]], task_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Select optimal combination of tools for the task"""
+    def _select_optimal_tools(
+        self, scored_tools: List[Dict[str, Any]], task_analysis: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """Select optimal combination of tools for the task."""
         selected = []
 
         # Always include the top-scoring tool
@@ -309,13 +324,15 @@ class AIToolSelector:
 
         return selected
 
-    async def _generate_multi_tool_workflow(self, selected_tools: List[Dict[str, Any]], task_analysis: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate a workflow specification for multiple tools"""
+    async def _generate_multi_tool_workflow(
+        self, selected_tools: List[Dict[str, Any]], task_analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Generate a workflow specification for multiple tools."""
         workflow = {
             "name": f"ai_generated_{task_analysis.get('primary_action', 'task')}_workflow",
             "description": f"AI-generated workflow for {task_analysis.get('primary_action', 'task')}",
             "steps": [],
-            "required_tools": [tool["name"] for tool in selected_tools]
+            "required_tools": [tool["name"] for tool in selected_tools],
         }
 
         # Generate workflow steps based on task analysis
@@ -324,18 +341,20 @@ class AIToolSelector:
             # Assign tools to steps
             assigned_tool = selected_tools[min(i, len(selected_tools) - 1)]
 
-            workflow["steps"].append({
-                "step_name": step,
-                "tool": assigned_tool["name"],
-                "service": assigned_tool["service"],
-                "description": f"Execute {step} using {assigned_tool['name']}",
-                "parameters": self._generate_step_parameters(step, assigned_tool)
-            })
+            workflow["steps"].append(
+                {
+                    "step_name": step,
+                    "tool": assigned_tool["name"],
+                    "service": assigned_tool["service"],
+                    "description": f"Execute {step} using {assigned_tool['name']}",
+                    "parameters": self._generate_step_parameters(step, assigned_tool),
+                }
+            )
 
         return workflow
 
     def _generate_step_parameters(self, step: str, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Generate appropriate parameters for a workflow step"""
+        """Generate appropriate parameters for a workflow step."""
         # This would use AI to determine optimal parameters
         # For now, provide basic parameter mapping
 
@@ -343,13 +362,15 @@ class AIToolSelector:
             "analyze_requirements": {"input": "task_description"},
             "select_tools": {"criteria": "task_requirements"},
             "execute_workflow": {"tools": tool["name"]},
-            "validate_results": {"expected_output": "task_completion"}
+            "validate_results": {"expected_output": "task_completion"},
         }
 
         return param_mapping.get(step, {"input": "previous_step_output"})
 
-    def _calculate_selection_confidence(self, selected_tools: List[Dict[str, Any]], task_analysis: Dict[str, Any]) -> float:
-        """Calculate confidence score for tool selection"""
+    def _calculate_selection_confidence(
+        self, selected_tools: List[Dict[str, Any]], task_analysis: Dict[str, Any]
+    ) -> float:
+        """Calculate confidence score for tool selection."""
         if not selected_tools:
             return 0.0
 
@@ -361,13 +382,11 @@ class AIToolSelector:
         return min(confidence, 1.0)  # Cap at 100%
 
     def _generate_selection_reasoning(self, selected_tools: List[Dict[str, Any]], task_analysis: Dict[str, Any]) -> str:
-        """Generate human-readable reasoning for the complete selection"""
+        """Generate human-readable reasoning for the complete selection."""
         if not selected_tools:
             return "No suitable tools found for the task requirements."
 
-        reasoning_parts = [
-            f"Selected {len(selected_tools)} tool(s) for {task_analysis.get('primary_action', 'task')}:"
-        ]
+        reasoning_parts = [f"Selected {len(selected_tools)} tool(s) for {task_analysis.get('primary_action', 'task')}:"]
 
         for i, tool in enumerate(selected_tools, 1):
             tool_name = tool.get("name", "Unknown")
@@ -375,12 +394,16 @@ class AIToolSelector:
             reasoning_parts.append(f"{i}. {tool_name} (score: {tool_score:.1f})")
 
         if len(selected_tools) > 1:
-            reasoning_parts.append(f"Combined tools provide comprehensive {task_analysis.get('primary_action', 'task')} workflow.")
+            reasoning_parts.append(
+                f"Combined tools provide comprehensive {task_analysis.get('primary_action', 'task')} workflow."
+            )
 
         return " ".join(reasoning_parts)
 
-    def _fallback_tool_selection(self, task_description: str, available_tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Fallback tool selection when AI analysis fails"""
+    def _fallback_tool_selection(
+        self, task_description: str, available_tools: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Fallback tool selection when AI analysis fails."""
         # Simple keyword-based selection
         task_lower = task_description.lower()
 
@@ -399,35 +422,22 @@ class AIToolSelector:
         return fallback_tools[:2]
 
     async def _query_ai_interpreter(self, prompt: str) -> Dict[str, Any]:
-        """Query the AI interpreter service"""
+        """Query the AI interpreter service."""
         try:
             async with self.service_client.session() as session:
                 url = f"{self.interpreter_url}/interpret"
 
-                payload = {
-                    "query": prompt,
-                    "context": "tool_selection_analysis",
-                    "response_format": "json"
-                }
+                payload = {"query": prompt, "context": "tool_selection_analysis", "response_format": "json"}
 
                 async with session.post(url, json=payload, timeout=15) as response:
                     if response.status == 200:
                         result = await response.json()
-                        return {
-                            "success": True,
-                            "response": result.get("interpretation", "")
-                        }
+                        return {"success": True, "response": result.get("interpretation", "")}
                     else:
-                        return {
-                            "success": False,
-                            "error": f"Interpreter returned {response.status}"
-                        }
+                        return {"success": False, "error": f"Interpreter returned {response.status}"}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e)
-            }
+            return {"success": False, "error": str(e)}
 
 
 # Create singleton instance

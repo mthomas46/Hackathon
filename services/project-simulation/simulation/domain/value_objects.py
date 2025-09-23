@@ -5,15 +5,16 @@ Value objects are immutable and compared by value, not identity.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Any
+from datetime import datetime
 from enum import Enum
-import hashlib
+from typing import List, Optional
 
 
 class ProjectType(Enum):
     """Project type value object."""
+
     WEB_APPLICATION = "web_application"
     API_SERVICE = "api_service"
     MOBILE_APPLICATION = "mobile_application"
@@ -26,6 +27,7 @@ class ProjectType(Enum):
 
 class ComplexityLevel(Enum):
     """Project complexity level."""
+
     SIMPLE = "simple"
     MEDIUM = "medium"
     COMPLEX = "complex"
@@ -33,6 +35,7 @@ class ComplexityLevel(Enum):
 
 class ProjectStatus(Enum):
     """Project status value object."""
+
     CREATED = "created"
     PLANNING = "planning"
     IN_PROGRESS = "in_progress"
@@ -44,6 +47,7 @@ class ProjectStatus(Enum):
 
 class SimulationStatus(Enum):
     """Simulation execution status."""
+
     CREATED = "created"
     INITIALIZED = "initialized"
     STARTING = "starting"
@@ -56,6 +60,7 @@ class SimulationStatus(Enum):
 
 class MilestoneStatus(Enum):
     """Milestone status value object."""
+
     UPCOMING = "upcoming"
     ACHIEVED = "achieved"
     MISSED = "missed"
@@ -64,6 +69,7 @@ class MilestoneStatus(Enum):
 @dataclass(frozen=True)
 class DocumentReference:
     """Document reference value object."""
+
     document_id: str
     document_type: str
     relationship: str
@@ -72,6 +78,7 @@ class DocumentReference:
 
 class ExpertiseLevel(Enum):
     """Team member expertise levels."""
+
     JUNIOR = "junior"
     INTERMEDIATE = "intermediate"
     SENIOR = "senior"
@@ -81,6 +88,7 @@ class ExpertiseLevel(Enum):
 
 class Phase(Enum):
     """Project phases."""
+
     PLANNING = "planning"
     DESIGN = "design"
     DEVELOPMENT = "development"
@@ -90,6 +98,7 @@ class Phase(Enum):
 
 class PhaseStatus(Enum):
     """Phase execution status."""
+
     NOT_STARTED = "not_started"
     ACTIVE = "active"
     COMPLETED = "completed"
@@ -98,6 +107,7 @@ class PhaseStatus(Enum):
 
 class Role(Enum):
     """Team member role value object."""
+
     DEVELOPER = "developer"
     QA = "qa"
     DESIGNER = "designer"
@@ -111,6 +121,7 @@ class Role(Enum):
 
 class TeamMemberRole(Enum):
     """Team member role - alias for Role for backward compatibility."""
+
     DEVELOPER = "developer"
     QA = "qa"
     DESIGNER = "designer"
@@ -122,6 +133,7 @@ class TeamMemberRole(Enum):
 @dataclass(frozen=True)
 class TeamMember:
     """Team member value object."""
+
     name: str
     role: Role
     expertise_level: ExpertiseLevel = ExpertiseLevel.INTERMEDIATE
@@ -130,6 +142,7 @@ class TeamMember:
 @dataclass(frozen=True)
 class SimulationConfig:
     """Simulation configuration value object."""
+
     project_type: ProjectType
     complexity: ComplexityLevel
     team_size: int = 5
@@ -139,6 +152,7 @@ class SimulationConfig:
 @dataclass(frozen=True)
 class Milestone:
     """Project milestone value object."""
+
     name: str
     description: str
     due_date: datetime
@@ -147,6 +161,7 @@ class Milestone:
 
 class DocumentType(Enum):
     """Document type value object."""
+
     # Existing types
     PROJECT_REQUIREMENTS = "project_requirements"
     ARCHITECTURE_DIAGRAM = "architecture_diagram"
@@ -195,6 +210,7 @@ class DocumentType(Enum):
 
 class ServiceHealth(Enum):
     """Service health status."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -204,37 +220,39 @@ class ServiceHealth(Enum):
 @dataclass(frozen=True)
 class EmailAddress:
     """Email address value object."""
+
     value: str
 
     def __post_init__(self):
-        if '@' not in self.value:
+        if "@" not in self.value:
             raise ValueError("Invalid email address")
         if len(self.value) > 254:
             raise ValueError("Email address too long")
 
         # Validate that both local and domain parts are non-empty
-        local_part, domain_part = self.value.split('@', 1)
+        local_part, domain_part = self.value.split("@", 1)
         if not local_part or not domain_part:
             raise ValueError("Invalid email address")
 
         # Basic domain validation (must contain at least one dot)
-        if '.' not in domain_part:
+        if "." not in domain_part:
             raise ValueError("Invalid email address")
 
     @property
     def domain(self) -> str:
         """Get email domain."""
-        return self.value.split('@')[1]
+        return self.value.split("@")[1]
 
     @property
     def local_part(self) -> str:
         """Get email local part."""
-        return self.value.split('@')[0]
+        return self.value.split("@")[0]
 
 
 @dataclass(frozen=True)
 class ProjectName:
     """Project name value object."""
+
     value: str
 
     def __post_init__(self):
@@ -249,16 +267,18 @@ class ProjectName:
         """Check if project name is valid."""
         # Allow alphanumeric, spaces, hyphens, underscores
         import re
-        return bool(re.match(r'^[a-zA-Z0-9\s\-_]+$', name))
+
+        return bool(re.match(r"^[a-zA-Z0-9\s\-_]+$", name))
 
     def slug(self) -> str:
         """Convert to URL-friendly slug."""
-        return self.value.lower().replace(' ', '-')
+        return self.value.lower().replace(" ", "-")
 
 
 @dataclass(frozen=True)
 class Duration:
     """Duration value object."""
+
     weeks: int
     days: int = 0
 
@@ -297,6 +317,7 @@ class Duration:
 @dataclass(frozen=True)
 class Money:
     """Money value object."""
+
     amount: float
     currency: str = "USD"
 
@@ -321,6 +342,7 @@ class Money:
 @dataclass(frozen=True)
 class Percentage:
     """Percentage value object."""
+
     value: float
 
     def __post_init__(self):
@@ -345,12 +367,13 @@ class Percentage:
 @dataclass(frozen=True)
 class ServiceEndpoint:
     """Service endpoint value object."""
+
     url: str
     timeout_seconds: int = 30
     retries: int = 3
 
     def __post_init__(self):
-        if not self.url.startswith(('http://', 'https://')):
+        if not self.url.startswith(("http://", "https://")):
             raise ValueError("URL must start with http:// or https://")
         if self.timeout_seconds <= 0:
             raise ValueError("Timeout must be positive")
@@ -361,18 +384,20 @@ class ServiceEndpoint:
     def base_url(self) -> str:
         """Get base URL without path."""
         from urllib.parse import urlparse
+
         parsed = urlparse(self.url)
         return f"{parsed.scheme}://{parsed.netloc}"
 
     @property
     def is_https(self) -> bool:
         """Check if endpoint uses HTTPS."""
-        return self.url.startswith('https://')
+        return self.url.startswith("https://")
 
 
 @dataclass(frozen=True)
 class ServiceHealthStatus:
     """Service health status value object."""
+
     service_name: str
     status: ServiceHealth
     response_time_ms: Optional[float] = None
@@ -391,6 +416,7 @@ class ServiceHealthStatus:
 @dataclass(frozen=True)
 class DocumentId:
     """Document identifier value object."""
+
     value: str
 
     def __post_init__(self):
@@ -401,6 +427,7 @@ class DocumentId:
     def generate(cls) -> DocumentId:
         """Generate a new document ID."""
         import uuid
+
         return cls(str(uuid.uuid4()))
 
     def __str__(self) -> str:
@@ -410,6 +437,7 @@ class DocumentId:
 @dataclass(frozen=True)
 class DocumentMetadata:
     """Document metadata value object."""
+
     document_id: DocumentId
     title: str
     type: DocumentType
@@ -440,6 +468,7 @@ class DocumentMetadata:
 @dataclass(frozen=True)
 class SimulationMetrics:
     """Simulation metrics value object."""
+
     total_documents: int
     total_tickets: int
     total_prs: int
@@ -476,6 +505,7 @@ class SimulationMetrics:
 @dataclass(frozen=True)
 class EcosystemService:
     """Ecosystem service value object."""
+
     name: str
     endpoint: ServiceEndpoint
     health_check_endpoint: str = "/health"
@@ -484,8 +514,8 @@ class EcosystemService:
 
     def get_health_check_url(self) -> str:
         """Get full health check URL."""
-        base = self.endpoint.base_url.rstrip('/')
-        endpoint = self.health_check_endpoint.lstrip('/')
+        base = self.endpoint.base_url.rstrip("/")
+        endpoint = self.health_check_endpoint.lstrip("/")
         return f"{base}/{endpoint}"
 
     def __str__(self) -> str:
@@ -497,107 +527,79 @@ ECOSYSTEM_SERVICES = [
     EcosystemService(
         name="doc_store",
         endpoint=ServiceEndpoint("http://doc_store:5010"),
-        description="Document storage and versioning"
+        description="Document storage and versioning",
     ),
     EcosystemService(
         name="prompt_store",
         endpoint=ServiceEndpoint("http://prompt_store:5015"),
-        description="Prompt management and versioning"
+        description="Prompt management and versioning",
     ),
     EcosystemService(
         name="analysis_service",
         endpoint=ServiceEndpoint("http://analysis_service:5020"),
-        description="Document analysis and insights"
+        description="Document analysis and insights",
     ),
     EcosystemService(
-        name="llm_gateway",
-        endpoint=ServiceEndpoint("http://llm_gateway:5055"),
-        description="AI content generation"
+        name="llm_gateway", endpoint=ServiceEndpoint("http://llm_gateway:5055"), description="AI content generation"
     ),
     EcosystemService(
-        name="orchestrator",
-        endpoint=ServiceEndpoint("http://orchestrator:5000"),
-        description="Workflow orchestration"
+        name="orchestrator", endpoint=ServiceEndpoint("http://orchestrator:5000"), description="Workflow orchestration"
     ),
     EcosystemService(
         name="mock_data_generator",
         endpoint=ServiceEndpoint("http://mock_data_generator:5065"),
-        description="Document generation service"
+        description="Document generation service",
     ),
     EcosystemService(
         name="source_agent",
         endpoint=ServiceEndpoint("http://source_agent:5070"),
-        description="Code analysis and documentation"
+        description="Code analysis and documentation",
     ),
     EcosystemService(
-        name="code_analyzer",
-        endpoint=ServiceEndpoint("http://code_analyzer:5025"),
-        description="Code quality analysis"
+        name="code_analyzer", endpoint=ServiceEndpoint("http://code_analyzer:5025"), description="Code quality analysis"
     ),
     EcosystemService(
-        name="github_mcp",
-        endpoint=ServiceEndpoint("http://github_mcp:5085"),
-        description="GitHub integration"
+        name="github_mcp", endpoint=ServiceEndpoint("http://github_mcp:5085"), description="GitHub integration"
     ),
     EcosystemService(
-        name="bedrock_proxy",
-        endpoint=ServiceEndpoint("http://bedrock_proxy:5090"),
-        description="AWS AI services"
+        name="bedrock_proxy", endpoint=ServiceEndpoint("http://bedrock_proxy:5090"), description="AWS AI services"
     ),
     EcosystemService(
         name="summarizer_hub",
         endpoint=ServiceEndpoint("http://summarizer_hub:5100"),
-        description="Content summarization"
+        description="Content summarization",
     ),
     EcosystemService(
         name="notification_service",
         endpoint=ServiceEndpoint("http://notification_service:5130"),
-        description="Event notifications"
+        description="Event notifications",
+    ),
+    EcosystemService(name="frontend", endpoint=ServiceEndpoint("http://frontend:3000"), description="Web interface"),
+    EcosystemService(
+        name="discovery_agent", endpoint=ServiceEndpoint("http://discovery_agent:5140"), description="Service discovery"
     ),
     EcosystemService(
-        name="frontend",
-        endpoint=ServiceEndpoint("http://frontend:3000"),
-        description="Web interface"
-    ),
-    EcosystemService(
-        name="discovery_agent",
-        endpoint=ServiceEndpoint("http://discovery_agent:5140"),
-        description="Service discovery"
-    ),
-    EcosystemService(
-        name="log_collector",
-        endpoint=ServiceEndpoint("http://log_collector:5150"),
-        description="Centralized logging"
+        name="log_collector", endpoint=ServiceEndpoint("http://log_collector:5150"), description="Centralized logging"
     ),
     EcosystemService(
         name="redis",
         endpoint=ServiceEndpoint("http://redis:6379"),
         health_check_endpoint="PING",
-        description="Caching and session storage"
+        description="Caching and session storage",
     ),
-    EcosystemService(
-        name="ollama",
-        endpoint=ServiceEndpoint("http://ollama:11434"),
-        description="Local AI models"
-    ),
+    EcosystemService(name="ollama", endpoint=ServiceEndpoint("http://ollama:11434"), description="Local AI models"),
     EcosystemService(
         name="architecture_digitizer",
         endpoint=ServiceEndpoint("http://architecture_digitizer:5160"),
-        description="Architecture diagrams"
+        description="Architecture diagrams",
     ),
     EcosystemService(
-        name="interpreter",
-        endpoint=ServiceEndpoint("http://interpreter:5170"),
-        description="Cross-document analysis"
+        name="interpreter", endpoint=ServiceEndpoint("http://interpreter:5170"), description="Cross-document analysis"
     ),
     EcosystemService(
-        name="memory_agent",
-        endpoint=ServiceEndpoint("http://memory_agent:5180"),
-        description="Context management"
+        name="memory_agent", endpoint=ServiceEndpoint("http://memory_agent:5180"), description="Context management"
     ),
     EcosystemService(
-        name="secure_analyzer",
-        endpoint=ServiceEndpoint("http://secure_analyzer:5190"),
-        description="Security analysis"
-    )
+        name="secure_analyzer", endpoint=ServiceEndpoint("http://secure_analyzer:5190"), description="Security analysis"
+    ),
 ]

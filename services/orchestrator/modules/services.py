@@ -1,18 +1,20 @@
-"""Service management functionality for the Orchestrator service.
+"""
+Service management functionality for the Orchestrator service.
 
 This module contains all service discovery and information endpoints,
 extracted from the main orchestrator service to improve maintainability.
 """
 
-from typing import Dict, Any, List
+from typing import Any, Dict
+
 from services.shared.core.constants_new import ServiceNames
+
 from .shared_utils import (
+    build_orchestrator_context,
+    create_service_success_response,
     get_orchestrator_service_client,
     handle_service_error,
-    create_service_success_response,
-    build_orchestrator_context
 )
-
 
 # Helper functions removed - using shared utilities from shared_utils.py
 
@@ -31,8 +33,8 @@ def _get_service_definitions() -> Dict[str, Dict[str, Any]]:
                 "POST /query - Natural language query processing",
                 "POST /query/execute - Execute interpreted workflows",
                 "GET /services - Service discovery and information",
-                "GET /workflows - Available workflow templates"
-            ]
+                "GET /workflows - Available workflow templates",
+            ],
         },
         ServiceNames.PROMPT_STORE: {
             "name": "Prompt Store",
@@ -45,8 +47,8 @@ def _get_service_definitions() -> Dict[str, Dict[str, Any]]:
                 "GET /prompts/{id} - Retrieve specific prompt",
                 "PUT /prompts/{id} - Update existing prompt",
                 "POST /ab-tests - Create A/B tests",
-                "GET /analytics - Usage analytics and metrics"
-            ]
+                "GET /analytics - Usage analytics and metrics",
+            ],
         },
         ServiceNames.INTERPRETER: {
             "name": "Interpreter",
@@ -57,8 +59,8 @@ def _get_service_definitions() -> Dict[str, Dict[str, Any]]:
                 "POST /interpret - Interpret natural language queries",
                 "POST /execute - Execute interpreted workflows",
                 "GET /intents - List supported intents",
-                "GET /workflows - Available workflow templates"
-            ]
+                "GET /workflows - Available workflow templates",
+            ],
         },
         ServiceNames.ANALYSIS_SERVICE: {
             "name": "Analysis Service",
@@ -69,8 +71,8 @@ def _get_service_definitions() -> Dict[str, Dict[str, Any]]:
                 "POST /analyze - Analyze documents for consistency",
                 "GET /findings - Retrieve analysis findings",
                 "POST /reports/generate - Generate analysis reports",
-                "GET /consistency/check - Validate document consistency"
-            ]
+                "GET /consistency/check - Validate document consistency",
+            ],
         },
         ServiceNames.DOC_STORE: {
             "name": "Doc Store",
@@ -82,8 +84,8 @@ def _get_service_definitions() -> Dict[str, Dict[str, Any]]:
                 "GET /documents/{id} - Retrieve specific document",
                 "GET /documents/_list - List documents with filtering",
                 "GET /search - Search documents by content",
-                "GET /documents/quality - Quality metrics and flags"
-            ]
+                "GET /documents/quality - Quality metrics and flags",
+            ],
         },
         ServiceNames.SOURCE_AGENT: {
             "name": "Source Agent",
@@ -93,9 +95,9 @@ def _get_service_definitions() -> Dict[str, Dict[str, Any]]:
             "endpoints": [
                 "POST /ingest - Ingest data from sources",
                 "GET /sources - List available data sources",
-                "GET /sources/{id}/status - Check source ingestion status"
-            ]
-        }
+                "GET /sources/{id}/status - Check source ingestion status",
+            ],
+        },
     }
 
 
@@ -112,23 +114,25 @@ def _build_service_info(service_name: str, service_config: Dict[str, Any], servi
             "url": service_url,
             "status": "active",  # Could be enhanced with actual health checks
             "version": "1.0.0",  # Could be retrieved from service metadata
-            "last_updated": None  # Could track service update timestamps
+            "last_updated": None,  # Could track service update timestamps
         }
     except Exception as e:
         # Use shared error handling for warnings
         from services.shared.monitoring.logging import fire_and_forget
+
         fire_and_forget("warning", f"Failed to get URL for service {service_name}: {e}", ServiceNames.ORCHESTRATOR)
         return {
             **service_config,
             "service_name": service_name,
             "url": f"http://{service_name}:unknown",
             "status": "configuration_error",
-            "error": str(e)
+            "error": str(e),
         }
 
 
 async def list_services() -> Dict[str, Any]:
-    """Get comprehensive information about all integrated services with enhanced metadata."""
+    """Get comprehensive information about all integrated services with
+    enhanced metadata."""
     try:
         service_client = get_orchestrator_service_client()
         service_definitions = _get_service_definitions()
@@ -153,10 +157,12 @@ async def list_services() -> Dict[str, Any]:
             "categories": categories,
             "integration_status": "fully_integrated",
             "orchestrator_version": "2.0.0",
-            "last_service_discovery": None  # Could track discovery timestamps
+            "last_service_discovery": None,  # Could track discovery timestamps
         }
 
-        context = build_orchestrator_context("service_discovery", total_services=len(services_info), categories=list(categories.keys()))
+        context = build_orchestrator_context(
+            "service_discovery", total_services=len(services_info), categories=list(categories.keys())
+        )
         return create_service_success_response("service discovery", response_data, **context)
 
     except Exception as e:

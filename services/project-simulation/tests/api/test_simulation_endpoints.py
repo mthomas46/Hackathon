@@ -5,17 +5,11 @@ ecosystem patterns. Validates request/response handling, error cases,
 and integration with FastAPI framework.
 """
 
-import pytest
-import json
-from unittest.mock import Mock, AsyncMock, patch
-from fastapi.testclient import TestClient
-from datetime import datetime, timezone
-from typing import Dict, Any, List
 
+import pytest
+from fastapi.testclient import TestClient
 from main import app
-from simulation.domain.value_objects import (
-    ProjectType, ComplexityLevel, ProjectStatus
-)
+from simulation.domain.value_objects import ComplexityLevel, ProjectType
 
 
 class TestSimulationEndpoints:
@@ -42,17 +36,10 @@ class TestSimulationEndpoints:
                     "name": "Alice Johnson",
                     "role": "developer",
                     "experience_years": 5,
-                    "skills": ["Python", "FastAPI", "React"]
+                    "skills": ["Python", "FastAPI", "React"],
                 }
             ],
-            "phases": [
-                {
-                    "name": "Planning",
-                    "start_date": "2024-01-01",
-                    "end_date": "2024-01-15",
-                    "duration_days": 15
-                }
-            ]
+            "phases": [{"name": "Planning", "start_date": "2024-01-01", "end_date": "2024-01-15", "duration_days": 15}],
         }
 
     @pytest.mark.asyncio
@@ -83,7 +70,7 @@ class TestSimulationEndpoints:
             "name": "",  # Invalid: empty name
             "type": "invalid_type",  # Invalid: not a valid project type
             "team_size": -1,  # Invalid: negative team size
-            "complexity": "invalid_complexity"
+            "complexity": "invalid_complexity",
         }
 
         # Act
@@ -318,11 +305,7 @@ class TestSimulationEndpoints:
     def test_content_type_validation(self, client):
         """Test content type validation for JSON endpoints."""
         # Act
-        response = client.post(
-            "/api/v1/simulations",
-            data="not json",
-            headers={"Content-Type": "text/plain"}
-        )
+        response = client.post("/api/v1/simulations", data="not json", headers={"Content-Type": "text/plain"})
 
         # Assert - Should handle gracefully or return appropriate error
         assert response.status_code in [400, 422]
@@ -360,9 +343,10 @@ class TestSimulationEndpoints:
                     "name": f"Team Member {i}",
                     "role": "developer",
                     "experience_years": 5,
-                    "skills": ["Python", "JavaScript", "AWS"] * 10  # Large skills list
-                } for i in range(50)
-            ]
+                    "skills": ["Python", "JavaScript", "AWS"] * 10,  # Large skills list
+                }
+                for i in range(50)
+            ],
         }
 
         # Act
@@ -375,9 +359,7 @@ class TestSimulationEndpoints:
         """Test handling of malformed JSON requests."""
         # Act
         response = client.post(
-            "/api/v1/simulations",
-            data='{"invalid": json}',
-            headers={"Content-Type": "application/json"}
+            "/api/v1/simulations", data='{"invalid": json}', headers={"Content-Type": "application/json"}
         )
 
         # Assert
@@ -420,12 +402,15 @@ class TestSimulationEndpoints:
         # Make multiple rapid requests
         responses = []
         for _ in range(15):  # Exceed rate limit
-            response = client.post("/api/v1/simulations", json={
-                "name": f"Rate Limit Test {_}",
-                "type": ProjectType.WEB_APPLICATION.value,
-                "complexity": ComplexityLevel.SIMPLE.value,
-                "duration_weeks": 4
-            })
+            response = client.post(
+                "/api/v1/simulations",
+                json={
+                    "name": f"Rate Limit Test {_}",
+                    "type": ProjectType.WEB_APPLICATION.value,
+                    "complexity": ComplexityLevel.SIMPLE.value,
+                    "duration_weeks": 4,
+                },
+            )
             responses.append(response)
 
         # Check that some requests are rate limited

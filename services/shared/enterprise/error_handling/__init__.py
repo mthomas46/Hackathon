@@ -1,7 +1,8 @@
 """
-Enterprise Error Handling Framework
+Enterprise Error Handling Framework.
 
-Advanced error handling, recovery, and resilience framework for Phase 1 implementation.
+Advanced error handling, recovery, and resilience framework for Phase 1
+implementation.
 """
 
 from .error_handling import *

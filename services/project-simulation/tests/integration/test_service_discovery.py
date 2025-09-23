@@ -4,15 +4,17 @@ This module contains integration tests for service discovery functionality,
 testing automatic service location, health checking, and fallback mechanisms.
 """
 
-import pytest
 import asyncio
-import aiohttp
-from unittest.mock import Mock, AsyncMock, patch
-from typing import Dict, Any
+from unittest.mock import Mock, patch
 
+import pytest
 from simulation.infrastructure.config.discovery import (
-    LocalServiceDiscovery, FallbackServiceClient, ServiceDiscoveryError,
-    ServiceHealth, get_service_discovery, start_service_discovery, stop_service_discovery
+    FallbackServiceClient,
+    LocalServiceDiscovery,
+    ServiceHealth,
+    get_service_discovery,
+    start_service_discovery,
+    stop_service_discovery,
 )
 
 
@@ -37,10 +39,10 @@ class TestServiceDiscoveryInitialization:
         mock_config.ecosystem.__dict__ = {
             "doc_store": "http://doc_store:5010",
             "mock_data_generator": "http://mock_data_generator:5065",
-            "orchestrator": "http://orchestrator:5000"
+            "orchestrator": "http://orchestrator:5000",
         }
 
-        with patch('simulation.infrastructure.config.discovery.get_config', return_value=mock_config):
+        with patch("simulation.infrastructure.config.discovery.get_config", return_value=mock_config):
             discovery = LocalServiceDiscovery()
 
             assert len(discovery.services) == 3
@@ -98,7 +100,7 @@ class TestServiceHealthChecking:
         services = [
             ServiceHealth("service1", "http://httpbin.org"),
             ServiceHealth("service2", "http://httpbin.org"),
-            ServiceHealth("service3", "http://httpbin.org")
+            ServiceHealth("service3", "http://httpbin.org"),
         ]
 
         for service in services:
@@ -220,12 +222,7 @@ class TestServiceAvailabilityChecking:
         discovery = LocalServiceDiscovery()
 
         # Add mix of healthy and unhealthy services
-        services = [
-            ("healthy1", True),
-            ("healthy2", True),
-            ("unhealthy1", False),
-            ("unhealthy2", False)
-        ]
+        services = [("healthy1", True), ("healthy2", True), ("unhealthy1", False), ("unhealthy2", False)]
 
         for name, is_healthy in services:
             service = ServiceHealth(name, f"http://{name}.com")
@@ -240,11 +237,7 @@ class TestServiceAvailabilityChecking:
         discovery = LocalServiceDiscovery()
 
         # Add mix of healthy and unhealthy services
-        services = [
-            ("healthy1", True),
-            ("unhealthy1", False),
-            ("unhealthy2", False)
-        ]
+        services = [("healthy1", True), ("unhealthy1", False), ("unhealthy2", False)]
 
         for name, is_healthy in services:
             service = ServiceHealth(name, f"http://{name}.com")
@@ -388,7 +381,7 @@ class TestServiceDiscoveryIntegration:
         services = [
             ("api_service", "http://httpbin.org"),
             ("data_service", "http://httpbin.org"),
-            ("auth_service", "http://httpbin.org")
+            ("auth_service", "http://httpbin.org"),
         ]
 
         for name, url in services:
@@ -421,12 +414,7 @@ class TestServiceDiscoveryIntegration:
         discovery = LocalServiceDiscovery()
 
         # Add services with different health states
-        services = [
-            ("healthy1", True),
-            ("healthy2", True),
-            ("unhealthy1", False),
-            ("unhealthy2", False)
-        ]
+        services = [("healthy1", True), ("healthy2", True), ("unhealthy1", False), ("unhealthy2", False)]
 
         for name, is_healthy in services:
             service = ServiceHealth(name, f"http://{name}.com")
@@ -543,7 +531,7 @@ class TestServiceDiscoveryComprehensiveSuite:
         services = [
             ("service1", "http://httpbin.org"),
             ("service2", "http://httpbin.org"),
-            ("service3", "http://httpbin.org")
+            ("service3", "http://httpbin.org"),
         ]
 
         for name, url in services:

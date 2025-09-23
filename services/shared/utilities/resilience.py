@@ -1,11 +1,13 @@
-"""Consolidated resilience utilities for fault tolerance and reliability.
+"""
+Consolidated resilience utilities for fault tolerance and reliability.
 
 Combines retry, circuit breaker, and rate limiting functionality.
 """
+
 import asyncio
 import random
 import time
-from typing import Callable, Awaitable, Optional, TypeVar, Dict
+from typing import Awaitable, Callable, Dict, Optional, TypeVar
 
 from .utilities import TokenBucket
 
@@ -13,7 +15,8 @@ T = TypeVar("T")
 
 
 class CircuitBreaker:
-    """Tracks consecutive failures and gates calls for a cooldown window.
+    """
+    Tracks consecutive failures and gates calls for a cooldown window.
 
     State transitions:
     - closed: calls pass, failures increment counter
@@ -60,11 +63,7 @@ async def with_circuit(cb: CircuitBreaker, func: Callable[[], Awaitable[T]]) -> 
         raise
 
 
-async def with_retries(
-    operation: Callable[[], Awaitable[T]],
-    attempts: int = 3,
-    base_delay_ms: int = 100
-) -> T:
+async def with_retries(operation: Callable[[], Awaitable[T]], attempts: int = 3, base_delay_ms: int = 100) -> T:
     """Execute operation with exponential backoff retry logic."""
     last_exc: Exception | None = None
     for i in range(attempts):
@@ -89,7 +88,7 @@ class ResilienceManager:
         circuit_reset_timeout: float = 30.0,
         retry_attempts: int = 3,
         retry_base_delay_ms: int = 150,
-        rate_limits: Optional[Dict[str, tuple[float, int]]] = None
+        rate_limits: Optional[Dict[str, tuple[float, int]]] = None,
     ):
         self.circuit_breaker = CircuitBreaker(circuit_failure_threshold, circuit_reset_timeout)
         self.retry_attempts = retry_attempts
@@ -102,6 +101,7 @@ class ResilienceManager:
 
     async def execute_with_resilience(self, operation: Callable[[], Awaitable[T]]) -> T:
         """Execute operation with full resilience (circuit + retry)."""
+
         async def _circuit_operation():
             return await with_retries(operation, self.retry_attempts, self.retry_base_delay_ms)
 

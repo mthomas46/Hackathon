@@ -1,23 +1,24 @@
 """Circuit Breaker - Resilient connection handling with failure protection."""
 
 import asyncio
-import time
-from typing import Any, Dict, List, Optional, Callable, Type
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Type
 
 
 class CircuitBreakerState(Enum):
     """Circuit breaker states."""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"         # Failing, requests rejected
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, requests rejected
     HALF_OPEN = "half_open"  # Testing if service recovered
 
 
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker."""
+
     failure_threshold: int = 5  # Number of failures to open circuit
     recovery_timeout: int = 60  # Seconds to wait before attempting recovery
     success_threshold: int = 3  # Number of successes needed in half-open state
@@ -53,9 +54,7 @@ class CircuitBreaker:
         if self.state == CircuitBreakerState.OPEN:
             if not self._should_attempt_reset():
                 self.rejected_requests += 1
-                raise CircuitBreakerOpenException(
-                    f"Circuit breaker '{self.config.name}' is OPEN"
-                )
+                raise CircuitBreakerOpenException(f"Circuit breaker '{self.config.name}' is OPEN")
 
             # Attempt reset
             self.state = CircuitBreakerState.HALF_OPEN
@@ -65,16 +64,12 @@ class CircuitBreaker:
         try:
             # Execute with timeout
             if asyncio.iscoroutinefunction(func):
-                result = await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=self.config.timeout
-                )
+                result = await asyncio.wait_for(func(*args, **kwargs), timeout=self.config.timeout)
             else:
                 # Run sync function in thread pool
                 loop = asyncio.get_event_loop()
                 result = await asyncio.wait_for(
-                    loop.run_in_executor(None, func, *args, **kwargs),
-                    timeout=self.config.timeout
+                    loop.run_in_executor(None, func, *args, **kwargs), timeout=self.config.timeout
                 )
 
             # Success
@@ -136,32 +131,32 @@ class CircuitBreaker:
     def get_state(self) -> Dict[str, Any]:
         """Get current circuit breaker state."""
         return {
-            'name': self.config.name,
-            'state': self.state.value,
-            'failure_count': self.failure_count,
-            'success_count': self.success_count,
-            'last_failure_time': self.last_failure_time.isoformat() if self.last_failure_time else None,
-            'next_attempt_time': self.next_attempt_time.isoformat() if self.next_attempt_time else None,
-            'config': {
-                'failure_threshold': self.config.failure_threshold,
-                'recovery_timeout': self.config.recovery_timeout,
-                'success_threshold': self.config.success_threshold,
-                'timeout': self.config.timeout
-            }
+            "name": self.config.name,
+            "state": self.state.value,
+            "failure_count": self.failure_count,
+            "success_count": self.success_count,
+            "last_failure_time": self.last_failure_time.isoformat() if self.last_failure_time else None,
+            "next_attempt_time": self.next_attempt_time.isoformat() if self.next_attempt_time else None,
+            "config": {
+                "failure_threshold": self.config.failure_threshold,
+                "recovery_timeout": self.config.recovery_timeout,
+                "success_threshold": self.config.success_threshold,
+                "timeout": self.config.timeout,
+            },
         }
 
     def get_stats(self) -> Dict[str, Any]:
         """Get circuit breaker statistics."""
         return {
-            'name': self.config.name,
-            'total_requests': self.total_requests,
-            'total_successes': self.total_successes,
-            'total_failures': self.total_failures,
-            'rejected_requests': self.rejected_requests,
-            'state_changes': self.state_change_count,
-            'success_rate': self.total_successes / max(1, self.total_requests),
-            'current_state': self.state.value,
-            'failure_rate': self.failure_count / max(1, self.failure_count + self.success_count)
+            "name": self.config.name,
+            "total_requests": self.total_requests,
+            "total_successes": self.total_successes,
+            "total_failures": self.total_failures,
+            "rejected_requests": self.rejected_requests,
+            "state_changes": self.state_change_count,
+            "success_rate": self.total_successes / max(1, self.total_requests),
+            "current_state": self.state.value,
+            "failure_rate": self.failure_count / max(1, self.failure_count + self.success_count),
         }
 
     def reset(self) -> None:
@@ -195,7 +190,7 @@ class CircuitBreaker:
 
 class CircuitBreakerOpenException(Exception):
     """Exception raised when circuit breaker is open."""
-    pass
+
 
 
 class CircuitBreakerRegistry:
@@ -245,6 +240,7 @@ class CircuitBreakerDecorator:
 
     def __call__(self, func: Callable) -> Callable:
         """Apply circuit breaker to function."""
+
         async def async_wrapper(*args, **kwargs):
             return await self.breaker.call(func, *args, **kwargs)
 
@@ -271,9 +267,10 @@ def circuit_breaker(
     recovery_timeout: int = 60,
     success_threshold: int = 3,
     timeout: float = 30.0,
-    name: Optional[str] = None
+    name: Optional[str] = None,
 ):
     """Decorator to apply circuit breaker to a function."""
+
     def decorator(func: Callable) -> Callable:
         breaker_name = name or f"{func.__module__}.{func.__name__}"
         config = CircuitBreakerConfig(
@@ -281,7 +278,7 @@ def circuit_breaker(
             recovery_timeout=recovery_timeout,
             success_threshold=success_threshold,
             timeout=timeout,
-            name=breaker_name
+            name=breaker_name,
         )
         return CircuitBreakerDecorator(config)(func)
 
@@ -289,7 +286,8 @@ def circuit_breaker(
 
 
 class AdaptiveCircuitBreaker(CircuitBreaker):
-    """Adaptive circuit breaker that adjusts thresholds based on performance."""
+    """Adaptive circuit breaker that adjusts thresholds based on
+    performance."""
 
     def __init__(self, config: CircuitBreakerConfig, adaptation_interval: int = 300):
         """Initialize adaptive circuit breaker."""
@@ -315,18 +313,11 @@ class AdaptiveCircuitBreaker(CircuitBreaker):
 
     async def _record_performance(self, success: bool) -> None:
         """Record performance data for adaptation."""
-        self.performance_history.append({
-            'timestamp': datetime.utcnow(),
-            'success': success,
-            'state': self.state.value
-        })
+        self.performance_history.append({"timestamp": datetime.utcnow(), "success": success, "state": self.state.value})
 
         # Keep only recent history (last adaptation_interval * 2)
         cutoff_time = datetime.utcnow() - timedelta(seconds=self.adaptation_interval * 2)
-        self.performance_history = [
-            entry for entry in self.performance_history
-            if entry['timestamp'] > cutoff_time
-        ]
+        self.performance_history = [entry for entry in self.performance_history if entry["timestamp"] > cutoff_time]
 
         # Check if we should adapt
         if (datetime.utcnow() - self.last_adaptation).total_seconds() >= self.adaptation_interval:
@@ -339,32 +330,27 @@ class AdaptiveCircuitBreaker(CircuitBreaker):
 
         # Calculate failure rate
         recent_entries = [
-            entry for entry in self.performance_history
-            if (datetime.utcnow() - entry['timestamp']).total_seconds() <= self.adaptation_interval
+            entry
+            for entry in self.performance_history
+            if (datetime.utcnow() - entry["timestamp"]).total_seconds() <= self.adaptation_interval
         ]
 
         if not recent_entries:
             return
 
-        failure_count = sum(1 for entry in recent_entries if not entry['success'])
+        failure_count = sum(1 for entry in recent_entries if not entry["success"])
         total_count = len(recent_entries)
         failure_rate = failure_count / total_count
 
         # Adapt threshold based on failure rate
         if failure_rate > self.failure_rate_threshold:
             # Increase threshold to be more tolerant
-            new_threshold = min(
-                self.config.failure_threshold + 1,
-                self.max_failure_threshold
-            )
+            new_threshold = min(self.config.failure_threshold + 1, self.max_failure_threshold)
             if new_threshold != self.config.failure_threshold:
                 self.config.failure_threshold = new_threshold
         elif failure_rate < self.failure_rate_threshold * 0.5:
             # Decrease threshold to be more sensitive
-            new_threshold = max(
-                self.config.failure_threshold - 1,
-                self.min_failure_threshold
-            )
+            new_threshold = max(self.config.failure_threshold - 1, self.min_failure_threshold)
             if new_threshold != self.config.failure_threshold:
                 self.config.failure_threshold = new_threshold
 
@@ -373,14 +359,16 @@ class AdaptiveCircuitBreaker(CircuitBreaker):
     def get_adaptation_stats(self) -> Dict[str, Any]:
         """Get adaptation statistics."""
         base_stats = self.get_stats()
-        base_stats.update({
-            'adaptation_interval': self.adaptation_interval,
-            'last_adaptation': self.last_adaptation.isoformat(),
-            'performance_history_size': len(self.performance_history),
-            'adaptive_failure_threshold': self.config.failure_threshold,
-            'min_failure_threshold': self.min_failure_threshold,
-            'max_failure_threshold': self.max_failure_threshold
-        })
+        base_stats.update(
+            {
+                "adaptation_interval": self.adaptation_interval,
+                "last_adaptation": self.last_adaptation.isoformat(),
+                "performance_history_size": len(self.performance_history),
+                "adaptive_failure_threshold": self.config.failure_threshold,
+                "min_failure_threshold": self.min_failure_threshold,
+                "max_failure_threshold": self.max_failure_threshold,
+            }
+        )
         return base_stats
 
 
@@ -391,11 +379,7 @@ class CircuitBreakerPool:
         """Initialize circuit breaker pool."""
         self.breakers: Dict[str, CircuitBreaker] = {}
 
-    def get_or_create(
-        self,
-        service_name: str,
-        config: Optional[CircuitBreakerConfig] = None
-    ) -> CircuitBreaker:
+    def get_or_create(self, service_name: str, config: Optional[CircuitBreakerConfig] = None) -> CircuitBreaker:
         """Get or create circuit breaker for service."""
         if service_name not in self.breakers:
             if config is None:
@@ -418,10 +402,7 @@ class CircuitBreakerPool:
 
     def get_pool_stats(self) -> Dict[str, Any]:
         """Get statistics for all breakers in pool."""
-        return {
-            service: breaker.get_stats()
-            for service, breaker in self.breakers.items()
-        }
+        return {service: breaker.get_stats() for service, breaker in self.breakers.items()}
 
 
 # Global circuit breaker pool

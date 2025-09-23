@@ -1,4 +1,6 @@
-"""Redis pub/sub integration for real-time communication between simulation services.
+"""
+Redis pub/sub integration for real-time communication between simulation
+services.
 
 This module provides Redis-based publish/subscribe functionality for:
 - Real-time simulation progress updates
@@ -7,12 +9,13 @@ This module provides Redis-based publish/subscribe functionality for:
 - Service health monitoring
 """
 
-import json
 import asyncio
-from typing import Dict, Any, Optional, Callable, List
-from datetime import datetime
-import redis.asyncio as redis
+import json
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
+
+import redis.asyncio as redis
 
 from .logging import SimulationLogger
 
@@ -20,6 +23,7 @@ from .logging import SimulationLogger
 @dataclass
 class RedisConfig:
     """Configuration for Redis connection."""
+
     host: str = "localhost"
     port: int = 6379
     db: int = 0
@@ -46,7 +50,7 @@ class RedisPubSubManager:
                 port=self.config.port,
                 db=self.config.db,
                 password=self.config.password,
-                decode_responses=self.config.decode_responses
+                decode_responses=self.config.decode_responses,
             )
 
             # Test connection
@@ -75,19 +79,13 @@ class RedisPubSubManager:
 
         try:
             # Add metadata to message
-            enriched_message = {
-                **message,
-                "timestamp": datetime.now().isoformat(),
-                "publisher": "simulation-service"
-            }
+            enriched_message = {**message, "timestamp": datetime.now().isoformat(), "publisher": "simulation-service"}
 
             # Publish to Redis
             await self.redis_client.publish(channel, json.dumps(enriched_message))
 
             self.logger.debug(
-                "Published message to Redis channel",
-                channel=channel,
-                message_type=message.get("type", "unknown")
+                "Published message to Redis channel", channel=channel, message_type=message.get("type", "unknown")
             )
 
             return True
@@ -143,11 +141,7 @@ class RedisPubSubManager:
                             try:
                                 await callback(data)
                             except Exception as e:
-                                self.logger.error(
-                                    "Error in Redis message callback",
-                                    error=str(e),
-                                    channel=channel
-                                )
+                                self.logger.error("Error in Redis message callback", error=str(e), channel=channel)
 
         except Exception as e:
             self.logger.error("Error in Redis message listening", error=str(e))
@@ -163,11 +157,7 @@ class SimulationRedisClient:
     async def publish_simulation_event(self, simulation_id: str, event_type: str, event_data: Dict[str, Any]) -> bool:
         """Publish a simulation event to Redis."""
         channel = f"simulation:{simulation_id}"
-        message = {
-            "type": event_type,
-            "simulation_id": simulation_id,
-            **event_data
-        }
+        message = {"type": event_type, "simulation_id": simulation_id, **event_data}
 
         return await self.redis_manager.publish(channel, message)
 
@@ -178,7 +168,7 @@ class SimulationRedisClient:
             "type": "document_generated",
             "simulation_id": simulation_id,
             "document_id": document_id,
-            "document_type": document_type
+            "document_type": document_type,
         }
 
         return await self.redis_manager.publish(channel, message)
@@ -190,7 +180,7 @@ class SimulationRedisClient:
             "type": "prompt_used",
             "simulation_id": simulation_id,
             "prompt_id": prompt_id,
-            "prompt_type": prompt_type
+            "prompt_type": prompt_type,
         }
 
         return await self.redis_manager.publish(channel, message)
@@ -215,7 +205,9 @@ _redis_manager = None
 _simulation_redis_client = None
 
 
-async def initialize_redis_integration(logger: SimulationLogger, config: Optional[RedisConfig] = None) -> SimulationRedisClient:
+async def initialize_redis_integration(
+    logger: SimulationLogger, config: Optional[RedisConfig] = None
+) -> SimulationRedisClient:
     """Initialize Redis integration with default configuration."""
     global _redis_config, _redis_manager, _simulation_redis_client
 

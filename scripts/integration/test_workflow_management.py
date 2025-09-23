@@ -8,19 +8,24 @@ Tests creation, execution, monitoring, and management of workflows.
 
 import asyncio
 import json
-import sys
 import os
+import sys
 import time
 
 # Add the services directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'services'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "services"))
+
+from services.orchestrator.modules.workflow_management.models import (
+    ActionType,
+    ParameterType,
+    WorkflowAction,
+    WorkflowExecutionStatus,
+    WorkflowParameter,
+    WorkflowStatus,
+)
 
 # Import workflow management components
 from services.orchestrator.modules.workflow_management.service import WorkflowManagementService
-from services.orchestrator.modules.workflow_management.models import (
-    WorkflowParameter, WorkflowAction, ParameterType, ActionType,
-    WorkflowStatus, WorkflowExecutionStatus
-)
 
 
 async def test_workflow_management():
@@ -47,7 +52,7 @@ async def test_workflow_management():
                     "name": "document_url",
                     "type": "string",
                     "description": "URL of the document to analyze",
-                    "required": True
+                    "required": True,
                 },
                 {
                     "name": "analysis_type",
@@ -55,8 +60,8 @@ async def test_workflow_management():
                     "description": "Type of analysis to perform",
                     "required": False,
                     "default_value": "quality",
-                    "allowed_values": ["quality", "consistency", "sentiment"]
-                }
+                    "allowed_values": ["quality", "consistency", "sentiment"],
+                },
             ],
             "actions": [
                 {
@@ -68,11 +73,8 @@ async def test_workflow_management():
                         "service": "source_agent",
                         "endpoint": "/fetch",
                         "method": "POST",
-                        "parameters": {
-                            "url": "{{document_url}}",
-                            "type": "document"
-                        }
-                    }
+                        "parameters": {"url": "{{document_url}}", "type": "document"},
+                    },
                 },
                 {
                     "action_type": "service_call",
@@ -85,10 +87,10 @@ async def test_workflow_management():
                         "method": "POST",
                         "parameters": {
                             "content": "{{fetch_document.response.content}}",
-                            "analysis_type": "{{analysis_type}}"
-                        }
+                            "analysis_type": "{{analysis_type}}",
+                        },
                     },
-                    "depends_on": ["fetch_document"]
+                    "depends_on": ["fetch_document"],
                 },
                 {
                     "action_type": "service_call",
@@ -99,14 +101,11 @@ async def test_workflow_management():
                         "service": "summarizer_hub",
                         "endpoint": "/summarize",
                         "method": "POST",
-                        "parameters": {
-                            "content": "{{analyze_document.response.results}}",
-                            "max_length": 300
-                        }
+                        "parameters": {"content": "{{analyze_document.response.results}}", "max_length": 300},
                     },
-                    "depends_on": ["analyze_document"]
-                }
-            ]
+                    "depends_on": ["analyze_document"],
+                },
+            ],
         }
 
         success, message, workflow = await workflow_service.create_workflow(workflow_data, "test_user")
@@ -179,10 +178,7 @@ async def test_workflow_management():
     try:
         if test_results["create_workflow"]["passed"]:
             workflow_id = test_results["create_workflow"]["workflow_id"]
-            execution_params = {
-                "document_url": "https://example.com/document.pdf",
-                "analysis_type": "quality"
-            }
+            execution_params = {"document_url": "https://example.com/document.pdf", "analysis_type": "quality"}
 
             success, message, execution = await workflow_service.execute_workflow(
                 workflow_id, execution_params, "test_user"
@@ -224,7 +220,7 @@ async def test_workflow_management():
             workflow_id = test_results["create_workflow"]["workflow_id"]
             updates = {
                 "description": "Updated test workflow description",
-                "tags": ["test", "analysis", "documentation", "updated"]
+                "tags": ["test", "analysis", "documentation", "updated"],
             }
 
             success, message = await workflow_service.update_workflow(workflow_id, updates, "test_user")
@@ -333,8 +329,8 @@ async def demonstrate_workflow_templates():
     print("🎯 DEMONSTRATING WORKFLOW TEMPLATES")
     print("=" * 50)
 
-    from services.orchestrator.modules.workflow_management.service import WorkflowManagementService
     from services.orchestrator.modules.workflow_management.models import create_workflow_from_template
+    from services.orchestrator.modules.workflow_management.service import WorkflowManagementService
 
     workflow_service = WorkflowManagementService()
 
@@ -342,15 +338,27 @@ async def demonstrate_workflow_templates():
     print("📄 Creating workflow from 'document_analysis' template...")
     try:
         workflow = create_workflow_from_template("document_analysis")
-        success, message, saved_workflow = await workflow_service.create_workflow({
-            "name": workflow.name,
-            "description": workflow.description,
-            "parameters": [{"name": p.name, "type": p.type.value, "description": p.description, "required": p.required}
-                          for p in workflow.parameters],
-            "actions": [{"action_type": a.action_type.value, "name": a.name, "description": a.description,
-                        "config": a.config, "depends_on": a.depends_on}
-                       for a in workflow.actions]
-        }, "demo_user")
+        success, message, saved_workflow = await workflow_service.create_workflow(
+            {
+                "name": workflow.name,
+                "description": workflow.description,
+                "parameters": [
+                    {"name": p.name, "type": p.type.value, "description": p.description, "required": p.required}
+                    for p in workflow.parameters
+                ],
+                "actions": [
+                    {
+                        "action_type": a.action_type.value,
+                        "name": a.name,
+                        "description": a.description,
+                        "config": a.config,
+                        "depends_on": a.depends_on,
+                    }
+                    for a in workflow.actions
+                ],
+            },
+            "demo_user",
+        )
 
         if success:
             print("✅ Template-based workflow created successfully!")
@@ -364,9 +372,9 @@ async def demonstrate_workflow_templates():
                 saved_workflow.workflow_id,
                 {
                     "document_urls": ["https://example.com/doc1.pdf", "https://example.com/doc2.pdf"],
-                    "analysis_types": ["quality", "consistency"]
+                    "analysis_types": ["quality", "consistency"],
                 },
-                "demo_user"
+                "demo_user",
             )
 
             if exec_success:
@@ -381,6 +389,7 @@ async def demonstrate_workflow_templates():
 
 
 if __name__ == "__main__":
+
     async def main():
         # Run comprehensive workflow management tests
         await test_workflow_management()

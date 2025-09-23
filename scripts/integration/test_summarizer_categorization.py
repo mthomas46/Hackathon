@@ -4,21 +4,24 @@
 Validates that the categorization module works correctly.
 """
 
-import sys
 import os
+import sys
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 def test_categorizer_import():
     """Test that the categorizer module can be imported."""
     try:
         from services.summarizer_hub.modules.categorizer import DocumentCategorizer, categorize_document
+
         print("✅ Categorizer module imported successfully")
         return True
     except ImportError as e:
         print(f"❌ Failed to import categorizer module: {e}")
         return False
+
 
 def test_categorizer_initialization():
     """Test that the categorizer can be initialized."""
@@ -33,6 +36,7 @@ def test_categorizer_initialization():
     except Exception as e:
         print(f"❌ Failed to initialize categorizer: {e}")
         return False
+
 
 def test_rule_based_categorization():
     """Test rule-based categorization functionality."""
@@ -59,6 +63,7 @@ def test_rule_based_categorization():
         print(f"❌ Rule-based categorization failed: {e}")
         return False
 
+
 def test_keyword_extraction():
     """Test keyword extraction functionality."""
     try:
@@ -77,15 +82,17 @@ def test_keyword_extraction():
         print(f"❌ Keyword extraction failed: {e}")
         return False
 
+
 def test_main_app_import():
     """Test that the main app can be imported."""
     try:
         from services.summarizer_hub.main import app
+
         print("✅ Main app imported successfully")
 
         # Check that categorization endpoints exist
         routes = [route.path for route in app.routes]
-        categorization_routes = [r for r in routes if 'categorize' in r]
+        categorization_routes = [r for r in routes if "categorize" in r]
 
         print(f"✅ Found {len(categorization_routes)} categorization routes:")
         for route in categorization_routes:
@@ -95,6 +102,7 @@ def test_main_app_import():
     except Exception as e:
         print(f"❌ Failed to import main app: {e}")
         return False
+
 
 def main():
     """Run all tests."""
@@ -127,6 +135,7 @@ def main():
     else:
         print("⚠️  Some tests failed. Check the output above for details.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

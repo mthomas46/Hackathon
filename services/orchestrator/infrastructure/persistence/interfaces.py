@@ -1,10 +1,10 @@
-"""Repository Interfaces"""
+"""Repository Interfaces."""
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from ...domain.workflow_management import Workflow, WorkflowExecution, WorkflowId, ExecutionId
 from ...domain.service_registry import Service, ServiceId
+from ...domain.workflow_management import ExecutionId, Workflow, WorkflowExecution, WorkflowId
 
 
 class WorkflowRepositoryInterface(ABC):
@@ -13,12 +13,10 @@ class WorkflowRepositoryInterface(ABC):
     @abstractmethod
     def save_workflow(self, workflow: Workflow) -> bool:
         """Save a workflow."""
-        pass
 
     @abstractmethod
     def get_workflow(self, workflow_id: WorkflowId) -> Optional[Workflow]:
         """Get a workflow by ID."""
-        pass
 
     @abstractmethod
     def list_workflows(
@@ -28,20 +26,17 @@ class WorkflowRepositoryInterface(ABC):
         status_filter: Optional[str] = None,
         created_by_filter: Optional[str] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[Workflow]:
         """List workflows with optional filters."""
-        pass
 
     @abstractmethod
     def delete_workflow(self, workflow_id: WorkflowId) -> bool:
         """Delete a workflow."""
-        pass
 
     @abstractmethod
     def update_workflow(self, workflow: Workflow) -> bool:
         """Update a workflow."""
-        pass
 
 
 class WorkflowExecutionRepositoryInterface(ABC):
@@ -50,12 +45,10 @@ class WorkflowExecutionRepositoryInterface(ABC):
     @abstractmethod
     def save_execution(self, execution: WorkflowExecution) -> bool:
         """Save a workflow execution."""
-        pass
 
     @abstractmethod
     def get_execution(self, execution_id: ExecutionId) -> Optional[WorkflowExecution]:
         """Get a workflow execution by ID."""
-        pass
 
     @abstractmethod
     def list_executions(
@@ -64,20 +57,17 @@ class WorkflowExecutionRepositoryInterface(ABC):
         status_filter: Optional[str] = None,
         correlation_id_filter: Optional[str] = None,
         limit: int = 50,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[WorkflowExecution]:
         """List workflow executions with optional filters."""
-        pass
 
     @abstractmethod
     def update_execution(self, execution: WorkflowExecution) -> bool:
         """Update a workflow execution."""
-        pass
 
     @abstractmethod
     def delete_execution(self, execution_id: ExecutionId) -> bool:
         """Delete a workflow execution."""
-        pass
 
 
 class ServiceRepositoryInterface(ABC):
@@ -86,24 +76,19 @@ class ServiceRepositoryInterface(ABC):
     @abstractmethod
     def save_service(self, service: Service) -> bool:
         """Save a service."""
-        pass
 
     @abstractmethod
     def get_service(self, service_id: ServiceId) -> Optional[Service]:
         """Get a service by ID."""
-        pass
 
     @abstractmethod
     def list_services(self) -> List[Service]:
         """List all services."""
-        pass
 
     @abstractmethod
     def delete_service(self, service_id: ServiceId) -> bool:
         """Delete a service."""
-        pass
 
     @abstractmethod
     def update_service(self, service: Service) -> bool:
         """Update a service."""
-        pass

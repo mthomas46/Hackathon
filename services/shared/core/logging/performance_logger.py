@@ -1,19 +1,19 @@
 """Performance Logger - Specialized logging for performance metrics and monitoring."""
 
-import time
 import asyncio
-from typing import Dict, Any, Optional, Callable, TypeVar, Awaitable
-from contextlib import asynccontextmanager
+import time
 from functools import wraps
+from typing import Any, Callable, Dict, Optional, TypeVar
 
-from .logger import get_logger
 from ..di.services import ILoggerService
+from .logger import get_logger
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class PerformanceLogger:
-    """Performance logging utility for tracking operation metrics.
+    """
+    Performance logging utility for tracking operation metrics.
 
     This class provides:
     - Automatic timing of operations
@@ -25,7 +25,8 @@ class PerformanceLogger:
     """
 
     def __init__(self, logger: Optional[ILoggerService] = None) -> None:
-        """Initialize performance logger.
+        """
+        Initialize performance logger.
 
         Args:
             logger: Logger service instance (uses global logger if None)
@@ -33,7 +34,8 @@ class PerformanceLogger:
         self._logger = logger or get_logger()
 
     def log_performance(self, operation: str, duration: float, **kwargs) -> None:
-        """Log performance metric.
+        """
+        Log performance metric.
 
         Args:
             operation: Name of the operation
@@ -42,8 +44,9 @@ class PerformanceLogger:
         """
         self._logger.log_performance(operation, duration, **kwargs)
 
-    def time_operation(self, operation: str, **context) -> 'PerformanceTimer':
-        """Create a performance timer for an operation.
+    def time_operation(self, operation: str, **context) -> "PerformanceTimer":
+        """
+        Create a performance timer for an operation.
 
         Args:
             operation: Name of the operation to time
@@ -59,8 +62,9 @@ class PerformanceLogger:
         """
         return PerformanceTimer(self, operation, **context)
 
-    def time_async_operation(self, operation: str, **context) -> 'AsyncPerformanceTimer':
-        """Create an async performance timer for an operation.
+    def time_async_operation(self, operation: str, **context) -> "AsyncPerformanceTimer":
+        """
+        Create an async performance timer for an operation.
 
         Args:
             operation: Name of the operation to time
@@ -77,7 +81,8 @@ class PerformanceLogger:
         return AsyncPerformanceTimer(self, operation, **context)
 
     def time_function(self, operation: Optional[str] = None, **context):
-        """Decorator to time function execution.
+        """
+        Decorator to time function execution.
 
         Args:
             operation: Custom operation name (uses function name if None)
@@ -97,28 +102,34 @@ class PerformanceLogger:
                 # processing logic here
                 return result
         """
+
         def decorator(func: Callable[..., T]) -> Callable[..., T]:
             op_name = operation or f"{func.__module__}.{func.__qualname__}"
 
             if asyncio.iscoroutinefunction(func):
+
                 @wraps(func)
                 async def async_wrapper(*args, **kwargs):
                     with self.time_operation(op_name, **context) as timer:
                         result = await func(*args, **kwargs)
                         return result
+
                 return async_wrapper
             else:
+
                 @wraps(func)
                 def sync_wrapper(*args, **kwargs):
                     with self.time_operation(op_name, **context) as timer:
                         result = func(*args, **kwargs)
                         return result
+
                 return sync_wrapper
 
         return decorator
 
-    def monitor_threshold(self, operation: str, threshold_seconds: float, **context) -> 'ThresholdTimer':
-        """Monitor operation against performance threshold.
+    def monitor_threshold(self, operation: str, threshold_seconds: float, **context) -> "ThresholdTimer":
+        """
+        Monitor operation against performance threshold.
 
         Args:
             operation: Name of the operation
@@ -139,7 +150,8 @@ class PerformanceTimer:
     """Timer for synchronous operations with performance logging."""
 
     def __init__(self, perf_logger: PerformanceLogger, operation: str, **context) -> None:
-        """Initialize performance timer.
+        """
+        Initialize performance timer.
 
         Args:
             perf_logger: Performance logger instance
@@ -164,7 +176,8 @@ class PerformanceTimer:
             self._log_performance(duration, exc_type is not None)
 
     def add_context(self, **kwargs) -> None:
-        """Add additional context to the performance log.
+        """
+        Add additional context to the performance log.
 
         Args:
             **kwargs: Additional context data
@@ -172,18 +185,14 @@ class PerformanceTimer:
         self._additional_context.update(kwargs)
 
     def _log_performance(self, duration: float, had_error: bool) -> None:
-        """Log performance data.
+        """
+        Log performance data.
 
         Args:
             duration: Operation duration in seconds
             had_error: Whether operation had an error
         """
-        context = {
-            **self._context,
-            **self._additional_context,
-            "success": not had_error,
-            "error_occurred": had_error
-        }
+        context = {**self._context, **self._additional_context, "success": not had_error, "error_occurred": had_error}
 
         self._perf_logger.log_performance(self._operation, duration, **context)
 
@@ -192,7 +201,8 @@ class AsyncPerformanceTimer:
     """Timer for asynchronous operations with performance logging."""
 
     def __init__(self, perf_logger: PerformanceLogger, operation: str, **context) -> None:
-        """Initialize async performance timer.
+        """
+        Initialize async performance timer.
 
         Args:
             perf_logger: Performance logger instance
@@ -218,7 +228,8 @@ class AsyncPerformanceTimer:
             self._log_performance(duration, had_error)
 
     def add_context(self, **kwargs) -> None:
-        """Add additional context to the performance log.
+        """
+        Add additional context to the performance log.
 
         Args:
             **kwargs: Additional context data
@@ -226,7 +237,8 @@ class AsyncPerformanceTimer:
         self._additional_context.update(kwargs)
 
     def _log_performance(self, duration: float, had_error: bool) -> None:
-        """Log async performance data.
+        """
+        Log async performance data.
 
         Args:
             duration: Operation duration in seconds
@@ -237,7 +249,7 @@ class AsyncPerformanceTimer:
             **self._additional_context,
             "success": not had_error,
             "error_occurred": had_error,
-            "async_operation": True
+            "async_operation": True,
         }
 
         self._perf_logger.log_performance(self._operation, duration, **context)
@@ -246,9 +258,9 @@ class AsyncPerformanceTimer:
 class ThresholdTimer(PerformanceTimer):
     """Performance timer that monitors against thresholds."""
 
-    def __init__(self, perf_logger: PerformanceLogger, operation: str,
-                 threshold_seconds: float, **context) -> None:
-        """Initialize threshold timer.
+    def __init__(self, perf_logger: PerformanceLogger, operation: str, threshold_seconds: float, **context) -> None:
+        """
+        Initialize threshold timer.
 
         Args:
             perf_logger: Performance logger instance
@@ -260,7 +272,8 @@ class ThresholdTimer(PerformanceTimer):
         self._threshold = threshold_seconds
 
     def _log_performance(self, duration: float, had_error: bool) -> None:
-        """Log performance with threshold monitoring.
+        """
+        Log performance with threshold monitoring.
 
         Args:
             duration: Operation duration in seconds
@@ -274,7 +287,7 @@ class ThresholdTimer(PerformanceTimer):
             "error_occurred": had_error,
             "threshold_seconds": self._threshold,
             "threshold_exceeded": duration > self._threshold,
-            "performance_ratio": duration / self._threshold if self._threshold > 0 else 0
+            "performance_ratio": duration / self._threshold if self._threshold > 0 else 0,
         }
 
         # Log with appropriate level based on threshold
@@ -286,7 +299,7 @@ class ThresholdTimer(PerformanceTimer):
                 duration_seconds=duration,
                 threshold_seconds=self._threshold,
                 excess_time=duration - self._threshold,
-                **context
+                **context,
             )
         else:
             # Log as info if within threshold
@@ -298,7 +311,8 @@ _performance_logger: Optional[PerformanceLogger] = None
 
 
 def get_performance_logger() -> PerformanceLogger:
-    """Get global performance logger instance.
+    """
+    Get global performance logger instance.
 
     Returns:
         Global performance logger instance
@@ -311,7 +325,8 @@ def get_performance_logger() -> PerformanceLogger:
 
 # Convenience functions
 def time_operation(operation: str, **context):
-    """Convenience function to time an operation.
+    """
+    Convenience function to time an operation.
 
     Args:
         operation: Operation name
@@ -328,7 +343,8 @@ def time_operation(operation: str, **context):
 
 
 def time_async_operation(operation: str, **context):
-    """Convenience function to time an async operation.
+    """
+    Convenience function to time an async operation.
 
     Args:
         operation: Operation name
@@ -345,7 +361,8 @@ def time_async_operation(operation: str, **context):
 
 
 def monitor_performance(operation: str, threshold_seconds: float, **context):
-    """Convenience function to monitor operation against threshold.
+    """
+    Convenience function to monitor operation against threshold.
 
     Args:
         operation: Operation name

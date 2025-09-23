@@ -1,11 +1,11 @@
 """
 Mock Data Generator for Project Simulations.
+
 Following TDD principles with clean, testable code.
 """
 
-from typing import List, Dict, Any
 from datetime import datetime
-import random
+from typing import Any, Dict, List
 
 
 class MockDataGenerator:
@@ -14,8 +14,17 @@ class MockDataGenerator:
     def __init__(self):
         """Initialize the mock data generator."""
         self.common_keywords = [
-            "api", "database", "frontend", "backend", "authentication", "security",
-            "microservices", "deployment", "testing", "documentation", "analytics"
+            "api",
+            "database",
+            "frontend",
+            "backend",
+            "authentication",
+            "security",
+            "microservices",
+            "deployment",
+            "testing",
+            "documentation",
+            "analytics",
         ]
 
         self.tech_mapping = {
@@ -28,7 +37,7 @@ class MockDataGenerator:
             "postgres": ["PostgreSQL", "PostGIS", "pgAdmin", "Database"],
             "authentication": ["JWT", "OAuth2", "Auth0", "Firebase Auth"],
             "deployment": ["Docker", "Kubernetes", "AWS", "Heroku", "CI/CD"],
-            "testing": ["pytest", "Jest", "Selenium", "Cypress", "unittest"]
+            "testing": ["pytest", "Jest", "Selenium", "Cypress", "unittest"],
         }
 
     def extract_keywords_from_query(self, query: str) -> List[str]:
@@ -76,14 +85,16 @@ class MockDataGenerator:
             # Use keywords as skills, limited to 3 per member
             skills = keywords[:3] if len(keywords) >= 3 else keywords + ["general"] * (3 - len(keywords))
 
-            team_members.append({
-                "id": f"member_{i+1}",
-                "name": f"Mock {role.title().replace('_', ' ')} {i+1}",
-                "role": role,
-                "skills": skills,
-                "experience_years": 3 + i,  # 3, 4, 5, 6, 7 years
-                "productivity_factor": round(0.8 + (i * 0.1), 1)  # 0.8, 0.9, 1.0, 1.1, 1.2
-            })
+            team_members.append(
+                {
+                    "id": f"member_{i+1}",
+                    "name": f"Mock {role.title().replace('_', ' ')} {i+1}",
+                    "role": role,
+                    "skills": skills,
+                    "experience_years": 3 + i,  # 3, 4, 5, 6, 7 years
+                    "productivity_factor": round(0.8 + (i * 0.1), 1),  # 0.8, 0.9, 1.0, 1.1, 1.2
+                }
+            )
 
         return team_members
 
@@ -93,14 +104,16 @@ class MockDataGenerator:
         documents = []
 
         for i, doc_type in enumerate(doc_types):
-            documents.append({
-                "id": f"doc_{i+1}",
-                "type": doc_type,
-                "title": f"Mock {doc_type.title().replace('_', ' ')}",
-                "content": f"Mock content for {doc_type} related to {', '.join(keywords[:3])}",
-                "keywords": keywords[:5],
-                "created_at": datetime.now().isoformat()
-            })
+            documents.append(
+                {
+                    "id": f"doc_{i+1}",
+                    "type": doc_type,
+                    "title": f"Mock {doc_type.title().replace('_', ' ')}",
+                    "content": f"Mock content for {doc_type} related to {', '.join(keywords[:3])}",
+                    "keywords": keywords[:5],
+                    "created_at": datetime.now().isoformat(),
+                }
+            )
 
         return documents
 
@@ -128,17 +141,21 @@ class MockDataGenerator:
             phase_duration = min(2, duration_weeks - start_week)
 
             if phase_duration > 0:
-                timeline.append({
-                    "phase": phase,
-                    "start_week": start_week,
-                    "duration_weeks": phase_duration,
-                    "milestones": [f"Complete {phase.lower()} phase"],
-                    "deliverables": [f"{phase} documentation and artifacts"]
-                })
+                timeline.append(
+                    {
+                        "phase": phase,
+                        "start_week": start_week,
+                        "duration_weeks": phase_duration,
+                        "milestones": [f"Complete {phase.lower()} phase"],
+                        "deliverables": [f"{phase} documentation and artifacts"],
+                    }
+                )
 
         return timeline
 
-    def generate_comprehensive_mock_data(self, query: str, context: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_comprehensive_mock_data(
+        self, query: str, context: Dict[str, Any], config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate comprehensive mock data for simulation."""
         try:
             # Extract keywords from query
@@ -164,7 +181,7 @@ class MockDataGenerator:
                 "technologies": technologies,
                 "timeline": timeline,
                 "keywords_extracted": keywords,
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
         except Exception as e:
@@ -176,5 +193,5 @@ class MockDataGenerator:
                 "timeline": [],
                 "keywords_extracted": ["error"],
                 "error": str(e),
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }

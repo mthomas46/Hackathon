@@ -1,7 +1,9 @@
-"""Database schema definitions for Doc Store service.
+"""
+Database schema definitions for Doc Store service.
 
 Contains all table creation statements and indexes.
 """
+
 from .connection import get_doc_store_connection, return_doc_store_connection
 
 
@@ -349,33 +351,41 @@ def init_database() -> None:
             conn.execute(index_sql)
 
         # Enable FTS on documents table
-        conn.execute("""
+        conn.execute(
+            """
             CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(
                 content, content='documents', content_rowid='rowid'
             )
-        """)
+        """
+        )
 
         # Create FTS triggers
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TRIGGER IF NOT EXISTS documents_fts_insert AFTER INSERT ON documents
             BEGIN
                 INSERT INTO documents_fts(rowid, content) VALUES (new.rowid, new.content);
             END
-        """)
+        """
+        )
 
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TRIGGER IF NOT EXISTS documents_fts_delete AFTER DELETE ON documents
             BEGIN
                 DELETE FROM documents_fts WHERE rowid = old.rowid;
             END
-        """)
+        """
+        )
 
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TRIGGER IF NOT EXISTS documents_fts_update AFTER UPDATE ON documents
             BEGIN
                 UPDATE documents_fts SET content = new.content WHERE rowid = new.rowid;
             END
-        """)
+        """
+        )
 
         conn.commit()
 

@@ -7,8 +7,9 @@ as an overlay on the existing menu system.
 """
 
 import asyncio
-import sys
 import os
+import sys
+
 from rich.console import Console
 
 # Add the project directory to the path
@@ -18,6 +19,7 @@ if project_dir not in sys.path:
 
 try:
     import questionary
+
     QUESTIONARY_AVAILABLE = True
 except ImportError:
     QUESTIONARY_AVAILABLE = False
@@ -96,10 +98,7 @@ async def demo_interactive_overlay():
 
     try:
         # Simulate a quick menu interaction (will timeout for demo)
-        await asyncio.wait_for(
-            overlay.enhanced_menu_loop(manager, "Document Analysis Manager"),
-            timeout=3.0
-        )
+        await asyncio.wait_for(overlay.enhanced_menu_loop(manager, "Document Analysis Manager"), timeout=3.0)
     except asyncio.TimeoutError:
         console.print("[yellow]⏰ Demo timeout - menu would continue in real usage[/yellow]")
     except Exception as e:

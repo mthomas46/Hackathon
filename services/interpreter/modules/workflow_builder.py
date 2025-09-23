@@ -1,16 +1,17 @@
-"""Workflow building functionality for the Interpreter service.
+"""
+Workflow building functionality for the Interpreter service.
 
-This module contains the WorkflowBuilder class and related functionality,
-extracted from the main interpreter service to improve maintainability.
+This module contains the WorkflowBuilder class and related
+functionality, extracted from the main interpreter service to improve
+maintainability.
 """
 
-from typing import Dict, Any, Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import utc_now
 
 # Import shared configuration utilities
-from .shared_utils import get_default_timeout, get_interpreter_clients
+from .shared_utils import get_interpreter_clients
 
 if TYPE_CHECKING:
     from services.interpreter.main import InterpretedWorkflow, WorkflowStep
@@ -63,18 +64,15 @@ class WorkflowBuilder:
                     step_id="analyze_docs",
                     service="analysis-service",
                     operation="analyze",
-                    params={
-                        "targets": targets,
-                        "analysis_types": ["consistency", "quality", "security"]
-                    }
+                    params={"targets": targets, "analysis_types": ["consistency", "quality", "security"]},
                 ),
                 WorkflowStep(
                     step_id="generate_findings",
                     service="analysis-service",
                     operation="findings",
-                    params={"format": "json"}
-                )
-            ]
+                    params={"format": "json"},
+                ),
+            ],
         )
 
     async def _build_consistency_workflow(self, entities: Dict[str, Any]) -> "InterpretedWorkflow":
@@ -87,9 +85,9 @@ class WorkflowBuilder:
                     step_id="consistency_check",
                     service="analysis-service",
                     operation="consistency/check",
-                    params={"comprehensive": True}
+                    params={"comprehensive": True},
                 )
-            ]
+            ],
         )
 
     async def _build_ingestion_workflow(self, source_type: str, entities: Dict[str, Any]) -> "InterpretedWorkflow":
@@ -114,18 +112,12 @@ class WorkflowBuilder:
                     step_id="ingest_data",
                     service="source-agent",
                     operation="ingest",
-                    params={
-                        "sources": sources,
-                        "source_type": source_type
-                    }
+                    params={"sources": sources, "source_type": source_type},
                 ),
                 WorkflowStep(
-                    step_id="store_documents",
-                    service="doc_store",
-                    operation="store",
-                    params={"validate": True}
-                )
-            ]
+                    step_id="store_documents", service="doc_store", operation="store", params={"validate": True}
+                ),
+            ],
         )
 
     async def _build_report_workflow(self, entities: Dict[str, Any]) -> "InterpretedWorkflow":
@@ -140,12 +132,9 @@ class WorkflowBuilder:
                     step_id="generate_report",
                     service="analysis-service",
                     operation="reports/generate",
-                    params={
-                        "type": report_type,
-                        "format": "json"
-                    }
+                    params={"type": report_type, "format": "json"},
                 )
-            ]
+            ],
         )
 
     async def _build_prompt_search_workflow(self, entities: Dict[str, Any]) -> "InterpretedWorkflow":
@@ -160,10 +149,7 @@ class WorkflowBuilder:
                     step_id="search_prompts",
                     service="prompt-store",
                     operation="search",
-                    params={
-                        "query": " ".join(search_terms),
-                        "limit": 10
-                    }
+                    params={"query": " ".join(search_terms), "limit": 10},
                 )
-            ]
+            ],
         )

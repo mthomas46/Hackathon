@@ -1,11 +1,7 @@
 """Lifecycle management domain package."""
 
+from .handlers import LifecycleHandlers
 from .repository import LifecycleRepository
 from .service import LifecycleService
-from .handlers import LifecycleHandlers
 
-__all__ = [
-    "LifecycleRepository",
-    "LifecycleService",
-    "LifecycleHandlers"
-]
+__all__ = ["LifecycleRepository", "LifecycleService", "LifecycleHandlers"]

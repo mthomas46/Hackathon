@@ -1,12 +1,14 @@
 """Style examples management for code analyzer service."""
 
-from typing import Dict, List, Any, Optional
 import os
+from typing import Any, Dict, List, Optional
+
 from services.shared.utilities import stable_hash  # type: ignore
 
 
 class StyleExamplesManager:
-    """Manages style examples with in-memory storage and optional persistence."""
+    """Manages style examples with in-memory storage and optional
+    persistence."""
 
     def __init__(self):
         self._examples: Dict[str, List[Dict[str, Any]]] = {}
@@ -32,6 +34,7 @@ class StyleExamplesManager:
             if ds:
                 try:
                     from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+
                     svc = ServiceClients(timeout=10)
                     doc_store_examples = svc.get_json(f"{ds}/style/examples", params={"language": language})
                     if doc_store_examples and "items" in doc_store_examples:
@@ -51,6 +54,7 @@ class StyleExamplesManager:
         if ds:
             try:
                 from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+
                 svc = ServiceClients(timeout=10)
                 doc_store_summary = svc.get_json(f"{ds}/style/examples")
                 if doc_store_summary and "languages" in doc_store_summary:
@@ -72,6 +76,7 @@ class StyleExamplesManager:
 
         try:
             from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+
             svc = ServiceClients(timeout=10)
 
             for item in items:
@@ -85,11 +90,14 @@ class StyleExamplesManager:
                 }
 
                 content = item.get("snippet", "")
-                svc.post_json(f"{ds}/documents", {
-                    "content": content,
-                    "content_hash": stable_hash(content),
-                    "metadata": meta,
-                })
+                svc.post_json(
+                    f"{ds}/documents",
+                    {
+                        "content": content,
+                        "content_hash": stable_hash(content),
+                        "metadata": meta,
+                    },
+                )
         except Exception:
             pass  # Persistence is optional, don't fail if it doesn't work
 

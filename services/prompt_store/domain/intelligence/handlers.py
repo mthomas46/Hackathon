@@ -1,9 +1,11 @@
 """Intelligence handlers for cross-service prompt generation."""
 
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
+
+from services.shared.core.responses.responses import create_error_response, create_success_response
+
 from ...core.handler import BaseHandler
 from .service import IntelligenceService
-from services.shared.core.responses.responses import create_success_response, create_error_response
 
 
 class IntelligenceHandlers(BaseHandler):
@@ -19,12 +21,11 @@ class IntelligenceHandlers(BaseHandler):
             if "error" in result:
                 return create_error_response(result["error"], "ANALYSIS_FAILED").model_dump()
 
-            return create_success_response(
-                message="Prompts generated from code analysis",
-                data=result
-            ).model_dump()
+            return create_success_response(message="Prompts generated from code analysis", data=result).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to generate prompts from code: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to generate prompts from code: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
     async def handle_generate_from_document(self, document_content: str, doc_type: str = "markdown") -> Dict[str, Any]:
         """Generate prompts from document analysis."""
@@ -33,12 +34,11 @@ class IntelligenceHandlers(BaseHandler):
             if "error" in result:
                 return create_error_response(result["error"], "ANALYSIS_FAILED").model_dump()
 
-            return create_success_response(
-                message="Prompts generated from document analysis",
-                data=result
-            ).model_dump()
+            return create_success_response(message="Prompts generated from document analysis", data=result).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to generate prompts from document: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to generate prompts from document: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
     async def handle_generate_service_prompts(self, service_name: str, service_description: str = "") -> Dict[str, Any]:
         """Generate prompts for service integration."""
@@ -46,12 +46,14 @@ class IntelligenceHandlers(BaseHandler):
             prompts = await self.service.generate_service_integration_prompts(service_name, service_description)
             return create_success_response(
                 message="Service integration prompts generated",
-                data={"service": service_name, "prompts": prompts, "count": len(prompts)}
+                data={"service": service_name, "prompts": prompts, "count": len(prompts)},
             ).model_dump()
         except Exception as e:
             return create_error_response(f"Failed to generate service prompts: {str(e)}", "INTERNAL_ERROR").model_dump()
 
-    async def handle_analyze_effectiveness(self, prompt_id: str, usage_history: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    async def handle_analyze_effectiveness(
+        self, prompt_id: str, usage_history: Optional[List[Dict[str, Any]]] = None
+    ) -> Dict[str, Any]:
         """Analyze prompt effectiveness."""
         try:
             # If no usage history provided, get it from analytics
@@ -63,10 +65,7 @@ class IntelligenceHandlers(BaseHandler):
             if "error" in analysis:
                 return create_error_response(analysis["error"], "ANALYSIS_FAILED").model_dump()
 
-            return create_success_response(
-                message="Prompt effectiveness analyzed",
-                data=analysis
-            ).model_dump()
+            return create_success_response(message="Prompt effectiveness analyzed", data=analysis).model_dump()
         except Exception as e:
             return create_error_response(f"Failed to analyze effectiveness: {str(e)}", "INTERNAL_ERROR").model_dump()
 
@@ -95,13 +94,13 @@ Include:
                     "variables": [],
                     "tags": ["api", "documentation", "endpoint", "auto_generated"],
                     "source_type": "service_analysis",
-                    "confidence_score": 0.8
+                    "confidence_score": 0.8,
                 }
                 api_prompts.append(prompt)
 
             return create_success_response(
                 message="API endpoint prompts generated",
-                data={"endpoints_analyzed": len(endpoints), "prompts": api_prompts}
+                data={"endpoints_analyzed": len(endpoints), "prompts": api_prompts},
             ).model_dump()
         except Exception as e:
             return create_error_response(f"Failed to generate API prompts: {str(e)}", "INTERNAL_ERROR").model_dump()

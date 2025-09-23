@@ -1,7 +1,7 @@
-"""Application Commands for Service Registry"""
+"""Application Commands for Service Registry."""
 
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 from ...domain.service_registry import ServiceId
 
@@ -9,6 +9,7 @@ from ...domain.service_registry import ServiceId
 @dataclass
 class RegisterServiceCommand:
     """Command to register a new service."""
+
     service_id: ServiceId
     name: str
     description: str
@@ -31,12 +32,14 @@ class RegisterServiceCommand:
 @dataclass
 class UnregisterServiceCommand:
     """Command to unregister a service."""
+
     service_id: ServiceId
 
 
 @dataclass
 class UpdateServiceStatusCommand:
     """Command to update service status."""
+
     service_id: ServiceId
     status: str
 
@@ -44,4 +47,5 @@ class UpdateServiceStatusCommand:
 @dataclass
 class HeartbeatServiceCommand:
     """Command to send heartbeat for a service."""
+
     service_id: ServiceId

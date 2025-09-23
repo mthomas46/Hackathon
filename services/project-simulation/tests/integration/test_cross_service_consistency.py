@@ -1,18 +1,18 @@
-"""Cross-Service Data Consistency Tests.
+"""
+Cross-Service Data Consistency Tests.
 
 This module contains tests that validate data consistency and integrity
 across multiple services in the ecosystem, ensuring reliable data flow
 and synchronization.
 """
 
-import pytest
-import json
-import time
-from unittest.mock import Mock, patch
-from typing import Dict, Any, List, Optional
-from pathlib import Path
-import sys
 import hashlib
+import json
+import sys
+import time
+from pathlib import Path
+
+import pytest
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -25,18 +25,14 @@ class TestDataSynchronization:
         """Test that simulation data is properly replicated across services."""
         simulation_data = {
             "id": "sim_123",
-            "project": {
-                "name": "E-commerce Platform",
-                "type": "web_application",
-                "complexity": "complex"
-            },
+            "project": {"name": "E-commerce Platform", "type": "web_application", "complexity": "complex"},
             "team": {
                 "size": 8,
                 "members": ["alice", "bob", "carol", "dave", "eve", "frank", "grace", "henry"],
-                "roles": ["developer", "qa", "designer", "product_manager"]
+                "roles": ["developer", "qa", "designer", "product_manager"],
             },
             "created_at": time.time(),
-            "status": "active"
+            "status": "active",
         }
 
         # Simulate data storage in different services
@@ -45,18 +41,18 @@ class TestDataSynchronization:
             "project_repository": {
                 "simulation_id": simulation_data["id"],
                 "project_data": simulation_data["project"],
-                "sync_timestamp": time.time()
+                "sync_timestamp": time.time(),
             },
             "team_service": {
                 "simulation_id": simulation_data["id"],
                 "team_data": simulation_data["team"],
-                "sync_timestamp": time.time()
+                "sync_timestamp": time.time(),
             },
             "timeline_service": {
                 "simulation_id": simulation_data["id"],
                 "status": simulation_data["status"],
-                "sync_timestamp": time.time()
-            }
+                "sync_timestamp": time.time(),
+            },
         }
 
         # Validate data consistency
@@ -66,8 +62,9 @@ class TestDataSynchronization:
             # Different services may store simulation_id under different keys
             sim_id = stored_data.get("simulation_id") or stored_data.get("id")
             if sim_id:
-                assert sim_id == base_simulation_id, \
-                    f"{service_name} has incorrect simulation ID: {sim_id} != {base_simulation_id}"
+                assert (
+                    sim_id == base_simulation_id
+                ), f"{service_name} has incorrect simulation ID: {sim_id} != {base_simulation_id}"
 
             # Validate timestamps are recent
             sync_time = stored_data.get("sync_timestamp")
@@ -98,7 +95,7 @@ class TestDataSynchronization:
             "quality_score": 0.87,
             "created_at": time.time(),
             "author": "alice_dev",
-            "version": "1.0"
+            "version": "1.0",
         }
 
         # Simulate document storage in different services
@@ -107,23 +104,19 @@ class TestDataSynchronization:
             "doc_store": {
                 **base_document,
                 "storage_path": "/docs/requirements_doc_v1.0.md",
-                "backup_locations": ["/backup/docs/", "/archive/docs/"]
+                "backup_locations": ["/backup/docs/", "/archive/docs/"],
             },
             "analysis_service": {
                 **base_document,
-                "analysis_results": {
-                    "readability_score": 0.92,
-                    "completeness_score": 0.85,
-                    "consistency_score": 0.90
-                },
-                "analyzed_at": time.time()
+                "analysis_results": {"readability_score": 0.92, "completeness_score": 0.85, "consistency_score": 0.90},
+                "analyzed_at": time.time(),
             },
             "search_index": {
                 "document_id": base_document["id"],
                 "content_hash": base_document["content_hash"],
                 "search_terms": ["requirements", "system", "alice_dev"],
-                "indexed_at": time.time()
-            }
+                "indexed_at": time.time(),
+            },
         }
 
         # Validate core metadata consistency
@@ -132,8 +125,7 @@ class TestDataSynchronization:
         for service_name, doc_data in service_documents.items():
             for field in core_fields:
                 if field in doc_data:
-                    assert doc_data[field] == base_document[field], \
-                        f"{service_name} has inconsistent {field}"
+                    assert doc_data[field] == base_document[field], f"{service_name} has inconsistent {field}"
 
         # Validate quality scores are reasonable
         quality_fields = ["quality_score", "readability_score", "completeness_score", "consistency_score"]
@@ -142,8 +134,7 @@ class TestDataSynchronization:
             for field in quality_fields:
                 if field in doc_data:
                     score = doc_data[field]
-                    assert 0.0 <= score <= 1.0, \
-                        f"{service_name} has invalid {field}: {score}"
+                    assert 0.0 <= score <= 1.0, f"{service_name} has invalid {field}: {score}"
 
         # Validate content hash integrity
         content_hashes = []
@@ -163,12 +154,8 @@ class TestDataSynchronization:
             "type": "document_generated",
             "simulation_id": "sim_123",
             "timestamp": time.time(),
-            "data": {
-                "document_id": "doc_456",
-                "document_type": "requirements_doc",
-                "quality_score": 0.87
-            },
-            "source_service": "mock_data_generator"
+            "data": {"document_id": "doc_456", "document_type": "requirements_doc", "quality_score": 0.87},
+            "source_service": "mock_data_generator",
         }
 
         # Simulate event processing by different services
@@ -178,24 +165,24 @@ class TestDataSynchronization:
                 **base_event,
                 "notification_sent": True,
                 "recipients": ["alice_dev", "bob_pm"],
-                "notification_timestamp": time.time()
+                "notification_timestamp": time.time(),
             },
             "audit_service": {
                 **base_event,
                 "audit_trail": [
                     {"action": "event_received", "timestamp": time.time()},
                     {"action": "event_processed", "timestamp": time.time()},
-                    {"action": "event_stored", "timestamp": time.time()}
-                ]
+                    {"action": "event_stored", "timestamp": time.time()},
+                ],
             },
             "metrics_service": {
                 **base_event,
                 "metrics_captured": {
                     "event_processing_time": 0.05,
                     "event_size_bytes": 1024,
-                    "event_priority": "normal"
-                }
-            }
+                    "event_priority": "normal",
+                },
+            },
         }
 
         # Validate event integrity
@@ -204,8 +191,7 @@ class TestDataSynchronization:
         for service_name, event_data in service_events.items():
             for field in immutable_fields:
                 if field in event_data:
-                    assert event_data[field] == base_event[field], \
-                        f"{service_name} has inconsistent {field}"
+                    assert event_data[field] == base_event[field], f"{service_name} has inconsistent {field}"
 
         # Validate event data consistency
         for service_name, event_data in service_events.items():
@@ -217,15 +203,15 @@ class TestDataSynchronization:
                 key_fields = ["document_id", "document_type", "quality_score"]
                 for field in key_fields:
                     if field in event_payload and field in base_payload:
-                        assert event_payload[field] == base_payload[field], \
-                            f"{service_name} has inconsistent event data {field}"
+                        assert (
+                            event_payload[field] == base_payload[field]
+                        ), f"{service_name} has inconsistent event data {field}"
 
         # Validate timestamps are monotonic and reasonable
         current_time = time.time()
         for service_name, event_data in service_events.items():
             event_time = event_data.get("timestamp", 0)
-            assert abs(current_time - event_time) < 300, \
-                f"{service_name} has unreasonable timestamp"
+            assert abs(current_time - event_time) < 300, f"{service_name} has unreasonable timestamp"
 
         print("✅ Event data integrity validated")
 
@@ -239,15 +225,17 @@ class TestServiceCommunicationPatterns:
         communication_log = []
 
         def log_communication(from_service, to_service, request, response, duration):
-            communication_log.append({
-                "from_service": from_service,
-                "to_service": to_service,
-                "request": request,
-                "response": response,
-                "duration": duration,
-                "timestamp": time.time(),
-                "correlation_id": f"corr_{len(communication_log)}"
-            })
+            communication_log.append(
+                {
+                    "from_service": from_service,
+                    "to_service": to_service,
+                    "request": request,
+                    "response": response,
+                    "duration": duration,
+                    "timestamp": time.time(),
+                    "correlation_id": f"corr_{len(communication_log)}",
+                }
+            )
 
         # Simulate typical service interactions
         interactions = [
@@ -256,22 +244,22 @@ class TestServiceCommunicationPatterns:
                 "to": "mock_data_generator",
                 "request": {"action": "generate_document", "type": "requirements_doc"},
                 "response": {"status": "success", "document_id": "doc_123"},
-                "duration": 0.15
+                "duration": 0.15,
             },
             {
                 "from": "mock_data_generator",
                 "to": "doc_store",
                 "request": {"action": "store_document", "document_id": "doc_123"},
                 "response": {"status": "stored", "storage_path": "/docs/doc_123"},
-                "duration": 0.08
+                "duration": 0.08,
             },
             {
                 "from": "simulation_engine",
                 "to": "analysis_service",
                 "request": {"action": "analyze_document", "document_id": "doc_123"},
                 "response": {"status": "analyzed", "quality_score": 0.87},
-                "duration": 0.12
-            }
+                "duration": 0.12,
+            },
         ]
 
         for interaction in interactions:
@@ -280,7 +268,7 @@ class TestServiceCommunicationPatterns:
                 interaction["to"],
                 interaction["request"],
                 interaction["response"],
-                interaction["duration"]
+                interaction["duration"],
             )
 
         # Validate communication patterns
@@ -318,7 +306,7 @@ class TestServiceCommunicationPatterns:
                 **message,
                 "priority": priority,
                 "enqueued_at": time.time(),
-                "message_id": f"msg_{len(message_queue)}"
+                "message_id": f"msg_{len(message_queue)}",
             }
             message_queue.append(message_entry)
 
@@ -339,19 +327,11 @@ class TestServiceCommunicationPatterns:
                 # Simulate processing
                 time.sleep(0.001)
 
-                processed_messages.append({
-                    **message,
-                    "processed_at": time.time(),
-                    "status": "success"
-                })
+                processed_messages.append({**message, "processed_at": time.time(), "status": "success"})
 
                 return True
             except Exception as e:
-                failed_messages.append({
-                    **message,
-                    "failed_at": time.time(),
-                    "error": str(e)
-                })
+                failed_messages.append({**message, "failed_at": time.time(), "error": str(e)})
                 return False
 
         # Enqueue various messages
@@ -359,7 +339,7 @@ class TestServiceCommunicationPatterns:
             {"type": "document_request", "priority": "high", "data": {"doc_type": "requirements"}},
             {"type": "analysis_request", "priority": "normal", "data": {"target": "doc_123"}},
             {"type": "cleanup_request", "priority": "low", "data": {"action": "remove_temp"}},
-            {"type": "urgent_notification", "priority": "high", "data": {"message": "system_alert"}}
+            {"type": "urgent_notification", "priority": "high", "data": {"message": "system_alert"}},
         ]
 
         for msg in messages:
@@ -401,11 +381,7 @@ class TestDataIntegrityValidation:
         test_data = {
             "simulation_id": "sim_123",
             "document_content": "This is a sample document content for testing.",
-            "metadata": {
-                "author": "alice_dev",
-                "version": "1.0",
-                "created_at": time.time()
-            }
+            "metadata": {"author": "alice_dev", "version": "1.0", "created_at": time.time()},
         }
 
         # Generate checksums for data
@@ -415,22 +391,14 @@ class TestDataIntegrityValidation:
 
         # Simulate data storage with checksums
         stored_data = {
-            "service_a": {
-                "data": test_data,
-                "checksum": generate_checksum(test_data),
-                "stored_at": time.time()
-            },
-            "service_b": {
-                "data": test_data,
-                "checksum": generate_checksum(test_data),
-                "stored_at": time.time()
-            },
+            "service_a": {"data": test_data, "checksum": generate_checksum(test_data), "stored_at": time.time()},
+            "service_b": {"data": test_data, "checksum": generate_checksum(test_data), "stored_at": time.time()},
             "service_c": {
                 "data": test_data,  # Intentionally corrupted
                 "corrupted_field": "modified",
                 "checksum": generate_checksum(test_data),  # Original checksum
-                "stored_at": time.time()
-            }
+                "stored_at": time.time(),
+            },
         }
 
         # Validate checksums
@@ -460,26 +428,22 @@ class TestDataIntegrityValidation:
 
         # Simulate version tracking across services
         service_versions = {
-            "simulation_engine": {
-                "data_version": base_version,
-                "api_version": "2.1.0",
-                "last_updated": time.time()
-            },
+            "simulation_engine": {"data_version": base_version, "api_version": "2.1.0", "last_updated": time.time()},
             "mock_data_generator": {
                 "data_version": base_version,
                 "generator_version": "1.5.0",
-                "last_updated": time.time()
+                "last_updated": time.time(),
             },
             "analysis_service": {
                 "data_version": base_version,
                 "analysis_version": "2.0.1",
-                "last_updated": time.time()
+                "last_updated": time.time(),
             },
             "doc_store": {
                 "data_version": "1.2.2",  # Slightly different version
                 "storage_version": "3.0.0",
-                "last_updated": time.time()
-            }
+                "last_updated": time.time(),
+            },
         }
 
         # Validate version compatibility
@@ -488,8 +452,9 @@ class TestDataIntegrityValidation:
         incompatible_versions = [v for v in data_versions if v != base_version]
 
         # Most services should have compatible versions
-        assert len(compatible_versions) >= len(service_versions) - 1, \
-            "Too many services with incompatible data versions"
+        assert (
+            len(compatible_versions) >= len(service_versions) - 1
+        ), "Too many services with incompatible data versions"
 
         # Check version age
         current_time = time.time()
@@ -499,13 +464,13 @@ class TestDataIntegrityValidation:
 
         # Validate version format
         import re
-        version_pattern = re.compile(r'^\d+\.\d+\.\d+$')
+
+        version_pattern = re.compile(r"^\d+\.\d+\.\d+$")
 
         for service_name, version_info in service_versions.items():
             for key, version in version_info.items():
                 if key.endswith("_version"):
-                    assert version_pattern.match(version), \
-                        f"{service_name} has invalid {key} format: {version}"
+                    assert version_pattern.match(version), f"{service_name} has invalid {key} format: {version}"
 
         print("✅ Data version consistency validated")
 
@@ -516,13 +481,15 @@ class TestDataIntegrityValidation:
         transaction_log = []
 
         def log_transaction_event(service, event_type, data):
-            transaction_log.append({
-                "transaction_id": transaction_id,
-                "service": service,
-                "event_type": event_type,
-                "data": data,
-                "timestamp": time.time()
-            })
+            transaction_log.append(
+                {
+                    "transaction_id": transaction_id,
+                    "service": service,
+                    "event_type": event_type,
+                    "data": data,
+                    "timestamp": time.time(),
+                }
+            )
 
         # Simulate transaction steps
         transaction_steps = [
@@ -530,7 +497,7 @@ class TestDataIntegrityValidation:
             ("project_repository", "prepare", {"simulation_data": {"id": "sim_123"}}),
             ("team_service", "prepare", {"team_data": {"size": 5}}),
             ("timeline_service", "prepare", {"timeline_data": {"duration": 8}}),
-            ("simulation_engine", "commit", {"status": "success"})
+            ("simulation_engine", "commit", {"status": "success"}),
         ]
 
         for service, event_type, data in transaction_steps:
@@ -568,7 +535,7 @@ class TestServiceDependencyManagement:
             "analysis_service": ["doc_store", "ml_service"],
             "doc_store": [],
             "template_service": [],
-            "ml_service": ["model_store"]
+            "ml_service": ["model_store"],
         }
 
         def resolve_dependencies(service, resolved=None, visiting=None):
@@ -622,7 +589,7 @@ class TestServiceDependencyManagement:
             "mock_data_generator": "healthy",
             "analysis_service": "degraded",
             "doc_store": "healthy",
-            "template_service": "unhealthy"
+            "template_service": "unhealthy",
         }
 
         def check_service_readiness(service):
@@ -671,7 +638,7 @@ def mock_service_registry():
         "simulation_engine": {"status": "healthy", "version": "2.1.0"},
         "mock_data_generator": {"status": "healthy", "version": "1.5.0"},
         "analysis_service": {"status": "degraded", "version": "2.0.1"},
-        "doc_store": {"status": "healthy", "version": "3.0.0"}
+        "doc_store": {"status": "healthy", "version": "3.0.0"},
     }
 
 
@@ -683,19 +650,20 @@ def sample_transaction_data():
         "operations": [
             {"service": "simulation_engine", "action": "create_simulation"},
             {"service": "mock_data_generator", "action": "generate_documents"},
-            {"service": "analysis_service", "action": "analyze_results"}
+            {"service": "analysis_service", "action": "analyze_results"},
         ],
         "expected_duration": 30.0,
         "rollback_actions": [
             {"service": "doc_store", "action": "delete_documents"},
-            {"service": "simulation_engine", "action": "delete_simulation"}
-        ]
+            {"service": "simulation_engine", "action": "delete_simulation"},
+        ],
     }
 
 
 @pytest.fixture
 def data_integrity_checker():
     """Create a data integrity checker for testing."""
+
     def check_integrity(data, expected_hash=None):
         if expected_hash:
             data_str = json.dumps(data, sort_keys=True)

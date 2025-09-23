@@ -1,26 +1,24 @@
 #!/usr/bin/env python3
 """
-Real-Time Event Streaming Infrastructure
+Real-Time Event Streaming Infrastructure.
 
 Enterprise-grade event streaming system for Phase 1 implementation.
-Provides distributed event processing, correlation, and real-time analytics.
+Provides distributed event processing, correlation, and real-time
+analytics.
 """
 
 import asyncio
-import json
-import uuid
 import time
-import threading
-from typing import Dict, Any, List, Optional, Callable, Type, Union, Set
-from datetime import datetime, timedelta
+import uuid
+from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
-from collections import defaultdict, deque
-import heapq
-import random
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     import redis.asyncio as redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     redis = None
@@ -29,6 +27,7 @@ except ImportError:
 
 class EventPriority(Enum):
     """Event priority levels."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -37,6 +36,7 @@ class EventPriority(Enum):
 
 class EventType(Enum):
     """Event type categories."""
+
     SYSTEM = "system"
     BUSINESS = "business"
     SECURITY = "security"
@@ -48,6 +48,7 @@ class EventType(Enum):
 @dataclass
 class StreamEvent:
     """Event for streaming processing."""
+
     event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     event_type: EventType = EventType.SYSTEM
     source_service: str = ""
@@ -83,11 +84,11 @@ class StreamEvent:
             "processed_at": self.processed_at.isoformat() if self.processed_at else None,
             "processing_time_ms": self.processing_time_ms,
             "retry_count": self.retry_count,
-            "max_retries": self.max_retries
+            "max_retries": self.max_retries,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'StreamEvent':
+    def from_dict(cls, data: Dict[str, Any]) -> "StreamEvent":
         """Create event from dictionary."""
         return cls(
             event_id=data["event_id"],
@@ -104,7 +105,7 @@ class StreamEvent:
             processed_at=datetime.fromisoformat(data["processed_at"]) if data.get("processed_at") else None,
             processing_time_ms=data.get("processing_time_ms", 0.0),
             retry_count=data.get("retry_count", 0),
-            max_retries=data.get("max_retries", 3)
+            max_retries=data.get("max_retries", 3),
         )
 
     def should_retry(self) -> bool:
@@ -120,6 +121,7 @@ class StreamEvent:
 @dataclass
 class EventSubscription:
     """Event subscription configuration."""
+
     subscription_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     subscriber_service: str = ""
     event_pattern: str = "*"  # Wildcard pattern for event matching
@@ -188,6 +190,7 @@ class EventSubscription:
 @dataclass
 class EventStream:
     """Event stream configuration."""
+
     stream_name: str
     partitions: int = 1
     retention_hours: int = 24
@@ -204,6 +207,7 @@ class EventStream:
 @dataclass
 class ProcessingMetrics:
     """Event processing metrics."""
+
     stream_name: str
     total_events_published: int = 0
     total_events_processed: int = 0
@@ -243,14 +247,13 @@ class EventCorrelationEngine:
         self.correlation_windows: Dict[str, timedelta] = {}
         self.correlated_events: List[Dict[str, Any]] = []
 
-    def add_correlation_rule(self, rule_name: str, conditions: Dict[str, Any],
-                           window_seconds: int = 300):
+    def add_correlation_rule(self, rule_name: str, conditions: Dict[str, Any], window_seconds: int = 300):
         """Add event correlation rule."""
         self.correlation_rules[rule_name] = {
             "conditions": conditions,
             "window": timedelta(seconds=window_seconds),
             "matches": 0,
-            "created_at": datetime.now()
+            "created_at": datetime.now(),
         }
         self.correlation_windows[rule_name] = timedelta(seconds=window_seconds)
 
@@ -266,8 +269,7 @@ class EventCorrelationEngine:
 
                 # Check if correlation window is complete
                 window_events = self._get_events_in_window(
-                    self.active_correlations[correlation_key],
-                    self.correlation_windows[rule_name]
+                    self.active_correlations[correlation_key], self.correlation_windows[rule_name]
                 )
 
                 if self._correlation_complete(window_events, rule):
@@ -276,7 +278,7 @@ class EventCorrelationEngine:
                         "rule_name": rule_name,
                         "events": [e.to_dict() for e in window_events],
                         "detected_at": datetime.now().isoformat(),
-                        "confidence": self._calculate_correlation_confidence(window_events, rule)
+                        "confidence": self._calculate_correlation_confidence(window_events, rule),
                     }
                     correlations.append(correlation)
                     self.correlated_events.append(correlation)
@@ -299,9 +301,7 @@ class EventCorrelationEngine:
             return False
 
         # Check event name pattern
-        if "event_pattern" in conditions and not self._matches_pattern(
-            event.event_name, conditions["event_pattern"]
-        ):
+        if "event_pattern" in conditions and not self._matches_pattern(event.event_name, conditions["event_pattern"]):
             return False
 
         # Check payload conditions
@@ -404,12 +404,9 @@ class EventCorrelationEngine:
             "active_correlations": len(self.active_correlations),
             "total_correlations_detected": len(self.correlated_events),
             "rule_performance": {
-                rule_name: {
-                    "matches": rule["matches"],
-                    "created_at": rule["created_at"].isoformat()
-                }
+                rule_name: {"matches": rule["matches"], "created_at": rule["created_at"].isoformat()}
                 for rule_name, rule in self.correlation_rules.items()
-            }
+            },
         }
 
 
@@ -454,23 +451,16 @@ class EventStreamProcessor:
         print(f"   • Streams: {len(self.streams)}")
         print("   • Correlation Rules: Configured")
 
-    async def create_stream(self, stream_name: str, partitions: int = 1,
-                          retention_hours: int = 24) -> EventStream:
+    async def create_stream(self, stream_name: str, partitions: int = 1, retention_hours: int = 24) -> EventStream:
         """Create a new event stream."""
-        stream = EventStream(
-            stream_name=stream_name,
-            partitions=partitions,
-            retention_hours=retention_hours
-        )
+        stream = EventStream(stream_name=stream_name, partitions=partitions, retention_hours=retention_hours)
 
         self.streams[stream_name] = stream
         self.event_queues[stream_name] = asyncio.Queue(maxsize=10000)
         self.metrics[stream_name] = ProcessingMetrics(stream_name=stream_name)
 
         # Start processing task for this stream
-        self.processing_tasks[stream_name] = asyncio.create_task(
-            self._process_stream_events(stream_name)
-        )
+        self.processing_tasks[stream_name] = asyncio.create_task(self._process_stream_events(stream_name))
 
         return stream
 
@@ -479,13 +469,7 @@ class EventStreamProcessor:
 
         # Error correlation
         self.correlation_engine.add_correlation_rule(
-            "error_burst",
-            {
-                "event_type": "error",
-                "min_events": 5,
-                "max_time_span_seconds": 300
-            },
-            window_seconds=300
+            "error_burst", {"event_type": "error", "min_events": 5, "max_time_span_seconds": 300}, window_seconds=300
         )
 
         # Security correlation
@@ -495,9 +479,9 @@ class EventStreamProcessor:
                 "event_type": "security",
                 "payload_conditions": {"severity": "high"},
                 "min_events": 3,
-                "max_time_span_seconds": 600
+                "max_time_span_seconds": 600,
             },
-            window_seconds=600
+            window_seconds=600,
         )
 
         # Performance correlation
@@ -507,9 +491,9 @@ class EventStreamProcessor:
                 "event_type": "performance",
                 "payload_conditions": {"metric_type": "response_time"},
                 "min_events": 10,
-                "max_time_span_seconds": 900
+                "max_time_span_seconds": 900,
             },
-            window_seconds=900
+            window_seconds=900,
         )
 
     async def publish_event(self, stream_name: str, event: StreamEvent) -> bool:
@@ -573,8 +557,7 @@ class EventStreamProcessor:
             except Exception as e:
                 print(f"❌ Error processing event from {stream_name}: {e}")
 
-    async def _process_single_event(self, stream_name: str, event: StreamEvent,
-                                  metrics: ProcessingMetrics):
+    async def _process_single_event(self, stream_name: str, event: StreamEvent, metrics: ProcessingMetrics):
         """Process a single event."""
         start_time = time.time()
 
@@ -612,7 +595,7 @@ class EventStreamProcessor:
             source_service="event_processor",
             event_name="correlation_detected",
             payload=correlation,
-            correlation_id=correlation["correlation_id"]
+            correlation_id=correlation["correlation_id"],
         )
 
         # Publish correlation event
@@ -629,13 +612,9 @@ class EventStreamProcessor:
             if subscription.matches_event(event):
                 # Deliver event based on batch size
                 if subscription.batch_size == 1:
-                    task = asyncio.create_task(
-                        self._deliver_single_event(subscription, event)
-                    )
+                    task = asyncio.create_task(self._deliver_single_event(subscription, event))
                 else:
-                    task = asyncio.create_task(
-                        self._deliver_batch_events(subscription, [event])
-                    )
+                    task = asyncio.create_task(self._deliver_batch_events(subscription, [event]))
 
                 delivery_tasks.append(task)
 
@@ -679,7 +658,7 @@ class EventStreamProcessor:
             "total_subscribers": sum(len(subs) for subs in self.subscriptions.values()),
             "total_events_processed": sum(m.total_events_processed for m in self.metrics.values()),
             "stream_details": {},
-            "correlation_statistics": self.correlation_engine.get_correlation_statistics()
+            "correlation_statistics": self.correlation_engine.get_correlation_statistics(),
         }
 
         for stream_name, stream in self.streams.items():
@@ -689,12 +668,16 @@ class EventStreamProcessor:
                 "subscribers": stream.total_subscribers,
                 "created_at": stream.created_at.isoformat(),
                 "last_event_at": stream.last_event_at.isoformat() if stream.last_event_at else None,
-                "processing_metrics": {
-                    "events_processed": metrics.total_events_processed if metrics else 0,
-                    "average_processing_time": metrics.average_processing_time if metrics else 0,
-                    "throughput_eps": metrics.throughput_events_per_second if metrics else 0,
-                    "error_count": metrics.error_count if metrics else 0
-                } if metrics else {}
+                "processing_metrics": (
+                    {
+                        "events_processed": metrics.total_events_processed if metrics else 0,
+                        "average_processing_time": metrics.average_processing_time if metrics else 0,
+                        "throughput_eps": metrics.throughput_events_per_second if metrics else 0,
+                        "error_count": metrics.error_count if metrics else 0,
+                    }
+                    if metrics
+                    else {}
+                ),
             }
 
         return statistics
@@ -739,9 +722,7 @@ async def test_event_streaming():
 
     # Subscribe to stream
     subscription = EventSubscription(
-        subscriber_service="test_service",
-        event_pattern="test_*",
-        handler_function=test_event_handler
+        subscriber_service="test_service", event_pattern="test_*", handler_function=test_event_handler
     )
 
     await event_stream_processor.subscribe_to_stream("system_events", subscription)
@@ -751,18 +732,18 @@ async def test_event_streaming():
         StreamEvent(
             source_service="analysis-service",
             event_name="test_document_processed",
-            payload={"document_id": "doc123", "processing_time": 1.5}
+            payload={"document_id": "doc123", "processing_time": 1.5},
         ),
         StreamEvent(
             source_service="doc_store",
             event_name="test_document_stored",
-            payload={"document_id": "doc456", "size_bytes": 1024}
+            payload={"document_id": "doc456", "size_bytes": 1024},
         ),
         StreamEvent(
             source_service="orchestrator",
             event_name="test_workflow_completed",
-            payload={"workflow_id": "wf789", "status": "success"}
-        )
+            payload={"workflow_id": "wf789", "status": "success"},
+        ),
     ]
 
     print("🚀 Publishing test events...")
@@ -783,7 +764,7 @@ async def test_event_streaming():
     print(f"   • Total Subscribers: {stats['total_subscribers']}")
     print(f"   • Total Events Processed: {stats['total_events_processed']}")
 
-    for stream_name, details in stats['stream_details'].items():
+    for stream_name, details in stats["stream_details"].items():
         print(f"   • {stream_name}: {details['total_events']} events")
 
     print("\n🎉 Event Streaming Infrastructure Test Complete!")

@@ -1,9 +1,10 @@
-from typing import Any, Dict, List, Tuple, Callable
+from typing import Any, Callable, List, Tuple
+
 from rich.prompt import Prompt
-import json
 
 from services.shared.integrations.clients.clients import ServiceClients
-from ...utils.display_helpers import print_kv, print_list
+
+from ...utils.display_helpers import print_kv
 
 
 def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
@@ -20,7 +21,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         if not code_input.strip():
             file_path = Prompt.ask("File path")
             try:
-                with open(file_path, 'r') as f:
+                with open(file_path, "r") as f:
                     code_input = f.read()
                 console.print(f"✅ Loaded code from {file_path} ({len(code_input)} characters)")
             except Exception as e:
@@ -35,7 +36,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             "code": code_input,
             "language": language,
             "include_functions": include_functions,
-            "include_classes": include_classes
+            "include_classes": include_classes,
         }
 
         url = f"{clients.code_analyzer_url()}/analyze"
@@ -53,9 +54,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 console.print(f"\n[bold blue]📋 Functions ({len(data['functions'])})[/bold blue]")
                 for func in data["functions"]:
                     console.print(f"  • {func['name']}({', '.join(func.get('parameters', []))})")
-                    if 'purpose' in func:
+                    if "purpose" in func:
                         console.print(f"    └─ {func['purpose']}")
-                    if 'return_type' in func:
+                    if "return_type" in func:
                         console.print(f"    └─ Returns: {func['return_type']}")
 
             # Display classes
@@ -63,23 +64,25 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 console.print(f"\n[bold blue]🏗️  Classes ({len(data['classes'])})[/bold blue]")
                 for cls in data["classes"]:
                     console.print(f"  • {cls['name']}")
-                    if 'purpose' in cls:
+                    if "purpose" in cls:
                         console.print(f"    └─ {cls['purpose']}")
-                    if 'methods' in cls:
+                    if "methods" in cls:
                         console.print(f"    └─ Methods: {', '.join(cls['methods'])}")
 
             # Display complexity
             if data.get("complexity"):
-                console.print("
-[bold blue]📊 Complexity Analysis[/bold blue]"                complexity = data["complexity"]
+                console.print("\n[bold blue]📊 Complexity Analysis[/bold blue]")
+                complexity = data["complexity"]
                 console.print(f"  • Overall: {complexity.get('overall', 'N/A')}")
 
                 if complexity.get("functions"):
-                    console.print("  • Function complexity:"                    for func_name, score in complexity["functions"].items():
+                    console.print("  • Function complexity:")
+                    for func_name, score in complexity["functions"].items():
                         console.print(f"    └─ {func_name}: {score}")
 
                 if complexity.get("classes"):
-                    console.print("  • Class complexity:"                    for class_name, score in complexity["classes"].items():
+                    console.print("  • Class complexity:")
+                    for class_name, score in complexity["classes"].items():
                         console.print(f"    └─ {class_name}: {score}")
 
             # Display imports and patterns
@@ -102,7 +105,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         language = Prompt.ask("Language (auto-detect if empty)", default="")
 
         try:
-            with open(file_path, 'r') as f:
+            with open(file_path, "r") as f:
                 code = f.read()
 
             console.print(f"📁 Analyzing file: {file_path}")
@@ -110,23 +113,18 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
             # Auto-detect language if not specified
             if not language:
-                if file_path.endswith('.py'):
-                    language = 'python'
-                elif file_path.endswith('.js'):
-                    language = 'javascript'
-                elif file_path.endswith('.java'):
-                    language = 'java'
-                elif file_path.endswith('.cpp') or file_path.endswith('.cc'):
-                    language = 'cpp'
+                if file_path.endswith(".py"):
+                    language = "python"
+                elif file_path.endswith(".js"):
+                    language = "javascript"
+                elif file_path.endswith(".java"):
+                    language = "java"
+                elif file_path.endswith(".cpp") or file_path.endswith(".cc"):
+                    language = "cpp"
                 else:
                     language = Prompt.ask("Could not auto-detect language. Please specify")
 
-            payload = {
-                "code": code,
-                "language": language,
-                "include_functions": True,
-                "include_classes": True
-            }
+            payload = {"code": code, "language": language, "include_functions": True, "include_classes": True}
 
             url = f"{clients.code_analyzer_url()}/analyze"
             rx = await clients.post_json(url, payload)
@@ -171,14 +169,10 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             if analysis_type == "files":
                 file_path = Prompt.ask(f"File path {i+1}")
                 try:
-                    with open(file_path, 'r') as f:
+                    with open(file_path, "r") as f:
                         code = f.read()
                     language = Prompt.ask("Language", default="python")
-                    items.append({
-                        "name": file_path,
-                        "code": code,
-                        "language": language
-                    })
+                    items.append({"name": file_path, "code": code, "language": language})
                 except Exception as e:
                     console.print(f"[red]❌ Failed to read {file_path}: {e}[/red]")
                     continue
@@ -186,11 +180,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 code = Prompt.ask(f"Code snippet {i+1}")
                 language = Prompt.ask("Language", default="python")
                 name = f"snippet_{i+1}"
-                items.append({
-                    "name": name,
-                    "code": code,
-                    "language": language
-                })
+                items.append({"name": name, "code": code, "language": language})
 
         console.print(f"\n[bold blue]🔄 Analyzing {len(items)} items...[/bold blue]")
 
@@ -203,32 +193,36 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                     "code": item["code"],
                     "language": item["language"],
                     "include_functions": True,
-                    "include_classes": True
+                    "include_classes": True,
                 }
 
                 url = f"{clients.code_analyzer_url()}/analyze"
                 rx = await clients.post_json(url, payload)
 
-                results.append({
-                    "name": item["name"],
-                    "language": item["language"],
-                    "success": rx.get("success", False),
-                    "functions_count": len(rx.get("data", {}).get("functions", [])),
-                    "classes_count": len(rx.get("data", {}).get("classes", [])),
-                    "complexity": rx.get("data", {}).get("complexity", {}).get("overall"),
-                    "error": rx.get("error") if not rx.get("success") else None
-                })
+                results.append(
+                    {
+                        "name": item["name"],
+                        "language": item["language"],
+                        "success": rx.get("success", False),
+                        "functions_count": len(rx.get("data", {}).get("functions", [])),
+                        "classes_count": len(rx.get("data", {}).get("classes", [])),
+                        "complexity": rx.get("data", {}).get("complexity", {}).get("overall"),
+                        "error": rx.get("error") if not rx.get("success") else None,
+                    }
+                )
 
             except Exception as e:
-                results.append({
-                    "name": item["name"],
-                    "language": item["language"],
-                    "success": False,
-                    "functions_count": 0,
-                    "classes_count": 0,
-                    "complexity": None,
-                    "error": str(e)
-                })
+                results.append(
+                    {
+                        "name": item["name"],
+                        "language": item["language"],
+                        "success": False,
+                        "functions_count": 0,
+                        "classes_count": 0,
+                        "complexity": None,
+                        "error": str(e),
+                    }
+                )
 
         # Display batch results
         console.print(f"\n[bold green]📊 Batch Analysis Results ({len(results)} items)[/bold green]")
@@ -237,6 +231,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         console.print(f"✅ Successful: {successful}/{len(results)}")
 
         from rich.table import Table
+
         table = Table(title="Analysis Summary")
         table.add_column("Name", style="cyan", max_width=25)
         table.add_column("Language", style="white")
@@ -255,7 +250,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 str(result["functions_count"]),
                 str(result["classes_count"]),
                 complexity,
-                status
+                status,
             )
 
         console.print(table)
@@ -283,15 +278,18 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             "def hello():\n    print('Hello World')",
             "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n-1)",
             "class Calculator:\n    def add(self, a, b):\n        return a + b\n    def multiply(self, a, b):\n        return a * b",
-            "import os\nimport sys\ndef main():\n    path = os.getcwd()\n    print(f'Current directory: {path}')\n    return 0\n\nif __name__ == '__main__':\n    main()"
+            "import os\nimport sys\ndef main():\n    path = os.getcwd()\n    print(f'Current directory: {path}')\n    return 0\n\nif __name__ == '__main__':\n    main()",
         ]
 
         iterations = Prompt.ask("Number of iterations per code sample", default="3")
         iterations = int(iterations)
 
-        console.print(f"\n[bold blue]⚡ Benchmarking with {len(test_codes)} code samples, {iterations} iterations each...[/bold blue]")
+        console.print(
+            f"\n[bold blue]⚡ Benchmarking with {len(test_codes)} code samples, {iterations} iterations each...[/bold blue]"
+        )
 
         import time
+
         results = []
 
         for i, code in enumerate(test_codes):
@@ -302,12 +300,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 try:
                     start_time = time.time()
                     url = f"{clients.code_analyzer_url()}/analyze"
-                    await clients.post_json(url, {
-                        "code": code,
-                        "language": "python",
-                        "include_functions": True,
-                        "include_classes": True
-                    })
+                    await clients.post_json(
+                        url, {"code": code, "language": "python", "include_functions": True, "include_classes": True}
+                    )
                     end_time = time.time()
                     sample_times.append(end_time - start_time)
                 except Exception as e:
@@ -318,19 +313,22 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 min_time = min(sample_times)
                 max_time = max(sample_times)
 
-                results.append({
-                    "sample": f"sample_{i+1}",
-                    "size": len(code),
-                    "avg_time": avg_time,
-                    "min_time": min_time,
-                    "max_time": max_time,
-                    "iterations": len(sample_times)
-                })
+                results.append(
+                    {
+                        "sample": f"sample_{i+1}",
+                        "size": len(code),
+                        "avg_time": avg_time,
+                        "min_time": min_time,
+                        "max_time": max_time,
+                        "iterations": len(sample_times),
+                    }
+                )
 
         # Display results
         console.print(f"\n[bold green]📊 Benchmark Results ({len(results)} samples)[/bold green]")
 
         from rich.table import Table
+
         table = Table(title="Analysis Performance Benchmark")
         table.add_column("Sample", style="cyan")
         table.add_column("Size", style="white")
@@ -346,7 +344,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 f"{result['avg_time']:.3f}s",
                 f"{result['min_time']:.3f}s",
                 f"{result['max_time']:.3f}s",
-                str(result["iterations"])
+                str(result["iterations"]),
             )
 
         console.print(table)
@@ -366,7 +364,6 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("🔍 Analyze code snippet", analyze_code),
         ("📁 Analyze code file", analyze_file),
         ("📦 Batch analyze multiple items", batch_analyze),
-
         # Testing & Diagnostics
         ("🩺 Service health check", test_code_analyzer_health),
         ("⚡ Benchmark analysis performance", benchmark_analysis),

@@ -1,15 +1,25 @@
 """Service Registry - Central service registration and configuration."""
 
 import os
-from typing import Dict, Any, Type, Optional, List
+from typing import Any, Optional, Type
+
 from .container import DependencyContainer, ServiceLifetime, get_global_container
 from .services import (
-    IAnalysisService, IDocumentService, IRepositoryService,
-    ICacheService, IEventPublisher, ILoggerService, IMetricsService,
-    IConfigurationService, IServiceClient,
-    ISemanticAnalyzer, ISentimentAnalyzer, IQualityAnalyzer,
-    IAnalysisRepository, IDocumentRepository, IFindingRepository,
-    BaseService, BaseRepository
+    IAnalysisRepository,
+    IAnalysisService,
+    ICacheService,
+    IConfigurationService,
+    IDocumentRepository,
+    IDocumentService,
+    IEventPublisher,
+    IFindingRepository,
+    ILoggerService,
+    IMetricsService,
+    IQualityAnalyzer,
+    IRepositoryService,
+    ISemanticAnalyzer,
+    ISentimentAnalyzer,
+    IServiceClient,
 )
 
 
@@ -48,136 +58,104 @@ class ServiceRegistry:
 
         # Configuration Service
         from ..config.config import ConfigService
-        self._container.register_singleton(
-            IConfigurationService,
-            ConfigService
-        )
+
+        self._container.register_singleton(IConfigurationService, ConfigService)
 
         # Logger Service
         from ..logging import LoggerService
-        self._container.register_singleton(
-            ILoggerService,
-            LoggerService
-        )
+
+        self._container.register_singleton(ILoggerService, LoggerService)
 
         # Metrics Service
         from ..monitoring.metrics import MetricsService
-        self._container.register_singleton(
-            IMetricsService,
-            MetricsService
-        )
+
+        self._container.register_singleton(IMetricsService, MetricsService)
 
         # Cache Service
         from ..caching.cache import CacheService
-        self._container.register_singleton(
-            ICacheService,
-            CacheService
-        )
+
+        self._container.register_singleton(ICacheService, CacheService)
 
         # Event Publisher
         from ..streaming.event_publisher import EventPublisher
-        self._container.register_singleton(
-            IEventPublisher,
-            EventPublisher
-        )
+
+        self._container.register_singleton(IEventPublisher, EventPublisher)
 
         # Service Client
         from ..utilities.service_client import ServiceClient
-        self._container.register_singleton(
-            IServiceClient,
-            ServiceClient
-        )
+
+        self._container.register_singleton(IServiceClient, ServiceClient)
 
     def _register_domain_services(self) -> None:
         """Register domain services."""
 
         # Analysis Service
         from ...domain.services.analysis_service import AnalysisService
-        self._container.register_singleton(
-            IAnalysisService,
-            AnalysisService
-        )
+
+        self._container.register_singleton(IAnalysisService, AnalysisService)
 
         # Document Service
         from ...domain.services.document_service import DocumentService
-        self._container.register_singleton(
-            IDocumentService,
-            DocumentService
-        )
+
+        self._container.register_singleton(IDocumentService, DocumentService)
 
         # Repository Service
         from ...domain.services.repository_service import RepositoryService
-        self._container.register_singleton(
-            IRepositoryService,
-            RepositoryService
-        )
+
+        self._container.register_singleton(IRepositoryService, RepositoryService)
 
     def _register_repository_services(self) -> None:
         """Register repository services."""
 
         # Analysis Repository
         from ...infrastructure.repositories.analysis_repository import AnalysisRepository
-        self._container.register_scoped(
-            IAnalysisRepository,
-            AnalysisRepository
-        )
+
+        self._container.register_scoped(IAnalysisRepository, AnalysisRepository)
 
         # Document Repository
         from ...infrastructure.repositories.document_repository import DocumentRepository
-        self._container.register_scoped(
-            IDocumentRepository,
-            DocumentRepository
-        )
+
+        self._container.register_scoped(IDocumentRepository, DocumentRepository)
 
         # Finding Repository
         from ...infrastructure.repositories.finding_repository import FindingRepository
-        self._container.register_scoped(
-            IFindingRepository,
-            FindingRepository
-        )
+
+        self._container.register_scoped(IFindingRepository, FindingRepository)
 
     def _register_external_services(self) -> None:
         """Register external service adapters."""
 
         # Semantic Analyzer
         from ...infrastructure.external.semantic_analyzer_adapter import SemanticAnalyzerAdapter
-        self._container.register_singleton(
-            ISemanticAnalyzer,
-            SemanticAnalyzerAdapter
-        )
+
+        self._container.register_singleton(ISemanticAnalyzer, SemanticAnalyzerAdapter)
 
         # Sentiment Analyzer
         from ...infrastructure.external.sentiment_analyzer_adapter import SentimentAnalyzerAdapter
-        self._container.register_singleton(
-            ISentimentAnalyzer,
-            SentimentAnalyzerAdapter
-        )
+
+        self._container.register_singleton(ISentimentAnalyzer, SentimentAnalyzerAdapter)
 
         # Quality Analyzer
         from ...infrastructure.external.quality_analyzer_adapter import QualityAnalyzerAdapter
-        self._container.register_singleton(
-            IQualityAnalyzer,
-            QualityAnalyzerAdapter
-        )
+
+        self._container.register_singleton(IQualityAnalyzer, QualityAnalyzerAdapter)
 
     def _register_cross_cutting_services(self) -> None:
         """Register cross-cutting concern services."""
 
         # Register factories
         from ...application.factories.handler_factory import HandlerFactory
-        self._container.register_singleton(
-            Type[HandlerFactory],
-            HandlerFactory
-        )
+
+        self._container.register_singleton(Type[HandlerFactory], HandlerFactory)
 
         # Register validators
         from ...application.validators.business_rule_validator import BusinessRuleValidator
-        self._container.register_singleton(
-            Type[BusinessRuleValidator],
-            BusinessRuleValidator
-        )
 
-    def register_custom_service(self, interface: Type, implementation: Type, lifetime: ServiceLifetime = ServiceLifetime.SINGLETON) -> None:
+        self._container.register_singleton(Type[BusinessRuleValidator], BusinessRuleValidator)
+
+    def register_custom_service(
+        self, interface: Type, implementation: Type, lifetime: ServiceLifetime = ServiceLifetime.SINGLETON
+    ) -> None:
         """Register a custom service."""
         if lifetime == ServiceLifetime.SINGLETON:
             self._container.register_singleton(interface, implementation)
@@ -190,7 +168,9 @@ class ServiceRegistry:
         """Register a service instance."""
         self._container.register_instance(interface, instance)
 
-    def register_factory(self, interface: Type, factory_func, lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT) -> None:
+    def register_factory(
+        self, interface: Type, factory_func, lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT
+    ) -> None:
         """Register a service factory."""
         self._container.register_factory(interface, factory_func, lifetime)
 
@@ -228,10 +208,13 @@ def initialize_services() -> None:
         metrics_service = registry.get_service(IMetricsService)
 
         # Log initialization
-        logger_service.info("Services initialized successfully", {
-            "service_count": len(registry._container._services),
-            "environment": os.getenv("ENVIRONMENT", "development")
-        })
+        logger_service.info(
+            "Services initialized successfully",
+            {
+                "service_count": len(registry._container._services),
+                "environment": os.getenv("ENVIRONMENT", "development"),
+            },
+        )
 
     except Exception as e:
         print(f"Failed to initialize services: {e}")

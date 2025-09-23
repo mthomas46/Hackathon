@@ -1,13 +1,14 @@
-"""Bedrock Proxy monitoring infrastructure for Frontend service.
+"""
+Bedrock Proxy monitoring infrastructure for Frontend service.
 
 Provides visualization and monitoring capabilities for bedrock proxy
 service AI invocations and template-based responses.
 """
-from typing import Dict, Any, List, Optional
-import asyncio
-from datetime import datetime, timedelta
+
+from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
+
 from .shared_utils import get_bedrock_proxy_url, get_frontend_clients
 
 
@@ -41,7 +42,7 @@ class BedrockProxyMonitor:
                 "health": health_response,
                 "invocation_stats": self._calculate_invocation_stats(),
                 "recent_invocations": self._invocations[-10:] if self._invocations else [],  # Last 10 invocations
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
             self._activity_cache["status"] = status_data
@@ -55,10 +56,19 @@ class BedrockProxyMonitor:
                 "health": {},
                 "invocation_stats": {},
                 "recent_invocations": [],
-                "last_updated": utc_now().isoformat()
+                "last_updated": utc_now().isoformat(),
             }
 
-    async def invoke_ai(self, prompt: str, template: Optional[str] = None, format: Optional[str] = None, title: Optional[str] = None, model: Optional[str] = None, region: Optional[str] = None, **params) -> Dict[str, Any]:
+    async def invoke_ai(
+        self,
+        prompt: str,
+        template: Optional[str] = None,
+        format: Optional[str] = None,
+        title: Optional[str] = None,
+        model: Optional[str] = None,
+        region: Optional[str] = None,
+        **params,
+    ) -> Dict[str, Any]:
         """Invoke AI through the bedrock proxy and cache the result."""
         try:
             clients = get_frontend_clients()
@@ -71,7 +81,7 @@ class BedrockProxyMonitor:
                 "title": title,
                 "model": model,
                 "region": region,
-                **params
+                **params,
             }
 
             # Remove None values
@@ -91,7 +101,7 @@ class BedrockProxyMonitor:
                     "model": model,
                     "region": region,
                     "response": response.get("response", response),
-                    "params": params
+                    "params": params,
                 }
 
                 self._invocations.insert(0, invocation_result)  # Add to front
@@ -100,34 +110,17 @@ class BedrockProxyMonitor:
                 if len(self._invocations) > 50:
                     self._invocations = self._invocations[:50]
 
-                return {
-                    "success": True,
-                    "invocation_id": invocation_result["id"],
-                    "response": response
-                }
+                return {"success": True, "invocation_id": invocation_result["id"], "response": response}
 
-            return {
-                "success": False,
-                "error": "Invocation failed",
-                "response": response
-            }
+            return {"success": False, "error": "Invocation failed", "response": response}
 
         except Exception as e:
-            return {
-                "success": False,
-                "error": str(e),
-                "response": None
-            }
+            return {"success": False, "error": str(e), "response": None}
 
     def _calculate_invocation_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached invocations."""
         if not self._invocations:
-            return {
-                "total_invocations": 0,
-                "unique_models": 0,
-                "unique_templates": 0,
-                "average_response_time": 0
-            }
+            return {"total_invocations": 0, "unique_models": 0, "unique_templates": 0, "average_response_time": 0}
 
         total = len(self._invocations)
 
@@ -146,7 +139,7 @@ class BedrockProxyMonitor:
             "unique_models": len(models),
             "unique_templates": len(templates),
             "models_used": list(models),
-            "templates_used": list(templates)
+            "templates_used": list(templates),
         }
 
     def get_invocation_history(self, limit: int = 20) -> List[Dict[str, Any]]:

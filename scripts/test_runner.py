@@ -4,20 +4,22 @@ Comprehensive Test Runner for LLM Documentation Ecosystem
 Orchestrates all test suites in proper dependency order
 """
 
-import os
-import sys
 import asyncio
 import json
+import os
+import subprocess
+import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.panel import Panel
-import subprocess
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 console = Console()
+
 
 class TestRunner:
     """Comprehensive test runner for the entire ecosystem."""
@@ -35,9 +37,9 @@ class TestRunner:
                 "scripts": [
                     "scripts/validation/test_api_compatibility.py",
                     "scripts/validation/test_all_endpoints.py",
-                    "scripts/validation/test_service_imports.py"
+                    "scripts/validation/test_service_imports.py",
                 ],
-                "optional": False
+                "optional": False,
             },
             "services": {
                 "name": "Service Tests",
@@ -45,9 +47,9 @@ class TestRunner:
                 "scripts": [
                     "scripts/services/test_services.py",
                     "scripts/services/test_services_direct.py",
-                    "scripts/services/test_interpreter_only.py"
+                    "scripts/services/test_interpreter_only.py",
                 ],
-                "optional": False
+                "optional": False,
             },
             "integration": {
                 "name": "Integration Tests",
@@ -55,28 +57,25 @@ class TestRunner:
                 "scripts": [
                     "scripts/integration/test_service_mesh.py",
                     "scripts/integration/test_workflow_management.py",
-                    "scripts/integration/test_orchestrator_simple.py"
+                    "scripts/integration/test_orchestrator_simple.py",
                 ],
-                "optional": True  # Require services to be running
+                "optional": True,  # Require services to be running
             },
             "cli": {
                 "name": "CLI Tests",
                 "description": "Command-line interface functionality",
-                "scripts": [
-                    "scripts/cli/test_cli_simple.py",
-                    "scripts/cli/test_cli_analysis_service.py"
-                ],
-                "optional": True  # May require services running
+                "scripts": ["scripts/cli/test_cli_simple.py", "scripts/cli/test_cli_analysis_service.py"],
+                "optional": True,  # May require services running
             },
             "performance": {
                 "name": "Performance Tests",
                 "description": "Performance benchmarking and optimization",
                 "scripts": [
                     "scripts/validation/performance_benchmark.py",
-                    "scripts/integration/benchmark_prompt_store.py"
+                    "scripts/integration/benchmark_prompt_store.py",
                 ],
-                "optional": True
-            }
+                "optional": True,
+            },
         }
 
     async def check_services_availability(self) -> Dict[str, bool]:
@@ -84,24 +83,34 @@ class TestRunner:
         services_to_check = {
             "redis": ("redis-server", "--version"),
             "doc_store": ("python", "-c", "import requests; requests.get('http://localhost:5010/health', timeout=2)"),
-            "analysis_service": ("python", "-c", "import requests; requests.get('http://localhost:5020/health', timeout=2)"),
-            "orchestrator": ("python", "-c", "import requests; requests.get('http://localhost:5099/health/system', timeout=2)"),
-            "prompt_store": ("python", "-c", "import requests; requests.get('http://localhost:5110/health', timeout=2)"),
-            "summarizer_hub": ("python", "-c", "import requests; requests.get('http://localhost:5060/health', timeout=2)"),
-            "interpreter": ("python", "-c", "import requests; requests.get('http://localhost:5120/health', timeout=2)")
+            "analysis_service": (
+                "python",
+                "-c",
+                "import requests; requests.get('http://localhost:5020/health', timeout=2)",
+            ),
+            "orchestrator": (
+                "python",
+                "-c",
+                "import requests; requests.get('http://localhost:5099/health/system', timeout=2)",
+            ),
+            "prompt_store": (
+                "python",
+                "-c",
+                "import requests; requests.get('http://localhost:5110/health', timeout=2)",
+            ),
+            "summarizer_hub": (
+                "python",
+                "-c",
+                "import requests; requests.get('http://localhost:5060/health', timeout=2)",
+            ),
+            "interpreter": ("python", "-c", "import requests; requests.get('http://localhost:5120/health', timeout=2)"),
         }
 
         availability = {}
 
         for service_name, check_cmd in services_to_check.items():
             try:
-                result = subprocess.run(
-                    check_cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=5,
-                    cwd=self.project_root
-                )
+                result = subprocess.run(check_cmd, capture_output=True, text=True, timeout=5, cwd=self.project_root)
                 availability[service_name] = result.returncode == 0
             except:
                 availability[service_name] = False
@@ -117,7 +126,7 @@ class TestRunner:
 
             # Set PYTHONPATH
             env = os.environ.copy()
-            env['PYTHONPATH'] = str(self.project_root)
+            env["PYTHONPATH"] = str(self.project_root)
 
             # Run the script
             process = await asyncio.create_subprocess_exec(
@@ -126,14 +135,14 @@ class TestRunner:
                 env=env,
                 cwd=self.project_root,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
             )
 
             stdout, stderr = await process.communicate()
 
             # Parse output for test results
-            output = stdout.decode('utf-8', errors='ignore')
-            error_output = stderr.decode('utf-8', errors='ignore')
+            output = stdout.decode("utf-8", errors="ignore")
+            error_output = stderr.decode("utf-8", errors="ignore")
 
             # Try to extract test results from output
             success = process.returncode == 0
@@ -141,16 +150,16 @@ class TestRunner:
             passed_count = 0
 
             # Look for common test result patterns
-            lines = output.split('\n')
+            lines = output.split("\n")
             for line in lines:
-                if 'tests passed' in line.lower() or 'tests successful' in line.lower():
+                if "tests passed" in line.lower() or "tests successful" in line.lower():
                     try:
                         parts = line.split()
                         for i, part in enumerate(parts):
                             if part.isdigit():
-                                if 'passed' in line.lower():
+                                if "passed" in line.lower():
                                     passed_count = int(part)
-                                elif 'total' in line.lower() or 'tests' in line.lower():
+                                elif "total" in line.lower() or "tests" in line.lower():
                                     test_count = int(part)
                     except:
                         pass
@@ -163,7 +172,7 @@ class TestRunner:
                 "test_count": test_count,
                 "passed_count": passed_count,
                 "output": output[-1000:],  # Last 1000 chars
-                "error": error_output[-500:] if error_output else None
+                "error": error_output[-500:] if error_output else None,
             }
 
         except Exception as e:
@@ -175,7 +184,7 @@ class TestRunner:
                 "test_count": 0,
                 "passed_count": 0,
                 "output": "",
-                "error": str(e)
+                "error": str(e),
             }
 
     async def run_test_suite(self, suite_name: str, suite_config: Dict[str, Any]) -> Dict[str, Any]:
@@ -189,7 +198,7 @@ class TestRunner:
             "total_scripts": len(suite_config["scripts"]),
             "successful_scripts": 0,
             "total_tests": 0,
-            "passed_tests": 0
+            "passed_tests": 0,
         }
 
         for script_path in suite_config["scripts"]:
@@ -226,7 +235,9 @@ class TestRunner:
 
         # Overall summary
         total_suites = len(results)
-        successful_suites = sum(1 for suite in results.values() if suite["successful_scripts"] == suite["total_scripts"])
+        successful_suites = sum(
+            1 for suite in results.values() if suite["successful_scripts"] == suite["total_scripts"]
+        )
         total_scripts = sum(suite["total_scripts"] for suite in results.values())
         successful_scripts = sum(suite["successful_scripts"] for suite in results.values())
         total_tests = sum(suite["total_tests"] for suite in results.values())
@@ -260,19 +271,18 @@ class TestRunner:
 
         for suite_name, suite_result in results.items():
             scripts_status = f"{suite_result['successful_scripts']}/{suite_result['total_scripts']}"
-            tests_status = f"{suite_result['passed_tests']}/{suite_result['total_tests']}" if suite_result['total_tests'] > 0 else "N/A"
+            tests_status = (
+                f"{suite_result['passed_tests']}/{suite_result['total_tests']}"
+                if suite_result["total_tests"] > 0
+                else "N/A"
+            )
 
             if suite_result["successful_scripts"] == suite_result["total_scripts"]:
                 status = "✅ PASS"
             else:
                 status = "❌ FAIL"
 
-            table.add_row(
-                suite_result["suite_name"],
-                scripts_status,
-                tests_status,
-                status
-            )
+            table.add_row(suite_result["suite_name"], scripts_status, tests_status, status)
 
         console.print(table)
 
@@ -301,19 +311,19 @@ class TestRunner:
                 "total_scripts": total_scripts,
                 "successful_scripts": successful_scripts,
                 "total_tests": total_tests,
-                "passed_tests": passed_tests
-            }
+                "passed_tests": passed_tests,
+            },
         }
 
         report_file = self.project_root / "scripts" / "comprehensive_test_report.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(report_data, f, indent=2, default=str)
 
         console.print(f"\n📄 Detailed report saved to: {report_file}")
 
         # Generate simple summary
         summary_file = self.project_root / "scripts" / "test_summary.txt"
-        with open(summary_file, 'w') as f:
+        with open(summary_file, "w") as f:
             f.write("COMPREHENSIVE TEST SUMMARY\n")
             f.write("=" * 40 + "\n\n")
             f.write(f"Date: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -328,10 +338,12 @@ class TestRunner:
 
     async def run_all_tests(self, skip_optional: bool = False):
         """Run all test suites in proper order."""
-        console.print(Panel.fit(
-            "[bold blue]🚀 LLM Documentation Ecosystem Test Runner[/bold blue]\n"
-            "[dim]Running comprehensive test suites in dependency order[/dim]"
-        ))
+        console.print(
+            Panel.fit(
+                "[bold blue]🚀 LLM Documentation Ecosystem Test Runner[/bold blue]\n"
+                "[dim]Running comprehensive test suites in dependency order[/dim]"
+            )
+        )
 
         # Check service availability
         console.print("🔍 Checking service availability...")
@@ -349,9 +361,7 @@ class TestRunner:
         results = {}
 
         with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console
+            SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
         ) as progress:
             overall_task = progress.add_task("Running test suites...", total=len(self.test_suites))
 
@@ -373,6 +383,7 @@ class TestRunner:
         self.generate_report(results)
 
         return results
+
 
 async def main():
     """Main function."""
@@ -411,6 +422,7 @@ async def main():
 
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

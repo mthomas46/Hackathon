@@ -1,12 +1,14 @@
-"""Bulk operations repository implementation.
+"""
+Bulk operations repository implementation.
 
 Handles database operations for bulk operations and their results.
 """
 
-from typing import List, Optional, Dict, Any
-from services.prompt_store.core.repository import BaseRepository
+from typing import Any, Dict, List, Optional
+
 from services.prompt_store.core.entities import BulkOperation
-from services.prompt_store.db.queries import execute_query, serialize_json, deserialize_json
+from services.prompt_store.core.repository import BaseRepository
+from services.prompt_store.db.queries import deserialize_json, execute_query, serialize_json
 
 
 class BulkOperationRepository(BaseRepository[BulkOperation]):
@@ -17,21 +19,23 @@ class BulkOperationRepository(BaseRepository[BulkOperation]):
 
     def _row_to_entity(self, row: Dict[str, Any]) -> BulkOperation:
         """Convert database row to BulkOperation entity."""
-        return BulkOperation.from_dict({
-            "id": row["id"],
-            "operation_type": row["operation_type"],
-            "status": row["status"],
-            "total_items": row["total_items"],
-            "processed_items": row["processed_items"],
-            "successful_items": row["successful_items"],
-            "failed_items": row["failed_items"],
-            "errors": deserialize_json(row["errors"]),
-            "metadata": deserialize_json(row["metadata"]),
-            "results": deserialize_json(row["results"]),
-            "created_by": row["created_by"],
-            "created_at": row["created_at"],
-            "completed_at": row["completed_at"]
-        })
+        return BulkOperation.from_dict(
+            {
+                "id": row["id"],
+                "operation_type": row["operation_type"],
+                "status": row["status"],
+                "total_items": row["total_items"],
+                "processed_items": row["processed_items"],
+                "successful_items": row["successful_items"],
+                "failed_items": row["failed_items"],
+                "errors": deserialize_json(row["errors"]),
+                "metadata": deserialize_json(row["metadata"]),
+                "results": deserialize_json(row["results"]),
+                "created_by": row["created_by"],
+                "created_at": row["created_at"],
+                "completed_at": row["completed_at"],
+            }
+        )
 
     def _entity_to_row(self, entity: BulkOperation) -> Dict[str, Any]:
         """Convert BulkOperation entity to database row."""
@@ -48,7 +52,7 @@ class BulkOperationRepository(BaseRepository[BulkOperation]):
             "results": serialize_json(entity.results),
             "created_by": entity.created_by,
             "created_at": entity.created_at.isoformat(),
-            "completed_at": entity.completed_at.isoformat() if entity.completed_at else None
+            "completed_at": entity.completed_at.isoformat() if entity.completed_at else None,
         }
 
     def save(self, entity: BulkOperation) -> BulkOperation:
@@ -76,6 +80,7 @@ class BulkOperationRepository(BaseRepository[BulkOperation]):
     def get_all(self, limit: int = 50, offset: int = 0, **filters) -> Dict[str, Any]:
         """Get all bulk operations with pagination and filtering."""
         from services.prompt_store.db.queries import execute_paged_query
+
         return execute_paged_query(self.table_name, filters, limit=limit, offset=offset)
 
     def update(self, entity_id: str, updates: Dict[str, Any]) -> Optional[BulkOperation]:
@@ -154,14 +159,11 @@ class BulkOperationRepository(BaseRepository[BulkOperation]):
         rows = execute_query(query, (status, limit), fetch_all=True)
         return [self._row_to_entity(row) for row in rows]
 
-    def update_progress(self, operation_id: str, processed: int, successful: int,
-                       failed: int, errors: Optional[List[str]] = None) -> bool:
+    def update_progress(
+        self, operation_id: str, processed: int, successful: int, failed: int, errors: Optional[List[str]] = None
+    ) -> bool:
         """Update operation progress."""
-        updates = {
-            "processed_items": processed,
-            "successful_items": successful,
-            "failed_items": failed
-        }
+        updates = {"processed_items": processed, "successful_items": successful, "failed_items": failed}
 
         if errors:
             # Get current operation to append errors
@@ -178,10 +180,7 @@ class BulkOperationRepository(BaseRepository[BulkOperation]):
         """Mark operation as completed."""
         from datetime import datetime, timezone
 
-        updates = {
-            "status": "completed",
-            "completed_at": datetime.now(timezone.utc)
-        }
+        updates = {"status": "completed", "completed_at": datetime.now(timezone.utc)}
 
         if results:
             updates["results"] = results
@@ -193,11 +192,7 @@ class BulkOperationRepository(BaseRepository[BulkOperation]):
         """Mark operation as failed."""
         from datetime import datetime, timezone
 
-        updates = {
-            "status": "failed",
-            "completed_at": datetime.now(timezone.utc),
-            "errors": errors
-        }
+        updates = {"status": "failed", "completed_at": datetime.now(timezone.utc), "errors": errors}
 
         self.update(operation_id, updates)
         return True

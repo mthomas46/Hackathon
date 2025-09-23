@@ -4,22 +4,25 @@
 Validates that the change impact analyzer works correctly.
 """
 
-import sys
 import os
+import sys
 from datetime import datetime
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+
 def test_change_impact_analyzer_import():
     """Test that the change impact analyzer module can be imported."""
     try:
         from services.analysis_service.modules.change_impact_analyzer import ChangeImpactAnalyzer, analyze_change_impact
+
         print("✅ Change impact analyzer module imported successfully")
         return True
     except ImportError as e:
         print(f"❌ Failed to import change impact analyzer module: {e}")
         return False
+
 
 def test_change_impact_analyzer_initialization():
     """Test that the change impact analyzer can be initialized."""
@@ -36,6 +39,7 @@ def test_change_impact_analyzer_initialization():
         print(f"❌ Failed to initialize change impact analyzer: {e}")
         return False
 
+
 def test_extract_document_features():
     """Test extraction of document features."""
     try:
@@ -45,10 +49,10 @@ def test_extract_document_features():
 
         # Create sample document data
         document_data = {
-            'document_id': 'test_api_doc',
-            'title': 'API Developer Guide',
-            'document_type': 'developer_guide',
-            'content': '''
+            "document_id": "test_api_doc",
+            "title": "API Developer Guide",
+            "document_type": "developer_guide",
+            "content": """
             # API Developer Guide
 
             This guide covers REST API usage, authentication, and best practices.
@@ -63,9 +67,9 @@ def test_extract_document_features():
 
             ## Error Handling
             The API returns standard HTTP status codes...
-            ''',
-            'tags': ['api', 'rest', 'authentication'],
-            'last_modified': datetime.now().isoformat()
+            """,
+            "tags": ["api", "rest", "authentication"],
+            "last_modified": datetime.now().isoformat(),
         }
 
         features = analyzer._extract_document_features(document_data)
@@ -85,6 +89,7 @@ def test_extract_document_features():
         print(f"❌ Document features extraction failed: {e}")
         return False
 
+
 def test_stakeholder_identification():
     """Test stakeholder group identification."""
     try:
@@ -94,24 +99,24 @@ def test_stakeholder_identification():
 
         # Test different document types
         api_doc = {
-            'document_id': 'api_doc',
-            'document_type': 'api_reference',
-            'content': 'API documentation for developers',
-            'tags': ['api', 'developers']
+            "document_id": "api_doc",
+            "document_type": "api_reference",
+            "content": "API documentation for developers",
+            "tags": ["api", "developers"],
         }
 
         user_doc = {
-            'document_id': 'user_doc',
-            'document_type': 'user_guide',
-            'content': 'User guide for end users',
-            'tags': ['guide', 'users']
+            "document_id": "user_doc",
+            "document_type": "user_guide",
+            "content": "User guide for end users",
+            "tags": ["guide", "users"],
         }
 
         security_doc = {
-            'document_id': 'security_doc',
-            'document_type': 'security',
-            'content': 'Security best practices',
-            'tags': ['security', 'compliance']
+            "document_id": "security_doc",
+            "document_type": "security",
+            "content": "Security best practices",
+            "tags": ["security", "compliance"],
         }
 
         stakeholders_api = analyzer._identify_stakeholder_groups(api_doc)
@@ -124,16 +129,17 @@ def test_stakeholder_identification():
         print(f"   Security document stakeholders: {stakeholders_security}")
 
         # API docs should include developers
-        assert 'developers' in stakeholders_api
+        assert "developers" in stakeholders_api
         # User guides should include end users
-        assert 'end_users' in stakeholders_user
+        assert "end_users" in stakeholders_user
         # Security docs should include security compliance
-        assert 'security_compliance' in stakeholders_security
+        assert "security_compliance" in stakeholders_security
 
         return True
     except Exception as e:
         print(f"❌ Stakeholder identification failed: {e}")
         return False
+
 
 def test_semantic_similarity_analysis():
     """Test semantic similarity analysis."""
@@ -144,19 +150,13 @@ def test_semantic_similarity_analysis():
 
         # Create similar documents
         source_doc = {
-            'document_id': 'source',
-            'content': 'API authentication using OAuth 2.0 with client credentials flow'
+            "document_id": "source",
+            "content": "API authentication using OAuth 2.0 with client credentials flow",
         }
 
         related_docs = [
-            {
-                'document_id': 'related1',
-                'content': 'OAuth 2.0 authentication for API access with client credentials'
-            },
-            {
-                'document_id': 'related2',
-                'content': 'User management and profile information retrieval'
-            }
+            {"document_id": "related1", "content": "OAuth 2.0 authentication for API access with client credentials"},
+            {"document_id": "related2", "content": "User management and profile information retrieval"},
         ]
 
         similarities = analyzer._analyze_semantic_similarity(source_doc, related_docs)
@@ -171,12 +171,13 @@ def test_semantic_similarity_analysis():
         # Should have high similarity for the first related document
         if similarities:
             first_doc = list(similarities.keys())[0]
-            assert similarities[first_doc]['similarity_score'] > 0.5
+            assert similarities[first_doc]["similarity_score"] > 0.5
 
         return True
     except Exception as e:
         print(f"❌ Semantic similarity analysis failed: {e}")
         return False
+
 
 def test_relationship_analysis():
     """Test relationship analysis between documents."""
@@ -187,25 +188,25 @@ def test_relationship_analysis():
 
         # Create documents with different relationships
         source_doc = {
-            'document_id': 'api_guide',
-            'document_type': 'developer_guide',
-            'content': 'API guide for developers',
-            'tags': ['api', 'guide']
+            "document_id": "api_guide",
+            "document_type": "developer_guide",
+            "content": "API guide for developers",
+            "tags": ["api", "guide"],
         }
 
         related_docs = [
             {
-                'document_id': 'api_reference',
-                'document_type': 'api_reference',
-                'content': 'API reference documentation',
-                'tags': ['api', 'reference']
+                "document_id": "api_reference",
+                "document_type": "api_reference",
+                "content": "API reference documentation",
+                "tags": ["api", "reference"],
             },
             {
-                'document_id': 'tutorial',
-                'document_type': 'tutorial',
-                'content': 'Getting started tutorial',
-                'tags': ['tutorial', 'getting-started']
-            }
+                "document_id": "tutorial",
+                "document_type": "tutorial",
+                "content": "Getting started tutorial",
+                "tags": ["tutorial", "getting-started"],
+            },
         ]
 
         relationships = analyzer._analyze_relationships(source_doc, related_docs)
@@ -224,6 +225,7 @@ def test_relationship_analysis():
         print(f"❌ Relationship analysis failed: {e}")
         return False
 
+
 def test_change_severity_assessment():
     """Test change severity assessment."""
     try:
@@ -233,21 +235,21 @@ def test_change_severity_assessment():
 
         # Test different change types
         breaking_change = {
-            'change_type': 'breaking_change',
-            'change_scope': 'entire_document',
-            'description': 'Complete API redesign'
+            "change_type": "breaking_change",
+            "change_scope": "entire_document",
+            "description": "Complete API redesign",
         }
 
         major_change = {
-            'change_type': 'major_change',
-            'change_scope': 'major_section',
-            'description': 'New authentication flow'
+            "change_type": "major_change",
+            "change_scope": "major_section",
+            "description": "New authentication flow",
         }
 
         minor_change = {
-            'change_type': 'minor_change',
-            'change_scope': 'minor_section',
-            'description': 'Updated error messages'
+            "change_type": "minor_change",
+            "change_scope": "minor_section",
+            "description": "Updated error messages",
         }
 
         severity_breaking = analyzer._assess_change_severity(breaking_change)
@@ -255,18 +257,21 @@ def test_change_severity_assessment():
         severity_minor = analyzer._assess_change_severity(minor_change)
 
         print("✅ Change severity assessment working")
-        print(f"   Breaking change severity: {severity_breaking['severity_level']} ({severity_breaking['severity_score']:.2f})")
+        print(
+            f"   Breaking change severity: {severity_breaking['severity_level']} ({severity_breaking['severity_score']:.2f})"
+        )
         print(f"   Major change severity: {severity_major['severity_level']} ({severity_major['severity_score']:.2f})")
         print(f"   Minor change severity: {severity_minor['severity_level']} ({severity_minor['severity_score']:.2f})")
 
         # Breaking changes should have highest severity
-        assert severity_breaking['severity_score'] > severity_major['severity_score']
-        assert severity_major['severity_score'] > severity_minor['severity_score']
+        assert severity_breaking["severity_score"] > severity_major["severity_score"]
+        assert severity_major["severity_score"] > severity_minor["severity_score"]
 
         return True
     except Exception as e:
         print(f"❌ Change severity assessment failed: {e}")
         return False
+
 
 def test_overall_impact_calculation():
     """Test overall impact calculation."""
@@ -277,33 +282,28 @@ def test_overall_impact_calculation():
 
         # Create sample data for impact calculation
         document_features = {
-            'document_type': 'api_reference',
-            'stakeholder_groups': ['developers', 'administrators'],
-            'business_criticality': 'high'
+            "document_type": "api_reference",
+            "stakeholder_groups": ["developers", "administrators"],
+            "business_criticality": "high",
         }
 
-        change_description = {
-            'change_type': 'major_change',
-            'change_scope': 'major_section'
-        }
+        change_description = {"change_type": "major_change", "change_scope": "major_section"}
 
         # Mock relationships
         relationships = {
-            'related_doc_1': {
-                'relationship_score': 0.8,
-                'primary_relationship': 'dependency',
-                'impact_multiplier': 0.8
+            "related_doc_1": {
+                "relationship_score": 0.8,
+                "primary_relationship": "dependency",
+                "impact_multiplier": 0.8,
             },
-            'related_doc_2': {
-                'relationship_score': 0.6,
-                'primary_relationship': 'reference_link',
-                'impact_multiplier': 0.7
-            }
+            "related_doc_2": {
+                "relationship_score": 0.6,
+                "primary_relationship": "reference_link",
+                "impact_multiplier": 0.7,
+            },
         }
 
-        impact_analysis = analyzer._calculate_change_impact(
-            change_description, document_features, relationships
-        )
+        impact_analysis = analyzer._calculate_change_impact(change_description, document_features, relationships)
 
         print("✅ Overall impact calculation working")
         print(f"   Overall impact score: {impact_analysis['overall_impact']['overall_impact_score']:.3f}")
@@ -316,6 +316,7 @@ def test_overall_impact_calculation():
         print(f"❌ Overall impact calculation failed: {e}")
         return False
 
+
 def test_impact_recommendations():
     """Test impact recommendation generation."""
     try:
@@ -325,23 +326,23 @@ def test_impact_recommendations():
 
         # Test different impact levels
         critical_impact = {
-            'overall_impact': {
-                'impact_level': 'critical',
-                'affected_documents_count': 8,
-                'high_impact_documents_count': 5
+            "overall_impact": {
+                "impact_level": "critical",
+                "affected_documents_count": 8,
+                "high_impact_documents_count": 5,
             },
-            'document_impacts': {},
-            'change_analysis': {'change_type': 'breaking_change'}
+            "document_impacts": {},
+            "change_analysis": {"change_type": "breaking_change"},
         }
 
         medium_impact = {
-            'overall_impact': {
-                'impact_level': 'medium',
-                'affected_documents_count': 3,
-                'high_impact_documents_count': 1
+            "overall_impact": {
+                "impact_level": "medium",
+                "affected_documents_count": 3,
+                "high_impact_documents_count": 1,
             },
-            'document_impacts': {},
-            'change_analysis': {'change_type': 'minor_change'}
+            "document_impacts": {},
+            "change_analysis": {"change_type": "minor_change"},
         }
 
         recommendations_critical = analyzer._generate_impact_recommendations(critical_impact)
@@ -357,12 +358,13 @@ def test_impact_recommendations():
             print(f"     {i+1}. {rec}")
 
         # Critical impact should have immediate action recommendations
-        assert any('immediate' in rec.lower() or 'critical' in rec.upper() for rec in recommendations_critical)
+        assert any("immediate" in rec.lower() or "critical" in rec.upper() for rec in recommendations_critical)
 
         return True
     except Exception as e:
         print(f"❌ Impact recommendations failed: {e}")
         return False
+
 
 async def test_full_change_impact_analysis():
     """Test the complete change impact analysis pipeline."""
@@ -373,10 +375,10 @@ async def test_full_change_impact_analysis():
 
         # Create comprehensive test data
         document_data = {
-            'document_id': 'api_guide_v2',
-            'title': 'API Developer Guide v2.0',
-            'document_type': 'developer_guide',
-            'content': '''
+            "document_id": "api_guide_v2",
+            "title": "API Developer Guide v2.0",
+            "document_type": "developer_guide",
+            "content": """
             # API Developer Guide v2.0
 
             This updated guide covers the new REST API with enhanced authentication,
@@ -393,46 +395,46 @@ async def test_full_change_impact_analysis():
 
             ## Enhanced Error Handling
             Improved error responses with detailed messages and error codes.
-            ''',
-            'tags': ['api', 'rest', 'authentication', 'developers'],
-            'last_modified': datetime.now().isoformat()
+            """,
+            "tags": ["api", "rest", "authentication", "developers"],
+            "last_modified": datetime.now().isoformat(),
         }
 
         change_description = {
-            'change_type': 'major_change',
-            'change_scope': 'major_section',
-            'description': 'Updated authentication system and added new endpoints',
-            'affected_sections': ['Authentication', 'Endpoints'],
-            'breaking_change': False,
-            'estimated_impact': 'medium'
+            "change_type": "major_change",
+            "change_scope": "major_section",
+            "description": "Updated authentication system and added new endpoints",
+            "affected_sections": ["Authentication", "Endpoints"],
+            "breaking_change": False,
+            "estimated_impact": "medium",
         }
 
         related_documents = [
             {
-                'document_id': 'api_reference',
-                'document_type': 'api_reference',
-                'content': 'API reference with endpoint details',
-                'tags': ['api', 'reference']
+                "document_id": "api_reference",
+                "document_type": "api_reference",
+                "content": "API reference with endpoint details",
+                "tags": ["api", "reference"],
             },
             {
-                'document_id': 'tutorial',
-                'document_type': 'tutorial',
-                'content': 'Getting started tutorial for API usage',
-                'tags': ['tutorial', 'getting-started']
+                "document_id": "tutorial",
+                "document_type": "tutorial",
+                "content": "Getting started tutorial for API usage",
+                "tags": ["tutorial", "getting-started"],
             },
             {
-                'document_id': 'security_guide',
-                'document_type': 'security',
-                'content': 'Security best practices for API usage',
-                'tags': ['security', 'api']
-            }
+                "document_id": "security_guide",
+                "document_type": "security",
+                "content": "Security best practices for API usage",
+                "tags": ["security", "api"],
+            },
         ]
 
         result = await analyzer.analyze_change_impact(
             document_id="api_guide_v2",
             document_data=document_data,
             change_description=change_description,
-            related_documents=related_documents
+            related_documents=related_documents,
         )
 
         print("✅ Full change impact analysis pipeline working")
@@ -442,34 +444,40 @@ async def test_full_change_impact_analysis():
         print(f"   Affected documents: {result['impact_analysis']['overall_impact']['affected_documents_count']}")
         print(f"   High impact documents: {result['impact_analysis']['overall_impact']['high_impact_documents_count']}")
         print(f"   Change severity: {result['impact_analysis']['change_analysis']['severity_level']}")
-        print(f"   Stakeholder impact: {result['impact_analysis']['overall_impact']['stakeholder_impact']['impact_level']}")
+        print(
+            f"   Stakeholder impact: {result['impact_analysis']['overall_impact']['stakeholder_impact']['impact_level']}"
+        )
         print(f"   Related documents analyzed: {len(result['related_documents_analysis'])}")
         print(f"   Recommendations generated: {len(result['recommendations'])}")
         print(f"   Processing time: {result['processing_time']:.2f}s")
 
-        if result['recommendations']:
+        if result["recommendations"]:
             print(f"   Key recommendations:")
-            for i, rec in enumerate(result['recommendations'][:3]):
+            for i, rec in enumerate(result["recommendations"][:3]):
                 print(f"     {i+1}. {rec}")
 
-        if result['related_documents_analysis']:
+        if result["related_documents_analysis"]:
             print(f"   Top related documents:")
-            for doc_id, analysis in list(result['related_documents_analysis'].items())[:2]:
-                if 'relationship' in analysis:
-                    relationship = analysis['relationship']
-                    print(f"     {doc_id}: {relationship['primary_relationship']} (score: {relationship['relationship_score']:.2f})")
+            for doc_id, analysis in list(result["related_documents_analysis"].items())[:2]:
+                if "relationship" in analysis:
+                    relationship = analysis["relationship"]
+                    print(
+                        f"     {doc_id}: {relationship['primary_relationship']} (score: {relationship['relationship_score']:.2f})"
+                    )
 
         return True
     except Exception as e:
         print(f"❌ Full change impact analysis failed: {e}")
         return False
 
+
 def test_main_app_import():
     """Test that the main app can be imported with change impact analysis endpoints."""
     try:
         from services.analysis_service.main import app
-        routes = [route.path for route in app.routes if hasattr(route, 'path')]
-        impact_routes = [r for r in routes if 'impact' in r]
+
+        routes = [route.path for route in app.routes if hasattr(route, "path")]
+        impact_routes = [r for r in routes if "impact" in r]
 
         print("✅ Main app imported successfully")
         print(f"✅ Found {len(impact_routes)} change impact analysis routes:")
@@ -480,6 +488,7 @@ def test_main_app_import():
     except Exception as e:
         print(f"❌ Failed to import main app: {e}")
         return False
+
 
 def main():
     """Run all tests."""
@@ -506,8 +515,9 @@ def main():
     for test in tests:
         print(f"\n🧪 Running {test.__name__}...")
         try:
-            if test.__name__ == 'test_full_change_impact_analysis':
+            if test.__name__ == "test_full_change_impact_analysis":
                 import asyncio
+
                 result = asyncio.run(test())
             else:
                 result = test()
@@ -526,6 +536,7 @@ def main():
     else:
         print("⚠️  Some tests failed. Check the output above for details.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

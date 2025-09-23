@@ -1,19 +1,20 @@
-"""GitHub MCP UI handlers for Frontend service.
+"""
+GitHub MCP UI handlers for Frontend service.
 
 Handles github-mcp service visualization, including tool invocation
 monitoring, GitHub operations, and MCP tool testing.
 """
-from typing import Dict, Any
+
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    fetch_service_data,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
 from ..github_mcp_monitor import github_mcp_monitor
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    get_frontend_clients,
+    handle_frontend_error,
+)
 
 
 class GithubMcpUIHandlers:
@@ -35,7 +36,7 @@ class GithubMcpUIHandlers:
                 "info": status_data.get("info", {}),
                 "tool_stats": status_data.get("tool_stats", {}),
                 "recent_invocations": invocation_history,
-                "last_updated": status_data.get("last_updated", "Never")
+                "last_updated": status_data.get("last_updated", "Never"),
             }
 
             html = """
@@ -696,4 +697,6 @@ class GithubMcpUIHandlers:
 """
             return create_html_response(html, "GitHub MCP Dashboard")
         except Exception as e:
-            return handle_frontend_error("render github-mcp dashboard", e, **build_frontend_context("render_github_mcp_dashboard"))
+            return handle_frontend_error(
+                "render github-mcp dashboard", e, **build_frontend_context("render_github_mcp_dashboard")
+            )

@@ -1,6 +1,5 @@
-"""Action Executed Event"""
+"""Action Executed Event."""
 
-from typing import Dict, Any
 
 from .base_event import DomainEvent
 
@@ -16,6 +15,6 @@ class ActionExecutedEvent(DomainEvent):
                 "execution_id": execution_id,
                 "action_id": action_id,
                 "status": status,
-                "execution_time_ms": execution_time_ms
-            }
+                "execution_time_ms": execution_time_ms,
+            },
         )

@@ -1,8 +1,9 @@
-"""DTOs for Workflow Management API"""
+"""DTOs for Workflow Management API."""
+
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Any, Optional, List
-from datetime import datetime
 
 
 class CreateWorkflowRequest(BaseModel):
@@ -15,18 +16,18 @@ class CreateWorkflowRequest(BaseModel):
     actions: List[Dict[str, Any]] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def validate_name(cls, v):
         if not v.strip():
-            raise ValueError('Workflow name cannot be empty')
+            raise ValueError("Workflow name cannot be empty")
         return v.strip()
 
-    @field_validator('workflow_type')
+    @field_validator("workflow_type")
     @classmethod
     def validate_workflow_type(cls, v):
         if not v.strip():
-            raise ValueError('Workflow type cannot be empty')
+            raise ValueError("Workflow type cannot be empty")
         return v.strip()
 
 
@@ -39,18 +40,18 @@ class ExecuteWorkflowRequest(BaseModel):
     correlation_id: Optional[str] = Field(None, max_length=255)
     priority: int = Field(5, ge=1, le=10)  # Priority 1-10
 
-    @field_validator('workflow_id')
+    @field_validator("workflow_id")
     @classmethod
     def validate_workflow_id(cls, v):
         if not v.strip():
-            raise ValueError('Workflow ID cannot be empty')
+            raise ValueError("Workflow ID cannot be empty")
         return v.strip()
 
-    @field_validator('correlation_id')
+    @field_validator("correlation_id")
     @classmethod
     def validate_correlation_id(cls, v):
         if v and len(v) > 255:
-            raise ValueError('Correlation ID too long (max 255 characters)')
+            raise ValueError("Correlation ID too long (max 255 characters)")
         return v
 
 
@@ -59,11 +60,11 @@ class GetWorkflowRequest(BaseModel):
 
     workflow_id: str = Field(..., min_length=1, max_length=255)
 
-    @field_validator('workflow_id')
+    @field_validator("workflow_id")
     @classmethod
     def validate_workflow_id(cls, v):
         if not v.strip():
-            raise ValueError('Workflow ID cannot be empty')
+            raise ValueError("Workflow ID cannot be empty")
         return v.strip()
 
 
@@ -131,6 +132,7 @@ class ExecutionListResponse(BaseModel):
 
 class WorkflowHistoryRequest(BaseModel):
     """Request for workflow history."""
+
     workflow_id: Optional[str] = Field(None, max_length=255)
     limit: int = Field(50, ge=1, le=1000)
     status_filter: Optional[str] = Field(None, max_length=50)
@@ -138,6 +140,7 @@ class WorkflowHistoryRequest(BaseModel):
 
 class WorkflowHistoryEntryResponse(BaseModel):
     """Response containing workflow execution history entry."""
+
     workflow_id: str
     execution_id: str
     status: str
@@ -153,6 +156,7 @@ class WorkflowHistoryEntryResponse(BaseModel):
 
 class WorkflowHistoryResponse(BaseModel):
     """Response containing workflow execution history."""
+
     entries: List[WorkflowHistoryEntryResponse]
     total: int
     limit: int

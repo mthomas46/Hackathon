@@ -1,14 +1,17 @@
-"""Base service pattern for Prompt Store service.
+"""
+Base service pattern for Prompt Store service.
 
-Following domain-driven design principles with generic service implementation.
+Following domain-driven design principles with generic service
+implementation.
 """
 
-from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any, TypeVar, Generic
+from abc import ABC
+from typing import Any, Dict, Generic, Optional, TypeVar
+
 from ..core.entities import BaseEntity
 from ..core.repository import BaseRepository
 
-T = TypeVar('T', bound=BaseEntity)
+T = TypeVar("T", bound=BaseEntity)
 
 
 class BaseService(ABC, Generic[T]):
@@ -36,7 +39,7 @@ class BaseService(ABC, Generic[T]):
             "total": result.get("total", 0),
             "has_more": result.get("has_more", False),
             "limit": limit,
-            "offset": offset
+            "offset": offset,
         }
 
     def update_entity(self, entity_id: str, updates: Dict[str, Any]) -> Optional[T]:

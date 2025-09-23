@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enterprise Ecosystem Initializer
+Enterprise Ecosystem Initializer.
 
 This module provides centralized initialization and orchestration of all
 enterprise-grade features across the entire ecosystem.
@@ -8,24 +8,25 @@ enterprise-grade features across the entire ecosystem.
 
 import asyncio
 import json
-from typing import Dict, Any, List, Optional
-from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
 import signal
-import sys
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+from typing import Any, Dict, List
 
+from ..caching.intelligent_caching import get_service_cache, shutdown_all_caches
 from ..core.constants_new import ServiceNames
 from ..monitoring.logging import fire_and_forget
-from .error_handling.error_handling import enterprise_error_handler
-from ..caching.intelligent_caching import get_service_cache, shutdown_all_caches
-from .enterprise_integration import (
-    service_registry, initialize_enterprise_integration,
-    workflow_context_middleware, service_mesh_middleware
-)
 from ..operational.operational_excellence import (
-    health_monitor, service_discovery, performance_dashboard,
-    initialize_operational_excellence, shutdown_operational_excellence
+    health_monitor,
+    initialize_operational_excellence,
+    performance_dashboard,
+    shutdown_operational_excellence,
 )
+from .enterprise_integration import (
+    initialize_enterprise_integration,
+    service_registry,
+)
+from .error_handling.error_handling import enterprise_error_handler
 
 
 class EnterpriseEcosystemInitializer:
@@ -44,7 +45,7 @@ class EnterpriseEcosystemInitializer:
             "status": "initializing",
             "components": {},
             "start_time": self.startup_time.isoformat(),
-            "errors": []
+            "errors": [],
         }
 
         try:
@@ -52,51 +53,37 @@ class EnterpriseEcosystemInitializer:
 
             # 1. Initialize Enterprise Error Handling
             await self._initialize_component(
-                "enterprise_error_handling",
-                self._init_enterprise_error_handling,
-                initialization_results
+                "enterprise_error_handling", self._init_enterprise_error_handling, initialization_results
             )
 
             # 2. Initialize Intelligent Caching
             await self._initialize_component(
-                "intelligent_caching",
-                self._init_intelligent_caching,
-                initialization_results
+                "intelligent_caching", self._init_intelligent_caching, initialization_results
             )
 
             # 3. Initialize Enterprise Integration
             await self._initialize_component(
-                "enterprise_integration",
-                self._init_enterprise_integration,
-                initialization_results
+                "enterprise_integration", self._init_enterprise_integration, initialization_results
             )
 
             # 4. Initialize Operational Excellence
             await self._initialize_component(
-                "operational_excellence",
-                self._init_operational_excellence,
-                initialization_results
+                "operational_excellence", self._init_operational_excellence, initialization_results
             )
 
             # 5. Initialize Service-Specific Components
             await self._initialize_component(
-                "service_specific_components",
-                self._init_service_specific_components,
-                initialization_results
+                "service_specific_components", self._init_service_specific_components, initialization_results
             )
 
             # 6. Initialize Cross-Service Integrations
             await self._initialize_component(
-                "cross_service_integrations",
-                self._init_cross_service_integrations,
-                initialization_results
+                "cross_service_integrations", self._init_cross_service_integrations, initialization_results
             )
 
             # 7. Initialize Monitoring and Dashboards
             await self._initialize_component(
-                "monitoring_dashboards",
-                self._init_monitoring_dashboards,
-                initialization_results
+                "monitoring_dashboards", self._init_monitoring_dashboards, initialization_results
             )
 
             # Calculate initialization time
@@ -114,9 +101,7 @@ class EnterpriseEcosystemInitializer:
             fire_and_forget("critical", f"Enterprise ecosystem initialization failed: {e}", "enterprise_initializer")
             return initialization_results
 
-    async def _initialize_component(self, component_name: str,
-                                  init_func: callable,
-                                  results: Dict[str, Any]):
+    async def _initialize_component(self, component_name: str, init_func: callable, results: Dict[str, Any]):
         """Initialize a specific component with error handling."""
         try:
             fire_and_forget("info", f"Initializing {component_name}...", "enterprise_initializer")
@@ -132,7 +117,7 @@ class EnterpriseEcosystemInitializer:
             results["components"][component_name] = {
                 "status": "success",
                 "init_time_seconds": init_time,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             fire_and_forget("info", ".2f", "enterprise_initializer")
@@ -144,7 +129,7 @@ class EnterpriseEcosystemInitializer:
             results["components"][component_name] = {
                 "status": "failed",
                 "error": str(e),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             results["errors"].append(f"{component_name}: {str(e)}")
@@ -155,7 +140,11 @@ class EnterpriseEcosystemInitializer:
         # Enterprise error handler is already a global instance
         # Just ensure it's ready
         error_stats = enterprise_error_handler.get_error_statistics()
-        fire_and_forget("info", f"Enterprise error handler ready - tracking {error_stats.get('total_errors', 0)} errors", "enterprise_initializer")
+        fire_and_forget(
+            "info",
+            f"Enterprise error handler ready - tracking {error_stats.get('total_errors', 0)} errors",
+            "enterprise_initializer",
+        )
 
     async def _init_intelligent_caching(self):
         """Initialize intelligent caching system."""
@@ -167,13 +156,17 @@ class EnterpriseEcosystemInitializer:
             ServiceNames.INTERPRETER,
             ServiceNames.SUMMARIZER_HUB,
             ServiceNames.SOURCE_AGENT,
-            ServiceNames.DISCOVERY_AGENT
+            ServiceNames.DISCOVERY_AGENT,
         ]
 
         for service_name in services_to_test:
             cache = get_service_cache(service_name)
             cache_stats = cache.get_cache_stats()
-            fire_and_forget("info", f"Cache initialized for {service_name} - {cache_stats['cache_size_items']} items", "enterprise_initializer")
+            fire_and_forget(
+                "info",
+                f"Cache initialized for {service_name} - {cache_stats['cache_size_items']} items",
+                "enterprise_initializer",
+            )
 
     async def _init_enterprise_integration(self):
         """Initialize enterprise integration components."""
@@ -181,7 +174,9 @@ class EnterpriseEcosystemInitializer:
 
         # Test service registry
         registry_stats = len(service_registry.service_endpoints)
-        fire_and_forget("info", f"Service registry initialized with {registry_stats} services", "enterprise_initializer")
+        fire_and_forget(
+            "info", f"Service registry initialized with {registry_stats} services", "enterprise_initializer"
+        )
 
     async def _init_operational_excellence(self):
         """Initialize operational excellence components."""
@@ -189,8 +184,12 @@ class EnterpriseEcosystemInitializer:
 
         # Test health monitoring
         health_status = await health_monitor.get_health_status()
-        healthy_services = health_status.get('system', {}).get('healthy_services', 0)
-        fire_and_forget("info", f"Operational excellence initialized - monitoring {healthy_services} services", "enterprise_initializer")
+        healthy_services = health_status.get("system", {}).get("healthy_services", 0)
+        fire_and_forget(
+            "info",
+            f"Operational excellence initialized - monitoring {healthy_services} services",
+            "enterprise_initializer",
+        )
 
     async def _init_service_specific_components(self):
         """Initialize service-specific enterprise components."""
@@ -205,27 +204,32 @@ class EnterpriseEcosystemInitializer:
                 ServiceNames.SOURCE_AGENT,
                 ServiceNames.ANALYSIS_SERVICE,
                 ServiceNames.SUMMARIZER_HUB,
-                ServiceNames.DOCUMENT_STORE
+                ServiceNames.DOCUMENT_STORE,
             ],
             "prompt_optimization_workflow": [
                 ServiceNames.INTERPRETER,
                 ServiceNames.PROMPT_STORE,
-                ServiceNames.ANALYSIS_SERVICE
+                ServiceNames.ANALYSIS_SERVICE,
             ],
-            "service_discovery_workflow": [
-                ServiceNames.DISCOVERY_AGENT,
-                ServiceNames.INTERPRETER
-            ]
+            "service_discovery_workflow": [ServiceNames.DISCOVERY_AGENT, ServiceNames.INTERPRETER],
         }
 
         for pattern_name, services in integration_patterns.items():
-            fire_and_forget("info", f"Cross-service integration pattern '{pattern_name}' configured for {len(services)} services", "enterprise_initializer")
+            fire_and_forget(
+                "info",
+                f"Cross-service integration pattern '{pattern_name}' configured for {len(services)} services",
+                "enterprise_initializer",
+            )
 
     async def _init_monitoring_dashboards(self):
         """Initialize monitoring dashboards."""
         # Setup performance dashboard metrics
         dashboard_data = performance_dashboard.get_dashboard_data(health_monitor)
-        fire_and_forget("info", f"Performance dashboard initialized - tracking {len(dashboard_data.get('service_health', {}))} services", "enterprise_initializer")
+        fire_and_forget(
+            "info",
+            f"Performance dashboard initialized - tracking {len(dashboard_data.get('service_health', {}))} services",
+            "enterprise_initializer",
+        )
 
     async def get_ecosystem_status(self) -> Dict[str, Any]:
         """Get comprehensive ecosystem status."""
@@ -242,45 +246,38 @@ class EnterpriseEcosystemInitializer:
                 "components": {
                     "health_monitoring": {
                         "status": "active" if health_status else "inactive",
-                        "services_monitored": len(health_status.get('services', {})),
-                        "system_health": health_status.get('system', {})
+                        "services_monitored": len(health_status.get("services", {})),
+                        "system_health": health_status.get("system", {}),
                     },
                     "caching_system": {
                         "status": "active",
-                        "cache_hit_rate": cache_metrics.get('performance', {}).get('hit_ratio', 0),
-                        "total_cache_size_mb": cache_metrics.get('total_size_mb', 0)
+                        "cache_hit_rate": cache_metrics.get("performance", {}).get("hit_ratio", 0),
+                        "total_cache_size_mb": cache_metrics.get("total_size_mb", 0),
                     },
                     "error_handling": {
                         "status": "active",
-                        "total_errors": error_stats.get('total_errors', 0),
-                        "error_recovery_rate": self._calculate_error_recovery_rate(error_stats)
+                        "total_errors": error_stats.get("total_errors", 0),
+                        "error_recovery_rate": self._calculate_error_recovery_rate(error_stats),
                     },
                     "service_registry": {
                         "status": "active",
-                        "services_registered": len(service_registry.service_endpoints)
+                        "services_registered": len(service_registry.service_endpoints),
                     },
-                    "performance_monitoring": {
-                        "status": "active",
-                        "dashboard_data": performance_data
-                    }
+                    "performance_monitoring": {"status": "active", "dashboard_data": performance_data},
                 },
                 "workflows": {
                     "active_workflows": 0,  # Will be populated by orchestrator
                     "completed_workflows": 0,
-                    "failed_workflows": 0
+                    "failed_workflows": 0,
                 },
                 "last_updated": datetime.now().isoformat(),
-                "version": "1.0.0-enterprise"
+                "version": "1.0.0-enterprise",
             }
 
             return ecosystem_status
 
         except Exception as e:
-            return {
-                "overall_status": "error",
-                "error": str(e),
-                "last_updated": datetime.now().isoformat()
-            }
+            return {"overall_status": "error", "error": str(e), "last_updated": datetime.now().isoformat()}
 
     def _calculate_overall_status(self) -> str:
         """Calculate overall ecosystem status."""
@@ -299,7 +296,7 @@ class EnterpriseEcosystemInitializer:
 
     def _calculate_error_recovery_rate(self, error_stats: Dict[str, Any]) -> float:
         """Calculate error recovery rate."""
-        services = error_stats.get('services', {})
+        services = error_stats.get("services", {})
         if not services:
             return 100.0
 
@@ -308,8 +305,8 @@ class EnterpriseEcosystemInitializer:
 
         for service_data in services.values():
             if isinstance(service_data, dict):
-                recoveries = service_data.get('successful_recoveries', 0)
-                errors = service_data.get('total_errors', 0)
+                recoveries = service_data.get("successful_recoveries", 0)
+                errors = service_data.get("total_errors", 0)
                 total_recoveries += recoveries
                 total_errors += errors
 
@@ -344,7 +341,7 @@ class EnterpriseEcosystemInitializer:
             "timestamp": datetime.now().isoformat(),
             "overall_health": "unknown",
             "component_health": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         try:
@@ -354,21 +351,19 @@ class EnterpriseEcosystemInitializer:
                 ("caching_system", self._check_caching_system),
                 ("error_handling", self._check_error_handling),
                 ("service_registry", self._check_service_registry),
-                ("performance_monitoring", self._check_performance_monitoring)
+                ("performance_monitoring", self._check_performance_monitoring),
             ]
 
             for component_name, check_func in components_to_check:
                 try:
                     health_check_results["component_health"][component_name] = await check_func()
                 except Exception as e:
-                    health_check_results["component_health"][component_name] = {
-                        "status": "error",
-                        "error": str(e)
-                    }
+                    health_check_results["component_health"][component_name] = {"status": "error", "error": str(e)}
 
             # Calculate overall health
-            component_statuses = [comp.get("status", "unknown")
-                                for comp in health_check_results["component_health"].values()]
+            component_statuses = [
+                comp.get("status", "unknown") for comp in health_check_results["component_health"].values()
+            ]
 
             if all(status == "healthy" for status in component_statuses):
                 health_check_results["overall_health"] = "healthy"
@@ -393,8 +388,8 @@ class EnterpriseEcosystemInitializer:
         health_status = await health_monitor.get_health_status()
         return {
             "status": "healthy" if health_status else "unhealthy",
-            "services_monitored": len(health_status.get('services', {})),
-            "last_check": datetime.now().isoformat()
+            "services_monitored": len(health_status.get("services", {})),
+            "last_check": datetime.now().isoformat(),
         }
 
     async def _check_caching_system(self) -> Dict[str, Any]:
@@ -402,27 +397,27 @@ class EnterpriseEcosystemInitializer:
         cache = get_service_cache(ServiceNames.ANALYSIS_SERVICE)
         cache_stats = cache.get_cache_stats()
 
-        hit_ratio = cache_stats.get('performance', {}).get('hit_ratio', 0)
+        hit_ratio = cache_stats.get("performance", {}).get("hit_ratio", 0)
         status = "healthy" if hit_ratio >= 0.5 else "degraded" if hit_ratio >= 0.2 else "unhealthy"
 
         return {
             "status": status,
             "cache_hit_ratio": hit_ratio,
-            "cache_size_mb": cache_stats.get('total_size_mb', 0),
-            "cache_items": cache_stats.get('cache_size_items', 0)
+            "cache_size_mb": cache_stats.get("total_size_mb", 0),
+            "cache_items": cache_stats.get("cache_size_items", 0),
         }
 
     async def _check_error_handling(self) -> Dict[str, Any]:
         """Check error handling system."""
         error_stats = enterprise_error_handler.get_error_statistics()
 
-        recent_errors = error_stats.get('total_errors', 0)
+        recent_errors = error_stats.get("total_errors", 0)
         status = "healthy" if recent_errors < 10 else "degraded" if recent_errors < 50 else "unhealthy"
 
         return {
             "status": status,
             "total_errors": recent_errors,
-            "error_recovery_rate": self._calculate_error_recovery_rate(error_stats)
+            "error_recovery_rate": self._calculate_error_recovery_rate(error_stats),
         }
 
     async def _check_service_registry(self) -> Dict[str, Any]:
@@ -430,11 +425,7 @@ class EnterpriseEcosystemInitializer:
         services_count = len(service_registry.service_endpoints)
         status = "healthy" if services_count >= 5 else "degraded" if services_count >= 2 else "unhealthy"
 
-        return {
-            "status": status,
-            "services_registered": services_count,
-            "last_updated": datetime.now().isoformat()
-        }
+        return {"status": status, "services_registered": services_count, "last_updated": datetime.now().isoformat()}
 
     async def _check_performance_monitoring(self) -> Dict[str, Any]:
         """Check performance monitoring."""
@@ -443,13 +434,10 @@ class EnterpriseEcosystemInitializer:
             return {
                 "status": "healthy",
                 "dashboard_active": True,
-                "services_tracked": len(dashboard_data.get('service_health', {}))
+                "services_tracked": len(dashboard_data.get("service_health", {})),
             }
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e)
-            }
+            return {"status": "unhealthy", "error": str(e)}
 
     def _generate_health_recommendations(self, component_health: Dict[str, Any]) -> List[str]:
         """Generate health recommendations based on component status."""
@@ -501,6 +489,7 @@ async def perform_enterprise_health_check() -> Dict[str, Any]:
 
 def setup_signal_handlers():
     """Setup signal handlers for graceful shutdown."""
+
     def signal_handler(signum, frame):
         fire_and_forget("info", f"Received signal {signum}, initiating graceful shutdown", "enterprise_initializer")
         asyncio.create_task(enterprise_initializer.graceful_shutdown())

@@ -1,19 +1,14 @@
-"""Doc Store UI handlers for Frontend service.
+"""
+Doc Store UI handlers for Frontend service.
 
 Handles document store browsing and exploration.
 """
-from typing import Dict, Any
+
+
 from fastapi.responses import HTMLResponse
 
-from ..shared_utils import (
-    get_frontend_clients,
-    create_html_response,
-    handle_frontend_error,
-    build_frontend_context
-)
-from services.frontend.modules.data_browser import (
-    get_doc_store_summary
-)
+
+from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
 
 
 class DocStoreUIHandlers:
@@ -709,4 +704,6 @@ class DocStoreUIHandlers:
 """
             return create_html_response(html, "Doc Store Browser")
         except Exception as e:
-            return handle_frontend_error("render doc store browser", e, **build_frontend_context("render_doc_store_browser"))
+            return handle_frontend_error(
+                "render doc store browser", e, **build_frontend_context("render_doc_store_browser")
+            )

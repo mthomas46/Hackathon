@@ -1,43 +1,44 @@
 """Tests for Application Services - Cross-cutting concerns."""
 
-import pytest
 import asyncio
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from unittest.mock import AsyncMock, Mock
 
+import pytest
+
+from ...application.services.analysis_application_service import AnalysisApplicationService
 from ...application.services.application_service import (
-    ApplicationService, ServiceContext, ServiceRegistry, OperationContextManager
+    ApplicationService,
+    OperationContextManager,
+    ServiceContext,
+    ServiceRegistry,
 )
+from ...application.services.caching_service import ApplicationCache, CacheEntry, CacheStats, CachingService
+from ...application.services.configuration_service import ConfigurationService, ConfigValidator, EnvironmentConfig
+from ...application.services.health_service import DependencyStatus, HealthCheck, HealthCheckResult, HealthService
 from ...application.services.logging_service import (
-    LoggingService, ApplicationLogger, StructuredFormatter, LogAggregator, RotatingFileHandler
+    ApplicationLogger,
+    LogAggregator,
+    LoggingService,
+    RotatingFileHandler,
+    StructuredFormatter,
 )
-from ...application.services.caching_service import (
-    CachingService, ApplicationCache, CacheEntry, CacheStats
-)
-from ...application.services.monitoring_service import (
-    MonitoringService, ApplicationMetrics, MetricType, HealthStatus
-)
-from ...application.services.configuration_service import (
-    ConfigurationService, EnvironmentConfig, ConfigValidator
-)
-from ...application.services.health_service import (
-    HealthService, HealthCheck, HealthCheckResult, DependencyStatus
-)
+from ...application.services.monitoring_service import ApplicationMetrics, HealthStatus, MetricType, MonitoringService
 from ...application.services.notification_service import (
-    NotificationService, NotificationChannel, NotificationTemplate,
-    EmailChannel, WebhookChannel, SlackChannel
+    EmailChannel,
+    NotificationChannel,
+    NotificationService,
+    NotificationTemplate,
+    SlackChannel,
+    WebhookChannel,
 )
 from ...application.services.transaction_service import (
-    TransactionService, TransactionManager, TransactionContext, SQLiteTransactionManager
+    SQLiteTransactionManager,
+    TransactionContext,
+    TransactionService,
 )
-from ...application.services.analysis_application_service import AnalysisApplicationService
-
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.analysis import AnalysisStatus
 from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
 
 
 class TestApplicationService:
@@ -55,7 +56,7 @@ class TestApplicationService:
             operation_id="op-123",
             user_id="user-456",
             correlation_id="corr-789",
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         assert context.service_name == "test-service"
@@ -139,8 +140,8 @@ class TestLoggingService:
 
     def test_rotating_file_handler(self):
         """Test rotating file handler."""
-        import tempfile
         import os
+        import tempfile
 
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             temp_path = temp_file.name
@@ -159,19 +160,9 @@ class TestLoggingService:
         service = LoggingService()
 
         # Test structured logging
-        await service.log_info(
-            "Test operation",
-            operation_id="op-123",
-            user_id="user-456",
-            extra_data={"key": "value"}
-        )
+        await service.log_info("Test operation", operation_id="op-123", user_id="user-456", extra_data={"key": "value"})
 
-        await service.log_error(
-            "Test error",
-            operation_id="op-123",
-            error_code=500,
-            stack_trace="mock stack trace"
-        )
+        await service.log_error("Test error", operation_id="op-123", error_code=500, stack_trace="mock stack trace")
 
         # Service should handle async logging without errors
         assert service.logger is not None
@@ -342,7 +333,7 @@ class TestConfigurationService:
             debug=True,
             database_url="sqlite:///test.db",
             redis_url="redis://localhost:6379",
-            log_level="DEBUG"
+            log_level="DEBUG",
         )
 
         assert config.environment == "development"
@@ -359,7 +350,7 @@ class TestConfigurationService:
         valid_config = {
             "environment": "production",
             "database_url": "postgresql://user:pass@localhost/db",
-            "redis_url": "redis://localhost:6379"
+            "redis_url": "redis://localhost:6379",
         }
 
         result = validator.validate(valid_config)
@@ -367,11 +358,7 @@ class TestConfigurationService:
         assert len(result.errors) == 0
 
         # Invalid config
-        invalid_config = {
-            "environment": "invalid_env",
-            "database_url": "",
-            "redis_url": "invalid_url"
-        }
+        invalid_config = {"environment": "invalid_env", "database_url": "", "redis_url": "invalid_url"}
 
         result = validator.validate(invalid_config)
         assert result.is_valid is False
@@ -389,20 +376,13 @@ class TestHealthService:
 
     def test_health_check_creation(self):
         """Test health check creation."""
+
         async def check_func():
             return HealthCheckResult(
-                name="test-check",
-                status=HealthStatus.HEALTHY,
-                response_time=0.05,
-                message="All good"
+                name="test-check", status=HealthStatus.HEALTHY, response_time=0.05, message="All good"
             )
 
-        check = HealthCheck(
-            name="test-check",
-            check_function=check_func,
-            timeout_seconds=5.0,
-            interval_seconds=30.0
-        )
+        check = HealthCheck(name="test-check", check_function=check_func, timeout_seconds=5.0, interval_seconds=30.0)
 
         assert check.name == "test-check"
         assert check.timeout_seconds == 5.0
@@ -411,12 +391,13 @@ class TestHealthService:
     @pytest.mark.asyncio
     async def test_health_check_execution(self):
         """Test health check execution."""
+
         async def mock_check():
             return HealthCheckResult(
                 name="database-check",
                 status=HealthStatus.HEALTHY,
                 response_time=0.023,
-                message="Database connection OK"
+                message="Database connection OK",
             )
 
         check = HealthCheck("database-check", mock_check)
@@ -473,9 +454,7 @@ class TestNotificationService:
     def test_notification_channel_creation(self):
         """Test notification channel creation."""
         channel = NotificationChannel(
-            name="email-channel",
-            channel_type="email",
-            config={"smtp_server": "smtp.example.com"}
+            name="email-channel", channel_type="email", config={"smtp_server": "smtp.example.com"}
         )
 
         assert channel.name == "email-channel"
@@ -485,10 +464,7 @@ class TestNotificationService:
     def test_email_channel(self):
         """Test email notification channel."""
         channel = EmailChannel(
-            smtp_server="smtp.gmail.com",
-            smtp_port=587,
-            username="test@example.com",
-            password="password123"
+            smtp_server="smtp.gmail.com", smtp_port=587, username="test@example.com", password="password123"
         )
 
         assert channel.smtp_server == "smtp.gmail.com"
@@ -497,10 +473,7 @@ class TestNotificationService:
 
     def test_webhook_channel(self):
         """Test webhook notification channel."""
-        channel = WebhookChannel(
-            url="https://hooks.slack.com/services/...",
-            headers={"Authorization": "Bearer token"}
-        )
+        channel = WebhookChannel(url="https://hooks.slack.com/services/...", headers={"Authorization": "Bearer token"})
 
         assert channel.url == "https://hooks.slack.com/services/..."
         assert channel.headers["Authorization"] == "Bearer token"
@@ -508,9 +481,7 @@ class TestNotificationService:
     def test_slack_channel(self):
         """Test Slack notification channel."""
         channel = SlackChannel(
-            webhook_url="https://hooks.slack.com/services/...",
-            channel="#alerts",
-            username="analysis-bot"
+            webhook_url="https://hooks.slack.com/services/...", channel="#alerts", username="analysis-bot"
         )
 
         assert channel.webhook_url == "https://hooks.slack.com/services/..."
@@ -522,7 +493,7 @@ class TestNotificationService:
         template = NotificationTemplate(
             name="alert-template",
             subject_template="Alert: {{title}}",
-            body_template="Description: {{description}}\nSeverity: {{severity}}"
+            body_template="Description: {{description}}\nSeverity: {{severity}}",
         )
 
         assert template.name == "alert-template"
@@ -541,10 +512,7 @@ class TestNotificationService:
 
         # Send notification
         success = await service.send_notification(
-            channel_name=mock_channel.name,
-            subject="Test Alert",
-            message="This is a test notification",
-            priority="high"
+            channel_name=mock_channel.name, subject="Test Alert", message="This is a test notification", priority="high"
         )
 
         assert success is True
@@ -561,11 +529,7 @@ class TestTransactionService:
 
     def test_transaction_context_creation(self):
         """Test transaction context creation."""
-        context = TransactionContext(
-            transaction_id="tx-123",
-            isolation_level="SERIALIZABLE",
-            timeout_seconds=30.0
-        )
+        context = TransactionContext(transaction_id="tx-123", isolation_level="SERIALIZABLE", timeout_seconds=30.0)
 
         assert context.transaction_id == "tx-123"
         assert context.isolation_level == "SERIALIZABLE"
@@ -615,27 +579,22 @@ class TestAnalysisApplicationService:
     @pytest.fixture
     def mock_domain_services(self):
         """Mock domain services for testing."""
-        return {
-            'analysis_service': Mock(),
-            'document_service': Mock(),
-            'finding_service': Mock()
-        }
+        return {"analysis_service": Mock(), "document_service": Mock(), "finding_service": Mock()}
 
     @pytest.fixture
     def mock_application_services(self):
         """Mock application services for testing."""
         return {
-            'logging_service': Mock(),
-            'caching_service': Mock(),
-            'monitoring_service': Mock(),
-            'transaction_service': Mock()
+            "logging_service": Mock(),
+            "caching_service": Mock(),
+            "monitoring_service": Mock(),
+            "transaction_service": Mock(),
         }
 
     def test_analysis_application_service_creation(self, mock_domain_services, mock_application_services):
         """Test creating analysis application service."""
         service = AnalysisApplicationService(
-            domain_services=mock_domain_services,
-            application_services=mock_application_services
+            domain_services=mock_domain_services, application_services=mock_application_services
         )
 
         assert service.domain_services == mock_domain_services
@@ -645,46 +604,42 @@ class TestAnalysisApplicationService:
     async def test_perform_analysis_workflow(self, mock_domain_services, mock_application_services):
         """Test complete analysis workflow."""
         # Setup mocks
-        mock_analysis_service = mock_domain_services['analysis_service']
-        mock_analysis_service.start_analysis = AsyncMock(return_value=Mock(id='analysis-123'))
-        mock_analysis_service.complete_analysis = AsyncMock(return_value=Mock(id='analysis-123', status=AnalysisStatus.COMPLETED))
+        mock_analysis_service = mock_domain_services["analysis_service"]
+        mock_analysis_service.start_analysis = AsyncMock(return_value=Mock(id="analysis-123"))
+        mock_analysis_service.complete_analysis = AsyncMock(
+            return_value=Mock(id="analysis-123", status=AnalysisStatus.COMPLETED)
+        )
 
         service = AnalysisApplicationService(
-            domain_services=mock_domain_services,
-            application_services=mock_application_services
+            domain_services=mock_domain_services, application_services=mock_application_services
         )
 
         # Execute workflow
         result = await service.perform_analysis_workflow(
-            document_id='doc-123',
-            analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+            document_id="doc-123", analysis_type=AnalysisType.SEMANTIC_SIMILARITY
         )
 
         # Verify calls
         mock_analysis_service.start_analysis.assert_called_once()
         mock_analysis_service.complete_analysis.assert_called_once()
 
-        assert result.id == 'analysis-123'
+        assert result.id == "analysis-123"
         assert result.status == AnalysisStatus.COMPLETED
 
     @pytest.mark.asyncio
     async def test_error_handling_in_workflow(self, mock_domain_services, mock_application_services):
         """Test error handling in analysis workflow."""
         # Setup mock to raise exception
-        mock_analysis_service = mock_domain_services['analysis_service']
+        mock_analysis_service = mock_domain_services["analysis_service"]
         mock_analysis_service.start_analysis = AsyncMock(side_effect=Exception("Analysis failed"))
 
         service = AnalysisApplicationService(
-            domain_services=mock_domain_services,
-            application_services=mock_application_services
+            domain_services=mock_domain_services, application_services=mock_application_services
         )
 
         # Execute and expect error handling
         with pytest.raises(Exception, match="Analysis failed"):
-            await service.perform_analysis_workflow(
-                document_id='doc-123',
-                analysis_type=AnalysisType.CODE_QUALITY
-            )
+            await service.perform_analysis_workflow(document_id="doc-123", analysis_type=AnalysisType.CODE_QUALITY)
 
     @pytest.mark.asyncio
     async def test_caching_integration(self, mock_domain_services, mock_application_services):
@@ -693,18 +648,17 @@ class TestAnalysisApplicationService:
         mock_cache.get = AsyncMock(return_value=None)  # Cache miss
         mock_cache.set = AsyncMock()
 
-        mock_application_services['caching_service'] = Mock()
-        mock_application_services['caching_service'].cache = mock_cache
+        mock_application_services["caching_service"] = Mock()
+        mock_application_services["caching_service"].cache = mock_cache
 
         service = AnalysisApplicationService(
-            domain_services=mock_domain_services,
-            application_services=mock_application_services
+            domain_services=mock_domain_services, application_services=mock_application_services
         )
 
         # This would typically cache analysis results
         # For testing, we verify the cache methods are available
-        assert hasattr(service, 'application_services')
-        assert 'caching_service' in service.application_services
+        assert hasattr(service, "application_services")
+        assert "caching_service" in service.application_services
 
     @pytest.mark.asyncio
     async def test_monitoring_integration(self, mock_domain_services, mock_application_services):
@@ -712,17 +666,16 @@ class TestAnalysisApplicationService:
         mock_monitoring = Mock()
         mock_monitoring.increment_counter = AsyncMock()
 
-        mock_application_services['monitoring_service'] = mock_monitoring
+        mock_application_services["monitoring_service"] = mock_monitoring
 
         service = AnalysisApplicationService(
-            domain_services=mock_domain_services,
-            application_services=mock_application_services
+            domain_services=mock_domain_services, application_services=mock_application_services
         )
 
         # This would typically record metrics
         # For testing, we verify the monitoring methods are available
-        assert hasattr(service, 'application_services')
-        assert 'monitoring_service' in service.application_services
+        assert hasattr(service, "application_services")
+        assert "monitoring_service" in service.application_services
 
     @pytest.mark.asyncio
     async def test_transaction_integration(self, mock_domain_services, mock_application_services):
@@ -730,14 +683,13 @@ class TestAnalysisApplicationService:
         mock_transaction = Mock()
         mock_transaction.begin_transaction = AsyncMock()
 
-        mock_application_services['transaction_service'] = mock_transaction
+        mock_application_services["transaction_service"] = mock_transaction
 
         service = AnalysisApplicationService(
-            domain_services=mock_domain_services,
-            application_services=mock_application_services
+            domain_services=mock_domain_services, application_services=mock_application_services
         )
 
         # This would typically wrap operations in transactions
         # For testing, we verify the transaction methods are available
-        assert hasattr(service, 'application_services')
-        assert 'transaction_service' in service.application_services
+        assert hasattr(service, "application_services")
+        assert "transaction_service" in service.application_services

@@ -5,18 +5,20 @@ optimization opportunities in the refactored DDD architecture.
 """
 
 import gc
-import tracemalloc
-import psutil
-import time
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
-import sys
 import os
+import sys
+import time
+import tracemalloc
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
+import psutil
 
 
 @dataclass
 class MemorySnapshot:
     """Memory usage snapshot."""
+
     timestamp: float
     current_mb: float
     peak_mb: float
@@ -30,7 +32,7 @@ class MemorySnapshot:
             "current_mb": self.current_mb,
             "peak_mb": self.peak_mb,
             "objects_count": self.objects_count,
-            "top_allocations": self.top_allocations
+            "top_allocations": self.top_allocations,
         }
 
 
@@ -77,7 +79,7 @@ class MemoryAnalyzer:
                 "optimization_recommendations": recommendations,
                 "analysis_results": analysis_results,
                 "system_memory": self._get_system_memory_info(),
-                "analysis_timestamp": time.time()
+                "analysis_timestamp": time.time(),
             }
 
             print("\n📊 MEMORY ANALYSIS SUMMARY:")
@@ -106,19 +108,21 @@ class MemoryAnalyzer:
         print("   Creating large data structures...")
         large_list = []
         for i in range(10000):
-            large_list.append({
-                "id": i,
-                "data": "x" * 100,  # 100 bytes per item
-                "metadata": {
-                    "created": time.time(),
-                    "tags": [f"tag_{j}" for j in range(10)],
-                    "nested": {"level1": {"level2": "deep_data" * 20}}
+            large_list.append(
+                {
+                    "id": i,
+                    "data": "x" * 100,  # 100 bytes per item
+                    "metadata": {
+                        "created": time.time(),
+                        "tags": [f"tag_{j}" for j in range(10)],
+                        "nested": {"level1": {"level2": "deep_data" * 20}},
+                    },
                 }
-            })
+            )
 
         results["large_data_creation"] = {
             "items_created": len(large_list),
-            "estimated_size_mb": len(large_list) * 0.5  # Rough estimate
+            "estimated_size_mb": len(large_list) * 0.5,  # Rough estimate
         }
 
         # Force garbage collection
@@ -131,11 +135,9 @@ class MemoryAnalyzer:
 
         for i in range(5000):
             # Create various types of objects
-            test_obj = type(f"TestClass_{i}", (), {
-                "id": i,
-                "data": list(range(100)),
-                "metadata": {"type": "test", "index": i}
-            })()
+            test_obj = type(
+                f"TestClass_{i}", (), {"id": i, "data": list(range(100)), "metadata": {"type": "test", "index": i}}
+            )()
 
             # Create some references to stress GC
             if i % 100 == 0:
@@ -147,7 +149,7 @@ class MemoryAnalyzer:
         results["object_instantiation"] = {
             "objects_created": objects_created,
             "creation_time_seconds": creation_time,
-            "objects_per_second": objects_created / creation_time
+            "objects_per_second": objects_created / creation_time,
         }
 
         # Test 3: Memory cleanup test
@@ -167,7 +169,7 @@ class MemoryAnalyzer:
         results["memory_cleanup"] = {
             "objects_before_cleanup": before_cleanup,
             "objects_after_cleanup": after_cleanup,
-            "cleanup_efficiency": (before_cleanup - after_cleanup) / before_cleanup * 100
+            "cleanup_efficiency": (before_cleanup - after_cleanup) / before_cleanup * 100,
         }
 
         return results
@@ -178,9 +180,9 @@ class MemoryAnalyzer:
 
         # Compare with baseline
         if self.baseline_snapshot:
-            stats = final_snapshot.compare_to(self.baseline_snapshot, 'lineno')
+            stats = final_snapshot.compare_to(self.baseline_snapshot, "lineno")
         else:
-            stats = final_snapshot.statistics('lineno')
+            stats = final_snapshot.statistics("lineno")
 
         # Calculate totals
         total_memory = sum(stat.size for stat in stats)
@@ -189,13 +191,15 @@ class MemoryAnalyzer:
         # Get top memory allocations
         top_allocations = []
         for stat in stats[:20]:  # Top 20 allocations
-            top_allocations.append({
-                "file": stat.traceback[0].filename if stat.traceback else "unknown",
-                "line": stat.traceback[0].lineno if stat.traceback else 0,
-                "size_mb": stat.size / (1024 * 1024),
-                "count": stat.count,
-                "average_mb": (stat.size / stat.count) / (1024 * 1024) if stat.count > 0 else 0
-            })
+            top_allocations.append(
+                {
+                    "file": stat.traceback[0].filename if stat.traceback else "unknown",
+                    "line": stat.traceback[0].lineno if stat.traceback else 0,
+                    "size_mb": stat.size / (1024 * 1024),
+                    "count": stat.count,
+                    "average_mb": (stat.size / stat.count) / (1024 * 1024) if stat.count > 0 else 0,
+                }
+            )
 
         # Calculate memory efficiency metrics
         large_objects = [s for s in stats if s.size > 1024 * 1024]  # Objects > 1MB
@@ -204,7 +208,7 @@ class MemoryAnalyzer:
         # Get current memory usage
         process_memory = self.process.memory_info()
         current_memory_mb = process_memory.rss / (1024 * 1024)
-        peak_memory_mb = getattr(process_memory, 'peak_rss', process_memory.rss) / (1024 * 1024)
+        peak_memory_mb = getattr(process_memory, "peak_rss", process_memory.rss) / (1024 * 1024)
 
         return {
             "total_memory_mb": total_memory_mb,
@@ -214,7 +218,7 @@ class MemoryAnalyzer:
             "large_objects_count": len(large_objects),
             "memory_efficiency": memory_efficiency,
             "top_allocations": top_allocations,
-            "memory_per_object_kb": (total_memory / len(stats)) / 1024 if stats else 0
+            "memory_per_object_kb": (total_memory / len(stats)) / 1024 if stats else 0,
         }
 
     def _analyze_potential_leaks(self, final_snapshot) -> Dict[str, Any]:
@@ -222,20 +226,22 @@ class MemoryAnalyzer:
         print("🔍 Analyzing potential memory leaks...")
 
         # Look for suspiciously large allocations
-        stats = final_snapshot.statistics('lineno')
+        stats = final_snapshot.statistics("lineno")
         potential_leaks = []
 
         for stat in stats:
             # Flag allocations that are unusually large
             size_mb = stat.size / (1024 * 1024)
             if size_mb > 10:  # More than 10MB in one location
-                potential_leaks.append({
-                    "file": stat.traceback[0].filename if stat.traceback else "unknown",
-                    "line": stat.traceback[0].lineno if stat.traceback else 0,
-                    "size_mb": size_mb,
-                    "count": stat.count,
-                    "severity": "high" if size_mb > 50 else "medium"
-                })
+                potential_leaks.append(
+                    {
+                        "file": stat.traceback[0].filename if stat.traceback else "unknown",
+                        "line": stat.traceback[0].lineno if stat.traceback else 0,
+                        "size_mb": size_mb,
+                        "count": stat.count,
+                        "severity": "high" if size_mb > 50 else "medium",
+                    }
+                )
 
         # Look for objects that might not be getting garbage collected
         gc_objects = gc.get_objects()
@@ -246,9 +252,10 @@ class MemoryAnalyzer:
             object_counts[obj_type] = object_counts.get(obj_type, 0) + 1
 
         # Flag potentially problematic object types
-        problematic_types = ['dict', 'list', 'tuple']
+        problematic_types = ["dict", "list", "tuple"]
         suspicious_objects = {
-            obj_type: count for obj_type, count in object_counts.items()
+            obj_type: count
+            for obj_type, count in object_counts.items()
             if obj_type in problematic_types and count > 1000
         }
 
@@ -257,7 +264,7 @@ class MemoryAnalyzer:
             "large_allocations": potential_leaks,
             "suspicious_objects": suspicious_objects,
             "gc_objects_sampled": len(gc_objects),
-            "leak_risk_level": self._assess_leak_risk(potential_leaks, suspicious_objects)
+            "leak_risk_level": self._assess_leak_risk(potential_leaks, suspicious_objects),
         }
 
     def _assess_leak_risk(self, potential_leaks: List[Dict], suspicious_objects: Dict[str, int]) -> str:
@@ -294,12 +301,16 @@ class MemoryAnalyzer:
         # Memory efficiency recommendations
         efficiency = memory_stats.get("memory_efficiency", 100)
         if efficiency < 80:
-            recommendations.append("Consider using memory-efficient data structures (__slots__, arrays instead of lists)")
+            recommendations.append(
+                "Consider using memory-efficient data structures (__slots__, arrays instead of lists)"
+            )
 
         # Large object recommendations
         large_objects = memory_stats.get("large_objects_count", 0)
         if large_objects > 10:
-            recommendations.append("Reduce the number of large objects - consider streaming or pagination for large datasets")
+            recommendations.append(
+                "Reduce the number of large objects - consider streaming or pagination for large datasets"
+            )
 
         # Memory per object recommendations
         memory_per_object = memory_stats.get("memory_per_object_kb", 0)
@@ -331,7 +342,7 @@ class MemoryAnalyzer:
             "available_gb": vm.available / (1024**3),
             "used_gb": vm.used / (1024**3),
             "percentage": vm.percent,
-            "process_memory_mb": self.process.memory_info().rss / (1024**2)
+            "process_memory_mb": self.process.memory_info().rss / (1024**2),
         }
 
 
@@ -340,10 +351,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Memory Usage Analysis")
-    parser.add_argument("--output", default="memory_analysis_results.json",
-                       help="Output file for results")
-    parser.add_argument("--stress-test", action="store_true",
-                       help="Run additional stress tests")
+    parser.add_argument("--output", default="memory_analysis_results.json", help="Output file for results")
+    parser.add_argument("--stress-test", action="store_true", help="Run additional stress tests")
 
     args = parser.parse_args()
 
@@ -355,7 +364,8 @@ def main():
 
     # Save results
     import json
-    with open(args.output, 'w') as f:
+
+    with open(args.output, "w") as f:
         json.dump(results, f, indent=2, default=str)
 
     print(f"\n💾 Results saved to: {args.output}")

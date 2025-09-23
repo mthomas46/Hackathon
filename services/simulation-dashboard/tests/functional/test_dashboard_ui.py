@@ -1,14 +1,10 @@
 """Functional tests for dashboard UI components."""
 
-import pytest
-from unittest.mock import Mock, MagicMock, patch
-from datetime import datetime
+from unittest.mock import MagicMock, Mock, patch
 
-from pages.overview import render_overview_page
+import pytest
 from pages.create import render_create_page
-from pages.monitor import render_monitor_page
-from pages.reports import render_reports_page
-from pages.config import render_config_page
+from pages.overview import render_overview_page
 
 
 @pytest.mark.functional
@@ -16,15 +12,13 @@ from pages.config import render_config_page
 class TestOverviewPage:
     """Functional tests for overview page."""
 
-    @patch('pages.overview.st')
-    @patch('pages.overview.get_available_simulations')
-    @patch('pages.overview.get_simulation_client')
+    @patch("pages.overview.st")
+    @patch("pages.overview.get_available_simulations")
+    @patch("pages.overview.get_simulation_client")
     def test_overview_page_renders_without_errors(self, mock_get_client, mock_get_sims, mock_st):
         """Test that overview page renders without critical errors."""
         # Mock dependencies
-        mock_get_sims.return_value = [
-            {"id": "sim_001", "name": "Test Sim", "status": "completed"}
-        ]
+        mock_get_sims.return_value = [{"id": "sim_001", "name": "Test Sim", "status": "completed"}]
 
         mock_client = MagicMock()
         mock_client.get_health.return_value = {"status": "healthy"}
@@ -48,8 +42,8 @@ class TestOverviewPage:
         mock_st.header.assert_called()
         mock_st.columns.assert_called()
 
-    @patch('pages.overview.st')
-    @patch('pages.overview.get_available_simulations')
+    @patch("pages.overview.st")
+    @patch("pages.overview.get_available_simulations")
     def test_overview_page_handles_empty_simulations(self, mock_get_sims, mock_st):
         """Test overview page with no simulations available."""
         mock_get_sims.return_value = []
@@ -72,8 +66,8 @@ class TestOverviewPage:
 class TestCreatePage:
     """Functional tests for create page."""
 
-    @patch('pages.create.st')
-    @patch('pages.create.get_simulation_client')
+    @patch("pages.create.st")
+    @patch("pages.create.get_simulation_client")
     def test_create_page_renders_form(self, mock_get_client, mock_st):
         """Test that create page renders simulation creation form."""
         mock_client = MagicMock()
@@ -98,16 +92,14 @@ class TestCreatePage:
         mock_st.slider.assert_called()
         mock_st.text_input.assert_called()
 
-    @patch('pages.create.st')
-    @patch('pages.create.get_simulation_client')
+    @patch("pages.create.st")
+    @patch("pages.create.get_simulation_client")
     def test_create_simulation_success_flow(self, mock_get_client, mock_st):
         """Test successful simulation creation flow."""
         mock_client = MagicMock()
-        mock_client.create_simulation = Mock(return_value={
-            "id": "sim_002",
-            "name": "Test Simulation",
-            "status": "created"
-        })
+        mock_client.create_simulation = Mock(
+            return_value={"id": "sim_002", "name": "Test Simulation", "status": "created"}
+        )
         mock_get_client.return_value = mock_client
 
         # Mock Streamlit components
@@ -136,9 +128,9 @@ class TestCreatePage:
 class TestMonitorPage:
     """Functional tests for monitor page."""
 
-    @patch('pages.monitor.st')
-    @patch('pages.monitor.get_simulation_client')
-    @patch('pages.monitor.get_websocket_manager')
+    @patch("pages.monitor.st")
+    @patch("pages.monitor.get_simulation_client")
+    @patch("pages.monitor.get_websocket_manager")
     def test_monitor_page_initialization(self, mock_get_ws, mock_get_client, mock_st):
         """Test monitor page initialization."""
         mock_client = MagicMock()
@@ -159,14 +151,15 @@ class TestMonitorPage:
         mock_st.session_state = {}
 
         from pages.monitor import render_monitor_page
+
         render_monitor_page()
 
         # Verify initialization
         mock_st.markdown.assert_called()
         mock_st.columns.assert_called()
 
-    @patch('pages.monitor.st')
-    @patch('pages.monitor.get_simulation_client')
+    @patch("pages.monitor.st")
+    @patch("pages.monitor.get_simulation_client")
     def test_monitor_page_handles_websocket_events(self, mock_get_client, mock_st):
         """Test monitor page handles WebSocket events."""
         mock_client = MagicMock()
@@ -181,16 +174,14 @@ class TestMonitorPage:
         mock_st.button = Mock(return_value=False)
         mock_st.empty = Mock(return_value=Mock())
         mock_st.container = Mock(return_value=Mock())
-        mock_st.session_state = {
-            'websocket_connected': True,
-            'realtime_events': []
-        }
+        mock_st.session_state = {"websocket_connected": True, "realtime_events": []}
 
         from pages.monitor import render_monitor_page
+
         render_monitor_page()
 
         # Should handle WebSocket connection status
-        assert 'websocket_connected' in mock_st.session_state
+        assert "websocket_connected" in mock_st.session_state
 
 
 @pytest.mark.functional
@@ -198,8 +189,8 @@ class TestMonitorPage:
 class TestReportsPage:
     """Functional tests for reports page."""
 
-    @patch('pages.reports.st')
-    @patch('pages.reports.get_simulation_client')
+    @patch("pages.reports.st")
+    @patch("pages.reports.get_simulation_client")
     def test_reports_page_renders_tabs(self, mock_get_client, mock_st):
         """Test reports page renders with tabbed interface."""
         mock_client = MagicMock()
@@ -216,12 +207,13 @@ class TestReportsPage:
         mock_st.metric = Mock()
 
         from pages.reports import render_reports_page
+
         render_reports_page()
 
         # Verify tabs were created
         mock_st.tabs.assert_called()
 
-    @patch('pages.reports.st')
+    @patch("pages.reports.st")
     def test_reports_page_handles_empty_analytics(self, mock_st):
         """Test reports page with no analytics data."""
         # Mock Streamlit components
@@ -230,6 +222,7 @@ class TestReportsPage:
         mock_st.info = Mock()
 
         from pages.reports import render_reports_page
+
         render_reports_page()
 
         # Should show empty state message
@@ -241,8 +234,8 @@ class TestReportsPage:
 class TestConfigPage:
     """Functional tests for config page."""
 
-    @patch('pages.config.st')
-    @patch('pages.config.get_config')
+    @patch("pages.config.st")
+    @patch("pages.config.get_config")
     def test_config_page_renders_health_dashboard(self, mock_get_config, mock_st):
         """Test config page renders health dashboard."""
         mock_config = MagicMock()
@@ -260,6 +253,7 @@ class TestConfigPage:
         mock_st.info = Mock()
 
         from pages.config import render_config_page
+
         render_config_page()
 
         # Verify health dashboard components
@@ -272,8 +266,8 @@ class TestConfigPage:
 class TestPageNavigation:
     """Functional tests for page navigation."""
 
-    @patch('app.st')
-    @patch('app.render_page_content')
+    @patch("app.st")
+    @patch("app.render_page_content")
     def test_app_initialization(self, mock_render, mock_st):
         """Test main app initialization."""
         mock_st.set_page_config = Mock()
@@ -284,14 +278,15 @@ class TestPageNavigation:
 
         # Import should not fail
         try:
-            from app import render_page_content, PAGES
+            from app import PAGES, render_page_content
+
             assert callable(render_page_content)
             assert isinstance(PAGES, dict)
             assert "overview" in PAGES
         except ImportError:
             pytest.skip("App module not available for testing")
 
-    @patch('app.st')
+    @patch("app.st")
     def test_page_routing(self, mock_st):
         """Test page routing functionality."""
         mock_st.set_page_config = Mock()
@@ -301,7 +296,7 @@ class TestPageNavigation:
         mock_st.container = Mock(return_value=Mock())
 
         try:
-            from app import render_page_content, PAGES
+            from app import render_page_content
 
             # Test routing to overview page
             render_page_content("overview")
@@ -320,8 +315,8 @@ class TestPageNavigation:
 class TestErrorHandling:
     """Functional tests for error handling in UI."""
 
-    @patch('pages.overview.st')
-    @patch('pages.overview.get_simulation_client')
+    @patch("pages.overview.st")
+    @patch("pages.overview.get_simulation_client")
     def test_overview_handles_client_errors(self, mock_get_client, mock_st):
         """Test overview page handles client connection errors."""
         mock_client = MagicMock()
@@ -335,13 +330,14 @@ class TestErrorHandling:
         mock_st.metric = Mock()
 
         from pages.overview import render_overview_page
+
         render_overview_page()
 
         # Should handle error gracefully
         mock_st.error.assert_called()
 
-    @patch('pages.create.st')
-    @patch('pages.create.get_simulation_client')
+    @patch("pages.create.st")
+    @patch("pages.create.get_simulation_client")
     def test_create_handles_creation_errors(self, mock_get_client, mock_st):
         """Test create page handles simulation creation errors."""
         mock_client = MagicMock()
@@ -359,6 +355,7 @@ class TestErrorHandling:
         mock_st.error = Mock()
 
         from pages.create import render_create_page
+
         render_create_page()
 
         # Should handle error gracefully

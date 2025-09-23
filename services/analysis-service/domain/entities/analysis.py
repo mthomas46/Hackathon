@@ -2,13 +2,15 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Any
 from enum import Enum
+from typing import Any, Dict, Optional
+
 from .document import DocumentId
 
 
 class AnalysisStatus(Enum):
     """Analysis execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -19,6 +21,7 @@ class AnalysisStatus(Enum):
 @dataclass(frozen=True)
 class AnalysisId:
     """Value object for analysis identifier."""
+
     value: str
 
     def __post_init__(self):
@@ -29,6 +32,7 @@ class AnalysisId:
 @dataclass
 class Analysis:
     """Analysis domain entity."""
+
     id: AnalysisId
     document_id: DocumentId
     analysis_type: str
@@ -98,15 +102,15 @@ class Analysis:
     def to_dict(self) -> Dict[str, Any]:
         """Convert analysis to dictionary representation."""
         return {
-            'id': self.id.value,
-            'document_id': self.document_id.value,
-            'analysis_type': self.analysis_type,
-            'status': self.status.value,
-            'configuration': self.configuration,
-            'started_at': self.started_at.isoformat() if self.started_at else None,
-            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
-            'result': self.result,
-            'error_message': self.error_message,
-            'created_at': self.created_at.isoformat(),
-            'duration': self.duration
+            "id": self.id.value,
+            "document_id": self.document_id.value,
+            "analysis_type": self.analysis_type,
+            "status": self.status.value,
+            "configuration": self.configuration,
+            "started_at": self.started_at.isoformat() if self.started_at else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "result": self.result,
+            "error_message": self.error_message,
+            "created_at": self.created_at.isoformat(),
+            "duration": self.duration,
         }

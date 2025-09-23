@@ -1,4 +1,4 @@
-"""Report Type Value Object"""
+"""Report Type Value Object."""
 
 from enum import Enum
 
@@ -26,7 +26,7 @@ class ReportType(Enum):
             ReportType.PR_CONFIDENCE: "Pull request confidence analysis",
             ReportType.LIFE_OF_TICKET: "End-to-end ticket lifecycle analysis",
             ReportType.COMPLIANCE: "Regulatory compliance assessment",
-            ReportType.PERFORMANCE: "System performance and efficiency metrics"
+            ReportType.PERFORMANCE: "System performance and efficiency metrics",
         }
         return descriptions[self]
 

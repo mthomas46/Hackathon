@@ -1,4 +1,5 @@
-"""End-to-End Ecosystem Test Workflow.
+"""
+End-to-End Ecosystem Test Workflow.
 
 Comprehensive workflow that demonstrates the full LLM Documentation Ecosystem:
 1. Generate mock data (Confluence, GitHub, Jira)
@@ -11,17 +12,13 @@ Comprehensive workflow that demonstrates the full LLM Documentation Ecosystem:
 This workflow serves as both a demonstration and comprehensive integration test.
 """
 
-from typing import Dict, Any, List
-from langgraph.graph import StateGraph, END
 from datetime import datetime
+from typing import Any, Dict, List
+
+from langgraph.graph import END, StateGraph
 
 from ..langgraph.state import WorkflowState
-from ..langgraph.tools import (
-    store_document_tool,
-    analyze_document_tool,
-    summarize_document_tool,
-    get_prompt_tool
-)
+from ..langgraph.tools import analyze_document_tool, get_prompt_tool, store_document_tool, summarize_document_tool
 
 
 class EndToEndTestWorkflow:
@@ -93,10 +90,10 @@ class EndToEndTestWorkflow:
                 # Store document in doc_store
                 stored_doc = await store_document_tool(
                     title=f"Mock {source.title()} Document - {doc.get('title', 'Untitled')}",
-                    content=doc.get('content', ''),
+                    content=doc.get("content", ""),
                     doc_type=source,
                     tags=["mock-data", source, "end-to-end-test"],
-                    workflow_id=state.run_id
+                    workflow_id=state.run_id,
                 )
 
                 if stored_doc["success"]:
@@ -113,8 +110,7 @@ class EndToEndTestWorkflow:
 
         # Get analysis prompt from prompt_store
         analysis_prompt = await get_prompt_tool(
-            task_type="document_analysis",
-            context={"analysis_type": "consistency", "quality_check": True}
+            task_type="document_analysis", context={"analysis_type": "consistency", "quality_check": True}
         )
 
         if analysis_prompt["success"]:
@@ -124,7 +120,7 @@ class EndToEndTestWorkflow:
             # Fallback prompt
             state.output_data["analysis_prompt"] = {
                 "content": "Analyze this document for consistency, quality, and completeness.",
-                "variables": ["document_content"]
+                "variables": ["document_content"],
             }
 
         return state
@@ -143,7 +139,7 @@ class EndToEndTestWorkflow:
             analysis = await analyze_document_tool(
                 doc_id=doc.get("doc_store_id"),
                 analysis_type="comprehensive",
-                prompt=state.output_data.get("analysis_prompt", {}).get("content", "")
+                prompt=state.output_data.get("analysis_prompt", {}).get("content", ""),
             )
 
             if analysis["success"]:
@@ -151,7 +147,7 @@ class EndToEndTestWorkflow:
                     "document_id": doc.get("doc_store_id"),
                     "document_title": doc.get("title"),
                     "analysis_result": analysis["data"],
-                    "analysis_timestamp": datetime.now().isoformat()
+                    "analysis_timestamp": datetime.now().isoformat(),
                 }
                 analysis_results.append(analysis_result)
 
@@ -176,9 +172,9 @@ class EndToEndTestWorkflow:
                 metadata={
                     "original_document_id": result["document_id"],
                     "analysis_type": "comprehensive",
-                    "workflow_id": state.run_id
+                    "workflow_id": state.run_id,
                 },
-                workflow_id=state.run_id
+                workflow_id=state.run_id,
             )
 
             if stored_result["success"]:
@@ -200,18 +196,14 @@ class EndToEndTestWorkflow:
             print(f"Generating summary for: {doc.get('title', 'Unknown')}")
 
             # Generate summary using summarizer hub
-            summary = await summarize_document_tool(
-                content=doc.get('content', ''),
-                max_length=300,
-                format="structured"
-            )
+            summary = await summarize_document_tool(content=doc.get("content", ""), max_length=300, format="structured")
 
             if summary["success"]:
                 summary_data = {
                     "document_id": doc.get("doc_store_id"),
                     "document_title": doc.get("title"),
                     "summary": summary["data"],
-                    "summary_timestamp": datetime.now().isoformat()
+                    "summary_timestamp": datetime.now().isoformat(),
                 }
                 summaries.append(summary_data)
 
@@ -231,9 +223,7 @@ class EndToEndTestWorkflow:
 
         # Generate unified summary
         unified_summary = await summarize_document_tool(
-            content=unified_content,
-            max_length=500,
-            format="comprehensive_report"
+            content=unified_content, max_length=500, format="comprehensive_report"
         )
 
         if unified_summary["success"]:
@@ -241,7 +231,7 @@ class EndToEndTestWorkflow:
                 "content": unified_summary["data"],
                 "sources_count": len(individual_summaries),
                 "analysis_count": len(analysis_results),
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
         state.add_log_entry("INFO", "Created unified summary across all sources")
@@ -264,17 +254,22 @@ class EndToEndTestWorkflow:
                 "workflow_id": state.run_id,
                 "execution_time": datetime.now().isoformat(),
                 "sources_tested": ["confluence", "github", "jira"],
-                "services_tested": ["mock-data-generator", "doc_store", "prompt_store",
-                                  "analysis_service", "summarizer_hub"]
+                "services_tested": [
+                    "mock-data-generator",
+                    "doc_store",
+                    "prompt_store",
+                    "analysis_service",
+                    "summarizer_hub",
+                ],
             },
-            workflow_id=state.run_id
+            workflow_id=state.run_id,
         )
 
         if final_report["success"]:
             state.output_data["final_report"] = {
                 "report_id": final_report["document_id"],
                 "report_content": report_content,
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
             }
 
         state.add_log_entry("INFO", "Generated final comprehensive report")
@@ -292,7 +287,7 @@ class EndToEndTestWorkflow:
             "analyses_performed": len(state.output_data.get("analysis_results", [])),
             "summaries_created": len(state.output_data.get("individual_summaries", [])),
             "final_report_id": state.output_data.get("final_report", {}).get("report_id"),
-            "execution_time": datetime.now().isoformat()
+            "execution_time": datetime.now().isoformat(),
         }
 
         state.output_data["execution_summary"] = summary
@@ -310,14 +305,14 @@ class EndToEndTestWorkflow:
                 "title": f"Mock {source.title()} Document 1",
                 "content": f"This is mock content for {source} document 1. Generated for end-to-end testing.",
                 "source": source,
-                "metadata": {"test": True, "index": 1}
+                "metadata": {"test": True, "index": 1},
             },
             {
                 "title": f"Mock {source.title()} Document 2",
                 "content": f"This is mock content for {source} document 2. Generated for end-to-end testing.",
                 "source": source,
-                "metadata": {"test": True, "index": 2}
-            }
+                "metadata": {"test": True, "index": 2},
+            },
         ]
 
     def _create_unified_content(self, summaries: List[Dict], analyses: List[Dict]) -> str:
@@ -327,13 +322,13 @@ class EndToEndTestWorkflow:
         content_parts.append("## Individual Document Summaries\n")
         for summary in summaries:
             content_parts.append(f"### {summary['document_title']}")
-            content_parts.append(summary['summary'])
+            content_parts.append(summary["summary"])
             content_parts.append("")
 
         content_parts.append("## Analysis Results\n")
         for analysis in analyses:
             content_parts.append(f"### Analysis: {analysis['document_title']}")
-            content_parts.append(analysis['analysis_result'])
+            content_parts.append(analysis["analysis_result"])
             content_parts.append("")
 
         return "\n".join(content_parts)
@@ -365,7 +360,7 @@ class EndToEndTestWorkflow:
             "Analysis Service",
             "Summarizer Hub",
             "Orchestrator (LangGraph)",
-            "LLM Gateway"
+            "LLM Gateway",
         ]
         for service in services:
             report_parts.append(f"- ✅ {service}")
@@ -384,7 +379,7 @@ class EndToEndTestWorkflow:
             report_parts.append("## Individual Document Summaries")
             for summary in summaries:
                 report_parts.append(f"### {summary['document_title']}")
-                report_parts.append(summary['summary'])
+                report_parts.append(summary["summary"])
                 report_parts.append("")
 
         return "\n".join(report_parts)

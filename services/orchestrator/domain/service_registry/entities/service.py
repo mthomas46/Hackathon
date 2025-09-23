@@ -1,11 +1,11 @@
-"""Service Entity"""
+"""Service Entity."""
 
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ..value_objects.service_id import ServiceId
-from ..value_objects.service_endpoint import ServiceEndpoint
 from ..value_objects.service_capability import ServiceCapability
+from ..value_objects.service_endpoint import ServiceEndpoint
+from ..value_objects.service_id import ServiceId
 
 
 class Service:
@@ -19,7 +19,7 @@ class Service:
         category: str,
         base_url: Optional[str] = None,
         openapi_url: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         self._service_id = service_id
         self._name = name.strip()
@@ -157,5 +157,5 @@ class Service:
             "metadata": self._metadata,
             "registered_at": self._registered_at.isoformat(),
             "last_seen": self._last_seen.isoformat(),
-            "status": self._status
+            "status": self._status,
         }

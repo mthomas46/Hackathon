@@ -1,4 +1,5 @@
-"""Analytics Page.
+"""
+Analytics Page.
 
 This module provides advanced analytics and insights with interactive
 visualizations, performance metrics, and trend analysis.
@@ -26,8 +27,10 @@ def render_analytics_page():
 
     # Sample chart placeholder
     st.subheader("Sample Visualization")
-    st.bar_chart({
-        "Simulation A": [85, 90, 88, 92, 87],
-        "Simulation B": [78, 85, 82, 88, 90],
-        "Simulation C": [92, 88, 95, 89, 93]
-    })
+    st.bar_chart(
+        {
+            "Simulation A": [85, 90, 88, 92, 87],
+            "Simulation B": [78, 85, 82, 88, 90],
+            "Simulation C": [92, 88, 95, 89, 93],
+        }
+    )

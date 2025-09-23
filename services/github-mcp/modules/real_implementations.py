@@ -1,9 +1,13 @@
-"""Real implementations for GitHub MCP tools.
+"""
+Real implementations for GitHub MCP tools.
 
 Handles delegation to actual GitHub services via source-agent.
 """
-from typing import Dict, Any
+
+from typing import Any, Dict
+
 from fastapi import HTTPException
+
 from services.shared.integrations.clients.clients import ServiceClients
 
 

@@ -1,10 +1,12 @@
 """Normalizers for different architectural diagram systems."""
 
-import httpx
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List
-from services.shared.monitoring.logging import fire_and_forget
-from .models import NormalizedArchitectureData, ArchitectureComponent, ArchitectureConnection
+from typing import Any, Dict, List, Optional
+
+import httpx
+
+
+from .models import ArchitectureComponent, ArchitectureConnection, NormalizedArchitectureData
 
 
 class BaseNormalizer(ABC):
@@ -13,7 +15,6 @@ class BaseNormalizer(ABC):
     @abstractmethod
     async def normalize(self, board_id: str, token: str) -> NormalizedArchitectureData:
         """Normalize diagram data into standard format."""
-        pass
 
     @classmethod
     def get_description(cls) -> str:
@@ -66,7 +67,7 @@ class MiroNormalizer(BaseNormalizer):
                     id=item.get("id", ""),
                     type="service",  # Default type
                     name=item.get("data", {}).get("content", "").strip()[:50] or f"Component {item.get('id', '')}",
-                    description=item.get("data", {}).get("content", "")
+                    description=item.get("data", {}).get("content", ""),
                 )
                 components.append(component)
 
@@ -79,7 +80,7 @@ class MiroNormalizer(BaseNormalizer):
                     id=item.get("id", ""),
                     type=component_type,
                     name=shape_data.get("content", "").strip()[:50] or f"Component {item.get('id', '')}",
-                    description=shape_data.get("content", "")
+                    description=shape_data.get("content", ""),
                 )
                 components.append(component)
 
@@ -92,14 +93,12 @@ class MiroNormalizer(BaseNormalizer):
                     connection = ArchitectureConnection(
                         from_id=start_widget.get("id", ""),
                         to_id=end_widget.get("id", ""),
-                        label=item.get("data", {}).get("content", "").strip() or "connects"
+                        label=item.get("data", {}).get("content", "").strip() or "connects",
                     )
                     connections.append(connection)
 
         return NormalizedArchitectureData(
-            components=components,
-            connections=connections,
-            metadata={"source": "miro", "board_id": data.get("id", "")}
+            components=components, connections=connections, metadata={"source": "miro", "board_id": data.get("id", "")}
         )
 
     def _map_shape_to_component_type(self, shape_data: Dict[str, Any]) -> str:
@@ -170,7 +169,7 @@ class FigJamNormalizer(BaseNormalizer):
                     id=node.get("id", ""),
                     type=component_type,
                     name=node.get("name", "").strip()[:50] or f"Component {node.get('id', '')}",
-                    description=node.get("name", "")
+                    description=node.get("name", ""),
                 )
                 components.append(component)
 
@@ -185,7 +184,7 @@ class FigJamNormalizer(BaseNormalizer):
         return NormalizedArchitectureData(
             components=components,
             connections=connections,  # FigJam connections would need additional processing
-            metadata={"source": "figjam", "file_id": data.get("name", "")}
+            metadata={"source": "figjam", "file_id": data.get("name", "")},
         )
 
     def _map_figma_node_to_component(self, node: Dict[str, Any]) -> str:
@@ -255,7 +254,7 @@ class LucidNormalizer(BaseNormalizer):
                         id=obj.get("id", ""),
                         type=component_type,
                         name=obj.get("text", "").strip()[:50] or f"Component {obj.get('id', '')}",
-                        description=obj.get("text", "")
+                        description=obj.get("text", ""),
                     )
                     components.append(component)
 
@@ -264,14 +263,14 @@ class LucidNormalizer(BaseNormalizer):
                     connection = ArchitectureConnection(
                         from_id=obj.get("startObjectId", ""),
                         to_id=obj.get("endObjectId", ""),
-                        label=obj.get("text", "").strip() or "connects"
+                        label=obj.get("text", "").strip() or "connects",
                     )
                     connections.append(connection)
 
         return NormalizedArchitectureData(
             components=components,
             connections=connections,
-            metadata={"source": "lucid", "document_id": data.get("id", "")}
+            metadata={"source": "lucid", "document_id": data.get("id", "")},
         )
 
     def _map_lucid_object_to_component(self, obj: Dict[str, Any]) -> str:
@@ -335,17 +334,14 @@ class ConfluenceNormalizer(BaseNormalizer):
         page_title = data.get("title", f"Page {data.get('id', '')}")
 
         component = ArchitectureComponent(
-            id=data.get("id", ""),
-            type="service",
-            name=page_title,
-            description=f"Confluence page: {page_title}"
+            id=data.get("id", ""), type="service", name=page_title, description=f"Confluence page: {page_title}"
         )
         components.append(component)
 
         return NormalizedArchitectureData(
             components=components,
             connections=connections,
-            metadata={"source": "confluence", "page_id": data.get("id", "")}
+            metadata={"source": "confluence", "page_id": data.get("id", "")},
         )
 
     @classmethod
@@ -363,7 +359,6 @@ class BaseFileNormalizer(ABC):
     @abstractmethod
     async def normalize_file(self, file_content: bytes, filename: str, file_format: str) -> NormalizedArchitectureData:
         """Normalize diagram data from uploaded file."""
-        pass
 
     @classmethod
     def get_supported_formats(cls) -> List[Dict[str, Any]]:
@@ -389,8 +384,9 @@ class MiroFileNormalizer(BaseFileNormalizer):
     async def _normalize_miro_json(self, file_content: bytes, filename: str) -> NormalizedArchitectureData:
         """Normalize Miro JSON export."""
         import json
+
         try:
-            data = json.loads(file_content.decode('utf-8'))
+            data = json.loads(file_content.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             raise ValueError(f"Invalid Miro JSON file: {e}")
 
@@ -412,7 +408,7 @@ class MiroFileNormalizer(BaseFileNormalizer):
                     id=item.get("id", ""),
                     type=component_type,
                     name=item.get("text", "").strip()[:50] or f"Component {item.get('id', '')}",
-                    description=item.get("text", "")
+                    description=item.get("text", ""),
                 )
                 components.append(component)
 
@@ -425,14 +421,14 @@ class MiroFileNormalizer(BaseFileNormalizer):
                     connection = ArchitectureConnection(
                         from_id=start_widget.get("id", ""),
                         to_id=end_widget.get("id", ""),
-                        label=item.get("text", "").strip() or "connects"
+                        label=item.get("text", "").strip() or "connects",
                     )
                     connections.append(connection)
 
         return NormalizedArchitectureData(
             components=components,
             connections=connections,
-            metadata={"source": "miro", "filename": filename, "format": "json"}
+            metadata={"source": "miro", "filename": filename, "format": "json"},
         )
 
     def _map_miro_widget_to_component(self, widget: Dict[str, Any]) -> str:
@@ -460,7 +456,7 @@ class MiroFileNormalizer(BaseFileNormalizer):
                 "format": "json",
                 "description": "Miro JSON export (developer format)",
                 "capabilities": ["full_structural_data"],
-                "export_method": "Miro Developer API or manual export"
+                "export_method": "Miro Developer API or manual export",
             }
         ]
 
@@ -478,8 +474,9 @@ class FigJamFileNormalizer(BaseFileNormalizer):
     async def _normalize_figjam_json(self, file_content: bytes, filename: str) -> NormalizedArchitectureData:
         """Normalize FigJam JSON export."""
         import json
+
         try:
-            data = json.loads(file_content.decode('utf-8'))
+            data = json.loads(file_content.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             raise ValueError(f"Invalid FigJam JSON file: {e}")
 
@@ -498,7 +495,7 @@ class FigJamFileNormalizer(BaseFileNormalizer):
                     id=node.get("id", ""),
                     type=component_type,
                     name=node.get("name", "").strip()[:50] or f"Component {node.get('id', '')}",
-                    description=node.get("name", "")
+                    description=node.get("name", ""),
                 )
                 components.append(component)
 
@@ -513,7 +510,7 @@ class FigJamFileNormalizer(BaseFileNormalizer):
         return NormalizedArchitectureData(
             components=components,
             connections=connections,  # FigJam connections would need additional processing
-            metadata={"source": "figjam", "filename": filename, "format": "json"}
+            metadata={"source": "figjam", "filename": filename, "format": "json"},
         )
 
     def _map_figma_node_to_component(self, node: Dict[str, Any]) -> str:
@@ -538,7 +535,7 @@ class FigJamFileNormalizer(BaseFileNormalizer):
                 "format": "json",
                 "description": "Figma FigJam JSON export",
                 "capabilities": ["structural_data"],
-                "export_method": "Figma API or File > Export > JSON"
+                "export_method": "Figma API or File > Export > JSON",
             }
         ]
 
@@ -556,8 +553,9 @@ class LucidFileNormalizer(BaseFileNormalizer):
     async def _normalize_lucid_json(self, file_content: bytes, filename: str) -> NormalizedArchitectureData:
         """Normalize Lucid JSON export."""
         import json
+
         try:
-            data = json.loads(file_content.decode('utf-8'))
+            data = json.loads(file_content.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             raise ValueError(f"Invalid Lucid JSON file: {e}")
 
@@ -577,7 +575,7 @@ class LucidFileNormalizer(BaseFileNormalizer):
                     id=obj.get("id", ""),
                     type=component_type,
                     name=obj.get("text", "").strip()[:50] or f"Component {obj.get('id', '')}",
-                    description=obj.get("text", "")
+                    description=obj.get("text", ""),
                 )
                 components.append(component)
 
@@ -586,14 +584,14 @@ class LucidFileNormalizer(BaseFileNormalizer):
                 connection = ArchitectureConnection(
                     from_id=obj.get("startObjectId", ""),
                     to_id=obj.get("endObjectId", ""),
-                    label=obj.get("text", "").strip() or "connects"
+                    label=obj.get("text", "").strip() or "connects",
                 )
                 connections.append(connection)
 
         return NormalizedArchitectureData(
             components=components,
             connections=connections,
-            metadata={"source": "lucid", "filename": filename, "format": "json"}
+            metadata={"source": "lucid", "filename": filename, "format": "json"},
         )
 
     def _map_lucid_object_to_component(self, obj: Dict[str, Any]) -> str:
@@ -618,7 +616,7 @@ class LucidFileNormalizer(BaseFileNormalizer):
                 "format": "json",
                 "description": "Lucidchart JSON export",
                 "capabilities": ["full_structural_data"],
-                "export_method": "Lucid API or manual JSON export"
+                "export_method": "Lucid API or manual JSON export",
             }
         ]
 
@@ -633,10 +631,12 @@ class ConfluenceFileNormalizer(BaseFileNormalizer):
         else:
             raise ValueError(f"Confluence file normalizer does not support format: {file_format}")
 
-    async def _normalize_confluence_markup(self, file_content: bytes, filename: str, file_format: str) -> NormalizedArchitectureData:
+    async def _normalize_confluence_markup(
+        self, file_content: bytes, filename: str, file_format: str
+    ) -> NormalizedArchitectureData:
         """Normalize Confluence XML/HTML export."""
         try:
-            content = file_content.decode('utf-8')
+            content = file_content.decode("utf-8")
         except UnicodeDecodeError as e:
             raise ValueError(f"Invalid {file_format.upper()} file encoding: {e}")
 
@@ -652,28 +652,27 @@ class ConfluenceFileNormalizer(BaseFileNormalizer):
         if file_format.lower() == "xml":
             # Basic XML title extraction
             import re
-            title_match = re.search(r'<title[^>]*>([^<]+)</title>', content, re.IGNORECASE)
+
+            title_match = re.search(r"<title[^>]*>([^<]+)</title>", content, re.IGNORECASE)
             if title_match:
                 title = title_match.group(1).strip()
         elif file_format.lower() == "html":
             # Basic HTML title extraction
             import re
-            title_match = re.search(r'<title[^>]*>([^<]+)</title>', content, re.IGNORECASE)
+
+            title_match = re.search(r"<title[^>]*>([^<]+)</title>", content, re.IGNORECASE)
             if title_match:
                 title = title_match.group(1).strip()
 
         component = ArchitectureComponent(
-            id=f"page_{hash(filename)}",
-            type="service",
-            name=title,
-            description=f"Confluence page from {filename}"
+            id=f"page_{hash(filename)}", type="service", name=title, description=f"Confluence page from {filename}"
         )
         components.append(component)
 
         return NormalizedArchitectureData(
             components=components,
             connections=connections,
-            metadata={"source": "confluence", "filename": filename, "format": file_format}
+            metadata={"source": "confluence", "filename": filename, "format": file_format},
         )
 
     @classmethod
@@ -683,14 +682,14 @@ class ConfluenceFileNormalizer(BaseFileNormalizer):
                 "format": "xml",
                 "description": "Confluence XML export",
                 "capabilities": ["basic_content"],
-                "export_method": "Space Tools > Content Tools > Export > XML"
+                "export_method": "Space Tools > Content Tools > Export > XML",
             },
             {
                 "format": "html",
                 "description": "Confluence HTML export",
                 "capabilities": ["basic_content"],
-                "export_method": "Space Tools > Content Tools > Export > HTML"
-            }
+                "export_method": "Space Tools > Content Tools > Export > HTML",
+            },
         ]
 
 

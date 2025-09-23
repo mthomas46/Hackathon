@@ -1,13 +1,12 @@
-"""Query Processing Application Use Cases"""
+"""Query Processing Application Use Cases."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
-
-from .commands import ProcessNaturalLanguageQueryCommand, ExecuteStructuredQueryCommand
+from ...shared.application import UseCase
+from .commands import ProcessNaturalLanguageQueryCommand
 from .queries import GetQueryResultQuery, ListQueriesQuery
 
 
-from ...shared.application import UseCase
 class ProcessNaturalLanguageQueryUseCase(UseCase):
     """Use case for processing natural language queries."""
 
@@ -18,7 +17,7 @@ class ProcessNaturalLanguageQueryUseCase(UseCase):
             "query_id": "placeholder-query-id",
             "original_query": command.query_text,
             "interpreted_intent": "search",
-            "confidence_score": 0.85
+            "confidence_score": 0.85,
         }
 
 
@@ -28,11 +27,7 @@ class GetQueryResultUseCase(UseCase):
     async def execute(self, query: GetQueryResultQuery) -> Optional[Dict[str, Any]]:
         """Execute the get query result use case."""
         # Placeholder implementation
-        return {
-            "query_id": query.query_id,
-            "status": "completed",
-            "results": ["result1", "result2"]
-        }
+        return {"query_id": query.query_id, "status": "completed", "results": ["result1", "result2"]}
 
 
 class ListQueriesUseCase(UseCase):
@@ -41,10 +36,4 @@ class ListQueriesUseCase(UseCase):
     async def execute(self, query: ListQueriesQuery) -> List[Dict[str, Any]]:
         """Execute the list queries use case."""
         # Placeholder implementation
-        return [
-            {
-                "query_id": "query-1",
-                "query_text": "find documentation",
-                "status": "completed"
-            }
-        ]
+        return [{"query_id": "query-1", "query_text": "find documentation", "status": "completed"}]

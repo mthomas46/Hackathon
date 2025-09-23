@@ -1,17 +1,18 @@
 """Get Findings Use Case."""
 
-from typing import Optional, List
 from dataclasses import dataclass
+from typing import List, Optional
 
 from ...domain.entities import Finding
 from ...domain.services import FindingService
 from ...infrastructure.repositories import FindingRepository
-from ..dto import GetFindingsRequest, FindingResponse, FindingListResponse
+from ..dto import FindingListResponse, FindingResponse
 
 
 @dataclass
 class GetFindingsQuery:
     """Query for getting findings."""
+
     document_id: Optional[str] = None
     category: Optional[str] = None
     severity: Optional[str] = None
@@ -24,6 +25,7 @@ class GetFindingsQuery:
 @dataclass
 class FindingsQueryResult:
     """Result of findings query."""
+
     findings: List[Finding]
     total_count: int
     has_more: bool
@@ -32,9 +34,7 @@ class FindingsQueryResult:
 class GetFindingsUseCase:
     """Use case for retrieving findings."""
 
-    def __init__(self,
-                 finding_service: FindingService,
-                 finding_repository: FindingRepository):
+    def __init__(self, finding_service: FindingService, finding_repository: FindingRepository):
         """Initialize use case with dependencies."""
         self.finding_service = finding_service
         self.finding_repository = finding_repository
@@ -58,11 +58,7 @@ class GetFindingsUseCase:
 
         has_more = end_idx < total_count
 
-        return FindingsQueryResult(
-            findings=paginated_findings,
-            total_count=total_count,
-            has_more=has_more
-        )
+        return FindingsQueryResult(findings=paginated_findings, total_count=total_count, has_more=has_more)
 
     async def get_by_document(self, document_id: str) -> List[Finding]:
         """Get all findings for a specific document."""
@@ -108,11 +104,11 @@ class GetFindingsUseCase:
         finding_responses = [FindingResponse.from_domain(finding) for finding in result.findings]
 
         filters = {
-            'document_id': query.document_id,
-            'category': query.category,
-            'severity': query.severity,
-            'resolved': query.resolved,
-            'confidence_min': query.confidence_min
+            "document_id": query.document_id,
+            "category": query.category,
+            "severity": query.severity,
+            "resolved": query.resolved,
+            "confidence_min": query.confidence_min,
         }
 
         return FindingListResponse.create(
@@ -120,5 +116,5 @@ class GetFindingsUseCase:
             total=result.total_count,
             page=(query.offset // query.limit) + 1,
             page_size=query.limit,
-            filters=filters
+            filters=filters,
         )

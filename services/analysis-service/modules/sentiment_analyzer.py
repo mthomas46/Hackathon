@@ -1,11 +1,11 @@
 """Sentiment Analyzer - Advanced sentiment detection and tone analysis."""
 
 import asyncio
+import hashlib
 import re
-from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-import hashlib
+from typing import Any, Dict, List, Optional
 
 from services.shared.core.di.services import ILoggerService
 from services.shared.core.logging.logger import get_logger
@@ -34,16 +34,14 @@ class SentimentResult:
             "polarity": self.polarity,
             "subjectivity": self.subjectivity,
             "analyzer": self.analyzer,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
 
 class SentimentDetector:
     """Detects sentiment in text using rule-based analysis."""
 
-    def __init__(self,
-                 logger: Optional[ILoggerService] = None,
-                 cache: Optional[Any] = None):
+    def __init__(self, logger: Optional[ILoggerService] = None, cache: Optional[Any] = None):
         """Initialize sentiment detector."""
         self._logger = logger or get_logger()
         self._cache = cache or get_cache_manager()
@@ -64,10 +62,7 @@ class SentimentDetector:
             # Cache the result
             await self._cache.set(cache_key, result.to_dict(), ttl=1800)
 
-            await self._logger.debug(
-                f"Detected sentiment: {result.sentiment}",
-                confidence=result.confidence
-            )
+            await self._logger.debug(f"Detected sentiment: {result.sentiment}", confidence=result.confidence)
 
             return result
 
@@ -77,19 +72,47 @@ class SentimentDetector:
 
         # Define positive and negative word lists
         positive_words = {
-            'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic',
-            'love', 'like', 'best', 'awesome', 'brilliant', 'perfect',
-            'happy', 'pleased', 'satisfied', 'delighted', 'thrilled'
+            "good",
+            "great",
+            "excellent",
+            "amazing",
+            "wonderful",
+            "fantastic",
+            "love",
+            "like",
+            "best",
+            "awesome",
+            "brilliant",
+            "perfect",
+            "happy",
+            "pleased",
+            "satisfied",
+            "delighted",
+            "thrilled",
         }
 
         negative_words = {
-            'bad', 'terrible', 'awful', 'horrible', 'worst', 'hate',
-            'dislike', 'poor', 'disappointing', 'frustrating', 'annoying',
-            'sad', 'angry', 'upset', 'displeased', 'unhappy', 'dissatisfied'
+            "bad",
+            "terrible",
+            "awful",
+            "horrible",
+            "worst",
+            "hate",
+            "dislike",
+            "poor",
+            "disappointing",
+            "frustrating",
+            "annoying",
+            "sad",
+            "angry",
+            "upset",
+            "displeased",
+            "unhappy",
+            "dissatisfied",
         }
 
         # Count positive and negative words
-        words = re.findall(r'\b\w+\b', text_lower)
+        words = re.findall(r"\b\w+\b", text_lower)
         positive_count = sum(1 for word in words if word in positive_words)
         negative_count = sum(1 for word in words if word in negative_words)
 
@@ -118,11 +141,7 @@ class SentimentDetector:
             polarity=float(polarity),
             subjectivity=float(total_sentiment_words / len(words)) if words else 0.0,
             analyzer="rule_based",
-            metadata={
-                "positive_words": positive_count,
-                "negative_words": negative_count,
-                "total_words": len(words)
-            }
+            metadata={"positive_words": positive_count, "negative_words": negative_count, "total_words": len(words)},
         )
 
     async def detect_batch_sentiment(self, texts: List[str]) -> List[SentimentResult]:
@@ -135,14 +154,16 @@ class SentimentDetector:
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 await self._logger.error(f"Failed to analyze sentiment for text {i}", error=str(result))
-                valid_results.append(SentimentResult(
-                    text=texts[i],
-                    sentiment="neutral",
-                    confidence=0.0,
-                    polarity=0.0,
-                    subjectivity=0.0,
-                    analyzer="error_fallback"
-                ))
+                valid_results.append(
+                    SentimentResult(
+                        text=texts[i],
+                        sentiment="neutral",
+                        confidence=0.0,
+                        polarity=0.0,
+                        subjectivity=0.0,
+                        analyzer="error_fallback",
+                    )
+                )
             else:
                 valid_results.append(result)
 
@@ -152,9 +173,7 @@ class SentimentDetector:
 class SentimentAnalyzer:
     """Main sentiment analysis service."""
 
-    def __init__(self,
-                 sentiment_detector: Optional[SentimentDetector] = None,
-                 logger: Optional[ILoggerService] = None):
+    def __init__(self, sentiment_detector: Optional[SentimentDetector] = None, logger: Optional[ILoggerService] = None):
         """Initialize sentiment analyzer."""
         self._sentiment_detector = sentiment_detector or SentimentDetector()
         self._logger = logger or get_logger()
@@ -178,13 +197,13 @@ class SentimentAnalyzer:
                     "subjectivity": sentiment_result.subjectivity,
                     "analyzer": sentiment_result.analyzer,
                     "execution_time_seconds": execution_time.total_seconds(),
-                    "created_at": start_time.isoformat()
+                    "created_at": start_time.isoformat(),
                 }
 
                 await self._logger.info(
                     "Completed sentiment analysis",
                     sentiment=sentiment_result.sentiment,
-                    confidence=sentiment_result.confidence
+                    confidence=sentiment_result.confidence,
                 )
 
                 return result
@@ -199,7 +218,7 @@ class SentimentAnalyzer:
                     "error": error_msg,
                     "analysis_id": f"error-{start_time.timestamp()}",
                     "execution_time_seconds": execution_time.total_seconds(),
-                    "status": "failed"
+                    "status": "failed",
                 }
 
     async def analyze_batch_sentiment(self, texts: List[str]) -> Dict[str, Any]:
@@ -213,14 +232,16 @@ class SentimentAnalyzer:
 
                 results = []
                 for i, sentiment in enumerate(sentiment_results):
-                    results.append({
-                        "index": i,
-                        "text": texts[i],
-                        "sentiment": sentiment.sentiment,
-                        "confidence": sentiment.confidence,
-                        "polarity": sentiment.polarity,
-                        "subjectivity": sentiment.subjectivity
-                    })
+                    results.append(
+                        {
+                            "index": i,
+                            "text": texts[i],
+                            "sentiment": sentiment.sentiment,
+                            "confidence": sentiment.confidence,
+                            "polarity": sentiment.polarity,
+                            "subjectivity": sentiment.subjectivity,
+                        }
+                    )
 
                 result = {
                     "analysis_id": f"batch-sentiment-{start_time.timestamp()}",
@@ -231,14 +252,14 @@ class SentimentAnalyzer:
                     "created_at": start_time.isoformat(),
                     "summary": {
                         "sentiment_distribution": self._calculate_sentiment_distribution(sentiment_results),
-                        "average_confidence": sum(s.confidence for s in sentiment_results) / len(sentiment_results)
-                    }
+                        "average_confidence": sum(s.confidence for s in sentiment_results) / len(sentiment_results),
+                    },
                 }
 
                 await self._logger.info(
                     "Completed batch sentiment analysis",
                     num_texts=len(texts),
-                    execution_time_seconds=result["execution_time_seconds"]
+                    execution_time_seconds=result["execution_time_seconds"],
                 )
 
                 return result
@@ -253,7 +274,7 @@ class SentimentAnalyzer:
                     "error": error_msg,
                     "analysis_id": f"error-{start_time.timestamp()}",
                     "execution_time_seconds": execution_time.total_seconds(),
-                    "status": "failed"
+                    "status": "failed",
                 }
 
     def _calculate_sentiment_distribution(self, results: List[SentimentResult]) -> Dict[str, int]:

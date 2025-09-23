@@ -4,35 +4,34 @@ Doc Store Service Launcher - Run the doc_store service with proper environment s
 """
 
 import os
-import sys
 import subprocess
+import sys
 from pathlib import Path
+
 
 def main():
     """Launch the doc_store service with proper environment."""
     # Get the directory where this script is located
     script_dir = Path(__file__).parent.absolute()
-    docstore_dir = script_dir / 'services' / 'doc_store'
+    docstore_dir = script_dir / "services" / "doc_store"
 
     # Set PYTHONPATH to include the project root
     env = os.environ.copy()
-    env['PYTHONPATH'] = str(script_dir)
+    env["PYTHONPATH"] = str(script_dir)
 
     # Set default database path if not set
-    if 'DOCSTORE_DB' not in env:
-        env['DOCSTORE_DB'] = 'db.sqlite3'  # Relative to service directory
+    if "DOCSTORE_DB" not in env:
+        env["DOCSTORE_DB"] = "db.sqlite3"  # Relative to service directory
 
     # Default port
-    port = os.environ.get('PORT', '5010')
+    port = os.environ.get("PORT", "5010")
 
     # Set DOCSTORE_PORT environment variable
-    if 'DOCSTORE_PORT' not in env:
-        env['DOCSTORE_PORT'] = port
+    if "DOCSTORE_PORT" not in env:
+        env["DOCSTORE_PORT"] = port
 
     # Run as module from project root to avoid relative import issues
-    cmd = [
-        sys.executable, '-m', 'services.doc_store.main'
-    ]
+    cmd = [sys.executable, "-m", "services.doc_store.main"]
 
     try:
         print(f"🚀 Starting Doc Store service on port {port}...")
@@ -46,6 +45,7 @@ def main():
     except Exception as e:
         print(f"Error running Doc Store service: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,7 @@
-"""Application Queries for Service Registry"""
+"""Application Queries for Service Registry."""
 
-from typing import Optional, List
 from dataclasses import dataclass
+from typing import Optional
 
 from ...domain.service_registry import ServiceId
 
@@ -9,12 +9,14 @@ from ...domain.service_registry import ServiceId
 @dataclass
 class GetServiceQuery:
     """Query to get a service by ID."""
+
     service_id: ServiceId
 
 
 @dataclass
 class ListServicesQuery:
     """Query to list services with optional filters."""
+
     category_filter: Optional[str] = None
     capability_filter: Optional[str] = None
     status_filter: Optional[str] = None

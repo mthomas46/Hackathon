@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""
-Frontend Service Startup Script
-Handles the frontend service startup with proper import resolution
-"""
+"""Frontend Service Startup Script Handles the frontend service startup with
+proper import resolution."""
 
 import os
 import sys
@@ -13,9 +11,9 @@ app_root = "/app"
 service_dir = Path(__file__).parent
 
 # Set environment variables
-os.environ.setdefault('PYTHONPATH', f"{app_root}")
-os.environ.setdefault('SERVICE_NAME', 'frontend')
-os.environ.setdefault('SERVICE_PORT', '3000')
+os.environ.setdefault("PYTHONPATH", f"{app_root}")
+os.environ.setdefault("SERVICE_NAME", "frontend")
+os.environ.setdefault("SERVICE_PORT", "3000")
 
 # Setup Python path for proper module resolution
 sys.path.insert(0, app_root)
@@ -34,9 +32,9 @@ import uvicorn
 try:
     # Import the FastAPI app from main
     from main import app
-    
+
     if __name__ == "__main__":
-        port = int(os.environ.get('SERVICE_PORT', 3000))
+        port = int(os.environ.get("SERVICE_PORT", 3000))
         print(f"Starting frontend service on port {port}")
         uvicorn.run(app, host="0.0.0.0", port=port)
 
@@ -48,5 +46,6 @@ except ImportError as e:
 except Exception as e:
     print(f"Error starting frontend service: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)

@@ -1,17 +1,17 @@
-"""Database connection management for Prompt Store service.
+"""
+Database connection management for Prompt Store service.
 
 Provides connection pooling and secure database access.
 """
 
 import os
 import sqlite3
-from typing import Optional, Any
 from contextlib import contextmanager
 
 
 def _validate_db_path(db_path: str) -> str:
     """Validate database path to prevent directory traversal attacks."""
-    if any(char in db_path for char in ['..', '/', '\\', ':', '*', '?', '"', '<', '>', '|']):
+    if any(char in db_path for char in ["..", "/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
         return "prompt_store.db"
     return db_path
 

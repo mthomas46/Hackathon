@@ -1,8 +1,11 @@
-"""Provider management for Summarizer Hub.
+"""
+Provider management for Summarizer Hub.
 
 Handles provider registry and orchestration.
 """
-from typing import Dict, Any, Callable, Optional
+
+from typing import Callable, Dict, Optional
+
 from .provider_implementations import provider_implementations
 
 
@@ -18,7 +21,9 @@ class ProviderManager:
             "bedrock": provider_implementations.summarize_with_bedrock,
         }
 
-    async def summarize_with_provider(self, provider_name: str, provider_config, prompt: Optional[str], text: str) -> str:
+    async def summarize_with_provider(
+        self, provider_name: str, provider_config, prompt: Optional[str], text: str
+    ) -> str:
         """Summarize using a specific provider."""
         impl = self.provider_implementations.get(provider_name.lower())
         if impl is None:

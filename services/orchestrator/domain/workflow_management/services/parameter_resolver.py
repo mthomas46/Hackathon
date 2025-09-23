@@ -1,6 +1,6 @@
-"""Parameter Resolver Domain Service"""
+"""Parameter Resolver Domain Service."""
 
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..entities.workflow import Workflow
 from ..entities.workflow_parameter import WorkflowParameter
@@ -11,9 +11,7 @@ class ParameterResolver:
 
     @staticmethod
     def resolve_parameters(
-        workflow: Workflow,
-        provided_params: Dict[str, Any],
-        context: Optional[Dict[str, Any]] = None
+        workflow: Workflow, provided_params: Dict[str, Any], context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Resolve all parameters for workflow execution."""
         resolved = {}
@@ -26,9 +24,7 @@ class ParameterResolver:
 
     @staticmethod
     def _resolve_parameter_value(
-        param: WorkflowParameter,
-        provided_params: Dict[str, Any],
-        context: Optional[Dict[str, Any]]
+        param: WorkflowParameter, provided_params: Dict[str, Any], context: Optional[Dict[str, Any]]
     ) -> Any:
         """Resolve a single parameter value."""
         # Check if parameter was provided
@@ -58,10 +54,7 @@ class ParameterResolver:
         return None
 
     @staticmethod
-    def validate_parameter_resolution(
-        workflow: Workflow,
-        resolved_params: Dict[str, Any]
-    ) -> Tuple[bool, List[str]]:
+    def validate_parameter_resolution(workflow: Workflow, resolved_params: Dict[str, Any]) -> Tuple[bool, List[str]]:
         """Validate that all required parameters are resolved."""
         errors = []
 
@@ -72,10 +65,7 @@ class ParameterResolver:
         return len(errors) == 0, errors
 
     @staticmethod
-    def get_missing_parameters(
-        workflow: Workflow,
-        provided_params: Dict[str, Any]
-    ) -> List[str]:
+    def get_missing_parameters(workflow: Workflow, provided_params: Dict[str, Any]) -> List[str]:
         """Get list of missing required parameters."""
         missing = []
 

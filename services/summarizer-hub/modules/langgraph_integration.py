@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-LangGraph Integration for Summarizer Hub Service
+LangGraph Integration for Summarizer Hub Service.
 
 This module provides LangGraph awareness and integration capabilities
-for the Summarizer Hub Service, enabling intelligent summarization in workflows.
+for the Summarizer Hub Service, enabling intelligent summarization in
+workflows.
 """
 
-import asyncio
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
-from services.shared.utilities import get_service_client
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import get_service_client
 
 
 class SummarizerHubLangGraphIntegration:
@@ -31,9 +31,12 @@ class SummarizerHubLangGraphIntegration:
         """Initialize LangGraph tools for summarizer hub."""
 
         @tool
-        async def summarize_content_langgraph(content: str, summary_type: str = "concise",
-                                           max_length: int = 500,
-                                           workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def summarize_content_langgraph(
+            content: str,
+            summary_type: str = "concise",
+            max_length: int = 500,
+            workflow_context: Optional[Dict[str, Any]] = None,
+        ) -> Dict[str, Any]:
             """Summarize content within LangGraph workflow context."""
             try:
                 # Check cache first for similar content
@@ -46,7 +49,7 @@ class SummarizerHubLangGraphIntegration:
                         "success": True,
                         "summary": cached_summary,
                         "source": "cache",
-                        "workflow_integration": "completed"
+                        "workflow_integration": "completed",
                     }
 
                 # Enhance summarization with workflow context
@@ -56,7 +59,7 @@ class SummarizerHubLangGraphIntegration:
                     "max_length": max_length,
                     "workflow_context": workflow_context or {},
                     "summarization_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True
+                    "langgraph_driven": True,
                 }
 
                 result = await self.service_client.post_json(
@@ -65,8 +68,8 @@ class SummarizerHubLangGraphIntegration:
                         "content": content,
                         "summary_type": summary_type,
                         "max_length": max_length,
-                        "context": summary_context
-                    }
+                        "context": summary_context,
+                    },
                 )
 
                 # Cache the summary
@@ -79,19 +82,21 @@ class SummarizerHubLangGraphIntegration:
                         if workflow_id:
                             if workflow_id not in self.workflow_summaries:
                                 self.workflow_summaries[workflow_id] = []
-                            self.workflow_summaries[workflow_id].append({
-                                "content_hash": content_hash,
-                                "summary_type": summary_type,
-                                "created_at": datetime.now().isoformat(),
-                                "summary_length": len(result["summary"])
-                            })
+                            self.workflow_summaries[workflow_id].append(
+                                {
+                                    "content_hash": content_hash,
+                                    "summary_type": summary_type,
+                                    "created_at": datetime.now().isoformat(),
+                                    "summary_length": len(result["summary"]),
+                                }
+                            )
 
                 return {
                     "success": True,
                     "summary": result,
                     "source": "fresh_summary",
                     "workflow_integration": "completed",
-                    "cached_for_future": True
+                    "cached_for_future": True,
                 }
 
             except Exception as e:
@@ -99,8 +104,9 @@ class SummarizerHubLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def compare_summaries_langgraph(summaries: List[str], comparison_criteria: List[str],
-                                           workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def compare_summaries_langgraph(
+            summaries: List[str], comparison_criteria: List[str], workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Compare multiple summaries within workflow context."""
             try:
                 comparison_context = {
@@ -108,23 +114,19 @@ class SummarizerHubLangGraphIntegration:
                     "comparison_criteria": comparison_criteria,
                     "workflow_context": workflow_context or {},
                     "comparison_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True
+                    "langgraph_driven": True,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/compare",
-                    {
-                        "summaries": summaries,
-                        "comparison_criteria": comparison_criteria,
-                        "context": comparison_context
-                    }
+                    {"summaries": summaries, "comparison_criteria": comparison_criteria, "context": comparison_context},
                 )
 
                 return {
                     "success": True,
                     "comparison_result": result,
                     "workflow_integration": "completed",
-                    "summaries_compared": len(summaries)
+                    "summaries_compared": len(summaries),
                 }
 
             except Exception as e:
@@ -132,8 +134,9 @@ class SummarizerHubLangGraphIntegration:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_summary_quality_metrics_langgraph(summary_id: str,
-                                                      workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        async def get_summary_quality_metrics_langgraph(
+            summary_id: str, workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
             """Get quality metrics for a summary within workflow."""
             try:
                 result = await self.service_client.get_json(
@@ -146,34 +149,29 @@ class SummarizerHubLangGraphIntegration:
                     result["metrics_retrieved_for_workflow"] = True
                     result["retrieval_timestamp"] = datetime.now().isoformat()
 
-                return {
-                    "success": True,
-                    "quality_metrics": result,
-                    "workflow_integration": "completed"
-                }
+                return {"success": True, "quality_metrics": result, "workflow_integration": "completed"}
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def generate_workflow_summary_langgraph(content_list: List[str],
-                                                   workflow_context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-            """Generate a comprehensive workflow summary from multiple content pieces."""
+        async def generate_workflow_summary_langgraph(
+            content_list: List[str], workflow_context: Optional[Dict[str, Any]] = None
+        ) -> Dict[str, Any]:
+            """Generate a comprehensive workflow summary from multiple content
+            pieces."""
             try:
                 workflow_summary_context = {
                     "content_list": content_list,
                     "workflow_context": workflow_context or {},
                     "summary_timestamp": datetime.now().isoformat(),
                     "langgraph_driven": True,
-                    "workflow_summary": True
+                    "workflow_summary": True,
                 }
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/summarize/workflow",
-                    {
-                        "content_list": content_list,
-                        "context": workflow_summary_context
-                    }
+                    {"content_list": content_list, "context": workflow_summary_context},
                 )
 
                 # Store workflow summary tracking
@@ -182,18 +180,20 @@ class SummarizerHubLangGraphIntegration:
                     if workflow_id:
                         if workflow_id not in self.workflow_summaries:
                             self.workflow_summaries[workflow_id] = []
-                        self.workflow_summaries[workflow_id].append({
-                            "summary_type": "workflow_summary",
-                            "content_pieces": len(content_list),
-                            "created_at": datetime.now().isoformat(),
-                            "summary_id": result.get("summary_id")
-                        })
+                        self.workflow_summaries[workflow_id].append(
+                            {
+                                "summary_type": "workflow_summary",
+                                "content_pieces": len(content_list),
+                                "created_at": datetime.now().isoformat(),
+                                "summary_id": result.get("summary_id"),
+                            }
+                        )
 
                 return {
                     "success": True,
                     "workflow_summary": result,
                     "workflow_integration": "completed",
-                    "content_pieces_summarized": len(content_list)
+                    "content_pieces_summarized": len(content_list),
                 }
 
             except Exception as e:
@@ -211,7 +211,7 @@ class SummarizerHubLangGraphIntegration:
                         "summaries": summaries,
                         "source": "workflow_cache",
                         "workflow_id": workflow_id,
-                        "total_summaries": len(summaries)
+                        "total_summaries": len(summaries),
                     }
 
                 # If not in cache, return empty result
@@ -220,7 +220,7 @@ class SummarizerHubLangGraphIntegration:
                     "summaries": [],
                     "source": "cache_miss",
                     "workflow_id": workflow_id,
-                    "total_summaries": 0
+                    "total_summaries": 0,
                 }
 
             except Exception as e:
@@ -231,7 +231,7 @@ class SummarizerHubLangGraphIntegration:
             "compare_summaries_langgraph": compare_summaries_langgraph,
             "get_summary_quality_metrics_langgraph": get_summary_quality_metrics_langgraph,
             "generate_workflow_summary_langgraph": generate_workflow_summary_langgraph,
-            "get_workflow_summaries_langgraph": get_workflow_summaries_langgraph
+            "get_workflow_summaries_langgraph": get_workflow_summaries_langgraph,
         }
 
     async def handle_langgraph_workflow_message(self, message: BaseMessage) -> Dict[str, Any]:
@@ -257,7 +257,7 @@ class SummarizerHubLangGraphIntegration:
                 "action": "summarize_content",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["content_summarization", "multi_model_summaries", "quality_assessment"]
+                "capabilities": ["content_summarization", "multi_model_summaries", "quality_assessment"],
             }
 
         elif "compare" in instruction_lower or "comparison" in instruction_lower:
@@ -265,7 +265,7 @@ class SummarizerHubLangGraphIntegration:
                 "action": "compare_summaries",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["summary_comparison", "quality_assessment", "difference_analysis"]
+                "capabilities": ["summary_comparison", "quality_assessment", "difference_analysis"],
             }
 
         elif "quality" in instruction_lower or "metrics" in instruction_lower:
@@ -273,7 +273,7 @@ class SummarizerHubLangGraphIntegration:
                 "action": "get_quality_metrics",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["quality_assessment", "metrics_calculation", "performance_evaluation"]
+                "capabilities": ["quality_assessment", "metrics_calculation", "performance_evaluation"],
             }
 
         elif "workflow" in instruction_lower and "summary" in instruction_lower:
@@ -281,7 +281,7 @@ class SummarizerHubLangGraphIntegration:
                 "action": "generate_workflow_summary",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["workflow_summarization", "multi_content_synthesis", "comprehensive_overview"]
+                "capabilities": ["workflow_summarization", "multi_content_synthesis", "comprehensive_overview"],
             }
 
         else:
@@ -289,7 +289,7 @@ class SummarizerHubLangGraphIntegration:
                 "action": "general_summarization",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["content_summarization", "text_processing", "information_extraction"]
+                "capabilities": ["content_summarization", "text_processing", "information_extraction"],
             }
 
     async def _process_summarizer_workflow_response(self, response: str) -> Dict[str, Any]:
@@ -299,14 +299,14 @@ class SummarizerHubLangGraphIntegration:
             "content": response,
             "timestamp": datetime.now().isoformat(),
             "processed_by": self.service_name,
-            "response_type": "summarizer_workflow"
+            "response_type": "summarizer_workflow",
         }
 
         return {
             "status": "processed",
             "service": self.service_name,
             "response_stored": True,
-            "next_actions": ["await_workflow_instructions", "prepare_summarization_tools"]
+            "next_actions": ["await_workflow_instructions", "prepare_summarization_tools"],
         }
 
     def get_langgraph_capabilities(self) -> Dict[str, Any]:
@@ -319,25 +319,16 @@ class SummarizerHubLangGraphIntegration:
                 "multi_model_summaries",
                 "summary_comparison",
                 "quality_assessment",
-                "workflow_summarization"
+                "workflow_summarization",
             ],
-            "tool_categories": [
-                "summarization_tools",
-                "comparison_tools",
-                "quality_tools",
-                "workflow_tools"
-            ],
-            "message_types": [
-                "summarization_instructions",
-                "workflow_responses",
-                "content_commands"
-            ],
+            "tool_categories": ["summarization_tools", "comparison_tools", "quality_tools", "workflow_tools"],
+            "message_types": ["summarization_instructions", "workflow_responses", "content_commands"],
             "integration_features": [
                 "workflow_context_awareness",
                 "caching_optimization",
                 "multi_model_support",
-                "quality_tracking"
-            ]
+                "quality_tracking",
+            ],
         }
 
     def get_workflow_integration_status(self) -> Dict[str, Any]:
@@ -349,7 +340,7 @@ class SummarizerHubLangGraphIntegration:
             "active_workflows": len(self.workflow_summaries),
             "total_summaries_generated": sum(len(summaries) for summaries in self.workflow_summaries.values()),
             "last_activity": datetime.now().isoformat(),
-            "capabilities_ready": True
+            "capabilities_ready": True,
         }
 
     def get_summarization_performance_summary(self) -> Dict[str, Any]:
@@ -361,7 +352,7 @@ class SummarizerHubLangGraphIntegration:
             "cache_hit_ratio": 0,  # Would be calculated from actual usage
             "average_summary_time": 0,  # Would be tracked from actual calls
             "summary_types": {},
-            "recent_activity": []
+            "recent_activity": [],
         }
 
         # Analyze summary types
@@ -379,11 +370,13 @@ class SummarizerHubLangGraphIntegration:
         recent_workflows = []
         for workflow_id, summaries in list(self.workflow_summaries.items())[-5:]:
             if summaries:
-                recent_workflows.append({
-                    "workflow_id": workflow_id,
-                    "last_summary": max(summary["created_at"] for summary in summaries),
-                    "total_summaries": len(summaries)
-                })
+                recent_workflows.append(
+                    {
+                        "workflow_id": workflow_id,
+                        "last_summary": max(summary["created_at"] for summary in summaries),
+                        "total_summaries": len(summaries),
+                    }
+                )
 
         summary["recent_activity"] = recent_workflows
 
@@ -409,7 +402,7 @@ class SummarizerHubLangGraphIntegration:
             return {
                 "cache_cleared": True,
                 "total_summaries_removed": total_summaries,
-                "total_cached_removed": total_cached
+                "total_cached_removed": total_cached,
             }
 
 

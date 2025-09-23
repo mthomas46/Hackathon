@@ -13,22 +13,21 @@ Key Features:
 - Multi-workflow concurrent monitoring
 """
 
-import streamlit as st
-from typing import Dict, Any, List, Optional, Callable
-import pandas as pd
-from datetime import datetime, timedelta
-import time
-import asyncio
 import random
-from dataclasses import dataclass, field
-import plotly.graph_objects as go
-import plotly.express as px
 from collections import deque
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional
+
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
 
 
 @dataclass
 class WorkflowState:
     """Represents the state of a single workflow."""
+
     workflow_id: str
     name: str
     status: str = "pending"  # pending, running, completed, failed
@@ -46,6 +45,7 @@ class WorkflowState:
 @dataclass
 class WorkflowVisualizerConfig:
     """Configuration for the workflow visualizer."""
+
     max_concurrent_workflows: int = 10
     update_interval_seconds: float = 1.0
     show_progress_bars: bool = True
@@ -74,7 +74,7 @@ class RealTimeWorkflowVisualizer:
 
     def update_workflow_state(self, workflow_data: Dict[str, Any]) -> None:
         """Update the state of a workflow from incoming data."""
-        workflow_id = workflow_data.get('workflow_id', workflow_data.get('id'))
+        workflow_id = workflow_data.get("workflow_id", workflow_data.get("id"))
 
         if not workflow_id:
             return
@@ -82,51 +82,52 @@ class RealTimeWorkflowVisualizer:
         # Get or create workflow state
         if workflow_id not in self.workflows:
             self.workflows[workflow_id] = WorkflowState(
-                workflow_id=workflow_id,
-                name=workflow_data.get('name', f'Workflow {workflow_id[:8]}')
+                workflow_id=workflow_id, name=workflow_data.get("name", f"Workflow {workflow_id[:8]}")
             )
 
         workflow = self.workflows[workflow_id]
 
         # Update workflow state
-        workflow.status = workflow_data.get('status', workflow.status)
-        workflow.progress = workflow_data.get('progress', workflow.progress)
-        workflow.current_step = workflow_data.get('current_step', workflow.current_step)
+        workflow.status = workflow_data.get("status", workflow.status)
+        workflow.progress = workflow_data.get("progress", workflow.progress)
+        workflow.current_step = workflow_data.get("current_step", workflow.current_step)
 
         # Handle timing
-        if workflow_data.get('event_type') == 'workflow_started' and not workflow.start_time:
+        if workflow_data.get("event_type") == "workflow_started" and not workflow.start_time:
             workflow.start_time = datetime.now()
             if workflow_id not in self.active_workflows:
                 self.active_workflows.append(workflow_id)
 
-        elif workflow_data.get('event_type') in ['workflow_completed', 'workflow_failed']:
+        elif workflow_data.get("event_type") in ["workflow_completed", "workflow_failed"]:
             if not workflow.end_time:
                 workflow.end_time = datetime.now()
-                workflow.actual_duration = (workflow.end_time - workflow.start_time).total_seconds() if workflow.start_time else 0
+                workflow.actual_duration = (
+                    (workflow.end_time - workflow.start_time).total_seconds() if workflow.start_time else 0
+                )
 
                 # Move from active to completed/failed
                 if workflow_id in self.active_workflows:
                     self.active_workflows.remove(workflow_id)
 
-                if workflow_data.get('event_type') == 'workflow_completed':
+                if workflow_data.get("event_type") == "workflow_completed":
                     self.completed_workflows.append(workflow_id)
                 else:
                     self.failed_workflows.append(workflow_id)
-                    workflow.error_message = workflow_data.get('error_message')
+                    workflow.error_message = workflow_data.get("error_message")
 
         # Update steps if provided
-        if 'steps' in workflow_data:
-            workflow.steps = workflow_data['steps']
+        if "steps" in workflow_data:
+            workflow.steps = workflow_data["steps"]
 
         # Update metadata
-        if 'metadata' in workflow_data:
-            workflow.metadata.update(workflow_data['metadata'])
+        if "metadata" in workflow_data:
+            workflow.metadata.update(workflow_data["metadata"])
 
         self.last_update_time = datetime.now()
 
-    def render_workflow_visualizer(self,
-                                 title: str = "🔄 Real-Time Workflow Monitor",
-                                 height: Optional[int] = None) -> None:
+    def render_workflow_visualizer(
+        self, title: str = "🔄 Real-Time Workflow Monitor", height: Optional[int] = None
+    ) -> None:
         """Render the main workflow visualizer component."""
         st.markdown(f"### {title}")
         st.markdown("*Watch workflows execute in real-time with live progress updates*")
@@ -134,11 +135,7 @@ class RealTimeWorkflowVisualizer:
         height = height or self.config.height_pixels
 
         # Create tabs for different views
-        tab1, tab2, tab3 = st.tabs([
-            "📊 Active Workflows",
-            "✅ Completed Workflows",
-            "📈 Performance Analytics"
-        ])
+        tab1, tab2, tab3 = st.tabs(["📊 Active Workflows", "✅ Completed Workflows", "📈 Performance Analytics"])
 
         with tab1:
             self._render_active_workflows_tab()
@@ -156,7 +153,8 @@ class RealTimeWorkflowVisualizer:
         """Render the active workflows tab."""
         if not self.active_workflows:
             st.success("🎉 No active workflows at the moment")
-            st.markdown("""
+            st.markdown(
+                """
             **Waiting for workflows to start...**
 
             When workflows begin execution, they will appear here with:
@@ -164,7 +162,8 @@ class RealTimeWorkflowVisualizer:
             - Current step information
             - Estimated completion time
             - Performance metrics
-            """)
+            """
+            )
             return
 
         st.markdown(f"#### 🚀 Active Workflows ({len(self.active_workflows)})")
@@ -173,10 +172,10 @@ class RealTimeWorkflowVisualizer:
         sorted_workflows = sorted(
             [self.workflows[wid] for wid in self.active_workflows],
             key=lambda w: w.start_time or datetime.min,
-            reverse=True
+            reverse=True,
         )
 
-        for workflow in sorted_workflows[:self.config.max_concurrent_workflows]:
+        for workflow in sorted_workflows[: self.config.max_concurrent_workflows]:
             self._render_single_workflow_card(workflow)
 
         if len(self.active_workflows) > self.config.max_concurrent_workflows:
@@ -195,8 +194,9 @@ class RealTimeWorkflowVisualizer:
 
             with col2:
                 status_color = self._get_status_color(workflow.status)
-                st.markdown(f"<span style='color:{status_color}'>●</span> {workflow.status.title()}",
-                           unsafe_allow_html=True)
+                st.markdown(
+                    f"<span style='color:{status_color}'>●</span> {workflow.status.title()}", unsafe_allow_html=True
+                )
 
             with col3:
                 elapsed = self._calculate_elapsed_time(workflow)
@@ -207,7 +207,7 @@ class RealTimeWorkflowVisualizer:
                 progress_bar = st.progress(workflow.progress / 100, text=".1f")
 
                 # Add animated progress effect for running workflows
-                if workflow.status == 'running' and self.config.enable_animations:
+                if workflow.status == "running" and self.config.enable_animations:
                     self._add_progress_animation(progress_bar, workflow.workflow_id)
 
             # Timing information
@@ -242,22 +242,22 @@ class RealTimeWorkflowVisualizer:
         """Render detailed workflow steps."""
         with st.expander(f"📋 Steps ({len(workflow.steps)})", expanded=False):
             for i, step in enumerate(workflow.steps):
-                step_status = step.get('status', 'pending')
-                step_name = step.get('name', f'Step {i+1}')
+                step_status = step.get("status", "pending")
+                step_name = step.get("name", f"Step {i+1}")
 
                 # Step status indicator
-                if step_status == 'completed':
+                if step_status == "completed":
                     st.markdown(f"✅ {step_name}")
-                elif step_status == 'running':
+                elif step_status == "running":
                     st.markdown(f"🔄 {step_name} *(in progress)*")
-                elif step_status == 'failed':
+                elif step_status == "failed":
                     st.markdown(f"❌ {step_name} *(failed)*")
                 else:
                     st.markdown(f"⏳ {step_name} *(pending)*")
 
                 # Step timing
-                if step.get('start_time') and step.get('end_time'):
-                    duration = (step['end_time'] - step['start_time']).total_seconds()
+                if step.get("start_time") and step.get("end_time"):
+                    duration = (step["end_time"] - step["start_time"]).total_seconds()
                     st.markdown(f"   ⏱️ {duration:.1f}s")
 
     def _render_completed_workflows_tab(self) -> None:
@@ -335,45 +335,43 @@ class RealTimeWorkflowVisualizer:
         base_time = datetime.now() - timedelta(hours=2)
 
         for i in range(24):  # Last 24 data points
-            performance_data.append({
-                'time': base_time + timedelta(minutes=i*5),
-                'duration': 120 + random.uniform(-20, 30),
-                'success_rate': 85 + random.uniform(-10, 10),
-                'throughput': 5 + random.uniform(-1, 2)
-            })
+            performance_data.append(
+                {
+                    "time": base_time + timedelta(minutes=i * 5),
+                    "duration": 120 + random.uniform(-20, 30),
+                    "success_rate": 85 + random.uniform(-10, 10),
+                    "throughput": 5 + random.uniform(-1, 2),
+                }
+            )
 
         df = pd.DataFrame(performance_data)
 
         # Duration trend
         fig = go.Figure()
 
-        fig.add_trace(go.Scatter(
-            x=df['time'],
-            y=df['duration'],
-            mode='lines+markers',
-            name='Avg Duration (s)',
-            line=dict(color='blue')
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=df["time"], y=df["duration"], mode="lines+markers", name="Avg Duration (s)", line=dict(color="blue")
+            )
+        )
 
-        fig.add_trace(go.Scatter(
-            x=df['time'],
-            y=df['success_rate'],
-            mode='lines+markers',
-            name='Success Rate (%)',
-            line=dict(color='green'),
-            yaxis='y2'
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=df["time"],
+                y=df["success_rate"],
+                mode="lines+markers",
+                name="Success Rate (%)",
+                line=dict(color="green"),
+                yaxis="y2",
+            )
+        )
 
         fig.update_layout(
             title="Workflow Performance Trends",
             xaxis_title="Time",
             yaxis_title="Duration (seconds)",
-            yaxis2=dict(
-                title="Success Rate (%)",
-                overlaying='y',
-                side='right'
-            ),
-            showlegend=True
+            yaxis2=dict(title="Success Rate (%)", overlaying="y", side="right"),
+            showlegend=True,
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -414,15 +412,16 @@ class RealTimeWorkflowVisualizer:
     def _calculate_workflow_success_rate(self, workflow: WorkflowState) -> float:
         """Calculate success rate for a workflow based on completed steps."""
         if not workflow.steps:
-            return 100.0 if workflow.status == 'completed' else 0.0
+            return 100.0 if workflow.status == "completed" else 0.0
 
-        completed_steps = sum(1 for step in workflow.steps if step.get('status') == 'completed')
+        completed_steps = sum(1 for step in workflow.steps if step.get("status") == "completed")
         return (completed_steps / len(workflow.steps)) * 100
 
     def _calculate_average_duration(self) -> float:
         """Calculate average duration of completed workflows."""
         completed_workflows = [
-            self.workflows[wid] for wid in self.completed_workflows
+            self.workflows[wid]
+            for wid in self.completed_workflows
             if wid in self.workflows and self.workflows[wid].actual_duration
         ]
 
@@ -443,42 +442,42 @@ class RealTimeWorkflowVisualizer:
     def _get_status_color(self, status: str) -> str:
         """Get color code for workflow status."""
         colors = {
-            'running': '#28a745',
-            'completed': '#007bff',
-            'failed': '#dc3545',
-            'pending': '#ffc107',
-            'paused': '#6c757d'
+            "running": "#28a745",
+            "completed": "#007bff",
+            "failed": "#dc3545",
+            "pending": "#ffc107",
+            "paused": "#6c757d",
         }
-        return colors.get(status.lower(), '#6c757d')
+        return colors.get(status.lower(), "#6c757d")
 
     def add_workflow_event_handler(self, event_type: str, handler: Callable) -> None:
         """Add an event handler for workflow events."""
         # This would integrate with the WebSocket event system
-        pass
 
-    def export_workflow_data(self, format: str = 'json') -> str:
+    def export_workflow_data(self, format: str = "json") -> str:
         """Export workflow data for external analysis."""
         export_data = {
-            'workflows': {
+            "workflows": {
                 wid: {
-                    'name': w.name,
-                    'status': w.status,
-                    'progress': w.progress,
-                    'start_time': w.start_time.isoformat() if w.start_time else None,
-                    'end_time': w.end_time.isoformat() if w.end_time else None,
-                    'duration': w.actual_duration,
-                    'steps': w.steps
+                    "name": w.name,
+                    "status": w.status,
+                    "progress": w.progress,
+                    "start_time": w.start_time.isoformat() if w.start_time else None,
+                    "end_time": w.end_time.isoformat() if w.end_time else None,
+                    "duration": w.actual_duration,
+                    "steps": w.steps,
                 }
                 for wid, w in self.workflows.items()
             },
-            'export_timestamp': datetime.now().isoformat(),
-            'total_workflows': len(self.workflows),
-            'active_workflows': len(self.active_workflows),
-            'completed_workflows': len(self.completed_workflows)
+            "export_timestamp": datetime.now().isoformat(),
+            "total_workflows": len(self.workflows),
+            "active_workflows": len(self.active_workflows),
+            "completed_workflows": len(self.completed_workflows),
         }
 
-        if format == 'json':
+        if format == "json":
             import json
+
             return json.dumps(export_data, indent=2, default=str)
         else:
             return str(export_data)
@@ -493,13 +492,13 @@ class RealTimeWorkflowVisualizer:
     def get_workflow_statistics(self) -> Dict[str, Any]:
         """Get comprehensive workflow statistics."""
         return {
-            'total_workflows': len(self.workflows),
-            'active_workflows': len(self.active_workflows),
-            'completed_workflows': len(self.completed_workflows),
-            'failed_workflows': len(self.failed_workflows),
-            'average_duration': self._calculate_average_duration(),
-            'overall_success_rate': self._calculate_overall_success_rate(),
-            'completion_rate': len(self.completed_workflows) / len(self.workflows) if self.workflows else 0
+            "total_workflows": len(self.workflows),
+            "active_workflows": len(self.active_workflows),
+            "completed_workflows": len(self.completed_workflows),
+            "failed_workflows": len(self.failed_workflows),
+            "average_duration": self._calculate_average_duration(),
+            "overall_success_rate": self._calculate_overall_success_rate(),
+            "completion_rate": len(self.completed_workflows) / len(self.workflows) if self.workflows else 0,
         }
 
 
@@ -509,9 +508,9 @@ def create_workflow_visualizer(config: Optional[WorkflowVisualizerConfig] = None
     return RealTimeWorkflowVisualizer(config)
 
 
-def render_realtime_workflow_monitor(simulation_id: Optional[str] = None,
-                                   title: str = "🔄 Real-Time Workflow Monitor") -> None:
+def render_realtime_workflow_monitor(
+    simulation_id: Optional[str] = None, title: str = "🔄 Real-Time Workflow Monitor"
+) -> None:
     """Render a real-time workflow monitor component."""
     visualizer = RealTimeWorkflowVisualizer()
     visualizer.render_workflow_visualizer(title=title)
-

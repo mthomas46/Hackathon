@@ -17,6 +17,7 @@ Features Demonstrated:
 """
 
 import asyncio
+
 from rich.console import Console
 from rich.table import Table
 
@@ -27,14 +28,10 @@ def simulate_service_health_response(service_name: str, healthy: bool = True):
         return {
             "status": "healthy",
             "response": {"version": "1.0.0", "uptime": 3600},
-            "timestamp": asyncio.get_event_loop().time()
+            "timestamp": asyncio.get_event_loop().time(),
         }
     else:
-        return {
-            "status": "unreachable",
-            "error": "Connection refused",
-            "timestamp": asyncio.get_event_loop().time()
-        }
+        return {"status": "unreachable", "error": "Connection refused", "timestamp": asyncio.get_event_loop().time()}
 
 
 def format_health_status(service_name: str, health_data: dict) -> tuple[str, str]:
@@ -61,10 +58,20 @@ class DemoServiceHealth:
     def __init__(self):
         self.console = Console()
         self.services = [
-            "Orchestrator", "Analysis Service", "Doc Store", "Source Agent",
-            "Prompt Store", "Discovery Agent", "Interpreter", "Frontend",
-            "Summarizer Hub", "Secure Analyzer", "Memory Agent", "Code Analyzer",
-            "Log Collector", "Notification Service"
+            "Orchestrator",
+            "Analysis Service",
+            "Doc Store",
+            "Source Agent",
+            "Prompt Store",
+            "Discovery Agent",
+            "Interpreter",
+            "Frontend",
+            "Summarizer Hub",
+            "Secure Analyzer",
+            "Memory Agent",
+            "Code Analyzer",
+            "Log Collector",
+            "Notification Service",
         ]
 
     async def demo_service_health_checking(self):
@@ -145,7 +152,7 @@ class DemoServiceHealth:
             ("2", "Check Specific Service - Test individual service connectivity"),
             ("3", "System Diagnostics - Comprehensive system health check"),
             ("4", "Service Dependencies - View which services depend on others"),
-            ("5", "Configuration Overview - Display current settings")
+            ("5", "Configuration Overview - Display current settings"),
         ]
 
         settings_table = Table(title="Settings Menu", border_style="cyan")

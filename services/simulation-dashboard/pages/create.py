@@ -1,4 +1,5 @@
-"""Create Simulation Page.
+"""
+Create Simulation Page.
 
 This module provides the simulation creation page with guided setup,
 configuration management, and validation.
@@ -41,61 +42,52 @@ def render_create_page():
         name = st.text_input(
             "Simulation Name *",
             placeholder="e.g., E-commerce Platform Development",
-            help="Choose a descriptive name for your simulation"
+            help="Choose a descriptive name for your simulation",
         )
 
-        description = st.text_area(
-            "Description",
-            placeholder="Describe the project and its goals...",
-            height=80
-        )
+        description = st.text_area("Description", placeholder="Describe the project and its goals...", height=80)
 
         col1, col2 = st.columns(2)
         with col1:
             sim_type = st.selectbox(
                 "Project Type *",
-                options=["web_application", "mobile_app", "api_service", "data_pipeline", "microservices", "ai_ml_project"],
+                options=[
+                    "web_application",
+                    "mobile_app",
+                    "api_service",
+                    "data_pipeline",
+                    "microservices",
+                    "ai_ml_project",
+                ],
                 format_func=lambda x: x.replace("_", " ").title(),
-                help="Select the type of project to simulate"
+                help="Select the type of project to simulate",
             )
 
             complexity = st.selectbox(
                 "Complexity Level *",
                 options=["low", "medium", "high"],
                 format_func=lambda x: x.title(),
-                help="Choose the complexity level for realistic simulation"
+                help="Choose the complexity level for realistic simulation",
             )
 
         with col2:
-            team_size = st.slider(
-                "Team Size",
-                min_value=1,
-                max_value=20,
-                value=5,
-                help="Number of team members"
-            )
+            team_size = st.slider("Team Size", min_value=1, max_value=20, value=5, help="Number of team members")
 
             duration = st.slider(
-                "Duration (weeks)",
-                min_value=1,
-                max_value=52,
-                value=8,
-                help="Estimated project duration"
+                "Duration (weeks)", min_value=1, max_value=52, value=8, help="Estimated project duration"
             )
 
         # Advanced options
         with st.expander("Advanced Options"):
             enable_ecosystem = st.checkbox(
-                "Enable Ecosystem Integration",
-                value=True,
-                help="Integrate with ecosystem services"
+                "Enable Ecosystem Integration", value=True, help="Integrate with ecosystem services"
             )
 
             output_formats = st.multiselect(
                 "Report Formats",
                 options=["json", "html", "pdf", "markdown"],
                 default=["json", "html"],
-                help="Select output formats for reports"
+                help="Select output formats for reports",
             )
 
         # Submit button
@@ -109,14 +101,14 @@ def render_create_page():
             else:
                 # Create simulation
                 simulation_data = {
-                    'name': name,
-                    'description': description,
-                    'type': sim_type,
-                    'complexity': complexity,
-                    'team_size': team_size,
-                    'duration_weeks': duration,
-                    'enable_ecosystem': enable_ecosystem,
-                    'output_formats': output_formats
+                    "name": name,
+                    "description": description,
+                    "type": sim_type,
+                    "complexity": complexity,
+                    "team_size": team_size,
+                    "duration_weeks": duration,
+                    "enable_ecosystem": enable_ecosystem,
+                    "output_formats": output_formats,
                 }
 
                 create_simulation(simulation_data)
@@ -125,14 +117,14 @@ def render_create_page():
 def create_quick_simulation(sim_type: str, name: str):
     """Create a quick simulation with default settings."""
     simulation_data = {
-        'name': name,
-        'description': f"Quick {sim_type.replace('_', ' ').title()} simulation",
-        'type': sim_type,
-        'complexity': 'medium',
-        'team_size': 5,
-        'duration_weeks': 8,
-        'enable_ecosystem': True,
-        'output_formats': ['json', 'html']
+        "name": name,
+        "description": f"Quick {sim_type.replace('_', ' ').title()} simulation",
+        "type": sim_type,
+        "complexity": "medium",
+        "team_size": 5,
+        "duration_weeks": 8,
+        "enable_ecosystem": True,
+        "output_formats": ["json", "html"],
     }
 
     create_simulation(simulation_data)

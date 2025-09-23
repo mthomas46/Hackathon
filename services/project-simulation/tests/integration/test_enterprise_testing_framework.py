@@ -1,27 +1,22 @@
-"""Integration Tests for Enterprise Testing Framework Validation.
+"""
+Integration Tests for Enterprise Testing Framework Validation.
 
-This module contains comprehensive tests for validating the enterprise testing framework,
-including unit test validation, mocking patterns, test fixtures, and performance benchmarking.
+This module contains comprehensive tests for validating the enterprise
+testing framework, including unit test validation, mocking patterns,
+test fixtures, and performance benchmarking.
 """
 
-import pytest
 import time
-import psutil
-import os
-import subprocess
-import sys
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from typing import Dict, Any, List, Optional
-import json
-import tempfile
-import shutil
 
+import psutil
+import pytest
 from fastapi.testclient import TestClient
 
 
 class TestUnitTestFrameworkValidation:
-    """Test cases for validating the unit test framework setup and functionality."""
+    """Test cases for validating the unit test framework setup and
+    functionality."""
 
     def test_pytest_configuration_validation(self):
         """Test that pytest is properly configured."""
@@ -29,7 +24,7 @@ class TestUnitTestFrameworkValidation:
         pytest_ini_path = Path(__file__).parent.parent.parent / "pytest.ini"
         assert pytest_ini_path.exists()
 
-        with open(pytest_ini_path, 'r') as f:
+        with open(pytest_ini_path, "r") as f:
             content = f.read()
 
         # Should have proper pytest configuration
@@ -49,7 +44,7 @@ class TestUnitTestFrameworkValidation:
         assert len(test_files) > 10, f"Expected > 10 test files, found {len(test_files)}"
 
         # Should have tests in different categories
-        categories = ['unit', 'integration', 'functional', 'api']
+        categories = ["unit", "integration", "functional", "api"]
         found_categories = set()
 
         for test_file in test_files:
@@ -70,11 +65,11 @@ class TestUnitTestFrameworkValidation:
             filename = test_file.name
 
             # Should start with 'test_'
-            if not filename.startswith('test_'):
+            if not filename.startswith("test_"):
                 naming_issues.append(f"{filename}: Should start with 'test_'")
 
             # Should end with '.py'
-            if not filename.endswith('.py'):
+            if not filename.endswith(".py"):
                 naming_issues.append(f"{filename}: Should end with '.py'")
 
             # Should use underscores, not camelCase
@@ -82,7 +77,7 @@ class TestUnitTestFrameworkValidation:
                 naming_issues.append(f"{filename}: Should use underscores, not camelCase")
 
         # Allow some flexibility but ensure basic conventions
-        critical_issues = [issue for issue in naming_issues if 'Should start with' in issue]
+        critical_issues = [issue for issue in naming_issues if "Should start with" in issue]
         assert len(critical_issues) == 0, f"Critical naming issues: {critical_issues}"
 
     def test_test_isolation_validation(self):
@@ -96,15 +91,15 @@ class TestUnitTestFrameworkValidation:
         isolation_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for global variable modifications
-            if 'global ' in content:
+            if "global " in content:
                 isolation_patterns.append(f"{test_file.name}: Uses global variables")
 
             # Check for shared fixtures that might cause issues
-            if 'shared_' in content and 'fixture' in content:
+            if "shared_" in content and "fixture" in content:
                 isolation_patterns.append(f"{test_file.name}: Uses shared fixtures")
 
         # While these patterns might be acceptable, we should be aware of them
@@ -122,15 +117,15 @@ class TestMockingPatternsValidation:
         mock_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for unittest.mock usage
-            if 'from unittest.mock import' in content:
+            if "from unittest.mock import" in content:
                 mock_patterns.append(f"{test_file.name}: Uses unittest.mock")
 
             # Check for pytest mocking
-            if 'monkeypatch' in content or 'mocker' in content:
+            if "monkeypatch" in content or "mocker" in content:
                 mock_patterns.append(f"{test_file.name}: Uses pytest mocking")
 
         # Should have some mocking usage
@@ -145,14 +140,14 @@ class TestMockingPatternsValidation:
         cleanup_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for context managers or cleanup methods
-            if 'with patch' in content or 'mock.patch' in content:
+            if "with patch" in content or "mock.patch" in content:
                 cleanup_patterns.append(f"{test_file.name}: Uses context manager mocking")
 
-            if 'addCleanup' in content or 'tearDown' in content:
+            if "addCleanup" in content or "tearDown" in content:
                 cleanup_patterns.append(f"{test_file.name}: Uses cleanup methods")
 
         # Should have some cleanup patterns
@@ -166,17 +161,17 @@ class TestMockingPatternsValidation:
         assertion_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for assertion patterns
-            if 'assert_called' in content:
+            if "assert_called" in content:
                 assertion_patterns.append(f"{test_file.name}: Uses assert_called")
 
-            if 'assert_called_once' in content:
+            if "assert_called_once" in content:
                 assertion_patterns.append(f"{test_file.name}: Uses assert_called_once")
 
-            if 'assert_not_called' in content:
+            if "assert_not_called" in content:
                 assertion_patterns.append(f"{test_file.name}: Uses assert_not_called")
 
         # Should have some assertion patterns
@@ -191,25 +186,25 @@ class TestTestFixturesValidation:
         conftest_path = Path(__file__).parent.parent / "conftest.py"
         assert conftest_path.exists()
 
-        with open(conftest_path, 'r') as f:
+        with open(conftest_path, "r") as f:
             content = f.read()
 
         # Should have pytest fixtures
-        assert '@pytest.fixture' in content or 'def ' in content
+        assert "@pytest.fixture" in content or "def " in content
         # Should have test client setup
-        assert 'test_client' in content or 'TestClient' in content
+        assert "test_client" in content or "TestClient" in content
 
     def test_fixture_isolation(self):
         """Test that fixtures are properly isolated."""
         conftest_path = Path(__file__).parent.parent / "conftest.py"
 
-        with open(conftest_path, 'r') as f:
+        with open(conftest_path, "r") as f:
             content = f.read()
 
         # Check for fixture scoping
-        if '@pytest.fixture' in content:
+        if "@pytest.fixture" in content:
             # Should have proper scoping
-            if 'scope=' in content:
+            if "scope=" in content:
                 assert True  # Has explicit scoping
             else:
                 # Default scope is function, which is usually fine
@@ -219,11 +214,11 @@ class TestTestFixturesValidation:
         """Test that shared fixtures are properly implemented."""
         conftest_path = Path(__file__).parent.parent / "conftest.py"
 
-        with open(conftest_path, 'r') as f:
+        with open(conftest_path, "r") as f:
             content = f.read()
 
         # Should have some shared setup
-        assert 'sys.path' in content or 'import' in content
+        assert "sys.path" in content or "import" in content
 
 
 class TestPerformanceBenchmarking:
@@ -273,16 +268,16 @@ class TestPerformanceBenchmarking:
         issues = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for global state modifications
-            if 'global ' in content and 'test_' in content:
+            if "global " in content and "test_" in content:
                 parallel_ready = False
                 issues.append(f"{test_file.name}: Modifies global state")
 
             # Check for shared resources without proper locking
-            if ('file' in content or 'database' in content) and 'lock' not in content:
+            if ("file" in content or "database" in content) and "lock" not in content:
                 # This is a potential issue but not necessarily critical
                 pass
 
@@ -299,11 +294,11 @@ class TestTestCoverageValidation:
         """Test that coverage is properly configured."""
         pytest_ini_path = Path(__file__).parent.parent.parent / "pytest.ini"
 
-        with open(pytest_ini_path, 'r') as f:
+        with open(pytest_ini_path, "r") as f:
             content = f.read()
 
         # Should have coverage configuration
-        coverage_config = any(marker in content for marker in ['--cov', 'coverage', 'cov-report'])
+        coverage_config = any(marker in content for marker in ["--cov", "coverage", "cov-report"])
         if coverage_config:
             assert True
         else:
@@ -330,12 +325,12 @@ class TestTestQualityMetrics:
 
         # Count test lines
         for test_file in test_dir.rglob("*.py"):
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 test_lines += len(f.readlines())
 
         # Count source lines
         for source_file in source_dir.rglob("*.py"):
-            with open(source_file, 'r') as f:
+            with open(source_file, "r") as f:
                 source_lines += len(f.readlines())
 
         if source_lines > 0:
@@ -366,7 +361,7 @@ class TestCIIntegrationValidation:
             assert len(workflow_files) > 0, "No workflow files found"
 
             # Should have CI workflow
-            ci_workflows = [f for f in workflow_files if 'ci' in f.name.lower() or 'test' in f.name.lower()]
+            ci_workflows = [f for f in workflow_files if "ci" in f.name.lower() or "test" in f.name.lower()]
             assert len(ci_workflows) > 0, "No CI/test workflows found"
         else:
             pytest.skip("GitHub Actions workflows directory not found")
@@ -376,12 +371,12 @@ class TestCIIntegrationValidation:
         dockerfile_path = Path(__file__).parent.parent.parent / "Dockerfile"
 
         if dockerfile_path.exists():
-            with open(dockerfile_path, 'r') as f:
+            with open(dockerfile_path, "r") as f:
                 content = f.read()
 
             # Should have Python and testing setup
-            assert 'python' in content.lower()
-            assert 'pip' in content.lower()
+            assert "python" in content.lower()
+            assert "pip" in content.lower()
         else:
             pytest.skip("Dockerfile not found")
 
@@ -398,11 +393,11 @@ class TestEnterpriseTestingStandards:
         total_test_functions = 0
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Count test functions
-            test_functions = len([line for line in content.split('\n') if line.strip().startswith('def test_')])
+            test_functions = len([line for line in content.split("\n") if line.strip().startswith("def test_")])
             total_test_functions += test_functions
 
             # Count docstrings
@@ -423,16 +418,16 @@ class TestEnterpriseTestingStandards:
         assertion_patterns = []
 
         for test_file in test_files:
-            with open(test_file, 'r') as f:
+            with open(test_file, "r") as f:
                 content = f.read()
 
             # Check for different assertion types
-            if 'assert ' in content:
-                assertion_patterns.append('assert')
-            if 'pytest.raises' in content:
-                assertion_patterns.append('pytest.raises')
-            if 'assert_called' in content:
-                assertion_patterns.append('mock_assert')
+            if "assert " in content:
+                assertion_patterns.append("assert")
+            if "pytest.raises" in content:
+                assertion_patterns.append("pytest.raises")
+            if "assert_called" in content:
+                assertion_patterns.append("mock_assert")
 
         # Should have variety in assertion patterns
         assert len(set(assertion_patterns)) > 1, "Limited assertion pattern variety"
@@ -443,13 +438,11 @@ class TestEnterpriseTestingStandards:
 def test_client():
     """Create test client for API testing."""
     from main import app
+
     return TestClient(app)
 
 
 @pytest.fixture(scope="session")
 def performance_metrics():
     """Collect performance metrics for the test session."""
-    return {
-        'start_time': time.time(),
-        'initial_memory': psutil.Process().memory_info().rss / 1024 / 1024  # MB
-    }
+    return {"start_time": time.time(), "initial_memory": psutil.Process().memory_info().rss / 1024 / 1024}  # MB

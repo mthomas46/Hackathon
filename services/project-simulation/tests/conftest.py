@@ -1,15 +1,18 @@
-"""Shared test configuration and fixtures for Project Simulation Service.
+"""
+Shared test configuration and fixtures for Project Simulation Service.
 
-Provides common test setup, fixtures, and utilities reused across all test layers.
-Follows established ecosystem testing patterns for consistency and maintainability.
+Provides common test setup, fixtures, and utilities reused across all
+test layers. Follows established ecosystem testing patterns for
+consistency and maintainability.
 """
 
-import pytest
 import asyncio
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional, AsyncGenerator
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any, Dict, List
+from unittest.mock import AsyncMock
+
+import pytest
 
 # Add the services path to Python path
 services_path = Path(__file__).parent.parent.parent.parent / "services"
@@ -23,49 +26,54 @@ sys.path.insert(0, str(project_sim_path))
 import types
 
 # Mock services.shared module
-shared_mock = types.ModuleType('services.shared')
-sys.modules['services.shared'] = shared_mock
+shared_mock = types.ModuleType("services.shared")
+sys.modules["services.shared"] = shared_mock
 
 # Mock services.shared.core
-shared_core = types.ModuleType('services.shared.core')
-sys.modules['services.shared.core'] = shared_core
+shared_core = types.ModuleType("services.shared.core")
+sys.modules["services.shared.core"] = shared_core
 
 # Mock services.shared.core.responses
-shared_responses = types.ModuleType('services.shared.core.responses')
-sys.modules['services.shared.core.responses'] = shared_responses
+shared_responses = types.ModuleType("services.shared.core.responses")
+sys.modules["services.shared.core.responses"] = shared_responses
 
 # Mock services.shared.utilities
-shared_utilities = types.ModuleType('services.shared.utilities')
-sys.modules['services.shared.utilities'] = shared_utilities
+shared_utilities = types.ModuleType("services.shared.utilities")
+sys.modules["services.shared.utilities"] = shared_utilities
 
 # Mock integrations.clients
-integrations_mock = types.ModuleType('integrations')
-integrations_clients = types.ModuleType('integrations.clients')
+integrations_mock = types.ModuleType("integrations")
+integrations_clients = types.ModuleType("integrations.clients")
+
 
 # Add ServiceClients class to integrations.clients
 class MockServiceClients:
     pass
 
+
 integrations_clients.ServiceClients = MockServiceClients
 
-sys.modules['integrations'] = integrations_mock
-sys.modules['integrations.clients'] = integrations_clients
+sys.modules["integrations"] = integrations_mock
+sys.modules["integrations.clients"] = integrations_clients
 
 # Mock utilities.resilience
-utilities_mock = types.ModuleType('utilities')
-utilities_resilience = types.ModuleType('utilities.resilience')
+utilities_mock = types.ModuleType("utilities")
+utilities_resilience = types.ModuleType("utilities.resilience")
+
 
 # Add CircuitBreaker class to utilities.resilience
 class MockCircuitBreaker:
     pass
 
+
 utilities_resilience.CircuitBreaker = MockCircuitBreaker
 
-sys.modules['utilities'] = utilities_mock
-sys.modules['utilities.resilience'] = utilities_resilience
+sys.modules["utilities"] = utilities_mock
+sys.modules["utilities.resilience"] = utilities_resilience
 
 # Simple test configuration for integration tests
 # We'll mock the app and other dependencies for now
+
 
 # Define TeamMemberRole for testing if not available
 class TeamMemberRole:
@@ -77,6 +85,7 @@ class TeamMemberRole:
 # ============================================================================
 # SHARED FIXTURES - Reused across test layers
 # ============================================================================
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -97,7 +106,7 @@ def sample_project_config() -> Dict[str, Any]:
         "complexity": "complex",
         "duration_weeks": 12,
         "budget": 250000,
-        "technologies": ["Python", "FastAPI", "React", "PostgreSQL", "Redis", "Docker"]
+        "technologies": ["Python", "FastAPI", "React", "PostgreSQL", "Redis", "Docker"],
     }
 
 
@@ -111,7 +120,7 @@ def sample_team_members() -> List[Dict[str, Any]]:
             "role": TeamMemberRole.DEVELOPER,
             "experience_years": 5,
             "skills": ["Python", "FastAPI", "React", "PostgreSQL"],
-            "productivity_factor": 1.2
+            "productivity_factor": 1.2,
         },
         {
             "member_id": "qa_001",
@@ -119,7 +128,7 @@ def sample_team_members() -> List[Dict[str, Any]]:
             "role": TeamMemberRole.QA_ENGINEER,
             "experience_years": 3,
             "skills": ["Selenium", "pytest", "Postman", "Jira"],
-            "productivity_factor": 1.0
+            "productivity_factor": 1.0,
         },
         {
             "member_id": "pm_001",
@@ -127,8 +136,8 @@ def sample_team_members() -> List[Dict[str, Any]]:
             "role": TeamMemberRole.PRODUCT_OWNER,
             "experience_years": 7,
             "skills": ["Agile", "Scrum", "Product Strategy", "Stakeholder Management"],
-            "productivity_factor": 0.9
-        }
+            "productivity_factor": 0.9,
+        },
     ]
 
 
@@ -140,25 +149,25 @@ def mock_ecosystem_clients():
         "analysis_service": AsyncMock(),
         "interpreter": AsyncMock(),
         "doc_store": AsyncMock(),
-        "llm_gateway": AsyncMock()
+        "llm_gateway": AsyncMock(),
     }
 
     # Configure common mock responses
     clients["mock_data_generator"].generate_content.return_value = {
         "content": "Mock generated content",
-        "metadata": {"quality_score": 0.85}
+        "metadata": {"quality_score": 0.85},
     }
 
     clients["analysis_service"].analyze_document_quality.return_value = {
         "overall_score": 0.82,
         "issues": [],
-        "recommendations": ["Good documentation quality"]
+        "recommendations": ["Good documentation quality"],
     }
 
     clients["interpreter"].generate_insight_content.return_value = {
         "title": "Test Insight",
         "description": "Mock insight content",
-        "recommendations": ["Test recommendation"]
+        "recommendations": ["Test recommendation"],
     }
 
     return clients
@@ -167,6 +176,7 @@ def mock_ecosystem_clients():
 # ============================================================================
 # TEST CONFIGURATION - Environment setup
 # ============================================================================
+
 
 def pytest_configure(config):
     """Configure pytest with custom markers."""
@@ -192,7 +202,6 @@ def setup_test_environment():
     yield
 
     # Cleanup environment variables after all tests
-    pass
 
 
 @pytest.fixture
@@ -200,8 +209,9 @@ def test_client():
     """Create a test client for API testing."""
     try:
         # Try to import the actual FastAPI app
-        from main import app
         from fastapi.testclient import TestClient
+        from main import app
+
         return TestClient(app)
     except ImportError:
         # Fallback: create a mock test client
@@ -230,6 +240,7 @@ def test_client():
 
 class MockResponse:
     """Mock response object for testing."""
+
     def __init__(self, status_code, json_data):
         self.status_code = status_code
         self._json_data = json_data

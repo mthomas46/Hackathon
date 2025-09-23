@@ -1,10 +1,9 @@
 """Sentiment analyzer adapter for external sentiment analysis services."""
 
-import asyncio
-from typing import Dict, Any, Optional
-from abc import ABC, abstractmethod
 import time
+from abc import ABC, abstractmethod
 from enum import Enum
+from typing import Any, Dict, Optional
 
 from ...domain.exceptions import SentimentAnalysisException
 from ..config import ExternalServiceConfig
@@ -12,6 +11,7 @@ from ..config import ExternalServiceConfig
 
 class SentimentLabel(Enum):
     """Sentiment labels."""
+
     POSITIVE = "positive"
     NEGATIVE = "negative"
     NEUTRAL = "neutral"
@@ -20,13 +20,15 @@ class SentimentLabel(Enum):
 class SentimentAnalysisResult:
     """Result of sentiment analysis."""
 
-    def __init__(self,
-                 document_id: str,
-                 sentiment: SentimentLabel,
-                 confidence: float,
-                 scores: Optional[Dict[str, float]] = None,
-                 aspects: Optional[Dict[str, Any]] = None,
-                 processing_time: float = 0.0):
+    def __init__(
+        self,
+        document_id: str,
+        sentiment: SentimentLabel,
+        confidence: float,
+        scores: Optional[Dict[str, float]] = None,
+        aspects: Optional[Dict[str, Any]] = None,
+        processing_time: float = 0.0,
+    ):
         """Initialize sentiment analysis result."""
         self.document_id = document_id
         self.sentiment = sentiment
@@ -38,12 +40,12 @@ class SentimentAnalysisResult:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'document_id': self.document_id,
-            'sentiment': self.sentiment.value,
-            'confidence': self.confidence,
-            'scores': self.scores,
-            'aspects': self.aspects,
-            'processing_time': self.processing_time
+            "document_id": self.document_id,
+            "sentiment": self.sentiment.value,
+            "confidence": self.confidence,
+            "scores": self.scores,
+            "aspects": self.aspects,
+            "processing_time": self.processing_time,
         }
 
 
@@ -58,17 +60,14 @@ class SentimentAnalyzerAdapter(ABC):
     @abstractmethod
     async def analyze_sentiment(self, document_text: str, document_id: str) -> SentimentAnalysisResult:
         """Analyze sentiment of document."""
-        pass
 
     @abstractmethod
     async def analyze_tone(self, document_text: str, document_id: str) -> Dict[str, Any]:
         """Analyze tone and writing style of document."""
-        pass
 
     @abstractmethod
     def is_available(self) -> bool:
         """Check if the service is available."""
-        pass
 
 
 class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
@@ -77,7 +76,7 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
     def __init__(self, config: ExternalServiceConfig):
         """Initialize local sentiment analyzer."""
         super().__init__(config)
-        self.confidence_threshold = config.get_sentiment_config().get('confidence_threshold', 0.6)
+        self.confidence_threshold = config.get_sentiment_config().get("confidence_threshold", 0.6)
 
     async def analyze_sentiment(self, document_text: str, document_id: str) -> SentimentAnalysisResult:
         """Analyze sentiment using basic text processing."""
@@ -85,8 +84,8 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
 
         try:
             # Simple sentiment analysis based on keyword matching
-            positive_words = {'good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'love', 'like', 'best'}
-            negative_words = {'bad', 'terrible', 'awful', 'hate', 'worst', 'poor', 'disappointing', 'fail'}
+            positive_words = {"good", "great", "excellent", "amazing", "wonderful", "fantastic", "love", "like", "best"}
+            negative_words = {"bad", "terrible", "awful", "hate", "worst", "poor", "disappointing", "fail"}
 
             words = document_text.lower().split()
             positive_count = sum(1 for word in words if word in positive_words)
@@ -113,11 +112,7 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
                     sentiment = SentimentLabel.NEUTRAL
                     confidence = neutral_score
 
-            scores = {
-                'positive': positive_score,
-                'negative': negative_score,
-                'neutral': neutral_score
-            }
+            scores = {"positive": positive_score, "negative": negative_score, "neutral": neutral_score}
 
             processing_time = time.time() - start_time
 
@@ -126,7 +121,7 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
                 sentiment=sentiment,
                 confidence=min(confidence, 1.0),  # Cap at 1.0
                 scores=scores,
-                processing_time=processing_time
+                processing_time=processing_time,
             )
 
         except Exception as e:
@@ -138,8 +133,8 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
         text_lower = document_text.lower()
 
         # Check for formal vs informal language
-        formal_indicators = ['therefore', 'however', 'consequently', 'moreover', 'furthermore', 'accordingly']
-        informal_indicators = ['like', 'kinda', 'sorta', 'totally', 'awesome', 'cool']
+        formal_indicators = ["therefore", "however", "consequently", "moreover", "furthermore", "accordingly"]
+        informal_indicators = ["like", "kinda", "sorta", "totally", "awesome", "cool"]
 
         formal_count = sum(1 for word in formal_indicators if word in text_lower)
         informal_count = sum(1 for word in informal_indicators if word in text_lower)
@@ -155,12 +150,12 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
             confidence = 0.5
 
         return {
-            'document_id': document_id,
-            'tone': tone,
-            'confidence': confidence,
-            'formal_indicators': formal_count,
-            'informal_indicators': informal_count,
-            'readability_score': self._calculate_readability(text_lower)
+            "document_id": document_id,
+            "tone": tone,
+            "confidence": confidence,
+            "formal_indicators": formal_count,
+            "informal_indicators": informal_count,
+            "readability_score": self._calculate_readability(text_lower),
         }
 
     def is_available(self) -> bool:
@@ -169,7 +164,7 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
 
     def _calculate_readability(self, text: str) -> float:
         """Calculate basic readability score."""
-        sentences = text.split('.')
+        sentences = text.split(".")
         words = text.split()
         avg_words_per_sentence = len(words) / len(sentences) if sentences else 0
 
@@ -188,8 +183,8 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
     def __init__(self, config: ExternalServiceConfig):
         """Initialize transformers sentiment analyzer."""
         super().__init__(config)
-        self.model_name = config.get_sentiment_config().get('model', 'cardiffnlp/twitter-roberta-base-sentiment-latest')
-        self.confidence_threshold = config.get_sentiment_config().get('confidence_threshold', 0.6)
+        self.model_name = config.get_sentiment_config().get("model", "cardiffnlp/twitter-roberta-base-sentiment-latest")
+        self.confidence_threshold = config.get_sentiment_config().get("confidence_threshold", 0.6)
         self._model = None  # Lazy loading
 
     async def analyze_sentiment(self, document_text: str, document_id: str) -> SentimentAnalysisResult:
@@ -211,10 +206,10 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
 
             return SentimentAnalysisResult(
                 document_id=document_id,
-                sentiment=SentimentLabel(sentiment_result['label'].lower()),
-                confidence=sentiment_result['confidence'],
-                scores=sentiment_result['scores'],
-                processing_time=processing_time
+                sentiment=SentimentLabel(sentiment_result["label"].lower()),
+                confidence=sentiment_result["confidence"],
+                scores=sentiment_result["scores"],
+                processing_time=processing_time,
             )
 
         except Exception as e:
@@ -225,14 +220,10 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
         try:
             # Mock tone analysis
             return {
-                'document_id': document_id,
-                'tone': 'professional',  # Mock result
-                'confidence': 0.85,
-                'style_features': {
-                    'formality': 0.8,
-                    'objectivity': 0.7,
-                    'technical_level': 0.6
-                }
+                "document_id": document_id,
+                "tone": "professional",  # Mock result
+                "confidence": 0.85,
+                "style_features": {"formality": 0.8, "objectivity": 0.7, "technical_level": 0.6},
             }
         except Exception as e:
             raise SentimentAnalysisException("TransformersSentimentAnalyzer", str(e))
@@ -240,7 +231,8 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
     def is_available(self) -> bool:
         """Check if transformers service is available."""
         try:
-            import transformers
+            pass
+
             return True
         except ImportError:
             return False
@@ -258,11 +250,7 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
         """Analyze text with the loaded model."""
         # Mock implementation - in real code, this would use the actual model
         return {
-            'label': 'POSITIVE',  # Mock positive sentiment
-            'confidence': 0.89,
-            'scores': {
-                'POSITIVE': 0.89,
-                'NEGATIVE': 0.08,
-                'NEUTRAL': 0.03
-            }
+            "label": "POSITIVE",  # Mock positive sentiment
+            "confidence": 0.89,
+            "scores": {"POSITIVE": 0.89, "NEGATIVE": 0.08, "NEUTRAL": 0.03},
         }

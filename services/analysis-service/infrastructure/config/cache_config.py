@@ -1,8 +1,8 @@
 """Cache configuration management."""
 
 import os
-from typing import Optional
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -33,21 +33,21 @@ class CacheConfig:
     max_retries: int = 3
 
     @classmethod
-    def from_env(cls) -> 'CacheConfig':
+    def from_env(cls) -> "CacheConfig":
         """Create configuration from environment variables."""
         return cls(
-            redis_host=os.getenv('REDIS_HOST', 'localhost'),
-            redis_port=int(os.getenv('REDIS_PORT', '6379')),
-            redis_db=int(os.getenv('REDIS_DB', '0')),
-            redis_password=os.getenv('REDIS_PASSWORD'),
-            redis_ssl=os.getenv('REDIS_SSL', 'false').lower() == 'true',
-            default_ttl=int(os.getenv('CACHE_DEFAULT_TTL', '3600')),
-            max_memory=os.getenv('CACHE_MAX_MEMORY', '256mb'),
-            enable_compression=os.getenv('CACHE_ENABLE_COMPRESSION', 'true').lower() == 'true',
-            connection_pool_size=int(os.getenv('CACHE_POOL_SIZE', '10')),
-            connection_timeout=int(os.getenv('CACHE_CONNECTION_TIMEOUT', '5')),
-            retry_on_timeout=os.getenv('CACHE_RETRY_ON_TIMEOUT', 'true').lower() == 'true',
-            max_retries=int(os.getenv('CACHE_MAX_RETRIES', '3'))
+            redis_host=os.getenv("REDIS_HOST", "localhost"),
+            redis_port=int(os.getenv("REDIS_PORT", "6379")),
+            redis_db=int(os.getenv("REDIS_DB", "0")),
+            redis_password=os.getenv("REDIS_PASSWORD"),
+            redis_ssl=os.getenv("REDIS_SSL", "false").lower() == "true",
+            default_ttl=int(os.getenv("CACHE_DEFAULT_TTL", "3600")),
+            max_memory=os.getenv("CACHE_MAX_MEMORY", "256mb"),
+            enable_compression=os.getenv("CACHE_ENABLE_COMPRESSION", "true").lower() == "true",
+            connection_pool_size=int(os.getenv("CACHE_POOL_SIZE", "10")),
+            connection_timeout=int(os.getenv("CACHE_CONNECTION_TIMEOUT", "5")),
+            retry_on_timeout=os.getenv("CACHE_RETRY_ON_TIMEOUT", "true").lower() == "true",
+            max_retries=int(os.getenv("CACHE_MAX_RETRIES", "3")),
         )
 
     def get_redis_url(self) -> str:
@@ -75,15 +75,15 @@ class CacheConfig:
     def get_connection_config(self) -> dict:
         """Get Redis connection configuration."""
         config = {
-            'host': self.redis_host,
-            'port': self.redis_port,
-            'db': self.redis_db,
-            'password': self.redis_password,
-            'ssl': self.redis_ssl,
-            'socket_connect_timeout': self.connection_timeout,
-            'socket_timeout': self.connection_timeout,
-            'retry_on_timeout': self.retry_on_timeout,
-            'max_connections': self.connection_pool_size
+            "host": self.redis_host,
+            "port": self.redis_port,
+            "db": self.redis_db,
+            "password": self.redis_password,
+            "ssl": self.redis_ssl,
+            "socket_connect_timeout": self.connection_timeout,
+            "socket_timeout": self.connection_timeout,
+            "retry_on_timeout": self.retry_on_timeout,
+            "max_connections": self.connection_pool_size,
         }
 
         # Remove None values
@@ -92,10 +92,10 @@ class CacheConfig:
     def get_cache_config(self) -> dict:
         """Get cache configuration."""
         return {
-            'default_ttl': self.default_ttl,
-            'max_memory': self.max_memory,
-            'enable_compression': self.enable_compression,
-            'max_retries': self.max_retries
+            "default_ttl": self.default_ttl,
+            "max_memory": self.max_memory,
+            "enable_compression": self.enable_compression,
+            "max_retries": self.max_retries,
         }
 
     def validate(self) -> list[str]:

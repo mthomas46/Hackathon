@@ -1,11 +1,11 @@
-"""Service Discovery Domain Service"""
+"""Service Discovery Domain Service."""
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from ..entities.service import Service
-from ..value_objects.service_id import ServiceId
 from ..value_objects.service_capability import ServiceCapability
 from ..value_objects.service_endpoint import ServiceEndpoint
+from ..value_objects.service_id import ServiceId
 
 
 class ServiceDiscoveryService:
@@ -25,7 +25,7 @@ class ServiceDiscoveryService:
                 service_id=service_id,
                 name=definition["name"],
                 description=definition["description"],
-                category=definition["category"]
+                category=definition["category"],
             )
 
             # Add capabilities
@@ -99,7 +99,7 @@ class ServiceDiscoveryService:
             return None
 
         # Look for health endpoints
-        health_endpoints = [ep for ep in service.endpoints if 'health' in ep.path.lower()]
+        health_endpoints = [ep for ep in service.endpoints if "health" in ep.path.lower()]
         if health_endpoints:
             return f"{service.base_url or ''}{health_endpoints[0].path}"
 

@@ -17,7 +17,6 @@ import re
 import sys
 from pathlib import Path
 
-
 CURSOR_SETTINGS = Path.home() / "Library/Application Support/Cursor/User/settings.json"
 OUTPUT_FILE = Path(__file__).resolve().parents[1] / "ai-sessions/DEV_TIMELINE.md"
 
@@ -74,7 +73,7 @@ def extract_sections(markdown_text: str, section_titles: list[str]) -> str:
             continue
         start = m.start(1)
         # find next top-level heading
-        next_heading = re.search(r"^##\s+.+$", markdown_text[m.end(1):], re.MULTILINE)
+        next_heading = re.search(r"^##\s+.+$", markdown_text[m.end(1) :], re.MULTILINE)
         if next_heading:
             end = m.end(1) + next_heading.start()
         else:
@@ -121,5 +120,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-
-

@@ -1,59 +1,54 @@
-"""CLI Commands module for the CLI service.
+"""
+CLI Commands module for the CLI service.
 
 This module contains the main CLI class and command handling logic,
 extracted from the main CLI service to improve maintainability.
 """
 
-import os
-import time
-import signal
 import asyncio
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
-from rich.live import Live
-from rich.spinner import Spinner
-from rich.progress import Progress, TaskID
+import os
+import signal
+import time
 from contextlib import asynccontextmanager
+from typing import Any, Dict, Optional
 
-from services.shared.integrations.clients.clients import ServiceClients
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
+
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.logging import fire_and_forget
 
-from .shared_utils import (
-    get_cli_clients,
-    create_menu_table,
-    add_menu_rows,
-    print_panel,
-    get_service_health_url,
-    create_health_status_display,
-    log_cli_metrics
-)
-from .handlers.service_actions import ServiceActions
+from .managers.analysis.analysis_service_manager import AnalysisServiceManager
 from .managers.config.config_manager import ConfigManager
 from .managers.config.settings_manager import SettingsManager
-from .managers.analysis.analysis_service_manager import AnalysisServiceManager
 from .managers.monitoring.advanced_monitoring_manager import AdvancedMonitoringManager
 from .managers.services import (
-    OrchestratorManager,
     AnalysisManager,
-    DocStoreManager,
-    SourceAgentManager,
-    InfrastructureManager,
-    BulkOperationsManager,
-    InterpreterManager,
-    DiscoveryAgentManager,
-    MemoryAgentManager,
-    SecureAnalyzerManager,
-    SummarizerHubManager,
-    CodeAnalyzerManager,
-    NotificationServiceManager,
-    LogCollectorManager,
+    ArchitectureDigitizerManager,
     BedrockProxyManager,
+    BulkOperationsManager,
+    CodeAnalyzerManager,
     DeploymentManager,
-    ArchitectureDigitizerManager
+    DiscoveryAgentManager,
+    DocStoreManager,
+    InfrastructureManager,
+    InterpreterManager,
+    LogCollectorManager,
+    MemoryAgentManager,
+    NotificationServiceManager,
+    OrchestratorManager,
+    SecureAnalyzerManager,
+    SourceAgentManager,
+    SummarizerHubManager,
+)
+from .shared_utils import (
+    add_menu_rows,
+    create_health_status_display,
+    create_menu_table,
+    get_cli_clients,
+    get_service_health_url,
+    print_panel,
 )
 
 
@@ -96,6 +91,7 @@ class CLICommands:
 
     def setup_interrupt_handling(self):
         """Setup signal handlers for graceful interrupt handling."""
+
         def signal_handler(signum, frame):
             self._interrupt_requested = True
             self.console.print("\n[yellow]⚠️  Interrupt received. Cleaning up...[/yellow]")
@@ -109,8 +105,8 @@ class CLICommands:
         """Get cached value with TTL check."""
         if key in self._cache:
             cached_item = self._cache[key]
-            if time.time() - cached_item['timestamp'] < self._cache_ttl:
-                return cached_item['data']
+            if time.time() - cached_item["timestamp"] < self._cache_ttl:
+                return cached_item["data"]
             else:
                 # Cache expired, remove it
                 del self._cache[key]
@@ -118,10 +114,7 @@ class CLICommands:
 
     async def cache_set(self, key: str, data: Any):
         """Set cached value with timestamp."""
-        self._cache[key] = {
-            'data': data,
-            'timestamp': time.time()
-        }
+        self._cache[key] = {"data": data, "timestamp": time.time()}
 
     async def cache_invalidate(self, pattern: str = None):
         """Invalidate cache entries matching pattern."""
@@ -152,61 +145,76 @@ class CLICommands:
         print_panel(
             self.console,
             "[bold blue]LLM Documentation Consistency Ecosystem[/bold blue]\n"
-            "[dim]Interactive CLI for prompt management and workflow orchestration[/dim]"
+            "[dim]Interactive CLI for prompt management and workflow orchestration[/dim]",
         )
 
     def print_menu(self):
         """Print main menu with improved organization."""
         # Core Operations
         core_menu = create_menu_table("🔧 Core Operations", ["Option", "Description"])
-        add_menu_rows(core_menu, [
-            ("1", "Document Store (CRUD, Search, Quality)"),
-            ("2", "Analysis & Reports (Findings, Detectors, Quality)"),
-            ("3", "Source Agent (Fetch, Normalize, Code Analysis)"),
-            ("4", "Architecture Digitizer (Diagram Processing)"),
-            ("5", "Workflow Orchestration"),
-        ])
+        add_menu_rows(
+            core_menu,
+            [
+                ("1", "Document Store (CRUD, Search, Quality)"),
+                ("2", "Analysis & Reports (Findings, Detectors, Quality)"),
+                ("3", "Source Agent (Fetch, Normalize, Code Analysis)"),
+                ("4", "Architecture Digitizer (Diagram Processing)"),
+                ("5", "Workflow Orchestration"),
+            ],
+        )
 
         # AI & Intelligence Services
         ai_menu = create_menu_table("🤖 AI & Intelligence", ["Option", "Description"])
-        add_menu_rows(ai_menu, [
-            ("6", "Interpreter Service (Query Analysis, Workflows)"),
-            ("7", "Summarizer Hub (Ensemble AI, Multi-Provider)"),
-            ("8", "Bedrock Proxy (AI Invocations, Templates)"),
-            ("9", "Secure Analyzer (Content Security, Policies)"),
-            ("10", "Code Analyzer (Endpoint Extraction, Scanning)"),
-        ])
+        add_menu_rows(
+            ai_menu,
+            [
+                ("6", "Interpreter Service (Query Analysis, Workflows)"),
+                ("7", "Summarizer Hub (Ensemble AI, Multi-Provider)"),
+                ("8", "Bedrock Proxy (AI Invocations, Templates)"),
+                ("9", "Secure Analyzer (Content Security, Policies)"),
+                ("10", "Code Analyzer (Endpoint Extraction, Scanning)"),
+            ],
+        )
 
         # Infrastructure & Operations
         infra_menu = create_menu_table("🏗️ Infrastructure & Operations", ["Option", "Description"])
-        add_menu_rows(infra_menu, [
-            ("11", "Service Health & Monitoring"),
-            ("12", "Orchestrator Management (Registry, Jobs)"),
-            ("13", "Infrastructure (Redis, DLQ, Sagas, Tracing)"),
-            ("14", "Notification Service (Delivery, DLQ)"),
-            ("15", "Log Collector (Aggregation, Analytics)"),
-        ])
+        add_menu_rows(
+            infra_menu,
+            [
+                ("11", "Service Health & Monitoring"),
+                ("12", "Orchestrator Management (Registry, Jobs)"),
+                ("13", "Infrastructure (Redis, DLQ, Sagas, Tracing)"),
+                ("14", "Notification Service (Delivery, DLQ)"),
+                ("15", "Log Collector (Aggregation, Analytics)"),
+            ],
+        )
 
         # Advanced Features
         advanced_menu = create_menu_table("⚡ Advanced Features", ["Option", "Description"])
-        add_menu_rows(advanced_menu, [
-            ("16", "Bulk Operations (Mass Analysis, Notifications)"),
-            ("17", "Discovery Agent (API Registration)"),
-            ("18", "Memory Agent (Context, Summaries)"),
-            ("19", "Configuration Management"),
-            ("20", "Deployment Controls"),
-        ])
+        add_menu_rows(
+            advanced_menu,
+            [
+                ("16", "Bulk Operations (Mass Analysis, Notifications)"),
+                ("17", "Discovery Agent (API Registration)"),
+                ("18", "Memory Agent (Context, Summaries)"),
+                ("19", "Configuration Management"),
+                ("20", "Deployment Controls"),
+            ],
+        )
 
         # System Administration
         admin_menu = create_menu_table("⚙️ System Administration", ["Option", "Description"])
-        add_menu_rows(admin_menu, [
-            ("21", "Advanced Monitoring (Dashboards, SLO/SLA)"),
-            ("22", "Analytics & Testing"),
-            ("23", "Prompt Management"),
-            ("s", "Settings & Service Status"),
-            ("c", "Cache Management"),
-            ("q", "Quit")
-        ])
+        add_menu_rows(
+            admin_menu,
+            [
+                ("21", "Advanced Monitoring (Dashboards, SLO/SLA)"),
+                ("22", "Analytics & Testing"),
+                ("23", "Prompt Management"),
+                ("s", "Settings & Service Status"),
+                ("c", "Cache Management"),
+                ("q", "Quit"),
+            ],
+        )
 
         # Display all menu sections
         self.console.print(core_menu)
@@ -232,7 +240,7 @@ class CLICommands:
                 ServiceNames.PROMPT_STORE,
                 ServiceNames.SOURCE_AGENT,
                 ServiceNames.ANALYSIS_SERVICE,
-                ServiceNames.DOC_STORE
+                ServiceNames.DOC_STORE,
             ]
         }
 
@@ -241,17 +249,9 @@ class CLICommands:
             for service_name, url in services.items():
                 try:
                     response = await self.clients.get_json(url)
-                    results[service_name] = {
-                        "status": "healthy",
-                        "response": response,
-                        "timestamp": time.time()
-                    }
+                    results[service_name] = {"status": "healthy", "response": response, "timestamp": time.time()}
                 except Exception as e:
-                    results[service_name] = {
-                        "status": "unhealthy",
-                        "error": str(e),
-                        "timestamp": time.time()
-                    }
+                    results[service_name] = {"status": "unhealthy", "error": str(e), "timestamp": time.time()}
 
         return results
 
@@ -283,12 +283,15 @@ class CLICommands:
         """Combined analytics and testing submenu."""
         while True:
             menu = create_menu_table("Analytics & Testing", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "Prompt Store Analytics"),
-                ("2", "Run Integration Tests"),
-                ("3", "A/B Testing (Coming Soon)"),
-                ("b", "Back to Main Menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "Prompt Store Analytics"),
+                    ("2", "Run Integration Tests"),
+                    ("3", "A/B Testing (Coming Soon)"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = self.get_choice()
@@ -320,7 +323,7 @@ class CLICommands:
             ("Interpreter Integration", self._test_interpreter_integration),
             ("Orchestrator Integration", self._test_orchestrator_integration),
             ("Analysis Service Integration", self._test_analysis_integration),
-            ("Cross-Service Workflow", self._test_cross_service_workflow)
+            ("Cross-Service Workflow", self._test_cross_service_workflow),
         ]
 
         results = {}
@@ -365,9 +368,7 @@ class CLICommands:
             health = await self.clients.get_json("interpreter/health")
             if health.get("status") != "healthy":
                 return False
-            result = await self.clients.post_json("interpreter/interpret", {
-                "query": "analyze this document"
-            })
+            result = await self.clients.post_json("interpreter/interpret", {"query": "analyze this document"})
             return "intent" in result
         except:
             return False
@@ -391,9 +392,7 @@ class CLICommands:
     async def _test_cross_service_workflow(self) -> bool:
         """Test cross-service workflow execution."""
         try:
-            result = await self.clients.post_json("orchestrator/query", {
-                "query": "show me system status"
-            })
+            result = await self.clients.post_json("orchestrator/query", {"query": "show me system status"})
             return "interpretation" in result
         except:
             return False
@@ -488,13 +487,16 @@ class CLICommands:
         """Cache management submenu."""
         while True:
             menu = create_menu_table("Cache Management", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "View Cache Statistics"),
-                ("2", "Clear All Cache"),
-                ("3", "Clear Service Cache"),
-                ("4", "Set Cache TTL"),
-                ("b", "Back to Main Menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "View Cache Statistics"),
+                    ("2", "Clear All Cache"),
+                    ("3", "Clear Service Cache"),
+                    ("4", "Set Cache TTL"),
+                    ("b", "Back to Main Menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = self.get_choice()
@@ -531,7 +533,7 @@ class CLICommands:
         current_time = time.time()
 
         for key, item in self._cache.items():
-            if current_time - item['timestamp'] >= self._cache_ttl:
+            if current_time - item["timestamp"] >= self._cache_ttl:
                 expired_entries += 1
 
         table = Table(title="Cache Statistics")

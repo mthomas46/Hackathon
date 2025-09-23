@@ -51,14 +51,13 @@ result = await analyzer.analyze_documents(targets, "consistency")
 - **Testability**: Easy to mock interfaces for unit testing
 - **Maintainability**: Clear contracts make code easier to understand
 - **Flexibility**: Implementations can be swapped without changing consumers
-- **Type Safety**: Full type checking and IDE support
+- **Type Safety**: Full type checking and IDE support.
 """
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional, Protocol, TypeVar, Generic, Union
-from datetime import datetime
+from abc import ABC
+from typing import Any, Dict, List, Optional, Protocol, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 # Domain Service Interfaces
@@ -74,7 +73,8 @@ class IAnalysisService(Protocol):
     """
 
     async def analyze_documents(self, targets: List[str], analysis_type: str, **kwargs) -> Dict[str, Any]:
-        """Analyze documents using specified analysis type.
+        """
+        Analyze documents using specified analysis type.
 
         Performs comprehensive analysis on the specified documents based on
         the analysis type requested. Supports various analysis types including
@@ -102,7 +102,8 @@ class IAnalysisService(Protocol):
         ...
 
     async def get_analysis_status(self, analysis_id: str) -> Dict[str, Any]:
-        """Get the current status of an analysis operation.
+        """
+        Get the current status of an analysis operation.
 
         Retrieves the current state and progress of a running or completed
         analysis operation. Useful for monitoring long-running analyses.
@@ -172,7 +173,8 @@ class ICacheService(Protocol):
     """
 
     async def get(self, key: str) -> Optional[Any]:
-        """Get value from cache by key.
+        """
+        Get value from cache by key.
 
         Retrieves a cached value if it exists and hasn't expired.
         Returns None if the key doesn't exist or has expired.
@@ -189,7 +191,8 @@ class ICacheService(Protocol):
         ...
 
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
-        """Set value in cache with optional TTL.
+        """
+        Set value in cache with optional TTL.
 
         Stores a value in the cache with an optional time-to-live.
         If TTL is specified, the value will automatically expire after
@@ -207,7 +210,8 @@ class ICacheService(Protocol):
         ...
 
     async def delete(self, key: str) -> None:
-        """Delete value from cache.
+        """
+        Delete value from cache.
 
         Removes a value from the cache if it exists.
 
@@ -220,7 +224,8 @@ class ICacheService(Protocol):
         ...
 
     async def exists(self, key: str) -> bool:
-        """Check if key exists in cache.
+        """
+        Check if key exists in cache.
 
         Returns True if the key exists and hasn't expired,
         False otherwise.
@@ -262,7 +267,8 @@ class ILoggerService(Protocol):
     """
 
     def debug(self, message: str, **kwargs) -> None:
-        """Log debug message with optional structured data.
+        """
+        Log debug message with optional structured data.
 
         Debug messages are typically used for detailed troubleshooting
         information that's useful during development and debugging.
@@ -274,7 +280,8 @@ class ILoggerService(Protocol):
         ...
 
     def info(self, message: str, **kwargs) -> None:
-        """Log info message with optional structured data.
+        """
+        Log info message with optional structured data.
 
         Info messages are used for general information about application
         operation, such as startup events, successful operations, etc.
@@ -286,7 +293,8 @@ class ILoggerService(Protocol):
         ...
 
     def warning(self, message: str, **kwargs) -> None:
-        """Log warning message with optional structured data.
+        """
+        Log warning message with optional structured data.
 
         Warning messages indicate potential issues that don't prevent
         operation but should be investigated.
@@ -298,7 +306,8 @@ class ILoggerService(Protocol):
         ...
 
     def error(self, message: str, **kwargs) -> None:
-        """Log error message with optional structured data.
+        """
+        Log error message with optional structured data.
 
         Error messages indicate failures that affect operation but
         don't necessarily cause application shutdown.
@@ -310,7 +319,8 @@ class ILoggerService(Protocol):
         ...
 
     def critical(self, message: str, **kwargs) -> None:
-        """Log critical message with optional structured data.
+        """
+        Log critical message with optional structured data.
 
         Critical messages indicate severe failures that may require
         immediate attention and could cause application instability.

@@ -7,30 +7,28 @@ analysis capabilities.
 """
 
 import asyncio
-import time
 import json
-import sys
 import os
-from typing import Dict, Any, List
+import sys
+import time
 from datetime import datetime
+from typing import Any, Dict, List
 
 # Add services to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'services'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'services', 'analysis-service'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "services"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "services", "analysis-service"))
 
 try:
     # Try direct imports first
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'services', 'analysis-service'))
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "services", "analysis-service"))
+    from modules.cross_repository_analyzer import CrossRepositoryAnalyzer, analyze_repositories
     from modules.distributed_processor import (
         DistributedProcessor,
-        submit_distributed_task,
+        LoadBalancingStrategy,
         get_distributed_task_status,
-        LoadBalancingStrategy
+        submit_distributed_task,
     )
-    from modules.cross_repository_analyzer import (
-        CrossRepositoryAnalyzer,
-        analyze_repositories
-    )
+
     print("✅ All imports successful")
 except ImportError as e:
     print(f"❌ Import failed: {e}")
@@ -49,11 +47,11 @@ class IntegrationTestSuite:
     def log_test(self, test_name: str, success: bool, message: str = "", duration: float = None):
         """Log a test result."""
         result = {
-            'test_name': test_name,
-            'success': success,
-            'message': message,
-            'duration': duration,
-            'timestamp': datetime.now().isoformat()
+            "test_name": test_name,
+            "success": success,
+            "message": message,
+            "duration": duration,
+            "timestamp": datetime.now().isoformat(),
         }
         self.test_results.append(result)
 
@@ -119,13 +117,13 @@ class IntegrationTestSuite:
             assert len(processor.task_handlers) > 0
 
             duration = time.time() - start_time
-            self.log_test("distributed_processor_initialization", True,
-                         "Successfully initialized with 5 workers", duration)
+            self.log_test(
+                "distributed_processor_initialization", True, "Successfully initialized with 5 workers", duration
+            )
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("distributed_processor_initialization", False,
-                         f"Failed: {e}", duration)
+            self.log_test("distributed_processor_initialization", False, f"Failed: {e}", duration)
 
     async def test_load_balancing_strategies(self):
         """Test different load balancing strategies."""
@@ -147,13 +145,11 @@ class IntegrationTestSuite:
             assert processor.load_balancer.strategy == LoadBalancingStrategy.ADAPTIVE
 
             duration = time.time() - start_time
-            self.log_test("load_balancing_strategies", True,
-                         "All strategies configured successfully", duration)
+            self.log_test("load_balancing_strategies", True, "All strategies configured successfully", duration)
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("load_balancing_strategies", False,
-                         f"Failed: {e}", duration)
+            self.log_test("load_balancing_strategies", False, f"Failed: {e}", duration)
 
     async def test_task_submission_and_processing(self):
         """Test task submission and processing."""
@@ -162,14 +158,14 @@ class IntegrationTestSuite:
         try:
             # Test semantic similarity task
             task_data = {
-                'task_type': 'semantic_similarity',
-                'data': {
-                    'documents': [
-                        {'id': 'doc1', 'content': 'This is a test document about machine learning.'},
-                        {'id': 'doc2', 'content': 'This document discusses ML algorithms and AI.'}
+                "task_type": "semantic_similarity",
+                "data": {
+                    "documents": [
+                        {"id": "doc1", "content": "This is a test document about machine learning."},
+                        {"id": "doc2", "content": "This document discusses ML algorithms and AI."},
                     ]
                 },
-                'priority': 'high'
+                "priority": "high",
             }
 
             task_id = await submit_distributed_task(**task_data)
@@ -181,16 +177,16 @@ class IntegrationTestSuite:
             # Check task status
             status = await get_distributed_task_status(task_id)
             assert status is not None
-            assert 'status' in status
+            assert "status" in status
 
             duration = time.time() - start_time
-            self.log_test("task_submission_and_processing", True,
-                         f"Task {task_id} submitted and processed successfully", duration)
+            self.log_test(
+                "task_submission_and_processing", True, f"Task {task_id} submitted and processed successfully", duration
+            )
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("task_submission_and_processing", False,
-                         f"Failed: {e}", duration)
+            self.log_test("task_submission_and_processing", False, f"Failed: {e}", duration)
 
     async def test_batch_task_processing(self):
         """Test batch task processing."""
@@ -199,15 +195,15 @@ class IntegrationTestSuite:
         try:
             batch_tasks = [
                 {
-                    'task_type': 'sentiment_analysis',
-                    'data': {'documents': [{'id': 'doc1', 'content': 'Great documentation!'}]},
-                    'priority': 'normal'
+                    "task_type": "sentiment_analysis",
+                    "data": {"documents": [{"id": "doc1", "content": "Great documentation!"}]},
+                    "priority": "normal",
                 },
                 {
-                    'task_type': 'content_quality',
-                    'data': {'documents': [{'id': 'doc2', 'content': 'Poor documentation'}]},
-                    'priority': 'low'
-                }
+                    "task_type": "content_quality",
+                    "data": {"documents": [{"id": "doc2", "content": "Poor documentation"}]},
+                    "priority": "low",
+                },
             ]
 
             # This would normally use the batch processing endpoint
@@ -220,13 +216,13 @@ class IntegrationTestSuite:
             assert len(task_ids) == 2
 
             duration = time.time() - start_time
-            self.log_test("batch_task_processing", True,
-                         f"Batch of {len(task_ids)} tasks submitted successfully", duration)
+            self.log_test(
+                "batch_task_processing", True, f"Batch of {len(task_ids)} tasks submitted successfully", duration
+            )
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("batch_task_processing", False,
-                         f"Failed: {e}", duration)
+            self.log_test("batch_task_processing", False, f"Failed: {e}", duration)
 
     async def test_cross_repository_analysis(self):
         """Test cross-repository analysis."""
@@ -236,40 +232,30 @@ class IntegrationTestSuite:
             # Create sample repository data
             repositories = [
                 {
-                    'repository_id': 'repo-1',
-                    'repository_name': 'api-service',
-                    'files': [
-                        {
-                            'path': 'docs/README.md',
-                            'content': '# API Service\nREST API for user management.'
-                        }
-                    ]
+                    "repository_id": "repo-1",
+                    "repository_name": "api-service",
+                    "files": [{"path": "docs/README.md", "content": "# API Service\nREST API for user management."}],
                 },
                 {
-                    'repository_id': 'repo-2',
-                    'repository_name': 'frontend-app',
-                    'files': [
-                        {
-                            'path': 'docs/guide.md',
-                            'content': '# Frontend Guide\nHow to use the application.'
-                        }
-                    ]
-                }
+                    "repository_id": "repo-2",
+                    "repository_name": "frontend-app",
+                    "files": [{"path": "docs/guide.md", "content": "# Frontend Guide\nHow to use the application."}],
+                },
             ]
 
             results = await analyze_repositories(repositories)
             assert results is not None
-            assert 'repository_count' in results
-            assert results['repository_count'] == 2
+            assert "repository_count" in results
+            assert results["repository_count"] == 2
 
             duration = time.time() - start_time
-            self.log_test("cross_repository_analysis", True,
-                         "Cross-repository analysis completed successfully", duration)
+            self.log_test(
+                "cross_repository_analysis", True, "Cross-repository analysis completed successfully", duration
+            )
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("cross_repository_analysis", False,
-                         f"Failed: {e}", duration)
+            self.log_test("cross_repository_analysis", False, f"Failed: {e}", duration)
 
     async def test_worker_scaling(self):
         """Test worker scaling functionality."""
@@ -291,13 +277,13 @@ class IntegrationTestSuite:
             assert len(processor.workers) == 3
 
             duration = time.time() - start_time
-            self.log_test("worker_scaling", True,
-                         f"Workers scaled from {initial_count} to {len(processor.workers)}", duration)
+            self.log_test(
+                "worker_scaling", True, f"Workers scaled from {initial_count} to {len(processor.workers)}", duration
+            )
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("worker_scaling", False,
-                         f"Failed: {e}", duration)
+            self.log_test("worker_scaling", False, f"Failed: {e}", duration)
 
     async def test_queue_management(self):
         """Test queue management functionality."""
@@ -309,23 +295,21 @@ class IntegrationTestSuite:
             # Submit multiple tasks to fill queue
             for i in range(5):
                 await processor.submit_task(
-                    task_type='data_processing',
-                    data={'operation': f'task-{i}'},
-                    priority=['low', 'normal', 'high', 'critical'][i % 4]
+                    task_type="data_processing",
+                    data={"operation": f"task-{i}"},
+                    priority=["low", "normal", "high", "critical"][i % 4],
                 )
 
             queue_status = processor.get_queue_status()
-            assert 'queue_length' in queue_status
-            assert queue_status['queue_length'] > 0
+            assert "queue_length" in queue_status
+            assert queue_status["queue_length"] > 0
 
             duration = time.time() - start_time
-            self.log_test("queue_management", True,
-                         f"Queue contains {queue_status['queue_length']} tasks", duration)
+            self.log_test("queue_management", True, f"Queue contains {queue_status['queue_length']} tasks", duration)
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("queue_management", False,
-                         f"Failed: {e}", duration)
+            self.log_test("queue_management", False, f"Failed: {e}", duration)
 
     async def test_performance_monitoring(self):
         """Test performance monitoring."""
@@ -336,26 +320,26 @@ class IntegrationTestSuite:
 
             # Get initial stats
             stats = await processor.get_processing_stats()
-            assert 'total_tasks' in stats
-            assert 'active_workers' in stats
+            assert "total_tasks" in stats
+            assert "active_workers" in stats
 
             # Submit a task and check updated stats
-            task_id = await processor.submit_task(
-                task_type='data_processing',
-                data={'operation': 'performance_test'}
-            )
+            task_id = await processor.submit_task(task_type="data_processing", data={"operation": "performance_test"})
 
             updated_stats = await processor.get_processing_stats()
-            assert updated_stats['total_tasks'] >= stats['total_tasks']
+            assert updated_stats["total_tasks"] >= stats["total_tasks"]
 
             duration = time.time() - start_time
-            self.log_test("performance_monitoring", True,
-                         f"Performance stats: {updated_stats['total_tasks']} total tasks", duration)
+            self.log_test(
+                "performance_monitoring",
+                True,
+                f"Performance stats: {updated_stats['total_tasks']} total tasks",
+                duration,
+            )
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("performance_monitoring", False,
-                         f"Failed: {e}", duration)
+            self.log_test("performance_monitoring", False, f"Failed: {e}", duration)
 
     async def test_error_handling(self):
         """Test error handling in distributed processing."""
@@ -365,10 +349,7 @@ class IntegrationTestSuite:
             processor = DistributedProcessor(max_workers=2)
 
             # Submit task with invalid data
-            task_id = await processor.submit_task(
-                task_type='invalid_task_type',
-                data={'invalid': 'data'}
-            )
+            task_id = await processor.submit_task(task_type="invalid_task_type", data={"invalid": "data"})
 
             # Wait for processing
             await asyncio.sleep(1)
@@ -378,13 +359,11 @@ class IntegrationTestSuite:
             # Should either complete or fail gracefully
 
             duration = time.time() - start_time
-            self.log_test("error_handling", True,
-                         "Error handling processed gracefully", duration)
+            self.log_test("error_handling", True, "Error handling processed gracefully", duration)
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("error_handling", False,
-                         f"Error handling failed: {e}", duration)
+            self.log_test("error_handling", False, f"Error handling failed: {e}", duration)
 
     async def test_concurrent_load(self):
         """Test concurrent load handling."""
@@ -397,9 +376,9 @@ class IntegrationTestSuite:
             tasks = []
             for i in range(20):
                 task = processor.submit_task(
-                    task_type='data_processing',
-                    data={'operation': f'concurrent-{i}'},
-                    priority=['low', 'normal', 'high'][i % 3]
+                    task_type="data_processing",
+                    data={"operation": f"concurrent-{i}"},
+                    priority=["low", "normal", "high"][i % 3],
                 )
                 tasks.append(task)
 
@@ -409,16 +388,14 @@ class IntegrationTestSuite:
 
             # Check queue status
             queue_status = processor.get_queue_status()
-            assert queue_status['queue_length'] >= 15  # Some may be processing
+            assert queue_status["queue_length"] >= 15  # Some may be processing
 
             duration = time.time() - start_time
-            self.log_test("concurrent_load", True,
-                         f"Successfully handled {len(task_ids)} concurrent tasks", duration)
+            self.log_test("concurrent_load", True, f"Successfully handled {len(task_ids)} concurrent tasks", duration)
 
         except Exception as e:
             duration = time.time() - start_time
-            self.log_test("concurrent_load", False,
-                         f"Concurrent load test failed: {e}", duration)
+            self.log_test("concurrent_load", False, f"Concurrent load test failed: {e}", duration)
 
     def generate_report(self):
         """Generate comprehensive test report."""
@@ -428,7 +405,7 @@ class IntegrationTestSuite:
         print("📊 INTEGRATION TEST REPORT")
         print("=" * 60)
 
-        passed = sum(1 for test in self.test_results if test['success'])
+        passed = sum(1 for test in self.test_results if test["success"])
         failed = len(self.test_results) - passed
 
         print(f"⏱️  Total execution time: {total_time:.2f} seconds")
@@ -440,10 +417,10 @@ class IntegrationTestSuite:
         print("-" * 40)
 
         for test in self.test_results:
-            status = "✅" if test['success'] else "❌"
-            duration = f" ({test['duration']:.2f}s)" if test['duration'] else ""
+            status = "✅" if test["success"] else "❌"
+            duration = f" ({test['duration']:.2f}s)" if test["duration"] else ""
             print(f"{status} {test['test_name']}{duration}")
-            if test['message']:
+            if test["message"]:
                 print(f"   {test['message']}")
 
         print("\n" + "=" * 60)

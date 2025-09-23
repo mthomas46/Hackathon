@@ -1,10 +1,9 @@
 """Distributed Analysis Handler - Handles distributed processing operations."""
 
 import logging
-from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 
-from .base_handler import BaseAnalysisHandler, AnalysisResult
+from .base_handler import AnalysisResult, BaseAnalysisHandler
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +20,10 @@ class DistributedAnalysisHandler(BaseAnalysisHandler):
             # Import distributed processor
             try:
                 from ..distributed_processor import (
-                    submit_distributed_task, get_distributed_task_status,
-                    cancel_distributed_task, get_worker_stats
+                    cancel_distributed_task,
+                    get_distributed_task_status,
+                    get_worker_stats,
+                    submit_distributed_task,
                 )
             except ImportError:
                 submit_distributed_task = self._mock_distributed_submit
@@ -31,29 +32,27 @@ class DistributedAnalysisHandler(BaseAnalysisHandler):
                 get_worker_stats = self._mock_worker_stats
 
             # Handle different distributed operations
-            if hasattr(request, 'cancel_task_id'):
+            if hasattr(request, "cancel_task_id"):
                 result = await cancel_distributed_task(request.cancel_task_id)
-                operation = 'cancel'
-            elif hasattr(request, 'task_id'):
+                operation = "cancel"
+            elif hasattr(request, "task_id"):
                 result = await get_distributed_task_status(request.task_id)
-                operation = 'status'
-            elif hasattr(request, 'worker_stats'):
+                operation = "status"
+            elif hasattr(request, "worker_stats"):
                 result = await get_worker_stats()
-                operation = 'stats'
+                operation = "stats"
             else:
                 result = await submit_distributed_task(
-                    request.task_type,
-                    getattr(request, 'data', {}),
-                    getattr(request, 'priority', 'normal')
+                    request.task_type, getattr(request, "data", {}), getattr(request, "priority", "normal")
                 )
-                operation = 'submit'
+                operation = "submit"
 
             analysis_id = f"distributed-{operation}-{int(datetime.now(timezone.utc).timestamp())}"
 
             return self._create_analysis_result(
                 analysis_id=analysis_id,
-                data={'operation': operation, 'result': result},
-                execution_time=result.get('execution_time_seconds', 0.0)
+                data={"operation": operation, "result": result},
+                execution_time=result.get("execution_time_seconds", 0.0),
             )
 
         except Exception as e:
@@ -64,44 +63,44 @@ class DistributedAnalysisHandler(BaseAnalysisHandler):
     async def _mock_distributed_submit(self, task_type, data, priority):
         """Mock distributed task submission."""
         import random
+
         return {
-            'task_id': f'task-{random.randint(1000, 9999)}',
-            'status': 'submitted',
-            'queue_position': random.randint(1, 10),
-            'estimated_completion_seconds': random.uniform(10, 300)
+            "task_id": f"task-{random.randint(1000, 9999)}",
+            "status": "submitted",
+            "queue_position": random.randint(1, 10),
+            "estimated_completion_seconds": random.uniform(10, 300),
         }
 
     async def _mock_distributed_status(self, task_id):
         """Mock distributed task status."""
         import random
+
         return {
-            'task_id': task_id,
-            'status': random.choice(['running', 'completed', 'failed', 'pending']),
-            'progress': random.uniform(0, 1),
-            'started_at': datetime.now(timezone.utc).isoformat(),
-            'execution_time_seconds': random.uniform(1, 60)
+            "task_id": task_id,
+            "status": random.choice(["running", "completed", "failed", "pending"]),
+            "progress": random.uniform(0, 1),
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "execution_time_seconds": random.uniform(1, 60),
         }
 
     async def _mock_distributed_cancel(self, task_id):
         """Mock distributed task cancellation."""
-        return {
-            'task_id': task_id,
-            'cancelled': True,
-            'message': 'Task cancelled successfully'
-        }
+        return {"task_id": task_id, "cancelled": True, "message": "Task cancelled successfully"}
 
     async def _mock_worker_stats(self):
         """Mock worker statistics."""
         import random
+
         return {
-            'total_workers': random.randint(3, 10),
-            'active_workers': random.randint(1, 5),
-            'idle_workers': random.randint(0, 3),
-            'avg_utilization': random.uniform(0.3, 0.9)
+            "total_workers": random.randint(3, 10),
+            "active_workers": random.randint(1, 5),
+            "idle_workers": random.randint(0, 3),
+            "avg_utilization": random.uniform(0.3, 0.9),
         }
 
 
 # Register handler
 from .base_handler import handler_registry
+
 handler_registry.register("distributed_analysis", DistributedAnalysisHandler())
 handler_registry.register("distributed_processing", DistributedAnalysisHandler())

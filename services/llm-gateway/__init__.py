@@ -1,4 +1,5 @@
-"""LLM Gateway Service Package.
+"""
+LLM Gateway Service Package.
 
 The LLM Gateway provides unified, secure, and optimized access to all LLM providers
 in the LLM Documentation Ecosystem. It acts as a service mesh that intelligently
@@ -40,5 +41,5 @@ __all__ = [
     "SERVICE_NAME",
     "SERVICE_TITLE",
     "SERVICE_DESCRIPTION",
-    "DEFAULT_PORT"
+    "DEFAULT_PORT",
 ]

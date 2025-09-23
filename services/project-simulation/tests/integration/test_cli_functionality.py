@@ -1,19 +1,17 @@
-"""Integration Tests for CLI Functionality.
+"""
+Integration Tests for CLI Functionality.
 
-This module contains comprehensive tests for CLI scripts,
-command-line interfaces, and user interaction patterns.
-Tests cover script execution, argument parsing, error handling,
-and user experience aspects of CLI tools.
+This module contains comprehensive tests for CLI scripts, command-line
+interfaces, and user interaction patterns. Tests cover script execution,
+argument parsing, error handling, and user experience aspects of CLI
+tools.
 """
 
-import pytest
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, Any, List, Optional
-from unittest.mock import Mock, patch, MagicMock
-import tempfile
-import json
+from unittest.mock import Mock, patch
+
 
 
 class TestCLIScriptExecution:
@@ -56,7 +54,7 @@ class TestCLIScriptExecution:
 class TestCLIScriptFunctionality:
     """Test cases for CLI script functionality."""
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_monitor_simulation_script_can_be_called(self, mock_subprocess):
         """Test that monitor_simulation.py can be executed."""
         mock_subprocess.return_value = Mock(returncode=0, stdout="Monitoring simulation...", stderr="")
@@ -65,14 +63,13 @@ class TestCLIScriptFunctionality:
 
         # This would normally run the script
         # For testing, we mock the subprocess call
-        result = subprocess.run([sys.executable, str(script_path), "--help"],
-                              capture_output=True, text=True)
+        result = subprocess.run([sys.executable, str(script_path), "--help"], capture_output=True, text=True)
 
         # In a real scenario, this would test the actual script
         # For now, we just verify the script file exists and is callable
         assert script_path.exists()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_manage_events_script_can_be_called(self, mock_subprocess):
         """Test that manage_events.py can be executed."""
         mock_subprocess.return_value = Mock(returncode=0, stdout="Event management...", stderr="")
@@ -80,7 +77,7 @@ class TestCLIScriptFunctionality:
         script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
         assert script_path.exists()
 
-    @patch('subprocess.run')
+    @patch("subprocess.run")
     def test_run_tests_script_can_be_called(self, mock_subprocess):
         """Test that run_tests.py can be executed."""
         mock_subprocess.return_value = Mock(returncode=0, stdout="Running tests...", stderr="")
@@ -97,7 +94,7 @@ class TestCLIArgumentParsing:
         script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
 
         # Read script content to verify argument parsing
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should contain argument parsing logic
@@ -107,7 +104,7 @@ class TestCLIArgumentParsing:
         """Test that manage_events supports multiple subcommands."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have subcommand structure
@@ -117,7 +114,7 @@ class TestCLIArgumentParsing:
         """Test that run_tests supports different test categories."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should support category selection
@@ -128,10 +125,11 @@ class TestCLIErrorHandling:
     """Test cases for CLI error handling and user feedback."""
 
     def test_monitor_simulation_handles_invalid_simulation_id(self):
-        """Test that monitor_simulation handles invalid simulation IDs gracefully."""
+        """Test that monitor_simulation handles invalid simulation IDs
+        gracefully."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have error handling for invalid IDs
@@ -141,7 +139,7 @@ class TestCLIErrorHandling:
         """Test that manage_events validates command arguments."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should validate arguments
@@ -151,7 +149,7 @@ class TestCLIErrorHandling:
         """Test that run_tests handles missing test files gracefully."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should handle missing files
@@ -165,7 +163,7 @@ class TestCLIOutputFormatting:
         """Test that monitor_simulation provides clear status updates."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should have status display logic
@@ -175,7 +173,7 @@ class TestCLIOutputFormatting:
         """Test that manage_events provides feedback on operations."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should provide user feedback
@@ -185,7 +183,7 @@ class TestCLIOutputFormatting:
         """Test that run_tests shows test progress and results."""
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
 
-        with open(script_path, 'r') as f:
+        with open(script_path, "r") as f:
             content = f.read()
 
         # Should show progress/results
@@ -198,16 +196,12 @@ class TestCLIConfiguration:
     def test_scripts_handle_missing_configuration_gracefully(self):
         """Test that scripts handle missing configuration gracefully."""
         # Test each script's configuration handling
-        scripts = [
-            "monitor_simulation.py",
-            "manage_events.py",
-            "run_tests.py"
-        ]
+        scripts = ["monitor_simulation.py", "manage_events.py", "run_tests.py"]
 
         for script_name in scripts:
             script_path = Path(__file__).parent.parent.parent / "scripts" / script_name
 
-            with open(script_path, 'r') as f:
+            with open(script_path, "r") as f:
                 content = f.read()
 
             # Should handle configuration issues
@@ -215,16 +209,12 @@ class TestCLIConfiguration:
 
     def test_scripts_support_environment_variables(self):
         """Test that scripts support environment variable configuration."""
-        scripts = [
-            "monitor_simulation.py",
-            "manage_events.py",
-            "run_tests.py"
-        ]
+        scripts = ["monitor_simulation.py", "manage_events.py", "run_tests.py"]
 
         for script_name in scripts:
             script_path = Path(__file__).parent.parent.parent / "scripts" / script_name
 
-            with open(script_path, 'r') as f:
+            with open(script_path, "r") as f:
                 content = f.read()
 
             # Should support environment variables
@@ -236,15 +226,12 @@ class TestCLISecurity:
 
     def test_scripts_validate_input_parameters(self):
         """Test that scripts validate input parameters for security."""
-        scripts = [
-            "monitor_simulation.py",
-            "manage_events.py"
-        ]
+        scripts = ["monitor_simulation.py", "manage_events.py"]
 
         for script_name in scripts:
             script_path = Path(__file__).parent.parent.parent / "scripts" / script_name
 
-            with open(script_path, 'r') as f:
+            with open(script_path, "r") as f:
                 content = f.read()
 
             # Should validate inputs
@@ -253,7 +240,6 @@ class TestCLISecurity:
     def test_scripts_handle_sensitive_data_securely(self):
         """Test that scripts handle sensitive data securely."""
         # This would test for secure handling of API keys, passwords, etc.
-        pass
 
 
 class TestCLIIntegration:
@@ -262,17 +248,14 @@ class TestCLIIntegration:
     def test_cli_scripts_can_connect_to_api(self):
         """Test that CLI scripts can connect to the API."""
         # This would test actual API connectivity
-        pass
 
     def test_cli_scripts_handle_api_errors_gracefully(self):
         """Test that CLI scripts handle API errors gracefully."""
         # Test error handling when API is unavailable
-        pass
 
     def test_cli_scripts_support_json_output_format(self):
         """Test that CLI scripts support JSON output format."""
         # Test --json or similar output formatting options
-        pass
 
 
 class TestCLIDocumentation:
@@ -280,16 +263,12 @@ class TestCLIDocumentation:
 
     def test_scripts_provide_help_information(self):
         """Test that scripts provide helpful information."""
-        scripts = [
-            "monitor_simulation.py",
-            "manage_events.py",
-            "run_tests.py"
-        ]
+        scripts = ["monitor_simulation.py", "manage_events.py", "run_tests.py"]
 
         for script_name in scripts:
             script_path = Path(__file__).parent.parent.parent / "scripts" / script_name
 
-            with open(script_path, 'r') as f:
+            with open(script_path, "r") as f:
                 content = f.read()
 
             # Should have help/docstrings
@@ -298,19 +277,15 @@ class TestCLIDocumentation:
     def test_scripts_have_usage_examples(self):
         """Test that scripts include usage examples."""
         # Check for comments or docstrings with examples
-        pass
 
     def test_scripts_validate_required_arguments(self):
         """Test that scripts validate required arguments."""
-        scripts = [
-            "monitor_simulation.py",
-            "manage_events.py"
-        ]
+        scripts = ["monitor_simulation.py", "manage_events.py"]
 
         for script_name in scripts:
             script_path = Path(__file__).parent.parent.parent / "scripts" / script_name
 
-            with open(script_path, 'r') as f:
+            with open(script_path, "r") as f:
                 content = f.read()
 
             # Should validate required args

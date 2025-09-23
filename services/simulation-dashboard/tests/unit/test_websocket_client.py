@@ -1,14 +1,16 @@
 """Unit tests for WebSocket client."""
 
-import pytest
-import asyncio
 import json
-from unittest.mock import Mock, MagicMock, AsyncMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from services.clients.websocket_client import (
-    WebSocketClient, SimulationWebSocketManager,
-    WebSocketClientError, WebSocketConnectionError
+    SimulationWebSocketManager,
+    WebSocketClient,
+    WebSocketClientError,
+    WebSocketConnectionError,
 )
 
 
@@ -45,16 +47,13 @@ class TestWebSocketClient:
         """Test successful WebSocket connection."""
         mock_websocket = AsyncMock()
 
-        with patch('websockets.connect', return_value=mock_websocket) as mock_connect:
+        with patch("websockets.connect", return_value=mock_websocket) as mock_connect:
             await websocket_client.connect("ws://test-server:8080")
 
             assert websocket_client.is_connected is True
             assert websocket_client.websocket == mock_websocket
             mock_connect.assert_called_once_with(
-                "ws://test-server:8080",
-                extra_headers=None,
-                ping_interval=30.0,
-                close_timeout=10.0
+                "ws://test-server:8080", extra_headers=None, ping_interval=30.0, close_timeout=10.0
             )
 
     @pytest.mark.asyncio
@@ -63,20 +62,17 @@ class TestWebSocketClient:
         mock_websocket = AsyncMock()
         headers = {"Authorization": "Bearer token123"}
 
-        with patch('websockets.connect', return_value=mock_websocket) as mock_connect:
+        with patch("websockets.connect", return_value=mock_websocket) as mock_connect:
             await websocket_client.connect("ws://test-server:8080", headers=headers)
 
             mock_connect.assert_called_once_with(
-                "ws://test-server:8080",
-                extra_headers=headers,
-                ping_interval=30.0,
-                close_timeout=10.0
+                "ws://test-server:8080", extra_headers=headers, ping_interval=30.0, close_timeout=10.0
             )
 
     @pytest.mark.asyncio
     async def test_connection_failure(self, websocket_client):
         """Test WebSocket connection failure."""
-        with patch('websockets.connect', side_effect=WebSocketException("Connection failed")):
+        with patch("websockets.connect", side_effect=WebSocketException("Connection failed")):
             with pytest.raises(WebSocketConnectionError) as exc_info:
                 await websocket_client.connect("ws://test-server:8080")
 
@@ -217,10 +213,7 @@ class TestWebSocketClient:
         simulation_id = "sim_001"
         await websocket_client.subscribe_to_simulation(simulation_id)
 
-        expected_message = {
-            "type": "subscribe",
-            "simulation_id": simulation_id
-        }
+        expected_message = {"type": "subscribe", "simulation_id": simulation_id}
         mock_websocket.send.assert_called_once_with(json.dumps(expected_message))
 
     @pytest.mark.asyncio
@@ -235,10 +228,7 @@ class TestWebSocketClient:
         simulation_id = "sim_001"
         await websocket_client.unsubscribe_from_simulation(simulation_id)
 
-        expected_message = {
-            "type": "unsubscribe",
-            "simulation_id": simulation_id
-        }
+        expected_message = {"type": "unsubscribe", "simulation_id": simulation_id}
         mock_websocket.send.assert_called_once_with(json.dumps(expected_message))
 
     @pytest.mark.asyncio
@@ -259,6 +249,7 @@ class TestWebSocketClient:
 
     def test_message_handlers(self, websocket_client):
         """Test message handler registration and management."""
+
         # Test adding handler
         def test_handler(message):
             return "handled"
@@ -273,6 +264,7 @@ class TestWebSocketClient:
 
     def test_connection_handlers(self, websocket_client):
         """Test connection handler registration and management."""
+
         # Test adding handler
         def test_handler():
             return "handled"
@@ -286,6 +278,7 @@ class TestWebSocketClient:
 
     def test_error_handlers(self, websocket_client):
         """Test error handler registration and management."""
+
         # Test adding handler
         def test_handler(error):
             return "handled"
@@ -362,7 +355,7 @@ class TestSimulationWebSocketManager:
         mock_client.connect = AsyncMock()
         mock_client.subscribe_to_simulation = AsyncMock()
 
-        with patch.object(manager, 'get_client', return_value=mock_client):
+        with patch.object(manager, "get_client", return_value=mock_client):
             result = await manager.connect_simulation("sim_001")
 
             assert result == mock_client
@@ -375,7 +368,7 @@ class TestSimulationWebSocketManager:
         mock_client = MagicMock()
         mock_client.connect = AsyncMock()
 
-        with patch.object(manager, 'get_client', return_value=mock_client):
+        with patch.object(manager, "get_client", return_value=mock_client):
             result = await manager.connect_system()
 
             assert result == mock_client
@@ -390,10 +383,7 @@ class TestSimulationWebSocketManager:
         mock_client2 = MagicMock()
         mock_client2.disconnect = AsyncMock()
 
-        manager.clients = {
-            "sim_001": mock_client1,
-            "sim_002": mock_client2
-        }
+        manager.clients = {"sim_001": mock_client1, "sim_002": mock_client2}
 
         await manager.disconnect_all()
 
@@ -420,9 +410,9 @@ class TestSimulationWebSocketManager:
         manager.clients["sim_001"] = mock_client
 
         # Mock the handler imports (would normally be from pages.monitor)
-        with patch('services.clients.websocket_client.handle_simulation_progress') as mock_progress, \
-             patch('services.clients.websocket_client.handle_simulation_event') as mock_event, \
-             patch('services.clients.websocket_client.handle_websocket_connected') as mock_connected:
+        with patch("services.clients.websocket_client.handle_simulation_progress") as mock_progress, patch(
+            "services.clients.websocket_client.handle_simulation_event"
+        ) as mock_event, patch("services.clients.websocket_client.handle_websocket_connected") as mock_connected:
 
             result = manager.setup_event_handlers("sim_001")
 
@@ -439,7 +429,7 @@ class TestSimulationWebSocketManager:
         mock_client.subscribe_to_simulation = AsyncMock()
         mock_client.start_auto_reconnect = MagicMock()
 
-        with patch.object(manager, 'setup_event_handlers', return_value=mock_client) as mock_setup:
+        with patch.object(manager, "setup_event_handlers", return_value=mock_client) as mock_setup:
             result = await manager.start_realtime_updates("sim_001")
 
             assert result is True
@@ -455,7 +445,7 @@ class TestSimulationWebSocketManager:
         mock_client.connect = AsyncMock()
         mock_client.start_auto_reconnect = MagicMock()
 
-        with patch.object(manager, 'setup_event_handlers', return_value=mock_client) as mock_setup:
+        with patch.object(manager, "setup_event_handlers", return_value=mock_client) as mock_setup:
             result = await manager.start_realtime_updates()
 
             assert result is True
@@ -469,7 +459,7 @@ class TestSimulationWebSocketManager:
         mock_client = MagicMock()
         mock_client.connect = AsyncMock(side_effect=Exception("Connection failed"))
 
-        with patch.object(manager, 'setup_event_handlers', return_value=mock_client):
+        with patch.object(manager, "setup_event_handlers", return_value=mock_client):
             result = await manager.start_realtime_updates("sim_001")
 
             assert result is False
@@ -480,7 +470,7 @@ class TestSimulationWebSocketManager:
         mock_client.stop_auto_reconnect = MagicMock()
         manager.clients["sim_001"] = mock_client
 
-        with patch('asyncio.create_task') as mock_create_task:
+        with patch("asyncio.create_task") as mock_create_task:
             manager.stop_realtime_updates("sim_001")
 
             mock_client.stop_auto_reconnect.assert_called_once()

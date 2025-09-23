@@ -1,21 +1,20 @@
-"""Intent recognition functionality for the Interpreter service.
+"""
+Intent recognition functionality for the Interpreter service.
 
-This module contains the IntentRecognizer class and related functionality,
-extracted from the main interpreter service to improve maintainability.
-Enhanced with ecosystem context awareness for project-specific understanding.
+This module contains the IntentRecognizer class and related
+functionality, extracted from the main interpreter service to improve
+maintainability. Enhanced with ecosystem context awareness for project-
+specific understanding.
 """
 
 import re
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple
 
-from services.shared.core.models.models import Document, Finding
+
+from .ecosystem_context import ecosystem_context
 
 # Import shared utilities for consistent error handling
-from .shared_utils import (
-    handle_interpreter_error,
-    build_interpreter_context
-)
-from .ecosystem_context import ecosystem_context
+from .shared_utils import build_interpreter_context, handle_interpreter_error
 
 
 class IntentRecognizer:
@@ -34,164 +33,145 @@ class IntentRecognizer:
                 r"analyze\s+(?:this|the|that|my|your|a)?\s*(?:document|file|content|code)",
                 r"check\s+(?:this|the|that|my|your|a)?\s*(?:document|file)",
                 r"review\s+(?:this|the|that|my|your|a)?\s*(?:document|content)",
-                r"examine\s+(?:this|the|that|my|your|a)?\s*(?:document|file)"
+                r"examine\s+(?:this|the|that|my|your|a)?\s*(?:document|file)",
             ],
-
             "consistency_check": [
                 r"check\s+consistency",
                 r"find\s+inconsistencies",
                 r"consistency\s+analysis",
-                r"validate\s+consistency"
+                r"validate\s+consistency",
             ],
-
             "security_scan": [
                 r"security\s+(?:scan|check|analysis)",
                 r"scan\s+for\s+security",
                 r"check\s+security",
-                r"security\s+vulnerabilities"
+                r"security\s+vulnerabilities",
             ],
-
             # Enhanced ingestion intents with ecosystem context
             "ingest_github": [
                 r"ingest\s+(?:from\s+)?github",
                 r"pull\s+from\s+github",
                 r"import\s+github\s+(?:repo|repository)",
-                r"sync\s+github"
+                r"sync\s+github",
             ],
-
             "ingest_jira": [
                 r"ingest\s+(?:from\s+)?jira",
                 r"pull\s+from\s+jira",
                 r"import\s+jira\s+tickets",
-                r"sync\s+jira"
+                r"sync\s+jira",
             ],
-
             "ingest_confluence": [
                 r"ingest\s+(?:from\s+)?confluence",
                 r"pull\s+from\s+confluence",
                 r"import\s+confluence\s+pages",
-                r"sync\s+confluence"
+                r"sync\s+confluence",
             ],
-
             # Prompt management intents
             "create_prompt": [
                 r"create\s+(?:a\s+)?(?:new\s+)?prompt",
                 r"make\s+(?:a\s+)?prompt",
                 r"add\s+(?:a\s+)?prompt",
-                r"new\s+prompt"
+                r"new\s+prompt",
             ],
-
             "find_prompt": [
                 r"find\s+(?:a\s+)?prompt",
                 r"search\s+(?:for\s+)?prompts?",
                 r"get\s+(?:a\s+)?prompt",
-                r"show\s+(?:me\s+)?prompts?"
+                r"show\s+(?:me\s+)?prompts?",
             ],
-
             "optimize_prompt": [
                 r"optimize\s+(?:a\s+)?prompt",
                 r"improve\s+(?:a\s+)?prompt",
                 r"enhance\s+(?:a\s+)?prompt",
-                r"refine\s+(?:a\s+)?prompt"
+                r"refine\s+(?:a\s+)?prompt",
             ],
-
             # Document management intents
             "store_document": [
                 r"store\s+(?:a\s+)?document",
                 r"save\s+(?:a\s+)?document",
                 r"upload\s+(?:a\s+)?document",
-                r"add\s+(?:a\s+)?document"
+                r"add\s+(?:a\s+)?document",
             ],
-
             "search_documents": [
                 r"search\s+(?:for\s+)?documents?",
                 r"find\s+(?:a\s+)?document",
                 r"look\s+for\s+documents?",
-                r"query\s+documents?"
+                r"query\s+documents?",
             ],
-
             # Code analysis intents
             "analyze_code": [
                 r"analyze\s+(?:this|the|that)?\s*code",
                 r"check\s+(?:this|the|that)?\s*code",
                 r"review\s+(?:this|the|that)?\s*code",
-                r"examine\s+(?:this|the|that)?\s*code"
+                r"examine\s+(?:this|the|that)?\s*code",
             ],
-
             "generate_code_docs": [
                 r"generate\s+(?:code\s+)?docs?",
                 r"create\s+(?:code\s+)?docs?",
                 r"document\s+(?:the\s+)?code",
-                r"auto.*docs?"
+                r"auto.*docs?",
             ],
-
             # Content processing intents
             "summarize_content": [
                 r"summarize\s+(?:this|the|that)?\s*content",
                 r"create\s+(?:a\s+)?summary",
                 r"generate\s+(?:a\s+)?summary",
-                r"abstract\s+(?:the\s+)?content"
+                r"abstract\s+(?:the\s+)?content",
             ],
-
             # Workflow execution intents
             "execute_workflow": [
                 r"(?:run|execute|start)\s+(?:a\s+)?workflow",
                 r"trigger\s+(?:a\s+)?workflow",
                 r"launch\s+(?:a\s+)?workflow",
-                r"perform\s+(?:a\s+)?workflow"
+                r"perform\s+(?:a\s+)?workflow",
             ],
-
             "list_workflows": [
                 r"(?:show|list|get)\s+(?:available\s+)?workflows?",
                 r"what\s+workflows?\s+(?:are\s+)?available",
                 r"workflow\s+options",
-                r"available\s+workflows?"
+                r"available\s+workflows?",
             ],
-
             # Report generation intents
             "generate_report": [
                 r"generate\s+(?:a\s+)?report",
                 r"create\s+(?:a\s+)?report",
                 r"make\s+(?:a\s+)?report",
-                r"run\s+(?:a\s+)?report"
+                r"run\s+(?:a\s+)?report",
             ],
-
             # Notification intents
             "send_notification": [
                 r"send\s+(?:a\s+)?notification",
                 r"notify\s+(?:someone|team|user)",
                 r"alert\s+(?:someone|team)",
-                r"send\s+alert"
+                r"send\s+alert",
             ],
-
             # System intents
             "help": [
                 r"help(?:\s+me)?",
                 r"what\s+can\s+you\s+do",
                 r"show\s+commands",
-                r"list\s+(?:available\s+)?commands"
+                r"list\s+(?:available\s+)?commands",
             ],
-
             "status": [
                 r"(?:show\s+)?status",
                 r"(?:system\s+)?status",
                 r"health\s+(?:check|status)",
-                r"how\s+are\s+you"
+                r"how\s+are\s+you",
             ],
-
             "discover_tools": [
                 r"discover\s+(?:available\s+)?tools?",
                 r"what\s+tools?\s+(?:are\s+)?available",
                 r"list\s+(?:available\s+)?tools?",
-                r"show\s+(?:me\s+)?tools?"
-            ]
+                r"show\s+(?:me\s+)?tools?",
+            ],
         }
 
         # Add dynamic patterns based on ecosystem services
         self._add_service_specific_patterns()
 
     def _add_service_specific_patterns(self):
-        """Add service-specific intent patterns based on ecosystem capabilities."""
+        """Add service-specific intent patterns based on ecosystem
+        capabilities."""
         # Get service capabilities from ecosystem context
         services = ecosystem_context.service_capabilities
 
@@ -224,11 +204,11 @@ class IntentRecognizer:
         # Define entity patterns
         self.entity_patterns = {
             "url": r'https?://[^\s\'"]+',
-            "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-            "repo": r'(?:github\.com/)?([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)',
-            "jira_key": r'\b[A-Z]{2,}-\d+\b',
-            "file_path": r'(?:/[^/\s]+)+/\S+',
-            "version": r'\bv?\d+(?:\.\d+)*(?:\.\d+)*\b'
+            "email": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            "repo": r"(?:github\.com/)?([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+)",
+            "jira_key": r"\b[A-Z]{2,}-\d+\b",
+            "file_path": r"(?:/[^/\s]+)+/\S+",
+            "version": r"\bv?\d+(?:\.\d+)*(?:\.\d+)*\b",
         }
 
     def recognize_intent(self, query: str) -> Tuple[str, float, Dict[str, Any]]:
@@ -249,11 +229,7 @@ class IntentRecognizer:
                     if match:
                         # Enhanced scoring with ecosystem context
                         score = self._calculate_intent_score(intent, query_lower, match, pattern)
-                        intent_metadata[intent] = {
-                            "pattern": pattern,
-                            "match": match.group(),
-                            "score": score
-                        }
+                        intent_metadata[intent] = {"pattern": pattern, "match": match.group(), "score": score}
 
                         if score > best_score:
                             best_score = score
@@ -274,7 +250,7 @@ class IntentRecognizer:
             entities["ecosystem_context"] = {
                 "detected_services": self._detect_services_in_query(query_lower),
                 "detected_capabilities": self._detect_capabilities_in_query(query_lower),
-                "suggested_workflows": self._suggest_workflows(query_lower, best_intent)
+                "suggested_workflows": self._suggest_workflows(query_lower, best_intent),
             }
 
             return best_intent, best_score, entities
@@ -289,7 +265,9 @@ class IntentRecognizer:
         base_score = 0.6
 
         # High confidence for exact matches
-        if intent in ["analyze_document", "security_scan"] and any(word in query for word in ["analyze", "scan", "check"]):
+        if intent in ["analyze_document", "security_scan"] and any(
+            word in query for word in ["analyze", "scan", "check"]
+        ):
             base_score = 0.9
 
         # Medium-high confidence for action verbs
@@ -308,7 +286,8 @@ class IntentRecognizer:
         return min(base_score, 1.0)
 
     def _recognize_with_ecosystem_context(self, query: str) -> Tuple[str, float, Dict[str, Any]]:
-        """Use ecosystem context for intent recognition when pattern matching is uncertain."""
+        """Use ecosystem context for intent recognition when pattern matching
+        is uncertain."""
         best_intent = "unknown"
         best_score = 0.0
         metadata = {}
@@ -374,7 +353,7 @@ class IntentRecognizer:
             "summarize_content": ["content_processing"],
             "ingest_github": ["code_documentation"],
             "ingest_jira": ["content_processing"],
-            "ingest_confluence": ["content_processing"]
+            "ingest_confluence": ["content_processing"],
         }
 
         if intent in workflow_mapping:

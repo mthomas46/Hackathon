@@ -1,12 +1,13 @@
-"""Footer Component.
+"""
+Footer Component.
 
-This module provides the footer component for the dashboard,
-including version information, links, and system status.
+This module provides the footer component for the dashboard, including
+version information, links, and system status.
 """
 
-import streamlit as st
 from datetime import datetime
 
+import streamlit as st
 from infrastructure.config.config import get_config
 
 
@@ -58,8 +59,9 @@ def render_system_info():
     st.markdown("**🖥️ System Status**")
 
     # Get current system metrics
-    import psutil
     import platform
+
+    import psutil
 
     try:
         # CPU usage
@@ -111,7 +113,7 @@ def render_performance_info():
     st.markdown("**⚡ Performance**")
 
     # Calculate some basic metrics
-    import time
+
     import streamlit.runtime.caching as caching
 
     try:
@@ -139,6 +141,7 @@ def get_uptime_string() -> str:
     """Get system uptime as a formatted string."""
     try:
         import psutil
+
         uptime_seconds = int(time.time() - psutil.boot_time())
 
         days = uptime_seconds // 86400
@@ -182,7 +185,7 @@ def render_debug_info():
                 st.markdown("**Session State:**")
                 if st.session_state:
                     for key, value in st.session_state.items():
-                        if not key.startswith('_'):  # Skip private keys
+                        if not key.startswith("_"):  # Skip private keys
                             if isinstance(value, (str, int, float, bool)):
                                 st.code(f"{key}: {value}")
                             else:

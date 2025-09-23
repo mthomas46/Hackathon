@@ -1,18 +1,14 @@
 """Tests for Finding Repository Implementation."""
 
-import pytest
 import asyncio
-from datetime import datetime, timezone
-from typing import Dict, Any, List
 
-from ...infrastructure.repositories.finding_repository import (
-    FindingRepository, InMemoryFindingRepository
-)
-from ...infrastructure.repositories.sqlite_finding_repository import SQLiteFindingRepository
+import pytest
 
 from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.confidence import Confidence
-from ...domain.value_objects.location import FileLocation, CodeLocation
+from ...domain.value_objects.location import CodeLocation, FileLocation
+from ...infrastructure.repositories.finding_repository import FindingRepository, InMemoryFindingRepository
+from ...infrastructure.repositories.sqlite_finding_repository import SQLiteFindingRepository
 
 
 class TestFindingRepositoryInterface:
@@ -20,11 +16,16 @@ class TestFindingRepositoryInterface:
 
     def test_repository_interface_definition(self):
         """Test that FindingRepository defines the expected interface."""
-        repo_methods = [method for method in dir(FindingRepository) if not method.startswith('_')]
+        repo_methods = [method for method in dir(FindingRepository) if not method.startswith("_")]
 
         expected_methods = [
-            'save', 'get_by_id', 'get_all', 'get_by_analysis_id',
-            'get_by_document_id', 'get_by_severity', 'delete'
+            "save",
+            "get_by_id",
+            "get_all",
+            "get_by_analysis_id",
+            "get_by_document_id",
+            "get_by_severity",
+            "delete",
         ]
 
         for method in expected_methods:
@@ -43,15 +44,15 @@ class TestInMemoryFindingRepository:
     def sample_finding(self):
         """Create a sample finding for testing."""
         return Finding(
-            id='test-finding-123',
-            analysis_id='analysis-456',
-            document_id='doc-789',
-            title='Test Finding',
-            description='This is a test finding',
+            id="test-finding-123",
+            analysis_id="analysis-456",
+            document_id="doc-789",
+            title="Test Finding",
+            description="This is a test finding",
             severity=FindingSeverity.MEDIUM,
             confidence=Confidence(0.8),
-            category='code_quality',
-            location=FileLocation('/src/main.py', 42)
+            category="code_quality",
+            location=FileLocation("/src/main.py", 42),
         )
 
     def test_repository_creation(self, repository):
@@ -77,7 +78,7 @@ class TestInMemoryFindingRepository:
     @pytest.mark.asyncio
     async def test_get_by_id_nonexistent(self, repository):
         """Test getting non-existent finding."""
-        retrieved = await repository.get_by_id('non-existent-id')
+        retrieved = await repository.get_by_id("non-existent-id")
         assert retrieved is None
 
     @pytest.mark.asyncio
@@ -87,14 +88,14 @@ class TestInMemoryFindingRepository:
         findings = []
         for i in range(3):
             finding = Finding(
-                id=f'test-finding-{i}',
-                analysis_id='analysis-123',
-                document_id='doc-456',
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                id=f"test-finding-{i}",
+                analysis_id="analysis-123",
+                document_id="doc-456",
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
             findings.append(finding)
@@ -110,51 +111,51 @@ class TestInMemoryFindingRepository:
     async def test_get_by_analysis_id(self, repository):
         """Test getting findings by analysis ID."""
         # Create findings for different analyses
-        analysis_ids = ['analysis-1', 'analysis-2', 'analysis-1', 'analysis-3']
+        analysis_ids = ["analysis-1", "analysis-2", "analysis-1", "analysis-3"]
 
         for i, analysis_id in enumerate(analysis_ids):
             finding = Finding(
-                id=f'finding-{i}',
+                id=f"finding-{i}",
                 analysis_id=analysis_id,
-                document_id='doc-123',
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                document_id="doc-123",
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
 
         # Get findings for analysis-1
-        analysis_findings = await repository.get_by_analysis_id('analysis-1')
+        analysis_findings = await repository.get_by_analysis_id("analysis-1")
         assert len(analysis_findings) == 2
         for finding in analysis_findings:
-            assert finding.analysis_id == 'analysis-1'
+            assert finding.analysis_id == "analysis-1"
 
     @pytest.mark.asyncio
     async def test_get_by_document_id(self, repository):
         """Test getting findings by document ID."""
         # Create findings for different documents
-        document_ids = ['doc-1', 'doc-2', 'doc-1', 'doc-3']
+        document_ids = ["doc-1", "doc-2", "doc-1", "doc-3"]
 
         for i, doc_id in enumerate(document_ids):
             finding = Finding(
-                id=f'finding-{i}',
-                analysis_id='analysis-123',
+                id=f"finding-{i}",
+                analysis_id="analysis-123",
                 document_id=doc_id,
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
 
         # Get findings for doc-1
-        doc_findings = await repository.get_by_document_id('doc-1')
+        doc_findings = await repository.get_by_document_id("doc-1")
         assert len(doc_findings) == 2
         for finding in doc_findings:
-            assert finding.document_id == 'doc-1'
+            assert finding.document_id == "doc-1"
 
     @pytest.mark.asyncio
     async def test_get_by_severity(self, repository):
@@ -163,14 +164,14 @@ class TestInMemoryFindingRepository:
 
         for i, severity in enumerate(severities):
             finding = Finding(
-                id=f'finding-{i}',
-                analysis_id='analysis-123',
-                document_id='doc-456',
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                id=f"finding-{i}",
+                analysis_id="analysis-123",
+                document_id="doc-456",
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=severity,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
 
@@ -199,60 +200,54 @@ class TestInMemoryFindingRepository:
     @pytest.mark.asyncio
     async def test_delete_nonexistent_finding(self, repository):
         """Test deleting non-existent finding."""
-        result = await repository.delete('non-existent-id')
+        result = await repository.delete("non-existent-id")
         assert result is False
 
     @pytest.mark.asyncio
     async def test_finding_with_file_location(self, repository):
         """Test finding with file location."""
-        location = FileLocation('/src/utils.py', 150)
+        location = FileLocation("/src/utils.py", 150)
 
         finding = Finding(
-            id='location-finding',
-            analysis_id='analysis-123',
-            document_id='doc-456',
-            title='Location Finding',
-            description='Finding with file location',
+            id="location-finding",
+            analysis_id="analysis-123",
+            document_id="doc-456",
+            title="Location Finding",
+            description="Finding with file location",
             severity=FindingSeverity.MEDIUM,
             confidence=Confidence(0.85),
-            category='code_quality',
-            location=location
+            category="code_quality",
+            location=location,
         )
 
         await repository.save(finding)
 
-        retrieved = await repository.get_by_id('location-finding')
+        retrieved = await repository.get_by_id("location-finding")
         assert retrieved is not None
         assert retrieved.location == location
-        assert retrieved.location.file_path == '/src/utils.py'
+        assert retrieved.location.file_path == "/src/utils.py"
         assert retrieved.location.line_number == 150
 
     @pytest.mark.asyncio
     async def test_finding_with_code_location(self, repository):
         """Test finding with code location."""
-        location = CodeLocation(
-            file_path='/src/parser.py',
-            start_line=25,
-            end_line=35,
-            start_column=10,
-            end_column=25
-        )
+        location = CodeLocation(file_path="/src/parser.py", start_line=25, end_line=35, start_column=10, end_column=25)
 
         finding = Finding(
-            id='code-location-finding',
-            analysis_id='analysis-123',
-            document_id='doc-456',
-            title='Code Location Finding',
-            description='Finding with code location',
+            id="code-location-finding",
+            analysis_id="analysis-123",
+            document_id="doc-456",
+            title="Code Location Finding",
+            description="Finding with code location",
             severity=FindingSeverity.HIGH,
             confidence=Confidence(0.9),
-            category='security',
-            location=location
+            category="security",
+            location=location,
         )
 
         await repository.save(finding)
 
-        retrieved = await repository.get_by_id('code-location-finding')
+        retrieved = await repository.get_by_id("code-location-finding")
         assert retrieved is not None
         assert retrieved.location == location
         assert retrieved.location.start_line == 25
@@ -262,53 +257,53 @@ class TestInMemoryFindingRepository:
     async def test_finding_with_recommendation(self, repository):
         """Test finding with recommendation."""
         finding = Finding(
-            id='recommendation-finding',
-            analysis_id='analysis-123',
-            document_id='doc-456',
-            title='Recommendation Finding',
-            description='Finding with recommendation',
+            id="recommendation-finding",
+            analysis_id="analysis-123",
+            document_id="doc-456",
+            title="Recommendation Finding",
+            description="Finding with recommendation",
             severity=FindingSeverity.LOW,
             confidence=Confidence(0.7),
-            category='style',
-            recommendation='Consider using more descriptive variable names'
+            category="style",
+            recommendation="Consider using more descriptive variable names",
         )
 
         await repository.save(finding)
 
-        retrieved = await repository.get_by_id('recommendation-finding')
+        retrieved = await repository.get_by_id("recommendation-finding")
         assert retrieved is not None
-        assert retrieved.recommendation == 'Consider using more descriptive variable names'
+        assert retrieved.recommendation == "Consider using more descriptive variable names"
 
     @pytest.mark.asyncio
     async def test_finding_with_metadata(self, repository):
         """Test finding with metadata."""
         metadata = {
-            'rule_id': 'STYLE-001',
-            'tags': ['style', 'naming'],
-            'code_snippet': 'var x = 1;',
-            'suggestion_confidence': 0.85,
-            'automated_fix_available': True
+            "rule_id": "STYLE-001",
+            "tags": ["style", "naming"],
+            "code_snippet": "var x = 1;",
+            "suggestion_confidence": 0.85,
+            "automated_fix_available": True,
         }
 
         finding = Finding(
-            id='metadata-finding',
-            analysis_id='analysis-123',
-            document_id='doc-456',
-            title='Metadata Finding',
-            description='Finding with metadata',
+            id="metadata-finding",
+            analysis_id="analysis-123",
+            document_id="doc-456",
+            title="Metadata Finding",
+            description="Finding with metadata",
             severity=FindingSeverity.INFO,
             confidence=Confidence(0.6),
-            category='style',
-            metadata=metadata
+            category="style",
+            metadata=metadata,
         )
 
         await repository.save(finding)
 
-        retrieved = await repository.get_by_id('metadata-finding')
+        retrieved = await repository.get_by_id("metadata-finding")
         assert retrieved is not None
         assert retrieved.metadata == metadata
-        assert retrieved.metadata['rule_id'] == 'STYLE-001'
-        assert retrieved.metadata['automated_fix_available'] is True
+        assert retrieved.metadata["rule_id"] == "STYLE-001"
+        assert retrieved.metadata["automated_fix_available"] is True
 
 
 class TestSQLiteFindingRepository:
@@ -317,7 +312,7 @@ class TestSQLiteFindingRepository:
     @pytest.fixture
     async def repository(self):
         """Create a fresh SQLite finding repository for each test."""
-        repo = SQLiteFindingRepository(':memory:')
+        repo = SQLiteFindingRepository(":memory:")
         await repo.initialize()
         yield repo
         await repo.close()
@@ -326,14 +321,14 @@ class TestSQLiteFindingRepository:
     def sample_finding(self):
         """Create a sample finding for testing."""
         return Finding(
-            id='test-finding-123',
-            analysis_id='analysis-456',
-            document_id='doc-789',
-            title='Test Finding',
-            description='This is a test finding',
+            id="test-finding-123",
+            analysis_id="analysis-456",
+            document_id="doc-789",
+            title="Test Finding",
+            description="This is a test finding",
             severity=FindingSeverity.MEDIUM,
             confidence=Confidence(0.8),
-            category='code_quality'
+            category="code_quality",
         )
 
     @pytest.mark.asyncio
@@ -342,7 +337,7 @@ class TestSQLiteFindingRepository:
         assert repository is not None
         assert isinstance(repository, FindingRepository)
         assert isinstance(repository, SQLiteFindingRepository)
-        assert repository.database_path == ':memory:'
+        assert repository.database_path == ":memory:"
 
     @pytest.mark.asyncio
     async def test_save_and_retrieve_finding_sqlite(self, repository, sample_finding):
@@ -363,21 +358,21 @@ class TestSQLiteFindingRepository:
         # Create findings for different analyses
         for i in range(3):
             finding = Finding(
-                id=f'finding-{i}',
-                analysis_id=f'analysis-{i % 2}',  # 2 for analysis-0, 1 for analysis-1
-                document_id='doc-123',
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                id=f"finding-{i}",
+                analysis_id=f"analysis-{i % 2}",  # 2 for analysis-0, 1 for analysis-1
+                document_id="doc-123",
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
 
-        analysis_findings = await repository.get_by_analysis_id('analysis-0')
+        analysis_findings = await repository.get_by_analysis_id("analysis-0")
         assert len(analysis_findings) == 2
         for finding in analysis_findings:
-            assert finding.analysis_id == 'analysis-0'
+            assert finding.analysis_id == "analysis-0"
 
     @pytest.mark.asyncio
     async def test_get_by_document_id_sqlite(self, repository):
@@ -385,21 +380,21 @@ class TestSQLiteFindingRepository:
         # Create findings for different documents
         for i in range(3):
             finding = Finding(
-                id=f'finding-{i}',
-                analysis_id='analysis-123',
-                document_id=f'doc-{i % 2}',  # 2 for doc-0, 1 for doc-1
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                id=f"finding-{i}",
+                analysis_id="analysis-123",
+                document_id=f"doc-{i % 2}",  # 2 for doc-0, 1 for doc-1
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
 
-        doc_findings = await repository.get_by_document_id('doc-0')
+        doc_findings = await repository.get_by_document_id("doc-0")
         assert len(doc_findings) == 2
         for finding in doc_findings:
-            assert finding.document_id == 'doc-0'
+            assert finding.document_id == "doc-0"
 
     @pytest.mark.asyncio
     async def test_get_by_severity_sqlite(self, repository):
@@ -408,14 +403,14 @@ class TestSQLiteFindingRepository:
 
         for i, severity in enumerate(severities):
             finding = Finding(
-                id=f'finding-{i}',
-                analysis_id='analysis-123',
-                document_id='doc-456',
-                title=f'Finding {i}',
-                description=f'Description {i}',
+                id=f"finding-{i}",
+                analysis_id="analysis-123",
+                document_id="doc-456",
+                title=f"Finding {i}",
+                description=f"Description {i}",
                 severity=severity,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repository.save(finding)
 
@@ -448,10 +443,10 @@ class TestFindingRepositoryIntegration:
 
         # Create an analysis
         analysis = Analysis(
-            id='integration-analysis',
-            document_id='integration-doc',
+            id="integration-analysis",
+            document_id="integration-doc",
             analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
-            status=AnalysisStatus.COMPLETED
+            status=AnalysisStatus.COMPLETED,
         )
         await analysis_repo.save(analysis)
 
@@ -459,25 +454,25 @@ class TestFindingRepositoryIntegration:
         findings = []
         for i in range(3):
             finding = Finding(
-                id=f'integration-finding-{i}',
-                analysis_id='integration-analysis',
-                document_id='integration-doc',
-                title=f'Integration Finding {i}',
-                description=f'Description {i}',
+                id=f"integration-finding-{i}",
+                analysis_id="integration-analysis",
+                document_id="integration-doc",
+                title=f"Integration Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM if i % 2 == 0 else FindingSeverity.HIGH,
                 confidence=Confidence(0.7 + i * 0.1),
-                category='integration_test'
+                category="integration_test",
             )
             await finding_repo.save(finding)
             findings.append(finding)
 
         # Verify the relationship
-        analysis_findings = await finding_repo.get_by_analysis_id('integration-analysis')
+        analysis_findings = await finding_repo.get_by_analysis_id("integration-analysis")
         assert len(analysis_findings) == 3
 
         for finding in analysis_findings:
-            assert finding.analysis_id == 'integration-analysis'
-            assert finding.document_id == 'integration-doc'
+            assert finding.analysis_id == "integration-analysis"
+            assert finding.document_id == "integration-doc"
 
     @pytest.mark.asyncio
     async def test_finding_repository_cross_document_analysis(self):
@@ -485,21 +480,21 @@ class TestFindingRepositoryIntegration:
         repo = InMemoryFindingRepository()
 
         # Simulate findings from cross-document analysis
-        documents = ['doc-1', 'doc-2', 'doc-3']
+        documents = ["doc-1", "doc-2", "doc-3"]
         severities = [FindingSeverity.LOW, FindingSeverity.MEDIUM, FindingSeverity.HIGH]
 
         findings = []
         for i, doc_id in enumerate(documents):
             for j, severity in enumerate(severities):
                 finding = Finding(
-                    id=f'cross-finding-{i}-{j}',
-                    analysis_id='cross-analysis',
+                    id=f"cross-finding-{i}-{j}",
+                    analysis_id="cross-analysis",
                     document_id=doc_id,
-                    title=f'Cross-document finding {i}-{j}',
-                    description=f'Finding in document {doc_id}',
+                    title=f"Cross-document finding {i}-{j}",
+                    description=f"Finding in document {doc_id}",
                     severity=severity,
                     confidence=Confidence(0.6 + j * 0.2),
-                    category='cross_document_analysis'
+                    category="cross_document_analysis",
                 )
                 await repo.save(finding)
                 findings.append(finding)
@@ -526,14 +521,18 @@ class TestFindingRepositoryIntegration:
         findings = []
         for i in range(100):
             finding = Finding(
-                id=f'bulk-finding-{i:03d}',
-                analysis_id='bulk-analysis',
-                document_id='bulk-doc',
-                title=f'Bulk Finding {i}',
-                description=f'Description {i}',
-                severity=FindingSeverity.LOW if i % 3 == 0 else FindingSeverity.MEDIUM if i % 3 == 1 else FindingSeverity.HIGH,
+                id=f"bulk-finding-{i:03d}",
+                analysis_id="bulk-analysis",
+                document_id="bulk-doc",
+                title=f"Bulk Finding {i}",
+                description=f"Description {i}",
+                severity=(
+                    FindingSeverity.LOW
+                    if i % 3 == 0
+                    else FindingSeverity.MEDIUM if i % 3 == 1 else FindingSeverity.HIGH
+                ),
                 confidence=Confidence(0.5 + (i % 50) * 0.01),
-                category='bulk_test'
+                category="bulk_test",
             )
             findings.append(finding)
             await repo.save(finding)
@@ -543,10 +542,10 @@ class TestFindingRepositoryIntegration:
         assert len(all_findings) == 100
 
         # Test bulk queries
-        analysis_findings = await repo.get_by_analysis_id('bulk-analysis')
+        analysis_findings = await repo.get_by_analysis_id("bulk-analysis")
         assert len(analysis_findings) == 100
 
-        doc_findings = await repo.get_by_document_id('bulk-doc')
+        doc_findings = await repo.get_by_document_id("bulk-doc")
         assert len(doc_findings) == 100
 
         # Test severity distribution
@@ -566,24 +565,24 @@ class TestFindingRepositoryIntegration:
 
         # Create findings with various location types
         locations = [
-            FileLocation('/src/main.py', 42),
-            CodeLocation('/src/utils.py', 10, 15, 5, 20),
-            FileLocation('/tests/test_main.py', 123),
-            CodeLocation('/src/parser.py', 25, 35, 10, 25)
+            FileLocation("/src/main.py", 42),
+            CodeLocation("/src/utils.py", 10, 15, 5, 20),
+            FileLocation("/tests/test_main.py", 123),
+            CodeLocation("/src/parser.py", 25, 35, 10, 25),
         ]
 
         findings = []
         for i, location in enumerate(locations):
             finding = Finding(
-                id=f'location-finding-{i}',
-                analysis_id='location-analysis',
-                document_id='location-doc',
-                title=f'Location Finding {i}',
-                description=f'Finding at location {i}',
+                id=f"location-finding-{i}",
+                analysis_id="location-analysis",
+                document_id="location-doc",
+                title=f"Location Finding {i}",
+                description=f"Finding at location {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='location_test',
-                location=location
+                category="location_test",
+                location=location,
             )
             await repo.save(finding)
             findings.append(finding)
@@ -603,7 +602,7 @@ class TestFindingRepositoryErrorHandling:
     async def test_sqlite_repository_invalid_path(self):
         """Test SQLite repository with invalid database path."""
         with pytest.raises(Exception):
-            repo = SQLiteFindingRepository('/invalid/path/database.db')
+            repo = SQLiteFindingRepository("/invalid/path/database.db")
             await repo.initialize()
 
     @pytest.mark.asyncio
@@ -614,14 +613,14 @@ class TestFindingRepositoryErrorHandling:
         # Try to save finding with invalid data
         try:
             invalid_finding = Finding(
-                id='',  # Invalid empty ID
-                analysis_id='analysis-123',
-                document_id='doc-456',
-                title='Invalid Finding',
-                description='Description',
+                id="",  # Invalid empty ID
+                analysis_id="analysis-123",
+                document_id="doc-456",
+                title="Invalid Finding",
+                description="Description",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='test'
+                category="test",
             )
             await repo.save(invalid_finding)
         except ValueError:
@@ -635,14 +634,14 @@ class TestFindingRepositoryErrorHandling:
 
         async def create_and_save_finding(i: int):
             finding = Finding(
-                id=f'concurrent-finding-{i}',
-                analysis_id='concurrent-analysis',
-                document_id='concurrent-doc',
-                title=f'Concurrent Finding {i}',
-                description=f'Description {i}',
+                id=f"concurrent-finding-{i}",
+                analysis_id="concurrent-analysis",
+                document_id="concurrent-doc",
+                title=f"Concurrent Finding {i}",
+                description=f"Description {i}",
                 severity=FindingSeverity.MEDIUM,
                 confidence=Confidence(0.8),
-                category='concurrent_test'
+                category="concurrent_test",
             )
             await repo.save(finding)
             return finding
@@ -674,19 +673,19 @@ class TestFindingRepositoryEdgeCases:
         all_findings = await repo.get_all()
         assert len(all_findings) == 0
 
-        retrieved = await repo.get_by_id('non-existent')
+        retrieved = await repo.get_by_id("non-existent")
         assert retrieved is None
 
-        analysis_findings = await repo.get_by_analysis_id('non-existent-analysis')
+        analysis_findings = await repo.get_by_analysis_id("non-existent-analysis")
         assert len(analysis_findings) == 0
 
-        doc_findings = await repo.get_by_document_id('non-existent-doc')
+        doc_findings = await repo.get_by_document_id("non-existent-doc")
         assert len(doc_findings) == 0
 
         severity_findings = await repo.get_by_severity(FindingSeverity.CRITICAL)
         assert len(severity_findings) == 0
 
-        delete_result = await repo.delete('non-existent')
+        delete_result = await repo.delete("non-existent")
         assert delete_result is False
 
     @pytest.mark.asyncio
@@ -696,25 +695,25 @@ class TestFindingRepositoryEdgeCases:
 
         # Create finding with special characters
         special_finding = Finding(
-            id='special-finding-🚨',
-            analysis_id='analysis-ñáéíóú',
-            document_id='doc-🚀',
-            title='Finding with ñáéíóú 🚀 📚 💻',
-            description='Description with @#$%^&*()[]{}',
+            id="special-finding-🚨",
+            analysis_id="analysis-ñáéíóú",
+            document_id="doc-🚀",
+            title="Finding with ñáéíóú 🚀 📚 💻",
+            description="Description with @#$%^&*()[]{}",
             severity=FindingSeverity.HIGH,
             confidence=Confidence(0.9),
-            category='special_chars',
-            recommendation='Fix this issue: 🚨 → ✅'
+            category="special_chars",
+            recommendation="Fix this issue: 🚨 → ✅",
         )
 
         await repo.save(special_finding)
 
-        retrieved = await repo.get_by_id('special-finding-🚨')
+        retrieved = await repo.get_by_id("special-finding-🚨")
         assert retrieved is not None
-        assert '🚨' in retrieved.id.value
-        assert 'ñáéíóú' in retrieved.analysis_id
-        assert '🚀' in retrieved.title
-        assert retrieved.recommendation == 'Fix this issue: 🚨 → ✅'
+        assert "🚨" in retrieved.id.value
+        assert "ñáéíóú" in retrieved.analysis_id
+        assert "🚀" in retrieved.title
+        assert retrieved.recommendation == "Fix this issue: 🚨 → ✅"
 
     @pytest.mark.asyncio
     async def test_finding_repository_large_metadata(self):
@@ -723,41 +722,41 @@ class TestFindingRepositoryEdgeCases:
 
         # Create finding with large metadata
         large_metadata = {
-            'rule_id': 'COMPLEX-001',
-            'tags': [f'tag-{i}' for i in range(100)],  # 100 tags
-            'code_snippet': 'x' * 5000,  # 5KB code snippet
-            'related_findings': [f'finding-{i}' for i in range(200)],  # 200 related findings
-            'analysis_context': {
-                'file_dependencies': [f'/src/dep-{i}.py' for i in range(50)],
-                'function_calls': [{'name': f'func-{i}', 'line': i*10} for i in range(100)],
-                'variable_usage': {f'var-{i}': [f'usage-{j}' for j in range(20)] for i in range(30)}
+            "rule_id": "COMPLEX-001",
+            "tags": [f"tag-{i}" for i in range(100)],  # 100 tags
+            "code_snippet": "x" * 5000,  # 5KB code snippet
+            "related_findings": [f"finding-{i}" for i in range(200)],  # 200 related findings
+            "analysis_context": {
+                "file_dependencies": [f"/src/dep-{i}.py" for i in range(50)],
+                "function_calls": [{"name": f"func-{i}", "line": i * 10} for i in range(100)],
+                "variable_usage": {f"var-{i}": [f"usage-{j}" for j in range(20)] for i in range(30)},
             },
-            'performance_impact': {
-                'complexity_increase': 25.5,
-                'memory_overhead': 1024.0,
-                'execution_time_impact': 0.15
-            }
+            "performance_impact": {
+                "complexity_increase": 25.5,
+                "memory_overhead": 1024.0,
+                "execution_time_impact": 0.15,
+            },
         }
 
         finding = Finding(
-            id='large-metadata-finding',
-            analysis_id='large-analysis',
-            document_id='large-doc',
-            title='Finding with Large Metadata',
-            description='This finding has extensive metadata',
+            id="large-metadata-finding",
+            analysis_id="large-analysis",
+            document_id="large-doc",
+            title="Finding with Large Metadata",
+            description="This finding has extensive metadata",
             severity=FindingSeverity.MEDIUM,
             confidence=Confidence(0.85),
-            category='complex_analysis',
-            metadata=large_metadata
+            category="complex_analysis",
+            metadata=large_metadata,
         )
 
         await repo.save(finding)
 
-        retrieved = await repo.get_by_id('large-metadata-finding')
+        retrieved = await repo.get_by_id("large-metadata-finding")
         assert retrieved is not None
-        assert len(retrieved.metadata['tags']) == 100
-        assert len(retrieved.metadata['code_snippet']) == 5000
-        assert retrieved.metadata['performance_impact']['complexity_increase'] == 25.5
+        assert len(retrieved.metadata["tags"]) == 100
+        assert len(retrieved.metadata["code_snippet"]) == 5000
+        assert retrieved.metadata["performance_impact"]["complexity_increase"] == 25.5
 
     @pytest.mark.asyncio
     async def test_finding_repository_null_empty_values(self):
@@ -766,24 +765,24 @@ class TestFindingRepositoryEdgeCases:
 
         # Create finding with empty values where allowed
         finding = Finding(
-            id='empty-finding',
-            analysis_id='empty-analysis',
-            document_id='empty-doc',
-            title='Empty Finding',
-            description='',  # Empty description
+            id="empty-finding",
+            analysis_id="empty-analysis",
+            document_id="empty-doc",
+            title="Empty Finding",
+            description="",  # Empty description
             severity=FindingSeverity.INFO,
             confidence=Confidence(0.5),
-            category='',  # Empty category
-            recommendation=''  # Empty recommendation
+            category="",  # Empty category
+            recommendation="",  # Empty recommendation
         )
 
         await repo.save(finding)
 
-        retrieved = await repo.get_by_id('empty-finding')
+        retrieved = await repo.get_by_id("empty-finding")
         assert retrieved is not None
-        assert retrieved.description == ''
-        assert retrieved.category == ''
-        assert retrieved.recommendation == ''
+        assert retrieved.description == ""
+        assert retrieved.category == ""
+        assert retrieved.recommendation == ""
 
     @pytest.mark.asyncio
     async def test_finding_repository_extreme_confidence_values(self):
@@ -792,34 +791,34 @@ class TestFindingRepositoryEdgeCases:
 
         # Test very low confidence
         low_conf_finding = Finding(
-            id='low-confidence-finding',
-            analysis_id='analysis-123',
-            document_id='doc-456',
-            title='Low Confidence Finding',
-            description='Very uncertain finding',
+            id="low-confidence-finding",
+            analysis_id="analysis-123",
+            document_id="doc-456",
+            title="Low Confidence Finding",
+            description="Very uncertain finding",
             severity=FindingSeverity.INFO,
             confidence=Confidence(0.01),  # Very low confidence
-            category='uncertain'
+            category="uncertain",
         )
 
         # Test very high confidence
         high_conf_finding = Finding(
-            id='high-confidence-finding',
-            analysis_id='analysis-123',
-            document_id='doc-456',
-            title='High Confidence Finding',
-            description='Very certain finding',
+            id="high-confidence-finding",
+            analysis_id="analysis-123",
+            document_id="doc-456",
+            title="High Confidence Finding",
+            description="Very certain finding",
             severity=FindingSeverity.CRITICAL,
             confidence=Confidence(0.99),  # Very high confidence
-            category='certain'
+            category="certain",
         )
 
         await repo.save(low_conf_finding)
         await repo.save(high_conf_finding)
 
         # Verify both were saved correctly
-        low_retrieved = await repo.get_by_id('low-confidence-finding')
-        high_retrieved = await repo.get_by_id('high-confidence-finding')
+        low_retrieved = await repo.get_by_id("low-confidence-finding")
+        high_retrieved = await repo.get_by_id("high-confidence-finding")
 
         assert low_retrieved.confidence.value == 0.01
         assert high_retrieved.confidence.value == 0.99

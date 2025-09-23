@@ -1,9 +1,11 @@
-"""Cross-service intelligence service for generating prompts from code and documents."""
+"""Cross-service intelligence service for generating prompts from code and
+documents."""
 
 import re
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List
+
 from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.utilities import generate_id, utc_now
+from services.shared.utilities import generate_id
 
 
 class IntelligenceService:
@@ -49,10 +51,10 @@ class IntelligenceService:
                 "analysis_summary": {
                     "functions_analyzed": len(functions),
                     "classes_analyzed": len(classes),
-                    "complexity_score": analysis_data.get("complexity", {}).get("overall", 0)
+                    "complexity_score": analysis_data.get("complexity", {}).get("overall", 0),
                 },
                 "generated_prompts": generated_prompts,
-                "total_prompts": len(generated_prompts)
+                "total_prompts": len(generated_prompts),
             }
 
         except Exception as e:
@@ -90,7 +92,7 @@ Format the documentation clearly with sections and code examples."""
             "source_type": "code_analysis",
             "source_entity": func_name,
             "confidence_score": 0.85,
-            "estimated_complexity": "medium"
+            "estimated_complexity": "medium",
         }
 
     def _create_class_doc_prompt(self, cls: Dict[str, Any], language: str) -> Dict[str, Any]:
@@ -125,7 +127,7 @@ Provide practical examples and explain when to use this class."""
             "source_type": "code_analysis",
             "source_entity": class_name,
             "confidence_score": 0.8,
-            "estimated_complexity": "medium"
+            "estimated_complexity": "medium",
         }
 
     def _create_api_doc_prompt(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -161,7 +163,7 @@ Organize by resource groups and include a summary table."""
             "source_type": "code_analysis",
             "source_entity": "api_endpoints",
             "confidence_score": 0.75,
-            "estimated_complexity": "high"
+            "estimated_complexity": "high",
         }
 
     def _looks_like_api_function(self, func: Dict[str, Any]) -> bool:
@@ -175,7 +177,7 @@ Organize by resource groups and include a summary table."""
             r"app\.route|@app\.route|router\.|api\.|flask|fastapi|express",
             r"GET|POST|PUT|DELETE",
             r"@app\.(get|post|put|delete)",
-            r"def (get|post|put|delete|create|update|delete)"
+            r"def (get|post|put|delete|create|update|delete)",
         ]
 
         return any(re.search(pattern, code_content, re.IGNORECASE) for pattern in api_patterns)
@@ -218,10 +220,10 @@ Organize by resource groups and include a summary table."""
                     "main_topics": len(main_topics),
                     "key_concepts": len(key_concepts),
                     "word_count": len(document_content.split()),
-                    "sentiment": summary_data.get("sentiment", "neutral")
+                    "sentiment": summary_data.get("sentiment", "neutral"),
                 },
                 "generated_prompts": generated_prompts,
-                "total_prompts": len(generated_prompts)
+                "total_prompts": len(generated_prompts),
             }
 
         except Exception as e:
@@ -252,7 +254,7 @@ Format the content appropriately for {doc_type} format with proper headings, cod
             "source_type": "document_analysis",
             "source_entity": topic,
             "confidence_score": 0.8,
-            "estimated_complexity": "medium"
+            "estimated_complexity": "medium",
         }
 
     def _create_concept_explanation_prompt(self, concept: str) -> Dict[str, Any]:
@@ -280,7 +282,7 @@ Use simple language suitable for someone new to the topic, but include technical
             "source_type": "document_analysis",
             "source_entity": concept,
             "confidence_score": 0.9,
-            "estimated_complexity": "low"
+            "estimated_complexity": "low",
         }
 
     def _create_tutorial_prompt(self, summary_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -314,20 +316,31 @@ Make the tutorial progressive, starting with basics and building up to advanced 
             "source_type": "document_analysis",
             "source_entity": "tutorial_content",
             "confidence_score": 0.75,
-            "estimated_complexity": "high"
+            "estimated_complexity": "high",
         }
 
     def _is_tutorial_document(self, content: str) -> bool:
         """Check if document appears to be educational/tutorial content."""
         tutorial_indicators = [
-            "tutorial", "guide", "how to", "step by step", "learn", "introduction to",
-            "beginner", "getting started", "walkthrough", "example", "exercise"
+            "tutorial",
+            "guide",
+            "how to",
+            "step by step",
+            "learn",
+            "introduction to",
+            "beginner",
+            "getting started",
+            "walkthrough",
+            "example",
+            "exercise",
         ]
 
         content_lower = content.lower()
         return any(indicator in content_lower for indicator in tutorial_indicators)
 
-    async def generate_service_integration_prompts(self, service_name: str, service_description: str = "") -> List[Dict[str, Any]]:
+    async def generate_service_integration_prompts(
+        self, service_name: str, service_description: str = ""
+    ) -> List[Dict[str, Any]]:
         """Generate prompts optimized for specific service integrations."""
         service_prompts = []
 
@@ -337,26 +350,26 @@ Make the tutorial progressive, starting with basics and building up to advanced 
                 "CRUD operations documentation",
                 "Query optimization guide",
                 "Schema design patterns",
-                "Migration strategies"
+                "Migration strategies",
             ],
             "api": [
                 "RESTful API design",
                 "Authentication and authorization",
                 "Rate limiting strategies",
-                "API versioning best practices"
+                "API versioning best practices",
             ],
             "frontend": [
                 "Component design patterns",
                 "State management strategies",
                 "UI/UX optimization",
-                "Responsive design principles"
+                "Responsive design principles",
             ],
             "testing": [
                 "Unit testing strategies",
                 "Integration testing approaches",
                 "Test-driven development",
-                "Automated testing pipelines"
-            ]
+                "Automated testing pipelines",
+            ],
         }
 
         patterns = integration_patterns.get(service_name.lower(), ["General service integration"])
@@ -383,7 +396,7 @@ Provide practical, actionable guidance that developers can immediately apply."""
                 "source_type": "service_analysis",
                 "source_entity": service_name,
                 "confidence_score": 0.7,
-                "estimated_complexity": "high"
+                "estimated_complexity": "high",
             }
             service_prompts.append(prompt)
 
@@ -425,8 +438,10 @@ Provide practical, actionable guidance that developers can immediately apply."""
                 "success_rate": success_rate,
                 "avg_response_time_ms": avg_response_time,
                 "avg_user_satisfaction": avg_satisfaction,
-                "usage_trend": "stable"  # Would analyze trends
+                "usage_trend": "stable",  # Would analyze trends
             },
             "recommendations": recommendations,
-            "effectiveness_score": (success_rate * 0.4 + (avg_satisfaction / 5) * 0.4 + (1 - min(avg_response_time / 30000, 1)) * 0.2)
+            "effectiveness_score": (
+                success_rate * 0.4 + (avg_satisfaction / 5) * 0.4 + (1 - min(avg_response_time / 30000, 1)) * 0.2
+            ),
         }

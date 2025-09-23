@@ -1,21 +1,18 @@
 """Tests for domain repositories."""
 
+
 import pytest
-from typing import List
 
-from ...domain.repositories.document_repository import DocumentRepository
-from ...domain.repositories.analysis_repository import AnalysisRepository
-from ...domain.repositories.finding_repository import FindingRepository
-
-from ...infrastructure.repositories.in_memory.document_repository import InMemoryDocumentRepository
-from ...infrastructure.repositories.in_memory.analysis_repository import InMemoryAnalysisRepository
-from ...infrastructure.repositories.in_memory.finding_repository import InMemoryFindingRepository
-
-from ...domain.entities.document import Document, DocumentStatus
 from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.document import Document, DocumentStatus
+from ...domain.entities.finding import FindingSeverity
+from ...domain.repositories.analysis_repository import AnalysisRepository
+from ...domain.repositories.document_repository import DocumentRepository
+from ...domain.repositories.finding_repository import FindingRepository
 from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
+from ...infrastructure.repositories.in_memory.analysis_repository import InMemoryAnalysisRepository
+from ...infrastructure.repositories.in_memory.document_repository import InMemoryDocumentRepository
+from ...infrastructure.repositories.in_memory.finding_repository import InMemoryFindingRepository
 
 
 class TestDocumentRepository:
@@ -42,7 +39,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_get_nonexistent_document(self, document_repository):
         """Test getting non-existent document."""
-        retrieved = await document_repository.get_by_id('non-existent-id')
+        retrieved = await document_repository.get_by_id("non-existent-id")
         assert retrieved is None
 
     @pytest.mark.asyncio
@@ -52,12 +49,12 @@ class TestDocumentRepository:
         await document_repository.save(sample_document)
 
         # Modify and save again
-        sample_document.title = 'Updated Title'
+        sample_document.title = "Updated Title"
         await document_repository.save(sample_document)
 
         # Retrieve and verify
         retrieved = await document_repository.get_by_id(sample_document.id)
-        assert retrieved.title == 'Updated Title'
+        assert retrieved.title == "Updated Title"
 
     @pytest.mark.asyncio
     async def test_delete_document(self, document_repository, sample_document):
@@ -76,7 +73,7 @@ class TestDocumentRepository:
     @pytest.mark.asyncio
     async def test_delete_nonexistent_document(self, document_repository):
         """Test deleting non-existent document."""
-        result = await document_repository.delete('non-existent-id')
+        result = await document_repository.delete("non-existent-id")
         assert result is False
 
     @pytest.mark.asyncio
@@ -100,11 +97,11 @@ class TestDocumentRepository:
         documents = test_data_populator.create_test_documents(3)
 
         # Get documents by repository
-        repo_docs = await document_repository.get_by_repository_id('test-repo-001')
+        repo_docs = await document_repository.get_by_repository_id("test-repo-001")
 
         assert len(repo_docs) == 3
         for doc in repo_docs:
-            assert doc.repository_id == 'test-repo-001'
+            assert doc.repository_id == "test-repo-001"
 
     @pytest.mark.asyncio
     async def test_get_documents_by_status(self, document_repository, test_data_populator):
@@ -289,12 +286,12 @@ class TestFindingRepository:
         await finding_repository.save(sample_finding)
 
         # Modify and save again
-        sample_finding.title = 'Updated Finding Title'
+        sample_finding.title = "Updated Finding Title"
         await finding_repository.save(sample_finding)
 
         # Retrieve and verify
         retrieved = await finding_repository.get_by_id(sample_finding.id)
-        assert retrieved.title == 'Updated Finding Title'
+        assert retrieved.title == "Updated Finding Title"
 
 
 class TestRepositoryIntegration:
@@ -302,8 +299,7 @@ class TestRepositoryIntegration:
 
     @pytest.mark.asyncio
     async def test_cross_repository_queries(
-        self, document_repository, analysis_repository, finding_repository,
-        test_data_populator
+        self, document_repository, analysis_repository, finding_repository, test_data_populator
     ):
         """Test queries that span multiple repositories."""
         # Setup comprehensive test data
@@ -340,9 +336,7 @@ class TestRepositoryIntegration:
 
         # Simulate transaction: create analysis, then rollback by deleting
         analysis = Analysis(
-            id='transaction-test-analysis',
-            document_id=document.id,
-            analysis_type=AnalysisType.CODE_QUALITY
+            id="transaction-test-analysis", document_id=document.id, analysis_type=AnalysisType.CODE_QUALITY
         )
 
         await analysis_repository.save(analysis)
@@ -363,18 +357,16 @@ class TestRepositoryPerformance:
     """Test repository performance characteristics."""
 
     @pytest.mark.asyncio
-    async def test_bulk_operations_performance(
-        self, document_repository, performance_timer
-    ):
+    async def test_bulk_operations_performance(self, document_repository, performance_timer):
         """Test bulk document operations performance."""
         # Create multiple documents
         documents = []
         for i in range(100):
             doc = Document(
-                id=f'bulk-doc-{i:03d}',
-                title=f'Bulk Document {i}',
-                content=f'Content for document {i}',
-                repository_id='bulk-repo'
+                id=f"bulk-doc-{i:03d}",
+                title=f"Bulk Document {i}",
+                content=f"Content for document {i}",
+                repository_id="bulk-repo",
             )
             documents.append(doc)
 
@@ -390,9 +382,7 @@ class TestRepositoryPerformance:
         performance_timer.assert_less_than(2.0, "Bulk save operations took too long")
 
     @pytest.mark.asyncio
-    async def test_query_performance(
-        self, document_repository, test_data_populator, performance_timer
-    ):
+    async def test_query_performance(self, document_repository, test_data_populator, performance_timer):
         """Test repository query performance."""
         # Setup test data
         documents = test_data_populator.create_test_documents(50)
@@ -401,7 +391,7 @@ class TestRepositoryPerformance:
         performance_timer.start()
 
         all_docs = await document_repository.get_all()
-        repo_docs = await document_repository.get_by_repository_id('test-repo-001')
+        repo_docs = await document_repository.get_by_repository_id("test-repo-001")
 
         performance_timer.stop()
 
@@ -418,12 +408,13 @@ class TestRepositoryConcurrency:
     @pytest.mark.asyncio
     async def test_concurrent_saves(self, document_repository):
         """Test concurrent document saves."""
+
         async def save_document(i: int):
             doc = Document(
-                id=f'concurrent-doc-{i}',
-                title=f'Concurrent Document {i}',
-                content=f'Content {i}',
-                repository_id='concurrent-repo'
+                id=f"concurrent-doc-{i}",
+                title=f"Concurrent Document {i}",
+                content=f"Content {i}",
+                repository_id="concurrent-repo",
             )
             await document_repository.save(doc)
             return doc
@@ -438,7 +429,7 @@ class TestRepositoryConcurrency:
         for i, doc in enumerate(results):
             retrieved = await document_repository.get_by_id(doc.id)
             assert retrieved is not None
-            assert retrieved.title == f'Concurrent Document {i}'
+            assert retrieved.title == f"Concurrent Document {i}"
 
     @pytest.mark.asyncio
     async def test_concurrent_reads(self, document_repository, test_data_populator):

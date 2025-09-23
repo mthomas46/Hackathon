@@ -5,10 +5,11 @@ Tests CLI functionality by running actual CLI commands against live services
 """
 
 import os
-import sys
 import subprocess
+import sys
 import time
 from pathlib import Path
+
 
 def print_banner():
     """Print test banner."""
@@ -20,6 +21,7 @@ def print_banner():
     print("=" * 60)
     print()
 
+
 def check_services():
     """Check if required services are running."""
     print("🔍 Checking service availability...")
@@ -29,7 +31,7 @@ def check_services():
         ("Analysis Service", "http://localhost:5020/integration/health"),
         ("Prompt Store", "http://localhost:5110/health"),
         ("Summarizer Hub", "http://localhost:5060/health"),
-        ("Interpreter", "http://localhost:5120/health")
+        ("Interpreter", "http://localhost:5120/health"),
     ]
 
     available_services = 0
@@ -37,6 +39,7 @@ def check_services():
     for service_name, health_url in services:
         try:
             import requests
+
             response = requests.get(health_url, timeout=5)
             if response.status_code == 200:
                 print(f"✅ {service_name}: RUNNING")
@@ -57,6 +60,7 @@ def check_services():
 
     return True
 
+
 def run_cli_command(command, description, expect_interaction=False):
     """Run a CLI command and report results."""
     print(f"\n🔄 Testing: {description}")
@@ -70,17 +74,11 @@ def run_cli_command(command, description, expect_interaction=False):
         # Set PYTHONPATH for the CLI
         project_root = Path(__file__).parent.parent
         env = os.environ.copy()
-        env['PYTHONPATH'] = str(project_root)
+        env["PYTHONPATH"] = str(project_root)
 
         # Run the command
         result = subprocess.run(
-            command,
-            shell=True,
-            env=env,
-            cwd=str(project_root),
-            capture_output=True,
-            text=True,
-            timeout=30
+            command, shell=True, env=env, cwd=str(project_root), capture_output=True, text=True, timeout=30
         )
 
         if result.returncode == 0:
@@ -101,6 +99,7 @@ def run_cli_command(command, description, expect_interaction=False):
         print(f"💥 ERROR: {e}")
         return "ERROR"
 
+
 def test_cli_basic_functionality():
     """Test basic CLI functionality."""
     print("\n🧪 BASIC CLI FUNCTIONALITY TESTS")
@@ -109,20 +108,17 @@ def test_cli_basic_functionality():
     results = []
 
     # Test CLI help
-    result = run_cli_command(
-        "python services/cli/main.py --help",
-        "CLI help command"
-    )
+    result = run_cli_command("python services/cli/main.py --help", "CLI help command")
     results.append(("CLI Help", result))
 
     # Test CLI version/info
     result = run_cli_command(
-        "python services/cli/main.py --version 2>/dev/null || echo 'version not available'",
-        "CLI version command"
+        "python services/cli/main.py --version 2>/dev/null || echo 'version not available'", "CLI version command"
     )
     results.append(("CLI Version", result))
 
     return results
+
 
 def test_cli_service_interaction():
     """Test CLI interaction with services."""
@@ -132,20 +128,18 @@ def test_cli_service_interaction():
     results = []
 
     # Test health check
-    result = run_cli_command(
-        "echo '1' | python services/cli/main.py",
-        "CLI health check (requires user input)"
-    )
+    result = run_cli_command("echo '1' | python services/cli/main.py", "CLI health check (requires user input)")
     results.append(("Health Check", "REQUIRES_INTERACTION"))
 
     # Test service status via direct command
     result = run_cli_command(
         "python services/cli/main.py health 2>/dev/null || echo 'health command not available'",
-        "Direct health check command"
+        "Direct health check command",
     )
     results.append(("Direct Health Check", result))
 
     return results
+
 
 def test_cli_analysis_service():
     """Test CLI Analysis Service functionality."""
@@ -155,20 +149,18 @@ def test_cli_analysis_service():
     results = []
 
     # Test analysis service menu access
-    result = run_cli_command(
-        "echo '2' | timeout 10 python services/cli/main.py",
-        "Analysis Service menu access"
-    )
+    result = run_cli_command("echo '2' | timeout 10 python services/cli/main.py", "Analysis Service menu access")
     results.append(("Analysis Menu", "REQUIRES_INTERACTION"))
 
     # Test basic analysis command (if available)
     result = run_cli_command(
         "python services/cli/main.py analyze --help 2>/dev/null || echo 'analyze command not available'",
-        "Analysis command help"
+        "Analysis command help",
     )
     results.append(("Analysis Command", result))
 
     return results
+
 
 def test_cli_doc_store():
     """Test CLI Doc Store functionality."""
@@ -178,13 +170,11 @@ def test_cli_doc_store():
     results = []
 
     # Test doc store menu access
-    result = run_cli_command(
-        "echo '1' | timeout 10 python services/cli/main.py",
-        "Doc Store menu access"
-    )
+    result = run_cli_command("echo '1' | timeout 10 python services/cli/main.py", "Doc Store menu access")
     results.append(("Doc Store Menu", "REQUIRES_INTERACTION"))
 
     return results
+
 
 def test_cli_integration():
     """Test CLI integration functionality."""
@@ -196,11 +186,12 @@ def test_cli_integration():
     # Test integration test command
     result = run_cli_command(
         "python services/cli/main.py test-integration 2>/dev/null || echo 'integration test not available'",
-        "CLI integration test command"
+        "CLI integration test command",
     )
     results.append(("Integration Test", result))
 
     return results
+
 
 def generate_report(all_results):
     """Generate test report."""
@@ -254,6 +245,7 @@ def generate_report(all_results):
     else:
         print(f"\nℹ️  {skipped_tests} TEST(S) SKIPPED")
 
+
 def main():
     """Main test function."""
     print_banner()
@@ -289,6 +281,7 @@ def main():
     except Exception as e:
         print(f"\n💥 Unexpected error during testing: {e}")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

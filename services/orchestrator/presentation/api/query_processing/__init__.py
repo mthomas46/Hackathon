@@ -1,4 +1,4 @@
-"""Query Processing API Routes"""
+"""Query Processing API Routes."""
 
 # Placeholder - to be implemented
 __all__ = []

@@ -1,18 +1,19 @@
-"""Advanced Circuit Breaker Integration Tests.
+"""
+Advanced Circuit Breaker Integration Tests.
 
-This module contains comprehensive tests for circuit breaker functionality,
-including state transitions, failure thresholds, recovery mechanisms,
-and integration with service ecosystem.
+This module contains comprehensive tests for circuit breaker
+functionality, including state transitions, failure thresholds, recovery
+mechanisms, and integration with service ecosystem.
 """
 
-import pytest
 import asyncio
-import time
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from typing import Dict, Any, List, Optional, Callable
-import httpx
-from pathlib import Path
 import sys
+import time
+from pathlib import Path
+from unittest.mock import Mock, patch
+
+import httpx
+import pytest
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -27,11 +28,7 @@ class TestCircuitBreakerStateTransitions:
         """Test circuit breaker starts in closed state."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",
-            failure_threshold=3,
-            recovery_timeout=5.0
-        )
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=3, recovery_timeout=5.0)
 
         assert breaker.state == CircuitBreakerState.CLOSED
         assert breaker.failure_count == 0
@@ -41,8 +38,7 @@ class TestCircuitBreakerStateTransitions:
         """Test failure count increments on exceptions."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=2)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=2)
 
         # Simulate failures
         with pytest.raises(Exception):
@@ -61,8 +57,7 @@ class TestCircuitBreakerStateTransitions:
         """Test circuit breaker opens when failure threshold is reached."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=2)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=2)
 
         # First failure
         with pytest.raises(Exception):
@@ -84,8 +79,7 @@ class TestCircuitBreakerStateTransitions:
         """Test circuit breaker blocks calls when in open state."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=1)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1)
 
         # Open the breaker
         with pytest.raises(Exception):
@@ -102,11 +96,11 @@ class TestCircuitBreakerStateTransitions:
         assert "Circuit breaker is OPEN" in str(exc_info.value)
 
     def test_circuit_breaker_half_open_transition(self):
-        """Test circuit breaker transitions to half-open after recovery timeout."""
+        """Test circuit breaker transitions to half-open after recovery
+        timeout."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=1, recovery_timeout=0.1)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1, recovery_timeout=0.1)
 
         # Open the breaker
         with pytest.raises(Exception):
@@ -127,11 +121,13 @@ class TestCircuitBreakerStateTransitions:
         assert breaker.state == CircuitBreakerState.OPEN
 
     def test_circuit_breaker_recovery_on_success(self):
-        """Test circuit breaker recovers when call succeeds in half-open state."""
+        """Test circuit breaker recovers when call succeeds in half-open
+        state."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
         breaker = ServiceCircuitBreaker(
-            service_name="test_service", failure_threshold=1, recovery_timeout=0.1, success_threshold=1)
+            service_name="test_service", failure_threshold=1, recovery_timeout=0.1, success_threshold=1
+        )
 
         # Open the breaker
         with pytest.raises(Exception):
@@ -154,8 +150,7 @@ class TestCircuitBreakerStateTransitions:
         """Test circuit breaker reopens when call fails in half-open state."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=1, recovery_timeout=0.1)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1, recovery_timeout=0.1)
 
         # Open the breaker
         with pytest.raises(Exception):
@@ -183,8 +178,7 @@ class TestCircuitBreakerIntegration:
         """Test circuit breaker with async functions."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=2)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=2)
 
         async def failing_function():
             raise Exception("Async failure")
@@ -207,8 +201,7 @@ class TestCircuitBreakerIntegration:
         """Test circuit breaker with HTTP client calls."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=1)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1)
 
         def mock_http_call():
             raise httpx.ConnectError("Connection failed")
@@ -228,9 +221,7 @@ class TestCircuitBreakerIntegration:
             pass
 
         breaker = ServiceCircuitBreaker(
-            service_name="test_service",
-            failure_threshold=1,
-            expected_exception=CustomError
+            service_name="test_service", failure_threshold=1, expected_exception=CustomError
         )
 
         # Should only count CustomError
@@ -255,12 +246,11 @@ class TestCircuitBreakerMetrics:
         """Test circuit breaker tracks successful calls."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=5)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=5)
 
         # Track initial metrics
-        initial_success = getattr(breaker, 'success_count', 0)
-        initial_total = getattr(breaker, 'total_count', 0)
+        initial_success = getattr(breaker, "success_count", 0)
+        initial_total = getattr(breaker, "total_count", 0)
 
         # Make successful calls
         for i in range(3):
@@ -268,8 +258,8 @@ class TestCircuitBreakerMetrics:
                 pass
 
         # Check metrics updated
-        current_success = getattr(breaker, 'success_count', 0)
-        current_total = getattr(breaker, 'total_count', 0)
+        current_success = getattr(breaker, "success_count", 0)
+        current_total = getattr(breaker, "total_count", 0)
 
         assert current_success >= initial_success + 3
         assert current_total >= initial_total + 3
@@ -278,8 +268,7 @@ class TestCircuitBreakerMetrics:
         """Test circuit breaker failure metrics."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=5)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=5)
 
         # Make some failures
         for i in range(2):
@@ -295,8 +284,7 @@ class TestCircuitBreakerMetrics:
         """Test circuit breaker tracks state changes."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=1)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1)
 
         # Track state changes
         state_changes = []
@@ -307,7 +295,7 @@ class TestCircuitBreakerMetrics:
             with breaker:
                 raise Exception("Open breaker")
 
-        state_changes.append(('closed', 'open'))
+        state_changes.append(("closed", "open"))
 
         # Wait for recovery
         time.sleep(0.1)
@@ -317,7 +305,7 @@ class TestCircuitBreakerMetrics:
             with breaker:
                 raise Exception("Half-open failure")
 
-        state_changes.append(('open', 'half_open'))
+        state_changes.append(("open", "half_open"))
 
         # Should have tracked the state changes
         assert len(state_changes) >= 1
@@ -330,8 +318,7 @@ class TestCircuitBreakerConfiguration:
         """Test custom failure threshold configuration."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=5)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=5)
 
         # Should handle 4 failures without opening
         for i in range(4):
@@ -354,11 +341,7 @@ class TestCircuitBreakerConfiguration:
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
         timeout = 0.5
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",
-            failure_threshold=1,
-            recovery_timeout=timeout
-        )
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1, recovery_timeout=timeout)
 
         # Open breaker
         with pytest.raises(Exception):
@@ -384,11 +367,7 @@ class TestCircuitBreakerConfiguration:
         """Test circuit breaker filters exceptions."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",
-            failure_threshold=2,
-            expected_exception=ValueError
-        )
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=2, expected_exception=ValueError)
 
         # Should count ValueError
         with pytest.raises(ValueError):
@@ -410,11 +389,11 @@ class TestCircuitBreakerConcurrency:
 
     def test_concurrent_circuit_breaker_access(self):
         """Test circuit breaker handles concurrent access."""
-        from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
         import threading
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=10)
+        from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
+
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=10)
         results = []
         errors = []
 
@@ -451,8 +430,7 @@ class TestCircuitBreakerConcurrency:
         """Test circuit breaker with async concurrent operations."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=5)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=5)
         results = []
 
         async def async_worker(worker_id):
@@ -478,7 +456,7 @@ class TestCircuitBreakerConcurrency:
 class TestCircuitBreakerEcosystemIntegration:
     """Test circuit breaker integration with ecosystem services."""
 
-    @patch('httpx.AsyncClient')
+    @patch("httpx.AsyncClient")
     @pytest.mark.asyncio
     async def test_circuit_breaker_with_mock_service_client(self, mock_client):
         """Test circuit breaker with mocked service client."""
@@ -487,8 +465,7 @@ class TestCircuitBreakerEcosystemIntegration:
         # Mock service client failure
         mock_client.return_value.__aenter__.return_value.get.side_effect = httpx.ConnectError("Service down")
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=2)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=2)
 
         # Simulate service calls
         for i in range(3):
@@ -506,8 +483,7 @@ class TestCircuitBreakerEcosystemIntegration:
         """Test circuit breaker with service discovery patterns."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=1)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1)
 
         # Simulate service discovery scenarios
         services = ["service-a", "service-b", "service-c"]
@@ -530,7 +506,9 @@ class TestCircuitBreakerEcosystemIntegration:
 
         # Multiple service instances
         instances = ["instance-1", "instance-2", "instance-3"]
-        breakers = {instance: ServiceCircuitBreaker(service_name=instance, failure_threshold=2) for instance in instances}
+        breakers = {
+            instance: ServiceCircuitBreaker(service_name=instance, failure_threshold=2) for instance in instances
+        }
 
         # Simulate load balancing with failures
         for i in range(5):
@@ -558,25 +536,23 @@ class TestCircuitBreakerMonitoring:
         """Test circuit breaker exposes health metrics."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=3)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=3)
 
         # Should be able to get health status
         health = breaker.get_status()
 
-        assert 'state' in health
-        assert 'failure_count' in health
+        assert "state" in health
+        assert "failure_count" in health
 
         # Initial state should be healthy
-        assert health['state'] == 'closed'
-        assert health['failure_count'] == 0
+        assert health["state"] == "closed"
+        assert health["failure_count"] == 0
 
     def test_circuit_breaker_state_history(self):
         """Test circuit breaker maintains state history."""
         from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=1)
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=1)
 
         # Track state changes
         initial_state = breaker.state
@@ -590,15 +566,15 @@ class TestCircuitBreakerMonitoring:
         assert breaker.state != initial_state
 
         # Should be able to track state transitions
-        assert breaker.state == 'open'
+        assert breaker.state == "open"
 
     def test_circuit_breaker_performance_metrics(self):
         """Test circuit breaker performance tracking."""
-        from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
         import time
 
-        breaker = ServiceCircuitBreaker(
-            service_name="test_service",failure_threshold=5)
+        from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
+
+        breaker = ServiceCircuitBreaker(service_name="test_service", failure_threshold=5)
 
         # Measure call times
         start_time = time.time()
@@ -623,7 +599,7 @@ class TestCircuitBreakerMonitoring:
 def circuit_breaker():
     """Create a test circuit breaker."""
     from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
-    from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
+
     return ServiceCircuitBreaker(service_name="test_service", failure_threshold=2, recovery_timeout=0.1)
 
 
@@ -639,5 +615,5 @@ def mock_service_client():
 async def async_circuit_breaker():
     """Create an async circuit breaker for testing."""
     from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
-    from simulation.infrastructure.resilience.circuit_breaker import ServiceCircuitBreaker
+
     return ServiceCircuitBreaker(service_name="test_service", failure_threshold=2, recovery_timeout=0.1)

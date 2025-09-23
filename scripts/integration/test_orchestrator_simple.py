@@ -6,14 +6,14 @@ Basic test to verify orchestrator functionality works.
 """
 
 import asyncio
-import sys
 import os
+import sys
 
 # Add services to path
-sys.path.insert(0, '/Users/mykalthomas/Documents/work/Hackathon/services')
+sys.path.insert(0, "/Users/mykalthomas/Documents/work/Hackathon/services")
 
-from orchestrator.modules.workflow_management.service import WorkflowManagementService
 from orchestrator.modules.workflow_management.models import WorkflowStatus
+from orchestrator.modules.workflow_management.service import WorkflowManagementService
 
 
 async def test_orchestrator_basic():
@@ -28,29 +28,19 @@ async def test_orchestrator_basic():
         workflow_data = {
             "name": "Simple Test Workflow",
             "description": "Basic workflow for testing",
-            "parameters": [
-                {
-                    "name": "input_value",
-                    "type": "string",
-                    "required": True
-                }
-            ],
+            "parameters": [{"name": "input_value", "type": "string", "required": True}],
             "actions": [
                 {
                     "action_id": "test_action",
                     "action_type": "notification",
                     "name": "Test Action",
-                    "config": {
-                        "message": "Processing: {{input_value}}"
-                    }
+                    "config": {"message": "Processing: {{input_value}}"},
                 }
-            ]
+            ],
         }
 
         # Test workflow creation
-        success, message, workflow = await workflow_service.create_workflow(
-            workflow_data, "test_user"
-        )
+        success, message, workflow = await workflow_service.create_workflow(workflow_data, "test_user")
 
         if success:
             print("✅ Workflow creation: PASSED")
@@ -93,29 +83,19 @@ async def test_orchestrator_execution():
         workflow_data = {
             "name": "Execution Test Workflow",
             "description": "Workflow for execution testing",
-            "parameters": [
-                {
-                    "name": "test_param",
-                    "type": "string",
-                    "required": True
-                }
-            ],
+            "parameters": [{"name": "test_param", "type": "string", "required": True}],
             "actions": [
                 {
                     "action_id": "exec_action",
                     "action_type": "notification",
                     "name": "Execution Action",
-                    "config": {
-                        "message": "Executed with: {{test_param}}"
-                    }
+                    "config": {"message": "Executed with: {{test_param}}"},
                 }
-            ]
+            ],
         }
 
         # Create workflow
-        success, message, workflow = await workflow_service.create_workflow(
-            workflow_data, "test_user"
-        )
+        success, message, workflow = await workflow_service.create_workflow(workflow_data, "test_user")
 
         if not success:
             print(f"❌ Execution test setup failed: {message}")
@@ -187,7 +167,7 @@ async def main():
     tests = [
         ("Basic Functionality", test_orchestrator_basic),
         ("Workflow Execution", test_orchestrator_execution),
-        ("API Endpoints", test_orchestrator_api)
+        ("API Endpoints", test_orchestrator_api),
     ]
 
     results = []

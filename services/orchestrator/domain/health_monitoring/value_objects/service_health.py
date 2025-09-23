@@ -1,10 +1,10 @@
-"""Service Health Value Object"""
+"""Service Health Value Object."""
 
-from typing import Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Optional
 
-from .health_status import HealthStatus
 from .health_check_result import HealthCheckResult
+from .health_status import HealthStatus
 
 
 class ServiceHealth:
@@ -16,7 +16,7 @@ class ServiceHealth:
         status: HealthStatus,
         last_check: Optional[datetime] = None,
         check_result: Optional[HealthCheckResult] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         self._service_name = service_name.strip()
         self._status = status
@@ -66,11 +66,7 @@ class ServiceHealth:
         """Check if service is operational."""
         return self._status.is_operational
 
-    def update_status(
-        self,
-        status: HealthStatus,
-        check_result: Optional[HealthCheckResult] = None
-    ):
+    def update_status(self, status: HealthStatus, check_result: Optional[HealthCheckResult] = None):
         """Update the service health status."""
         self._status = status
         self._last_check = datetime.utcnow()
@@ -85,7 +81,7 @@ class ServiceHealth:
             "last_check": self._last_check.isoformat(),
             "is_healthy": self.is_healthy,
             "is_operational": self.is_operational,
-            "metadata": self._metadata
+            "metadata": self._metadata,
         }
 
         if self._check_result:
@@ -96,8 +92,7 @@ class ServiceHealth:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ServiceHealth):
             return NotImplemented
-        return (self._service_name == other._service_name and
-                self._status == other._status)
+        return self._service_name == other._service_name and self._status == other._status
 
     def __repr__(self) -> str:
         return f"ServiceHealth(service_name='{self._service_name}', status={self._status})"

@@ -1,14 +1,14 @@
 """Application Configuration Service - Centralized configuration management."""
 
-import os
 import json
-import yaml
-from typing import Dict, Any, Optional, List, Union
-from pathlib import Path
-from dataclasses import dataclass, field
+import os
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-from .application_service import ApplicationService, ServiceContext
+
+from .application_service import ApplicationService
 
 
 class ConfigurationSource(ABC):
@@ -17,17 +17,14 @@ class ConfigurationSource(ABC):
     @abstractmethod
     def load(self) -> Dict[str, Any]:
         """Load configuration from source."""
-        pass
 
     @abstractmethod
     def save(self, config: Dict[str, Any]) -> None:
         """Save configuration to source."""
-        pass
 
     @abstractmethod
     def can_save(self) -> bool:
         """Check if source supports saving."""
-        pass
 
 
 class FileConfigurationSource(ConfigurationSource):
@@ -39,9 +36,9 @@ class FileConfigurationSource(ConfigurationSource):
         self.format_type = format_type
 
         if self.format_type == "auto":
-            if self.file_path.suffix.lower() in ['.yaml', '.yml']:
+            if self.file_path.suffix.lower() in [".yaml", ".yml"]:
                 self.format_type = "yaml"
-            elif self.file_path.suffix.lower() == '.json':
+            elif self.file_path.suffix.lower() == ".json":
                 self.format_type = "json"
             else:
                 self.format_type = "json"  # Default
@@ -52,9 +49,10 @@ class FileConfigurationSource(ConfigurationSource):
             return {}
 
         try:
-            with open(self.file_path, 'r', encoding='utf-8') as f:
+            with open(self.file_path, "r", encoding="utf-8") as f:
                 if self.format_type == "yaml":
                     import yaml
+
                     return yaml.safe_load(f) or {}
                 else:
                     return json.load(f) or {}
@@ -66,9 +64,10 @@ class FileConfigurationSource(ConfigurationSource):
         try:
             self.file_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(self.file_path, 'w', encoding='utf-8') as f:
+            with open(self.file_path, "w", encoding="utf-8") as f:
                 if self.format_type == "yaml":
                     import yaml
+
                     yaml.dump(config, f, default_flow_style=False, indent=2)
                 else:
                     json.dump(config, f, indent=2, ensure_ascii=False)
@@ -102,7 +101,7 @@ class EnvironmentConfigurationSource(ConfigurationSource):
         for key, value in os.environ.items():
             if self.prefix and key.startswith(self.prefix):
                 # Remove prefix and convert to nested structure
-                clean_key = key[len(self.prefix):].lstrip('_')
+                clean_key = key[len(self.prefix) :].lstrip("_")
                 self._set_nested_value(config, clean_key, value)
             elif not self.prefix:
                 # No prefix, use all environment variables
@@ -112,7 +111,7 @@ class EnvironmentConfigurationSource(ConfigurationSource):
 
     def _set_nested_value(self, config: Dict[str, Any], key: str, value: str) -> None:
         """Set nested value in configuration dictionary."""
-        parts = key.lower().split('_')
+        parts = key.lower().split("_")
         current = config
 
         for part in parts[:-1]:
@@ -127,8 +126,8 @@ class EnvironmentConfigurationSource(ConfigurationSource):
     def _convert_value(self, value: str) -> Union[str, int, float, bool]:
         """Convert string value to appropriate type."""
         # Try boolean
-        if value.lower() in ['true', 'false']:
-            return value.lower() == 'true'
+        if value.lower() in ["true", "false"]:
+            return value.lower() == "true"
 
         # Try integer
         try:
@@ -210,13 +209,15 @@ class ApplicationConfig:
     external_services: Dict[str, Any] = field(default_factory=dict)
 
     # Feature flags
-    features: Dict[str, bool] = field(default_factory=lambda: {
-        'advanced_analysis': True,
-        'real_time_processing': False,
-        'cross_repository_analysis': True,
-        'automated_remediation': True,
-        'distributed_processing': False
-    })
+    features: Dict[str, bool] = field(
+        default_factory=lambda: {
+            "advanced_analysis": True,
+            "real_time_processing": False,
+            "cross_repository_analysis": True,
+            "automated_remediation": True,
+            "distributed_processing": False,
+        }
+    )
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -233,35 +234,35 @@ class ApplicationConfig:
         if self.service_port < 1 or self.service_port > 65535:
             raise ValueError("Service port must be between 1 and 65535")
 
-        if self.log_level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+        if self.log_level not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
             raise ValueError(f"Invalid log level: {self.log_level}")
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert configuration to dictionary."""
         return {
-            'database_url': self.database_url,
-            'database_pool_size': self.database_pool_size,
-            'database_max_overflow': self.database_max_overflow,
-            'cache_enabled': self.cache_enabled,
-            'cache_ttl_seconds': self.cache_ttl_seconds,
-            'cache_max_size': self.cache_max_size,
-            'log_level': self.log_level,
-            'log_directory': self.log_directory,
-            'log_max_file_size': self.log_max_file_size,
-            'log_backup_count': self.log_backup_count,
-            'monitoring_enabled': self.monitoring_enabled,
-            'monitoring_collection_interval': self.monitoring_collection_interval,
-            'metrics_retention_days': self.metrics_retention_days,
-            'service_name': self.service_name,
-            'service_version': self.service_version,
-            'service_port': self.service_port,
-            'service_host': self.service_host,
-            'external_services': self.external_services,
-            'features': self.features
+            "database_url": self.database_url,
+            "database_pool_size": self.database_pool_size,
+            "database_max_overflow": self.database_max_overflow,
+            "cache_enabled": self.cache_enabled,
+            "cache_ttl_seconds": self.cache_ttl_seconds,
+            "cache_max_size": self.cache_max_size,
+            "log_level": self.log_level,
+            "log_directory": self.log_directory,
+            "log_max_file_size": self.log_max_file_size,
+            "log_backup_count": self.log_backup_count,
+            "monitoring_enabled": self.monitoring_enabled,
+            "monitoring_collection_interval": self.monitoring_collection_interval,
+            "metrics_retention_days": self.metrics_retention_days,
+            "service_name": self.service_name,
+            "service_version": self.service_version,
+            "service_port": self.service_port,
+            "service_host": self.service_host,
+            "external_services": self.external_services,
+            "features": self.features,
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'ApplicationConfig':
+    def from_dict(cls, data: Dict[str, Any]) -> "ApplicationConfig":
         """Create configuration from dictionary."""
         return cls(**data)
 
@@ -273,7 +274,7 @@ class ConfigurationService(ApplicationService):
         self,
         config_file: Optional[str] = None,
         env_prefix: str = "ANALYSIS_SERVICE",
-        sources: Optional[List[ConfigurationSource]] = None
+        sources: Optional[List[ConfigurationSource]] = None,
     ):
         """Initialize configuration service."""
         super().__init__("configuration_service")
@@ -286,7 +287,7 @@ class ConfigurationService(ApplicationService):
             sources = [
                 EnvironmentConfigurationSource(env_prefix),
                 FileConfigurationSource(self.config_file),
-                InMemoryConfigurationSource()  # For runtime overrides
+                InMemoryConfigurationSource(),  # For runtime overrides
             ]
 
         self.sources = sources
@@ -296,11 +297,10 @@ class ConfigurationService(ApplicationService):
 
     async def load_config(self, force_reload: bool = False) -> ApplicationConfig:
         """Load configuration from all sources."""
-        current_time = __import__('time').time()
+        current_time = __import__("time").time()
 
         # Return cached config if still valid
-        if (not force_reload and self._config and
-            current_time - self._last_load_time < self._cache_ttl):
+        if not force_reload and self._config and current_time - self._last_load_time < self._cache_ttl:
             return self._config
 
         async with self.operation_context("load_config"):
@@ -341,7 +341,7 @@ class ConfigurationService(ApplicationService):
 
             # Update cached config
             self._config = config
-            self._last_load_time = __import__('time').time()
+            self._last_load_time = __import__("time").time()
 
     async def update_config(self, updates: Dict[str, Any]) -> ApplicationConfig:
         """Update configuration with new values."""
@@ -369,7 +369,7 @@ class ConfigurationService(ApplicationService):
         config = await self.load_config()
 
         # Support nested keys with dot notation
-        keys = key.split('.')
+        keys = key.split(".")
         value = config.to_dict()
 
         for k in keys:
@@ -394,14 +394,14 @@ class ConfigurationService(ApplicationService):
         config = await self.load_config()
 
         return {
-            'service_name': config.service_name,
-            'service_version': config.service_version,
-            'database_configured': bool(config.database_url),
-            'cache_enabled': config.cache_enabled,
-            'monitoring_enabled': config.monitoring_enabled,
-            'features_enabled': [k for k, v in config.features.items() if v],
-            'external_services_count': len(config.external_services),
-            'last_loaded': self._last_load_time
+            "service_name": config.service_name,
+            "service_version": config.service_version,
+            "database_configured": bool(config.database_url),
+            "cache_enabled": config.cache_enabled,
+            "monitoring_enabled": config.monitoring_enabled,
+            "features_enabled": [k for k, v in config.features.items() if v],
+            "external_services_count": len(config.external_services),
+            "last_loaded": self._last_load_time,
         }
 
     async def validate_config(self, config: ApplicationConfig) -> List[str]:
@@ -409,7 +409,7 @@ class ConfigurationService(ApplicationService):
         issues = []
 
         # Check database URL format
-        if not config.database_url.startswith(('sqlite://', 'postgresql://', 'mysql://')):
+        if not config.database_url.startswith(("sqlite://", "postgresql://", "mysql://")):
             issues.append("Invalid database URL format")
 
         # Check service port range
@@ -417,7 +417,7 @@ class ConfigurationService(ApplicationService):
             issues.append(f"Service port {config.service_port} is out of valid range (1-65535)")
 
         # Check log level validity
-        if config.log_level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+        if config.log_level not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
             issues.append(f"Invalid log level: {config.log_level}")
 
         # Check cache configuration
@@ -438,19 +438,19 @@ class ConfigurationService(ApplicationService):
             config_summary = await self.get_config_summary()
             validation_issues = await self.validate_config(await self.load_config())
 
-            health['configuration'] = {
-                'sources_count': len(self.sources),
-                'writable_sources': sum(1 for s in self.sources if s.can_save()),
-                'validation_issues': len(validation_issues),
-                'cache_ttl_seconds': self._cache_ttl,
-                'last_load_time': self._last_load_time
+            health["configuration"] = {
+                "sources_count": len(self.sources),
+                "writable_sources": sum(1 for s in self.sources if s.can_save()),
+                "validation_issues": len(validation_issues),
+                "cache_ttl_seconds": self._cache_ttl,
+                "last_load_time": self._last_load_time,
             }
 
             if validation_issues:
-                health['configuration']['issues'] = validation_issues[:5]  # First 5 issues
+                health["configuration"]["issues"] = validation_issues[:5]  # First 5 issues
 
         except Exception as e:
-            health['configuration'] = {'error': str(e)}
+            health["configuration"] = {"error": str(e)}
 
         return health
 

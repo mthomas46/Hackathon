@@ -1,32 +1,44 @@
-"""API routes for Doc Store service.
+"""
+API routes for Doc Store service.
 
 Consolidated route definitions for all endpoints.
 """
+
+from typing import Any, Dict, List, Optional
+
 from fastapi import APIRouter, HTTPException, Query
-from typing import Optional, Dict, Any, List
+
 from services.shared.core.responses.responses import SuccessResponse
+
+from ..core.models import (
+    BulkDocumentRequest,
+    CacheInvalidationRequest,
+    CacheStatsResponse,
+    DocumentListResponse,
+    DocumentRequest,
+    DocumentResponse,
+    LifecyclePolicyRequest,
+    LifecycleStatusResponse,
+    LifecycleTransitionRequest,
+    MetadataUpdateRequest,
+    QualityResponse,
+    SearchRequest,
+    SearchResponse,
+    TagRequest,
+    TagSearchRequest,
+    VersionRollbackRequest,
+    WebhookRequest,
+)
+from ..domain.analytics.handlers import AnalyticsHandlers
+from ..domain.bulk.handlers import BulkOperationsHandlers
 
 # Import handlers from domains
 from ..domain.documents.handlers import document_handlers
-from ..domain.bulk.handlers import BulkOperationsHandlers
-from ..domain.analytics.handlers import AnalyticsHandlers
 from ..domain.lifecycle.handlers import LifecycleHandlers
-from ..domain.versioning.handlers import VersioningHandlers
+from ..domain.notifications.handlers import NotificationsHandlers
 from ..domain.relationships.handlers import RelationshipsHandlers
 from ..domain.tagging.handlers import TaggingHandlers
-from ..domain.notifications.handlers import NotificationsHandlers
-from ..core.models import (
-    DocumentRequest, DocumentResponse, DocumentListResponse,
-    MetadataUpdateRequest, SearchRequest, SearchResponse,
-    QualityResponse, AnalyticsRequest,
-    DocumentVersionResponse, VersionComparison, VersionRollbackRequest,
-    RelationshipsResponse, PathsResponse, GraphStatisticsResponse,
-    TagRequest, TagResponse, TagSearchRequest, TagSearchResponse,
-    LifecyclePolicyRequest, LifecycleTransitionRequest, LifecycleStatusResponse,
-    WebhookRequest, WebhooksListResponse, NotificationStatsResponse,
-    BulkDocumentRequest, BulkOperationStatus, BulkOperationsListResponse,
-    CacheStatsResponse, CacheInvalidationRequest
-)
+from ..domain.versioning.handlers import VersioningHandlers
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["docstore"])
@@ -55,10 +67,7 @@ async def get_document(document_id: str):
 
 
 @router.get("/documents", response_model=DocumentListResponse)
-async def list_documents(
-    limit: int = Query(50, ge=1, le=1000),
-    offset: int = Query(0, ge=0)
-):
+async def list_documents(limit: int = Query(50, ge=1, le=1000), offset: int = Query(0, ge=0)):
     """List documents with pagination."""
     result = await document_handlers.handle_list_documents(limit, offset)
 
@@ -67,9 +76,7 @@ async def list_documents(
         data = result["data"]
         if isinstance(data, dict):
             return DocumentListResponse(
-                items=data.get("items", []),
-                total=data.get("total", 0),
-                has_more=data.get("has_more", False)
+                items=data.get("items", []), total=data.get("total", 0), has_more=data.get("has_more", False)
             )
 
     # Fallback: return result as-is if it doesn't match expected structure
@@ -104,10 +111,7 @@ async def get_quality_metrics(limit: int = Query(1000, ge=1, le=10000)):
 
 # Analytics endpoints
 @router.get("/analytics/summary", response_model=SuccessResponse)
-async def get_analytics_summary(
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None
-):
+async def get_analytics_summary(start_date: Optional[str] = None, end_date: Optional[str] = None):
     """Get analytics summary."""
     return await analytics_handlers.handle_get_analytics_summary()
 
@@ -134,14 +138,13 @@ async def add_relationship(request: Dict[str, Any]):  # Using dict for now
         request["target_document_id"],
         request["relationship_type"],
         request.get("strength", 1.0),
-        request.get("metadata", {})
+        request.get("metadata", {}),
     )
 
 
 @router.get("/documents/{document_id}/relationships", response_model=SuccessResponse)
 async def get_document_relationships(
-    document_id: str,
-    direction: str = Query("both", regex="^(both|outgoing|incoming)$")
+    document_id: str, direction: str = Query("both", regex="^(both|outgoing|incoming)$")
 ):
     """Get relationships for a document."""
     return await relationships_handlers.handle_get_relationships(document_id, direction)
@@ -151,7 +154,7 @@ async def get_document_relationships(
 async def find_relationship_paths(
     start_id: str = Query(..., description="Starting document ID"),
     end_id: str = Query(..., description="Ending document ID"),
-    max_depth: int = Query(3, ge=1, le=10)
+    max_depth: int = Query(3, ge=1, le=10),
 ):
     """Find paths between documents."""
     return await relationships_handlers.handle_find_paths(start_id, end_id, max_depth)
@@ -188,11 +191,9 @@ async def create_lifecycle_policy(request: LifecyclePolicyRequest):
 @router.post("/documents/{document_id}/lifecycle/transition")
 async def transition_document_phase(document_id: str, request: LifecycleTransitionRequest):
     """Transition document to new lifecycle phase."""
-    return await lifecycle_handlers.handle_apply_lifecycle_policies({
-        "id": document_id,
-        "new_phase": request.new_phase,
-        "reason": request.reason
-    })
+    return await lifecycle_handlers.handle_apply_lifecycle_policies(
+        {"id": document_id, "new_phase": request.new_phase, "reason": request.reason}
+    )
 
 
 @router.get("/documents/{document_id}/lifecycle", response_model=LifecycleStatusResponse)
@@ -206,7 +207,13 @@ async def get_document_lifecycle(document_id: str):
 async def register_webhook(request: WebhookRequest):
     """Register webhook for notifications."""
     return await notifications_handlers.handle_register_webhook(
-        request.name, request.url, request.events, request.secret, request.is_active, request.retry_count, request.timeout_seconds
+        request.name,
+        request.url,
+        request.events,
+        request.secret,
+        request.is_active,
+        request.retry_count,
+        request.timeout_seconds,
     )
 
 

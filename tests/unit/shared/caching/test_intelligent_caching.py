@@ -11,11 +11,9 @@ from unittest.mock import Mock, patch, AsyncMock
 from datetime import datetime, timedelta
 from services.shared.caching.intelligent_caching import (
     CacheEntry,
-    CacheConfig,
     IntelligentCache,
     CacheStrategy,
-    CacheMetrics,
-    DistributedCache
+    CacheMetrics
 )
 
 

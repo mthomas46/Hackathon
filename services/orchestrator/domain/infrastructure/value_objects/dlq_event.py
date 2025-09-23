@@ -1,10 +1,9 @@
-"""DLQ Event Value Object"""
+"""DLQ Event Value Object."""
 
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
-from .event_status import EventStatus
 
 
 class DLQEvent:
@@ -21,7 +20,7 @@ class DLQEvent:
         max_retries: int = 3,
         correlation_id: Optional[str] = None,
         service_name: Optional[str] = None,
-        error_details: Optional[Dict[str, Any]] = None
+        error_details: Optional[Dict[str, Any]] = None,
     ):
         self._event_id = event_id
         self._event_type = event_type.strip()
@@ -120,7 +119,11 @@ class DLQEvent:
         return (datetime.utcnow() - self._dlq_timestamp).total_seconds()
 
     def increment_retry_count(self) -> bool:
-        """Increment retry count. Returns True if can retry, False if exhausted."""
+        """
+        Increment retry count.
+
+        Returns True if can retry, False if exhausted.
+        """
         if self.can_retry:
             self._retry_count += 1
             return True
@@ -142,7 +145,7 @@ class DLQEvent:
             "service_name": self._service_name,
             "error_details": self._error_details,
             "can_retry": self.can_retry,
-            "age_seconds": self.age_seconds
+            "age_seconds": self.age_seconds,
         }
 
     def __repr__(self) -> str:

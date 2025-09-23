@@ -1,29 +1,28 @@
-"""Prompt Management module for the CLI service.
+"""
+Prompt Management module for the CLI service.
 
 This module contains prompt-related CLI commands and operations,
 extracted from the main CLI service to improve maintainability.
 """
 
-from typing import Dict, Any, List, Optional
-from rich.console import Console
-from rich.panel import Panel
-from rich.prompt import Prompt, Confirm
 
-from services.shared.integrations.clients.clients import ServiceClients
+from rich.console import Console
+from rich.prompt import Confirm, Prompt
+
 from services.shared.auth.credentials import get_secret
+from services.shared.integrations.clients.clients import ServiceClients
 
 from .shared_utils import (
-    get_default_timeout,
-    get_cli_clients,
-    create_menu_table,
     add_menu_rows,
+    create_menu_table,
     create_prompt_table,
     create_search_results_table,
-    validate_prompt_data,
     extract_variables_from_content,
     format_prompt_details,
-    parse_tags_input
+    parse_tags_input,
+    validate_prompt_data,
 )
+
 
 class PromptManager:
     """Handle prompt management CLI operations."""
@@ -37,16 +36,19 @@ class PromptManager:
         while True:
             self.console.print("\n[bold cyan]Prompt Management[/bold cyan]")
             menu = create_menu_table("", ["Option", "Description"])
-            add_menu_rows(menu, [
-                ("1", "List prompts"),
-                ("2", "Create new prompt"),
-                ("3", "View prompt details"),
-                ("4", "Update prompt"),
-                ("5", "Delete prompt"),
-                ("6", "Fork prompt"),
-                ("7", "Search prompts"),
-                ("b", "Back to main menu")
-            ])
+            add_menu_rows(
+                menu,
+                [
+                    ("1", "List prompts"),
+                    ("2", "Create new prompt"),
+                    ("3", "View prompt details"),
+                    ("4", "Update prompt"),
+                    ("5", "Delete prompt"),
+                    ("6", "Fork prompt"),
+                    ("7", "Search prompts"),
+                    ("b", "Back to main menu"),
+                ],
+            )
             self.console.print(menu)
 
             choice = Prompt.ask("[bold green]Select option[/bold green]")
@@ -127,7 +129,7 @@ class PromptManager:
                 "content": content,
                 "variables": variables,
                 "tags": tags,
-                **({"author": author} if author else {})
+                **({"author": author} if author else {}),
             }
 
             url = f"{self.clients.prompt_store_url()}/prompts"
@@ -192,7 +194,7 @@ class PromptManager:
                 "description": description,
                 "content": content,
                 "variables": variables,
-                "tags": tags
+                "tags": tags,
             }
 
             url = f"{self.clients.prompt_store_url()}/prompts/{prompt_id}"
@@ -257,7 +259,7 @@ class PromptManager:
                 "description": description,
                 "content": current.get("content", ""),
                 "variables": current.get("variables", []),
-                "tags": current.get("tags", []) + ["forked"]
+                "tags": current.get("tags", []) + ["forked"],
             }
 
             url = f"{self.clients.prompt_store_url()}/prompts"

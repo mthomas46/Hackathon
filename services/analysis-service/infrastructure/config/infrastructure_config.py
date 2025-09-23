@@ -1,10 +1,9 @@
 """Main infrastructure configuration."""
 
-from typing import Optional
 from dataclasses import dataclass, field
 
-from .database_config import DatabaseConfig
 from .cache_config import CacheConfig
+from .database_config import DatabaseConfig
 from .external_service_config import ExternalServiceConfig
 
 
@@ -32,24 +31,24 @@ class InfrastructureConfig:
     request_timeout: int = 30
 
     @classmethod
-    def from_env(cls) -> 'InfrastructureConfig':
+    def from_env(cls) -> "InfrastructureConfig":
         """Create configuration from environment variables."""
         return cls(
             database=DatabaseConfig.from_env(),
             cache=CacheConfig.from_env(),
             external_services=ExternalServiceConfig.from_env(),
-            environment=os.getenv('ENVIRONMENT', 'development'),
-            debug_mode=os.getenv('DEBUG', 'false').lower() == 'true',
-            log_level=os.getenv('LOG_LEVEL', 'INFO'),
-            enable_caching=os.getenv('ENABLE_CACHING', 'true').lower() == 'true',
-            enable_metrics=os.getenv('ENABLE_METRICS', 'true').lower() == 'true',
-            enable_tracing=os.getenv('ENABLE_TRACING', 'false').lower() == 'true',
-            max_concurrent_requests=int(os.getenv('MAX_CONCURRENT_REQUESTS', '100')),
-            request_timeout=int(os.getenv('REQUEST_TIMEOUT', '30'))
+            environment=os.getenv("ENVIRONMENT", "development"),
+            debug_mode=os.getenv("DEBUG", "false").lower() == "true",
+            log_level=os.getenv("LOG_LEVEL", "INFO"),
+            enable_caching=os.getenv("ENABLE_CACHING", "true").lower() == "true",
+            enable_metrics=os.getenv("ENABLE_METRICS", "true").lower() == "true",
+            enable_tracing=os.getenv("ENABLE_TRACING", "false").lower() == "true",
+            max_concurrent_requests=int(os.getenv("MAX_CONCURRENT_REQUESTS", "100")),
+            request_timeout=int(os.getenv("REQUEST_TIMEOUT", "30")),
         )
 
     @classmethod
-    def for_testing(cls) -> 'InfrastructureConfig':
+    def for_testing(cls) -> "InfrastructureConfig":
         """Create configuration for testing."""
         return cls(
             database=DatabaseConfig(sqlite_path=":memory:"),
@@ -60,11 +59,11 @@ class InfrastructureConfig:
             log_level="DEBUG",
             enable_caching=False,
             enable_metrics=False,
-            enable_tracing=False
+            enable_tracing=False,
         )
 
     @classmethod
-    def for_development(cls) -> 'InfrastructureConfig':
+    def for_development(cls) -> "InfrastructureConfig":
         """Create configuration for development."""
         return cls(
             database=DatabaseConfig(sqlite_path="analysis_dev.db"),
@@ -72,11 +71,11 @@ class InfrastructureConfig:
             external_services=ExternalServiceConfig(),
             environment="development",
             debug_mode=True,
-            log_level="DEBUG"
+            log_level="DEBUG",
         )
 
     @classmethod
-    def for_production(cls) -> 'InfrastructureConfig':
+    def for_production(cls) -> "InfrastructureConfig":
         """Create configuration for production."""
         return cls(
             database=DatabaseConfig.from_env(),
@@ -84,7 +83,7 @@ class InfrastructureConfig:
             external_services=ExternalServiceConfig.from_env(),
             environment="production",
             debug_mode=False,
-            log_level="WARNING"
+            log_level="WARNING",
         )
 
     def validate(self) -> list[str]:
@@ -127,15 +126,8 @@ class InfrastructureConfig:
 
     def get_feature_flags(self) -> dict:
         """Get feature flags."""
-        return {
-            'caching': self.enable_caching,
-            'metrics': self.enable_metrics,
-            'tracing': self.enable_tracing
-        }
+        return {"caching": self.enable_caching, "metrics": self.enable_metrics, "tracing": self.enable_tracing}
 
     def get_performance_settings(self) -> dict:
         """Get performance settings."""
-        return {
-            'max_concurrent_requests': self.max_concurrent_requests,
-            'request_timeout': self.request_timeout
-        }
+        return {"max_concurrent_requests": self.max_concurrent_requests, "request_timeout": self.request_timeout}

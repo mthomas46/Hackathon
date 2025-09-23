@@ -4,21 +4,24 @@
 Validates that the sentiment analyzer works correctly.
 """
 
-import sys
 import os
+import sys
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 def test_sentiment_analyzer_import():
     """Test that the sentiment analyzer module can be imported."""
     try:
         from services.analysis_service.modules.sentiment_analyzer import SentimentAnalyzer, analyze_document_sentiment
+
         print("✅ Sentiment analyzer module imported successfully")
         return True
     except ImportError as e:
         print(f"❌ Failed to import sentiment analyzer module: {e}")
         return False
+
 
 def test_sentiment_analyzer_initialization():
     """Test that the sentiment analyzer can be initialized."""
@@ -33,6 +36,7 @@ def test_sentiment_analyzer_initialization():
     except Exception as e:
         print(f"❌ Failed to initialize sentiment analyzer: {e}")
         return False
+
 
 def test_textblob_sentiment_analysis():
     """Test TextBlob-based sentiment analysis."""
@@ -56,6 +60,7 @@ def test_textblob_sentiment_analysis():
         print(f"❌ TextBlob sentiment analysis failed: {e}")
         return False
 
+
 def test_readability_metrics():
     """Test readability metrics calculation."""
     try:
@@ -77,6 +82,7 @@ def test_readability_metrics():
     except Exception as e:
         print(f"❌ Readability metrics calculation failed: {e}")
         return False
+
 
 def test_tone_analysis():
     """Test tone analysis functionality."""
@@ -100,6 +106,7 @@ def test_tone_analysis():
         print(f"❌ Tone analysis failed: {e}")
         return False
 
+
 def test_full_sentiment_analysis():
     """Test the complete sentiment analysis pipeline."""
     try:
@@ -111,7 +118,7 @@ def test_full_sentiment_analysis():
             "id": "test_doc",
             "title": "Getting Started Guide",
             "content": "Welcome to our platform! This guide will help you get started with ease. We're excited to have you here and look forward to your success.",
-            "metadata": {"author": "Test Author"}
+            "metadata": {"author": "Test Author"},
         }
 
         # Test with initialization mocked to avoid model loading
@@ -120,9 +127,7 @@ def test_full_sentiment_analysis():
                 print("⚠️  Models not available, but core functionality should still work")
 
             result = analyzer.analyze_sentiment_and_clarity(
-                document=document,
-                use_transformer=False,
-                include_tone_analysis=True
+                document=document, use_transformer=False, include_tone_analysis=True
             )
 
             print("✅ Full sentiment analysis pipeline working")
@@ -131,9 +136,9 @@ def test_full_sentiment_analysis():
             print(f"   Sentiment: {result['sentiment_analysis']['sentiment']}")
             print(f"   Processing time: {result['processing_time']:.2f}s")
 
-            if result['recommendations']:
+            if result["recommendations"]:
                 print(f"   Recommendations: {len(result['recommendations'])} items")
-                for rec in result['recommendations'][:2]:  # Show first 2
+                for rec in result["recommendations"][:2]:  # Show first 2
                     print(f"     - {rec}")
 
             return True
@@ -142,12 +147,14 @@ def test_full_sentiment_analysis():
         print(f"❌ Full sentiment analysis failed: {e}")
         return False
 
+
 def test_main_app_import():
     """Test that the main app can be imported with sentiment analysis endpoints."""
     try:
         from services.analysis_service.main import app
-        routes = [route.path for route in app.routes if hasattr(route, 'path')]
-        sentiment_routes = [r for r in routes if 'sentiment' in r or 'tone' in r]
+
+        routes = [route.path for route in app.routes if hasattr(route, "path")]
+        sentiment_routes = [r for r in routes if "sentiment" in r or "tone" in r]
 
         print("✅ Main app imported successfully")
         print(f"✅ Found {len(sentiment_routes)} sentiment/tone analysis routes:")
@@ -158,6 +165,7 @@ def test_main_app_import():
     except Exception as e:
         print(f"❌ Failed to import main app: {e}")
         return False
+
 
 def main():
     """Run all tests."""
@@ -192,6 +200,7 @@ def main():
     else:
         print("⚠️  Some tests failed. Check the output above for details.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

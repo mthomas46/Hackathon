@@ -1,14 +1,16 @@
-"""Code analysis handler for Source Agent service.
+"""
+Code analysis handler for Source Agent service.
 
 Handles code analysis and endpoint extraction logic.
 """
-from typing import Dict, Any, List
+
+from typing import Any, Dict
 
 from .shared_utils import (
-    extract_endpoints_from_code,
-    create_source_agent_success_response,
     build_source_agent_context,
-    handle_source_agent_error
+    create_source_agent_success_response,
+    extract_endpoints_from_code,
+    handle_source_agent_error,
 )
 
 
@@ -24,7 +26,7 @@ class CodeAnalyzer:
             result = {
                 "analysis": "\n".join(hints),
                 "endpoint_count": len(hints),
-                "patterns_found": ["FastAPI", "Express", "Flask"]
+                "patterns_found": ["FastAPI", "Express", "Flask"],
             }
 
             context = build_source_agent_context("analyze_code", endpoint_count=len(hints))
