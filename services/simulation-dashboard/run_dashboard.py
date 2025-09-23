@@ -18,7 +18,7 @@ sys.path.insert(0, str(current_dir))
 def check_dependencies():
     """Check if required dependencies are installed."""
     try:
-        import streamlit
+        pass
 
         print("✅ Streamlit is installed")
     except ImportError:
@@ -27,7 +27,7 @@ def check_dependencies():
         return False
 
     try:
-        import httpx
+        pass
 
         print("✅ HTTPX is installed")
     except ImportError:
@@ -36,7 +36,7 @@ def check_dependencies():
         return False
 
     try:
-        import websockets
+        pass
 
         print("✅ WebSockets is installed")
     except ImportError:

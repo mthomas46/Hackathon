@@ -5,9 +5,9 @@ import time
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 
 class ConnectionState(Enum):
@@ -158,17 +158,14 @@ class ConnectionPool(ABC, Generic[T]):
     @abstractmethod
     async def create_connection(self) -> T:
         """Create a new connection."""
-        pass
 
     @abstractmethod
     async def validate_connection(self, connection: T) -> bool:
         """Validate connection health."""
-        pass
 
     @abstractmethod
     async def close_connection(self, connection: T) -> None:
         """Close a connection."""
-        pass
 
     async def start(self) -> None:
         """Start the connection pool."""
@@ -222,7 +219,7 @@ class ConnectionPool(ABC, Generic[T]):
 
     async def _acquire_connection(self) -> PooledConnection[T]:
         """Acquire a connection from the pool."""
-        start_time = time.time()
+        time.time()
 
         while True:
             if self._closed:

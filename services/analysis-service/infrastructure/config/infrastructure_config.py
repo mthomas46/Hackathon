@@ -1,7 +1,7 @@
 """Main infrastructure configuration."""
 
+import os
 from dataclasses import dataclass, field
-from typing import Optional
 
 from .cache_config import CacheConfig
 from .database_config import DatabaseConfig

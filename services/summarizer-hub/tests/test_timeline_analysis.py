@@ -4,9 +4,8 @@ This module contains unit tests for timeline analysis functionality
 that was moved from the simulation service to the summarizer-hub service.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock
 
 import pytest
 from main import SimpleSummarizer

@@ -4,19 +4,15 @@ Provides power-user operations for notification service including
 owner resolution, notification delivery, DLQ management, and resolutions.
 """
 
-import asyncio
 import json
-import os
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
-from rich.text import Text
 
 from ...base.base_manager import BaseManager
-from ...shared_utils import add_menu_rows, create_menu_table, get_cli_clients, log_cli_metrics, print_panel
+from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 
 
 class NotificationServiceManager(BaseManager):

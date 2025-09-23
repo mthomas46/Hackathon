@@ -30,7 +30,6 @@ from .shared_utils import (
     get_high_priority_score,
     get_medium_priority_score,
     handle_analysis_error,
-    validate_analysis_targets,
 )
 
 # Constants for analysis thresholds and scoring (using shared configuration)
@@ -163,7 +162,7 @@ def detect_readme_drift(docs: List[Document]) -> List[Finding]:
 
         for readme_doc, readme_title, readme_content in readmes:
             # Performance optimization: Pre-calculate word sets for README
-            readme_words = set(readme_content.lower().split())
+            set(readme_content.lower().split())
 
             for doc_doc, doc_title, doc_content in other_docs:
                 # Performance optimization: Skip obviously different documents

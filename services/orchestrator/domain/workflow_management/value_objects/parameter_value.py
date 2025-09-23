@@ -1,7 +1,7 @@
 """Parameter Value Value Object"""
 
 from enum import Enum
-from typing import Any, Union
+from typing import Any
 
 
 class ParameterType(Enum):

@@ -4,7 +4,6 @@ This module contains common utilities used across all frontend modules
 to eliminate code duplication and ensure consistency.
 """
 
-import os
 from typing import Any, Dict, List, Optional
 
 from fastapi.responses import HTMLResponse
@@ -16,7 +15,6 @@ from services.shared.core.responses.responses import create_error_response
 # Import shared utilities
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities import utc_now
 from services.shared.utilities.error_handling import ServiceException
 
 # Global configuration for frontend service

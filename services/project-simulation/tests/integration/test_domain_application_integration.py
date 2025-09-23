@@ -6,21 +6,16 @@ service integration, and cross-layer communication.
 """
 
 import asyncio
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import MagicMock
 
 import pytest
 from simulation.application.services.simulation_application_service import SimulationApplicationService
-from simulation.domain.entities.project import Project
 from simulation.domain.services.simulation_domain_service import SimulationDomainService
 from simulation.domain.value_objects import (
     ComplexityLevel,
     ExpertiseLevel,
-    ProjectStatus,
     ProjectType,
     Role,
-    TeamMember,
 )
 from simulation.infrastructure.repositories.in_memory_repositories import (
     InMemoryProjectRepository,

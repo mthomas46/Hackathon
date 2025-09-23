@@ -12,15 +12,14 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses import create_error_response, create_success_response
+from services.shared.core.constants_new import ServiceNames
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities.error_handling import ServiceException, install_error_handlers
-from services.shared.utilities.utilities import attach_self_register, generate_id, setup_common_middleware, utc_now
+from services.shared.utilities.error_handling import install_error_handlers
+from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
 
 # ============================================================================
 # CONTROLLERS - Clean separation of endpoint responsibilities
@@ -68,6 +67,14 @@ from .infrastructure.config import InfrastructureConfig
 # ============================================================================
 from .infrastructure.repositories import SQLiteAnalysisRepository, SQLiteDocumentRepository, SQLiteFindingRepository
 
+# ============================================================================
+# SERVICE CONSTANTS - Module-level constants for service configuration
+# ============================================================================
+SERVICE_NAME = "analysis-service"
+SERVICE_TITLE = "Analysis Service"
+SERVICE_VERSION = "1.0.0"
+DEFAULT_PORT = 5020
+
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application with clean architecture."""
@@ -75,11 +82,6 @@ def create_application() -> FastAPI:
     # ============================================================================
     # APPLICATION CONFIGURATION
     # ============================================================================
-    SERVICE_NAME = "analysis-service"
-    SERVICE_TITLE = "Analysis Service"
-    SERVICE_VERSION = "1.0.0"
-    DEFAULT_PORT = 5020
-
     # Create FastAPI app with clean configuration
     app = FastAPI(
         title=SERVICE_TITLE,
@@ -98,12 +100,12 @@ def create_application() -> FastAPI:
     # INFRASTRUCTURE SETUP
     # ============================================================================
     # Load configuration
-    config = InfrastructureConfig.from_env()
+    InfrastructureConfig.from_env()
 
     # Initialize repositories
-    document_repo = SQLiteDocumentRepository()
-    analysis_repo = SQLiteAnalysisRepository()
-    finding_repo = SQLiteFindingRepository()
+    document_repository = SQLiteDocumentRepository()
+    analysis_repository = SQLiteAnalysisRepository()
+    finding_repository = SQLiteFindingRepository()
 
     # Initialize domain services
     document_service = DocumentService()
@@ -111,8 +113,8 @@ def create_application() -> FastAPI:
     finding_service = FindingService()
 
     # Initialize factories
-    document_factory = DocumentFactory(document_service)
-    finding_factory = FindingFactory(finding_service)
+    DocumentFactory(document_service)
+    FindingFactory(finding_service)
 
     # ============================================================================
     # APPLICATION SERVICES SETUP

@@ -4,7 +4,6 @@ Handles github-mcp service visualization, including tool invocation
 monitoring, GitHub operations, and MCP tool testing.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..github_mcp_monitor import github_mcp_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )
@@ -25,7 +23,7 @@ class GithubMcpUIHandlers:
     def handle_github_mcp_dashboard() -> HTMLResponse:
         """Render github-mcp service monitoring dashboard."""
         try:
-            clients = get_frontend_clients()
+            get_frontend_clients()
 
             # Get github-mcp status and cached data
             status_data = github_mcp_monitor.get_mcp_status()

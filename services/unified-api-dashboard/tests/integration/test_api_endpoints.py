@@ -5,15 +5,10 @@ Comprehensive integration tests for all FastAPI endpoints in the Unified API Das
 Tests authentication, authorization, analytics, developer tools, security, and topology endpoints.
 """
 
-import json
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-import pytest_asyncio
-from httpx import AsyncClient
 
-from ...conftest import *
 
 
 class TestAuthenticationEndpoints:

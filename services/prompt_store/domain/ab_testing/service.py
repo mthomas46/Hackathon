@@ -4,10 +4,9 @@ Handles business logic for A/B testing operations.
 """
 
 import asyncio
-import statistics
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from services.prompt_store.core.entities import ABTest, ABTestResult, Prompt
+from services.prompt_store.core.entities import ABTest, ABTestResult
 from services.prompt_store.core.service import BaseService
 from services.prompt_store.domain.ab_testing.repository import ABTestRepository, ABTestResultRepository
 from services.prompt_store.domain.prompts.service import PromptService
@@ -315,7 +314,6 @@ class ABTestService(BaseService[ABTest]):
         """Record test usage for analytics."""
         # This would integrate with the usage tracking system
         # For now, just increment counters
-        pass
 
     def create_ab_test(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new A/B test (convenience method)."""

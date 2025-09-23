@@ -3,22 +3,18 @@
 import asyncio
 import os
 import tempfile
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from ...application.services.analysis_application_service import AnalysisApplicationService
-from ...application.services.application_service import ApplicationService
 from ...application.services.caching_service import CachingService
 from ...application.services.logging_service import LoggingService
 from ...application.services.monitoring_service import MonitoringService
 from ...application.services.transaction_service import TransactionService
 from ...application.use_cases.create_document_use_case import CreateDocumentUseCase
-from ...application.use_cases.perform_analysis_use_case import PerformAnalysisUseCase
 from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
+from ...domain.entities.document import Document
 from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence
@@ -275,7 +271,6 @@ class TestCrossCuttingConcernsIntegration:
     @pytest.mark.asyncio
     async def test_logging_service_with_file_persistence(self, infrastructure_setup):
         """Test logging service with file persistence."""
-        setup = infrastructure_setup
 
         # Create temporary log file
         with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
@@ -315,7 +310,7 @@ class TestCrossCuttingConcernsIntegration:
         setup = infrastructure_setup
 
         # Mock Redis pool for testing
-        redis_pool = setup["pools"].get("redis", Mock())
+        setup["pools"].get("redis", Mock())
 
         # Create caching service
         from ...application.services.caching_service import ApplicationCache
@@ -340,7 +335,6 @@ class TestCrossCuttingConcernsIntegration:
     @pytest.mark.asyncio
     async def test_monitoring_service_with_metrics_collection(self, infrastructure_setup):
         """Test monitoring service with metrics collection."""
-        setup = infrastructure_setup
 
         from ...application.services.monitoring_service import ApplicationMetrics
 
@@ -710,7 +704,7 @@ class TestInfrastructurePerformanceIntegration:
         # Cross-reference queries
         for analysis in all_analyses[:10]:  # Test first 10
             doc = await doc_repo.get_by_id(analysis.document_id)
-            analysis_findings = await finding_repo.get_by_analysis_id(analysis.id.value)
+            await finding_repo.get_by_analysis_id(analysis.id.value)
 
         query_time = time.time() - start_time
 

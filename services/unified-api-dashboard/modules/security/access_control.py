@@ -9,13 +9,12 @@ Advanced access control system supporting:
 - Geographic access controls
 """
 
-import asyncio
 import ipaddress
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, time
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from .auth import Permission, User, UserRole
 
@@ -471,7 +470,7 @@ class AccessControlManager:
     def _check_ip_restriction(self, config: Dict[str, Any], ip_address: str) -> bool:
         """Check IP address against restrictions."""
         try:
-            client_ip = ipaddress.ip_address(ip_address)
+            ipaddress.ip_address(ip_address)
         except ValueError:
             return False
 

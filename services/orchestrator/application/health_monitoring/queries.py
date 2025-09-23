@@ -1,7 +1,6 @@
 """Application Queries for Health Monitoring"""
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass

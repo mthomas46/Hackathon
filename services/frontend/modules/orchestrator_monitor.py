@@ -4,11 +4,9 @@ Provides visualization and monitoring capabilities for orchestrator Redis pub/su
 activity and service configuration.
 """
 
-import asyncio
-import json
 from collections import defaultdict
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
 from services.shared.utilities import utc_now
 

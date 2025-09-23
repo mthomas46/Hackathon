@@ -17,35 +17,26 @@ import asyncio
 import json
 import sys
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 from simulation.domain.entities.project import Project
-from simulation.domain.entities.simulation import Simulation, SimulationConfiguration, SimulationId, SimulationProgress
+from simulation.domain.entities.simulation import Simulation
 from simulation.domain.entities.team import Team
 from simulation.domain.entities.timeline import Timeline
-from simulation.domain.events import (
-    DocumentGenerated,
-    SimulationCompleted,
-    SimulationFailed,
-    SimulationStarted,
-    WorkflowExecuted,
-)
 from simulation.domain.repositories import (
     IProjectRepository,
     ISimulationRepository,
     ITeamRepository,
     ITimelineRepository,
 )
-from simulation.domain.services.project_simulation_service import ProjectSimulationService
 from simulation.domain.value_objects import DocumentType, SimulationMetrics, SimulationStatus
 from simulation.infrastructure.clients.ecosystem_clients import EcosystemServiceRegistry
 from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
-from simulation.infrastructure.logging import get_simulation_logger
 from simulation.infrastructure.monitoring.simulation_monitoring import SimulationMonitoringService
 from simulation.infrastructure.workflows.workflow_orchestrator import SimulationWorkflowOrchestrator
 
@@ -334,7 +325,7 @@ class SimulationExecutionEngine:
 
         # Store documents in ecosystem and broadcast events
         for doc in documents:
-            doc_id = await self._store_document(doc)
+            await self._store_document(doc)
 
             # Determine document type
             doc_type = DocumentType.CONFLUENCE_DOC

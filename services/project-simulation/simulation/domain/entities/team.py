@@ -7,7 +7,7 @@ roles, and team dynamics in the domain-driven design architecture.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
@@ -157,7 +157,7 @@ class TeamMemberEntity:
         if self.can_handle_task(task_type, complexity):
             task_fit_bonus = 1.2
         else:
-            task_fit_penalty = 0.8
+            pass
 
         # Adjust for morale
         morale_multiplier = self.morale_level.to_fraction()

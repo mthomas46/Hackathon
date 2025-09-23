@@ -5,17 +5,15 @@ with progress bars, real-time status updates, interactive elements, and rich
 visualization of simulation progress, document generation, and workflow execution.
 """
 
-import asyncio
 import os
 import sys
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
@@ -204,7 +202,7 @@ class TerminalProgressVisualizer:
         elif update_type == "document_generated":
             self.state.documents_generated += 1
             doc_title = update.get("document_title", "Document")
-            doc_type = update.get("document_type", "Unknown")
+            update.get("document_type", "Unknown")
             self._add_progress_item(f"doc_{self.state.documents_generated}", f"Generate {doc_title}", "completed")
 
         elif update_type == "workflow_executed":

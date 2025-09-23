@@ -6,20 +6,16 @@ future projections. It generates content that evolves naturally over the project
 lifecycle with proper temporal relationships and phase-aware intelligence.
 """
 
-import json
-import random
 import sys
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
 from simulation.infrastructure.content.context_aware_generation import (
-    ContentContext,
-    ContextAwareDocumentGenerator,
     get_context_aware_generator,
 )
 from simulation.infrastructure.logging import get_simulation_logger

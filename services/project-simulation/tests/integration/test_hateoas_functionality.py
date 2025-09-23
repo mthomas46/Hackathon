@@ -4,8 +4,6 @@ This module contains comprehensive tests for Hypermedia as the Engine of Applica
 implementation. Tests cover API discoverability, link relations, and hypermedia-driven navigation.
 """
 
-from typing import Any, Dict, List, Optional
-from unittest.mock import Mock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -54,7 +52,6 @@ class TestAPIDiscovery:
     def test_api_discovery_provides_deprecation_warnings(self, test_client):
         """Test that API discovery provides deprecation warnings for older versions."""
         # This would test deprecation notices for API versions
-        pass
 
 
 class TestResourceNavigation:
@@ -79,7 +76,7 @@ class TestResourceNavigation:
         # Conditional navigation links (may not exist for empty collections)
         if "data" in data and len(data["data"]) > 0:
             # If there are items, should have pagination links
-            pagination_links = ["next", "prev"]
+            pass
             # At least some pagination links should be present
 
     def test_simulation_resource_provides_relationship_links(self, test_client):
@@ -301,7 +298,6 @@ class TestHATEOASContentNegotiation:
     def test_api_provides_format_negotiation_links(self, test_client):
         """Test that API provides links for different content formats."""
         # This would test links like ?format=json, ?format=html, etc.
-        pass
 
 
 class TestHATEOASCaching:
@@ -313,7 +309,7 @@ class TestHATEOASCaching:
 
         # Should have cache-related headers
         cache_headers = ["cache-control", "etag", "last-modified"]
-        has_cache_header = any(header in response.headers for header in cache_headers)
+        any(header in response.headers for header in cache_headers)
 
         # At minimum should have cache-control
         assert "cache-control" in response.headers
@@ -402,7 +398,6 @@ class TestHATEOASPerformance:
     def test_link_validation_doesnt_impact_performance(self, test_client):
         """Test that link validation doesn't significantly impact performance."""
         # This would test the performance impact of link validation
-        pass
 
 
 # Fixtures

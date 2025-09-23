@@ -1,7 +1,7 @@
 """Quality assurance and validation service for prompt testing and bias detection."""
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now

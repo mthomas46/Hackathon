@@ -5,15 +5,12 @@ testing automatic service location, health checking, and fallback mechanisms.
 """
 
 import asyncio
-from typing import Any, Dict
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
-import aiohttp
 import pytest
 from simulation.infrastructure.config.discovery import (
     FallbackServiceClient,
     LocalServiceDiscovery,
-    ServiceDiscoveryError,
     ServiceHealth,
     get_service_discovery,
     start_service_discovery,

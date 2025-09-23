@@ -4,10 +4,7 @@ This module provides the main overview dashboard page with key metrics,
 recent activity, simulation status overview, and quick actions.
 """
 
-import asyncio
-import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import streamlit as st
 from infrastructure.logging.logger import get_dashboard_logger

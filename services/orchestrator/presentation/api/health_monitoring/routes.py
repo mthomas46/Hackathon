@@ -1,6 +1,5 @@
 """Health Monitoring API Routes"""
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 

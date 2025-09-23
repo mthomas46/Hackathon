@@ -9,7 +9,6 @@ from .utils import sanitize_for_response
 class ValidationError(ValueError):
     """Custom validation error for bedrock proxy."""
 
-    pass
 
 
 def validate_prompt(prompt: Optional[str]) -> Optional[str]:

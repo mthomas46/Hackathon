@@ -6,12 +6,7 @@ These tests are written FIRST (RED phase) and will initially FAIL.
 They define the expected behavior before implementation.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List
-from unittest.mock import Mock, patch
 
-import pytest
-from simulation.domain.entities.simulation import SimulationStatus, SimulationType
 
 # Import the modules we'll be testing (these may not exist yet - that's why tests will fail)
 from simulation.infrastructure.mock_data.mock_data_generator import MockDataGenerator
@@ -229,9 +224,7 @@ class TestMockDataIntegration:
         """Test that mock data integrates properly with simulation creation."""
         # This would test integration with the actual simulation creation process
         # For now, just verify the data structure is compatible
-        pass
 
     def test_mock_data_persistence(self):
         """Test that mock data can be properly persisted and retrieved."""
         # This would test integration with the database persistence layer
-        pass

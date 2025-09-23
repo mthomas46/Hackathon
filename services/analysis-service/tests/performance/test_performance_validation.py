@@ -1,20 +1,18 @@
 """Performance Tests - Validate system performance and scalability."""
 
 import asyncio
-import os
 import statistics
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Dict, List, Tuple
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Tuple
+from unittest.mock import patch
 
 import psutil
 import pytest
 
-from ...main import app
 from ...presentation.models.analysis import SemanticSimilarityRequest, SemanticSimilarityResponse
 from ..fixtures.test_data import TestDataFactory
-from ..fixtures.test_utilities import AsyncMockHelper, PerformanceMonitor
+from ..fixtures.test_utilities import PerformanceMonitor
 
 
 class TestPerformanceValidation:
@@ -152,7 +150,7 @@ class TestPerformanceValidation:
 
     def test_database_connection_pooling_performance(self):
         """Test database connection pooling under load."""
-        monitor = PerformanceMonitor()
+        PerformanceMonitor()
 
         async def simulate_db_operations():
             """Simulate multiple database operations."""
@@ -481,7 +479,7 @@ class TestPerformanceValidation:
                 batch_start = time.time()
                 tasks = [self._simulate_quick_operation(i) for i in range(10)]
                 await asyncio.gather(*tasks)
-                batch_time = time.time() - batch_start
+                time.time() - batch_start
 
                 operations_completed += 10
 
@@ -495,7 +493,7 @@ class TestPerformanceValidation:
         # Run continuous test
         monitor.start()
         total_operations = asyncio.run(continuous_operations())
-        total_time = monitor.stop()
+        monitor.stop()
 
         # Validate throughput stability
         if throughput_measurements:
@@ -588,7 +586,6 @@ class TestPerformanceValidation:
 
             async def run_cpu_scenario():
                 """Run CPU-intensive operations."""
-                tasks = []
 
                 def cpu_work(intensity):
                     """CPU-intensive work."""

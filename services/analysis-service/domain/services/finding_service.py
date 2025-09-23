@@ -12,7 +12,6 @@ class FindingService:
 
     def __init__(self):
         """Initialize finding service."""
-        pass
 
     def create_finding(
         self,

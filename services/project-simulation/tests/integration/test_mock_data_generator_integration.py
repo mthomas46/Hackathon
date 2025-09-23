@@ -6,12 +6,10 @@ testing end-to-end content generation, validation, and storage integration.
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from simulation.domain.value_objects import ComplexityLevel, DocumentMetadata, DocumentType, ProjectType
-from simulation.infrastructure.clients.ecosystem_clients import MockDataGeneratorClient, get_mock_data_generator_client
+from simulation.infrastructure.clients.ecosystem_clients import MockDataGeneratorClient
 from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
 
 

@@ -1,14 +1,10 @@
 """Functional tests for dashboard UI components."""
 
-from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from pages.config import render_config_page
 from pages.create import render_create_page
-from pages.monitor import render_monitor_page
 from pages.overview import render_overview_page
-from pages.reports import render_reports_page
 
 
 @pytest.mark.functional
@@ -300,7 +296,7 @@ class TestPageNavigation:
         mock_st.container = Mock(return_value=Mock())
 
         try:
-            from app import PAGES, render_page_content
+            from app import render_page_content
 
             # Test routing to overview page
             render_page_content("overview")

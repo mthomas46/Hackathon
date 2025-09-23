@@ -1,12 +1,11 @@
 """Event Bus - Core event publishing infrastructure."""
 
-import asyncio
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from ...application.services import ApplicationService, ServiceContext
 
@@ -133,37 +132,30 @@ class EventBus(ABC):
     @abstractmethod
     async def publish(self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None) -> None:
         """Publish an event."""
-        pass
 
     @abstractmethod
     async def publish_batch(self, events: List[Union[DomainEvent, EventEnvelope]], topic: Optional[str] = None) -> None:
         """Publish multiple events."""
-        pass
 
     @abstractmethod
     async def subscribe(self, topic: str, handler: Callable, **kwargs) -> None:
         """Subscribe to events on a topic."""
-        pass
 
     @abstractmethod
     async def unsubscribe(self, topic: str, handler: Callable) -> None:
         """Unsubscribe from events on a topic."""
-        pass
 
     @abstractmethod
     async def get_subscriber_count(self, topic: str) -> int:
         """Get number of subscribers for a topic."""
-        pass
 
     @abstractmethod
     async def get_topics(self) -> List[str]:
         """Get all available topics."""
-        pass
 
     @abstractmethod
     async def health_check(self) -> Dict[str, Any]:
         """Perform health check."""
-        pass
 
 
 class EventPublisher:

@@ -1,7 +1,7 @@
 """Application Queries for Workflow Management"""
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from ...domain.workflow_management import ExecutionId, WorkflowId
 

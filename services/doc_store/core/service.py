@@ -7,7 +7,6 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from services.shared.core.responses.responses import create_error_response, create_success_response
 from services.shared.utilities.error_handling import ServiceException
 
 from .entities import BaseEntity
@@ -24,7 +23,6 @@ class BaseService(Generic[T], ABC):
     @abstractmethod
     def _validate_entity(self, entity: T) -> None:
         """Validate entity before saving."""
-        pass
 
     def create_entity(self, entity_data: Dict[str, Any], entity_id: Optional[str] = None) -> T:
         """Create a new entity with validation."""
@@ -89,7 +87,6 @@ class BaseService(Generic[T], ABC):
     @abstractmethod
     def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> T:
         """Create entity instance from data dictionary."""
-        pass
 
     def _apply_updates(self, entity: T, updates: Dict[str, Any]) -> None:
         """Apply updates to entity."""

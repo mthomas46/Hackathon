@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ...shared.logging import fire_and_forget
 
 logger = logging.getLogger(__name__)
 

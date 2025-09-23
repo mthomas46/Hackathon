@@ -2,12 +2,10 @@
 
 import importlib
 import inspect
-import pkgutil
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type
 
-from .migration import Migration, MigrationDependency, MigrationType
+from .migration import Migration, MigrationType
 
 
 class MigrationDiscovery:

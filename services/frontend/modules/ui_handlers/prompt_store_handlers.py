@@ -3,11 +3,9 @@
 Handles prompt store browsing and analytics.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
-from services.frontend.modules.data_browser import get_prompt_store_summary
 
 from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
 

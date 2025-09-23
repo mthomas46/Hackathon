@@ -3,15 +3,13 @@
 Combines distributed tracing and logging functionality.
 """
 
-import json
 import time
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from starlette.requests import Request
-from starlette.responses import Response
 
 
 class TraceStatus(Enum):

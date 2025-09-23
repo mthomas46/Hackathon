@@ -6,7 +6,6 @@ Contains business logic for webhook management, event notification delivery, and
 import asyncio
 import hashlib
 import hmac
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import aiohttp
@@ -18,7 +17,7 @@ from services.prompt_store.domain.notifications.repository import (
 )
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.utilities import generate_id, utc_now
+from services.shared.utilities import utc_now
 
 
 class NotificationsService:

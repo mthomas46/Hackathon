@@ -1,7 +1,7 @@
 """Security middleware for adding security headers and protection."""
 
 import re
-from typing import Dict, List, Optional, Set
+from typing import List, Optional
 
 from fastapi import HTTPException, Request
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -83,7 +83,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 await self._block_request(request, "Suspicious user agent detected")
 
         # Rate limiting for suspicious IPs can be added here
-        client_ip = self._get_client_ip(request)
+        self._get_client_ip(request)
         # Could integrate with a reputation service here
 
     async def _block_request(self, request: Request, reason: str):

@@ -1,35 +1,23 @@
 """Analysis Controller - Handles core document analysis endpoints."""
 
-from typing import Any, Dict, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
-from ...application.dto import AnalysisResultResponse, ErrorResponse, PerformAnalysisRequest
+from ...application.dto import ErrorResponse, PerformAnalysisRequest
 from ...application.use_cases import PerformAnalysisUseCase
 from ...domain.services import AnalysisService
 from ...infrastructure.repositories import AnalysisRepository, DocumentRepository
 from ...modules.analysis_handlers import analysis_handlers
 from ...presentation.models.analysis import (
     AnalysisRequest,
-    AnalysisResponse,
-    ChangeImpactRequest,
-    ChangeImpactResponse,
     ContentQualityRequest,
-    ContentQualityResponse,
     MaintenanceForecastRequest,
-    MaintenanceForecastResponse,
-    QualityDegradationRequest,
-    QualityDegradationResponse,
     RiskAssessmentRequest,
-    RiskAssessmentResponse,
     SemanticSimilarityRequest,
     SemanticSimilarityResponse,
     SentimentAnalysisRequest,
-    SentimentAnalysisResponse,
     ToneAnalysisRequest,
-    ToneAnalysisResponse,
     TrendAnalysisRequest,
-    TrendAnalysisResponse,
 )
 from ...presentation.models.base import ErrorResponse, SuccessResponse
 

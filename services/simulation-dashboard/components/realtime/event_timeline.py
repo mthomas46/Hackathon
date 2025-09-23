@@ -14,14 +14,12 @@ Key Features:
 - Export capabilities for event analysis
 """
 
-import asyncio
 import json
-import re
 import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import plotly.express as px
@@ -401,7 +399,7 @@ class RealTimeEventTimeline:
             st.metric("Total Events", total_events)
 
         with col2:
-            events_per_hour = total_events / max(1, time_range.total_seconds() / 3600)
+            total_events / max(1, time_range.total_seconds() / 3600)
             st.metric("Events/Hour", ".1f")
 
         with col3:

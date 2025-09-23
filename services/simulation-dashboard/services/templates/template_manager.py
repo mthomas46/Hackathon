@@ -5,11 +5,10 @@ including loading, applying, customizing, and sharing templates.
 """
 
 import json
-import os
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 from infrastructure.logging.logger import get_dashboard_logger
 

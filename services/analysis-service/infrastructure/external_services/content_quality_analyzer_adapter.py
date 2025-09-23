@@ -4,7 +4,6 @@ import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
-from ...domain.exceptions import ExternalServiceException
 
 
 class ContentQualityAnalysisResult:
@@ -54,12 +53,10 @@ class ContentQualityAnalyzerAdapter(ABC):
     @abstractmethod
     async def analyze_quality(self, document_text: str, document_id: str) -> ContentQualityAnalysisResult:
         """Analyze content quality."""
-        pass
 
     @abstractmethod
     def is_available(self) -> bool:
         """Check if the service is available."""
-        pass
 
 
 class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
@@ -67,7 +64,6 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
 
     def __init__(self):
         """Initialize local content quality analyzer."""
-        pass
 
     async def analyze_quality(self, document_text: str, document_id: str) -> ContentQualityAnalysisResult:
         """Analyze content quality using local algorithms."""

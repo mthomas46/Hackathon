@@ -285,16 +285,12 @@ from simulation.infrastructure.redis_integration import (
     publish_prompt_event,
 )
 from simulation.presentation.api.hateoas import (
-    HealthResource,
     RootResource,
     SimulationResource,
     create_hateoas_response,
 )
 from simulation.presentation.websockets.simulation_websocket import (
     get_websocket_handler,
-    notify_ecosystem_status,
-    notify_simulation_event,
-    notify_simulation_progress,
 )
 
 
@@ -460,7 +456,6 @@ except Exception as e:
     from simulation.application.services.simulation_application_service import SimulationApplicationService
     from simulation.infrastructure.repositories.in_memory_repositories import (
         InMemoryProjectRepository,
-        InMemorySimulationRepository,
         InMemoryTeamRepository,
         InMemoryTimelineRepository,
     )
@@ -737,7 +732,7 @@ async def save_simulation_document(simulation_id: str, document_data: Dict[str, 
             document_id = document_data.get("document_id")
             document_type = document_data.get("document_type", "generated")
             content = document_data.get("content", "")
-            metadata = document_data.get("metadata", {})
+            document_data.get("metadata", {})
 
             if not document_id or not content:
                 raise HTTPException(status_code=400, detail="Document ID and content are required")
@@ -838,7 +833,7 @@ async def save_simulation_prompt(simulation_id: str, prompt_data: Dict[str, Any]
             prompt_id = prompt_data.get("prompt_id")
             prompt_type = prompt_data.get("prompt_type", "generation")
             prompt_text = prompt_data.get("prompt_text", "")
-            metadata = prompt_data.get("metadata", {})
+            prompt_data.get("metadata", {})
 
             if not prompt_id or not prompt_text:
                 raise HTTPException(status_code=400, detail="Prompt ID and text are required")
@@ -2968,7 +2963,7 @@ async def get_simulation_reports(simulation_id: str, req: Request):
                 get_comprehensive_reporting_system,
             )
 
-            reporting_system = get_comprehensive_reporting_system()
+            get_comprehensive_reporting_system()
 
             # In a real implementation, this would retrieve stored reports
             # For now, return mock report structure
@@ -3056,7 +3051,7 @@ async def get_simulation_report(simulation_id: str, report_type: str, req: Reque
                 get_comprehensive_reporting_system,
             )
 
-            reporting_system = get_comprehensive_reporting_system()
+            get_comprehensive_reporting_system()
 
             # In a real implementation, this would retrieve the specific report
             # For now, generate a sample report based on type

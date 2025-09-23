@@ -1,15 +1,12 @@
 """Service Configuration Manager for CLI operations."""
 
 import json
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
 
 from ...base.base_manager import BaseManager
-from ...formatters.display_utils import DisplayManager
-from ...utils.api_utils import APIClient
 
 
 class ServiceConfigManager(BaseManager):

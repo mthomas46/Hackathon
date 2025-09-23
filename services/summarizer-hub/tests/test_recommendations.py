@@ -5,10 +5,8 @@ Following TDD principles with comprehensive test coverage.
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
-import pytest
 
 # Import the FastAPI app and test client
 from fastapi.testclient import TestClient

@@ -9,7 +9,6 @@ Provides comprehensive self-healing capabilities:
 """
 
 import asyncio
-import json
 import logging
 import os
 import signal

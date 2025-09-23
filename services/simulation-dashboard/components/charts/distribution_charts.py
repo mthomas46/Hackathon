@@ -4,8 +4,7 @@ This module provides chart components for displaying data distributions,
 histograms, box plots, and statistical visualizations.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -532,13 +531,13 @@ def render_cdf_insights(df: pd.DataFrame, value_col: str, prob_col: str) -> None
         with col1:
             st.markdown("**Key Percentiles:**")
             for p in percentiles[:3]:
-                value = df[value_col].quantile(p)
+                df[value_col].quantile(p)
                 st.write(".1f")
 
         with col2:
             st.markdown("**More Percentiles:**")
             for p in percentiles[3:]:
-                value = df[value_col].quantile(p)
+                df[value_col].quantile(p)
                 st.write(".1f")
 
         with col3:

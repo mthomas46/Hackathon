@@ -10,12 +10,7 @@ Enterprise-grade authentication and authorization system supporting:
 - User identity management
 """
 
-import asyncio
-import hashlib
-import hmac
-import json
 import secrets
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
@@ -23,7 +18,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 import bcrypt
 import jwt
-from pydantic import BaseModel, EmailStr, Field
 
 from ...config import config
 

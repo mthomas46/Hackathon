@@ -6,7 +6,7 @@ to eliminate code duplication and ensure consistency.
 
 import json
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
@@ -150,7 +150,7 @@ def get_memory_stats_summary(
     memory_list: List[MemoryItem], max_items: int = _MEMORY_MAX_ITEMS, ttl_seconds: int = _MEMORY_TTL_SECONDS
 ) -> Dict[str, Any]:
     """Get comprehensive memory statistics summary."""
-    now = utc_now()
+    utc_now()
     active_items = len(memory_list)
 
     # Count by type

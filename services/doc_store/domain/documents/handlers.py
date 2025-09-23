@@ -3,12 +3,10 @@
 Handles HTTP requests and responses for document operations.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import HTTPException
 
-from services.shared.core.responses.responses import create_error_response, create_success_response
-from services.shared.utilities import utc_now
 
 from ...core.models import (
     DocumentListResponse,

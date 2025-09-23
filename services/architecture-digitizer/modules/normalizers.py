@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
-from services.shared.monitoring.logging import fire_and_forget
 
 from .models import ArchitectureComponent, ArchitectureConnection, NormalizedArchitectureData
 
@@ -16,7 +15,6 @@ class BaseNormalizer(ABC):
     @abstractmethod
     async def normalize(self, board_id: str, token: str) -> NormalizedArchitectureData:
         """Normalize diagram data into standard format."""
-        pass
 
     @classmethod
     def get_description(cls) -> str:
@@ -361,7 +359,6 @@ class BaseFileNormalizer(ABC):
     @abstractmethod
     async def normalize_file(self, file_content: bytes, filename: str, file_format: str) -> NormalizedArchitectureData:
         """Normalize diagram data from uploaded file."""
-        pass
 
     @classmethod
     def get_supported_formats(cls) -> List[Dict[str, Any]]:

@@ -16,10 +16,8 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, AsyncGenerator, Callable, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
-import psycopg2
-import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 

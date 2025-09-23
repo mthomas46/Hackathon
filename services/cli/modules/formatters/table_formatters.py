@@ -1,6 +1,6 @@
 """Table formatting utilities for CLI display."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from rich.console import Console
 from rich.table import Table

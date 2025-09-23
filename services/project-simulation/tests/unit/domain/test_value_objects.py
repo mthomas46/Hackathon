@@ -4,8 +4,7 @@ This module contains comprehensive unit tests for value objects,
 testing immutability, validation, equality, and business rules.
 """
 
-from datetime import datetime, timedelta
-from decimal import Decimal
+from datetime import datetime
 
 import pytest
 from simulation.domain.value_objects import (

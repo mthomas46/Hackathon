@@ -1,14 +1,13 @@
 """Base formatter class for CLI display formatting."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from rich.columns import Columns
 from rich.console import Console
 from rich.layout import Layout
 from rich.panel import Panel
 from rich.table import Table
-from rich.text import Text
 
 from ..formatters.display_utils import DisplayManager
 
@@ -118,12 +117,10 @@ class BaseFormatter(ABC):
     @abstractmethod
     def format_service_status(self, service_name: str, status_data: Dict[str, Any]) -> str:
         """Format service status information."""
-        pass
 
     @abstractmethod
     def format_operation_result(self, operation: str, result: Any) -> str:
         """Format operation result for display."""
-        pass
 
     def show_table(self, title: str, headers: List[str], data: List[List[str]]):
         """Show data in a table format."""

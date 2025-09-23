@@ -4,24 +4,19 @@ This module provides autonomous operation capabilities including auto-scaling,
 self-healing systems, intelligent resource allocation, and automated optimization loops.
 """
 
-import asyncio
 import time
 import warnings
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
 warnings.filterwarnings("ignore")
 
-from infrastructure.config.config import get_config
 
-from services.clients.simulation_client import SimulationClient
 
 
 def render_autonomous_page():
@@ -442,7 +437,7 @@ def render_intelligent_allocation():
                 st.metric("Available", pool["available"])
 
             with col4:
-                utilization_color = "🟢" if pool["utilization"] < 80 else "🟡" if pool["utilization"] < 90 else "🔴"
+                "🟢" if pool["utilization"] < 80 else "🟡" if pool["utilization"] < 90 else "🔴"
                 st.metric("Utilization", ".1f", pool["utilization"])
 
     # Allocation decisions

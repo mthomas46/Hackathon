@@ -5,7 +5,7 @@ These functions handle service communication, URL resolution, and request prepar
 """
 
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from services.shared.core.constants_new import EnvVars
 

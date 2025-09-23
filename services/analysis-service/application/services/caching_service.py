@@ -3,11 +3,10 @@
 import asyncio
 import hashlib
 import json
-import threading
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from .application_service import ApplicationService, ServiceContext
 
@@ -61,37 +60,30 @@ class CacheBackend(ABC):
     @abstractmethod
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache."""
-        pass
 
     @abstractmethod
     async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
         """Set value in cache."""
-        pass
 
     @abstractmethod
     async def delete(self, key: str) -> bool:
         """Delete value from cache."""
-        pass
 
     @abstractmethod
     async def clear(self) -> None:
         """Clear all values from cache."""
-        pass
 
     @abstractmethod
     async def has(self, key: str) -> bool:
         """Check if key exists in cache."""
-        pass
 
     @abstractmethod
     async def size(self) -> int:
         """Get cache size."""
-        pass
 
     @abstractmethod
     async def keys(self, pattern: Optional[str] = None) -> List[str]:
         """Get cache keys."""
-        pass
 
 
 class InMemoryCacheBackend(CacheBackend):
@@ -453,7 +445,7 @@ class CachingService(ApplicationService):
                     if isinstance(backend, InMemoryCacheBackend):
                         # The InMemoryCacheBackend handles cleanup automatically
                         # but we can force a cleanup by checking size
-                        size = await backend.size()
+                        await backend.size()
 
             except asyncio.CancelledError:
                 break

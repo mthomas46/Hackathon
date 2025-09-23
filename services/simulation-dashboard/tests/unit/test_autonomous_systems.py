@@ -5,12 +5,10 @@ including auto-scaling, self-healing, intelligent resource allocation,
 and autonomous optimization loops.
 """
 
-import asyncio
 import os
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pandas as pd

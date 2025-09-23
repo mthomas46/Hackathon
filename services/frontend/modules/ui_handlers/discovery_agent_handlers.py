@@ -4,7 +4,6 @@ Handles discovery agent service visualization, including endpoint
 registration monitoring, OpenAPI parsing, and service discovery operations.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..discovery_agent_monitor import discovery_agent_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )
@@ -25,7 +23,7 @@ class DiscoveryAgentUIHandlers:
     def handle_discovery_agent_dashboard() -> HTMLResponse:
         """Render discovery agent service monitoring dashboard."""
         try:
-            clients = get_frontend_clients()
+            get_frontend_clients()
 
             # Get discovery agent status and cached data
             status_data = discovery_agent_monitor.get_discovery_status()

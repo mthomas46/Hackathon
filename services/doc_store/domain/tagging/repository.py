@@ -6,7 +6,6 @@ Handles tag and taxonomy data operations.
 import json
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import validate_sql_identifier
 
 from ...core.entities import DocumentTag, TaxonomyNode
 from ...core.repository import BaseRepository

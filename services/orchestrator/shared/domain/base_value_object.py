@@ -1,7 +1,6 @@
 """Base Value Object Class"""
 
 from abc import ABC
-from typing import Any
 
 
 class BaseValueObject(ABC):

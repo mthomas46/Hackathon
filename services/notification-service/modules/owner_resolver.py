@@ -7,7 +7,7 @@ configurable caching to reduce resolution overhead.
 import json
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 class OwnerResolver:

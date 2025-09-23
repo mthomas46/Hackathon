@@ -2,18 +2,16 @@
 
 import asyncio
 import hashlib
-import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from services.shared.core.di.registry import get_service
-from services.shared.core.di.services import ICacheService, ILoggerService
+from services.shared.core.di.services import ILoggerService
 from services.shared.core.logging.logger import get_logger
 from services.shared.core.performance.cache_manager import get_cache_manager
-from services.shared.core.performance.profiler import get_async_profiler, profile_async_operation
+from services.shared.core.performance.profiler import profile_async_operation
 
 
 @dataclass

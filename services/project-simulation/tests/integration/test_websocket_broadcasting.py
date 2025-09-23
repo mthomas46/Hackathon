@@ -4,12 +4,8 @@ This module contains simplified integration tests for core WebSocket broadcastin
 focusing on event broadcasting and message formatting without complex infrastructure dependencies.
 """
 
-import asyncio
-import json
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from simulation.domain.events import (
@@ -18,12 +14,6 @@ from simulation.domain.events import (
     PhaseStarted,
     SimulationCompleted,
     SimulationStarted,
-)
-from simulation.presentation.websockets.simulation_websocket import (
-    SimulationWebSocketManager,
-    notify_simulation_error,
-    notify_simulation_event,
-    notify_simulation_progress,
 )
 
 

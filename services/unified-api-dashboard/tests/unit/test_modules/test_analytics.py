@@ -6,18 +6,13 @@ error tracking, and usage patterns analysis.
 """
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock, patch
 
-import numpy as np
-import pandas as pd
 import pytest
-import pytest_asyncio
 
 from ....modules.analytics.error_tracking import ErrorTracking
 from ....modules.analytics.performance_insights import PerformanceInsights
 from ....modules.analytics.usage_analytics import UsageAnalytics
 from ....modules.analytics.usage_patterns import UsagePatterns
-from ...conftest import *
 
 
 class TestUsageAnalytics:
@@ -348,7 +343,7 @@ class TestAnalyticsIntegration:
 
         # Get error overview and usage overview
         error_overview = await analytics_suite["error_tracking"].get_error_overview()
-        usage_overview = await analytics_suite["usage_analytics"].get_usage_overview()
+        await analytics_suite["usage_analytics"].get_usage_overview()
 
         # Verify error metrics are captured
         assert error_overview["total_errors"] == len(sample_error_data)

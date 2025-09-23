@@ -6,16 +6,12 @@ documentation analysis and quality checks.
 """
 
 import asyncio
-import json
 import logging
 import re
 import time
 from collections import defaultdict, deque
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Any, Dict, List, Optional
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 
@@ -483,11 +479,7 @@ class WorkflowTrigger:
 
         try:
             # Import analysis modules (lazy loading)
-            from .automated_remediator import remediate_document
-            from .change_impact_analyzer import analyze_change_impact
-            from .consistency_checker import check_document_consistency
-            from .peer_review_enhancer import review_documentation
-            from .quality_analyzer import analyze_document_quality
+            pass
 
             # Execute quality checks
             if analysis_plan.get("quality_checks"):

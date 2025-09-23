@@ -7,8 +7,7 @@ analysis runs, reports generation, findings management, and quality metrics.
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
-from rich.prompt import Confirm, Prompt
+from rich.prompt import Prompt
 from rich.table import Table
 
 from services.shared.core.constants_new import ServiceNames

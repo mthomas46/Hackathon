@@ -5,33 +5,19 @@ Comprehensive test fixtures for the Unified API Dashboard testing infrastructure
 """
 
 import asyncio
-import json
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-import pytest_asyncio
 
 from ..config import config
-from ..modules.analytics import ErrorTracking, PerformanceInsights, UsageAnalytics, UsagePatterns
 from ..modules.api.catalog import APICatalogManager
-from ..modules.developer_tools import APIValidator, ClientCodeGenerator, IntegrationTester
 from ..modules.discovery.client import DiscoveryClient
 from ..modules.monitoring.health import HealthMonitor
 from ..modules.security import (
-    AccessControlManager,
     AuditLogger,
-    AuthenticationManager,
-    AuthorizationManager,
-    ComplianceMonitor,
-    PermissionManager,
-    SecurityMonitor,
-    ThreatDetector,
     UserManager,
 )
-from ..modules.testing.tester import APITester
-from ..modules.topology import DependencyGraphBuilder, TopologyAnalyzer, TopologyMetrics, TopologyVisualizer
 
 # ============================================================================
 # MOCK DATA AND FIXTURES
@@ -305,7 +291,6 @@ async def cleanup_after_test():
     """Cleanup after each test."""
     yield
     # Add any cleanup logic here
-    pass
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -313,4 +298,3 @@ async def session_cleanup():
     """Cleanup after test session."""
     yield
     # Add session cleanup logic here
-    pass

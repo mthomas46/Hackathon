@@ -6,7 +6,6 @@ Handles relationship-related HTTP requests and responses.
 from typing import Any, Dict, Optional
 
 from ...core.handler import BaseHandler
-from ...core.models import GraphStatisticsResponse, PathsResponse, RelationshipRequest, RelationshipsResponse
 from .service import RelationshipsService
 
 

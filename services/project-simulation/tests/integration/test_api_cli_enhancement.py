@@ -6,17 +6,13 @@ including HATEOAS, WebSocket streaming, and command-line interface validation.
 
 import asyncio
 import json
-import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from typing import Any, Dict
+from unittest.mock import AsyncMock
 
 import pytest
-import websockets
-from fastapi import WebSocket
-from fastapi.testclient import TestClient
 
 # Add project path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -707,7 +703,7 @@ class TestAPIEnhancementFeatures:
             if not config["deprecated"]:
                 endpoints = config["endpoints"]
                 for base_endpoint in base_endpoints:
-                    versioned_endpoint = f"/api/{version}{base_endpoint}"
+                    f"/api/{version}{base_endpoint}"
                     assert any(
                         ep.endswith(base_endpoint) for ep in endpoints
                     ), f"Version {version} missing base endpoint: {base_endpoint}"
@@ -767,7 +763,7 @@ class TestAPIEnhancementFeatures:
 
             # Validate rate limiting
             limits = rate_limits.get(user_type, rate_limits["default"])
-            expected_allowed = min(num_requests, limits["requests_per_minute"])
+            min(num_requests, limits["requests_per_minute"])
 
             assert (
                 allowed_count <= limits["requests_per_minute"]

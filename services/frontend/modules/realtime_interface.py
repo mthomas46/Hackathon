@@ -253,7 +253,7 @@ class CollaborativeDocument:
 @dataclass
 class ActivityEvent:
     """Real-time activity event."""
-    event_id: str = field(default_factory=lambda: str(uuid.uuid4())
+    event_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     event_type: str = ""
     user_id: str = ""
     document_id: Optional[str] = None
@@ -741,23 +741,23 @@ async def test_realtime_collaboration():
         print(f"   Confidence: {suggestion.confidence_score:.2f}")
 
     # Get document state
-    print("
-📊 Getting document state..."    doc_state = realtime_collaboration.get_document_state(doc_id)
+    print("\n📊 Getting document state...")
+    doc_state = realtime_collaboration.get_document_state(doc_id)
     if doc_state:
         print(f"   Document version: {doc_state['version']}")
         print(f"   Active users: {len(doc_state['active_users'])}")
         print(f"   Content length: {len(doc_state['content'])}")
 
     # Get active users
-    print("
-👥 Getting active users..."    active_users = realtime_collaboration.get_active_users(doc_id)
+    print("\n👥 Getting active users...")
+    active_users = realtime_collaboration.get_active_users(doc_id)
     print(f"   Active users in document: {len(active_users)}")
     for user in active_users:
         print(f"   • {user['username']} ({user['presence']})")
 
     # Get collaboration statistics
-    print("
-📈 Collaboration Statistics:"    stats = realtime_collaboration.get_collaboration_statistics()
+    print("\n📈 Collaboration Statistics:")
+    stats = realtime_collaboration.get_collaboration_statistics()
     print(f"   • Active sessions: {stats['active_sessions']}")
     print(f"   • Active documents: {stats['active_documents']}")
     print(f"   • Total users: {stats['total_users']}")

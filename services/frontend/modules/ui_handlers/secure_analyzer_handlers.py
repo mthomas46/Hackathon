@@ -4,7 +4,6 @@ Handles secure analyzer service visualization, including content detection,
 policy enforcement, and secure summarization monitoring.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..secure_analyzer_monitor import secure_analyzer_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )
@@ -25,7 +23,7 @@ class SecureAnalyzerUIHandlers:
     def handle_secure_analyzer_dashboard() -> HTMLResponse:
         """Render secure analyzer service monitoring dashboard."""
         try:
-            clients = get_frontend_clients()
+            get_frontend_clients()
 
             # Get secure analyzer status and cached data
             status_data = secure_analyzer_monitor.get_secure_status()

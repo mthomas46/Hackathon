@@ -7,7 +7,6 @@ from ...domain.infrastructure.services import DLQService, EventStreamingService,
 from ...shared.application import UseCase
 from .commands import (
     AddTraceSpanCommand,
-    ArchiveEventCommand,
     CompensateSagaCommand,
     CompleteSagaCommand,
     CompleteTraceCommand,
@@ -23,7 +22,6 @@ from .queries import (
     GetSagaQuery,
     GetTraceQuery,
     ListDLQEventsQuery,
-    ListEventStreamQuery,
     ListSagasQuery,
     ListTracesQuery,
 )

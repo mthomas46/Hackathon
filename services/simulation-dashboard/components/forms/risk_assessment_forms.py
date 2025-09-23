@@ -6,7 +6,6 @@ calculating success probability, and generating mitigation strategies.
 
 from typing import Any, Dict, List, Optional
 
-import numpy as np
 import pandas as pd
 import streamlit as st
 

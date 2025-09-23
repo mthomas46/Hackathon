@@ -4,10 +4,9 @@ This module contains all document construction and processing functions,
 extracted from the main source-agent service to improve maintainability.
 """
 
-from typing import List, Optional
+from typing import List
 
 from services.shared.core.models.models import Document
-from services.shared.utilities import utc_now
 
 # Import shared utilities from main service module
 from .shared_utils import (

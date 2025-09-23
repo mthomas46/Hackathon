@@ -8,7 +8,6 @@ Provides comprehensive logging infrastructure for the ecosystem with:
 - Centralized log management
 """
 
-import asyncio
 import json
 import logging
 import os

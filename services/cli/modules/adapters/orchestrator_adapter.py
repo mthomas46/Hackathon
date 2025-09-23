@@ -6,7 +6,7 @@ for workflow management, service registry, peer synchronization, and orchestrati
 """
 
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 
 from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
 
@@ -106,7 +106,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         """Execute Orchestrator commands"""
         try:
-            start_time = time.time()
+            time.time()
 
             if command == "peers":
                 return await self._get_peers()

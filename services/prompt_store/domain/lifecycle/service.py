@@ -3,13 +3,12 @@
 Contains business logic for prompt lifecycle transitions, validation, and workflow management.
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from services.prompt_store.domain.lifecycle.repository import LifecycleRepository
 from services.prompt_store.domain.prompts.service import PromptService
 from services.prompt_store.infrastructure.cache import prompt_store_cache
-from services.shared.utilities import generate_id, utc_now
+from services.shared.utilities import utc_now
 
 
 class LifecycleService:
@@ -203,4 +202,3 @@ class LifecycleService:
 
         # For now, just log the deprecation
         # In a real system, this would trigger webhook notifications
-        pass

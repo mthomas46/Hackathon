@@ -1,6 +1,5 @@
 """Event Bus - Central hub for event-driven communication."""
 
-import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 from uuid import uuid4

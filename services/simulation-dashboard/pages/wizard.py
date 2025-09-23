@@ -4,17 +4,12 @@ This module provides a comprehensive, user-friendly multi-step wizard
 for creating and configuring project simulations with all required inputs.
 """
 
-import asyncio
-import json
-import time
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import streamlit as st
-from infrastructure.config.config import get_config
 
-from services.clients.simulation_client import SimulationClient
 
 
 def render_wizard_page():
@@ -880,11 +875,11 @@ def render_step_5_risk_assessment():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        risk_color = "🟢" if risk_score < 30 else "🟡" if risk_score < 60 else "🔴"
+        "🟢" if risk_score < 30 else "🟡" if risk_score < 60 else "🔴"
         st.metric("Risk Score", ".1f", risk_score)
 
     with col2:
-        success_color = "🟢" if success_probability > 70 else "🟡" if success_probability > 50 else "🔴"
+        "🟢" if success_probability > 70 else "🟡" if success_probability > 50 else "🔴"
         st.metric("Success Probability", ".1f", success_probability)
 
     with col3:
@@ -1149,7 +1144,7 @@ def render_step_7_review_launch():
 
     # Risk summary
     st.markdown("**⚠️ Risk Assessment**")
-    risk_score = wizard_data["risk_assessment"].get("risk_score", 0)
+    wizard_data["risk_assessment"].get("risk_score", 0)
     success_prob = wizard_data["risk_assessment"].get("success_probability", 0)
     risk_level = wizard_data["risk_assessment"].get("risk_level", "Unknown")
     st.write(f"**Risk Level:** {risk_level}")
@@ -1330,7 +1325,6 @@ def reset_wizard():
 def save_wizard_progress():
     """Save current wizard progress."""
     # In production, this would save to a database
-    pass
 
 
 # Step validation functions
@@ -1442,7 +1436,7 @@ def export_as_yaml(wizard_data: Dict[str, Any]) -> str:
         yaml_content += f"complexity_level: \"{wizard_data['project_info'].get('complexity', '').lower()}\"\n"
         # Add more YAML conversion logic as needed
         return yaml_content
-    except Exception as e:
+    except Exception:
         return "# Error generating YAML configuration"
 
 
@@ -1523,7 +1517,6 @@ def save_step_1_data(name: str, description: str, project_type: str, complexity:
 def render_team_member_form(i: int, member: Dict[str, Any]):
     """Render form for team member configuration."""
     # Implementation would include form fields for team member details
-    pass
 
 
 def get_recommended_team_size(complexity: str) -> int:
@@ -1541,13 +1534,11 @@ def get_team_recommendations(team_members: List[Dict[str, Any]], complexity: str
 def render_phase_form(i: int, phase: Dict[str, Any]):
     """Render form for phase configuration."""
     # Implementation would include form fields for phase details
-    pass
 
 
 def render_timeline_visualization(phases: List[Dict[str, Any]], duration: int):
     """Render timeline visualization."""
     # Implementation would create a visual timeline chart
-    pass
 
 
 def calculate_critical_path(phases: List[Dict[str, Any]]) -> int:
@@ -1639,19 +1630,16 @@ def load_config_from_file(uploaded_file) -> Optional[Dict[str, Any]]:
 def reuse_project_config(project: Dict[str, Any]):
     """Reuse configuration from previous project."""
     # Implementation would load project configuration
-    pass
 
 
 def apply_template(template_name: str):
     """Apply predefined template."""
     # Implementation would apply template configuration
-    pass
 
 
 def apply_timeline_template(template_name: str):
     """Apply timeline template."""
     # Implementation would apply timeline template
-    pass
 
 
 def get_expertise_score(expertise_level: str) -> float:

@@ -3,7 +3,7 @@
 Contains all Pydantic models used for API requests and responses.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 

@@ -6,21 +6,18 @@ execution, real-time monitoring, error handling, and result optimization.
 """
 
 import asyncio
-import json
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List
 
 from services.shared.clients import ServiceClients
 from services.shared.constants_new import ServiceNames
 from services.shared.logging import fire_and_forget
 
 try:
-    from .conversation_memory import conversation_memory
     from .ecosystem_context import ecosystem_context
     from .orchestrator_integration import orchestrator_integration
 except ImportError:
-    from conversation_memory import conversation_memory
     from ecosystem_context import ecosystem_context
     from orchestrator_integration import orchestrator_integration
 
@@ -302,7 +299,7 @@ class WorkflowExecutionEngine:
 
     async def _monitor_execution_completion(self, execution_context: Dict[str, Any], result: Dict[str, Any]):
         """Monitor workflow execution for completion."""
-        execution_id = execution_context["execution_id"]
+        execution_context["execution_id"]
 
         # Check if the result indicates async execution
         if result.get("async_execution", False):

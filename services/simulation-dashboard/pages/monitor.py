@@ -5,13 +5,11 @@ and simulation event visualization using WebSocket integration.
 """
 
 import asyncio
-import json
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
-from infrastructure.config.config import get_config
 
 from services.clients.simulation_client import SimulationClient
 from services.clients.websocket_client import get_websocket_manager
@@ -234,7 +232,7 @@ def render_active_simulations_monitor():
         st.metric("Running", running_count)
 
     with col3:
-        avg_progress = sum(sim.get("progress", 0) for sim in active_sims) / len(active_sims) if active_sims else 0
+        sum(sim.get("progress", 0) for sim in active_sims) / len(active_sims) if active_sims else 0
         st.metric("Avg Progress", ".1%")
 
     with col4:
@@ -275,7 +273,7 @@ def render_detailed_simulation_monitor(simulation: Dict[str, Any]):
         # Detailed metrics
         docs_generated = simulation.get("documents_generated", 0)
         workflows_executed = simulation.get("workflows_executed", 0)
-        quality_score = simulation.get("quality_score", 0)
+        simulation.get("quality_score", 0)
 
         col_a, col_b, col_c = st.columns(3)
         with col_a:
@@ -374,7 +372,7 @@ def render_event_item(event: Dict[str, Any]):
             elif event_type == "DocumentGenerated":
                 st.caption(f"Generated: {event.get('title', 'Document')}")
             elif event_type == "WorkflowExecuted":
-                execution_time = event.get("execution_time_seconds", 0)
+                event.get("execution_time_seconds", 0)
                 st.caption(".2f")
             else:
                 simulation_id = event.get("simulation_id", event.get("project_id", "Unknown"))
@@ -412,9 +410,6 @@ def render_performance_metrics():
         st.markdown("**System Performance**")
 
         # Mock performance data - in real implementation this would come from monitoring
-        cpu_usage = 45.2
-        memory_usage = 67.8
-        disk_usage = 23.1
 
         st.metric("CPU Usage", ".1f")
         st.metric("Memory Usage", ".1f")
@@ -472,7 +467,7 @@ def render_connection_status():
     with col3:
         # Last update time
         last_update = getattr(st.session_state, "last_refresh", time.time())
-        time_since = time.time() - last_update
+        time.time() - last_update
         st.info(".1f")
 
 

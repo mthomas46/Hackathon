@@ -14,9 +14,6 @@ from uuid import UUID, uuid4
 
 from ..events import DocumentGenerated, SimulationCompleted, SimulationFailed, SimulationStarted, WorkflowExecuted
 from ..value_objects import DocumentType, SimulationMetrics, SimulationStatus
-from .project import Project, ProjectId
-from .team import Team, TeamId
-from .timeline import Timeline, TimelineId
 
 
 @dataclass(frozen=True)

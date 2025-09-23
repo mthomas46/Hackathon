@@ -1,12 +1,10 @@
 """Service Registry - Central service registration and configuration."""
 
 import os
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Optional, Type
 
 from .container import DependencyContainer, ServiceLifetime, get_global_container
 from .services import (
-    BaseRepository,
-    BaseService,
     IAnalysisRepository,
     IAnalysisService,
     ICacheService,
@@ -205,9 +203,9 @@ def initialize_services() -> None:
 
     # Initialize any services that need startup
     try:
-        config_service = registry.get_service(IConfigurationService)
+        registry.get_service(IConfigurationService)
         logger_service = registry.get_service(ILoggerService)
-        metrics_service = registry.get_service(IMetricsService)
+        registry.get_service(IMetricsService)
 
         # Log initialization
         logger_service.info(

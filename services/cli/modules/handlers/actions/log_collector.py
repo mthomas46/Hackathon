@@ -218,8 +218,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 level = log.get("level", "unknown")
                 level_counts[level] = level_counts.get(level, 0) + 1
 
-            console.print("
-[bold blue]📊 Summary by Level:[/bold blue]"            for level, count in level_counts.items():
+            console.print("\n[bold blue]📊 Summary by Level:[/bold blue]")
+            for level, count in level_counts.items():
                 console.print(f"  {level.upper()}: {count}")
 
         else:
@@ -242,16 +242,16 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
             # Level distribution
             if stats.get("level_distribution"):
-                console.print("
-[bold blue]📈 Level Distribution:[/bold blue]"                level_dist = stats["level_distribution"]
+                console.print("\n[bold blue]📈 Level Distribution:[/bold blue]")
+                level_dist = stats["level_distribution"]
                 for level, count in level_dist.items():
                     percentage = (count / stats["total_logs"]) * 100 if stats["total_logs"] > 0 else 0
                     console.print(f"  {level.upper()}: {count} ({percentage:.1f}%)")
 
             # Service distribution
             if stats.get("service_distribution"):
-                console.print("
-[bold blue]🏢 Service Distribution:[/bold blue]"                service_dist = stats["service_distribution"]
+                console.print("\n[bold blue]🏢 Service Distribution:[/bold blue]")
+                service_dist = stats["service_distribution"]
                 for service, count in list(service_dist.items())[:10]:  # Show top 10
                     percentage = (count / stats["total_logs"]) * 100 if stats["total_logs"] > 0 else 0
                     console.print(f"  {service}: {count} ({percentage:.1f}%)")
@@ -262,15 +262,15 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             # Time-based stats
             if stats.get("time_range"):
                 time_range = stats["time_range"]
-                console.print("
-[bold blue]⏰ Time Range:[/bold blue]"                print_kv(console, "Earliest", time_range.get("earliest", "unknown"))
+                console.print("\n[bold blue]⏰ Time Range:[/bold blue]")
+                print_kv(console, "Earliest", time_range.get("earliest", "unknown"))
                 print_kv(console, "Latest", time_range.get("latest", "unknown"))
 
             # Recent activity
             if stats.get("recent_activity"):
                 recent = stats["recent_activity"]
-                console.print("
-[bold blue]📅 Recent Activity:[/bold blue]"                print_kv(console, "Last hour", recent.get("last_hour", 0))
+                console.print("\n[bold blue]📅 Recent Activity:[/bold blue]")
+                print_kv(console, "Last hour", recent.get("last_hour", 0))
                 print_kv(console, "Last 24 hours", recent.get("last_24_hours", 0))
                 print_kv(console, "Last 7 days", recent.get("last_7_days", 0))
 
@@ -418,13 +418,14 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         retrieve_avg = sum(retrieve_times) / len(retrieve_times) if retrieve_times else 0
 
         # Display results
-        console.print("
-[bold green]📊 Benchmark Results[/bold green]"        console.print("Submission Performance:"        console.print(f"  Average time: {submit_avg:.3f}s per log")
+        console.print("\n[bold green]📊 Benchmark Results[/bold green]")
+        console.print("Submission Performance:")
+        console.print(f"  Average time: {submit_avg:.3f}s per log")
         console.print(f"  Total logs submitted: {len(test_logs)}")
         console.print(f"  Throughput: {len(test_logs)/sum(submit_times):.1f} logs/second")
 
-        console.print("
-Retrieval Performance:"        console.print(f"  Average time: {retrieve_avg:.3f}s per query")
+        console.print("\nRetrieval Performance:")
+        console.print(f"  Average time: {retrieve_avg:.3f}s per query")
         console.print(f"  Records per query: 50")
         console.print(f"  Throughput: {50/retrieve_avg:.1f} records/second")
 

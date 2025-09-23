@@ -9,7 +9,6 @@ Comprehensive audit logging and compliance monitoring system:
 - Compliance reporting and alerts
 """
 
-import asyncio
 import hashlib
 import hmac
 import json
@@ -126,7 +125,6 @@ class AuditLogger:
     def _load_existing_audit_log(self):
         """Load existing audit log from storage."""
         # In production, this would load from secure database
-        pass
 
     async def log_event(
         self,

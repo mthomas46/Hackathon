@@ -9,17 +9,13 @@ Advanced security monitoring system:
 - Security metrics and reporting
 """
 
-import asyncio
 import ipaddress
-import json
-import re
 import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Optional, Set
 
-from ...config import config
 
 
 class ThreatLevel(Enum):
@@ -596,4 +592,3 @@ class ThreatDetector:
         """Update baseline metrics with new data."""
         # Incremental update of statistical baselines
         # In production, this would use exponential moving averages or more sophisticated methods
-        pass

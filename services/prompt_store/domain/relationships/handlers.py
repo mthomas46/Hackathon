@@ -9,7 +9,7 @@ from fastapi import HTTPException
 
 from services.prompt_store.core.models import PromptRelationshipCreate
 from services.prompt_store.domain.relationships.service import RelationshipsService
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.core.responses.responses import create_success_response
 
 
 class RelationshipsHandlers:

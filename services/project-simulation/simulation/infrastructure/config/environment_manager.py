@@ -15,7 +15,6 @@ Key Features:
 """
 
 import asyncio
-import hashlib
 import json
 import os
 import sys

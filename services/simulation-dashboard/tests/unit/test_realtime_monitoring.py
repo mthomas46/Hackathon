@@ -6,18 +6,14 @@ and performance monitoring under load.
 """
 
 import asyncio
-import json
 import os
 import sys
-import threading
 import time
 from datetime import datetime, timedelta
-from queue import Queue
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 import pytest
-import websockets
 
 # Add the dashboard service to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -26,7 +22,6 @@ from components.realtime.event_stream import (
     EventStreamWebSocketSimulator,
     generate_new_events,
     render_event_stream,
-    update_event_stream,
 )
 from components.realtime.live_metrics import (
     MetricsWebSocketSimulator,
@@ -722,7 +717,7 @@ def benchmark_realtime_component(component_func, *args, iterations=10, **kwargs)
 
     for _ in range(iterations):
         start_time = time.time()
-        result = component_func(*args, **kwargs)
+        component_func(*args, **kwargs)
         end_time = time.time()
 
         times.append(end_time - start_time)

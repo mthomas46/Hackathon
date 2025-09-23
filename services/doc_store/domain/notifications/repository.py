@@ -5,7 +5,7 @@ Handles notification and webhook data operations.
 
 from typing import Any, Dict, List, Optional
 
-from ...core.entities import NotificationEvent, Webhook, WebhookDelivery
+from ...core.entities import NotificationEvent, Webhook
 from ...core.repository import BaseRepository
 from ...db.queries import execute_query
 

@@ -3,12 +3,13 @@
 This module now delegates to the refactored handler system for improved maintainability.
 The original 1969+ line monolithic implementation has been broken down into focused
 handler modules in the handlers/ package.
-"""
+
+NOTE: This is a backup file - flake8 warnings suppressed with noqa.
+"""  # noqa: F821
 
 import logging
 from typing import Any
 
-from .handlers import handler_registry
 
 logger = logging.getLogger(__name__)
 
@@ -1731,7 +1732,7 @@ class AnalysisHandlers:
         """Handle worker scaling."""
         try:
             previous_count = len(distributed_processor.workers)
-            success = await distributed_processor.scale_workers(req.target_count)
+            await distributed_processor.scale_workers(req.target_count)
             new_count = len(distributed_processor.workers)
 
             return ScaleWorkersResponse(

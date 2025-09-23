@@ -296,13 +296,13 @@ def format_duration(seconds: float) -> str:
     if seconds < 60:
         return ".1f"
     elif seconds < 3600:
-        minutes = seconds / 60
+        seconds / 60
         return ".1f"
     elif seconds < 86400:
-        hours = seconds / 3600
+        seconds / 3600
         return ".1f"
     else:
-        days = seconds / 86400
+        seconds / 86400
         return ".1f"
 
 

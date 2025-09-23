@@ -7,17 +7,13 @@ Provides distributed event processing, correlation, and real-time analytics.
 """
 
 import asyncio
-import heapq
-import json
-import random
-import threading
 import time
 import uuid
-from collections import defaultdict, deque
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     import redis.asyncio as redis

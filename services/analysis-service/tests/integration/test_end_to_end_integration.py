@@ -1,18 +1,12 @@
 """End-to-end integration tests for complete system workflows."""
 
 import asyncio
-import os
-import tempfile
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from ...application.cqrs.command_bus import CommandBus
 from ...application.cqrs.query_bus import QueryBus
-from ...application.dto.request_dtos import CreateDocumentRequest, PerformAnalysisRequest
-from ...application.dto.response_dtos import AnalysisResultResponse, DocumentResponse
 from ...application.handlers.command_handlers import CreateDocumentCommandHandler, PerformAnalysisCommandHandler
 from ...application.handlers.commands import CreateDocumentCommand, PerformAnalysisCommand
 from ...application.handlers.queries import GetDocumentQuery, GetFindingsQuery
@@ -24,7 +18,6 @@ from ...application.use_cases.get_findings_use_case import GetFindingsUseCase
 from ...application.use_cases.perform_analysis_use_case import PerformAnalysisCommand, PerformAnalysisUseCase
 from ...domain.entities.analysis import Analysis, AnalysisStatus
 from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.services.analysis_service import AnalysisService
 from ...domain.services.document_service import DocumentService
 from ...domain.services.finding_service import FindingService
@@ -744,7 +737,7 @@ class TestSystemMonitoringIntegration:
             await doc_repo.save(doc)
             operations_count["saves"] += 1
 
-            retrieved = await doc_repo.get_by_id(f"metrics-doc-{i}")
+            await doc_repo.get_by_id(f"metrics-doc-{i}")
             operations_count["retrieves"] += 1
 
         # Verify operations were performed

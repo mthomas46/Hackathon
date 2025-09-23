@@ -3,7 +3,6 @@ Service registry for managing service registrations.
 Following DDD infrastructure patterns with clean separation of concerns.
 """
 
-from datetime import datetime
 from threading import Lock
 from typing import Dict, List, Optional
 

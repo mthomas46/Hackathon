@@ -5,7 +5,7 @@ for system health, service status, and operational metrics.
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -73,7 +73,7 @@ def render_status_dashboard(
 def display_overall_health(status_data: Dict[str, Any]):
     """Display overall system health status."""
     services = status_data.get("services", {})
-    alerts = status_data.get("alerts", [])
+    status_data.get("alerts", [])
 
     # Calculate health metrics
     total_services = len(services)

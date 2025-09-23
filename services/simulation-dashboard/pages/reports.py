@@ -97,7 +97,7 @@ def render_analytics_dashboard():
         st.metric("Total Reports", total_reports)
 
     with col2:
-        avg_quality = analytics_data.get("average_quality_score", 0) * 100
+        analytics_data.get("average_quality_score", 0) * 100
         st.metric("Avg Quality Score", ".1f")
 
     with col3:
@@ -105,7 +105,7 @@ def render_analytics_dashboard():
         st.metric("Simulations Analyzed", total_simulations)
 
     with col4:
-        avg_execution_time = analytics_data.get("average_execution_time", 0)
+        analytics_data.get("average_execution_time", 0)
         st.metric("Avg Execution Time", ".1f")
 
     # Interactive charts section

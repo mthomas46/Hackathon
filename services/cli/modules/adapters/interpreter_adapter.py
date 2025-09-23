@@ -3,16 +3,14 @@ Interpreter Service Adapter for CLI interaction
 Handles code execution and interpretation requests
 """
 
-import asyncio
 import time
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.syntax import Syntax
 from rich.table import Table
 
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo
 
 
 class InterpreterAdapter(BaseServiceAdapter):

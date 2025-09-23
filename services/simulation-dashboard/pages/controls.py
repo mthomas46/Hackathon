@@ -5,10 +5,8 @@ enabling users to manage simulation lifecycles, implement bulk operations,
 and monitor control status in real-time.
 """
 
-import asyncio
-import json
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
@@ -114,11 +112,11 @@ def render_simulation_controls(simulation_id: str):
 
     with col1:
         status = simulation_details.get("status", "Unknown")
-        status_color = get_status_color(status)
+        get_status_color(status)
         st.metric("Status", status)
 
     with col2:
-        progress = simulation_details.get("progress", 0)
+        simulation_details.get("progress", 0)
         st.metric("Progress", ".1f")
 
     with col3:
@@ -371,7 +369,7 @@ def get_available_simulations() -> List[Dict[str, Any]]:
     """Get list of available simulations for control."""
     try:
         config = get_config()
-        client = SimulationClient(config.simulation_service)
+        SimulationClient(config.simulation_service)
 
         # In a real implementation, this would call the API
         # For now, return mock data
@@ -588,7 +586,7 @@ def render_bulk_status(simulation_ids: List[str]):
         st.metric("Remaining", status.get("total", 0) - status.get("completed", 0))
 
     with col4:
-        progress = (status.get("completed", 0) / max(status.get("total", 1), 1)) * 100
+        (status.get("completed", 0) / max(status.get("total", 1), 1)) * 100
         st.metric("Progress", ".1f")
 
 

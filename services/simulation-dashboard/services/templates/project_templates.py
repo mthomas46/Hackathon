@@ -4,7 +4,6 @@ This module defines predefined project templates for different types of software
 providing quick-start configurations for common scenarios.
 """
 
-from datetime import datetime
 from typing import Any, Dict
 
 # Built-in project templates

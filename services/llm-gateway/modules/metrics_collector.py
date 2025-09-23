@@ -178,7 +178,7 @@ class MetricsCollector:
                 {"error": error, "response_time": response_time},
             )
 
-        except Exception as e:
+        except Exception:
             # Avoid recursive error logging
             pass
 

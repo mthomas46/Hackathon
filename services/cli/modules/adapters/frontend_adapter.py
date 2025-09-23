@@ -3,15 +3,14 @@ Frontend Service Adapter for CLI interaction
 Handles web interface and user interaction endpoints
 """
 
-import asyncio
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo
 
 
 class FrontendAdapter(BaseServiceAdapter):
@@ -111,7 +110,7 @@ class FrontendAdapter(BaseServiceAdapter):
             start_time = time.time()
 
             # Check main page
-            main_response = await self.clients.get_text(f"{self.base_url}/")
+            await self.clients.get_text(f"{self.base_url}/")
 
             # Common pages to check
             pages = ["/", "/health", "/api/status"]

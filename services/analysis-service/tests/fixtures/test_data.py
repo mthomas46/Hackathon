@@ -20,7 +20,7 @@ class TestDataFactory:
     def create_sample_documents(count: int = 5) -> List[Document]:
         """Create sample documents for testing."""
         documents = []
-        base_time = datetime.now(timezone.utc)
+        datetime.now(timezone.utc)
 
         for i in range(count):
             doc = Document(

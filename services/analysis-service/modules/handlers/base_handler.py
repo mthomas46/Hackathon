@@ -4,7 +4,7 @@ import logging
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Any, Awaitable, Dict, Generic, List, Optional, Protocol, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar
 
 from services.shared.core.di.registry import get_service
 from services.shared.core.di.services import (
@@ -241,7 +241,6 @@ class BaseAnalysisHandler(ABC):
     @abstractmethod
     async def handle(self, request: Any) -> AnalysisResult:
         """Handle the analysis request. Must be implemented by subclasses."""
-        pass
 
     async def execute_with_timing(self, request: Any) -> AnalysisResult:
         """Execute analysis with timing and error handling."""

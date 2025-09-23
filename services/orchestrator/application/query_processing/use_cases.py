@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional
 
 from ...shared.application import UseCase
-from .commands import ExecuteStructuredQueryCommand, ProcessNaturalLanguageQueryCommand
+from .commands import ProcessNaturalLanguageQueryCommand
 from .queries import GetQueryResultQuery, ListQueriesQuery
 
 

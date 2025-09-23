@@ -4,11 +4,9 @@ This module provides real-time monitoring and display of system metrics,
 with automatic updates and alerting capabilities.
 """
 
-import asyncio
-import json
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from queue import Queue
 from typing import Any, Callable, Dict, List, Optional
 
@@ -365,7 +363,7 @@ def check_metric_alerts(metric: Dict[str, Any]):
     """Check for metric alerts and add to queue."""
     name = metric["name"]
     value = metric["value"]
-    threshold = metric.get("threshold")
+    metric.get("threshold")
     status = metric["status"]
 
     alerts_queue = st.session_state.get("alerts_queue", [])

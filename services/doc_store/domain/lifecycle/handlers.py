@@ -3,7 +3,7 @@
 Handles lifecycle policy and transition-related HTTP requests.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ...core.handler import BaseHandler
 from .service import LifecycleService

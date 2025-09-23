@@ -12,8 +12,6 @@ from .queries import (
     GetDocumentsQuery,
     GetFindingQuery,
     GetFindingsQuery,
-    GetRepositoriesQuery,
-    GetRepositoryQuery,
     GetStatisticsQuery,
 )
 
@@ -24,7 +22,6 @@ class QueryHandler(ABC):
     @abstractmethod
     async def handle(self, query):
         """Handle the query."""
-        pass
 
 
 class GetDocumentQueryHandler(QueryHandler):

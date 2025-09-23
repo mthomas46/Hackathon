@@ -5,7 +5,7 @@ import hashlib
 import re
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from services.shared.core.di.services import ILoggerService
 from services.shared.core.logging.logger import get_logger

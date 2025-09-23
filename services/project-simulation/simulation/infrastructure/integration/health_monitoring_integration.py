@@ -4,9 +4,8 @@ This module integrates with the shared health monitoring infrastructure to provi
 comprehensive health monitoring for the simulation service and its ecosystem dependencies.
 """
 
-import asyncio
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 

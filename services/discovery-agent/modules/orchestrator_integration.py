@@ -4,8 +4,6 @@ This module provides Phase 3 integration between the Discovery Agent and Orchest
 to enable dynamic tool loading and AI-powered workflow generation.
 """
 
-import asyncio
-import json
 from typing import Any, Dict, List, Optional
 
 try:

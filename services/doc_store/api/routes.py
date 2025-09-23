@@ -10,35 +10,23 @@ from fastapi import APIRouter, HTTPException, Query
 from services.shared.core.responses.responses import SuccessResponse
 
 from ..core.models import (
-    AnalyticsRequest,
     BulkDocumentRequest,
-    BulkOperationsListResponse,
-    BulkOperationStatus,
     CacheInvalidationRequest,
     CacheStatsResponse,
     DocumentListResponse,
     DocumentRequest,
     DocumentResponse,
-    DocumentVersionResponse,
-    GraphStatisticsResponse,
     LifecyclePolicyRequest,
     LifecycleStatusResponse,
     LifecycleTransitionRequest,
     MetadataUpdateRequest,
-    NotificationStatsResponse,
-    PathsResponse,
     QualityResponse,
-    RelationshipsResponse,
     SearchRequest,
     SearchResponse,
     TagRequest,
-    TagResponse,
     TagSearchRequest,
-    TagSearchResponse,
-    VersionComparison,
     VersionRollbackRequest,
     WebhookRequest,
-    WebhooksListResponse,
 )
 from ..domain.analytics.handlers import AnalyticsHandlers
 from ..domain.bulk.handlers import BulkOperationsHandlers

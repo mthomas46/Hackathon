@@ -3,8 +3,8 @@
 Following domain-driven design principles with generic handler implementation.
 """
 
-from abc import ABC, abstractmethod
-from typing import Any, Awaitable, Callable, Dict
+from abc import ABC
+from typing import Any, Callable, Dict
 
 from services.shared.core.responses.responses import create_error_response, create_success_response
 from services.shared.utilities.error_handling import ServiceException

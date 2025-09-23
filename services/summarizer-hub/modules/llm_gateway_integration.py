@@ -7,9 +7,8 @@ Provides integration between the Summarizer Hub and LLM Gateway for:
 - Quality enhancement through LLM-powered analysis
 """
 
-import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from services.shared.core.config.config import get_config_value
 from services.shared.core.constants_new import ServiceNames

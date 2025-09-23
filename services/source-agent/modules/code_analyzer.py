@@ -3,7 +3,7 @@
 Handles code analysis and endpoint extraction logic.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from .shared_utils import (
     build_source_agent_context,

@@ -15,12 +15,10 @@ Responsibilities:
 Dependencies: Intent recognizer, workflow builder, shared utilities for NLP processing.
 """
 
-import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import aiohttp
 from fastapi import FastAPI
-from pydantic import BaseModel
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
 from services.shared.core.responses.responses import create_success_response
@@ -36,7 +34,7 @@ from services.shared.utilities import attach_self_register, setup_common_middlew
 # ============================================================================
 try:
     from .modules.list_handlers import list_handlers
-    from .modules.models import InterpretedIntent, InterpretedWorkflow, UserQuery, WorkflowStep
+    from .modules.models import InterpretedIntent, UserQuery
     from .modules.query_handlers import query_handlers
 except ImportError:
     # Fallback for when running as script
@@ -45,7 +43,7 @@ except ImportError:
 
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.list_handlers import list_handlers
-    from modules.models import InterpretedIntent, InterpretedWorkflow, UserQuery, WorkflowStep
+    from modules.models import InterpretedIntent, UserQuery
     from modules.query_handlers import query_handlers
 
 # ============================================================================

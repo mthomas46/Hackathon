@@ -629,7 +629,7 @@ class ServiceClients:
         self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Get style examples from local database."""
-        style_type = params.get("type", "all") if params else "all"
+        params.get("type", "all") if params else "all"
 
         # Return mock style examples since we don't have a style_examples table
         examples = [

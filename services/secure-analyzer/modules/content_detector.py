@@ -1,6 +1,5 @@
 """Content detection and analysis for secure analyzer service."""
 
-import os
 import re
 from typing import Any, Dict, List, Optional
 

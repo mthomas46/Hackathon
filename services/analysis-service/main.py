@@ -110,12 +110,14 @@ Responsibilities:
 Dependencies: Document Store, Prompt Store, Interpreter, Source Agent, Orchestrator.
 """
 
-import json
+import logging
 import os
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+logger = logging.getLogger(__name__)
+
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, field_validator
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
 from services.shared.core.responses import create_error_response, create_success_response
@@ -125,13 +127,11 @@ from services.shared.core.responses import create_error_response, create_success
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import ServiceException, install_error_handlers
+from services.shared.utilities.error_handling import install_error_handlers
 from services.shared.utilities.utilities import (
     attach_self_register,
-    generate_id,
     get_service_client,
     setup_common_middleware,
-    utc_now,
 )
 
 try:
@@ -139,7 +139,6 @@ try:
 except Exception:
     aioredis = None
 
-from services.shared.core.models import Document, Finding
 
 # Create shared client instance for all analysis operations
 service_client = get_service_client(timeout=30)
@@ -168,7 +167,6 @@ try:
         CrossRepositoryAnalysisRequest,
         DistributedTaskRequest,
         DocumentDumpRequest,
-        FindingsResponse,
         LoadBalancingConfigRequest,
         LoadBalancingStrategyRequest,
         MaintenanceForecastRequest,
@@ -192,7 +190,6 @@ try:
         TrendAnalysisRequest,
         WebhookConfigRequest,
         WorkflowEventRequest,
-        WorkflowStatusRequest,
     )
     from .modules.report_handlers import report_handlers
 except ImportError:
@@ -214,7 +211,6 @@ except ImportError:
         CrossRepositoryAnalysisRequest,
         DistributedTaskRequest,
         DocumentDumpRequest,
-        FindingsResponse,
         LoadBalancingConfigRequest,
         LoadBalancingStrategyRequest,
         MaintenanceForecastRequest,
@@ -238,7 +234,6 @@ except ImportError:
         TrendAnalysisRequest,
         WebhookConfigRequest,
         WorkflowEventRequest,
-        WorkflowStatusRequest,
     )
     from modules.report_handlers import report_handlers
 
@@ -262,10 +257,6 @@ attach_self_register(app, ServiceNames.ANALYSIS_SERVICE)
 # Import shared utilities for consistency
 from .modules.shared_utils import (
     _create_analysis_error_response,
-    build_analysis_context,
-    create_analysis_success_response,
-    handle_analysis_error,
-    validate_analysis_targets,
 )
 
 # API Endpoints
@@ -1066,7 +1057,7 @@ async def generate_analysis_report_endpoint(req: dict):
         documents = req.get("documents", [])
         report_type = req.get("report_type", "comprehensive_simulation_analysis")
         include_markdown = req.get("include_markdown", True)
-        include_json = req.get("include_json", True)
+        req.get("include_json", True)
 
         if not simulation_id:
             return create_error_response("simulation_id is required", error_code=ErrorCodes.VALIDATION_ERROR)
@@ -1275,7 +1266,7 @@ async def analyze_pull_request_handler(pr_data: dict, simulation_id: str = "") -
     changed_files = pr_data.get("changed_files", [])
     commits = pr_data.get("commits", [])
     pr_title = pr_data.get("title", "")
-    pr_description = pr_data.get("description", "")
+    pr_data.get("description", "")
     pr_author = pr_data.get("author", "")
 
     # Analyze different aspects of the PR
@@ -1350,7 +1341,7 @@ async def analyze_pr_code_changes(changed_files: list) -> dict:
         # Analyze changes
         additions = file_data.get("additions", 0)
         deletions = file_data.get("deletions", 0)
-        changes = file_data.get("changes", 0)
+        file_data.get("changes", 0)
 
         analysis["change_metrics"]["lines_added"] += additions
         analysis["change_metrics"]["lines_removed"] += deletions
@@ -1524,7 +1515,7 @@ def analyze_file_content(file_data: dict, file_type: str) -> dict:
         elif file_type == "java":
             issues.update(analyze_java_file(lines))
 
-    except Exception as e:
+    except Exception:
         pass
 
     return issues
@@ -1861,7 +1852,7 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     """Generate high-level recommendations for the pull request."""
     recommendations = []
 
-    health_score = pr_report.get("health_score", 0.5)
+    pr_report.get("health_score", 0.5)
     risk_level = pr_report.get("risk_level", "medium")
 
     if risk_level == "high":
@@ -3354,7 +3345,7 @@ async def get_confluence_consolidation_report(min_confidence: float = 0.0):
             },
         }
 
-    except Exception as e:
+    except Exception:
         # Return mock data for testing
         return {
             "items": [
@@ -3406,7 +3397,7 @@ async def get_jira_staleness_report(min_confidence: float = 0.0):
 
         return {"items": items, "total": len(items)}
 
-    except Exception as e:
+    except Exception:
         # Return mock data for testing
         return {
             "items": [
@@ -3505,7 +3496,7 @@ async def analyze_with_prompt(target_id: str, prompt_category: str, prompt_name:
             return _create_analysis_error_response(
                 "Unsupported target type",
                 ErrorCodes.UNSUPPORTED_TARGET_TYPE,
-                {"target_type": type(target).__name__, "supported_types": ["Document", "str"]},
+                {"target_type": type(target_id).__name__, "supported_types": ["Document", "str"]},
             )  # FURTHER OPTIMIZED: Using shared error utility
 
         # In a real implementation, this would call an LLM with the prompt
@@ -3839,7 +3830,6 @@ async def get_analysis_status():
 @app.get("/health")
 async def custom_analysis_health():
     """Custom analysis-service health endpoint with models_loaded field."""
-    from datetime import datetime, timezone
 
     from services.shared.monitoring.health import healthy_response
 

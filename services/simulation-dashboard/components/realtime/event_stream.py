@@ -4,7 +4,6 @@ This module provides real-time event streaming and display capabilities,
 with filtering, search, and live updates.
 """
 
-import json
 import time
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional

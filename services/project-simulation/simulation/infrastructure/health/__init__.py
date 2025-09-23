@@ -14,7 +14,6 @@ from .simulation_health import get_simulation_health_checker, get_simulation_hea
 # Add mock function for create_simulation_health_endpoints
 def create_simulation_health_endpoints():
     """Mock function for creating simulation health endpoints."""
-    pass
 
 
 __all__ = ["get_simulation_health_checker", "get_simulation_health_endpoint", "create_simulation_health_endpoints"]

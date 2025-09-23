@@ -7,9 +7,9 @@ Provides endpoints for:
 - Query history management
 """
 
-from typing import List, Optional
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from ....main import container
 from .dtos import (

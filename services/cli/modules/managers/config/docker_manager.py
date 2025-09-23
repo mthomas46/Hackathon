@@ -1,13 +1,11 @@
 """Docker Configuration Manager for CLI operations."""
 
-import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import yaml
 
 from ...base.base_manager import BaseManager
-from ...formatters.display_utils import DisplayManager
 
 
 class DockerManager(BaseManager):

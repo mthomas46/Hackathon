@@ -87,7 +87,7 @@ index 111..222 100644
     @staticmethod
     def search_users(args: Dict[str, Any]) -> Dict[str, Any]:
         """Mock implementation for github.search_users."""
-        query = args.get("query", "dev")
+        args.get("query", "dev")
         per_page = int(args.get("perPage", 2))
         return {"items": [{"login": f"user{i}", "score": 10 - i} for i in range(per_page)]}
 

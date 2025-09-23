@@ -4,13 +4,11 @@ Provides AI-assisted code review capabilities specifically focused on documentat
 offering comprehensive feedback, suggestions, and best practice recommendations.
 """
 
-import json
 import logging
 import re
 import time
-from collections import Counter, defaultdict
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
+from collections import Counter
+from typing import Any, Dict, List, Optional
 
 try:
     import language_tool_python
@@ -29,8 +27,6 @@ except ImportError:
     TextBlob = None
     language_tool_python = None
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses import create_error_response, create_success_response
 
 logger = logging.getLogger(__name__)
 
@@ -375,8 +371,8 @@ class PeerReviewEnhancer:
             return analysis
 
         # Calculate readability metrics
-        avg_sentence_length = len(words) / len(sentences)
-        avg_word_length = sum(len(word) for word in words) / len(words)
+        len(words) / len(sentences)
+        sum(len(word) for word in words) / len(words)
 
         # Check sentence complexity
         complex_sentences = [s for s in sentences if len(word_tokenize(s)) > 30]

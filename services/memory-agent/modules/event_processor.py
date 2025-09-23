@@ -3,9 +3,8 @@
 Handles Redis pub/sub event subscription and processing.
 """
 
-import asyncio
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 try:
     import redis.asyncio as aioredis  # type: ignore

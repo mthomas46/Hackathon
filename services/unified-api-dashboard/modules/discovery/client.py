@@ -2,9 +2,8 @@
 Discovery Client - API Service Discovery and Registration
 """
 
-import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import httpx
 

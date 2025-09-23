@@ -1,11 +1,7 @@
 """Tests for Repository Implementations - In-memory and SQLite repositories."""
 
 import asyncio
-import os
-import tempfile
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -17,9 +13,7 @@ from ...domain.value_objects.confidence import Confidence
 from ...infrastructure.repositories.analysis_repository import AnalysisRepository, InMemoryAnalysisRepository
 from ...infrastructure.repositories.document_repository import DocumentRepository, InMemoryDocumentRepository
 from ...infrastructure.repositories.finding_repository import FindingRepository, InMemoryFindingRepository
-from ...infrastructure.repositories.sqlite_analysis_repository import SQLiteAnalysisRepository
 from ...infrastructure.repositories.sqlite_document_repository import SQLiteDocumentRepository
-from ...infrastructure.repositories.sqlite_finding_repository import SQLiteFindingRepository
 
 
 class TestDocumentRepositoryInterface:

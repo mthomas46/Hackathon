@@ -1,9 +1,5 @@
 """Optimization service for A/B testing and automated prompt improvement."""
 
-import asyncio
-import random
-from collections import defaultdict
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from services.shared.integrations.clients.clients import ServiceClients

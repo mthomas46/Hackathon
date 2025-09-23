@@ -1,9 +1,9 @@
 """Document repository implementation."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
-from ...domain.entities import Document, DocumentId
+from ...domain.entities import Document
 
 
 class DocumentRepository(ABC):
@@ -12,27 +12,22 @@ class DocumentRepository(ABC):
     @abstractmethod
     async def save(self, document: Document) -> None:
         """Save a document."""
-        pass
 
     @abstractmethod
     async def get_by_id(self, document_id: str) -> Optional[Document]:
         """Get document by ID."""
-        pass
 
     @abstractmethod
     async def get_all(self) -> List[Document]:
         """Get all documents."""
-        pass
 
     @abstractmethod
     async def get_by_author(self, author: str) -> List[Document]:
         """Get documents by author."""
-        pass
 
     @abstractmethod
     async def delete(self, document_id: str) -> bool:
         """Delete a document."""
-        pass
 
 
 class InMemoryDocumentRepository(DocumentRepository):

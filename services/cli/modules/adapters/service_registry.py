@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, TaskID
+from rich.progress import Progress
 from rich.table import Table
 
 from .analysis_service_adapter import AnalysisServiceAdapter

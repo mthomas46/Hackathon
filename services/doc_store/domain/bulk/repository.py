@@ -3,16 +3,13 @@
 Handles bulk operation data and batch processing.
 """
 
-import asyncio
 import json
-import uuid
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import validate_sql_identifier
 
-from ...core.entities import BulkDocumentItem, BulkOperation
+from ...core.entities import BulkOperation
 from ...core.repository import BaseRepository
 from ...db.queries import execute_query
 

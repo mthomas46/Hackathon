@@ -4,12 +4,7 @@ This module contains comprehensive tests for Docker container functionality,
 deployment validation, and containerized environment testing.
 """
 
-import json
-import os
-import subprocess
-import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import docker
 import pytest
@@ -190,7 +185,7 @@ class TestDockerMultiStageBuild:
 
     def test_dockerfile_targets(self):
         """Test that Dockerfile has proper target stages."""
-        dockerfile_path = Path("Dockerfile")
+        Path("Dockerfile")
         compose_path = Path("docker-compose.yml")
         compose_content = compose_path.read_text()
 

@@ -216,7 +216,7 @@ class WorkflowManager(BaseManager):
                 execute = Prompt.ask("Execute the generated workflow? (y/n)", default="n")
                 if execute.lower() in ["y", "yes"]:
                     url = f"{self.clients.interpreter_url()}/execute"
-                    workflow_result = await self.clients.post_json(url, payload)
+                    await self.clients.post_json(url, payload)
                     self.console.print("[green]✅ Workflow executed![/green]")
 
         except Exception as e:

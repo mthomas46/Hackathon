@@ -11,7 +11,7 @@ from typing import Any, Dict, List
 from langgraph.graph import END, StateGraph
 
 from ..langgraph.state import WorkflowState
-from ..langgraph.tools import search_documents_tool, send_notification_tool, store_document_tool
+from ..langgraph.tools import send_notification_tool, store_document_tool
 
 
 class PRConfidenceOrchestrationWorkflow:

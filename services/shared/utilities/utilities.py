@@ -16,7 +16,6 @@ Used by all services for consistent behavior and reduced code duplication.
 """
 
 import hashlib
-import os
 import re
 import uuid
 from datetime import datetime, timezone

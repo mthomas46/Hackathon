@@ -2,8 +2,7 @@
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -36,14 +35,10 @@ from ...application.services.notification_service import (
 from ...application.services.transaction_service import (
     SQLiteTransactionManager,
     TransactionContext,
-    TransactionManager,
     TransactionService,
 )
-from ...domain.entities.analysis import Analysis, AnalysisStatus
-from ...domain.entities.document import Document, DocumentStatus
-from ...domain.entities.finding import Finding, FindingSeverity
+from ...domain.entities.analysis import AnalysisStatus
 from ...domain.value_objects.analysis_type import AnalysisType
-from ...domain.value_objects.confidence import Confidence
 
 
 class TestApplicationService:

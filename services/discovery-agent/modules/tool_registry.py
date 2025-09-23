@@ -5,9 +5,8 @@ using a simple file-based registry that can be extended to database storage.
 """
 
 import json
-import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 class ToolRegistryStorage:

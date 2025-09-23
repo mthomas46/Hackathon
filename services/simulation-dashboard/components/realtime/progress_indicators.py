@@ -4,7 +4,6 @@ This module provides real-time progress indicators and status tracking
 for simulations and long-running operations.
 """
 
-import time
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional
 

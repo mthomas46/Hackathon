@@ -5,13 +5,12 @@ detailed error reporting and suggestions for the Project Simulation Service.
 """
 
 import re
-import socket
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from ..logging import get_simulation_logger
-from .config_manager import ConfigManager, get_config
+from .config_manager import get_config
 
 
 class ValidationError(Exception):

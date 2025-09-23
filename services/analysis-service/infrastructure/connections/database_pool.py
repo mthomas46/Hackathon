@@ -2,10 +2,10 @@
 
 import asyncio
 import sqlite3
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from abc import abstractmethod
+from typing import Any, Dict, List, Optional
 
-from .connection_pool import ConnectionPool, ConnectionPoolConfig, PooledConnection
+from .connection_pool import ConnectionPool, ConnectionPoolConfig
 
 
 class DatabaseConnectionPool(ConnectionPool):
@@ -19,17 +19,14 @@ class DatabaseConnectionPool(ConnectionPool):
     @abstractmethod
     async def create_connection(self) -> Any:
         """Create a database connection."""
-        pass
 
     @abstractmethod
     async def validate_connection(self, connection: Any) -> bool:
         """Validate database connection."""
-        pass
 
     @abstractmethod
     async def close_connection(self, connection: Any) -> None:
         """Close database connection."""
-        pass
 
 
 class SQLiteConnectionPool(DatabaseConnectionPool):

@@ -1,6 +1,6 @@
 """Handler Factory - Creates handlers with dependency injection."""
 
-from typing import Any, Dict, List, Optional, Type
+from typing import Dict, List, Optional, Type
 
 from services.shared.core.di.registry import get_service
 from services.shared.core.di.services import (

@@ -11,14 +11,13 @@ Provides enterprise-grade service mesh capabilities including:
 
 import asyncio
 import hashlib
-import json
 import logging
 import random
 import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 import httpx
 

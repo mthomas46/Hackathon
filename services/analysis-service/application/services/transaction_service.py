@@ -4,7 +4,7 @@ import asyncio
 import sqlite3
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 from .application_service import ApplicationService, ServiceContext
 
@@ -41,34 +41,28 @@ class TransactionManager(ABC):
     @abstractmethod
     async def begin_transaction(self, isolation_level: str = "DEFERRED") -> TransactionContext:
         """Begin a new transaction."""
-        pass
 
     @abstractmethod
     async def commit_transaction(self, context: TransactionContext) -> None:
         """Commit a transaction."""
-        pass
 
     @abstractmethod
     async def rollback_transaction(self, context: TransactionContext) -> None:
         """Rollback a transaction."""
-        pass
 
     @abstractmethod
     async def create_savepoint(self, context: TransactionContext, name: str) -> None:
         """Create a savepoint in the transaction."""
-        pass
 
     @abstractmethod
     async def rollback_to_savepoint(self, context: TransactionContext, name: str) -> None:
         """Rollback to a savepoint."""
-        pass
 
     @abstractmethod
     async def execute_in_transaction(
         self, operation: Callable[[TransactionContext], Any], isolation_level: str = "DEFERRED"
     ) -> Any:
         """Execute operation within a transaction."""
-        pass
 
 
 class SQLiteTransactionManager(TransactionManager):

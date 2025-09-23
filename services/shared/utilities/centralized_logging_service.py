@@ -20,14 +20,13 @@ import shutil
 import sqlite3
 import threading
 import time
-from collections import defaultdict, deque
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, AsyncIterator, Callable, Dict, List, Optional
 
-import aiofiles
 
 logger = logging.getLogger(__name__)
 
@@ -481,7 +480,6 @@ class FileLogStorage(LogStorageBackend):
 
     async def _query_file(self, log_file: Path, query: LogQuery) -> List[LogEntry]:
         """Query a specific log file."""
-        results = []
 
         def _read_file():
             entries = []

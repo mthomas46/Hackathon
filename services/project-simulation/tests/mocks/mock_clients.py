@@ -7,8 +7,7 @@ test behavior and reliable service isolation.
 
 import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
-from unittest.mock import AsyncMock
+from typing import Any, Dict, List, Optional
 
 
 class MockEcosystemClient:

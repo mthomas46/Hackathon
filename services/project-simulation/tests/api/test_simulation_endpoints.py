@@ -5,15 +5,11 @@ ecosystem patterns. Validates request/response handling, error cases,
 and integration with FastAPI framework.
 """
 
-import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType
+from simulation.domain.value_objects import ComplexityLevel, ProjectType
 
 
 class TestSimulationEndpoints:

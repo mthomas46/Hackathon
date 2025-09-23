@@ -18,32 +18,22 @@ Dependencies: shared utilities, httpx for HTTP requests, Atlassian SDK, GitHub A
 """
 
 import os
-from typing import List, Optional
 
-import httpx
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, field_validator
+from fastapi import FastAPI
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.core.constants_new import ServiceNames
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities import clean_string, generate_id, utc_now
-from services.shared.utilities.error_handling import ServiceException, ValidationException, safe_execute_async
 
 try:
     import redis.asyncio as aioredis
 except Exception:
     aioredis = None
 
-from services.shared.core.models.models import Document
-from services.shared.envelopes import DocumentEnvelope
 from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
-from services.shared.owners import derive_github_owners
-from services.shared.utilities import cached_get, stable_hash
 
 # Service configuration constants
 SERVICE_NAME = "source-agent"
@@ -59,13 +49,6 @@ SOURCE_CAPABILITIES = {
     "confluence": ["page_normalization"],
 }
 from .modules.code_analyzer import code_analyzer
-from .modules.document_builders import (
-    build_confluence_doc,
-    build_jira_doc,
-    build_readme_doc,
-    extract_endpoints_from_patch,
-    storage_html_to_text,
-)
 from .modules.fetch_handler import fetch_handler
 
 # ============================================================================
@@ -78,12 +61,9 @@ from .modules.normalize_handler import normalize_handler
 # SHARED UTILITIES - Leveraging centralized functionality across modules
 # ============================================================================
 from .modules.shared_utils import (
-    build_github_url,
     build_source_agent_context,
     create_source_agent_success_response,
-    extract_endpoints_from_code,
     handle_source_agent_error,
-    sanitize_for_response,
 )
 
 # Create FastAPI app directly using shared utilities

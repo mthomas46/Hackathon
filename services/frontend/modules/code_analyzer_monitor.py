@@ -4,9 +4,7 @@ Provides visualization and monitoring capabilities for code analyzer
 service analysis results, security scans, and style checking.
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from services.shared.utilities import utc_now
 

@@ -3,7 +3,6 @@ Discovery Agent Service Adapter for CLI interaction
 Handles service discovery, registration, and ecosystem mapping
 """
 
-import asyncio
 import time
 from typing import Any, Dict, List, Optional
 
@@ -11,7 +10,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo
 
 
 class DiscoveryAgentAdapter(BaseServiceAdapter):

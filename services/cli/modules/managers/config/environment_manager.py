@@ -4,10 +4,9 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from ...base.base_manager import BaseManager
-from ...formatters.display_utils import DisplayManager
 
 
 class EnvironmentManager(BaseManager):

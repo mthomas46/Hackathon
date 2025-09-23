@@ -5,12 +5,10 @@ providing complete audit trails, temporal queries, and reliable state reconstruc
 following Domain-Driven Design principles and leveraging existing ecosystem patterns.
 """
 
-import json
 import sys
-import weakref
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 from uuid import uuid4
 
 # Import from shared infrastructure

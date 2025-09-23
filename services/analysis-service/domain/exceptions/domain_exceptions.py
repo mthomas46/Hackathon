@@ -40,7 +40,6 @@ class BusinessRuleViolation(DomainException):
 class DocumentException(DomainException):
     """Base exception for document-related errors."""
 
-    pass
 
 
 class DocumentNotFoundException(DocumentException):
@@ -80,7 +79,6 @@ class DocumentSizeExceededException(DocumentException):
 class AnalysisException(DomainException):
     """Base exception for analysis-related errors."""
 
-    pass
 
 
 class AnalysisNotFoundException(AnalysisException):
@@ -129,7 +127,6 @@ class AnalysisAlreadyRunningException(AnalysisException):
 class FindingException(DomainException):
     """Base exception for finding-related errors."""
 
-    pass
 
 
 class FindingNotFoundException(FindingException):
@@ -153,7 +150,6 @@ class FindingAlreadyResolvedException(FindingException):
 class RepositoryException(DomainException):
     """Base exception for repository-related errors."""
 
-    pass
 
 
 class RepositoryNotFoundException(RepositoryException):
@@ -191,7 +187,6 @@ class RepositorySyncException(RepositoryException):
 class ExternalServiceException(DomainException):
     """Base exception for external service errors."""
 
-    pass
 
 
 class SemanticAnalysisException(ExternalServiceException):

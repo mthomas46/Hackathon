@@ -1,7 +1,6 @@
 """Logging Client for sending logs to the log collector service."""
 
 import asyncio
-import json
 import logging
 import threading
 from datetime import datetime

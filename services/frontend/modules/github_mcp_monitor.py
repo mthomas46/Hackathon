@@ -4,7 +4,6 @@ Provides visualization and monitoring capabilities for github-mcp
 service tool invocations and GitHub data operations.
 """
 
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
@@ -78,7 +77,7 @@ class GithubMcpMonitor:
             tools_response = await clients.get_json(url)
             return tools_response if isinstance(tools_response, list) else []
 
-        except Exception as e:
+        except Exception:
             return []
 
     async def invoke_tool(

@@ -5,14 +5,9 @@ Simulation Service, validating complete simulation workflows, multi-service
 orchestration, and data consistency across the entire platform.
 """
 
-import asyncio
-import json
 import sys
-import time
-from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import Mock
 
 import pytest
 

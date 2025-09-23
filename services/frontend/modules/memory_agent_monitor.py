@@ -4,7 +4,6 @@ Provides visualization and monitoring capabilities for memory agent
 service operational context and event summary storage.
 """
 
-from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 from services.shared.utilities import utc_now
@@ -90,7 +89,7 @@ class MemoryAgentMonitor:
 
             return []
 
-        except Exception as e:
+        except Exception:
             return []
 
     async def store_memory_item(

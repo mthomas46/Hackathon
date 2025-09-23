@@ -16,7 +16,6 @@ Responsibilities:
 Dependencies: shared middlewares for request tracking; httpx for webhook delivery.
 """
 
-import os
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI

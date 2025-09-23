@@ -1,7 +1,7 @@
 """Application Queries for Service Registry"""
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from ...domain.service_registry import ServiceId
 

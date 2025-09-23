@@ -4,14 +4,13 @@ This is a minimal working version of the LLM Gateway that integrates with Ollama
 and provides basic LLM routing functionality.
 """
 
-import asyncio
 import json
 import os
 import time
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, List, Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -103,7 +102,7 @@ async def get_providers():
                 providers.append(ProviderInfo(name="ollama", status="healthy", models=models, endpoint=OLLAMA_ENDPOINT))
             else:
                 providers.append(ProviderInfo(name="ollama", status="unhealthy", models=[], endpoint=OLLAMA_ENDPOINT))
-    except Exception as e:
+    except Exception:
         providers.append(ProviderInfo(name="ollama", status="error", models=[], endpoint=OLLAMA_ENDPOINT))
 
     return {"providers": providers}

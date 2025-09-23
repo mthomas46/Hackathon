@@ -4,14 +4,11 @@ This module contains integration tests for content validation, quality checks,
 and consistency validation across the content generation pipeline.
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, Mock, patch
+from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from simulation.domain.value_objects import ComplexityLevel, DocumentMetadata, DocumentType, ProjectType
-from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
+from simulation.domain.value_objects import DocumentType
 
 
 class TestContentQualityValidation:

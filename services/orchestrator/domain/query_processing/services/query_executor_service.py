@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from ..value_objects.query_execution_result import ExecutionStatus, QueryExecutionResult
 from ..value_objects.query_intent import QueryIntent

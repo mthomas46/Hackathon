@@ -2,15 +2,13 @@
 
 import asyncio
 import hashlib
-import json
 import pickle  # nosec: Required for controlled cache serialization
 import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar
 
-import lru
 
 from ..di.services import ICacheService, ILoggerService
 from ..logging.logger import get_logger
@@ -68,32 +66,26 @@ class CacheBackend(ABC):
     @abstractmethod
     async def get(self, key: str) -> Optional[Any]:
         """Get value from cache."""
-        pass
 
     @abstractmethod
     async def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
         """Set value in cache with optional TTL."""
-        pass
 
     @abstractmethod
     async def delete(self, key: str) -> None:
         """Delete value from cache."""
-        pass
 
     @abstractmethod
     async def exists(self, key: str) -> bool:
         """Check if key exists in cache."""
-        pass
 
     @abstractmethod
     async def clear(self) -> None:
         """Clear all cache entries."""
-        pass
 
     @abstractmethod
     async def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
-        pass
 
 
 class MemoryCache(CacheBackend):

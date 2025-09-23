@@ -10,7 +10,7 @@ import time
 import uuid
 from dataclasses import asdict, dataclass
 from enum import Enum
-from typing import Any, Awaitable, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 try:
     import redis.asyncio as aioredis

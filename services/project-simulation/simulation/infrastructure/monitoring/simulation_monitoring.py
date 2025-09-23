@@ -4,12 +4,11 @@ This module extends the services/shared/monitoring/ infrastructure with comprehe
 simulation-specific metrics collection, performance monitoring, and alerting capabilities.
 """
 
-import asyncio
 import sys
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -17,7 +16,6 @@ from typing import Any, Callable, Dict, List, Optional, Union
 # Import from shared infrastructure
 sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
 
-from simulation.domain.value_objects import ComplexityLevel, ProjectType, SimulationStatus
 from simulation.infrastructure.logging import get_simulation_logger
 
 # Import shared monitoring (with fallbacks)

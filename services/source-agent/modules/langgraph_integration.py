@@ -6,9 +6,8 @@ This module provides LangGraph awareness and integration capabilities
 for the Source Agent Service, enabling repository content fetching in workflows.
 """
 
-import asyncio
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool

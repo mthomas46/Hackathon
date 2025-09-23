@@ -7,10 +7,8 @@ Provides endpoints for:
 - Event streaming
 """
 
-from datetime import datetime
-from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from ....main import container
 from .dtos import (
@@ -19,7 +17,6 @@ from .dtos import (
     EventClearRequest,
     EventHistoryResponse,
     EventReplayRequest,
-    PeerInfoResponse,
     SagaDetailResponse,
     SagaStatsResponse,
     TraceDetailResponse,

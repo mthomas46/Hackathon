@@ -1,6 +1,5 @@
 """Validators for application queries."""
 
-from typing import Any, Dict, List, Optional
 
 from ..handlers.queries import (
     GetAnalysisByIdQuery,
@@ -9,7 +8,7 @@ from ..handlers.queries import (
     GetDocumentQuery,
     ListFindingsQuery,
 )
-from .base_validator import BaseValidator, ValidationError, ValidationResult, ValidationSeverity
+from .base_validator import BaseValidator, ValidationResult
 
 
 class GetDocumentQueryValidator(BaseValidator):

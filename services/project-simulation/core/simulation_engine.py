@@ -7,10 +7,9 @@ analysis integration, and progress tracking.
 
 import asyncio
 import time
-import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from ..generators.document_generator import DocumentGenerator
 from ..generators.github_generator import GitHubGenerator

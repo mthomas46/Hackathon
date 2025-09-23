@@ -6,7 +6,6 @@ from typing import Any, Dict
 import pytest
 
 from ...domain.entities.document import Document, DocumentStatus
-from ...domain.value_objects.location import FileLocation
 
 
 class TestDocumentEntity:

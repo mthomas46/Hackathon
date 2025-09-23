@@ -1,8 +1,7 @@
 """Correlation Middleware - Automatic correlation ID management for requests."""
 
-import uuid
 from contextlib import asynccontextmanager
-from typing import Any, Callable, Optional
+from typing import Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 

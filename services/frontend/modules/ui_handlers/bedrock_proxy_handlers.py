@@ -4,7 +4,6 @@ Handles bedrock proxy service visualization, including AI invocation
 monitoring, template usage tracking, and response analytics.
 """
 
-from typing import Any, Dict
 
 from fastapi.responses import HTMLResponse
 
@@ -12,7 +11,6 @@ from ..bedrock_proxy_monitor import bedrock_proxy_monitor
 from ..shared_utils import (
     build_frontend_context,
     create_html_response,
-    fetch_service_data,
     get_frontend_clients,
     handle_frontend_error,
 )
@@ -25,7 +23,7 @@ class BedrockProxyUIHandlers:
     def handle_bedrock_proxy_dashboard() -> HTMLResponse:
         """Render bedrock proxy service monitoring dashboard."""
         try:
-            clients = get_frontend_clients()
+            get_frontend_clients()
 
             # Get bedrock proxy status and cached data
             status_data = bedrock_proxy_monitor.get_proxy_status()

@@ -7,12 +7,11 @@ supporting both API-based fetching and file upload processing.
 from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
 from ...base.base_manager import BaseManager
-from ...shared_utils import add_menu_rows, create_menu_table, get_cli_clients, log_cli_metrics, print_panel
+from ...shared_utils import add_menu_rows, create_menu_table
 
 
 class ArchitectureDigitizerManager(BaseManager):
@@ -75,7 +74,7 @@ class ArchitectureDigitizerManager(BaseManager):
         """Menu for API-based diagram normalization."""
         while True:
             # Get supported systems from cache or API
-            systems = await self._get_supported_systems()
+            await self._get_supported_systems()
 
             menu = create_menu_table("Normalize from API", ["Option", "Description"])
             add_menu_rows(
@@ -193,7 +192,7 @@ class ArchitectureDigitizerManager(BaseManager):
         """Menu for file upload and normalization."""
         while True:
             # Get supported systems for file upload
-            systems = await self._get_supported_systems()
+            await self._get_supported_systems()
 
             menu = create_menu_table("Upload & Normalize File", ["Option", "Description"])
             add_menu_rows(

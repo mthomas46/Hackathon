@@ -7,14 +7,12 @@ development workflow validation.
 
 import json
 import os
-import shutil
 import sqlite3
 import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -121,7 +119,6 @@ class TestEnvironmentConfiguration:
         """Test logging configuration optimized for local development."""
         # Test logging levels appropriate for development
         dev_log_levels = ["DEBUG", "INFO", "WARNING"]
-        prod_log_levels = ["INFO", "WARNING", "ERROR"]
 
         # In development, DEBUG should be acceptable
         assert "DEBUG" in dev_log_levels, "DEBUG level should be available in development"
@@ -368,7 +365,6 @@ class TestPostgreSQLIntegration:
                         username, password = credentials.split(":")
                     else:
                         username = credentials
-                        password = None
 
                     if ":" in host_port:
                         host, port_db = host_port.split(":")

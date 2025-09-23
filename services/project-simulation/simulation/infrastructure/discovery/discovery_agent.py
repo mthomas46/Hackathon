@@ -4,7 +4,6 @@ Following DDD infrastructure patterns with clean separation of concerns.
 """
 
 import time
-from datetime import datetime
 from typing import List, Optional
 
 import httpx
@@ -44,7 +43,7 @@ class DiscoveryAgent:
         try:
             start_time = time.time()
             response = await self.http_client.get(f"{service_url}/health")
-            response_time = int((time.time() - start_time) * 1000)
+            int((time.time() - start_time) * 1000)
 
             if response.status_code == 200:
                 health_data = response.json()
