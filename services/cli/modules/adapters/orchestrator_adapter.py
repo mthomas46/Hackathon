@@ -141,7 +141,7 @@ class OrchestratorAdapter(BaseServiceAdapter):
             try:
                 url = f"{self.base_url}/peers"
                 response = await self.clients.get_json(url)
-            except:
+            except Exception:
                 # Fallback to available endpoint
                 url = f"{self.base_url}/workflows"
                 response = await self.clients.get_json(url)

@@ -217,7 +217,7 @@ class DiscoveryAgentMonitoring:
                         return "healthy"
                     else:
                         return f"unhealthy ({response.status})"
-        except:
+        except Exception:
             return "unreachable"
 
     def _calculate_uptime(self) -> float:

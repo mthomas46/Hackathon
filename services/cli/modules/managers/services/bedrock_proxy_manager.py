@@ -951,7 +951,7 @@ class BedrockProxyManager(BaseManager):
                         dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                         hour = dt.hour
                         stats["hourly_distribution"][hour] += 1
-                    except:
+                    except ValueError:
                         pass
 
             # Display statistics

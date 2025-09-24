@@ -38,7 +38,7 @@ def check_workflows_loaded():
     """Check if workflows are loaded."""
     try:
         return hasattr(container, "workflow_repository") and container.workflow_repository is not None
-    except:
+    except Exception:
         return False
 
 

@@ -557,7 +557,7 @@ class EnvironmentManager:
                         try:
                             data = await response.json()
                             health.version = data.get("version")
-                        except:
+                        except Exception:
                             pass
                     elif response.status < 500:
                         health.status = ServiceStatus.DEGRADED

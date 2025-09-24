@@ -435,7 +435,7 @@ def get_system_uptime() -> str:
             return f"{hours}h {minutes}m"
         else:
             return f"{minutes}m"
-    except:
+    except Exception:
         return "Unknown"
 
 

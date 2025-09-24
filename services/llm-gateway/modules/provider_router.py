@@ -346,7 +346,7 @@ class ProviderRouter:
                 try:
                     response = await self.client.get_json("http://bedrock-proxy:7090/health")
                     return response.get("status") == "healthy"
-                except:
+                except Exception:
                     return False
 
             return False

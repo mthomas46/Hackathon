@@ -196,7 +196,7 @@ async def discover_service(request: DiscoverRequest):
                         if response.status_code == 200:
                             discovery_request.openapi_url = test_url
                             break
-                except:
+                except Exception:
                     continue
 
         if not discovery_request.openapi_url and not discovery_request.spec:
@@ -337,7 +337,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                                         "openapi_url": f"http://{service['name']}:{service['port']}/openapi.json",
                                     }
                                 )
-                    except:
+                    except Exception:
                         continue
                 else:
                     services_to_discover.append(

@@ -152,7 +152,7 @@ class AIToolSelector:
             if json_match:
                 parsed = json.loads(json_match.group())
                 return parsed
-        except:
+        except Exception:
             pass
 
         # Fallback to structured parsing

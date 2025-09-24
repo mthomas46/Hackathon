@@ -544,7 +544,7 @@ class ServiceMeshService:
         # Try to parse JSON response
         try:
             return response.json()
-        except:
+        except Exception:
             return {"status": response.status_code, "content": response.text}
 
     def register_service_instance(

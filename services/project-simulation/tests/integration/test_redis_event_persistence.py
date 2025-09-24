@@ -800,7 +800,7 @@ class RedisEventStore:
         """Connect to Redis."""
         try:
             return self.redis_client.ping()
-        except:
+        except Exception:
             return False
 
     def store_event(self, event):
@@ -821,7 +821,7 @@ class RedisEventStore:
             self.redis_client.lpush(key, event_data)
             self.redis_client.expire(key, self.event_ttl_seconds)
             return True
-        except:
+        except Exception:
             return False
 
     def get_events(self, simulation_id, offset=0, limit=100):
@@ -844,7 +844,7 @@ class RedisEventStore:
                 events.append(event)
 
             return events
-        except:
+        except Exception:
             return []
 
     def get_events_by_type(self, simulation_id, event_type):
@@ -865,7 +865,7 @@ class RedisEventStore:
                     cleaned += 1
 
             return cleaned
-        except:
+        except Exception:
             return 0
 
 

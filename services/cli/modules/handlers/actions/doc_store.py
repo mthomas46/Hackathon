@@ -207,7 +207,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
             try:
                 metadata = json.loads(metadata_input) if metadata_input.strip() else {}
-            except:
+            except Exception:
                 metadata = {}
 
             documents.append({"content": content, "metadata": metadata})
@@ -311,7 +311,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
         try:
             metadata = json.loads(metadata_input) if metadata_input.strip() else {}
-        except:
+        except Exception:
             metadata = {}
 
         labels = [label.strip() for label in labels_input.split(",") if label.strip()] if labels_input else []

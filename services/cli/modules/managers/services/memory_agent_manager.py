@@ -693,7 +693,7 @@ class MemoryAgentManager(BaseManager):
                             expired.append(item)
                         elif (expires_dt - now).total_seconds() < 3600:  # Expiring in < 1 hour
                             expiring_soon.append(item)
-                    except:
+                    except Exception:
                         pass  # Skip invalid dates
                 else:
                     permanent.append(item)
@@ -799,7 +799,7 @@ class MemoryAgentManager(BaseManager):
 
                                 if expires_dt < now:
                                     expired_count += 1
-                            except:
+                            except Exception:
                                 pass
 
                     self.console.print(

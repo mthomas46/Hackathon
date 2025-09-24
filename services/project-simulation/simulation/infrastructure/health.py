@@ -101,7 +101,7 @@ class SimulationHealthManager(HealthManager):
                     )
                     if dep_health.status == "healthy":
                         healthy_count += 1
-                except:
+                except Exception:
                     pass
 
         # Consider ecosystem healthy if at least 2 out of 3 critical services are available

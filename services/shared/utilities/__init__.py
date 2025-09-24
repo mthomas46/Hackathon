@@ -137,17 +137,6 @@ from .shutdown_service import (
     register_cleanup_function,
     register_shutdown_hook,
 )
-from .timeout_manager import (
-    HealthCheckTimeout,
-    ShutdownTimeout,
-    StartupTimeout,
-    TimeoutManager,
-    with_db_timeout,
-    with_health_timeout,
-    with_http_timeout,
-    with_shutdown_timeout,
-    with_startup_timeout,
-)
 
 # Import and expose key functions for easy access
 from .utilities import (
@@ -159,8 +148,8 @@ from .utilities import (
     safe_filename,
     sanitize_sql_identifier,
     setup_common_middleware,
-    utc_now,
     validate_sql_identifier,
+    utc_now,
 )
 
 __all__ = [
@@ -173,6 +162,8 @@ __all__ = [
     "safe_filename",
     "clean_string",
     "get_service_client",
+    "validate_sql_identifier",
+    "sanitize_sql_identifier",
     # Middleware
     "ServiceMiddleware",
     # Error handling

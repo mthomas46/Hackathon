@@ -319,7 +319,7 @@ def render_timeline_visualization(events: List[Dict[str, Any]]):
                         "correlation_id": event.get("correlation_id", "Unknown"),
                     }
                 )
-            except:
+            except Exception:
                 continue
 
     if timeline_data:
@@ -361,7 +361,7 @@ def render_event_details_table(events: List[Dict[str, Any]]):
             try:
                 dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                 formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
-            except:
+            except Exception:
                 formatted_time = timestamp
         else:
             formatted_time = "Unknown"
@@ -445,7 +445,7 @@ def render_event_frequency_chart(events: List[Dict[str, Any]]):
                 # Group by minute intervals
                 interval = dt.replace(second=0, microsecond=0)
                 time_intervals[interval] = time_intervals.get(interval, 0) + 1
-            except:
+            except Exception:
                 continue
 
     if time_intervals:
@@ -691,7 +691,7 @@ def generate_event_insights(events: List[Dict[str, Any]]) -> List[Dict[str, Any]
             if ts:
                 try:
                     timestamps.append(datetime.fromisoformat(ts.replace("Z", "+00:00")))
-                except:
+                except Exception:
                     continue
 
         if len(timestamps) > 1:

@@ -358,7 +358,7 @@ class CLICommands:
                 return False
             prompts = await self.clients.get_json("prompt-store/prompts?limit=1")
             return "prompts" in prompts
-        except:
+        except Exception:
             return False
 
     async def _test_interpreter_integration(self) -> bool:
@@ -369,7 +369,7 @@ class CLICommands:
                 return False
             result = await self.clients.post_json("interpreter/interpret", {"query": "analyze this document"})
             return "intent" in result
-        except:
+        except Exception:
             return False
 
     async def _test_orchestrator_integration(self) -> bool:
@@ -377,7 +377,7 @@ class CLICommands:
         try:
             health = await self.clients.get_json("orchestrator/health/system")
             return "overall_healthy" in health
-        except:
+        except Exception:
             return False
 
     async def _test_analysis_integration(self) -> bool:
@@ -385,7 +385,7 @@ class CLICommands:
         try:
             health = await self.clients.get_json("analysis-service/integration/health")
             return "integrations" in health
-        except:
+        except Exception:
             return False
 
     async def _test_cross_service_workflow(self) -> bool:
@@ -393,7 +393,7 @@ class CLICommands:
         try:
             result = await self.clients.post_json("orchestrator/query", {"query": "show me system status"})
             return "interpretation" in result
-        except:
+        except Exception:
             return False
 
     async def run(self):

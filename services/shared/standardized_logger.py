@@ -288,7 +288,7 @@ class StandardizedLogger:
 
             try:
                 self.metrics.open_files = len(process.open_files())
-            except:
+            except (OSError, IOError):
                 self.metrics.open_files = 0
 
             # Application metrics

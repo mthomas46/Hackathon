@@ -501,7 +501,7 @@ def render_event_timeline_chart(events: List[Dict[str, Any]]):
         try:
             timestamp = datetime.fromisoformat(event["timestamp"])
             timeline_data.append({"time": timestamp, "event_type": event["event_type"], "severity": event["severity"]})
-        except:
+        except ValueError:
             continue
 
     if timeline_data:
@@ -583,7 +583,7 @@ def render_anomaly_detection(events: List[Dict[str, Any]]):
                         "reason": f"Event at {hour}:00 (outside 9-17 business hours)",
                     }
                 )
-        except:
+        except Exception:
             continue
 
     # Check for rapid successive events (potential automation or attack)
@@ -593,7 +593,7 @@ def render_anomaly_detection(events: List[Dict[str, Any]]):
             timestamp = datetime.fromisoformat(event["timestamp"])
             minute_key = timestamp.strftime("%Y-%m-%d %H:%M")
             events_by_minute[minute_key] = events_by_minute.get(minute_key, 0) + 1
-        except:
+        except Exception:
             continue
 
     for minute_key, count in events_by_minute.items():
@@ -791,7 +791,7 @@ def get_earliest_event_date(events: List[Dict[str, Any]]) -> datetime.date:
             event_date = datetime.fromisoformat(event.get("timestamp", "")[:19])
             if event_date < earliest:
                 earliest = event_date
-        except:
+        except Exception:
             continue
 
     return earliest.date()

@@ -808,7 +808,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                                         "openapi_url": f"http://{service['name']}:{service['port']}/openapi.json",
                                     }
                                 )
-                    except:
+                    except Exception:
                         continue
                 else:
                     services_to_discover.append(
@@ -964,7 +964,7 @@ async def handle_discovery_endpoint(request: DiscoverRequest):
                             if response.status_code == 200:
                                 spec = response.json()
                                 break
-                    except:
+                    except Exception:
                         continue
 
                 if spec is None:

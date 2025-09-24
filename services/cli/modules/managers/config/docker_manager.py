@@ -245,7 +245,7 @@ class DockerManager(BaseManager):
             try:
                 compose_data = yaml.safe_load(content)
                 formatted_content = yaml.dump(compose_data, default_flow_style=False, indent=2)
-            except:
+            except Exception:
                 formatted_content = content
 
             self.display.show_panel(formatted_content, f"Docker Compose: {file_path.name}")

@@ -518,7 +518,7 @@ def render_control_history(simulation_id: str):
                 try:
                     dt = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                     st.write(dt.strftime("%H:%M:%S"))
-                except:
+                except ValueError:
                     st.write(timestamp[:19])
 
         with col3:
@@ -638,7 +638,7 @@ def render_control_timeline():
                 if time_key not in timeline_data:
                     timeline_data[time_key] = []
                 timeline_data[time_key].append(op)
-            except:
+            except ValueError:
                 continue
 
     # Display timeline
