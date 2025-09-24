@@ -1,945 +1,671 @@
-# Coding Standards & Patterns
+# 🏗️ Coding Standards & Architectural Patterns
 
 ## 📋 Overview
 
-This document establishes the coding standards and architectural patterns for the LLM Documentation Ecosystem service standardization initiative. These standards are derived from the analysis of well-implemented services (analysis-service, orchestrator, doc_store, prompt_store) that follow Domain-Driven Design (DDD) principles.
+This document establishes comprehensive coding standards for the LLM Documentation Ecosystem, following Domain-Driven Design (DDD) principles, REST architectural patterns, and KISS (Keep It Simple Stupid) / DRY (Don't Repeat Yourself) principles. All services must adhere to these standards for consistency, maintainability, and scalability.
 
-## 🏗️ Architectural Patterns
+## 🏛️ Architecture Principles
 
-### 1. Domain-Driven Design (DDD) Structure
+### Domain-Driven Design (DDD) Standards
 
-#### Standard Layer Organization
+#### 1. Layered Architecture
 ```
-services/{service-name}/
-├── domain/                    # Business logic layer
-│   ├── entities/             # Domain entities (dataclasses)
-│   ├── value_objects/        # Value objects (immutable dataclasses)
-│   ├── services/             # Domain services (business logic)
-│   ├── events/               # Domain events
-│   ├── factories/            # Entity factories
-│   ├── repositories/         # Repository interfaces
-│   ├── exceptions/           # Domain-specific exceptions
-│   └── validation/           # Domain validation rules
-├── application/               # Application layer
-│   ├── use_cases/           # Use cases (business workflows)
-│   ├── commands/            # CQRS commands
-│   ├── queries/             # CQRS queries
-│   ├── handlers/            # Command/query handlers
-│   ├── services/            # Application services
-│   ├── events/              # Application events
-│   ├── dto/                 # Data transfer objects
-│   └── validators/          # Input validation
-├── infrastructure/           # Infrastructure layer
-│   ├── repositories/        # Repository implementations
-│   ├── config/              # Configuration management
-│   ├── connections/         # External service connections
-│   ├── events/              # Event publishing/infrastructure
-│   └── migrations/          # Database migrations
-├── presentation/             # Presentation layer
-│   ├── controllers/         # HTTP controllers
-│   ├── middleware/          # HTTP middleware
-│   ├── models/              # API models (Pydantic)
-│   └── api/                 # API routes
-├── tests/                    # Test layer
-│   ├── unit/                # Unit tests
-│   ├── integration/         # Integration tests
-│   ├── e2e/                 # End-to-end tests
-│   └── fixtures/            # Test data
-├── config.yaml              # Service configuration
-├── main.py                  # Application entry point
-├── Dockerfile               # Container definition
-└── README.md               # Service documentation
+Presentation Layer (API/Controllers)
+├── Application Layer (Use Cases/Services)
+├── Domain Layer (Entities/Value Objects/Domain Services)
+└── Infrastructure Layer (Repositories/External Services)
 ```
 
-#### CQRS Pattern (When Applicable)
-For complex services with distinct read/write patterns:
-```
-application/
-├── cqrs/
-│   ├── command_bus.py       # Command dispatching
-│   ├── query_bus.py         # Query dispatching
-│   ├── commands.py          # Command definitions
-│   └── queries.py           # Query definitions
-└── handlers/
-    ├── command_handlers.py  # Command processors
-    └── query_handlers.py    # Query processors
-```
+**Requirements:**
+- **Strict separation** of concerns between layers
+- **Dependency inversion** - inner layers don't depend on outer layers
+- **Domain layer independence** - business logic free from infrastructure concerns
 
-### 2. Clean Architecture Principles
+#### 2. Domain Modeling Standards
 
-#### Dependency Rule
-- Inner layers (domain) should not depend on outer layers
-- Dependencies point inward only
-- Use dependency injection for cross-layer communication
+**Entities:**
+- Must have unique identity (`id` field)
+- Contain business logic methods
+- Use dataclasses with proper validation
+- Implement `from_dict()` and `to_dict()` for serialization
 
-#### Layer Responsibilities
-- **Domain Layer**: Business rules, entities, pure logic
-- **Application Layer**: Use cases, orchestration, coordination
-- **Infrastructure Layer**: External concerns (DB, APIs, frameworks)
-- **Presentation Layer**: HTTP, UI, external interfaces
-
-## 📝 Coding Standards
-
-### 1. Python Language Standards
-
-#### Imports
 ```python
-# Standard library imports (alphabetical)
-import logging
-from typing import Any, Dict, List, Optional
-
-# Third-party imports (alphabetical)
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
-
-# Local imports (relative, by layer)
-from ..domain.entities import Document
-from ..domain.repositories import DocumentRepository
-from ..infrastructure.config import DatabaseConfig
-```
-
-#### Type Hints
-```python
-# Always use type hints
-from typing import Any, Dict, List, Optional, Union
-
-def process_document(
-    document_id: str,
-    content: str,
-    metadata: Optional[Dict[str, Any]] = None
-) -> Document:
-    """Process a document with optional metadata."""
-    pass
-
-# Use Union for multiple possible types
-def validate_input(value: Union[str, int, float]) -> bool:
-    pass
-```
-
-#### Naming Conventions
-```python
-# Classes: PascalCase
-class DocumentService:
-    pass
-
-class DocumentRepository:
-    pass
-
-# Functions/Methods: snake_case
-def create_document():
-    pass
-
-def validate_document():
-    pass
-
-# Constants: UPPER_SNAKE_CASE
-MAX_DOCUMENT_SIZE = 1048576  # 1MB
-DEFAULT_TIMEOUT = 30
-
-# Private members: _leading_underscore
-class DocumentService:
-    def _validate_internal(self):
-        pass
-```
-
-### 2. Domain Layer Standards
-
-#### Entities (DataClasses)
-```python
-from dataclasses import dataclass, field
-from datetime import datetime
-from typing import List, Optional
-
-@dataclass(frozen=True)  # Immutable by default
-class DocumentId:
-    """Value object for document identifier."""
-    value: str
-
-    def __post_init__(self):
-        if not self.value or not isinstance(self.value, str):
-            raise ValueError("Document ID must be a non-empty string")
-
-@dataclass(frozen=True)
-class Document:
-    """Document domain entity."""
-    id: DocumentId
-    title: str
+@dataclass
+class Document(BaseEntity):
+    """Document entity following DDD standards."""
+    id: str
     content: str
-    created_at: datetime
-    updated_at: datetime
-    tags: List[str] = field(default_factory=list)
+    content_hash: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    correlation_id: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
 
-    def update_content(self, new_content: str) -> 'Document':
-        """Create new version with updated content."""
-        return Document(
-            id=self.id,
-            title=self.title,
-            content=new_content,
-            created_at=self.created_at,
-            updated_at=datetime.utcnow(),
-            tags=self.tags
-        )
+    def validate_content(self) -> None:
+        """Business rule validation."""
+        if not self.content or len(self.content.strip()) == 0:
+            raise ValueError("Document content cannot be empty")
+
+    def calculate_hash(self) -> str:
+        """Domain logic for content hashing."""
+        return hashlib.sha256(self.content.encode()).hexdigest()
 ```
 
-#### Value Objects
+**Value Objects:**
+- Immutable objects representing concepts
+- No identity, equality based on values
+- Used for validation and business rules
+
 ```python
 @dataclass(frozen=True)
 class EmailAddress:
-    """Email address value object."""
+    """Value object for email validation."""
     value: str
 
     def __post_init__(self):
-        # Validation logic here
-        if '@' not in self.value:
-            raise ValueError("Invalid email address")
+        if not self._is_valid_email(self.value):
+            raise ValueError(f"Invalid email address: {self.value}")
 
-    @property
-    def domain(self) -> str:
-        return self.value.split('@')[1]
-```
-
-#### Domain Services
-```python
-class DocumentAnalysisService:
-    """Domain service for document analysis logic."""
-
-    def analyze_document_quality(
-        self,
-        document: Document,
-        criteria: AnalysisCriteria
-    ) -> AnalysisResult:
-        """Analyze document quality against given criteria."""
-        # Pure business logic here
+    @staticmethod
+    def _is_valid_email(email: str) -> bool:
+        # Email validation logic
         pass
 ```
 
-#### Repository Interfaces
-```python
-from abc import ABC, abstractmethod
-from typing import List, Optional
+**Domain Services:**
+- Stateless services containing business logic
+- Don't belong to any single entity
+- Named with business meaning (not technical)
 
-class DocumentRepository(ABC):
-    """Repository interface for document persistence."""
+#### 3. Repository Pattern Standards
+
+**Base Repository Interface:**
+```python
+class BaseRepository(ABC, Generic[T]):
+    """Standardized repository interface."""
 
     @abstractmethod
-    async def save(self, document: Document) -> None:
-        """Save a document."""
+    async def save(self, entity: T) -> None:
         pass
 
     @abstractmethod
-    async def find_by_id(self, document_id: DocumentId) -> Optional[Document]:
-        """Find document by ID."""
+    async def find_by_id(self, entity_id: str) -> Optional[T]:
         pass
 
     @abstractmethod
-    async def find_all(self, limit: int = 100) -> List[Document]:
-        """Find all documents with limit."""
+    async def find_all(self, limit: int = 100, offset: int = 0) -> List[T]:
+        pass
+
+    @abstractmethod
+    async def update(self, entity_id: str, data: Dict[str, Any]) -> bool:
+        pass
+
+    @abstractmethod
+    async def delete(self, entity_id: str) -> bool:
         pass
 ```
 
-### 3. Application Layer Standards
+**SQL Repository Implementation:**
+- Use `aiosqlite` for async database operations
+- Implement proper connection management
+- Include SQL injection prevention
+- Use parameterized queries
 
-#### Use Cases
 ```python
-from ..domain.entities import Document, DocumentId
-from ..domain.repositories import DocumentRepository
-from ..domain.services import DocumentAnalysisService
+class SqlRepository(BaseRepository[T]):
+    """SQL-based repository with standardized patterns."""
 
-class AnalyzeDocumentUseCase:
-    """Use case for analyzing a document."""
-
-    def __init__(
-        self,
-        repository: DocumentRepository,
-        analysis_service: DocumentAnalysisService
-    ):
-        self.repository = repository
-        self.analysis_service = analysis_service
-
-    async def execute(self, document_id: str) -> AnalysisResult:
-        """Execute the document analysis use case."""
-        # Input validation
-        doc_id = DocumentId(document_id)
-
-        # Retrieve domain object
-        document = await self.repository.find_by_id(doc_id)
-        if not document:
-            raise DocumentNotFoundError(doc_id)
-
-        # Execute business logic
-        return await self.analysis_service.analyze_document_quality(
-            document,
-            AnalysisCriteria.default()
-        )
-```
-
-#### CQRS Commands/Queries
-```python
-from dataclasses import dataclass
-from typing import Optional
-
-@dataclass
-class CreateDocumentCommand:
-    """Command to create a new document."""
-    title: str
-    content: str
-    author_id: Optional[str] = None
-    command_id: str = field(default_factory=lambda: str(uuid4()))
-
-@dataclass
-class GetDocumentQuery:
-    """Query to retrieve a document."""
-    document_id: str
-    include_metadata: bool = False
-```
-
-### 4. Infrastructure Layer Standards
-
-#### Repository Implementations
-```python
-import aiosqlite
-from typing import List, Optional
-
-from ..domain.entities import Document, DocumentId
-from ..domain.repositories import DocumentRepository
-
-class SQLiteDocumentRepository(DocumentRepository):
-    """SQLite implementation of document repository."""
-
-    def __init__(self, connection_string: str):
+    def __init__(self, entity_class: type, connection_string: str):
+        self.entity_class = entity_class
         self.connection_string = connection_string
+        self._validate_table_name()
 
-    async def save(self, document: Document) -> None:
+    def _validate_table_name(self) -> None:
+        """Prevent SQL injection in table names."""
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
+
+    async def _execute_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
+        """Standardized query execution."""
         async with aiosqlite.connect(self.connection_string) as conn:
-            await conn.execute("""
-                INSERT OR REPLACE INTO documents
-                (id, title, content, created_at, updated_at, tags)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                document.id.value,
-                document.title,
-                document.content,
-                document.created_at.isoformat(),
-                document.updated_at.isoformat(),
-                ','.join(document.tags)
-            ))
-            await conn.commit()
-
-    async def find_by_id(self, document_id: DocumentId) -> Optional[Document]:
-        async with aiosqlite.connect(self.connection_string) as conn:
-            cursor = await conn.execute("""
-                SELECT id, title, content, created_at, updated_at, tags
-                FROM documents WHERE id = ?
-            """, (document_id.value,))
-
-            row = await cursor.fetchone()
-            if row:
-                return Document(
-                    id=DocumentId(row[0]),
-                    title=row[1],
-                    content=row[2],
-                    created_at=datetime.fromisoformat(row[3]),
-                    updated_at=datetime.fromisoformat(row[4]),
-                    tags=row[5].split(',') if row[5] else []
-                )
-        return None
+            conn.row_factory = aiosqlite.Row
+            cursor = await conn.execute(query, params)
+            rows = await cursor.fetchall()
+            return [dict(row) for row in rows]
 ```
 
-### 5. Presentation Layer Standards
+### REST API Design Standards
 
-#### Controllers with OpenAPI/Swagger Annotations
+#### 1. Resource Naming
+- Use nouns, not verbs: `/documents`, `/users`, `/analyses`
+- Use plural forms: `/documents/123`, not `/document/123`
+- Hierarchical relationships: `/documents/123/versions`
+
+#### 2. HTTP Methods
+```
+GET    /documents      # List documents
+GET    /documents/123  # Get specific document
+POST   /documents      # Create new document
+PUT    /documents/123  # Update document (full)
+PATCH  /documents/123  # Update document (partial)
+DELETE /documents/123  # Delete document
+```
+
+#### 3. HTTP Status Codes
+- **200 OK**: Successful GET/PUT/PATCH
+- **201 Created**: Successful POST
+- **204 No Content**: Successful DELETE
+- **400 Bad Request**: Invalid request data
+- **401 Unauthorized**: Authentication required
+- **403 Forbidden**: Authorization failed
+- **404 Not Found**: Resource doesn't exist
+- **409 Conflict**: Resource state conflict
+- **422 Unprocessable Entity**: Validation errors
+- **500 Internal Server Error**: Server errors
+
+#### 4. Response Format Standards
 ```python
-from fastapi import APIRouter, Depends, HTTPException, Path, Body
-from typing import Optional
+# Standardized response structure
+{
+    "success": bool,
+    "data": Any,  # Response payload
+    "message": str,  # Human-readable message
+    "errors": Optional[List[Dict]],  # Error details
+    "request_id": Optional[str],  # Correlation ID
+    "timestamp": str  # ISO format timestamp
+}
+```
 
-from ..application.use_cases import AnalyzeDocumentUseCase
-from ..presentation.models import AnalyzeDocumentRequest, AnalysisResponse
+### KISS & DRY Principles
 
-router = APIRouter(prefix="/documents", tags=["Documents"])
+#### 1. Keep It Simple Stupid (KISS)
+- **Simple solutions** over complex ones
+- **Clear, readable code** over clever optimizations
+- **One responsibility** per function/class
+- **Avoid over-engineering**
 
+#### 2. Don't Repeat Yourself (DRY)
+- **Extract common logic** into shared utilities
+- **Use base classes** for common patterns
+- **Configuration over code** for variability
+- **Templates and generators** for repetitive structures
+
+## 📚 OpenAPI/Swagger Documentation Standards
+
+### Controller Documentation Requirements
+
+#### 1. Endpoint Documentation
+```python
 @router.post(
-    "/{document_id}/analyze",
-    response_model=AnalysisResponse,
-    summary="Analyze Document Quality",
+    "/documents",
+    summary="Create a new document",
     description="""
-    Perform comprehensive quality analysis on a document.
+    Create a new document in the system with content validation and metadata.
 
-    This endpoint analyzes the document for:
-    - Content quality and readability
-    - Structural issues and formatting problems
-    - Consistency with organizational standards
-    - Potential improvements and recommendations
-
-    **Required Permissions:** documents:read, analysis:execute
-
-    **Rate Limit:** 10 requests per minute
+    **Business Rules:**
+    - Content cannot be empty
+    - Maximum size: 10MB
+    - Content hash is automatically calculated
     """,
+    response_model=DocumentResponse,
     responses={
-        200: {
-            "description": "Analysis completed successfully",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "document_id": "doc-123",
-                        "quality_score": 0.85,
-                        "issues": ["Minor formatting issue on line 42"],
-                        "recommendations": ["Consider adding more descriptive headings"],
-                        "analyzed_at": "2024-01-15T10:30:00Z"
-                    }
-                }
-            }
-        },
-        400: {
-            "description": "Invalid request parameters or document content",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Document ID must be a valid UUID format"}
-                }
-            }
-        },
-        404: {
-            "description": "Document not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Document with ID 'doc-123' not found"}
-                }
-            }
-        },
-        422: {
-            "description": "Validation error in request data",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": [
-                            {"field": "criteria.min_score", "message": "Must be between 0.0 and 1.0"}
-                        ]
-                    }
-                }
-            }
-        },
-        429: {
-            "description": "Rate limit exceeded",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Too many requests. Try again in 60 seconds"}
-                }
-            }
-        },
-        500: {
-            "description": "Internal server error",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "Analysis service temporarily unavailable"}
-                }
-            }
-        }
+        201: {"description": "Document created successfully"},
+        400: {"description": "Invalid request data"},
+        422: {"description": "Validation error"}
     },
-    tags=["Analysis"]
+    tags=["Documents"]
 )
-async def analyze_document(
-    document_id: str = Path(
-        ...,
-        description="Unique identifier of the document to analyze",
-        example="doc-123",
-        min_length=1,
-        max_length=100
-    ),
-    request: AnalyzeDocumentRequest = Body(
-        ...,
-        description="Analysis configuration and criteria",
-        example={
-            "criteria": {
-                "min_score": 0.7,
-                "check_formatting": True,
-                "check_consistency": True
-            },
-            "include_recommendations": True
-        }
-    ),
-    use_case: AnalyzeDocumentUseCase = Depends(get_analyze_use_case)
-):
-    """Analyze a document for quality and issues.
-
-    Performs automated analysis using configured detectors and returns
-    detailed quality metrics, identified issues, and improvement recommendations.
-    """
-    try:
-        result = await use_case.execute(document_id, request.criteria)
-        return AnalysisResponse.from_domain(result)
-    except DocumentNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Document with ID '{document_id}' not found"
-        )
-    except ValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except AnalysisTimeoutError:
-        raise HTTPException(
-            status_code=408,
-            detail="Analysis request timed out. Please try again."
-        )
-```
-
-### 6. OpenAPI/Swagger Documentation Standards
-
-#### API Documentation Requirements
-All REST endpoints MUST include comprehensive OpenAPI/Swagger documentation:
-
-1. **Summary and Description**: Clear, concise endpoint purpose and detailed description
-2. **Response Models**: Proper Pydantic schemas for all responses
-3. **Request Models**: Validated request bodies with examples
-4. **Status Codes**: All possible HTTP status codes documented
-5. **Parameter Documentation**: Path, query, and body parameters fully described
-6. **Authentication**: Security requirements clearly specified
-7. **Examples**: Realistic request/response examples
-8. **Tags**: Logical grouping for API organization
-
-#### Router Configuration
-```python
-from fastapi import APIRouter
-
-# Use descriptive tags for API organization
-router = APIRouter(
-    prefix="/api/v1/documents",
-    tags=["Documents"],
-    responses={
-        401: {"description": "Unauthorized - Invalid or missing authentication"},
-        403: {"description": "Forbidden - Insufficient permissions"},
-        500: {"description": "Internal Server Error"}
-    }
-)
-```
-
-#### Parameter Documentation
-```python
-from fastapi import Query, Path, Body
-from pydantic import Field
-
-@router.get("/{document_id}")
-async def get_document(
-    document_id: str = Path(
-        ...,
-        description="Unique identifier of the document",
-        example="doc-12345",
-        min_length=1,
-        max_length=100,
-        regex=r"^[a-zA-Z0-9_-]+$"  # Custom validation
-    ),
-    include_metadata: bool = Query(
-        False,
-        description="Whether to include full metadata in response",
-        example=True
-    ),
-    version: Optional[str] = Query(
-        None,
-        description="Specific version to retrieve",
-        example="v1.2.0",
-        min_length=1,
-        max_length=20
-    )
-):
-    """Retrieve a document by ID with optional version and metadata inclusion."""
+async def create_document(request: DocumentRequest) -> DocumentResponse:
     pass
 ```
 
-#### Pydantic Models with OpenAPI Annotations
+#### 2. Parameter Documentation
 ```python
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from datetime import datetime
+@router.get(
+    "/documents",
+    summary="List documents with pagination",
+    parameters=[
+        {
+            "name": "limit",
+            "in": "query",
+            "schema": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 50},
+            "description": "Maximum number of documents to return"
+        },
+        {
+            "name": "offset",
+            "in": "query",
+            "schema": {"type": "integer", "minimum": 0, "default": 0},
+            "description": "Number of documents to skip"
+        }
+    ]
+)
+async def list_documents(limit: int = Query(50, ge=1, le=1000), offset: int = Query(0, ge=0)):
+    pass
+```
 
-class DocumentResponse(BaseModel):
-    """Response model for document data with comprehensive OpenAPI documentation."""
+#### 3. Pydantic Model Documentation
+```python
+class DocumentRequest(BaseModel):
+    """Request model for document creation."""
 
-    id: str = Field(
+    content: str = Field(
         ...,
-        description="Unique identifier for the document",
-        example="doc-12345",
         min_length=1,
-        max_length=100
+        max_length=10485760,  # 10MB
+        description="The document content text",
+        example="This is the content of my document..."
     )
 
     title: str = Field(
         ...,
-        description="Document title or headline",
-        example="API Design Guidelines",
         min_length=1,
-        max_length=200
-    )
-
-    content: str = Field(
-        ...,
-        description="Full document content in markdown format",
-        example="# Introduction\n\nThis document covers API design best practices...",
-        min_length=1
-    )
-
-    status: str = Field(
-        "draft",
-        description="Current document status",
-        example="published",
-        enum=["draft", "review", "published", "archived"]
-    )
-
-    created_at: datetime = Field(
-        ...,
-        description="Timestamp when document was first created",
-        example="2024-01-15T10:30:00Z"
-    )
-
-    updated_at: datetime = Field(
-        ...,
-        description="Timestamp of last modification",
-        example="2024-01-20T14:22:00Z"
-    )
-
-    tags: List[str] = Field(
-        default_factory=list,
-        description="List of tags associated with the document",
-        example=["api", "documentation", "guidelines"],
-        max_items=50
+        max_length=200,
+        description="Document title",
+        example="My Important Document"
     )
 
     metadata: Optional[Dict[str, Any]] = Field(
-        None,
-        description="Additional metadata key-value pairs",
-        example={"author": "John Doe", "department": "Engineering"}
+        default_factory=dict,
+        description="Additional metadata for the document",
+        example={"author": "John Doe", "tags": ["important", "draft"]}
     )
 
     class Config:
         """Pydantic configuration."""
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
         schema_extra = {
             "example": {
-                "id": "doc-12345",
-                "title": "API Design Guidelines",
-                "content": "# Introduction\n\nThis document covers API design best practices...",
-                "status": "published",
-                "created_at": "2024-01-15T10:30:00Z",
-                "updated_at": "2024-01-20T14:22:00Z",
-                "tags": ["api", "documentation", "guidelines"],
-                "metadata": {
-                    "author": "John Doe",
-                    "department": "Engineering",
-                    "word_count": 1250
-                }
+                "content": "This is a sample document content...",
+                "title": "Sample Document",
+                "metadata": {"author": "Jane Smith", "priority": "high"}
             }
         }
-
-    @classmethod
-    def from_domain(cls, document: Document) -> 'DocumentResponse':
-        """Create response from domain entity."""
-        return cls(
-            id=document.id.value,
-            title=document.title,
-            content=document.content,
-            status=document.status,
-            created_at=document.created_at,
-            updated_at=document.updated_at,
-            tags=document.tags,
-            metadata=document.metadata
-        )
 ```
 
-#### Error Response Documentation
+#### 4. Response Model Documentation
 ```python
-@router.post(
-    "/documents",
-    response_model=DocumentResponse,
-    responses={
-        201: {
-            "description": "Document created successfully",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "id": "doc-12345",
-                        "title": "New Document",
-                        "status": "draft",
-                        "created_at": "2024-01-15T10:30:00Z"
-                    }
-                }
-            }
-        },
-        400: {
-            "description": "Invalid request data",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "validation_error",
-                        "message": "Request validation failed",
-                        "errors": [
-                            {"field": "title", "message": "Title is required"},
-                            {"field": "content", "message": "Content cannot be empty"}
-                        ]
-                    }
-                }
-            }
-        },
-        409: {
-            "description": "Document with this title already exists",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "conflict_error",
-                        "message": "A document with this title already exists",
-                        "existing_id": "doc-67890"
-                    }
-                }
+class DocumentResponse(BaseModel):
+    """Response model for document operations."""
+
+    id: str = Field(..., description="Unique document identifier")
+    content: str = Field(..., description="Document content")
+    title: str = Field(..., description="Document title")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Document metadata")
+    created_at: datetime = Field(..., description="Creation timestamp")
+    updated_at: Optional[datetime] = Field(None, description="Last update timestamp")
+
+    class Config:
+        """Pydantic configuration."""
+        json_encoders = {datetime: lambda v: v.isoformat()}
+        schema_extra = {
+            "example": {
+                "id": "doc_12345",
+                "content": "Document content here...",
+                "title": "My Document",
+                "metadata": {"author": "John Doe"},
+                "created_at": "2023-09-24T10:30:00Z"
             }
         }
-    }
-)
-async def create_document(request: CreateDocumentRequest):
-    """Create a new document."""
-    pass
 ```
 
-#### API Versioning and Deprecation
+#### 5. Error Response Documentation
 ```python
-@router.get(
-    "/documents/{document_id}",
-    deprecated=True,
-    summary="Get Document (Deprecated)",
-    description="""
-    ⚠️ **DEPRECATED**: Use `/api/v2/documents/{document_id}` instead.
+class ErrorResponse(BaseModel):
+    """Standardized error response."""
 
-    This endpoint is deprecated and will be removed in version 3.0.0.
-    Please migrate to the new version which includes additional metadata fields.
-    """,
-    responses={
-        200: {"description": "Document retrieved (deprecated format)"},
-        410: {"description": "Endpoint permanently removed - use v2 API"}
-    }
-)
-async def get_document_v1(document_id: str):
-    """Get document using deprecated format."""
-    pass
+    success: bool = Field(default=False, description="Always false for errors")
+    message: str = Field(..., description="Human-readable error message")
+    errors: List[Dict[str, Any]] = Field(..., description="Detailed error information")
+    request_id: Optional[str] = Field(None, description="Request correlation ID")
+    timestamp: str = Field(..., description="Error timestamp")
 
-@router.get(
-    "/v2/documents/{document_id}",
-    summary="Get Document v2",
-    description="Retrieve a document with enhanced metadata support.",
-    response_model=DocumentResponseV2
-)
-async def get_document_v2(document_id: str):
-    """Get document using current format."""
-    pass
+    class Config:
+        """Pydantic configuration."""
+        schema_extra = {
+            "example": {
+                "success": False,
+                "message": "Validation failed",
+                "errors": [
+                    {"field": "content", "message": "Content cannot be empty"},
+                    {"field": "title", "message": "Title is required"}
+                ],
+                "request_id": "req_abc123",
+                "timestamp": "2023-09-24T10:30:00Z"
+            }
+        }
 ```
 
-#### Tag Organization
-Use consistent tag naming for API organization:
-- **Core Resources**: `Documents`, `Users`, `Projects`
-- **Operations**: `Analysis`, `Search`, `Import/Export`
-- **Management**: `Administration`, `Monitoring`, `Configuration`
-- **Specialized**: `Authentication`, `Webhooks`, `Bulk Operations`
+### API Documentation Standards
 
-#### FastAPI Application Configuration
+#### 1. Service-Level Documentation
 ```python
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 app = FastAPI(
-    title="Document Service API",
+    title="Document Store Service",
     description="""
-    Comprehensive document management and analysis service.
+    Advanced document storage and analysis service with comprehensive features.
 
     ## Features
-    - Document CRUD operations with versioning
-    - Quality analysis and automated improvements
-    - Full-text search with advanced filtering
-    - Bulk operations and batch processing
-    - Webhook integrations and notifications
+    - Document storage with versioning
+    - Content analysis and tagging
+    - Full-text search capabilities
+    - Metadata management
+    - Audit trail and lifecycle management
 
-    ## Authentication
-    All endpoints require Bearer token authentication.
-    Include `Authorization: Bearer <token>` header in requests.
+    ## API Version
+    This is version 1.0.0 of the Document Store API.
     """,
-    version="2.1.0",
+    version="1.0.0",
     contact={
-        "name": "API Support",
-        "email": "api-support@company.com",
-        "url": "https://docs.company.com/support"
+        "name": "Document Store Team",
+        "email": "docs@company.com",
+        "url": "https://docs.company.com"
     },
     license_info={
         "name": "MIT",
         "url": "https://opensource.org/licenses/MIT"
+    }
+)
+```
+
+#### 2. Tag Organization
+```python
+tags_metadata = [
+    {
+        "name": "Documents",
+        "description": "Document management operations",
+        "externalDocs": {
+            "description": "Find out more",
+            "url": "https://docs.company.com/documents"
+        }
     },
-    docs_url="/docs",
-    redoc_url="/redoc",
-    openapi_url="/openapi.json"
-)
+    {
+        "name": "Search",
+        "description": "Search and filtering operations"
+    },
+    {
+        "name": "Analytics",
+        "description": "Document analytics and reporting"
+    }
+]
 
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://app.company.com"],
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
-)
+app = FastAPI(..., openapi_tags=tags_metadata)
 ```
 
-### 6. Testing Standards
-
-#### Unit Test Structure
+#### 3. Security Documentation
 ```python
-import pytest
-from unittest.mock import AsyncMock, Mock
-from ..domain.entities import Document, DocumentId
-from ..domain.services import DocumentAnalysisService
+security_schemes = {
+    "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "JWT token authentication"
+    },
+    "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key authentication"
+    }
+}
 
-class TestDocumentAnalysisService:
-    """Test cases for document analysis service."""
+app = FastAPI(..., openapi_components={"securitySchemes": security_schemes})
+```
 
-    @pytest.fixture
-    def analysis_service(self):
-        return DocumentAnalysisService()
+## 🧪 Testing Standards
 
-    @pytest.fixture
-    def sample_document(self):
-        return Document(
-            id=DocumentId("test-doc-123"),
+### Unit Testing Requirements
+- **Test coverage**: >90% for all services
+- **Test naming**: `test_[function_name]_[scenario]`
+- **Arrange-Act-Assert** pattern
+- **Mock external dependencies**
+- **Test edge cases and error conditions**
+
+```python
+class TestDocumentService:
+    """Unit tests for DocumentService."""
+
+    def test_create_document_success(self):
+        """Test successful document creation."""
+        # Arrange
+        service = DocumentService()
+        request = DocumentRequest(
             title="Test Document",
-            content="This is test content.",
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            content="Test content",
+            metadata={"author": "Test User"}
         )
 
-    def test_analyze_quality_high_score(self, analysis_service, sample_document):
-        """Test quality analysis returns high score for good content."""
-        result = analysis_service.analyze_document_quality(
-            sample_document,
-            AnalysisCriteria.default()
+        # Act
+        result = service.create_document(request)
+
+        # Assert
+        assert result.title == "Test Document"
+        assert result.content.text == "Test content"
+        assert result.metadata["author"] == "Test User"
+
+    def test_create_document_validation_error(self):
+        """Test document creation with validation error."""
+        # Arrange
+        service = DocumentService()
+        request = DocumentRequest(
+            title="",  # Invalid: empty title
+            content="Test content"
         )
 
-        assert result.score >= 0.8
-        assert len(result.issues) == 0
+        # Act & Assert
+        with pytest.raises(ValueError, match="Title cannot be empty"):
+            service.create_document(request)
 ```
 
-#### Integration Test Structure
-```python
-import pytest
-from httpx import AsyncClient
-from ..main import app
+### Integration Testing Standards
+- **Test real dependencies** where safe
+- **Use test databases** for data persistence
+- **Test complete workflows**
+- **Verify side effects**
 
-@pytest.mark.asyncio
-class TestDocumentAPI:
-    """Integration tests for document API."""
-
-    async def test_create_and_retrieve_document(self, client: AsyncClient):
-        """Test creating and retrieving a document."""
-        # Create document
-        create_response = await client.post(
-            "/documents",
-            json={
-                "title": "Integration Test Document",
-                "content": "Test content for integration testing."
-            }
-        )
-        assert create_response.status_code == 201
-        document_data = create_response.json()
-
-        # Retrieve document
-        doc_id = document_data["id"]
-        get_response = await client.get(f"/documents/{doc_id}")
-        assert get_response.status_code == 200
-
-        retrieved = get_response.json()
-        assert retrieved["title"] == "Integration Test Document"
+### Test Organization
+```
+tests/
+├── unit/
+│   ├── domain/
+│   ├── infrastructure/
+│   └── application/
+├── integration/
+│   ├── api/
+│   └── services/
+└── e2e/
+    └── workflows/
 ```
 
-## 🔧 Development Practices
+## 🛠️ Code Quality Standards
 
-### 1. Code Organization
-- One responsibility per class/function
-- Small, focused methods (< 20 lines)
-- Clear separation of concerns
-- Dependency injection over direct instantiation
+### Naming Conventions
+- **Classes**: `PascalCase` (e.g., `DocumentService`, `UserRepository`)
+- **Functions/Methods**: `snake_case` (e.g., `create_document`, `validate_user`)
+- **Variables**: `snake_case` (e.g., `user_id`, `document_list`)
+- **Constants**: `UPPER_SNAKE_CASE` (e.g., `MAX_FILE_SIZE`, `DEFAULT_TIMEOUT`)
 
-### 2. Error Handling
+### Code Structure Standards
+- **Maximum line length**: 88 characters (Black formatter default)
+- **Maximum function length**: 50 lines
+- **Maximum class length**: 300 lines
+- **One class per file** (except simple related classes)
+- **Import organization**: Standard library, third-party, local imports
+
+### Error Handling Standards
 ```python
-# Domain exceptions
+# Use specific exceptions
 class DocumentNotFoundError(ValueError):
-    """Raised when document is not found."""
+    """Raised when a document cannot be found."""
     pass
 
-class ValidationError(ValueError):
-    """Raised when validation fails."""
+class DocumentValidationError(ValueError):
+    """Raised when document validation fails."""
     pass
 
-# Application error handling
+# Consistent error handling pattern
 try:
-    result = await use_case.execute(document_id)
+    document = await document_service.get_by_id(document_id)
+    if not document:
+        raise DocumentNotFoundError(f"Document {document_id} not found")
 except DocumentNotFoundError:
-    # Handle domain error
     raise HTTPException(status_code=404, detail="Document not found")
-except ValidationError as e:
-    # Handle validation error
-    raise HTTPException(status_code=400, detail=str(e))
+except DocumentValidationError as e:
+    raise HTTPException(status_code=422, detail=str(e))
 ```
 
-### 3. Async/Await Patterns
+## 🔧 Configuration Standards
+
+### Environment-Based Configuration
 ```python
-# Always use async for I/O operations
-async def create_document(self, document: Document) -> None:
-    async with self.connection_pool.get_connection() as conn:
-        await conn.execute("INSERT INTO documents ...", document.values())
+# Use pydantic-settings for configuration
+from pydantic_settings import BaseSettings
 
-# Use sync for pure computation
-def calculate_score(self, content: str) -> float:
-    return len(content.split()) / 100.0  # Pure function
+class ServiceConfig(BaseSettings):
+    """Service configuration with validation."""
+
+    # Service identity
+    service_name: str = Field(default="unknown-service")
+    service_version: str = Field(default="1.0.0")
+
+    # Database configuration
+    database_url: str = Field(...)
+    database_pool_size: int = Field(default=10, ge=1, le=100)
+
+    # External service URLs
+    discovery_agent_url: str = Field(...)
+    orchestrator_url: str = Field(...)
+
+    # Security settings
+    secret_key: str = Field(default_factory=lambda: secrets.token_hex(32))
+    jwt_expiration_hours: int = Field(default=24, ge=1, le=168)
+
+    class Config:
+        """Pydantic configuration."""
+        env_prefix = "SERVICE_"
+        case_sensitive = False
 ```
 
-### 4. Logging Standards
+### Configuration Loading Pattern
 ```python
-import logging
+def load_service_config(service_type: str) -> ServiceConfig:
+    """Load service configuration from multiple sources."""
+    loader = ConfigLoader()
+    loader.add_environment_source("SERVICE_")
+    loader.add_file_source("./config.yaml")
 
-logger = logging.getLogger(__name__)
-
-class DocumentService:
-    async def process_document(self, document_id: str):
-        logger.info("Processing document", extra={
-            "document_id": document_id,
-            "operation": "process_document",
-            "service": "DocumentService"
-        })
-
-        try:
-            # Business logic
-            result = await self._process(document_id)
-
-            logger.info("Document processed successfully", extra={
-                "document_id": document_id,
-                "result": result.status,
-                "duration_ms": result.duration
-            })
-
-        except Exception as e:
-            logger.error("Failed to process document", extra={
-                "document_id": document_id,
-                "error": str(e),
-                "error_type": type(e).__name__
-            }, exc_info=True)
-            raise
+    return loader.load(ServiceConfig)
 ```
 
-## 📊 Quality Metrics
+## 📊 Performance Standards
 
-### Code Quality Targets
-- **Cyclomatic Complexity**: < 10 per method
-- **Method Length**: < 20 lines
-- **Class Length**: < 200 lines
-- **Test Coverage**: > 90%
-- **Type Hint Coverage**: 100%
+### Response Time Targets
+- **API endpoints**: <200ms 95th percentile
+- **Database queries**: <50ms average
+- **External API calls**: <500ms timeout
+- **Service startup**: <30 seconds
 
-### Documentation Standards
-- All public methods documented with docstrings
-- Complex business logic explained
-- API endpoints documented with examples
-- Error conditions documented
+### Resource Usage Limits
+- **Memory per service**: <512MB
+- **CPU usage**: <80% sustained
+- **Database connections**: <20 per service
+- **Concurrent requests**: Based on load testing
+
+### Caching Standards
+- **Cache frequently accessed data**
+- **Use TTL (Time To Live) appropriately**
+- **Implement cache invalidation strategies**
+- **Monitor cache hit rates**
+
+## 🔒 Security Standards
+
+### Input Validation
+- **Validate all inputs** at API boundaries
+- **Use parameterized queries** for database operations
+- **Sanitize user inputs** to prevent injection attacks
+- **Implement rate limiting** on public endpoints
+
+### Authentication & Authorization
+- **JWT tokens** for API authentication
+- **Role-based access control** (RBAC)
+- **API key authentication** for service-to-service calls
+- **Secure password hashing** (bcrypt/Argon2)
+
+### Data Protection
+- **Encrypt sensitive data** at rest and in transit
+- **Implement audit logging** for sensitive operations
+- **Use HTTPS** for all external communications
+- **Regular security updates** of dependencies
+
+## 📝 Documentation Standards
+
+### Code Documentation
+```python
+def create_document(
+    self,
+    title: str,
+    content: str,
+    metadata: Optional[Dict[str, Any]] = None
+) -> Document:
+    """
+    Create a new document with validation.
+
+    Args:
+        title: Document title (required, 1-200 characters)
+        content: Document content (required, max 10MB)
+        metadata: Optional metadata dictionary
+
+    Returns:
+        Created Document entity
+
+    Raises:
+        ValueError: If validation fails
+        DocumentExistsError: If document with same content exists
+
+    Example:
+        >>> service = DocumentService()
+        >>> doc = service.create_document(
+        ...     title="My Document",
+        ...     content="Document content...",
+        ...     metadata={"author": "John Doe"}
+        ... )
+        >>> doc.title
+        'My Document'
+    """
+```
+
+### README Standards
+Each service must have a comprehensive README with:
+- Service overview and purpose
+- Architecture diagram
+- API documentation links
+- Setup and deployment instructions
+- Configuration options
+- Testing instructions
+
+## 🎯 Compliance Checklist
+
+### Pre-Commit Checks
+- [ ] All flake8 linting passes
+- [ ] Black formatting applied
+- [ ] isort import sorting correct
+- [ ] Type hints present (mypy compatible)
+- [ ] Test coverage >90%
+- [ ] OpenAPI documentation complete
+- [ ] Security scan passes
+
+### Code Review Standards
+- [ ] DDD principles followed
+- [ ] REST conventions adhered to
+- [ ] KISS/DRY principles applied
+- [ ] Error handling comprehensive
+- [ ] Logging appropriate
+- [ ] Documentation complete
+- [ ] Tests included and passing
+
+### Deployment Readiness
+- [ ] Configuration documented
+- [ ] Environment variables specified
+- [ ] Health checks implemented
+- [ ] Monitoring configured
+- [ ] Rollback plan documented
 
 ---
 
-*These standards will be enforced through code reviews and automated tooling. All new services must follow these patterns, and existing services will be refactored to comply.*
+*These standards ensure consistency, maintainability, and scalability across all services in the LLM Documentation Ecosystem. All new code must comply with these standards, and existing code should be gradually migrated to meet these requirements.*
