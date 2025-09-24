@@ -31,6 +31,21 @@ from .error_handling import (
     ValidationException,
 )
 
+# Domain base classes - always available for service development
+from ..domain.exceptions import (
+    DomainError,
+    RepositoryError,
+    EntityNotFoundError,
+    DuplicateEntityError,
+    ServiceError,
+    BusinessRuleViolationError,
+    ValidationError as DomainValidationError,
+    create_validation_error,
+    create_business_rule_error,
+    create_not_found_error,
+    create_duplicate_error,
+)
+
 # Consolidated response handlers - always available
 from ..presentation.responses import (
     create_success_response,
@@ -101,6 +116,14 @@ def __getattr__(name: str):
 
         # Middleware
         'ServiceMiddleware': ('.middleware', 'ServiceMiddleware'),
+
+        # Base classes for service development
+        'BaseRepository': ('..domain.base_repository', 'BaseRepository'),
+        'SqlRepository': ('..domain.base_repository', 'SqlRepository'),
+        'InMemoryRepository': ('..domain.base_repository', 'InMemoryRepository'),
+        'BaseService': ('..domain.base_service', 'BaseService'),
+        'CrudService': ('..domain.base_service', 'CrudService'),
+        'BaseEntity': ('..domain.base_repository', 'BaseEntity'),
     }
 
     if name in lazy_imports:
@@ -126,6 +149,18 @@ __all__ = [
     # Error handling
     "ServiceException",
     "ValidationException",
+    # Domain exceptions
+    "DomainError",
+    "RepositoryError",
+    "EntityNotFoundError",
+    "DuplicateEntityError",
+    "ServiceError",
+    "BusinessRuleViolationError",
+    "DomainValidationError",
+    "create_validation_error",
+    "create_business_rule_error",
+    "create_not_found_error",
+    "create_duplicate_error",
     # Consolidated response handlers
     "create_success_response",
     "create_error_response",
@@ -134,4 +169,11 @@ __all__ = [
     "create_list_response",
     "create_crud_response",
     "APIResponse",
+    # Base classes
+    "BaseEntity",
+    "BaseRepository",
+    "SqlRepository",
+    "InMemoryRepository",
+    "BaseService",
+    "CrudService",
 ]
