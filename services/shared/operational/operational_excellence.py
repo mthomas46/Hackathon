@@ -554,7 +554,7 @@ class ServiceDiscovery:
                                 "discovery_method": "docker_network",
                                 "discovered_at": datetime.now().isoformat(),
                             }
-                        except:
+                        except Exception:
                             continue
 
         except FileNotFoundError:

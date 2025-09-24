@@ -105,7 +105,7 @@ def create_application() -> FastAPI:
     # Initialize repositories
     document_repository = SQLiteDocumentRepository()
     analysis_repository = SQLiteAnalysisRepository()
-    finding_repository = SQLiteFindingRepository()
+    SQLiteFindingRepository()
 
     # Initialize domain services
     document_service = DocumentService()

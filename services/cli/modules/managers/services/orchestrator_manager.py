@@ -655,7 +655,7 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
                             else:
                                 progress = status_response.get("progress", 0)
                                 self.console.print(f"[yellow]⏳ Demo progress: {progress}%[/yellow]")
-                        except:
+                        except Exception:
                             continue
                 else:
                     self.console.print("[red]❌ Failed to start E2E demo[/red]")

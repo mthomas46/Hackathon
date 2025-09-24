@@ -176,7 +176,7 @@ class OrchestratorMonitor:
                 try:
                     ts = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                     timestamps.append(ts)
-                except:
+                except ValueError:
                     pass
 
             if "ingestion" in event_type.lower():
@@ -228,7 +228,7 @@ class OrchestratorMonitor:
             if workflow.get("duration"):
                 try:
                     durations.append(float(workflow["duration"]))
-                except:
+                except Exception:
                     pass
 
         avg_duration = sum(durations) / len(durations) if durations else 0

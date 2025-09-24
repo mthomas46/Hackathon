@@ -1580,7 +1580,7 @@ class SimpleSummarizer:
                         return datetime.strptime(date_str, fmt)
                     except ValueError:
                         continue
-            except:
+            except ValueError:
                 pass
 
         return None
@@ -1669,7 +1669,7 @@ class JiraClient:
                     try:
                         error_json = response.json()
                         error_detail = error_json.get("errors", {}).get("summary", [error_detail])[0]
-                    except:
+                    except Exception:
                         pass
 
                     return {

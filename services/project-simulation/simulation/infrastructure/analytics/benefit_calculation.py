@@ -386,7 +386,7 @@ class BenefitCalculator:
                 "value": quality_analysis.get("overall_score", 8.0),
                 "context": {"data_points": 10, "time_span_days": time_period_days},
             }
-        except:
+        except Exception:
             metrics["code_quality_score"] = {
                 "value": 8.0,  # Fallback value
                 "context": {"data_points": 1, "time_span_days": time_period_days},

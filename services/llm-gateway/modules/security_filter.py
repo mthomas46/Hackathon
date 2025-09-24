@@ -100,7 +100,7 @@ class SecurityFilter:
                 # Parse comma-separated keywords
                 additional_keywords = {kw.strip().lower() for kw in config_keywords.split(",")}
                 default_keywords.update(additional_keywords)
-        except:
+        except Exception:
             pass
 
         return default_keywords

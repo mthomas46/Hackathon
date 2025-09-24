@@ -103,7 +103,7 @@ class HealthManager:
             try:
                 # For orchestrator, workflows are considered loaded if the service is running
                 health_status.workflows_loaded = True
-            except:
+            except Exception:
                 health_status.workflows_loaded = False
 
         elif self.service_name == "doc_store":
@@ -111,7 +111,7 @@ class HealthManager:
             try:
                 # For doc_store, database is considered connected if the service is running
                 health_status.database_connected = True
-            except:
+            except Exception:
                 health_status.database_connected = False
 
         elif self.service_name == "analysis-service":
@@ -119,49 +119,49 @@ class HealthManager:
             try:
                 # For analysis-service, models are considered loaded if the service is running
                 health_status.models_loaded = True
-            except:
+            except Exception:
                 health_status.models_loaded = False
 
         elif self.service_name == "frontend":
             # Check API connectivity
             try:
                 health_status.api_connected = True
-            except:
+            except Exception:
                 health_status.api_connected = False
 
         elif self.service_name == "summarizer-hub":
             # Check LLM connectivity
             try:
                 health_status.llm_connected = True
-            except:
+            except Exception:
                 health_status.llm_connected = False
 
         elif self.service_name == "llm-gateway":
             # Check Ollama availability
             try:
                 health_status.ollama_available = True
-            except:
+            except Exception:
                 health_status.ollama_available = False
 
         elif self.service_name == "mock-data-generator":
             # Check data sources count
             try:
                 health_status.data_sources = 5  # Placeholder count
-            except:
+            except Exception:
                 health_status.data_sources = 0
 
         elif self.service_name == "notification-service":
             # Check email configuration
             try:
                 health_status.email_configured = True
-            except:
+            except Exception:
                 health_status.email_configured = False
 
         elif self.service_name == "code-analyzer":
             # Check analysis readiness
             try:
                 health_status.analysis_ready = True
-            except:
+            except (OSError, IOError):
                 health_status.analysis_ready = False
 
         return health_status

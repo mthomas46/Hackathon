@@ -160,7 +160,7 @@ class SemanticToolAnalyzer:
                     "relationships": parsed.get("relationships", {}),
                     "complexity_score": parsed.get("complexity_score", 5),
                 }
-        except:
+        except Exception:
             pass
 
         # Fallback parsing

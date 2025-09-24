@@ -3843,7 +3843,7 @@ def _get_summarizer_service_url() -> str:
         with open("/proc/1/cgroup", "r") as f:
             if "docker" in f.read().lower():
                 return "http://summarizer-hub:5160"
-    except:
+    except Exception:
         pass
 
     # Default to localhost for development
@@ -3883,7 +3883,7 @@ def _get_doc_store_service_url() -> str:
         with open("/proc/1/cgroup", "r") as f:
             if "docker" in f.read().lower():
                 return "http://doc-store:5051"
-    except:
+    except Exception:
         pass
 
     # Default to localhost for development

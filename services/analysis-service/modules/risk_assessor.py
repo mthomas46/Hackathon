@@ -170,7 +170,7 @@ class RiskAssessor:
                     try:
                         last_mod_date = pd.to_datetime(last_modified)
                         value = (pd.Timestamp.now() - last_mod_date).days
-                    except:
+                    except Exception:
                         value = 180  # Default to 6 months
                 elif not value:
                     value = 180

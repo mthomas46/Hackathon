@@ -3210,7 +3210,7 @@ def format_timestamp(timestamp: str) -> str:
             return dt.strftime("%Y-%m-%d %H:%M:%S UTC")
         else:
             return timestamp
-    except:
+    except ValueError:
         return timestamp
 
 

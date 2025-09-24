@@ -227,7 +227,7 @@ class PromptOrchestrator:
 
                 try:
                     transformed_data[output_field] = json.loads(str(input_value))
-                except:
+                except Exception:
                     transformed_data[output_field] = input_value
 
         return {"step_type": "data_transformation", "success": True, "outputs": transformed_data}

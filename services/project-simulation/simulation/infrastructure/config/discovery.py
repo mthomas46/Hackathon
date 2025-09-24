@@ -143,7 +143,7 @@ class LocalServiceDiscovery:
                         try:
                             data = await response.json()
                             service.version = data.get("version")
-                        except:
+                        except Exception:
                             pass
 
                         service.is_healthy = True
@@ -278,7 +278,7 @@ class PortScanner:
                 writer.close()
                 await writer.wait_closed()
                 return True
-            except:
+            except (OSError, IOError):
                 return False
 
         tasks = []

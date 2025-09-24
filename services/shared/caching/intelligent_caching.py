@@ -328,7 +328,7 @@ class IntelligentCache:
             else:
                 # Estimate size for other types
                 return len(str(value).encode("utf-8"))
-        except:
+        except Exception:
             return 1024  # Default estimate
 
     def _get_total_size(self) -> int:

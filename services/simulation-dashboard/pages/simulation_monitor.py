@@ -166,7 +166,7 @@ class SimulationMonitor:
                 st.success("✅ Simulation service is healthy and ready for monitoring")
             else:
                 st.warning("⚠️ Simulation service health check failed")
-        except:
+        except Exception:
             st.error("❌ Unable to connect to simulation service")
 
     def render_monitoring_dashboard(self):

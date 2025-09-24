@@ -121,7 +121,7 @@ class FrontendAdapter(BaseServiceAdapter):
                     page_response = await self.clients.get_text(f"{self.base_url}{page}")
                     if page_response:
                         available_pages.append({"path": page, "status": "available"})
-                except:
+                except Exception:
                     available_pages.append({"path": page, "status": "unavailable"})
 
             execution_time = time.time() - start_time
@@ -148,7 +148,7 @@ class FrontendAdapter(BaseServiceAdapter):
                 try:
                     asset_response = await self.clients.get_text(f"{self.base_url}{asset}")
                     status = "available" if asset_response else "not found"
-                except:
+                except Exception:
                     status = "error"
 
                 asset_status.append({"path": asset, "status": status})

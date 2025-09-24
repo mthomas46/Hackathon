@@ -593,7 +593,7 @@ async def ecosystem_health():
                         ecosystem_health_status["connected_services"]["doc_store"]["status"] = "healthy"
                         ecosystem_health_status["ecosystem_summary"]["healthy_services"] += 1
                         ecosystem_health_status["ecosystem_summary"]["unknown_services"] -= 1
-            except:
+            except Exception:
                 ecosystem_health_status["connected_services"]["doc_store"]["status"] = "unreachable"
 
             # Check orchestrator
@@ -603,7 +603,7 @@ async def ecosystem_health():
                         ecosystem_health_status["connected_services"]["orchestrator"]["status"] = "healthy"
                         ecosystem_health_status["ecosystem_summary"]["healthy_services"] += 1
                         ecosystem_health_status["ecosystem_summary"]["unknown_services"] -= 1
-            except:
+            except Exception:
                 ecosystem_health_status["connected_services"]["orchestrator"]["status"] = "unreachable"
 
     except Exception as e:

@@ -192,7 +192,7 @@ def render_simulation_progress_card(simulation: Dict[str, Any]):
                 start_dt = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
                 elapsed = datetime.now() - start_dt
                 st.metric("Elapsed Time", f"{elapsed.seconds // 3600}h {(elapsed.seconds % 3600) // 60}m")
-            except:
+            except ValueError:
                 st.caption("Time: Unknown")
 
         # Estimated completion
@@ -394,7 +394,7 @@ def render_event_item(event: Dict[str, Any]):
                         time_str = f"{time_ago.seconds}s ago"
 
                     st.caption(time_str)
-                except:
+                except ValueError:
                     st.caption("Time: Unknown")
 
         st.markdown("---")

@@ -118,7 +118,7 @@ class QualityDegradationDetector:
                     timestamp = pd.to_datetime(timestamp, unit="s")
                 else:
                     continue
-            except:
+            except ValueError:
                 continue
 
             # Extract quality metrics
@@ -183,7 +183,7 @@ class QualityDegradationDetector:
         # Calculate p-value for slope significance
         try:
             _, p_value = stats.linregress(X.flatten(), y)
-        except:
+        except Exception:
             p_value = 1.0
 
         # Determine trend direction

@@ -568,7 +568,7 @@ class CodeAnalyzerManager(BaseManager):
             try:
                 result = subprocess.run(["git", "diff", "--cached"], capture_output=True, text=True, cwd=".")
                 patch_content = result.stdout
-            except:
+            except Exception:
                 patch_content = ""
 
             if not patch_content.strip():

@@ -112,7 +112,7 @@ class InterpreterManager(BaseManager):
             context_input = Prompt.ask("[bold cyan]Context (JSON, optional)[/bold cyan]", default="{}")
             try:
                 context = json.loads(context_input)
-            except:
+            except Exception:
                 context = {}
 
             query_data = {"query": query}

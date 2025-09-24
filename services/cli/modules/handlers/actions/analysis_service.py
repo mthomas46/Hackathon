@@ -125,7 +125,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         metadata_input = Prompt.ask("Metadata JSON (optional)", default="{}")
         try:
             metadata = json.loads(metadata_input) if metadata_input.strip() else {}
-        except:
+        except Exception:
             metadata = {}
         url = f"{clients.analysis_service_url()}/workflows/events"
         rx = await clients.post_json(
@@ -183,7 +183,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         filters_input = Prompt.ask("Filters JSON (optional)", default="{}")
         try:
             filters = json.loads(filters_input) if filters_input.strip() else {}
-        except:
+        except Exception:
             filters = {}
         url = f"{clients.analysis_service_url()}/reports/generate"
         rx = await clients.post_json(url, {"kind": kind, "format": format_type, "filters": filters})
@@ -234,7 +234,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         context_input = Prompt.ask("Context JSON (optional)", default="{}")
         try:
             context = json.loads(context_input) if context_input.strip() else {}
-        except:
+        except Exception:
             context = {}
         url = f"{clients.analysis_service_url()}/integration/natural-language-analysis"
         rx = await clients.post_json(url, {"query": query, "context": context})

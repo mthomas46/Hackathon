@@ -73,7 +73,7 @@ class SimulationClient:
             from services.shared.utilities.discovery import get_service_url
 
             return get_service_url("project-simulation")
-        except:
+        except Exception:
             # Fallback to direct configuration
             host = self.config.get("simulation_service", {}).get("host", "localhost")
             port = self.config.get("simulation_service", {}).get("port", 5075)

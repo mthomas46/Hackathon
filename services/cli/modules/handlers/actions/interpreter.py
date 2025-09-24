@@ -21,7 +21,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
         try:
             user_context_parsed = json.loads(user_context) if user_context.strip() else {}
-        except:
+        except Exception:
             user_context_parsed = {}
 
         payload = {"query": query}
@@ -42,7 +42,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
         try:
             user_context_parsed = json.loads(user_context) if user_context.strip() else {}
-        except:
+        except Exception:
             user_context_parsed = {}
 
         payload = {"query": query}
@@ -82,7 +82,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         choice = Prompt.ask("Select query type (number)", default="1")
         try:
             query_type = query_types[int(choice) - 1]
-        except:
+        except Exception:
             query_type = "search"
 
         # Target
@@ -101,7 +101,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 filter_type = filter_types[int(choice) - 1]
                 filter_value = Prompt.ask(f"Filter value for {filter_type}")
                 filters.append({"type": filter_type, "value": filter_value})
-            except:
+            except Exception:
                 pass
 
         # Build natural language query
