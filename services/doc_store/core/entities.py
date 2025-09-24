@@ -8,26 +8,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-
-class BaseEntity(ABC):
-    """Base entity with common fields and methods."""
-
-    id: str
-    created_at: datetime
-    updated_at: Optional[datetime]
-
-    @abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert entity to dictionary representation."""
-
-    def update_timestamp(self) -> None:
-        """Update the updated_at timestamp."""
-        self.updated_at = datetime.utcnow()
+# Import standardized base entity
+from services.shared.utilities import BaseEntity
 
 
 @dataclass
 class Document(BaseEntity):
-    """Core document entity."""
+    """Core document entity using standardized base class."""
 
     id: str
     content: str
@@ -36,6 +23,13 @@ class Document(BaseEntity):
     correlation_id: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
+
+    def __post_init__(self):
+        """Validate document after initialization."""
+        if not self.content or not self.content.strip():
+            raise ValueError("Document content cannot be empty")
+        if len(self.content) > 10485760:  # 10MB limit
+            raise ValueError("Document content exceeds maximum size")
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
