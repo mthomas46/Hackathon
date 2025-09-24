@@ -7,12 +7,12 @@ for document management, search, analytics, and lifecycle operations.
 from fastapi import FastAPI
 
 # ============================================================================
-# SHARED INFRASTRUCTURE - Core service setup
+# STANDARDIZED SHARED INFRASTRUCTURE - Using consolidated utilities
 # ============================================================================
-from services.shared.core.config.config import get_config_value
-from services.shared.core.constants_new import ServiceNames
-from services.shared.utilities.error_handling import install_error_handlers
-from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
+from services.shared.infrastructure.config import DocStoreConfig, load_service_config
+from services.shared.utilities import ServiceException, ValidationException
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_success_response
 
 from .api.routes import router as api_router
 
@@ -23,37 +23,66 @@ from .db.schema import init_database
 from .infrastructure.cache import docstore_cache
 
 # ============================================================================
+# CONFIGURATION - Using standardized config system
+# ============================================================================
+
+# Load configuration using standardized system
+config = load_service_config(
+    service_type="doc-store",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# ============================================================================
 # FASTAPI APPLICATION - Clean and minimal
 # ============================================================================
 app = FastAPI(
     title="Doc Store Service",
     description="Document storage and analysis service with advanced features",
-    version="2.0.0",
+    version=config.service_version,
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
-# Setup shared middleware and utilities
-setup_common_middleware(app, ServiceNames.DOC_STORE)
-install_error_handlers(app)
-# Skip shared health system to avoid datetime serialization issues
-# health_manager = register_health_endpoints(app, ServiceNames.DOC_STORE)
-attach_self_register(app, ServiceNames.DOC_STORE)
+# Setup standardized middleware and utilities
+setup_common_middleware(app)
+
+# Add standardized error handling
+@app.exception_handler(ServiceException)
+async def service_exception_handler(request, exc: ServiceException):
+    from services.shared.presentation.responses import create_error_response
+    return create_error_response(
+        message=str(exc),
+        error_code=exc.__class__.__name__,
+        request_id=getattr(exc, 'request_id', None)
+    )
+
+@app.exception_handler(ValidationException)
+async def validation_exception_handler(request, exc: ValidationException):
+    from services.shared.presentation.responses import create_validation_error_response
+    # For now, return generic error - can be enhanced with field details
+    return create_error_response(
+        message=str(exc),
+        error_code="ValidationError",
+        request_id=getattr(exc, 'request_id', None)
+    )
 
 
-# Simple health endpoint that bypasses all shared systems
+# Health endpoint using standardized response system
 @app.get("/health")
-async def simple_health():
-    """Simple health endpoint that avoids datetime serialization."""
+async def health_check():
+    """Health check endpoint with standardized response."""
     import time
 
-    return {
-        "status": "healthy",
-        "service": "doc_store",
-        "version": "1.0.0",
-        "timestamp": time.time(),
-        "uptime_seconds": 0,
-    }
+    return create_success_response(
+        data={
+            "status": "healthy",
+            "service": config.service_name,
+            "version": config.service_version,
+            "uptime_seconds": 0,  # TODO: Implement actual uptime tracking
+            "database_status": "unknown"  # TODO: Add database health check
+        },
+        message="Service is healthy"
+    )
 
 
 # Skip custom health endpoint registration - using simple one above
