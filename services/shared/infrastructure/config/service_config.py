@@ -264,6 +264,44 @@ class SummarizerHubConfig(ServiceConfig):
     max_concurrent_summaries: int = Field(default=10, gt=0, description="Max concurrent summaries")
 
 
+class DocStoreConfig(ServiceConfig):
+    """Configuration for document store service."""
+
+    # Document settings
+    max_document_size: int = Field(default=10485760, gt=0, description="Max document size in bytes (10MB)")
+    supported_formats: List[str] = Field(
+        default_factory=lambda: ["markdown", "html", "plaintext", "json"],
+        description="Supported document formats"
+    )
+    enable_content_hashing: bool = Field(default=True, description="Enable content hashing for duplicates")
+
+    # Storage settings
+    backup_interval: int = Field(default=3600, gt=0, description="Backup interval in seconds")
+    compression_enabled: bool = Field(default=True, description="Enable document compression")
+    max_versions_per_document: int = Field(default=10, gt=0, description="Max versions to keep per document")
+
+    # Search settings
+    enable_full_text_search: bool = Field(default=True, description="Enable full-text search")
+    search_index_batch_size: int = Field(default=1000, gt=0, description="Search indexing batch size")
+    search_timeout: int = Field(default=30, gt=0, description="Search query timeout")
+
+    # Analytics settings
+    enable_usage_analytics: bool = Field(default=True, description="Enable usage analytics collection")
+    analytics_retention_days: int = Field(default=90, gt=0, description="Analytics data retention")
+
+    # Lifecycle settings
+    enable_automatic_cleanup: bool = Field(default=True, description="Enable automatic cleanup")
+    cleanup_batch_size: int = Field(default=100, gt=0, description="Cleanup batch size")
+
+    # Tagging settings
+    max_tags_per_document: int = Field(default=50, gt=0, description="Max tags per document")
+    enable_tag_suggestions: bool = Field(default=True, description="Enable tag suggestions")
+
+    # Bulk operations settings
+    max_bulk_operation_size: int = Field(default=1000, gt=0, description="Max items in bulk operations")
+    bulk_operation_timeout: int = Field(default=300, gt=0, description="Bulk operation timeout")
+
+
 # Configuration factory functions
 
 def create_service_config(service_type: str, **overrides) -> ServiceConfig:

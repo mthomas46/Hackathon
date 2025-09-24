@@ -7,7 +7,14 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from services.shared.core.responses.responses import SuccessResponse
+# Using standardized response system
+from services.shared.presentation.responses import (
+    create_success_response,
+    create_error_response,
+    create_paginated_response,
+    create_list_response,
+    APIResponse
+)
 
 from ..core.models import (
     BulkDocumentRequest,
@@ -109,27 +116,30 @@ async def get_quality_metrics(limit: int = Query(1000, ge=1, le=10000)):
 
 
 # Analytics endpoints
-@router.get("/analytics/summary", response_model=SuccessResponse)
+@router.get("/analytics/summary")
 async def get_analytics_summary(start_date: Optional[str] = None, end_date: Optional[str] = None):
     """Get analytics summary."""
-    return await analytics_handlers.handle_get_analytics_summary()
+    result = await analytics_handlers.handle_get_analytics_summary()
+    return create_success_response(data=result, message="Analytics summary retrieved")
 
 
 # Versioning endpoints
-@router.get("/documents/{document_id}/versions", response_model=SuccessResponse)
+@router.get("/documents/{document_id}/versions")
 async def get_document_versions(document_id: str, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)):
     """Get document version history."""
-    return await versioning_handlers.handle_get_document_versions(document_id, limit, offset)
+    result = await versioning_handlers.handle_get_document_versions(document_id, limit, offset)
+    return create_paginated_response(result["items"], result["total"], 1, limit, message="Document versions retrieved")
 
 
-@router.post("/documents/{document_id}/versions/rollback", response_model=SuccessResponse)
+@router.post("/documents/{document_id}/versions/rollback")
 async def rollback_document_version(document_id: str, request: VersionRollbackRequest):
     """Rollback document to previous version."""
-    return await versioning_handlers.handle_rollback_to_version(document_id, request.version_number, request.reason)
+    result = await versioning_handlers.handle_rollback_to_version(document_id, request.version_number, request.reason)
+    return create_success_response(data=result, message="Document rolled back successfully")
 
 
 # Relationship endpoints
-@router.post("/relationships", response_model=SuccessResponse)
+@router.post("/relationships")
 async def add_relationship(request: Dict[str, Any]):  # Using dict for now
     """Add relationship between documents."""
     return await relationships_handlers.handle_add_relationship(
