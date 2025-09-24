@@ -420,7 +420,7 @@ def render_audit_compliance_report(audit_data: List[Dict[str, Any]]) -> Dict[str
         elif trend < -5:
             st.error(f"📉 Declining trend ({trend:.1f}% success rate)")
         else:
-            st.info("📊 Stable compliance performance"
+            st.info("📊 Stable compliance performance")
     return {
         'compliance_score': compliance_score,
         'success_rate': success_rate,

@@ -361,12 +361,13 @@ class MonitoringDashboard:
 
         # Performance metrics
         if metrics.get('avg_response_time', 0) > 0:
-            print("
-⚡ Performance:"            print(".2f"            print(f"  📊 Total Requests: {metrics.get('total_requests', 0)}")
-            print(".1f"
+            print("\n⚡ Performance:")
+            print(".2f")
+            print(f"  📊 Total Requests: {metrics.get('total_requests', 0)}")
+            print(".1f")
         # Service details
-        print("
-🏥 Service Status:"        for service in data["services"]:
+        print("\n🏥 Service Status:")
+        for service in data["services"]:
             status_icon = {
                 "healthy": "✅",
                 "warning": "⚠️",
@@ -379,8 +380,8 @@ class MonitoringDashboard:
 
         # Active alerts
         if data["alerts"]:
-            print("
-🚨 Active Alerts:"            for alert in data["alerts"]:
+            print("\n🚨 Active Alerts:")
+            for alert in data["alerts"]:
                 severity_icon = "🔴" if alert["severity"] == "critical" else "⚠️"
                 print(f"  {severity_icon} [{alert['service']}] {alert['message']}")
 

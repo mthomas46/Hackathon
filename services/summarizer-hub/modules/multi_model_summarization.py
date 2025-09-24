@@ -710,8 +710,8 @@ async def test_multi_model_summarization():
             print(f"Quality score: {result.quality_score:.2f}")
             print(f"Confidence score: {result.confidence_score:.2f}")
             print(f"Consensus level: {result.consensus_level:.2f}")
-            print("
-📄 Final Summary:"            print(f"   {result.final_summary}")
+            print("\n📄 Final Summary:")
+            print(f"   {result.final_summary}")
 
             if result.disagreement_areas:
                 print(f"   Disagreement areas: {result.disagreement_areas}")
@@ -720,17 +720,17 @@ async def test_multi_model_summarization():
             print(f"❌ Summarization failed: {e}")
 
     # Test statistics
-    print("
-📊 Summarization Statistics:"    stats = multi_model_summarizer.get_summarization_statistics()
+    print("\n📊 Summarization Statistics:")
+    stats = multi_model_summarizer.get_summarization_statistics()
     print(f"   • Total summaries: {stats['total_summaries_generated']}")
     print(".2f")
     print(".2f")
-    print("   • Model usage:"
+    print("   • Model usage:")
     for model, count in stats['model_usage'].items():
         print(f"     - {model}: {count}")
 
-    print("
-🎉 Multi-Model Summarization Engine Test Complete!"    print("Features demonstrated:")
+    print("\n🎉 Multi-Model Summarization Engine Test Complete!")
+    print("Features demonstrated:")
     print("   ✅ Ensemble summarization with multiple models")
     print("   ✅ Content-type aware model selection")
     print("   ✅ Quality evaluation and scoring")
