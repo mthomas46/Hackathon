@@ -176,7 +176,7 @@ class EventManager:
 
             print(f"✅ Replay started successfully!")
             print(f"Replay ID: {replay_id}")
-            print("Monitor the replay status or use WebSocket for real-time updates."
+            print("Monitor the replay status or use WebSocket for real-time updates.")
         else:
             print(f"❌ Failed to start replay: {response.get('error', 'Unknown error')}")
 

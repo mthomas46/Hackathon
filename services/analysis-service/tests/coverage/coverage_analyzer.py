@@ -231,19 +231,19 @@ class CoverageAnalyzer:
         print("="*80)
 
         overall = report['overall_coverage']
-        print("
-OVERALL COVERAGE:"        print(".1f")
+        print("\nOVERALL COVERAGE:")
+        print(".1f")
         print(f"Target:     {overall['target_percentage']:.1f}%")
         print(f"Status:     {'✅ PASS' if overall['status'] == 'pass' else '❌ FAIL'}")
         print(f"Lines:      {overall['covered_lines']}/{overall['total_lines']}")
 
-        print("
-LAYER COVERAGE:"        for layer_name, layer_data in report['layer_coverage'].items():
+        print("\nLAYER COVERAGE:")
+        for layer_name, layer_data in report['layer_coverage'].items():
             status_icon = "✅" if layer_data['status'] == 'pass' else "❌"
             print("6")
 
-        print("
-CRITICAL UNCOVERED CODE:"        if report['critical_uncovered']:
+        print("\nCRITICAL UNCOVERED CODE:")
+        if report['critical_uncovered']:
             for file_path, lines in list(report['critical_uncovered'].items())[:5]:
                 print(f"📁 {Path(file_path).name}:")
                 for line in lines[:3]:  # Show first 3 critical lines
@@ -253,8 +253,8 @@ CRITICAL UNCOVERED CODE:"        if report['critical_uncovered']:
         else:
             print("✅ No critical uncovered code found")
 
-        print("
-RECOMMENDATIONS:"        for i, rec in enumerate(report['recommendations'][:5], 1):
+        print("\nRECOMMENDATIONS:")
+        for i, rec in enumerate(report['recommendations'][:5], 1):
             print(f"{i}. {rec}")
 
         print("\n" + "="*80)
@@ -452,8 +452,8 @@ def get_coverage_trends():
     print(f"Overall: {trends['overall_trend']['direction']} "
           f"({trends['overall_trend']['magnitude']:.2f}%)")
 
-    print("
-Layer Trends:"    for layer, trend in trends['layer_trends'].items():
+    print("\nLayer Trends:")
+    for layer, trend in trends['layer_trends'].items():
         print("6")
 
     if trends['improving_layers']:
