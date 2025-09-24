@@ -29,7 +29,11 @@ from components.realtime.live_metrics import (
     render_live_metrics,
     update_live_metrics,
 )
-from components.realtime.progress_indicators import calculate_eta, render_progress_indicator, simulate_progress_updates
+from components.realtime.progress_indicators import (
+    calculate_eta,
+    render_progress_indicator,
+    simulate_progress_updates,
+)
 from components.realtime.status_dashboard import (
     calculate_overall_health,
     render_status_dashboard,
@@ -73,11 +77,15 @@ class TestLiveMetricsMonitoring:
     @patch("streamlit.button")
     @patch("streamlit.columns")
     @patch("streamlit.metric")
-    def test_render_live_metrics_display(self, mock_metric, mock_columns, mock_button, mock_page_config):
+    def test_render_live_metrics_display(
+        self, mock_metric, mock_columns, mock_button, mock_page_config
+    ):
         """Test rendering of live metrics dashboard."""
         mock_columns.return_value = [Mock(), Mock(), Mock(), Mock()]
 
-        with patch("streamlit.session_state", {"live_metrics_data": self.sample_metrics}):
+        with patch(
+            "streamlit.session_state", {"live_metrics_data": self.sample_metrics}
+        ):
             result = render_live_metrics(self.sample_metrics)
 
             assert isinstance(result, dict)
@@ -87,7 +95,9 @@ class TestLiveMetricsMonitoring:
 
     def test_update_live_metrics_simulation(self):
         """Test live metrics update simulation."""
-        with patch("streamlit.session_state", {"live_metrics_data": self.sample_metrics.copy()}):
+        with patch(
+            "streamlit.session_state", {"live_metrics_data": self.sample_metrics.copy()}
+        ):
             initial_values = [m["value"] for m in self.sample_metrics]
 
             update_live_metrics()
@@ -104,13 +114,24 @@ class TestLiveMetricsMonitoring:
     def test_metric_alert_generation(self):
         """Test metric alert generation."""
         # Create metric that exceeds threshold
-        high_cpu_metric = {"name": "CPU Utilization", "value": 85.0, "threshold": 80.0, "status": "warning"}
+        high_cpu_metric = {
+            "name": "CPU Utilization",
+            "value": 85.0,
+            "threshold": 80.0,
+            "status": "warning",
+        }
 
         with patch("streamlit.session_state", {"alerts_queue": []}):
             check_metric_alerts(high_cpu_metric)
 
             # Should have generated an alert
-            alerts = [{"severity": "warning", "message": "CPU Utilization exceeds threshold: 85.0", "value": 85.0}]
+            alerts = [
+                {
+                    "severity": "warning",
+                    "message": "CPU Utilization exceeds threshold: 85.0",
+                    "value": 85.0,
+                }
+            ]
             assert len(alerts) > 0
             assert alerts[0]["severity"] == "warning"
 
@@ -124,7 +145,11 @@ class TestLiveMetricsMonitoring:
         ]
 
         for case in test_cases:
-            metric = {"name": "Test Metric", "value": case["value"], "threshold": case["threshold"]}
+            metric = {
+                "name": "Test Metric",
+                "value": case["value"],
+                "threshold": case["threshold"],
+            }
 
             # Update status based on value and threshold
             if case["threshold"] is not None:
@@ -186,9 +211,13 @@ class TestEventStreamMonitoring:
     @patch("streamlit.set_page_config")
     @patch("streamlit.expander")
     @patch("streamlit.button")
-    def test_render_event_stream_display(self, mock_button, mock_expander, mock_page_config):
+    def test_render_event_stream_display(
+        self, mock_button, mock_expander, mock_page_config
+    ):
         """Test rendering of event stream."""
-        with patch("streamlit.session_state", {"event_stream_data": self.sample_events}):
+        with patch(
+            "streamlit.session_state", {"event_stream_data": self.sample_events}
+        ):
             result = render_event_stream(self.sample_events)
 
             assert isinstance(result, dict)
@@ -231,9 +260,24 @@ class TestEventStreamMonitoring:
         base_time = datetime.now()
 
         time_range_events = [
-            {"id": "evt_001", "timestamp": base_time, "event_type": "start", "severity": "info"},
-            {"id": "evt_002", "timestamp": base_time - timedelta(hours=2), "event_type": "middle", "severity": "info"},
-            {"id": "evt_003", "timestamp": base_time - timedelta(hours=6), "event_type": "old", "severity": "info"},
+            {
+                "id": "evt_001",
+                "timestamp": base_time,
+                "event_type": "start",
+                "severity": "info",
+            },
+            {
+                "id": "evt_002",
+                "timestamp": base_time - timedelta(hours=2),
+                "event_type": "middle",
+                "severity": "info",
+            },
+            {
+                "id": "evt_003",
+                "timestamp": base_time - timedelta(hours=6),
+                "event_type": "old",
+                "severity": "info",
+            },
         ]
 
         # Filter for last hour
@@ -318,13 +362,21 @@ class TestProgressIndicators:
             "current_stage_num": 2,
             "total_stages": 5,
             "current_stage_progress": 78.3,
-            "stages": ["Initialization", "Data Loading", "Data Transformation", "Validation", "Completion"],
+            "stages": [
+                "Initialization",
+                "Data Loading",
+                "Data Transformation",
+                "Validation",
+                "Completion",
+            ],
         }
 
     @patch("streamlit.set_page_config")
     @patch("streamlit.progress")
     @patch("streamlit.columns")
-    def test_render_progress_indicator_display(self, mock_columns, mock_progress, mock_page_config):
+    def test_render_progress_indicator_display(
+        self, mock_columns, mock_progress, mock_page_config
+    ):
         """Test rendering of progress indicator."""
         mock_columns.return_value = [Mock(), Mock(), Mock()]
 
@@ -481,7 +533,9 @@ class TestStatusDashboard:
     @patch("streamlit.set_page_config")
     @patch("streamlit.columns")
     @patch("streamlit.metric")
-    def test_render_status_dashboard_display(self, mock_metric, mock_columns, mock_page_config):
+    def test_render_status_dashboard_display(
+        self, mock_metric, mock_columns, mock_page_config
+    ):
         """Test rendering of status dashboard."""
         mock_columns.return_value = [Mock(), Mock(), Mock()]
 
@@ -642,7 +696,9 @@ class TestRealTimeIntegration:
 
         assert isinstance(result, dict)
         assert "current_events" in result
-        assert len(result["filtered_events"]) <= 100  # Should respect max_display_events
+        assert (
+            len(result["filtered_events"]) <= 100
+        )  # Should respect max_display_events
 
     def test_realtime_error_recovery(self):
         """Test error recovery in real-time components."""
@@ -722,7 +778,12 @@ def benchmark_realtime_component(component_func, *args, iterations=10, **kwargs)
 
         times.append(end_time - start_time)
 
-    return {"avg_time": np.mean(times), "min_time": np.min(times), "max_time": np.max(times), "std_dev": np.std(times)}
+    return {
+        "avg_time": np.mean(times),
+        "min_time": np.min(times),
+        "max_time": np.max(times),
+        "std_dev": np.std(times),
+    }
 
 
 if __name__ == "__main__":

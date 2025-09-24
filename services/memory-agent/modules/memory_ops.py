@@ -28,7 +28,10 @@ def _lazy_cleanup_memory():
     global _last_cleanup_time
 
     current_time = time.time()
-    if _last_cleanup_time is None or current_time - _last_cleanup_time > _CLEANUP_INTERVAL_SECONDS:
+    if (
+        _last_cleanup_time is None
+        or current_time - _last_cleanup_time > _CLEANUP_INTERVAL_SECONDS
+    ):
         # Time to run cleanup
         ttl_seconds = get_memory_ttl_seconds()
         _memory[:] = cleanup_expired_memory_items(_memory, ttl_seconds)
@@ -51,7 +54,9 @@ def put_memory_item(item: Any) -> Dict[str, Any]:
     }
 
 
-def list_memory_items(memory_type: Optional[str] = None, key: Optional[str] = None, limit: int = 100) -> List[Any]:
+def list_memory_items(
+    memory_type: Optional[str] = None, key: Optional[str] = None, limit: int = 100
+) -> List[Any]:
     """List memory items with filtering, lazy TTL cleanup, and pagination."""
     # Perform lazy cleanup to improve performance
     _lazy_cleanup_memory()

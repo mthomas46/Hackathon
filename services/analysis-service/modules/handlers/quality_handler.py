@@ -34,7 +34,9 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
 
             # Perform quality assessment
             quality_result = await assess_document_quality(
-                document_id=request.document_id, quality_checks=request.quality_checks, options=request.options or {}
+                document_id=request.document_id,
+                quality_checks=request.quality_checks,
+                options=request.options or {},
             )
 
             # Convert to standardized response format
@@ -42,12 +44,20 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
                 analysis_id=f"quality-{int(datetime.now(timezone.utc).timestamp())}",
                 document_id=request.document_id,
                 overall_score=quality_result.get("overall_score", 0.0),
-                quality_breakdown=QualityBreakdown(**quality_result.get("quality_breakdown", {})),
-                recommendations=[Recommendation(**rec) for rec in quality_result.get("recommendations", [])],
-                improvement_suggestions=[
-                    ImprovementSuggestion(**sug) for sug in quality_result.get("improvement_suggestions", [])
+                quality_breakdown=QualityBreakdown(
+                    **quality_result.get("quality_breakdown", {})
+                ),
+                recommendations=[
+                    Recommendation(**rec)
+                    for rec in quality_result.get("recommendations", [])
                 ],
-                execution_time_seconds=quality_result.get("execution_time_seconds", 0.0),
+                improvement_suggestions=[
+                    ImprovementSuggestion(**sug)
+                    for sug in quality_result.get("improvement_suggestions", [])
+                ],
+                execution_time_seconds=quality_result.get(
+                    "execution_time_seconds", 0.0
+                ),
                 error_message=None,
             )
 
@@ -65,12 +75,20 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
             return await self._handle_error(e, analysis_id)
 
     async def _mock_quality_assessment(
-        self, document_id: str, quality_checks: Optional[List[str]] = None, options: Optional[Dict[str, Any]] = None
+        self,
+        document_id: str,
+        quality_checks: Optional[List[str]] = None,
+        options: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Mock quality assessment for testing purposes."""
         import random
 
-        checks = quality_checks or ["readability", "grammar", "structure", "completeness"]
+        checks = quality_checks or [
+            "readability",
+            "grammar",
+            "structure",
+            "completeness",
+        ]
 
         # Mock quality breakdown
         quality_breakdown = {}
@@ -88,12 +106,18 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
                 issues = [] if score > 85 else ["missing_headings", "poor_organization"]
             elif check == "completeness":
                 score = random.uniform(60.0, 90.0)
-                issues = [] if score > 75 else ["missing_examples", "incomplete_sections"]
+                issues = (
+                    [] if score > 75 else ["missing_examples", "incomplete_sections"]
+                )
             else:
                 score = random.uniform(70.0, 90.0)
                 issues = []
 
-            quality_breakdown[check] = {"score": score, "level": self._score_to_level(score), "issues": issues}
+            quality_breakdown[check] = {
+                "score": score,
+                "level": self._score_to_level(score),
+                "issues": issues,
+            }
             total_score += score
 
         overall_score = total_score / len(checks) if checks else 0.0
@@ -145,7 +169,9 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
         else:
             return "poor"
 
-    async def handle_batch_quality_analysis(self, requests: List[ContentQualityRequest]) -> List[AnalysisResult]:
+    async def handle_batch_quality_analysis(
+        self, requests: List[ContentQualityRequest]
+    ) -> List[AnalysisResult]:
         """Handle batch quality analysis."""
         results = []
 
@@ -160,7 +186,10 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
         results = []
 
         for doc_id in document_ids:
-            request = ContentQualityRequest(document_id=doc_id, quality_checks=["readability", "grammar", "structure"])
+            request = ContentQualityRequest(
+                document_id=doc_id,
+                quality_checks=["readability", "grammar", "structure"],
+            )
             result = await self.handle(request)
             results.append(result)
 
@@ -186,7 +215,9 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
                     for issue in check_data.get("issues", []):
                         common_issues[issue] = common_issues.get(issue, 0) + 1
 
-        avg_score = total_score / successful_analyses if successful_analyses > 0 else 0.0
+        avg_score = (
+            total_score / successful_analyses if successful_analyses > 0 else 0.0
+        )
 
         # Get most common issues
         top_issues = sorted(common_issues.items(), key=lambda x: x[1], reverse=True)[:5]
@@ -196,14 +227,20 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
             "successful_analyses": successful_analyses,
             "average_score": avg_score,
             "quality_distribution": quality_distribution,
-            "top_common_issues": [{"issue": issue, "count": count} for issue, count in top_issues],
-            "execution_time_seconds": sum(r.execution_time_seconds or 0 for r in results),
+            "top_common_issues": [
+                {"issue": issue, "count": count} for issue, count in top_issues
+            ],
+            "execution_time_seconds": sum(
+                r.execution_time_seconds or 0 for r in results
+            ),
         }
 
     async def assess_readability(self, document_id: str) -> Dict[str, Any]:
         """Assess document readability specifically."""
         request = ContentQualityRequest(
-            document_id=document_id, quality_checks=["readability"], options={"detailed_readability": True}
+            document_id=document_id,
+            quality_checks=["readability"],
+            options={"detailed_readability": True},
         )
 
         result = await self.handle(request)
@@ -222,7 +259,9 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
             "issues": readability_data.get("issues", []),
             "flesch_kincaid_score": readability_data.get("flesch_kincaid", 0.0),
             "avg_sentence_length": readability_data.get("avg_sentence_length", 0.0),
-            "avg_words_per_sentence": readability_data.get("avg_words_per_sentence", 0.0),
+            "avg_words_per_sentence": readability_data.get(
+                "avg_words_per_sentence", 0.0
+            ),
             "complexity_score": readability_data.get("complexity_score", 0.0),
             "execution_time_seconds": result.execution_time_seconds,
         }
@@ -230,7 +269,9 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
     async def check_grammar_and_style(self, document_id: str) -> Dict[str, Any]:
         """Check grammar and style issues."""
         request = ContentQualityRequest(
-            document_id=document_id, quality_checks=["grammar"], options={"detailed_grammar_check": True}
+            document_id=document_id,
+            quality_checks=["grammar"],
+            options={"detailed_grammar_check": True},
         )
 
         result = await self.handle(request)
@@ -254,7 +295,9 @@ class QualityAnalysisHandler(BaseAnalysisHandler):
             "execution_time_seconds": result.execution_time_seconds,
         }
 
-    async def analyze_structure_and_completeness(self, document_id: str) -> Dict[str, Any]:
+    async def analyze_structure_and_completeness(
+        self, document_id: str
+    ) -> Dict[str, Any]:
         """Analyze document structure and completeness."""
         request = ContentQualityRequest(
             document_id=document_id,

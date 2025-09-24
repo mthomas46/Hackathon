@@ -42,9 +42,15 @@ class SecureAnalyzerMonitor:
             status_data = {
                 "health": health_response,
                 "analysis_stats": self._calculate_analysis_stats(),
-                "recent_detections": self._detections[-10:] if self._detections else [],  # Last 10 detections
-                "recent_suggestions": self._suggestions[-10:] if self._suggestions else [],  # Last 10 suggestions
-                "recent_summaries": self._summaries[-10:] if self._summaries else [],  # Last 10 summaries
+                "recent_detections": (
+                    self._detections[-10:] if self._detections else []
+                ),  # Last 10 detections
+                "recent_suggestions": (
+                    self._suggestions[-10:] if self._suggestions else []
+                ),  # Last 10 suggestions
+                "recent_summaries": (
+                    self._summaries[-10:] if self._summaries else []
+                ),  # Last 10 summaries
                 "last_updated": utc_now().isoformat(),
             }
 
@@ -65,14 +71,21 @@ class SecureAnalyzerMonitor:
             }
 
     async def detect_content(
-        self, content: str, keywords: Optional[List[str]] = None, keyword_document: Optional[str] = None
+        self,
+        content: str,
+        keywords: Optional[List[str]] = None,
+        keyword_document: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Detect sensitive content in provided text."""
         try:
             clients = get_frontend_clients()
             secure_url = get_secure_analyzer_url()
 
-            payload = {"content": content, "keywords": keywords or [], "keyword_document": keyword_document}
+            payload = {
+                "content": content,
+                "keywords": keywords or [],
+                "keyword_document": keyword_document,
+            }
 
             response = await clients.post_json(f"{secure_url}/detect", payload)
 
@@ -107,14 +120,21 @@ class SecureAnalyzerMonitor:
             return {"success": False, "error": str(e), "response": None}
 
     async def suggest_models(
-        self, content: str, keywords: Optional[List[str]] = None, keyword_document: Optional[str] = None
+        self,
+        content: str,
+        keywords: Optional[List[str]] = None,
+        keyword_document: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Get model suggestions based on content sensitivity."""
         try:
             clients = get_frontend_clients()
             secure_url = get_secure_analyzer_url()
 
-            payload = {"content": content, "keywords": keywords or [], "keyword_document": keyword_document}
+            payload = {
+                "content": content,
+                "keywords": keywords or [],
+                "keyword_document": keyword_document,
+            }
 
             response = await clients.post_json(f"{secure_url}/suggest", payload)
 
@@ -227,7 +247,11 @@ class SecureAnalyzerMonitor:
         total_summaries = len(self._summaries)
 
         # Calculate detection accuracy (if we had ground truth)
-        detection_accuracy = (sensitive_detections / total_detections) * 100 if total_detections > 0 else 0
+        detection_accuracy = (
+            (sensitive_detections / total_detections) * 100
+            if total_detections > 0
+            else 0
+        )
 
         return {
             "total_detections": total_detections,

@@ -43,14 +43,44 @@ class PRCrossReferenceAnalyzer:
 
     def __init__(self):
         self.requirement_patterns = {
-            "authentication": [r"auth", r"login", r"oauth", r"token", r"security", r"credential"],
-            "api_endpoints": [r"endpoint", r"api", r"rest", r"route", r"handler", r"controller"],
+            "authentication": [
+                r"auth",
+                r"login",
+                r"oauth",
+                r"token",
+                r"security",
+                r"credential",
+            ],
+            "api_endpoints": [
+                r"endpoint",
+                r"api",
+                r"rest",
+                r"route",
+                r"handler",
+                r"controller",
+            ],
             "testing": [r"test", r"spec", r"assert", r"validate", r"coverage", r"unit"],
-            "documentation": [r"doc", r"readme", r"comment", r"javadoc", r"swagger", r"api_doc"],
-            "security": [r"security", r"encrypt", r"hash", r"sanitize", r"validate", r"xss"],
+            "documentation": [
+                r"doc",
+                r"readme",
+                r"comment",
+                r"javadoc",
+                r"swagger",
+                r"api_doc",
+            ],
+            "security": [
+                r"security",
+                r"encrypt",
+                r"hash",
+                r"sanitize",
+                r"validate",
+                r"xss",
+            ],
         }
 
-    def analyze_pr_requirements_alignment(self, pr_data: Dict[str, Any], jira_data: Dict[str, Any]) -> Dict[str, Any]:
+    def analyze_pr_requirements_alignment(
+        self, pr_data: Dict[str, Any], jira_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Analyze alignment between PR implementation and Jira requirements.
 
@@ -63,12 +93,17 @@ class PRCrossReferenceAnalyzer:
         alignment_results = {}
 
         for req_category, req_details in jira_requirements.items():
-            alignment_results[req_category] = self._analyze_requirement_category(req_category, req_details, pr_content)
+            alignment_results[req_category] = self._analyze_requirement_category(
+                req_category, req_details, pr_content
+            )
 
         # Calculate overall alignment score
-        total_weight = sum(result.get("weight", 1) for result in alignment_results.values())
+        total_weight = sum(
+            result.get("weight", 1) for result in alignment_results.values()
+        )
         weighted_score = sum(
-            result.get("alignment_score", 0) * result.get("weight", 1) for result in alignment_results.values()
+            result.get("alignment_score", 0) * result.get("weight", 1)
+            for result in alignment_results.values()
         )
 
         overall_score = weighted_score / total_weight if total_weight > 0 else 0
@@ -79,13 +114,17 @@ class PRCrossReferenceAnalyzer:
             if result.get("status") == AlignmentStatus.NOT_IMPLEMENTED.value:
                 gaps.append(f"Requirement not implemented: {category}")
             elif result.get("status") == AlignmentStatus.PARTIALLY_ALIGNED.value:
-                gaps.append(f"Partial implementation: {category} - {result.get('missing_aspects', [])}")
+                gaps.append(
+                    f"Partial implementation: {category} - {result.get('missing_aspects', [])}"
+                )
 
         return {
             "overall_score": overall_score,
             "category_alignments": alignment_results,
             "gaps": gaps,
-            "recommendations": self._generate_alignment_recommendations(alignment_results),
+            "recommendations": self._generate_alignment_recommendations(
+                alignment_results
+            ),
         }
 
     def analyze_documentation_consistency(
@@ -107,7 +146,10 @@ class PRCrossReferenceAnalyzer:
         # Calculate overall consistency score
         if consistency_results:
             total_docs = len(consistency_results)
-            consistency_scores = [result.get("consistency_score", 0.5) for result in consistency_results.values()]
+            consistency_scores = [
+                result.get("consistency_score", 0.5)
+                for result in consistency_results.values()
+            ]
             overall_score = sum(consistency_scores) / total_docs
         else:
             overall_score = 0.5  # Neutral if no docs to compare
@@ -122,11 +164,16 @@ class PRCrossReferenceAnalyzer:
             "overall_score": overall_score,
             "document_consistency": consistency_results,
             "issues": issues,
-            "recommendations": self._generate_consistency_recommendations(consistency_results),
+            "recommendations": self._generate_consistency_recommendations(
+                consistency_results
+            ),
         }
 
     def perform_comprehensive_cross_reference(
-        self, pr_data: Dict[str, Any], jira_data: Dict[str, Any], confluence_docs: List[Dict[str, Any]]
+        self,
+        pr_data: Dict[str, Any],
+        jira_data: Dict[str, Any],
+        confluence_docs: List[Dict[str, Any]],
     ) -> CrossReferenceResult:
         """
         Perform comprehensive cross-reference analysis across all data sources.
@@ -138,7 +185,9 @@ class PRCrossReferenceAnalyzer:
         alignment_analysis = self.analyze_pr_requirements_alignment(pr_data, jira_data)
 
         # Analyze PR-Documentation consistency
-        consistency_analysis = self.analyze_documentation_consistency(pr_data, confluence_docs)
+        consistency_analysis = self.analyze_documentation_consistency(
+            pr_data, confluence_docs
+        )
 
         # Calculate overall cross-reference score
         alignment_weight = 0.6
@@ -163,7 +212,9 @@ class PRCrossReferenceAnalyzer:
         return CrossReferenceResult(
             overall_alignment_score=overall_score,
             requirement_alignment=alignment_analysis.get("category_alignments", {}),
-            documentation_consistency=consistency_analysis.get("document_consistency", {}),
+            documentation_consistency=consistency_analysis.get(
+                "document_consistency", {}
+            ),
             identified_gaps=all_gaps,
             consistency_issues=all_issues,
             recommendations=all_recommendations,
@@ -205,7 +256,9 @@ class PRCrossReferenceAnalyzer:
             category = self._categorize_requirement(req)
             if category not in requirements:
                 requirements[category] = []
-            requirements[category].append({"text": req, "type": "description_requirement", "priority": "medium"})
+            requirements[category].append(
+                {"text": req, "type": "description_requirement", "priority": "medium"}
+            )
 
         return requirements
 
@@ -219,7 +272,10 @@ class PRCrossReferenceAnalyzer:
         }
 
     def _analyze_requirement_category(
-        self, category: str, requirements: List[Dict[str, Any]], pr_content: Dict[str, Any]
+        self,
+        category: str,
+        requirements: List[Dict[str, Any]],
+        pr_content: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Analyze alignment for a specific requirement category."""
         pr_text = " ".join(
@@ -246,7 +302,9 @@ class PRCrossReferenceAnalyzer:
                     implemented_count += 1
                 else:
                     partial_count += 1
-                    missing_aspects.append(f"Missing implementation for: {req['text'][:50]}...")
+                    missing_aspects.append(
+                        f"Missing implementation for: {req['text'][:50]}..."
+                    )
 
         total_reqs = len(requirements)
         if total_reqs == 0:
@@ -279,7 +337,9 @@ class PRCrossReferenceAnalyzer:
             "missing_aspects": missing_aspects,
         }
 
-    def _analyze_doc_consistency(self, doc: Dict[str, Any], pr_changes: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_doc_consistency(
+        self, doc: Dict[str, Any], pr_changes: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze consistency between a document and PR changes."""
         doc_content = doc.get("content", "").lower()
         pr_files = [f.lower() for f in pr_changes.get("files_modified", [])]
@@ -288,24 +348,38 @@ class PRCrossReferenceAnalyzer:
         issues = []
 
         # Check for API endpoint changes without documentation updates
-        api_files = [f for f in pr_files if any(ext in f for ext in [".py", ".js", ".java", ".go"])]
+        api_files = [
+            f
+            for f in pr_files
+            if any(ext in f for ext in [".py", ".js", ".java", ".go"])
+        ]
         if api_files and "api" in doc_content:
-            if not any(term in doc_content for term in ["endpoint", "route", "handler"]):
+            if not any(
+                term in doc_content for term in ["endpoint", "route", "handler"]
+            ):
                 consistency_score -= 0.2
-                issues.append("API changes detected but documentation may not reflect new endpoints")
+                issues.append(
+                    "API changes detected but documentation may not reflect new endpoints"
+                )
 
         # Check for authentication changes
         auth_files = [f for f in pr_files if "auth" in f]
         if auth_files and "authentication" in doc_content:
             if not any(term in doc_content for term in ["oauth", "token", "login"]):
                 consistency_score -= 0.15
-                issues.append("Authentication changes detected but security documentation may be outdated")
+                issues.append(
+                    "Authentication changes detected but security documentation may be outdated"
+                )
 
         # Check for breaking changes
         if "breaking" in pr_changes.get("description", "").lower():
-            if not any(term in doc_content for term in ["breaking", "deprecated", "migration"]):
+            if not any(
+                term in doc_content for term in ["breaking", "deprecated", "migration"]
+            ):
                 consistency_score -= 0.25
-                issues.append("Breaking changes detected but migration documentation may be missing")
+                issues.append(
+                    "Breaking changes detected but migration documentation may be missing"
+                )
 
         return {
             "consistency_score": max(0.0, min(1.0, consistency_score)),
@@ -355,7 +429,9 @@ class PRCrossReferenceAnalyzer:
 
         return requirements
 
-    def _generate_alignment_recommendations(self, alignment_results: Dict[str, Any]) -> List[str]:
+    def _generate_alignment_recommendations(
+        self, alignment_results: Dict[str, Any]
+    ) -> List[str]:
         """Generate recommendations based on alignment analysis."""
         recommendations = []
 
@@ -371,14 +447,20 @@ class PRCrossReferenceAnalyzer:
                         f"Complete partial {category} implementation: {len(missing_aspects)} aspects remaining"
                     )
             elif result.get("alignment_score", 0) < 0.8:
-                recommendations.append(f"Review and improve {category} implementation quality")
+                recommendations.append(
+                    f"Review and improve {category} implementation quality"
+                )
 
         if not recommendations:
-            recommendations.append("All requirements appear to be well-aligned with implementation")
+            recommendations.append(
+                "All requirements appear to be well-aligned with implementation"
+            )
 
         return recommendations
 
-    def _generate_consistency_recommendations(self, consistency_results: Dict[str, Any]) -> List[str]:
+    def _generate_consistency_recommendations(
+        self, consistency_results: Dict[str, Any]
+    ) -> List[str]:
         """Generate recommendations based on consistency analysis."""
         recommendations = []
 
@@ -396,11 +478,15 @@ class PRCrossReferenceAnalyzer:
                 )
 
         if not recommendations:
-            recommendations.append("Documentation appears consistent with implementation changes")
+            recommendations.append(
+                "Documentation appears consistent with implementation changes"
+            )
 
         return recommendations
 
-    def _assess_overall_risk(self, overall_score: float, gaps: List[str], issues: List[str]) -> str:
+    def _assess_overall_risk(
+        self, overall_score: float, gaps: List[str], issues: List[str]
+    ) -> str:
         """Assess overall risk level based on analysis results."""
         risk_factors = len(gaps) + len(issues)
 

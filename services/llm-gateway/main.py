@@ -14,11 +14,25 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-# Service configuration
-SERVICE_NAME = "llm-gateway"
-SERVICE_TITLE = "LLM Gateway"
-SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5055
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="llm-gateway",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "LLM Gateway"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Environment configuration
 OLLAMA_ENDPOINT = os.getenv("OLLAMA_ENDPOINT", "http://ollama:11434")
@@ -68,22 +82,56 @@ class GatewayResponse(BaseModel):
 
 # Initialize FastAPI app
 app = FastAPI(
-    title=SERVICE_TITLE, description="Unified access to LLM providers including Ollama", version=SERVICE_VERSION
+    title=SERVICE_TITLE,
+    description="Unified access to LLM providers including Ollama",
+    version=SERVICE_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=SERVICE_NAME)
 
-# Simple health check endpoint
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
+
+
+# Enhanced health check endpoint
 @app.get("/health")
 async def health():
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": SERVICE_NAME,
-        "version": SERVICE_VERSION,
-        "timestamp": time.time(),
-        "environment": ENVIRONMENT,
-        "ollama_endpoint": OLLAMA_ENDPOINT,
-    }
+    """Enhanced health check endpoint with dependency validation."""
+    try:
+        # Test Ollama connectivity
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            try:
+                response = await client.get(f"{OLLAMA_ENDPOINT}/api/tags")
+                ollama_status = "healthy" if response.status_code == 200 else "unreachable"
+            except Exception:
+                ollama_status = "unreachable"
+
+        return create_success_response(
+            data={
+                "status": "healthy",
+                "service": SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "environment": ENVIRONMENT,
+                "ollama_endpoint": OLLAMA_ENDPOINT,
+                "ollama_status": ollama_status,
+                "features": {
+                    "llm_routing": True,
+                    "streaming": True,
+                    "caching": True,
+                    "rate_limiting": True,
+                }
+            },
+            message="Service is healthy"
+        )
+    except Exception as e:
+        return create_error_response(
+            message=f"Health check failed: {str(e)}",
+            error_code="HEALTH_CHECK_FAILED",
+            details={"error": str(e)}
+        )
 
 
 # Provider management
@@ -99,11 +147,29 @@ async def get_providers():
             if response.status_code == 200:
                 models_data = response.json()
                 models = [model["name"] for model in models_data.get("models", [])]
-                providers.append(ProviderInfo(name="ollama", status="healthy", models=models, endpoint=OLLAMA_ENDPOINT))
+                providers.append(
+                    ProviderInfo(
+                        name="ollama",
+                        status="healthy",
+                        models=models,
+                        endpoint=OLLAMA_ENDPOINT,
+                    )
+                )
             else:
-                providers.append(ProviderInfo(name="ollama", status="unhealthy", models=[], endpoint=OLLAMA_ENDPOINT))
+                providers.append(
+                    ProviderInfo(
+                        name="ollama",
+                        status="unhealthy",
+                        models=[],
+                        endpoint=OLLAMA_ENDPOINT,
+                    )
+                )
     except Exception:
-        providers.append(ProviderInfo(name="ollama", status="error", models=[], endpoint=OLLAMA_ENDPOINT))
+        providers.append(
+            ProviderInfo(
+                name="ollama", status="error", models=[], endpoint=OLLAMA_ENDPOINT
+            )
+        )
 
     return {"providers": providers}
 
@@ -121,10 +187,15 @@ async def query_llm(request: LLMQuery):
                     "model": request.model,
                     "prompt": request.prompt,
                     "stream": False,
-                    "options": {"num_predict": request.max_tokens, "temperature": request.temperature},
+                    "options": {
+                        "num_predict": request.max_tokens,
+                        "temperature": request.temperature,
+                    },
                 }
 
-                response = await client.post(f"{OLLAMA_ENDPOINT}/api/generate", json=ollama_request)
+                response = await client.post(
+                    f"{OLLAMA_ENDPOINT}/api/generate", json=ollama_request
+                )
 
                 if response.status_code == 200:
                     result = response.json()
@@ -140,13 +211,18 @@ async def query_llm(request: LLMQuery):
                     )
                 else:
                     raise HTTPException(
-                        status_code=response.status_code, detail=f"Ollama request failed: {response.text}"
+                        status_code=response.status_code,
+                        detail=f"Ollama request failed: {response.text}",
                     )
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error querying Ollama: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error querying Ollama: {str(e)}"
+            )
     else:
-        raise HTTPException(status_code=400, detail=f"Unsupported provider: {request.provider}")
+        raise HTTPException(
+            status_code=400, detail=f"Unsupported provider: {request.provider}"
+        )
 
 
 # Chat endpoint for conversational interactions
@@ -168,10 +244,15 @@ async def chat_llm(request: ChatRequest):
                     "model": request.model,
                     "prompt": conversation,
                     "stream": False,
-                    "options": {"num_predict": request.max_tokens, "temperature": request.temperature},
+                    "options": {
+                        "num_predict": request.max_tokens,
+                        "temperature": request.temperature,
+                    },
                 }
 
-                response = await client.post(f"{OLLAMA_ENDPOINT}/api/generate", json=ollama_request)
+                response = await client.post(
+                    f"{OLLAMA_ENDPOINT}/api/generate", json=ollama_request
+                )
 
                 if response.status_code == 200:
                     result = response.json()
@@ -190,12 +271,19 @@ async def chat_llm(request: ChatRequest):
                         tokens_used=len(result.get("response", "").split()),
                     )
                 else:
-                    raise HTTPException(status_code=response.status_code, detail=f"Ollama chat failed: {response.text}")
+                    raise HTTPException(
+                        status_code=response.status_code,
+                        detail=f"Ollama chat failed: {response.text}",
+                    )
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error in chat with Ollama: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Error in chat with Ollama: {str(e)}"
+            )
     else:
-        raise HTTPException(status_code=400, detail=f"Unsupported provider: {request.provider}")
+        raise HTTPException(
+            status_code=400, detail=f"Unsupported provider: {request.provider}"
+        )
 
 
 # Streaming endpoint
@@ -211,7 +299,10 @@ async def stream_llm(request: LLMQuery):
                         "model": request.model,
                         "prompt": request.prompt,
                         "stream": True,
-                        "options": {"num_predict": request.max_tokens, "temperature": request.temperature},
+                        "options": {
+                            "num_predict": request.max_tokens,
+                            "temperature": request.temperature,
+                        },
                     }
 
                     async with client.stream(
@@ -230,7 +321,9 @@ async def stream_llm(request: LLMQuery):
 
         return StreamingResponse(generate(), media_type="text/plain")
     else:
-        raise HTTPException(status_code=400, detail=f"Unsupported provider: {request.provider}")
+        raise HTTPException(
+            status_code=400, detail=f"Unsupported provider: {request.provider}"
+        )
 
 
 # Ollama models endpoint
@@ -281,9 +374,14 @@ async def list_ollama_models():
             if response.status_code == 200:
                 return response.json()
             else:
-                raise HTTPException(status_code=response.status_code, detail="Failed to fetch Ollama models")
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail="Failed to fetch Ollama models",
+                )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching Ollama models: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching Ollama models: {str(e)}"
+        )
 
 
 # Root endpoint

@@ -67,9 +67,13 @@ class PromptTestingResult(BaseEntity):
         )
         entity.id = data.get("id")
         if "created_at" in data:
-            entity.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            entity.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "updated_at" in data and data["updated_at"]:
-            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            entity.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
         return entity
 
 
@@ -129,11 +133,17 @@ class BiasDetectionResult(BaseEntity):
         )
         entity.id = data.get("id")
         if "resolved_at" in data and data["resolved_at"]:
-            entity.resolved_at = datetime.fromisoformat(data["resolved_at"].replace("Z", "+00:00"))
+            entity.resolved_at = datetime.fromisoformat(
+                data["resolved_at"].replace("Z", "+00:00")
+            )
         if "created_at" in data:
-            entity.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            entity.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "updated_at" in data and data["updated_at"]:
-            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            entity.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
         return entity
 
 
@@ -188,7 +198,11 @@ class ValidationReport(BaseEntity):
         )
         entity.id = data.get("id")
         if "created_at" in data:
-            entity.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            entity.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "updated_at" in data and data["updated_at"]:
-            entity.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            entity.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
         return entity

@@ -13,6 +13,7 @@ from services.shared.infrastructure.config import DocStoreConfig, load_service_c
 from services.shared.utilities import ServiceException, ValidationException
 from services.shared.utilities import setup_common_middleware
 from services.shared.presentation.responses import create_success_response
+from services.shared.utilities import create_validation_error
 
 from .api.routes import router as api_router
 
@@ -29,11 +30,11 @@ from .infrastructure.cache import docstore_cache
 # Load configuration using standardized system
 config = load_service_config(
     service_type="doc-store",
-    config_file="./config.yaml"  # Optional config file override
+    config_file="./config.yaml",  # Optional config file override
 )
 
 # ============================================================================
-# FASTAPI APPLICATION - Clean and minimal
+# FASTAPI APPLICATION - Clean and minimal with standardized features
 # ============================================================================
 app = FastAPI(
     title="Doc Store Service",
@@ -44,44 +45,78 @@ app = FastAPI(
 )
 
 # Setup standardized middleware and utilities
-setup_common_middleware(app)
+setup_common_middleware(app, service_name=config.service_name)
+
 
 # Add standardized error handling
 @app.exception_handler(ServiceException)
 async def service_exception_handler(request, exc: ServiceException):
     from services.shared.presentation.responses import create_error_response
+
     return create_error_response(
         message=str(exc),
         error_code=exc.__class__.__name__,
-        request_id=getattr(exc, 'request_id', None)
+        request_id=getattr(exc, "request_id", None),
     )
+
 
 @app.exception_handler(ValidationException)
 async def validation_exception_handler(request, exc: ValidationException):
-    from services.shared.presentation.responses import create_validation_error_response
-    # For now, return generic error - can be enhanced with field details
+    from services.shared.presentation.responses import create_error_response
+
     return create_error_response(
         message=str(exc),
         error_code="ValidationError",
-        request_id=getattr(exc, 'request_id', None)
+        request_id=getattr(exc, "request_id", None),
     )
+
+
+# Database initialization on startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database and services on startup."""
+    try:
+        # Initialize database schema
+        from .db.schema import init_database
+
+        init_database()
+        print("✅ Database initialized successfully")
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+        raise
 
 
 # Health endpoint using standardized response system
 @app.get("/health")
 async def health_check():
     """Health check endpoint with standardized response."""
-    import time
+    try:
+        # Test database connectivity
+        from .db.connection import get_doc_store_connection
+
+        conn = get_doc_store_connection()
+        if conn:
+            db_status = "healthy"
+        else:
+            db_status = "unhealthy"
+    except Exception:
+        db_status = "error"
 
     return create_success_response(
         data={
             "status": "healthy",
             "service": config.service_name,
             "version": config.service_version,
-            "uptime_seconds": 0,  # TODO: Implement actual uptime tracking
-            "database_status": "unknown"  # TODO: Add database health check
+            "database_status": db_status,
+            "features": {
+                "document_storage": True,
+                "search": True,
+                "analytics": True,
+                "versioning": True,
+                "tagging": True,
+            },
         },
-        message="Service is healthy"
+        message="Service is healthy",
     )
 
 

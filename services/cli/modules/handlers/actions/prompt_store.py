@@ -7,7 +7,9 @@ from services.shared.integrations.clients.clients import ServiceClients
 from ...utils.display_helpers import print_kv, print_list
 
 
-def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
+def build_actions(
+    console, clients: ServiceClients
+) -> List[Tuple[str, Callable[[], Any]]]:
     async def list_prompts():
         url = f"{clients.prompt_store_url()}/prompts?limit=50"
         rx = await clients.get_json(url)
@@ -29,7 +31,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         name = Prompt.ask("Name")
         content = Prompt.ask("Content")
         url = f"{clients.prompt_store_url()}/prompts"
-        rx = await clients.post_json(url, {"category": category, "name": name, "content": content})
+        rx = await clients.post_json(
+            url, {"category": category, "name": name, "content": content}
+        )
         print_kv(console, "Result", rx)
 
     return [

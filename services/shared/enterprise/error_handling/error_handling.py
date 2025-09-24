@@ -142,7 +142,9 @@ class ErrorContext:
             "duration_ms": self.duration_ms,
             "recovery_attempts": self.recovery_attempts,
             "max_recovery_attempts": self.max_recovery_attempts,
-            "recovery_strategy": self.recovery_strategy.value if self.recovery_strategy else None,
+            "recovery_strategy": (
+                self.recovery_strategy.value if self.recovery_strategy else None
+            ),
             "recovery_successful": self.recovery_successful,
             "related_errors": self.related_errors,
             "affected_resources": self.affected_resources,
@@ -225,15 +227,24 @@ class CircuitBreaker:
         self.failure_count += 1
         self.last_failure_time = datetime.now()
 
-        if self.state == CircuitBreakerState.CLOSED and self.failure_count >= self.failure_threshold:
+        if (
+            self.state == CircuitBreakerState.CLOSED
+            and self.failure_count >= self.failure_threshold
+        ):
             self.state = CircuitBreakerState.OPEN
-            self.next_attempt_time = datetime.now() + timedelta(seconds=self.recovery_timeout_seconds)
+            self.next_attempt_time = datetime.now() + timedelta(
+                seconds=self.recovery_timeout_seconds
+            )
             fire_and_forget(
-                "warning", f"Circuit breaker for {self.service_name}.{self.operation} opened", ServiceNames.ORCHESTRATOR
+                "warning",
+                f"Circuit breaker for {self.service_name}.{self.operation} opened",
+                ServiceNames.ORCHESTRATOR,
             )
         elif self.state == CircuitBreakerState.HALF_OPEN:
             self.state = CircuitBreakerState.OPEN
-            self.next_attempt_time = datetime.now() + timedelta(seconds=self.recovery_timeout_seconds)
+            self.next_attempt_time = datetime.now() + timedelta(
+                seconds=self.recovery_timeout_seconds
+            )
             self.success_count = 0
 
     def can_attempt(self) -> bool:
@@ -297,7 +308,9 @@ class EnterpriseErrorHandler:
             timeout_seconds=45,
         )
 
-    async def handle_error(self, error: Exception, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_error(
+        self, error: Exception, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle error with comprehensive recovery and reporting."""
 
         # Create error context
@@ -322,7 +335,9 @@ class EnterpriseErrorHandler:
         # Return standardized error response
         return self._create_error_response(error_context, recovery_result)
 
-    def _create_error_context(self, error: Exception, context: Dict[str, Any]) -> ErrorContext:
+    def _create_error_context(
+        self, error: Exception, context: Dict[str, Any]
+    ) -> ErrorContext:
         """Create comprehensive error context."""
         error_context = ErrorContext()
 
@@ -340,8 +355,12 @@ class EnterpriseErrorHandler:
         error_context.correlation_id = context.get("correlation_id")
 
         # Request/response data (sanitized)
-        error_context.request_data = self._sanitize_data(context.get("request_data", {}))
-        error_context.response_data = self._sanitize_data(context.get("response_data", {}))
+        error_context.request_data = self._sanitize_data(
+            context.get("request_data", {})
+        )
+        error_context.response_data = self._sanitize_data(
+            context.get("response_data", {})
+        )
 
         # Environment context
         error_context.environment_context = {
@@ -355,7 +374,9 @@ class EnterpriseErrorHandler:
         if "start_time" in context:
             start_time = context["start_time"]
             if isinstance(start_time, datetime):
-                error_context.duration_ms = (datetime.now() - start_time).total_seconds() * 1000
+                error_context.duration_ms = (
+                    datetime.now() - start_time
+                ).total_seconds() * 1000
 
         # Determine severity
         error_context.severity = self._determine_severity(error, context)
@@ -368,15 +389,24 @@ class EnterpriseErrorHandler:
         error_message = str(error).lower()
 
         # Network-related errors
-        if any(keyword in error_message for keyword in ["connection", "timeout", "network", "socket"]):
+        if any(
+            keyword in error_message
+            for keyword in ["connection", "timeout", "network", "socket"]
+        ):
             return ErrorCategory.NETWORK
 
         # Database-related errors
-        if any(keyword in error_message for keyword in ["database", "sql", "query", "connection"]):
+        if any(
+            keyword in error_message
+            for keyword in ["database", "sql", "query", "connection"]
+        ):
             return ErrorCategory.DATABASE
 
         # Authentication/Authorization errors
-        if any(keyword in error_message for keyword in ["auth", "permission", "access", "unauthorized"]):
+        if any(
+            keyword in error_message
+            for keyword in ["auth", "permission", "access", "unauthorized"]
+        ):
             return ErrorCategory.AUTHENTICATION
 
         # Validation errors
@@ -384,16 +414,24 @@ class EnterpriseErrorHandler:
             return ErrorCategory.VALIDATION
 
         # External service errors
-        if any(keyword in error_message for keyword in ["service", "external", "upstream", "downstream"]):
+        if any(
+            keyword in error_message
+            for keyword in ["service", "external", "upstream", "downstream"]
+        ):
             return ErrorCategory.EXTERNAL_SERVICE
 
         # Resource exhaustion
-        if any(keyword in error_message for keyword in ["memory", "cpu", "disk", "resource", "limit"]):
+        if any(
+            keyword in error_message
+            for keyword in ["memory", "cpu", "disk", "resource", "limit"]
+        ):
             return ErrorCategory.RESOURCE_EXHAUSTION
 
         return ErrorCategory.UNKNOWN
 
-    def _determine_severity(self, error: Exception, context: Dict[str, Any]) -> ErrorSeverity:
+    def _determine_severity(
+        self, error: Exception, context: Dict[str, Any]
+    ) -> ErrorSeverity:
         """Determine error severity based on error type and context."""
         error_type = type(error).__name__
 
@@ -418,7 +456,9 @@ class EnterpriseErrorHandler:
 
         return ErrorSeverity.LOW
 
-    def _sanitize_data(self, data: Dict[str, Any], max_depth: int = 3) -> Dict[str, Any]:
+    def _sanitize_data(
+        self, data: Dict[str, Any], max_depth: int = 3
+    ) -> Dict[str, Any]:
         """Sanitize sensitive data from error context."""
         if not isinstance(data, dict) or max_depth <= 0:
             return {}
@@ -433,7 +473,9 @@ class EnterpriseErrorHandler:
                 sanitized[key] = self._sanitize_data(value, max_depth - 1)
             elif isinstance(value, list):
                 sanitized[key] = [
-                    self._sanitize_data({"item": item}, max_depth - 1).get("item", "***REDACTED***")
+                    self._sanitize_data({"item": item}, max_depth - 1).get(
+                        "item", "***REDACTED***"
+                    )
                     for item in value[:10]
                 ]  # Limit array size
             else:
@@ -463,9 +505,16 @@ class EnterpriseErrorHandler:
             return await self._circuit_breaker_recovery(error_context)
 
         # Default recovery strategy
-        return {"success": False, "attempts": 0, "strategy": "none", "message": "No recovery strategy available"}
+        return {
+            "success": False,
+            "attempts": 0,
+            "strategy": "none",
+            "message": "No recovery strategy available",
+        }
 
-    async def _execute_recovery_action(self, action: RecoveryAction, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _execute_recovery_action(
+        self, action: RecoveryAction, error_context: ErrorContext
+    ) -> Dict[str, Any]:
         """Execute specific recovery action."""
         action.total_executions += 1
         start_time = time.time()
@@ -474,15 +523,21 @@ class EnterpriseErrorHandler:
             if action.strategy == RecoveryStrategy.RETRY:
                 result = await self._execute_retry_recovery(action, error_context)
             elif action.strategy == RecoveryStrategy.CIRCUIT_BREAKER:
-                result = await self._execute_circuit_breaker_recovery(action, error_context)
+                result = await self._execute_circuit_breaker_recovery(
+                    action, error_context
+                )
             elif action.strategy == RecoveryStrategy.FALLBACK:
                 result = await self._execute_fallback_recovery(action, error_context)
             else:
-                result = {"success": False, "message": f"Unsupported strategy: {action.strategy}"}
+                result = {
+                    "success": False,
+                    "message": f"Unsupported strategy: {action.strategy}",
+                }
 
             execution_time = time.time() - start_time
             action.average_execution_time = (
-                (action.average_execution_time * (action.total_executions - 1)) + execution_time
+                (action.average_execution_time * (action.total_executions - 1))
+                + execution_time
             ) / action.total_executions
 
             if result.get("success"):
@@ -503,7 +558,9 @@ class EnterpriseErrorHandler:
                 "execution_time": execution_time,
             }
 
-    async def _execute_retry_recovery(self, action: RecoveryAction, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _execute_retry_recovery(
+        self, action: RecoveryAction, error_context: ErrorContext
+    ) -> Dict[str, Any]:
         """Execute retry-based recovery."""
         for attempt in range(action.max_attempts):
             try:
@@ -520,7 +577,9 @@ class EnterpriseErrorHandler:
                         }
 
                 # Simulate retry logic (in real implementation, this would retry the actual operation)
-                await asyncio.sleep(action.backoff_seconds * (2**attempt))  # Exponential backoff
+                await asyncio.sleep(
+                    action.backoff_seconds * (2**attempt)
+                )  # Exponential backoff
 
                 # For simulation, assume success on attempt 2
                 if attempt >= 1:
@@ -575,34 +634,61 @@ class EnterpriseErrorHandler:
             }
 
         # Simulate operation
-        success = True  # In real implementation, this would be the actual operation result
+        success = (
+            True  # In real implementation, this would be the actual operation result
+        )
 
         if success:
             circuit_breaker.record_success()
-            return {"success": True, "attempts": 1, "strategy": "circuit_breaker", "message": "Operation successful"}
+            return {
+                "success": True,
+                "attempts": 1,
+                "strategy": "circuit_breaker",
+                "message": "Operation successful",
+            }
         else:
             circuit_breaker.record_failure()
-            return {"success": False, "attempts": 1, "strategy": "circuit_breaker", "message": "Operation failed"}
+            return {
+                "success": False,
+                "attempts": 1,
+                "strategy": "circuit_breaker",
+                "message": "Operation failed",
+            }
 
-    async def _execute_fallback_recovery(self, action: RecoveryAction, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _execute_fallback_recovery(
+        self, action: RecoveryAction, error_context: ErrorContext
+    ) -> Dict[str, Any]:
         """Execute fallback recovery."""
         try:
             # Simulate fallback operation
             await asyncio.sleep(0.1)  # Simulate fallback execution time
 
             # In real implementation, this would execute the fallback logic
-            return {"success": True, "attempts": 1, "strategy": "fallback", "message": "Fallback operation successful"}
+            return {
+                "success": True,
+                "attempts": 1,
+                "strategy": "fallback",
+                "message": "Fallback operation successful",
+            }
 
         except Exception as e:
-            return {"success": False, "attempts": 1, "strategy": "fallback", "error": str(e)}
+            return {
+                "success": False,
+                "attempts": 1,
+                "strategy": "fallback",
+                "error": str(e),
+            }
 
-    async def _circuit_breaker_recovery(self, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _circuit_breaker_recovery(
+        self, error_context: ErrorContext
+    ) -> Dict[str, Any]:
         """Default circuit breaker recovery for external service errors."""
         circuit_key = f"{error_context.service_name}:{error_context.operation}"
 
         if circuit_key not in self.circuit_breakers:
             self.circuit_breakers[circuit_key] = CircuitBreaker(
-                service_name=error_context.service_name, operation=error_context.operation
+                service_name=error_context.service_name,
+                operation=error_context.operation,
             )
 
         circuit_breaker = self.circuit_breakers[circuit_key]
@@ -635,7 +721,9 @@ class EnterpriseErrorHandler:
                 "message": "External service call failed",
             }
 
-    async def _log_error(self, error_context: ErrorContext, recovery_result: Dict[str, Any]):
+    async def _log_error(
+        self, error_context: ErrorContext, recovery_result: Dict[str, Any]
+    ):
         """Log comprehensive error information."""
         log_data = {
             "error_id": error_context.error_id,
@@ -669,7 +757,9 @@ class EnterpriseErrorHandler:
                 ServiceNames.ORCHESTRATOR,
             )
 
-    def _create_error_response(self, error_context: ErrorContext, recovery_result: Dict[str, Any]) -> Dict[str, Any]:
+    def _create_error_response(
+        self, error_context: ErrorContext, recovery_result: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create standardized error response."""
         response = {
             "error": {
@@ -695,19 +785,29 @@ class EnterpriseErrorHandler:
 
         # Add user-friendly message based on error type
         if error_context.category == ErrorCategory.NETWORK:
-            response["user_message"] = "Network connectivity issue. Please try again in a moment."
+            response["user_message"] = (
+                "Network connectivity issue. Please try again in a moment."
+            )
         elif error_context.category == ErrorCategory.AUTHENTICATION:
-            response["user_message"] = "Authentication failed. Please check your credentials."
+            response["user_message"] = (
+                "Authentication failed. Please check your credentials."
+            )
         elif error_context.category == ErrorCategory.VALIDATION:
             response["user_message"] = "Invalid input data. Please check your request."
         elif error_context.severity == ErrorSeverity.CRITICAL:
-            response["user_message"] = "A critical system error occurred. Our team has been notified."
+            response["user_message"] = (
+                "A critical system error occurred. Our team has been notified."
+            )
         else:
-            response["user_message"] = "An error occurred while processing your request."
+            response["user_message"] = (
+                "An error occurred while processing your request."
+            )
 
         return response
 
-    def get_error_statistics(self, service_name: Optional[str] = None, hours: int = 24) -> Dict[str, Any]:
+    def get_error_statistics(
+        self, service_name: Optional[str] = None, hours: int = 24
+    ) -> Dict[str, Any]:
         """Get error statistics for analysis."""
         cutoff_time = datetime.now() - timedelta(hours=hours)
         statistics = {
@@ -742,7 +842,9 @@ class EnterpriseErrorHandler:
                             successful_recoveries += 1
 
         if total_recovery_attempts > 0:
-            statistics["recovery_success_rate"] = successful_recoveries / total_recovery_attempts
+            statistics["recovery_success_rate"] = (
+                successful_recoveries / total_recovery_attempts
+            )
 
         return dict(statistics)
 
@@ -762,16 +864,22 @@ class EnterpriseErrorHandler:
                     else 0
                 ),
                 "last_failure": (
-                    circuit_breaker.last_failure_time.isoformat() if circuit_breaker.last_failure_time else None
+                    circuit_breaker.last_failure_time.isoformat()
+                    if circuit_breaker.last_failure_time
+                    else None
                 ),
                 "next_attempt": (
-                    circuit_breaker.next_attempt_time.isoformat() if circuit_breaker.next_attempt_time else None
+                    circuit_breaker.next_attempt_time.isoformat()
+                    if circuit_breaker.next_attempt_time
+                    else None
                 ),
             }
 
         return status
 
-    def register_recovery_action(self, error_pattern: str, recovery_action: RecoveryAction):
+    def register_recovery_action(
+        self, error_pattern: str, recovery_action: RecoveryAction
+    ):
         """Register custom recovery action for specific error patterns."""
         self.recovery_actions[error_pattern] = recovery_action
 
@@ -815,7 +923,9 @@ def enterprise_error_handler_decorator(service_name: str, operation: str):
                     elif isinstance(args[1], dict):
                         context.update(args[1])
 
-                error_response = await enterprise_error_handler.handle_error(error, context)
+                error_response = await enterprise_error_handler.handle_error(
+                    error, context
+                )
                 raise HTTPException(status_code=500, detail=error_response)
 
         return wrapper
@@ -869,18 +979,29 @@ async def initialize_enterprise_error_handling():
 
     # Register circuit breakers for critical services
     enterprise_error_handler.register_circuit_breaker(
-        CircuitBreaker(service_name="doc_store", operation="query", failure_threshold=5, recovery_timeout_seconds=30)
-    )
-
-    enterprise_error_handler.register_circuit_breaker(
         CircuitBreaker(
-            service_name="analysis_service", operation="analyze", failure_threshold=3, recovery_timeout_seconds=60
+            service_name="doc_store",
+            operation="query",
+            failure_threshold=5,
+            recovery_timeout_seconds=30,
         )
     )
 
     enterprise_error_handler.register_circuit_breaker(
         CircuitBreaker(
-            service_name="prompt_store", operation="get_prompt", failure_threshold=4, recovery_timeout_seconds=45
+            service_name="analysis_service",
+            operation="analyze",
+            failure_threshold=3,
+            recovery_timeout_seconds=60,
+        )
+    )
+
+    enterprise_error_handler.register_circuit_breaker(
+        CircuitBreaker(
+            service_name="prompt_store",
+            operation="get_prompt",
+            failure_threshold=4,
+            recovery_timeout_seconds=45,
         )
     )
 
@@ -890,7 +1011,11 @@ async def initialize_enterprise_error_handling():
     print("   • Error classification enabled")
     print("   • Comprehensive error reporting activated")
 
-    fire_and_forget("info", "Enterprise Error Handling Framework v2.0 initialized", ServiceNames.ORCHESTRATOR)
+    fire_and_forget(
+        "info",
+        "Enterprise Error Handling Framework v2.0 initialized",
+        ServiceNames.ORCHESTRATOR,
+    )
 
 
 # Utility functions for service integration
@@ -926,7 +1051,9 @@ def handle_service_error(error: Exception, context: Dict[str, Any]) -> Dict[str,
             asyncio.set_event_loop(loop)
 
         # Handle error asynchronously
-        return loop.run_until_complete(enterprise_error_handler.handle_error(error, context))
+        return loop.run_until_complete(
+            enterprise_error_handler.handle_error(error, context)
+        )
     except Exception as e:
         # Fallback error response
         return {

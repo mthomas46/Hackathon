@@ -41,13 +41,17 @@ class AnalysisMonitor:
 
             # Get basic info
             detectors = await clients.get_json(f"{analysis_url}/detectors")
-            integration_health = await clients.get_json(f"{analysis_url}/integration/health")
+            integration_health = await clients.get_json(
+                f"{analysis_url}/integration/health"
+            )
 
             status_data = {
                 "detectors": detectors.get("detectors", []),
                 "integration_health": integration_health,
                 "analysis_stats": self._calculate_analysis_stats(),
-                "recent_findings": self._findings_cache[-10:] if self._findings_cache else [],  # Last 10 findings
+                "recent_findings": (
+                    self._findings_cache[-10:] if self._findings_cache else []
+                ),  # Last 10 findings
                 "last_updated": utc_now().isoformat(),
             }
 
@@ -102,7 +106,9 @@ class AnalysisMonitor:
         # Apply pagination
         start_idx = offset
         end_idx = offset + limit
-        paginated_findings = findings[start_idx:end_idx] if start_idx < len(findings) else []
+        paginated_findings = (
+            findings[start_idx:end_idx] if start_idx < len(findings) else []
+        )
 
         return {
             "findings": paginated_findings,
@@ -134,14 +140,21 @@ class AnalysisMonitor:
         }
 
     async def run_analysis(
-        self, targets: List[str], analysis_type: str = "consistency", options: Optional[Dict[str, Any]] = None
+        self,
+        targets: List[str],
+        analysis_type: str = "consistency",
+        options: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Run a new analysis and cache the results."""
         try:
             clients = get_frontend_clients()
             analysis_url = get_analysis_service_url()
 
-            payload = {"targets": targets, "analysis_type": analysis_type, "options": options or {}}
+            payload = {
+                "targets": targets,
+                "analysis_type": analysis_type,
+                "options": options or {},
+            }
 
             response = await clients.post_json(f"{analysis_url}/analyze", payload)
 
@@ -178,7 +191,11 @@ class AnalysisMonitor:
                     "results": analysis_result,
                 }
 
-            return {"success": False, "error": response.get("message", "Analysis failed"), "results": response}
+            return {
+                "success": False,
+                "error": response.get("message", "Analysis failed"),
+                "results": response,
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e), "results": None}
@@ -194,13 +211,19 @@ class AnalysisMonitor:
             analysis_url = get_analysis_service_url()
 
             if report_type == "confluence_consolidation":
-                response = await clients.get_json(f"{analysis_url}/reports/confluence/consolidation")
+                response = await clients.get_json(
+                    f"{analysis_url}/reports/confluence/consolidation"
+                )
             elif report_type == "jira_staleness":
-                response = await clients.get_json(f"{analysis_url}/reports/jira/staleness")
+                response = await clients.get_json(
+                    f"{analysis_url}/reports/jira/staleness"
+                )
             else:
                 # Generate general report
                 report_payload = {"kind": report_type, "format": "json"}
-                response = await clients.post_json(f"{analysis_url}/reports/generate", report_payload)
+                response = await clients.post_json(
+                    f"{analysis_url}/reports/generate", report_payload
+                )
 
             report_data = {
                 "type": report_type,
@@ -214,9 +237,16 @@ class AnalysisMonitor:
             return report_data
 
         except Exception as e:
-            return {"type": report_type, "error": str(e), "data": {}, "generated_at": utc_now().isoformat()}
+            return {
+                "type": report_type,
+                "error": str(e),
+                "data": {},
+                "generated_at": utc_now().isoformat(),
+            }
 
-    async def _enhance_analysis_with_documents(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
+    async def _enhance_analysis_with_documents(
+        self, analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Enhance analysis results with document information."""
         enhanced_analysis = analysis.copy()
         linked_documents = []
@@ -248,7 +278,9 @@ class AnalysisMonitor:
                 "type_breakdown": {},
             }
 
-        total_findings = sum(len(result.get("findings", [])) for result in self._analysis_results)
+        total_findings = sum(
+            len(result.get("findings", [])) for result in self._analysis_results
+        )
 
         # Analysis types
         analysis_types = defaultdict(int)
@@ -271,7 +303,9 @@ class AnalysisMonitor:
             "severity_breakdown": dict(severity_breakdown),
             "type_breakdown": dict(type_breakdown),
             "average_findings_per_analysis": (
-                total_findings / len(self._analysis_results) if self._analysis_results else 0
+                total_findings / len(self._analysis_results)
+                if self._analysis_results
+                else 0
             ),
         }
 

@@ -23,8 +23,7 @@ from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from services.shared.core.constants_new import ServiceNames
-from services.shared.core.models.models import MemoryItem
+from services.shared.infrastructure.config import load_service_config
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
@@ -70,11 +69,17 @@ from .modules.event_processor import event_processor
 # ============================================================================
 
 
-# Service configuration constants
-SERVICE_NAME = "memory-agent"
-SERVICE_TITLE = "Memory Agent"
-SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5040
+# Load standardized configuration
+config = load_service_config(
+    service_type="memory-agent",
+    config_file="./config.yaml",  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Memory Agent"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Global event task
 _event_task = None
@@ -99,19 +104,21 @@ async def _lifespan(app: FastAPI):
 # APP INITIALIZATION - Using shared patterns for consistency
 # ============================================================================
 
-# Initialize FastAPI app with shared middleware
+# Initialize FastAPI app with standardized configuration
 app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Memory agent service for storing operational context and event summaries",
     lifespan=_lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# Use common middleware setup and error handlers to reduce duplication across services
-setup_common_middleware(app, ServiceNames.MEMORY_AGENT)
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=config.service_name)
 
-# Auto-register with orchestrator
-attach_self_register(app, ServiceNames.MEMORY_AGENT)
+# Auto-register with orchestrator using standardized service name
+attach_self_register(app, config.service_name)
 
 
 # Custom memory-specific health endpoint
@@ -174,13 +181,17 @@ async def put_memory(req: PutMemoryRequest):
 
 
 @app.get("/memory/list")
-async def list_memory(type: Optional[str] = None, key: Optional[str] = None, limit: int = 100):
+async def list_memory(
+    type: Optional[str] = None, key: Optional[str] = None, limit: int = 100
+):
     """List memory items with filtering and pagination."""
     try:
         items = list_memory_items(type, key, limit)
         result = {"items": [m.model_dump() for m in items]}
 
-        context = build_memory_agent_context("list", memory_type=type, item_count=len(items), limit=limit)
+        context = build_memory_agent_context(
+            "list", memory_type=type, item_count=len(items), limit=limit
+        )
         context = {k: v for k, v in context.items() if k in ["request_id"]}
         return create_memory_agent_success_response("retrieved", result, **context)
 

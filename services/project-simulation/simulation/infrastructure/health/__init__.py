@@ -8,7 +8,10 @@ Modules:
 """
 
 # Re-export key functions from simulation_health for easier imports
-from .simulation_health import get_simulation_health_checker, get_simulation_health_endpoint
+from .simulation_health import (
+    get_simulation_health_checker,
+    get_simulation_health_endpoint,
+)
 
 
 # Add mock function for create_simulation_health_endpoints
@@ -16,4 +19,8 @@ def create_simulation_health_endpoints():
     """Mock function for creating simulation health endpoints."""
 
 
-__all__ = ["get_simulation_health_checker", "get_simulation_health_endpoint", "create_simulation_health_endpoints"]
+__all__ = [
+    "get_simulation_health_checker",
+    "get_simulation_health_endpoint",
+    "create_simulation_health_endpoints",
+]

@@ -161,17 +161,27 @@ class HealthMonitor:
         health_info = ServiceHealth(
             service_name=service_name,
             dependencies=dependencies or [],
-            metadata={"endpoint": endpoint, "role": role.value, "registered_at": datetime.now().isoformat()},
+            metadata={
+                "endpoint": endpoint,
+                "role": role.value,
+                "registered_at": datetime.now().isoformat(),
+            },
         )
 
         self.services_health[service_name] = health_info
 
         # Register with service registry
         await service_registry.register_service(
-            service_name, {"health_endpoint": f"{endpoint}/health"}, {"role": role.value, "monitored": True}
+            service_name,
+            {"health_endpoint": f"{endpoint}/health"},
+            {"role": role.value, "monitored": True},
         )
 
-        fire_and_forget("info", f"Service {service_name} registered for health monitoring", "health_monitor")
+        fire_and_forget(
+            "info",
+            f"Service {service_name} registered for health monitoring",
+            "health_monitor",
+        )
 
     async def _health_check_loop(self):
         """Continuous health check loop."""
@@ -190,9 +200,13 @@ class HealthMonitor:
                 await self._check_alerts()
 
             except Exception as e:
-                fire_and_forget("error", f"Health check loop error: {e}", "health_monitor")
+                fire_and_forget(
+                    "error", f"Health check loop error: {e}", "health_monitor"
+                )
 
-    async def _check_service_health(self, service_name: str, health_info: ServiceHealth):
+    async def _check_service_health(
+        self, service_name: str, health_info: ServiceHealth
+    ):
         """Check health of a specific service."""
         endpoint = health_info.metadata.get("endpoint")
         if not endpoint:
@@ -201,7 +215,9 @@ class HealthMonitor:
         start_time = time.time()
 
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as session:
                 async with session.get(f"{endpoint}/health") as response:
                     response_time = (time.time() - start_time) * 1000
 
@@ -232,24 +248,48 @@ class HealthMonitor:
             health_info.last_check = datetime.now()
             health_info.error_count += 1
 
-            fire_and_forget("warning", f"Health check failed for {service_name}: {e}", "health_monitor")
+            fire_and_forget(
+                "warning",
+                f"Health check failed for {service_name}: {e}",
+                "health_monitor",
+            )
 
         # Update uptime
-        registered_at = datetime.fromisoformat(health_info.metadata.get("registered_at", datetime.now().isoformat()))
-        health_info.uptime_seconds = int((datetime.now() - registered_at).total_seconds())
+        registered_at = datetime.fromisoformat(
+            health_info.metadata.get("registered_at", datetime.now().isoformat())
+        )
+        health_info.uptime_seconds = int(
+            (datetime.now() - registered_at).total_seconds()
+        )
 
     async def _update_system_health_status(self):
         """Update system-wide health metrics."""
         total_services = len(self.services_health)
-        healthy_count = sum(1 for h in self.services_health.values() if h.status == HealthStatus.HEALTHY)
-        degraded_count = sum(1 for h in self.services_health.values() if h.status == HealthStatus.DEGRADED)
-        unhealthy_count = sum(1 for h in self.services_health.values() if h.status == HealthStatus.UNHEALTHY)
+        healthy_count = sum(
+            1 for h in self.services_health.values() if h.status == HealthStatus.HEALTHY
+        )
+        degraded_count = sum(
+            1
+            for h in self.services_health.values()
+            if h.status == HealthStatus.DEGRADED
+        )
+        unhealthy_count = sum(
+            1
+            for h in self.services_health.values()
+            if h.status == HealthStatus.UNHEALTHY
+        )
 
         # Calculate system metrics
         total_requests = sum(h.request_count for h in self.services_health.values())
         total_errors = sum(h.error_count for h in self.services_health.values())
-        response_times = [h.response_time_ms for h in self.services_health.values() if h.response_time_ms]
-        avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+        response_times = [
+            h.response_time_ms
+            for h in self.services_health.values()
+            if h.response_time_ms
+        ]
+        avg_response_time = (
+            sum(response_times) / len(response_times) if response_times else 0
+        )
 
         self.system_metrics = SystemMetrics(
             total_services=total_services,
@@ -284,7 +324,8 @@ class HealthMonitor:
             # Response time alert
             if (
                 health_info.response_time_ms
-                and health_info.response_time_ms > self.alert_thresholds["response_time_ms"]
+                and health_info.response_time_ms
+                > self.alert_thresholds["response_time_ms"]
             ):
                 alerts.append(
                     {
@@ -298,7 +339,10 @@ class HealthMonitor:
                 )
 
         # System resource alerts
-        if self.system_metrics.system_memory_usage_percent > self.alert_thresholds["memory_usage_percent"]:
+        if (
+            self.system_metrics.system_memory_usage_percent
+            > self.alert_thresholds["memory_usage_percent"]
+        ):
             alerts.append(
                 {
                     "type": "high_memory_usage",
@@ -309,7 +353,10 @@ class HealthMonitor:
                 }
             )
 
-        if self.system_metrics.system_cpu_usage_percent > self.alert_thresholds["cpu_usage_percent"]:
+        if (
+            self.system_metrics.system_cpu_usage_percent
+            > self.alert_thresholds["cpu_usage_percent"]
+        ):
             alerts.append(
                 {
                     "type": "high_cpu_usage",
@@ -346,13 +393,17 @@ class HealthMonitor:
                 await self._store_metrics_history()
 
             except Exception as e:
-                fire_and_forget("error", f"Metrics collection error: {e}", "health_monitor")
+                fire_and_forget(
+                    "error", f"Metrics collection error: {e}", "health_monitor"
+                )
 
     async def _collect_detailed_metrics(self):
         """Collect detailed system and service metrics."""
         # Update system metrics with more detail
         network_stats = psutil.net_io_counters()
-        self.system_metrics.network_traffic_mbps = (network_stats.bytes_sent + network_stats.bytes_recv) / (
+        self.system_metrics.network_traffic_mbps = (
+            network_stats.bytes_sent + network_stats.bytes_recv
+        ) / (
             1024 * 1024
         )  # Simplified calculation
 
@@ -363,7 +414,9 @@ class HealthMonitor:
             if error_stats.get("services", {}).get(service_name):
                 service_stats = error_stats["services"][service_name]
                 health_info.error_count = service_stats.get("total_errors", 0)
-                health_info.request_count = health_info.error_count * 10  # Estimate based on error rate
+                health_info.request_count = (
+                    health_info.error_count * 10
+                )  # Estimate based on error rate
 
     async def _store_metrics_history(self):
         """Store metrics history for trend analysis."""
@@ -378,7 +431,9 @@ class HealthMonitor:
 
         if self.system_metrics.system_cpu_usage_percent > 80:
             fire_and_forget(
-                "warning", f"High system CPU usage: {self.system_metrics.system_cpu_usage_percent}%", "health_monitor"
+                "warning",
+                f"High system CPU usage: {self.system_metrics.system_cpu_usage_percent}%",
+                "health_monitor",
             )
 
     def get_health_status(self, service_name: Optional[str] = None) -> Dict[str, Any]:
@@ -391,7 +446,9 @@ class HealthMonitor:
 
         # Return all services health
         return {
-            "services": {name: health.to_dict() for name, health in self.services_health.items()},
+            "services": {
+                name: health.to_dict() for name, health in self.services_health.items()
+            },
             "system": self.system_metrics.to_dict(),
             "alerts": self.alerts[-10:],  # Last 10 alerts
             "timestamp": datetime.now().isoformat(),
@@ -408,7 +465,8 @@ class HealthMonitor:
                     "status": health.status.value,
                     "response_time_ms": health.response_time_ms,
                     "uptime_seconds": health.uptime_seconds,
-                    "error_rate": (health.error_count / max(health.request_count, 1)) * 100,
+                    "error_rate": (health.error_count / max(health.request_count, 1))
+                    * 100,
                     "memory_usage_mb": health.memory_usage_mb,
                     "cpu_usage_percent": health.cpu_usage_percent,
                 }
@@ -418,8 +476,12 @@ class HealthMonitor:
             "error_summary": enterprise_error_handler.get_error_statistics(),
             "alert_summary": {
                 "total_alerts": len(self.alerts),
-                "critical_alerts": len([a for a in self.alerts if a.get("severity") == "critical"]),
-                "warning_alerts": len([a for a in self.alerts if a.get("severity") == "warning"]),
+                "critical_alerts": len(
+                    [a for a in self.alerts if a.get("severity") == "critical"]
+                ),
+                "warning_alerts": len(
+                    [a for a in self.alerts if a.get("severity") == "warning"]
+                ),
                 "recent_alerts": self.alerts[-5:],
             },
             "performance_trends": {
@@ -476,13 +538,19 @@ class ServiceDiscovery:
                         discovered = await discovery_method()
                         await self._process_discovered_services(discovered)
                     except Exception as e:
-                        fire_and_forget("warning", f"Discovery method failed: {e}", "service_discovery")
+                        fire_and_forget(
+                            "warning",
+                            f"Discovery method failed: {e}",
+                            "service_discovery",
+                        )
 
                 # Update service registry
                 await self._update_service_registry()
 
             except Exception as e:
-                fire_and_forget("error", f"Service discovery loop error: {e}", "service_discovery")
+                fire_and_forget(
+                    "error", f"Service discovery loop error: {e}", "service_discovery"
+                )
 
     async def _discover_via_dns(self) -> Dict[str, Dict[str, Any]]:
         """Discover services via DNS."""
@@ -492,7 +560,9 @@ class ServiceDiscovery:
         for service_name in service_names:
             try:
                 # Try to resolve service DNS
-                addr_info = socket.getaddrinfo(f"{service_name}", 8000, socket.AF_INET, socket.SOCK_STREAM)
+                addr_info = socket.getaddrinfo(
+                    f"{service_name}", 8000, socket.AF_INET, socket.SOCK_STREAM
+                )
                 if addr_info:
                     ip_address = addr_info[0][4][0]
                     discovered[service_name] = {
@@ -545,7 +615,9 @@ class ServiceDiscovery:
                     for service_name in service_names:
                         try:
                             # Try to connect to service on Docker network
-                            reader, writer = await asyncio.open_connection(service_name, 8000)
+                            reader, writer = await asyncio.open_connection(
+                                service_name, 8000
+                            )
                             writer.close()
                             await writer.wait_closed()
 
@@ -569,7 +641,9 @@ class ServiceDiscovery:
             if service_name not in self.discovered_services:
                 self.discovered_services[service_name] = service_info
                 fire_and_forget(
-                    "info", f"Discovered new service: {service_name} at {service_info['endpoint']}", "service_discovery"
+                    "info",
+                    f"Discovered new service: {service_name} at {service_info['endpoint']}",
+                    "service_discovery",
                 )
 
             # Update existing service info
@@ -600,7 +674,9 @@ class ServiceDiscovery:
             "discovered_at": datetime.now().isoformat(),
         }
 
-        await service_registry.register_service(service_name, {"base_url": endpoint}, {"discovery_method": "manual"})
+        await service_registry.register_service(
+            service_name, {"base_url": endpoint}, {"discovery_method": "manual"}
+        )
 
 
 class PerformanceDashboard:
@@ -608,7 +684,12 @@ class PerformanceDashboard:
 
     def __init__(self):
         # Use simple in-memory metrics storage instead of Prometheus
-        self.metrics_store = {"service_health": {}, "system_metrics": {}, "cache_metrics": {}, "error_metrics": {}}
+        self.metrics_store = {
+            "service_health": {},
+            "system_metrics": {},
+            "cache_metrics": {},
+            "error_metrics": {},
+        }
         self.setup_metrics()
 
     def setup_metrics(self):
@@ -616,9 +697,17 @@ class PerformanceDashboard:
         # Initialize metrics storage
         self.metrics_store = {
             "service_health": {},
-            "system_metrics": {"memory_usage_percent": 0.0, "cpu_usage_percent": 0.0, "disk_usage_percent": 0.0},
+            "system_metrics": {
+                "memory_usage_percent": 0.0,
+                "cpu_usage_percent": 0.0,
+                "disk_usage_percent": 0.0,
+            },
             "cache_metrics": {},
-            "error_metrics": {"total_errors": 0, "errors_by_service": {}, "errors_by_severity": {}},
+            "error_metrics": {
+                "total_errors": 0,
+                "errors_by_service": {},
+                "errors_by_severity": {},
+            },
         }
 
     def update_metrics(self, health_monitor: HealthMonitor):
@@ -684,13 +773,20 @@ class PerformanceDashboard:
         """Get alerts summary for dashboard."""
         alerts = health_monitor.alerts[-50:]  # Last 50 alerts
 
-        summary = {"total": len(alerts), "by_severity": {}, "by_type": {}, "recent": alerts[-10:]}
+        summary = {
+            "total": len(alerts),
+            "by_severity": {},
+            "by_type": {},
+            "recent": alerts[-10:],
+        }
 
         for alert in alerts:
             severity = alert.get("severity", "info")
             alert_type = alert.get("type", "unknown")
 
-            summary["by_severity"][severity] = summary["by_severity"].get(severity, 0) + 1
+            summary["by_severity"][severity] = (
+                summary["by_severity"].get(severity, 0) + 1
+            )
             summary["by_type"][alert_type] = summary["by_type"].get(alert_type, 0) + 1
 
         return summary
@@ -713,18 +809,30 @@ class PerformanceDashboard:
         system_metrics = dashboard.get("system_overview", {})
 
         if system_metrics.get("system_memory_usage_percent", 0) > 85:
-            recommendations.append("Consider increasing system memory or optimizing memory usage")
+            recommendations.append(
+                "Consider increasing system memory or optimizing memory usage"
+            )
 
         if system_metrics.get("system_cpu_usage_percent", 0) > 90:
-            recommendations.append("High CPU usage detected - consider scaling or optimization")
+            recommendations.append(
+                "High CPU usage detected - consider scaling or optimization"
+            )
 
         if system_metrics.get("average_response_time_ms", 0) > 3000:
-            recommendations.append("High average response time - investigate performance bottlenecks")
+            recommendations.append(
+                "High average response time - investigate performance bottlenecks"
+            )
 
         service_health = dashboard.get("service_health", {})
-        unhealthy_services = [name for name, health in service_health.items() if health.get("status") != "healthy"]
+        unhealthy_services = [
+            name
+            for name, health in service_health.items()
+            if health.get("status") != "healthy"
+        ]
         if unhealthy_services:
-            recommendations.append(f"Services needing attention: {', '.join(unhealthy_services)}")
+            recommendations.append(
+                f"Services needing attention: {', '.join(unhealthy_services)}"
+            )
 
         return recommendations
 
@@ -752,7 +860,9 @@ async def initialize_operational_excellence():
     ]
 
     for service_name, endpoint in core_services:
-        await health_monitor.register_service(service_name, endpoint, role=ServiceRole.CORE)
+        await health_monitor.register_service(
+            service_name, endpoint, role=ServiceRole.CORE
+        )
 
     # Start service discovery
     await service_discovery.start_discovery()

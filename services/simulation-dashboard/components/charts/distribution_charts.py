@@ -67,10 +67,19 @@ def render_distribution_chart(
             # Create the appropriate chart type
             if chart_type == "histogram":
                 fig = px.histogram(
-                    df, x=value_col, title=title, labels={value_col: value_col.replace("_", " ").title()}, nbins=30
+                    df,
+                    x=value_col,
+                    title=title,
+                    labels={value_col: value_col.replace("_", " ").title()},
+                    nbins=30,
                 )
             elif chart_type == "box":
-                fig = px.box(df, y=value_col, title=title, labels={value_col: value_col.replace("_", " ").title()})
+                fig = px.box(
+                    df,
+                    y=value_col,
+                    title=title,
+                    labels={value_col: value_col.replace("_", " ").title()},
+                )
             elif chart_type == "violin":
                 fig = px.violin(
                     df,
@@ -83,13 +92,20 @@ def render_distribution_chart(
             elif chart_type == "kde":
                 # Create KDE plot approximation using histogram
                 fig = ff.create_distplot(
-                    [df[value_col].dropna()], [value_col.replace("_", " ").title()], show_hist=True, show_rug=False
+                    [df[value_col].dropna()],
+                    [value_col.replace("_", " ").title()],
+                    show_hist=True,
+                    show_rug=False,
                 )
                 fig.update_layout(title=title)
             else:
                 # Default to histogram
                 fig = px.histogram(
-                    df, x=value_col, title=title, labels={value_col: value_col.replace("_", " ").title()}, nbins=30
+                    df,
+                    x=value_col,
+                    title=title,
+                    labels={value_col: value_col.replace("_", " ").title()},
+                    nbins=30,
                 )
 
             fig.update_layout(
@@ -176,7 +192,9 @@ def render_distribution_stats(series: pd.Series) -> None:
 
         # Range analysis
         data_range = max_val - min_val
-        st.info(f"**Data Range:** {data_range:.2f} (from {min_val:.2f} to {max_val:.2f})")
+        st.info(
+            f"**Data Range:** {data_range:.2f} (from {min_val:.2f} to {max_val:.2f})"
+        )
 
     except Exception as e:
         st.error(f"❌ Error rendering distribution statistics: {str(e)}")
@@ -221,7 +239,10 @@ def render_multi_distribution_chart(
         fig = make_subplots(
             rows=rows,
             cols=cols,
-            subplot_titles=[dist.get("name", f"Distribution {i+1}") for i, dist in enumerate(distributions)],
+            subplot_titles=[
+                dist.get("name", f"Distribution {i+1}")
+                for i, dist in enumerate(distributions)
+            ],
         )
 
         for i, dist in enumerate(distributions):
@@ -292,8 +313,12 @@ def render_comparative_stats(distributions: List[Dict[str, Any]]) -> None:
                 min_mean_idx = means.index(min(means))
 
                 if max_mean_idx != min_mean_idx:
-                    st.info(f"📈 **{comparison_data[max_mean_idx]['Distribution']}** has the highest average value")
-                    st.info(f"📉 **{comparison_data[min_mean_idx]['Distribution']}** has the lowest average value")
+                    st.info(
+                        f"📈 **{comparison_data[max_mean_idx]['Distribution']}** has the highest average value"
+                    )
+                    st.info(
+                        f"📉 **{comparison_data[min_mean_idx]['Distribution']}** has the lowest average value"
+                    )
 
     except Exception as e:
         st.error(f"❌ Error rendering comparative statistics: {str(e)}")
@@ -326,7 +351,11 @@ def render_probability_distribution_chart(
 
         distribution = prob_data["distribution"]
 
-        if isinstance(distribution, dict) and "x" in distribution and "y" in distribution:
+        if (
+            isinstance(distribution, dict)
+            and "x" in distribution
+            and "y" in distribution
+        ):
             x_values = distribution["x"]
             y_values = distribution["y"]
 
@@ -347,18 +376,37 @@ def render_probability_distribution_chart(
             # Add mean line if available
             if "mean" in prob_data:
                 mean_val = prob_data["mean"]
-                fig.add_vline(x=mean_val, line_dash="dash", line_color="red", annotation_text=f"Mean: {mean_val:.2f}")
+                fig.add_vline(
+                    x=mean_val,
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text=f"Mean: {mean_val:.2f}",
+                )
 
             # Add standard deviation lines if available
             if "std" in prob_data and "mean" in prob_data:
                 mean_val = prob_data["mean"]
                 std_val = prob_data["std"]
 
-                fig.add_vline(x=mean_val - std_val, line_dash="dot", line_color="orange", annotation_text="-1σ")
-                fig.add_vline(x=mean_val + std_val, line_dash="dot", line_color="orange", annotation_text="+1σ")
+                fig.add_vline(
+                    x=mean_val - std_val,
+                    line_dash="dot",
+                    line_color="orange",
+                    annotation_text="-1σ",
+                )
+                fig.add_vline(
+                    x=mean_val + std_val,
+                    line_dash="dot",
+                    line_color="orange",
+                    annotation_text="+1σ",
+                )
 
             fig.update_layout(
-                title=title, width=width, height=height, xaxis_title="Value", yaxis_title="Probability Density"
+                title=title,
+                width=width,
+                height=height,
+                xaxis_title="Value",
+                yaxis_title="Probability Density",
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -465,7 +513,11 @@ def render_cumulative_distribution_chart(
             for col in df.columns:
                 if "value" in col.lower():
                     value_col = col
-                elif "prob" in col.lower() or "cumulative" in col.lower() or "cdf" in col.lower():
+                elif (
+                    "prob" in col.lower()
+                    or "cumulative" in col.lower()
+                    or "cdf" in col.lower()
+                ):
                     prob_col = col
 
             if not value_col or not prob_col:
@@ -488,12 +540,25 @@ def render_cumulative_distribution_chart(
                 x=value_col,
                 y=prob_col,
                 title=title,
-                labels={value_col: value_col.replace("_", " ").title(), prob_col: "Cumulative Probability"},
+                labels={
+                    value_col: value_col.replace("_", " ").title(),
+                    prob_col: "Cumulative Probability",
+                },
             )
 
             # Add reference lines
-            fig.add_hline(y=0.5, line_dash="dash", line_color="red", annotation_text="Median (50%)")
-            fig.add_hline(y=0.95, line_dash="dot", line_color="orange", annotation_text="95th Percentile")
+            fig.add_hline(
+                y=0.5,
+                line_dash="dash",
+                line_color="red",
+                annotation_text="Median (50%)",
+            )
+            fig.add_hline(
+                y=0.95,
+                line_dash="dot",
+                line_color="orange",
+                annotation_text="95th Percentile",
+            )
 
             fig.update_layout(
                 width=width,

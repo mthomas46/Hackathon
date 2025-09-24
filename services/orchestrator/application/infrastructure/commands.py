@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 
-
 @dataclass
 class StartSagaCommand:
     """Command to start a new saga."""

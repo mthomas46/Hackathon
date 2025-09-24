@@ -13,7 +13,9 @@ from typing import Any, Dict, List, Optional, Type, Union
 from pydantic import BaseModel, Field, validator
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 # Import shared models and utilities
 try:
@@ -26,7 +28,9 @@ except ImportError:
     class BaseResponse(BaseModel):
         success: bool = Field(default=True, description="Operation success status")
         message: Optional[str] = Field(default=None, description="Response message")
-        timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
+        timestamp: datetime = Field(
+            default_factory=datetime.now, description="Response timestamp"
+        )
 
     class BaseRequest(BaseModel):
         pass
@@ -35,7 +39,9 @@ except ImportError:
         page: int = Field(default=1, ge=1, description="Page number")
         page_size: int = Field(default=50, ge=1, le=1000, description="Items per page")
         sort_by: Optional[str] = Field(default=None, description="Sort field")
-        sort_order: str = Field(default="asc", regex="^(asc|desc)$", description="Sort order")
+        sort_order: str = Field(
+            default="asc", regex="^(asc|desc)$", description="Sort order"
+        )
 
     class HealthStatus(str, Enum):
         HEALTHY = "healthy"
@@ -44,13 +50,19 @@ except ImportError:
 
     class HealthCheck(BaseModel):
         status: HealthStatus = Field(description="Health status")
-        timestamp: datetime = Field(default_factory=datetime.now, description="Check timestamp")
-        checks: Dict[str, Any] = Field(default_factory=dict, description="Individual health checks")
+        timestamp: datetime = Field(
+            default_factory=datetime.now, description="Check timestamp"
+        )
+        checks: Dict[str, Any] = Field(
+            default_factory=dict, description="Individual health checks"
+        )
 
     class MetricData(BaseModel):
         name: str = Field(description="Metric name")
         value: Union[int, float] = Field(description="Metric value")
-        timestamp: datetime = Field(default_factory=datetime.now, description="Metric timestamp")
+        timestamp: datetime = Field(
+            default_factory=datetime.now, description="Metric timestamp"
+        )
         tags: Dict[str, str] = Field(default_factory=dict, description="Metric tags")
 
     class PerformanceMetrics(BaseModel):
@@ -65,7 +77,9 @@ except ImportError:
     class ErrorResponse(BaseResponse):
         success: bool = Field(default=False, description="Always false for errors")
         error_code: str = Field(description="Error code")
-        details: Optional[Dict[str, Any]] = Field(default=None, description="Error details")
+        details: Optional[Dict[str, Any]] = Field(
+            default=None, description="Error details"
+        )
 
 
 # Ecosystem Service Model Imports (with fallbacks)
@@ -78,12 +92,18 @@ except ImportError:
         id: str = Field(description="Document ID")
         title: str = Field(description="Document title")
         content: str = Field(description="Document content")
-        metadata: Dict[str, Any] = Field(default_factory=dict, description="Document metadata")
+        metadata: Dict[str, Any] = Field(
+            default_factory=dict, description="Document metadata"
+        )
 
     class DocumentMetadata(BaseModel):
         author: Optional[str] = Field(default=None, description="Document author")
-        created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
-        updated_at: datetime = Field(default_factory=datetime.now, description="Last update timestamp")
+        created_at: datetime = Field(
+            default_factory=datetime.now, description="Creation timestamp"
+        )
+        updated_at: datetime = Field(
+            default_factory=datetime.now, description="Last update timestamp"
+        )
         tags: List[str] = Field(default_factory=list, description="Document tags")
 
 
@@ -95,8 +115,12 @@ except ImportError:
     class AnalysisResult(BaseModel):
         document_id: str = Field(description="Analyzed document ID")
         score: float = Field(description="Analysis score")
-        insights: List[str] = Field(default_factory=list, description="Analysis insights")
-        recommendations: List[str] = Field(default_factory=list, description="Recommendations")
+        insights: List[str] = Field(
+            default_factory=list, description="Analysis insights"
+        )
+        recommendations: List[str] = Field(
+            default_factory=list, description="Recommendations"
+        )
 
     class QualityMetrics(BaseModel):
         readability_score: float = Field(description="Readability score")
@@ -112,7 +136,9 @@ except ImportError:
     class GenerationRequest(BaseModel):
         prompt: str = Field(description="Generation prompt")
         model: str = Field(default="gpt-4", description="Model to use")
-        temperature: float = Field(default=0.7, ge=0, le=2, description="Generation temperature")
+        temperature: float = Field(
+            default=0.7, ge=0, le=2, description="Generation temperature"
+        )
         max_tokens: int = Field(default=1000, ge=1, description="Maximum tokens")
 
     class GenerationResponse(BaseModel):
@@ -131,13 +157,17 @@ except ImportError:
         id: str = Field(description="Workflow definition ID")
         name: str = Field(description="Workflow name")
         steps: List[Dict[str, Any]] = Field(description="Workflow steps")
-        triggers: List[str] = Field(default_factory=list, description="Workflow triggers")
+        triggers: List[str] = Field(
+            default_factory=list, description="Workflow triggers"
+        )
 
     class WorkflowExecution(BaseModel):
         workflow_id: str = Field(description="Workflow definition ID")
         execution_id: str = Field(description="Execution ID")
         status: str = Field(description="Execution status")
-        results: Dict[str, Any] = Field(default_factory=dict, description="Execution results")
+        results: Dict[str, Any] = Field(
+            default_factory=dict, description="Execution results"
+        )
 
 
 # Simulation-Specific Models (extending ecosystem models)
@@ -146,41 +176,70 @@ except ImportError:
 class SimulationBaseRequest(BaseRequest):
     """Base request model for simulation operations."""
 
-    simulation_id: Optional[str] = Field(default=None, description="Simulation ID for context")
-    correlation_id: Optional[str] = Field(default=None, description="Request correlation ID")
+    simulation_id: Optional[str] = Field(
+        default=None, description="Simulation ID for context"
+    )
+    correlation_id: Optional[str] = Field(
+        default=None, description="Request correlation ID"
+    )
     user_id: Optional[str] = Field(default=None, description="Requesting user ID")
 
     @validator("correlation_id", always=True)
     def generate_correlation_id(cls, v):
-        return v or f"sim-{datetime.now().strftime('%Y%m%d%H%M%S')}-{hash(datetime.now()) % 10000:04d}"
+        return (
+            v
+            or f"sim-{datetime.now().strftime('%Y%m%d%H%M%S')}-{hash(datetime.now()) % 10000:04d}"
+        )
 
 
 class SimulationBaseResponse(StandardResponse):
     """Base response model for simulation operations."""
 
     simulation_id: Optional[str] = Field(default=None, description="Simulation ID")
-    request_id: Optional[str] = Field(default=None, description="Request ID for correlation")
-    processing_time_ms: Optional[float] = Field(default=None, description="Processing time")
+    request_id: Optional[str] = Field(
+        default=None, description="Request ID for correlation"
+    )
+    processing_time_ms: Optional[float] = Field(
+        default=None, description="Processing time"
+    )
 
 
 class SimulationHealthCheck(HealthCheck):
     """Enhanced health check for simulation service."""
 
-    service_status: Dict[str, HealthStatus] = Field(default_factory=dict, description="Individual service health")
-    ecosystem_connectivity: Dict[str, bool] = Field(default_factory=dict, description="Ecosystem service connectivity")
-    active_simulations: int = Field(default=0, description="Number of active simulations")
+    service_status: Dict[str, HealthStatus] = Field(
+        default_factory=dict, description="Individual service health"
+    )
+    ecosystem_connectivity: Dict[str, bool] = Field(
+        default_factory=dict, description="Ecosystem service connectivity"
+    )
+    active_simulations: int = Field(
+        default=0, description="Number of active simulations"
+    )
     queue_depth: int = Field(default=0, description="Queued simulation requests")
 
 
 class SimulationMetrics(PerformanceMetrics):
     """Enhanced performance metrics for simulation service."""
 
-    active_simulations: int = Field(default=0, description="Currently active simulations")
-    completed_simulations: int = Field(default=0, description="Total completed simulations")
-    average_simulation_duration: float = Field(default=0.0, description="Average simulation duration in seconds")
-    simulation_success_rate: float = Field(default=0.0, description="Simulation success rate percentage")
-    ecosystem_service_calls: int = Field(default=0, description="Total ecosystem service calls")
-    average_service_response_time: float = Field(default=0.0, description="Average ecosystem service response time")
+    active_simulations: int = Field(
+        default=0, description="Currently active simulations"
+    )
+    completed_simulations: int = Field(
+        default=0, description="Total completed simulations"
+    )
+    average_simulation_duration: float = Field(
+        default=0.0, description="Average simulation duration in seconds"
+    )
+    simulation_success_rate: float = Field(
+        default=0.0, description="Simulation success rate percentage"
+    )
+    ecosystem_service_calls: int = Field(
+        default=0, description="Total ecosystem service calls"
+    )
+    average_service_response_time: float = Field(
+        default=0.0, description="Average ecosystem service response time"
+    )
 
 
 class ProjectDocument(Document):
@@ -189,9 +248,15 @@ class ProjectDocument(Document):
     project_id: str = Field(description="Associated project ID")
     simulation_id: str = Field(description="Associated simulation ID")
     document_type: str = Field(description="Type of project document")
-    phase: Optional[str] = Field(default=None, description="Project phase this document belongs to")
-    quality_score: Optional[float] = Field(default=None, description="Document quality score")
-    generation_metadata: Dict[str, Any] = Field(default_factory=dict, description="Document generation metadata")
+    phase: Optional[str] = Field(
+        default=None, description="Project phase this document belongs to"
+    )
+    quality_score: Optional[float] = Field(
+        default=None, description="Document quality score"
+    )
+    generation_metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Document generation metadata"
+    )
 
     @validator("quality_score")
     def validate_quality_score(cls, v):
@@ -203,29 +268,53 @@ class ProjectDocument(Document):
 class SimulationAnalysisResult(AnalysisResult):
     """Simulation-specific analysis result extending ecosystem AnalysisResult."""
 
-    simulation_context: Dict[str, Any] = Field(default_factory=dict, description="Simulation context")
-    project_phase: Optional[str] = Field(default=None, description="Project phase context")
-    team_impact: Dict[str, Any] = Field(default_factory=dict, description="Team impact analysis")
-    timeline_impact: Dict[str, Any] = Field(default_factory=dict, description="Timeline impact analysis")
+    simulation_context: Dict[str, Any] = Field(
+        default_factory=dict, description="Simulation context"
+    )
+    project_phase: Optional[str] = Field(
+        default=None, description="Project phase context"
+    )
+    team_impact: Dict[str, Any] = Field(
+        default_factory=dict, description="Team impact analysis"
+    )
+    timeline_impact: Dict[str, Any] = Field(
+        default_factory=dict, description="Timeline impact analysis"
+    )
 
 
 class SimulationGenerationRequest(GenerationRequest):
     """Simulation-specific generation request extending ecosystem GenerationRequest."""
 
-    simulation_context: Dict[str, Any] = Field(default_factory=dict, description="Simulation context")
-    project_type: Optional[str] = Field(default=None, description="Project type context")
-    complexity_level: Optional[str] = Field(default=None, description="Complexity level context")
-    team_composition: Optional[Dict[str, Any]] = Field(default=None, description="Team composition context")
-    timeline_phase: Optional[str] = Field(default=None, description="Timeline phase context")
+    simulation_context: Dict[str, Any] = Field(
+        default_factory=dict, description="Simulation context"
+    )
+    project_type: Optional[str] = Field(
+        default=None, description="Project type context"
+    )
+    complexity_level: Optional[str] = Field(
+        default=None, description="Complexity level context"
+    )
+    team_composition: Optional[Dict[str, Any]] = Field(
+        default=None, description="Team composition context"
+    )
+    timeline_phase: Optional[str] = Field(
+        default=None, description="Timeline phase context"
+    )
 
 
 class SimulationWorkflowDefinition(WorkflowDefinition):
     """Simulation workflow definition extending ecosystem WorkflowDefinition."""
 
     simulation_type: str = Field(description="Type of simulation workflow")
-    project_template: Optional[str] = Field(default=None, description="Project template to use")
-    required_services: List[str] = Field(default_factory=list, description="Required ecosystem services")
-    estimated_duration: Optional[int] = Field(default=None, description="Estimated duration in seconds")
+    project_template: Optional[str] = Field(
+        default=None, description="Project template to use"
+    )
+    required_services: List[str] = Field(
+        default_factory=list, description="Required ecosystem services"
+    )
+    estimated_duration: Optional[int] = Field(
+        default=None, description="Estimated duration in seconds"
+    )
 
 
 class SimulationWorkflowExecution(WorkflowExecution):
@@ -233,9 +322,15 @@ class SimulationWorkflowExecution(WorkflowExecution):
 
     simulation_id: str = Field(description="Associated simulation ID")
     project_id: str = Field(description="Associated project ID")
-    phase_progress: Dict[str, float] = Field(default_factory=dict, description="Progress by phase")
-    service_interactions: Dict[str, int] = Field(default_factory=dict, description="Service interaction counts")
-    generated_documents: List[str] = Field(default_factory=list, description="Generated document IDs")
+    phase_progress: Dict[str, float] = Field(
+        default_factory=dict, description="Progress by phase"
+    )
+    service_interactions: Dict[str, int] = Field(
+        default_factory=dict, description="Service interaction counts"
+    )
+    generated_documents: List[str] = Field(
+        default_factory=list, description="Generated document IDs"
+    )
 
 
 # Specialized Simulation Models
@@ -249,8 +344,12 @@ class SimulationConfiguration(BaseModel):
     team_config: Dict[str, Any] = Field(description="Team configuration")
     timeline_config: Dict[str, Any] = Field(description="Timeline configuration")
     ecosystem_services: List[str] = Field(description="Enabled ecosystem services")
-    quality_thresholds: Dict[str, float] = Field(default_factory=dict, description="Quality thresholds")
-    performance_targets: Dict[str, Any] = Field(default_factory=dict, description="Performance targets")
+    quality_thresholds: Dict[str, float] = Field(
+        default_factory=dict, description="Quality thresholds"
+    )
+    performance_targets: Dict[str, Any] = Field(
+        default_factory=dict, description="Performance targets"
+    )
 
     @validator("ecosystem_services")
     def validate_services(cls, v):
@@ -275,13 +374,27 @@ class SimulationProgress(BaseModel):
 
     simulation_id: str = Field(description="Simulation ID")
     status: str = Field(description="Current simulation status")
-    progress_percentage: float = Field(ge=0, le=100, description="Overall progress percentage")
-    current_phase: Optional[str] = Field(default=None, description="Current active phase")
-    completed_phases: List[str] = Field(default_factory=list, description="Completed phases")
-    pending_phases: List[str] = Field(default_factory=list, description="Pending phases")
-    phase_progress: Dict[str, float] = Field(default_factory=dict, description="Progress by phase")
-    estimated_completion: Optional[datetime] = Field(default=None, description="Estimated completion time")
-    last_updated: datetime = Field(default_factory=datetime.now, description="Last progress update")
+    progress_percentage: float = Field(
+        ge=0, le=100, description="Overall progress percentage"
+    )
+    current_phase: Optional[str] = Field(
+        default=None, description="Current active phase"
+    )
+    completed_phases: List[str] = Field(
+        default_factory=list, description="Completed phases"
+    )
+    pending_phases: List[str] = Field(
+        default_factory=list, description="Pending phases"
+    )
+    phase_progress: Dict[str, float] = Field(
+        default_factory=dict, description="Progress by phase"
+    )
+    estimated_completion: Optional[datetime] = Field(
+        default=None, description="Estimated completion time"
+    )
+    last_updated: datetime = Field(
+        default_factory=datetime.now, description="Last progress update"
+    )
 
 
 class SimulationResults(BaseModel):
@@ -290,14 +403,26 @@ class SimulationResults(BaseModel):
     simulation_id: str = Field(description="Simulation ID")
     project_id: str = Field(description="Project ID")
     status: str = Field(description="Final simulation status")
-    completed_at: datetime = Field(default_factory=datetime.now, description="Completion timestamp")
+    completed_at: datetime = Field(
+        default_factory=datetime.now, description="Completion timestamp"
+    )
     duration_seconds: float = Field(description="Total simulation duration")
-    generated_documents: List[str] = Field(default_factory=list, description="Generated document IDs")
-    service_interactions: Dict[str, int] = Field(default_factory=dict, description="Service interaction counts")
-    quality_metrics: Dict[str, Any] = Field(default_factory=dict, description="Overall quality metrics")
-    performance_metrics: Dict[str, Any] = Field(default_factory=dict, description="Performance metrics")
+    generated_documents: List[str] = Field(
+        default_factory=list, description="Generated document IDs"
+    )
+    service_interactions: Dict[str, int] = Field(
+        default_factory=dict, description="Service interaction counts"
+    )
+    quality_metrics: Dict[str, Any] = Field(
+        default_factory=dict, description="Overall quality metrics"
+    )
+    performance_metrics: Dict[str, Any] = Field(
+        default_factory=dict, description="Performance metrics"
+    )
     insights: List[str] = Field(default_factory=list, description="Simulation insights")
-    recommendations: List[str] = Field(default_factory=list, description="Actionable recommendations")
+    recommendations: List[str] = Field(
+        default_factory=list, description="Actionable recommendations"
+    )
 
 
 class EcosystemServiceStatus(BaseModel):
@@ -306,10 +431,16 @@ class EcosystemServiceStatus(BaseModel):
     service_name: str = Field(description="Service name")
     status: HealthStatus = Field(description="Service health status")
     response_time_ms: Optional[float] = Field(default=None, description="Response time")
-    last_checked: datetime = Field(default_factory=datetime.now, description="Last health check")
-    error_message: Optional[str] = Field(default=None, description="Error message if unhealthy")
+    last_checked: datetime = Field(
+        default_factory=datetime.now, description="Last health check"
+    )
+    error_message: Optional[str] = Field(
+        default=None, description="Error message if unhealthy"
+    )
     version: Optional[str] = Field(default=None, description="Service version")
-    endpoints: Dict[str, HealthStatus] = Field(default_factory=dict, description="Endpoint-specific status")
+    endpoints: Dict[str, HealthStatus] = Field(
+        default_factory=dict, description="Endpoint-specific status"
+    )
 
 
 # Model Registry for Dynamic Loading
@@ -379,7 +510,9 @@ def get_model_schema(model_name: str) -> Dict[str, Any]:
 # Ecosystem Integration Helpers
 
 
-def create_ecosystem_request(service_name: str, operation: str, **kwargs) -> Dict[str, Any]:
+def create_ecosystem_request(
+    service_name: str, operation: str, **kwargs
+) -> Dict[str, Any]:
     """Create a standardized request for ecosystem service integration."""
     return {
         "service": service_name,
@@ -394,7 +527,9 @@ def create_simulation_response(
     success: bool, data: Any = None, message: str = None, simulation_id: str = None
 ) -> SimulationBaseResponse:
     """Create a standardized simulation response."""
-    return SimulationBaseResponse(success=success, data=data, message=message, simulation_id=simulation_id)
+    return SimulationBaseResponse(
+        success=success, data=data, message=message, simulation_id=simulation_id
+    )
 
 
 # Export all models

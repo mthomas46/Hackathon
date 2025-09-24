@@ -11,7 +11,9 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 try:
     from integrations.clients import ServiceClients
 except ImportError:
@@ -33,12 +35,16 @@ class EcosystemServiceClient:
         self.service_name = service_name
         self.endpoint = endpoint
         self.logger = get_simulation_logger()
-        self._client = httpx.AsyncClient(timeout=endpoint.timeout_seconds, base_url=endpoint.base_url)
+        self._client = httpx.AsyncClient(
+            timeout=endpoint.timeout_seconds, base_url=endpoint.base_url
+        )
 
     async def health_check(self) -> ServiceHealth:
         """Check service health."""
         try:
-            health_url = f"{self.endpoint.base_url}{self.endpoint.health_check_endpoint}"
+            health_url = (
+                f"{self.endpoint.base_url}{self.endpoint.health_check_endpoint}"
+            )
             response = await self._client.get(health_url)
 
             if response.status_code == 200:
@@ -56,11 +62,15 @@ class EcosystemServiceClient:
             return response.json()
         except httpx.HTTPStatusError as e:
             self.logger.error(
-                f"HTTP error from {self.service_name}", status_code=e.response.status_code, url=str(e.request.url)
+                f"HTTP error from {self.service_name}",
+                status_code=e.response.status_code,
+                url=str(e.request.url),
             )
             raise
         except Exception as e:
-            self.logger.error(f"Request failed to {self.service_name}", error=str(e), path=path)
+            self.logger.error(
+                f"Request failed to {self.service_name}", error=str(e), path=path
+            )
             raise
 
     async def post_json(self, path: str, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -71,11 +81,15 @@ class EcosystemServiceClient:
             return response.json()
         except httpx.HTTPStatusError as e:
             self.logger.error(
-                f"HTTP error from {self.service_name}", status_code=e.response.status_code, url=str(e.request.url)
+                f"HTTP error from {self.service_name}",
+                status_code=e.response.status_code,
+                url=str(e.request.url),
             )
             raise
         except Exception as e:
-            self.logger.error(f"Request failed to {self.service_name}", error=str(e), path=path)
+            self.logger.error(
+                f"Request failed to {self.service_name}", error=str(e), path=path
+            )
             raise
 
 
@@ -87,10 +101,14 @@ class DocStoreClient(EcosystemServiceClient):
         service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "doc_store")
         super().__init__(service_info.name, service_info.endpoint)
 
-    async def store_document(self, title: str, content: str, metadata: Dict[str, Any]) -> Optional[str]:
+    async def store_document(
+        self, title: str, content: str, metadata: Dict[str, Any]
+    ) -> Optional[str]:
         """Store a document in doc_store."""
         try:
-            response = await self.post_json("/documents", {"title": title, "content": content, "metadata": metadata})
+            response = await self.post_json(
+                "/documents", {"title": title, "content": content, "metadata": metadata}
+            )
             return response.get("document_id")
         except Exception:
             return None
@@ -116,10 +134,14 @@ class MockDataGeneratorClient(EcosystemServiceClient):
 
     def __init__(self):
         """Initialize mock-data-generator client."""
-        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "mock_data_generator")
+        service_info = next(
+            s for s in ECOSYSTEM_SERVICES if s.name == "mock_data_generator"
+        )
         super().__init__(service_info.name, service_info.endpoint)
 
-    async def generate_project_documents(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_project_documents(
+        self, request: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate project documents."""
         return await self.post_json("/simulation/project-docs", request)
 
@@ -135,7 +157,9 @@ class MockDataGeneratorClient(EcosystemServiceClient):
         """Generate phase documents."""
         return await self.post_json("/simulation/phase-documents", request)
 
-    async def generate_ecosystem_scenario(self, request: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_ecosystem_scenario(
+        self, request: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate ecosystem scenario."""
         return await self.post_json("/simulation/ecosystem-scenario", request)
 
@@ -170,10 +194,14 @@ class AnalysisServiceClient(EcosystemServiceClient):
 
     def __init__(self):
         """Initialize analysis_service client."""
-        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "analysis_service")
+        service_info = next(
+            s for s in ECOSYSTEM_SERVICES if s.name == "analysis_service"
+        )
         super().__init__(service_info.name, service_info.endpoint)
 
-    async def analyze_documents(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_documents(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze documents for quality and insights."""
         return await self.post_json("/analyze/documents", {"documents": documents})
 
@@ -190,9 +218,13 @@ class LlmGatewayClient(EcosystemServiceClient):
         service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "llm_gateway")
         super().__init__(service_info.name, service_info.endpoint)
 
-    async def generate_content(self, prompt: str, model: str = "gpt-4") -> Dict[str, Any]:
+    async def generate_content(
+        self, prompt: str, model: str = "gpt-4"
+    ) -> Dict[str, Any]:
         """Generate content using LLM."""
-        return await self.post_json("/generate", {"prompt": prompt, "model": model, "max_tokens": 1000})
+        return await self.post_json(
+            "/generate", {"prompt": prompt, "model": model, "max_tokens": 1000}
+        )
 
 
 class PromptStoreClient(EcosystemServiceClient):
@@ -203,10 +235,14 @@ class PromptStoreClient(EcosystemServiceClient):
         service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "prompt_store")
         super().__init__(service_info.name, service_info.endpoint)
 
-    async def store_prompt(self, name: str, content: str, category: str) -> Optional[str]:
+    async def store_prompt(
+        self, name: str, content: str, category: str
+    ) -> Optional[str]:
         """Store a prompt in prompt_store."""
         try:
-            response = await self.post_json("/prompts", {"name": name, "content": content, "category": category})
+            response = await self.post_json(
+                "/prompts", {"name": name, "content": content, "category": category}
+            )
             return response.get("prompt_id")
         except Exception:
             return None
@@ -229,7 +265,9 @@ class SummarizerHubClient(EcosystemServiceClient):
 
     async def summarize_text(self, text: str, max_length: int = 200) -> Dict[str, Any]:
         """Summarize text content."""
-        return await self.post_json("/summarize", {"text": text, "max_length": max_length})
+        return await self.post_json(
+            "/summarize", {"text": text, "max_length": max_length}
+        )
 
 
 class InterpreterClient(EcosystemServiceClient):
@@ -240,13 +278,19 @@ class InterpreterClient(EcosystemServiceClient):
         service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "interpreter")
         super().__init__(service_info.name, service_info.endpoint)
 
-    async def analyze_relationships(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_relationships(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze relationships between documents."""
         return await self.post_json("/analyze/relationships", {"documents": documents})
 
-    async def extract_insights(self, content: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def extract_insights(
+        self, content: str, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Extract insights from content with context."""
-        return await self.post_json("/extract/insights", {"content": content, "context": context})
+        return await self.post_json(
+            "/extract/insights", {"content": content, "context": context}
+        )
 
 
 class NotificationServiceClient(EcosystemServiceClient):
@@ -254,13 +298,18 @@ class NotificationServiceClient(EcosystemServiceClient):
 
     def __init__(self):
         """Initialize notification_service client."""
-        service_info = next(s for s in ECOSYSTEM_SERVICES if s.name == "notification_service")
+        service_info = next(
+            s for s in ECOSYSTEM_SERVICES if s.name == "notification_service"
+        )
         super().__init__(service_info.name, service_info.endpoint)
 
-    async def send_notification(self, recipient: str, message: str, notification_type: str = "info") -> Dict[str, Any]:
+    async def send_notification(
+        self, recipient: str, message: str, notification_type: str = "info"
+    ) -> Dict[str, Any]:
         """Send a notification."""
         return await self.post_json(
-            "/notifications", {"recipient": recipient, "message": message, "type": notification_type}
+            "/notifications",
+            {"recipient": recipient, "message": message, "type": notification_type},
         )
 
 

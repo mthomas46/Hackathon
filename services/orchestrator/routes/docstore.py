@@ -26,4 +26,9 @@ class DocstoreSaveRequest(BaseModel):
 @router.post("/docstore/save")
 async def save_document(req: DocstoreSaveRequest):
     """Save document to docstore."""
-    return {"status": "saved", "id": req.id, "size": len(req.content), "timestamp": "2024-01-01T00:00:00Z"}
+    return {
+        "status": "saved",
+        "id": req.id,
+        "size": len(req.content),
+        "timestamp": "2024-01-01T00:00:00Z",
+    }

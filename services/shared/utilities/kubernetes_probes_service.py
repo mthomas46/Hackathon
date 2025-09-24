@@ -60,7 +60,9 @@ class KubernetesProbesService:
         self.startup_time = time.time()
 
         # Default probe configurations
-        self.liveness_config = ProbeConfig(timeout_seconds=3.0, period_seconds=30.0, failure_threshold=3)
+        self.liveness_config = ProbeConfig(
+            timeout_seconds=3.0, period_seconds=30.0, failure_threshold=3
+        )
 
         self.readiness_config = ProbeConfig(
             timeout_seconds=5.0,
@@ -70,7 +72,9 @@ class KubernetesProbesService:
             readiness_check_resources=True,
         )
 
-        self.startup_config = ProbeConfig(timeout_seconds=10.0, startup_timeout_seconds=60.0)
+        self.startup_config = ProbeConfig(
+            timeout_seconds=10.0, startup_timeout_seconds=60.0
+        )
 
         # Probe state
         self._last_liveness_check = 0.0
@@ -105,24 +109,34 @@ class KubernetesProbesService:
 
             self._circuit_breaker_service = get_circuit_breaker_service()
         except ImportError:
-            logger.warning("Circuit breaker service not available for Kubernetes probes")
+            logger.warning(
+                "Circuit breaker service not available for Kubernetes probes"
+            )
 
         try:
             from .process_monitor_service import get_process_monitor_service
 
             self._process_monitor_service = get_process_monitor_service()
         except ImportError:
-            logger.warning("Process monitor service not available for Kubernetes probes")
+            logger.warning(
+                "Process monitor service not available for Kubernetes probes"
+            )
 
-    def add_custom_liveness_check(self, check_func: Callable[[], bool], description: str = ""):
+    def add_custom_liveness_check(
+        self, check_func: Callable[[], bool], description: str = ""
+    ):
         """Add a custom liveness check function."""
         self._custom_liveness_checks.append((check_func, description))
 
-    def add_custom_readiness_check(self, check_func: Callable[[], bool], description: str = ""):
+    def add_custom_readiness_check(
+        self, check_func: Callable[[], bool], description: str = ""
+    ):
         """Add a custom readiness check function."""
         self._custom_readiness_checks.append((check_func, description))
 
-    def add_custom_startup_check(self, check_func: Callable[[], bool], description: str = ""):
+    def add_custom_startup_check(
+        self, check_func: Callable[[], bool], description: str = ""
+    ):
         """Add a custom startup check function."""
         self._custom_startup_checks.append((check_func, description))
 
@@ -164,7 +178,9 @@ class KubernetesProbesService:
                     if not check_func():
                         issues.append(f"Custom liveness check failed: {description}")
                 except Exception as e:
-                    issues.append(f"Custom liveness check error ({description}): {str(e)}")
+                    issues.append(
+                        f"Custom liveness check error ({description}): {str(e)}"
+                    )
 
             self._last_liveness_check = time.time()
             response_time = time.time() - start_time
@@ -232,7 +248,9 @@ class KubernetesProbesService:
                     if not check_func():
                         issues.append(f"Custom readiness check failed: {description}")
                 except Exception as e:
-                    issues.append(f"Custom readiness check error ({description}): {str(e)}")
+                    issues.append(
+                        f"Custom readiness check error ({description}): {str(e)}"
+                    )
 
             self._last_readiness_check = time.time()
             response_time = time.time() - start_time
@@ -281,7 +299,10 @@ class KubernetesProbesService:
                     healthy=False,
                     status_code=500,  # Internal Server Error
                     message=f"Startup timeout exceeded ({elapsed_time:.1f}s > {self.startup_config.startup_timeout_seconds}s)",
-                    details={"elapsed_time": elapsed_time, "timeout": self.startup_config.startup_timeout_seconds},
+                    details={
+                        "elapsed_time": elapsed_time,
+                        "timeout": self.startup_config.startup_timeout_seconds,
+                    },
                     response_time=time.time() - start_time,
                 )
 
@@ -297,7 +318,9 @@ class KubernetesProbesService:
                     if not check_func():
                         issues.append(f"Custom startup check failed: {description}")
                 except Exception as e:
-                    issues.append(f"Custom startup check error ({description}): {str(e)}")
+                    issues.append(
+                        f"Custom startup check error ({description}): {str(e)}"
+                    )
 
             response_time = time.time() - start_time
 
@@ -314,7 +337,9 @@ class KubernetesProbesService:
                 if not self._startup_complete:
                     self._startup_complete = True
                     self._startup_completed_at = time.time()
-                    logger.info(f"Application {self.service_name} startup completed successfully")
+                    logger.info(
+                        f"Application {self.service_name} startup completed successfully"
+                    )
 
                 return ProbeResult(
                     healthy=True,
@@ -353,8 +378,13 @@ class KubernetesProbesService:
 
             # Check memory usage (critical threshold)
             memory_usage = summary.get("memory", {}).get("current_value", 0)
-            memory_threshold = self._process_monitor_service.resource_thresholds.get("memory")
-            if memory_threshold and memory_usage >= memory_threshold.emergency_threshold:
+            memory_threshold = self._process_monitor_service.resource_thresholds.get(
+                "memory"
+            )
+            if (
+                memory_threshold
+                and memory_usage >= memory_threshold.emergency_threshold
+            ):
                 return False
 
             # Check if there are any critical alerts
@@ -404,7 +434,9 @@ class KubernetesProbesService:
             for resource_name, resource_data in summary.items():
                 if resource_name == "memory":
                     current = resource_data.get("current_value", 0)
-                    warning = resource_data.get("thresholds", {}).get("warning", float("inf"))
+                    warning = resource_data.get("thresholds", {}).get(
+                        "warning", float("inf")
+                    )
                     if current >= warning * 0.9:  # 90% of warning threshold
                         return False
 
@@ -503,7 +535,11 @@ class KubernetesProbesService:
                 "response_time": f"{result.response_time:.3f}s",
             }
 
-        return {"/health/liveness": liveness, "/health/readiness": readiness, "/health/startup": startup}
+        return {
+            "/health/liveness": liveness,
+            "/health/readiness": readiness,
+            "/health/startup": startup,
+        }
 
 
 # Global instance function
@@ -518,7 +554,9 @@ def create_standard_probes(service_name: str) -> KubernetesProbesService:
     probes = KubernetesProbesService(service_name)
 
     # Configure standard timeouts and intervals
-    probes.configure_liveness_probe(ProbeConfig(timeout_seconds=3.0, period_seconds=30.0, failure_threshold=3))
+    probes.configure_liveness_probe(
+        ProbeConfig(timeout_seconds=3.0, period_seconds=30.0, failure_threshold=3)
+    )
 
     probes.configure_readiness_probe(
         ProbeConfig(
@@ -530,7 +568,9 @@ def create_standard_probes(service_name: str) -> KubernetesProbesService:
         )
     )
 
-    probes.configure_startup_probe(ProbeConfig(timeout_seconds=10.0, startup_timeout_seconds=60.0))
+    probes.configure_startup_probe(
+        ProbeConfig(timeout_seconds=10.0, startup_timeout_seconds=60.0)
+    )
 
     return probes
 
@@ -540,7 +580,9 @@ def create_fast_startup_probes(service_name: str) -> KubernetesProbesService:
     probes = KubernetesProbesService(service_name)
 
     # Faster checks for applications that start quickly
-    probes.configure_liveness_probe(ProbeConfig(timeout_seconds=1.0, period_seconds=10.0, failure_threshold=3))
+    probes.configure_liveness_probe(
+        ProbeConfig(timeout_seconds=1.0, period_seconds=10.0, failure_threshold=3)
+    )
 
     probes.configure_readiness_probe(
         ProbeConfig(
@@ -552,7 +594,9 @@ def create_fast_startup_probes(service_name: str) -> KubernetesProbesService:
         )
     )
 
-    probes.configure_startup_probe(ProbeConfig(timeout_seconds=5.0, startup_timeout_seconds=30.0))
+    probes.configure_startup_probe(
+        ProbeConfig(timeout_seconds=5.0, startup_timeout_seconds=30.0)
+    )
 
     return probes
 
@@ -581,7 +625,9 @@ def create_resilient_probes(service_name: str) -> KubernetesProbesService:
     )
 
     probes.configure_startup_probe(
-        ProbeConfig(timeout_seconds=15.0, startup_timeout_seconds=300.0)  # 5 minutes for slow startups
+        ProbeConfig(
+            timeout_seconds=15.0, startup_timeout_seconds=300.0
+        )  # 5 minutes for slow startups
     )
 
     return probes

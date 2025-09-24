@@ -41,13 +41,27 @@ class TestToolDiscoveryService:
                     "get": {
                         "summary": "Get document",
                         "operationId": "get_document",
-                        "parameters": [{"name": "id", "in": "path", "required": True, "schema": {"type": "string"}}],
+                        "parameters": [
+                            {
+                                "name": "id",
+                                "in": "path",
+                                "required": True,
+                                "schema": {"type": "string"},
+                            }
+                        ],
                         "responses": {"200": {"description": "Success"}},
                     },
                     "put": {
                         "summary": "Update document",
                         "operationId": "update_document",
-                        "parameters": [{"name": "id", "in": "path", "required": True, "schema": {"type": "string"}}],
+                        "parameters": [
+                            {
+                                "name": "id",
+                                "in": "path",
+                                "required": True,
+                                "schema": {"type": "string"},
+                            }
+                        ],
                         "responses": {"200": {"description": "Updated"}},
                     },
                 },
@@ -64,15 +78,21 @@ class TestToolDiscoveryService:
         """Test successful OpenAPI spec fetching."""
         mock_spec = {"openapi": "3.0.0", "info": {"title": "Test"}}
 
-        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_spec) as mock_fetch:
-            result = await discovery_service._fetch_openapi_spec("http://test.com/openapi.json")
+        with patch.object(
+            discovery_service, "_fetch_openapi_spec", return_value=mock_spec
+        ) as mock_fetch:
+            result = await discovery_service._fetch_openapi_spec(
+                "http://test.com/openapi.json"
+            )
             assert result == mock_spec
             mock_fetch.assert_called_once_with("http://test.com/openapi.json")
 
     @pytest.mark.asyncio
     async def test_discover_tools_basic(self, discovery_service, mock_openapi_spec):
         """Test basic tool discovery from OpenAPI spec."""
-        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec):
+        with patch.object(
+            discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec
+        ):
             result = await discovery_service.discover_tools(
                 service_name="test_service", service_url="http://test-service:8000"
             )
@@ -94,7 +114,9 @@ class TestToolDiscoveryService:
     @pytest.mark.asyncio
     async def test_tool_categorization(self, discovery_service, mock_openapi_spec):
         """Test that tools are properly categorized."""
-        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec):
+        with patch.object(
+            discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec
+        ):
             result = await discovery_service.discover_tools(
                 service_name="test_service", service_url="http://test-service:8000"
             )
@@ -131,7 +153,9 @@ class TestToolDiscoveryService:
     @pytest.mark.asyncio
     async def test_tool_naming_convention(self, discovery_service, mock_openapi_spec):
         """Test that tool names follow proper naming conventions."""
-        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec):
+        with patch.object(
+            discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec
+        ):
             result = await discovery_service.discover_tools(
                 service_name="test_service", service_url="http://test-service:8000"
             )
@@ -149,7 +173,9 @@ class TestToolDiscoveryService:
     @pytest.mark.asyncio
     async def test_parameter_extraction(self, discovery_service, mock_openapi_spec):
         """Test that parameters are properly extracted from OpenAPI spec."""
-        with patch.object(discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec):
+        with patch.object(
+            discovery_service, "_fetch_openapi_spec", return_value=mock_openapi_spec
+        ):
             result = await discovery_service.discover_tools(
                 service_name="test_service", service_url="http://test-service:8000"
             )
@@ -199,7 +225,9 @@ class TestDiscoveryHandler:
     @pytest.mark.asyncio
     async def test_discover_tools_with_registration(self, mock_request):
         """Test tool discovery with orchestrator registration."""
-        with patch("modules.discovery_handler.tool_discovery_service") as mock_service, patch(
+        with patch(
+            "modules.discovery_handler.tool_discovery_service"
+        ) as mock_service, patch(
             "modules.discovery_handler.register_with_orchestrator"
         ) as mock_register:
 
@@ -219,8 +247,11 @@ class TestDiscoveryHandler:
     @pytest.mark.asyncio
     async def test_discover_tools_registration_failure(self, mock_request):
         """Test tool discovery when orchestrator registration fails."""
-        with patch("modules.discovery_handler.tool_discovery_service") as mock_service, patch(
-            "modules.discovery_handler.register_with_orchestrator", side_effect=Exception("Registration failed")
+        with patch(
+            "modules.discovery_handler.tool_discovery_service"
+        ) as mock_service, patch(
+            "modules.discovery_handler.register_with_orchestrator",
+            side_effect=Exception("Registration failed"),
         ):
 
             mock_service.discover_tools.return_value = {
@@ -320,7 +351,9 @@ class TestIntegrationScenarios:
             mock_service._fetch_openapi_spec.side_effect = Exception("Network error")
 
             with pytest.raises(Exception) as exc_info:
-                await mock_service.discover_tools("failing_service", "http://failing.com")
+                await mock_service.discover_tools(
+                    "failing_service", "http://failing.com"
+                )
 
             assert "Network error" in str(exc_info.value)
 

@@ -82,7 +82,12 @@ def render_performance_chart(
                 # Default to line chart
                 fig = px.line(df, x="timestamp", y=numeric_cols, title=title)
 
-            fig.update_layout(width=width, height=height, xaxis_title="Time", yaxis_title="Metric Value")
+            fig.update_layout(
+                width=width,
+                height=height,
+                xaxis_title="Time",
+                yaxis_title="Metric Value",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -164,7 +169,9 @@ def render_system_health_chart(
 
         if "metrics" in health_data:
             for metric in health_data["metrics"]:
-                timestamps.append(pd.to_datetime(metric.get("timestamp", datetime.now())))
+                timestamps.append(
+                    pd.to_datetime(metric.get("timestamp", datetime.now()))
+                )
                 cpu_usage.append(metric.get("cpu_percent", 0))
                 memory_usage.append(metric.get("memory_percent", 0))
                 disk_usage.append(metric.get("disk_percent", 0))
@@ -179,21 +186,47 @@ def render_system_health_chart(
             rows=2,
             cols=2,
             subplot_titles=("CPU Usage", "Memory Usage", "Disk Usage", "Network I/O"),
-            specs=[[{"secondary_y": False}, {"secondary_y": False}], [{"secondary_y": False}, {"secondary_y": False}]],
+            specs=[
+                [{"secondary_y": False}, {"secondary_y": False}],
+                [{"secondary_y": False}, {"secondary_y": False}],
+            ],
         )
 
         # Add CPU usage
-        fig.add_trace(go.Scatter(x=timestamps, y=cpu_usage, name="CPU %", line=dict(color="red")), row=1, col=1)
+        fig.add_trace(
+            go.Scatter(x=timestamps, y=cpu_usage, name="CPU %", line=dict(color="red")),
+            row=1,
+            col=1,
+        )
 
         # Add Memory usage
-        fig.add_trace(go.Scatter(x=timestamps, y=memory_usage, name="Memory %", line=dict(color="blue")), row=1, col=2)
+        fig.add_trace(
+            go.Scatter(
+                x=timestamps, y=memory_usage, name="Memory %", line=dict(color="blue")
+            ),
+            row=1,
+            col=2,
+        )
 
         # Add Disk usage
-        fig.add_trace(go.Scatter(x=timestamps, y=disk_usage, name="Disk %", line=dict(color="green")), row=2, col=1)
+        fig.add_trace(
+            go.Scatter(
+                x=timestamps, y=disk_usage, name="Disk %", line=dict(color="green")
+            ),
+            row=2,
+            col=1,
+        )
 
         # Add Network I/O
         fig.add_trace(
-            go.Scatter(x=timestamps, y=network_io, name="Network I/O", line=dict(color="orange")), row=2, col=2
+            go.Scatter(
+                x=timestamps,
+                y=network_io,
+                name="Network I/O",
+                line=dict(color="orange"),
+            ),
+            row=2,
+            col=2,
         )
 
         fig.update_layout(title=title, width=width, height=height, showlegend=False)
@@ -236,7 +269,9 @@ def render_health_status_summary(health_data: Dict[str, Any]) -> None:
 
         with col4:
             status = current.get("overall_status", "unknown")
-            status_color = "🟢" if status == "healthy" else "🟡" if status == "warning" else "🔴"
+            status_color = (
+                "🟢" if status == "healthy" else "🟡" if status == "warning" else "🔴"
+            )
             st.metric("Overall Status", status, status_color)
 
     except Exception as e:
@@ -274,7 +309,9 @@ def render_response_time_chart(
             df = pd.DataFrame(responses)
 
             if "timestamp" not in df.columns or "response_time" not in df.columns:
-                st.error("❌ Response data missing required columns (timestamp, response_time)")
+                st.error(
+                    "❌ Response data missing required columns (timestamp, response_time)"
+                )
                 return
 
             df["timestamp"] = pd.to_datetime(df["timestamp"])
@@ -292,11 +329,19 @@ def render_response_time_chart(
             df["rolling_avg"] = df["response_time"].rolling(window=10).mean()
             fig.add_trace(
                 go.Scatter(
-                    x=df["timestamp"], y=df["rolling_avg"], name="Rolling Average", line=dict(color="red", width=2)
+                    x=df["timestamp"],
+                    y=df["rolling_avg"],
+                    name="Rolling Average",
+                    line=dict(color="red", width=2),
                 )
             )
 
-            fig.update_layout(width=width, height=height, xaxis_title="Time", yaxis_title="Response Time (ms)")
+            fig.update_layout(
+                width=width,
+                height=height,
+                xaxis_title="Time",
+                yaxis_title="Response Time (ms)",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -397,7 +442,9 @@ def render_throughput_chart(
             throughput_cols = [
                 col
                 for col in df.columns
-                if "throughput" in col.lower() or "requests" in col.lower() or "transactions" in col.lower()
+                if "throughput" in col.lower()
+                or "requests" in col.lower()
+                or "transactions" in col.lower()
             ]
 
             if not throughput_cols:
@@ -411,10 +458,19 @@ def render_throughput_chart(
 
             # Create throughput chart
             fig = px.line(
-                df, x="timestamp", y=throughput_cols, title=title, labels={"value": "Throughput", "timestamp": "Time"}
+                df,
+                x="timestamp",
+                y=throughput_cols,
+                title=title,
+                labels={"value": "Throughput", "timestamp": "Time"},
             )
 
-            fig.update_layout(width=width, height=height, xaxis_title="Time", yaxis_title="Throughput (req/sec)")
+            fig.update_layout(
+                width=width,
+                height=height,
+                xaxis_title="Time",
+                yaxis_title="Throughput (req/sec)",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -499,9 +555,13 @@ def render_error_rate_chart(
 
             # Calculate error rate if not provided
             if "error_rate" not in df.columns:
-                total_requests = df.get("total_requests", df.get("requests", [1] * len(df)))
+                total_requests = df.get(
+                    "total_requests", df.get("requests", [1] * len(df))
+                )
                 error_count = df.get("error_count", df.get("errors", [0] * len(df)))
-                df["error_rate"] = np.array(error_count) / np.array(total_requests) * 100
+                df["error_rate"] = (
+                    np.array(error_count) / np.array(total_requests) * 100
+                )
 
             # Create error rate chart
             fig = px.line(
@@ -513,9 +573,19 @@ def render_error_rate_chart(
             )
 
             # Add error threshold line
-            fig.add_hline(y=5, line_dash="dash", line_color="red", annotation_text="Error Threshold (5%)")
+            fig.add_hline(
+                y=5,
+                line_dash="dash",
+                line_color="red",
+                annotation_text="Error Threshold (5%)",
+            )
 
-            fig.update_layout(width=width, height=height, xaxis_title="Time", yaxis_title="Error Rate (%)")
+            fig.update_layout(
+                width=width,
+                height=height,
+                xaxis_title="Time",
+                yaxis_title="Error Rate (%)",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 

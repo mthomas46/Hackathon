@@ -4,7 +4,6 @@ Handles source agent service visualization, including document fetching,
 data normalization, and code analysis operations across GitHub, Jira, and Confluence.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..shared_utils import (
@@ -28,7 +27,9 @@ class SourceAgentUIHandlers:
             # Get source agent status and cached data
             status_data = source_agent_monitor.get_source_status()
             fetch_history = source_agent_monitor.get_fetch_history(limit=20)
-            normalization_history = source_agent_monitor.get_normalization_history(limit=20)
+            normalization_history = source_agent_monitor.get_normalization_history(
+                limit=20
+            )
             analysis_history = source_agent_monitor.get_analysis_history(limit=20)
 
             # Build context for template
@@ -539,12 +540,12 @@ class SourceAgentUIHandlers:
                         <div class="form-group">
                             <label for="normalize-data">Raw Data (JSON):</label>
                             <textarea id="normalize-data" placeholder='{"type": "pr", "number": 123, "title": "Add feature", "body": "PR description..."}'>{
-  "type": "pr",
-  "number": 123,
-  "title": "Add new feature",
-  "body": "This PR adds a new feature to improve user experience.",
-  "html_url": "https://github.com/owner/repo/pull/123",
-  "base": {"repo": {"full_name": "owner/repo"}}
+    "type": "pr",
+    "number": 123,
+    "title": "Add new feature",
+    "body": "This PR adds a new feature to improve user experience.",
+    "html_url": "https://github.com/owner/repo/pull/123",
+    "base": {"repo": {"full_name": "owner/repo"}}
 }</textarea>
                         </div>
                         <button type="submit" class="btn">Normalize Data</button>
@@ -1058,5 +1059,7 @@ class UserAPI:
             return create_html_response(html, "Source Agent Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render source agent dashboard", e, **build_frontend_context("render_source_agent_dashboard")
+                "render source agent dashboard",
+                e,
+                **build_frontend_context("render_source_agent_dashboard")
             )

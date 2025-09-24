@@ -47,7 +47,11 @@ class OwnerResolver:
             cached_resolution = self._resolution_cache.get(owner_name)
             if cached_resolution and self._is_cache_entry_valid(cached_resolution):
                 # Return cached result without internal timestamp field
-                resolved_targets[owner_name] = {key: value for key, value in cached_resolution.items() if key != "_ts"}
+                resolved_targets[owner_name] = {
+                    key: value
+                    for key, value in cached_resolution.items()
+                    if key != "_ts"
+                }
                 continue
 
             # Resolve owner information from mapping or heuristics

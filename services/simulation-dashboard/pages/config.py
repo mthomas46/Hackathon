@@ -20,11 +20,18 @@ from services.clients.simulation_client import SimulationClient
 def render_config_page():
     """Render the comprehensive configuration and health monitoring page."""
     st.markdown("## ⚙️ Configuration & Health Monitoring")
-    st.markdown("Manage service connections, monitor system health, and configure dashboard settings.")
+    st.markdown(
+        "Manage service connections, monitor system health, and configure dashboard settings."
+    )
 
     # Create tabs for different configuration sections
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["🔗 Service Connections", "🏥 Health Dashboard", "📊 System Resources", "⚙️ Settings"]
+        [
+            "🔗 Service Connections",
+            "🏥 Health Dashboard",
+            "📊 System Resources",
+            "⚙️ Settings",
+        ]
     )
 
     with tab1:
@@ -66,16 +73,22 @@ def render_service_connections():
 
     with col2:
         st.markdown("**📊 Analysis Service (Optional)**")
-        analysis_host = st.text_input("Host", value=config.analysis_service_url or "", placeholder="Optional")
+        analysis_host = st.text_input(
+            "Host", value=config.analysis_service_url or "", placeholder="Optional"
+        )
         analysis_port = st.text_input("Port", value="", placeholder="Optional")
 
         if analysis_host and analysis_port:
             if st.button("🔍 Test Connection", key="test_analysis_connection"):
                 with st.spinner("Testing connection..."):
-                    health_status = test_analysis_service_health(analysis_host, analysis_port)
+                    health_status = test_analysis_service_health(
+                        analysis_host, analysis_port
+                    )
                     if health_status["healthy"]:
                         st.success("✅ Analysis service is healthy")
-                        st.metric("Response Time", f"{health_status['response_time']}ms")
+                        st.metric(
+                            "Response Time", f"{health_status['response_time']}ms"
+                        )
                     else:
                         st.warning("⚠️ Analysis service is not responding")
         else:
@@ -246,11 +259,16 @@ def render_dashboard_settings():
 
     col1, col2 = st.columns(2)
     with col1:
-        theme = st.selectbox("Theme", options=["Light", "Dark", "Auto"], help="Choose dashboard theme")
+        theme = st.selectbox(
+            "Theme", options=["Light", "Dark", "Auto"], help="Choose dashboard theme"
+        )
 
     with col2:
         font_size = st.selectbox(
-            "Font Size", options=["Small", "Medium", "Large"], index=1, help="Choose default font size"
+            "Font Size",
+            options=["Small", "Medium", "Large"],
+            index=1,
+            help="Choose default font size",
         )
 
     # Performance settings
@@ -278,12 +296,19 @@ def render_dashboard_settings():
     # Notification settings
     st.markdown("#### 🔔 Notifications")
 
-    enable_notifications = st.checkbox("Enable Notifications", value=True, help="Enable dashboard notifications")
+    enable_notifications = st.checkbox(
+        "Enable Notifications", value=True, help="Enable dashboard notifications"
+    )
 
     if enable_notifications:
         notification_types = st.multiselect(
             "Notification Types",
-            options=["Simulation Completed", "Errors", "Warnings", "Service Health Changes"],
+            options=[
+                "Simulation Completed",
+                "Errors",
+                "Warnings",
+                "Service Health Changes",
+            ],
             default=["Simulation Completed", "Errors"],
             help="Choose which notifications to receive",
         )
@@ -310,7 +335,9 @@ def render_dashboard_settings():
                 "refresh_rate": refresh_rate,
                 "max_items": max_items,
                 "enable_notifications": enable_notifications,
-                "notification_types": notification_types if enable_notifications else [],
+                "notification_types": (
+                    notification_types if enable_notifications else []
+                ),
             }
         )
 
@@ -328,7 +355,10 @@ def test_simulation_service_health() -> Dict[str, Any]:
         result = client.get_health()
         response_time = int((time.time() - start_time) * 1000)
 
-        return {"healthy": result.get("status") == "healthy", "response_time": response_time}
+        return {
+            "healthy": result.get("status") == "healthy",
+            "response_time": response_time,
+        }
     except Exception as e:
         return {"healthy": False, "response_time": 0, "error": str(e)}
 
@@ -406,7 +436,12 @@ def render_ecosystem_services_status():
 def get_overall_system_health() -> Dict[str, Any]:
     """Get overall system health status."""
     # Mock implementation - in real system this would aggregate all service health
-    return {"status": "healthy", "services_healthy": 3, "services_total": 4, "last_check": datetime.now()}
+    return {
+        "status": "healthy",
+        "services_healthy": 3,
+        "services_total": 4,
+        "last_check": datetime.now(),
+    }
 
 
 def count_active_services() -> int:
@@ -497,7 +532,32 @@ def render_health_trends():
     """Render health trends over time."""
     # Mock health trend data
     hours = [f"{i}:00" for i in range(24)]
-    health_scores = [85, 87, 82, 89, 91, 88, 93, 90, 87, 89, 92, 88, 85, 87, 82, 89, 91, 88, 93, 90, 87, 89, 92, 88]
+    health_scores = [
+        85,
+        87,
+        82,
+        89,
+        91,
+        88,
+        93,
+        90,
+        87,
+        89,
+        92,
+        88,
+        85,
+        87,
+        82,
+        89,
+        91,
+        88,
+        93,
+        90,
+        87,
+        89,
+        92,
+        88,
+    ]
 
     fig = go.Figure()
     fig.add_trace(
@@ -512,7 +572,10 @@ def render_health_trends():
     )
 
     fig.update_layout(
-        title="System Health Score (Last 24 Hours)", xaxis_title="Time", yaxis_title="Health Score (%)", height=300
+        title="System Health Score (Last 24 Hours)",
+        xaxis_title="Time",
+        yaxis_title="Health Score (%)",
+        height=300,
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -569,12 +632,31 @@ def render_resource_usage_trends():
     cpu_usage = [23, 25, 22, 28, 24, 26, 23, 29, 25, 27, 24, 26]
     memory_usage = [45, 47, 44, 49, 46, 48, 45, 50, 47, 49, 46, 48]
 
-    fig = make_subplots(rows=2, cols=1, subplot_titles=("CPU Usage (%)", "Memory Usage (%)"), shared_xaxes=True)
-
-    fig.add_trace(go.Scatter(x=times, y=cpu_usage, mode="lines", name="CPU", line=dict(color="blue")), row=1, col=1)
+    fig = make_subplots(
+        rows=2,
+        cols=1,
+        subplot_titles=("CPU Usage (%)", "Memory Usage (%)"),
+        shared_xaxes=True,
+    )
 
     fig.add_trace(
-        go.Scatter(x=times, y=memory_usage, mode="lines", name="Memory", line=dict(color="green")), row=2, col=1
+        go.Scatter(
+            x=times, y=cpu_usage, mode="lines", name="CPU", line=dict(color="blue")
+        ),
+        row=1,
+        col=1,
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=times,
+            y=memory_usage,
+            mode="lines",
+            name="Memory",
+            line=dict(color="green"),
+        ),
+        row=2,
+        col=1,
     )
 
     fig.update_layout(height=400, showlegend=False)

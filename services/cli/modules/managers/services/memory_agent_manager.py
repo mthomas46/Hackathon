@@ -19,7 +19,9 @@ from ...base.base_manager import BaseManager
 class MemoryAgentManager(BaseManager):
     """Manager for memory agent power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def memory_agent_menu(self):
@@ -55,7 +57,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_item_management_menu(self):
         """Memory item management submenu."""
         while True:
-            menu = create_menu_table("Memory Item Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Memory Item Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -90,8 +94,12 @@ class MemoryAgentManager(BaseManager):
         """Store a new memory item."""
         try:
             # Get memory item details
-            memory_type = Prompt.ask("[bold cyan]Memory type[/bold cyan]", default="operation")
-            memory_key = Prompt.ask("[bold cyan]Memory key (correlation ID, doc ID, etc.)[/bold cyan]")
+            memory_type = Prompt.ask(
+                "[bold cyan]Memory type[/bold cyan]", default="operation"
+            )
+            memory_key = Prompt.ask(
+                "[bold cyan]Memory key (correlation ID, doc ID, etc.)[/bold cyan]"
+            )
             summary = Prompt.ask("[bold cyan]Summary[/bold cyan]")
 
             # Get data as JSON
@@ -99,7 +107,9 @@ class MemoryAgentManager(BaseManager):
             try:
                 data = json.loads(data_input)
             except json.JSONDecodeError:
-                self.console.print("[red]Invalid JSON for data. Using empty dict.[/red]")
+                self.console.print(
+                    "[red]Invalid JSON for data. Using empty dict.[/red]"
+                )
                 data = {}
 
             # Create memory item
@@ -115,16 +125,24 @@ class MemoryAgentManager(BaseManager):
             self.console.print("[yellow]Memory Item to Store:[/yellow]")
             self.console.print(json.dumps(memory_item, indent=2))
 
-            confirm = Confirm.ask("[bold cyan]Store this memory item?[/bold cyan]", default=True)
+            confirm = Confirm.ask(
+                "[bold cyan]Store this memory item?[/bold cyan]", default=True
+            )
 
             if confirm:
                 request_data = {"item": memory_item}
-                response = await self.clients.post_json("memory-agent/memory/put", request_data)
+                response = await self.clients.post_json(
+                    "memory-agent/memory/put", request_data
+                )
 
                 if response.get("data"):
-                    self.console.print("[green]✅ Memory item stored successfully[/green]")
+                    self.console.print(
+                        "[green]✅ Memory item stored successfully[/green]"
+                    )
                     if response.get("data", {}).get("count"):
-                        self.console.print(f"[green]Total memory items: {response['data']['count']}[/green]")
+                        self.console.print(
+                            f"[green]Total memory items: {response['data']['count']}[/green]"
+                        )
                 else:
                     self.console.print("[red]❌ Failed to store memory item[/red]")
 
@@ -134,8 +152,12 @@ class MemoryAgentManager(BaseManager):
     async def list_memory_items(self):
         """List memory items with filtering."""
         try:
-            memory_type = Prompt.ask("[bold cyan]Filter by type (optional)[/bold cyan]", default="")
-            key_filter = Prompt.ask("[bold cyan]Filter by key (optional)[/bold cyan]", default="")
+            memory_type = Prompt.ask(
+                "[bold cyan]Filter by type (optional)[/bold cyan]", default=""
+            )
+            key_filter = Prompt.ask(
+                "[bold cyan]Filter by key (optional)[/bold cyan]", default=""
+            )
             limit = int(Prompt.ask("[bold cyan]Limit[/bold cyan]", default="50"))
 
             params = {}
@@ -145,13 +167,19 @@ class MemoryAgentManager(BaseManager):
                 params["key"] = key_filter
             params["limit"] = limit
 
-            response = await self.clients.get_json("memory-agent/memory/list", params=params)
+            response = await self.clients.get_json(
+                "memory-agent/memory/list", params=params
+            )
 
             if response.get("data"):
                 items = response["data"].get("items", [])
-                await self.display_memory_items(items, f"Memory Items ({len(items)} found)")
+                await self.display_memory_items(
+                    items, f"Memory Items ({len(items)} found)"
+                )
             else:
-                self.console.print("[yellow]No memory items found or error retrieving items[/yellow]")
+                self.console.print(
+                    "[yellow]No memory items found or error retrieving items[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error listing memory items: {e}[/red]")
@@ -160,10 +188,14 @@ class MemoryAgentManager(BaseManager):
         """Search memory items by key or type."""
         try:
             search_term = Prompt.ask("[bold cyan]Search term[/bold cyan]")
-            search_type = Prompt.ask("[bold cyan]Search in (key/type/both)[/bold cyan]", default="both")
+            search_type = Prompt.ask(
+                "[bold cyan]Search in (key/type/both)[/bold cyan]", default="both"
+            )
 
             # Get all items and filter client-side
-            response = await self.clients.get_json("memory-agent/memory/list", params={"limit": 1000})
+            response = await self.clients.get_json(
+                "memory-agent/memory/list", params={"limit": 1000}
+            )
 
             if response.get("data"):
                 all_items = response["data"].get("items", [])
@@ -171,16 +203,23 @@ class MemoryAgentManager(BaseManager):
 
                 for item in all_items:
                     match = False
-                    if search_type in ["key", "both"] and search_term.lower() in (item.get("key", "") or "").lower():
+                    if (
+                        search_type in ["key", "both"]
+                        and search_term.lower() in (item.get("key", "") or "").lower()
+                    ):
                         match = True
-                    if search_type in ["type", "both"] and search_term.lower() in (item.get("type", "") or "").lower():
+                    if (
+                        search_type in ["type", "both"]
+                        and search_term.lower() in (item.get("type", "") or "").lower()
+                    ):
                         match = True
 
                     if match:
                         filtered_items.append(item)
 
                 await self.display_memory_items(
-                    filtered_items, f"Search Results for '{search_term}' ({len(filtered_items)} found)"
+                    filtered_items,
+                    f"Search Results for '{search_term}' ({len(filtered_items)} found)",
                 )
             else:
                 self.console.print("[yellow]No memory items found[/yellow]")
@@ -192,7 +231,9 @@ class MemoryAgentManager(BaseManager):
         """View detailed information about a specific memory item."""
         try:
             # First list items to choose from
-            response = await self.clients.get_json("memory-agent/memory/list", params={"limit": 20})
+            response = await self.clients.get_json(
+                "memory-agent/memory/list", params={"limit": 20}
+            )
 
             if not response.get("data") or not response["data"].get("items"):
                 self.console.print("[yellow]No memory items available[/yellow]")
@@ -216,7 +257,11 @@ class MemoryAgentManager(BaseManager):
                 table.add_row(
                     str(i),
                     item.get("type", "unknown"),
-                    item.get("key", "N/A")[:30] + "..." if len(item.get("key", "")) > 30 else item.get("key", "N/A"),
+                    (
+                        item.get("key", "N/A")[:30] + "..."
+                        if len(item.get("key", "")) > 30
+                        else item.get("key", "N/A")
+                    ),
                     (
                         item.get("summary", "No summary")[:40] + "..."
                         if len(item.get("summary", "")) > 40
@@ -230,7 +275,9 @@ class MemoryAgentManager(BaseManager):
             if not items:
                 return
 
-            choice = Prompt.ask("[bold cyan]Enter item index to view details[/bold cyan]", default="1")
+            choice = Prompt.ask(
+                "[bold cyan]Enter item index to view details[/bold cyan]", default="1"
+            )
 
             try:
                 index = int(choice) - 1
@@ -267,7 +314,9 @@ class MemoryAgentManager(BaseManager):
     async def bulk_memory_operations(self):
         """Perform bulk memory operations."""
         while True:
-            menu = create_menu_table("Bulk Memory Operations", ["Option", "Description"])
+            menu = create_menu_table(
+                "Bulk Memory Operations", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -312,7 +361,9 @@ class MemoryAgentManager(BaseManager):
 
             self.console.print(f"[yellow]Found {len(items)} items to store[/yellow]")
 
-            confirm = Confirm.ask(f"[bold cyan]Store {len(items)} memory items?[/bold cyan]", default=True)
+            confirm = Confirm.ask(
+                f"[bold cyan]Store {len(items)} memory items?[/bold cyan]", default=True
+            )
 
             if confirm:
                 stored = 0
@@ -322,12 +373,16 @@ class MemoryAgentManager(BaseManager):
                     try:
                         # Ensure required fields
                         if "id" not in item:
-                            item["id"] = f"bulk-{int(datetime.now(timezone.utc).timestamp() * 1000)}-{stored}"
+                            item["id"] = (
+                                f"bulk-{int(datetime.now(timezone.utc).timestamp() * 1000)}-{stored}"
+                            )
                         if "type" not in item:
                             item["type"] = "bulk_import"
 
                         request_data = {"item": item}
-                        response = await self.clients.post_json("memory-agent/memory/put", request_data)
+                        response = await self.clients.post_json(
+                            "memory-agent/memory/put", request_data
+                        )
 
                         if response.get("data"):
                             stored += 1
@@ -335,10 +390,14 @@ class MemoryAgentManager(BaseManager):
                             failed += 1
 
                     except Exception as e:
-                        self.console.print(f"[red]Failed to store item {item.get('id', 'unknown')}: {e}[/red]")
+                        self.console.print(
+                            f"[red]Failed to store item {item.get('id', 'unknown')}: {e}[/red]"
+                        )
                         failed += 1
 
-                self.console.print(f"[green]✅ Bulk store complete: {stored} stored, {failed} failed[/green]")
+                self.console.print(
+                    f"[green]✅ Bulk store complete: {stored} stored, {failed} failed[/green]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error in bulk JSON store: {e}[/red]")
@@ -347,7 +406,9 @@ class MemoryAgentManager(BaseManager):
         """Bulk store memory items from CSV file."""
         try:
             file_path = Prompt.ask("[bold cyan]CSV file path[/bold cyan]")
-            memory_type = Prompt.ask("[bold cyan]Memory type for all items[/bold cyan]", default="csv_import")
+            memory_type = Prompt.ask(
+                "[bold cyan]Memory type for all items[/bold cyan]", default="csv_import"
+            )
 
             if not os.path.exists(file_path):
                 self.console.print(f"[red]File not found: {file_path}[/red]")
@@ -375,7 +436,9 @@ class MemoryAgentManager(BaseManager):
 
             self.console.print(f"[yellow]Parsed {len(items)} items from CSV[/yellow]")
 
-            confirm = Confirm.ask(f"[bold cyan]Store {len(items)} memory items?[/bold cyan]", default=True)
+            confirm = Confirm.ask(
+                f"[bold cyan]Store {len(items)} memory items?[/bold cyan]", default=True
+            )
 
             if confirm:
                 stored = 0
@@ -384,7 +447,9 @@ class MemoryAgentManager(BaseManager):
                 for item in items:
                     try:
                         request_data = {"item": item}
-                        response = await self.clients.post_json("memory-agent/memory/put", request_data)
+                        response = await self.clients.post_json(
+                            "memory-agent/memory/put", request_data
+                        )
 
                         if response.get("data"):
                             stored += 1
@@ -394,7 +459,9 @@ class MemoryAgentManager(BaseManager):
                     except Exception:
                         failed += 1
 
-                self.console.print(f"[green]✅ CSV bulk store complete: {stored} stored, {failed} failed[/green]")
+                self.console.print(
+                    f"[green]✅ CSV bulk store complete: {stored} stored, {failed} failed[/green]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error in bulk CSV store: {e}[/red]")
@@ -402,16 +469,22 @@ class MemoryAgentManager(BaseManager):
     async def export_memory_items(self):
         """Export memory items to file."""
         try:
-            export_format = Prompt.ask("[bold cyan]Export format (json/csv)[/bold cyan]", default="json")
+            export_format = Prompt.ask(
+                "[bold cyan]Export format (json/csv)[/bold cyan]", default="json"
+            )
             file_path = Prompt.ask("[bold cyan]Export file path[/bold cyan]")
-            memory_type = Prompt.ask("[bold cyan]Filter by type (optional)[/bold cyan]", default="")
+            memory_type = Prompt.ask(
+                "[bold cyan]Filter by type (optional)[/bold cyan]", default=""
+            )
 
             # Get items
             params = {"limit": 10000}  # Large limit for export
             if memory_type:
                 params["type"] = memory_type
 
-            response = await self.clients.get_json("memory-agent/memory/list", params=params)
+            response = await self.clients.get_json(
+                "memory-agent/memory/list", params=params
+            )
 
             if not response.get("data") or not response["data"].get("items"):
                 self.console.print("[yellow]No items to export[/yellow]")
@@ -422,7 +495,9 @@ class MemoryAgentManager(BaseManager):
             if export_format.lower() == "json":
                 with open(file_path, "w") as f:
                     json.dump(items, f, indent=2, default=str)
-                self.console.print(f"[green]✅ Exported {len(items)} items to {file_path} (JSON)[/green]")
+                self.console.print(
+                    f"[green]✅ Exported {len(items)} items to {file_path} (JSON)[/green]"
+                )
 
             elif export_format.lower() == "csv":
                 if not items:
@@ -455,10 +530,14 @@ class MemoryAgentManager(BaseManager):
 
                         writer.writerow(row)
 
-                self.console.print(f"[green]✅ Exported {len(items)} items to {file_path} (CSV)[/green]")
+                self.console.print(
+                    f"[green]✅ Exported {len(items)} items to {file_path} (CSV)[/green]"
+                )
 
             else:
-                self.console.print("[red]Unsupported export format. Use 'json' or 'csv'[/red]")
+                self.console.print(
+                    "[red]Unsupported export format. Use 'json' or 'csv'[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error exporting memory items: {e}[/red]")
@@ -470,8 +549,12 @@ class MemoryAgentManager(BaseManager):
 
             # This would require a delete endpoint in the memory agent
             # For now, show placeholder
-            self.console.print("[yellow]Bulk delete functionality requires memory agent API enhancement[/yellow]")
-            self.console.print("[yellow]This would delete all items of type: {memory_type}[/yellow]")
+            self.console.print(
+                "[yellow]Bulk delete functionality requires memory agent API enhancement[/yellow]"
+            )
+            self.console.print(
+                "[yellow]This would delete all items of type: {memory_type}[/yellow]"
+            )
 
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
@@ -502,7 +585,11 @@ class MemoryAgentManager(BaseManager):
 
             table.add_row(
                 item.get("type", "unknown"),
-                item.get("key", "N/A")[:30] + "..." if len(item.get("key", "")) > 30 else item.get("key", "N/A"),
+                (
+                    item.get("key", "N/A")[:30] + "..."
+                    if len(item.get("key", "")) > 30
+                    else item.get("key", "N/A")
+                ),
                 (
                     item.get("summary", "No summary")[:40] + "..."
                     if len(item.get("summary", "")) > 40
@@ -520,7 +607,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_statistics_menu(self):
         """Memory statistics and monitoring submenu."""
         while True:
-            menu = create_menu_table("Memory Statistics & Monitoring", ["Option", "Description"])
+            menu = create_menu_table(
+                "Memory Statistics & Monitoring", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -574,7 +663,11 @@ class MemoryAgentManager(BaseManager):
 """
 
                 print_panel(
-                    self.console, content, border_style="green" if response.get("status") == "healthy" else "yellow"
+                    self.console,
+                    content,
+                    border_style=(
+                        "green" if response.get("status") == "healthy" else "yellow"
+                    ),
                 )
             else:
                 self.console.print("[red]Failed to retrieve memory health stats[/red]")
@@ -586,10 +679,14 @@ class MemoryAgentManager(BaseManager):
         """Analyze memory usage patterns."""
         try:
             # Get all memory items for analysis
-            response = await self.clients.get_json("memory-agent/memory/list", params={"limit": 10000})
+            response = await self.clients.get_json(
+                "memory-agent/memory/list", params={"limit": 10000}
+            )
 
             if not response.get("data"):
-                self.console.print("[yellow]No memory data available for analysis[/yellow]")
+                self.console.print(
+                    "[yellow]No memory data available for analysis[/yellow]"
+                )
                 return
 
             items = response["data"].get("items", [])
@@ -635,7 +732,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_type_distribution(self):
         """Show memory type distribution chart."""
         try:
-            response = await self.clients.get_json("memory-agent/memory/list", params={"limit": 10000})
+            response = await self.clients.get_json(
+                "memory-agent/memory/list", params={"limit": 10000}
+            )
 
             if not response.get("data"):
                 self.console.print("[yellow]No memory data available[/yellow]")
@@ -654,7 +753,9 @@ class MemoryAgentManager(BaseManager):
             table.add_column("Count", style="yellow", justify="right")
             table.add_column("Percentage", style="cyan", justify="right")
 
-            for item_type, count in sorted(type_counts.items(), key=lambda x: x[1], reverse=True):
+            for item_type, count in sorted(
+                type_counts.items(), key=lambda x: x[1], reverse=True
+            ):
                 percentage = (count / len(items)) * 100 if items else 0
                 table.add_row(item_type, str(count), f"{percentage:.1f}%")
 
@@ -666,7 +767,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_expiration_monitoring(self):
         """Monitor memory item expiration."""
         try:
-            response = await self.clients.get_json("memory-agent/memory/list", params={"limit": 10000})
+            response = await self.clients.get_json(
+                "memory-agent/memory/list", params={"limit": 10000}
+            )
 
             if not response.get("data"):
                 self.console.print("[yellow]No memory data available[/yellow]")
@@ -685,13 +788,17 @@ class MemoryAgentManager(BaseManager):
                     try:
                         # Parse datetime
                         if isinstance(expires_at, str):
-                            expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+                            expires_dt = datetime.fromisoformat(
+                                expires_at.replace("Z", "+00:00")
+                            )
                         else:
                             expires_dt = expires_at
 
                         if expires_dt < now:
                             expired.append(item)
-                        elif (expires_dt - now).total_seconds() < 3600:  # Expiring in < 1 hour
+                        elif (
+                            expires_dt - now
+                        ).total_seconds() < 3600:  # Expiring in < 1 hour
                             expiring_soon.append(item)
                     except Exception:
                         pass  # Skip invalid dates
@@ -710,10 +817,14 @@ class MemoryAgentManager(BaseManager):
             if expired:
                 content += f"\n[bold red]Expired Items (showing first 5):[/bold red]\n"
                 for item in expired[:5]:
-                    content += f"• {item.get('type', 'unknown')}: {item.get('key', 'N/A')}\n"
+                    content += (
+                        f"• {item.get('type', 'unknown')}: {item.get('key', 'N/A')}\n"
+                    )
 
             if expiring_soon:
-                content += f"\n[bold yellow]Expiring Soon (showing first 5):[/bold yellow]\n"
+                content += (
+                    f"\n[bold yellow]Expiring Soon (showing first 5):[/bold yellow]\n"
+                )
                 for item in expiring_soon[:5]:
                     expires = item.get("expires_at", "")
                     content += f"• {item.get('type', 'unknown')}: {item.get('key', 'N/A')} (expires: {expires})\n"
@@ -729,7 +840,9 @@ class MemoryAgentManager(BaseManager):
             self.console.print(
                 "[yellow]Memory performance metrics would show response times, throughput, etc.[/yellow]"
             )
-            self.console.print("[yellow]This requires additional memory agent API endpoints for metrics[/yellow]")
+            self.console.print(
+                "[yellow]This requires additional memory agent API endpoints for metrics[/yellow]"
+            )
 
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
@@ -739,7 +852,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_cleanup_menu(self):
         """Memory cleanup and maintenance submenu."""
         while True:
-            menu = create_menu_table("Memory Cleanup & Maintenance", ["Option", "Description"])
+            menu = create_menu_table(
+                "Memory Cleanup & Maintenance", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -774,14 +889,22 @@ class MemoryAgentManager(BaseManager):
         """Clean up expired memory items."""
         try:
             # This would require a cleanup endpoint in memory agent
-            self.console.print("[yellow]Expired item cleanup would remove all expired memory items[/yellow]")
-            self.console.print("[yellow]This requires memory agent API enhancement[/yellow]")
+            self.console.print(
+                "[yellow]Expired item cleanup would remove all expired memory items[/yellow]"
+            )
+            self.console.print(
+                "[yellow]This requires memory agent API enhancement[/yellow]"
+            )
 
-            confirm = Confirm.ask("[bold cyan]Proceed with cleanup simulation?[/bold cyan]", default=False)
+            confirm = Confirm.ask(
+                "[bold cyan]Proceed with cleanup simulation?[/bold cyan]", default=False
+            )
 
             if confirm:
                 # Simulate cleanup by showing what would be cleaned
-                response = await self.clients.get_json("memory-agent/memory/list", params={"limit": 10000})
+                response = await self.clients.get_json(
+                    "memory-agent/memory/list", params={"limit": 10000}
+                )
 
                 if response.get("data"):
                     items = response["data"].get("items", [])
@@ -793,7 +916,9 @@ class MemoryAgentManager(BaseManager):
                         if expires_at:
                             try:
                                 if isinstance(expires_at, str):
-                                    expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+                                    expires_dt = datetime.fromisoformat(
+                                        expires_at.replace("Z", "+00:00")
+                                    )
                                 else:
                                     expires_dt = expires_at
 
@@ -812,7 +937,9 @@ class MemoryAgentManager(BaseManager):
     async def compact_memory_storage(self):
         """Compact memory storage."""
         try:
-            self.console.print("[yellow]Memory compaction would optimize storage efficiency[/yellow]")
+            self.console.print(
+                "[yellow]Memory compaction would optimize storage efficiency[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -821,7 +948,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_fragmentation_analysis(self):
         """Analyze memory fragmentation."""
         try:
-            self.console.print("[yellow]Fragmentation analysis would show storage efficiency metrics[/yellow]")
+            self.console.print(
+                "[yellow]Fragmentation analysis would show storage efficiency metrics[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -830,7 +959,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_backup_restore(self):
         """Memory backup and restore operations."""
         try:
-            self.console.print("[yellow]Memory backup/restore would provide data persistence across restarts[/yellow]")
+            self.console.print(
+                "[yellow]Memory backup/restore would provide data persistence across restarts[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -839,7 +970,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_integrity_check(self):
         """Check memory integrity."""
         try:
-            self.console.print("[yellow]Integrity check would validate memory item consistency[/yellow]")
+            self.console.print(
+                "[yellow]Integrity check would validate memory item consistency[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -848,7 +981,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_analytics_menu(self):
         """Memory analytics and reporting submenu."""
         while True:
-            menu = create_menu_table("Memory Analytics & Reporting", ["Option", "Description"])
+            menu = create_menu_table(
+                "Memory Analytics & Reporting", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -882,7 +1017,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_trends_analysis(self):
         """Analyze memory usage trends."""
         try:
-            self.console.print("[yellow]Memory trends analysis would show usage patterns over time[/yellow]")
+            self.console.print(
+                "[yellow]Memory trends analysis would show usage patterns over time[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -891,7 +1028,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_usage_forecasting(self):
         """Forecast memory usage."""
         try:
-            self.console.print("[yellow]Usage forecasting would predict future memory needs[/yellow]")
+            self.console.print(
+                "[yellow]Usage forecasting would predict future memory needs[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -900,7 +1039,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_pattern_recognition(self):
         """Recognize patterns in memory usage."""
         try:
-            self.console.print("[yellow]Pattern recognition would identify usage patterns and anomalies[/yellow]")
+            self.console.print(
+                "[yellow]Pattern recognition would identify usage patterns and anomalies[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -909,7 +1050,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_correlation_analysis(self):
         """Analyze correlations in memory data."""
         try:
-            self.console.print("[yellow]Correlation analysis would find relationships between memory items[/yellow]")
+            self.console.print(
+                "[yellow]Correlation analysis would find relationships between memory items[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -918,7 +1061,9 @@ class MemoryAgentManager(BaseManager):
     async def generate_memory_report(self):
         """Generate comprehensive memory report."""
         try:
-            self.console.print("[yellow]Memory report generation would create detailed analytics reports[/yellow]")
+            self.console.print(
+                "[yellow]Memory report generation would create detailed analytics reports[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -961,7 +1106,9 @@ class MemoryAgentManager(BaseManager):
     async def view_memory_config(self):
         """View current memory configuration."""
         try:
-            self.console.print("[yellow]Memory configuration would show current settings[/yellow]")
+            self.console.print(
+                "[yellow]Memory configuration would show current settings[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -970,7 +1117,9 @@ class MemoryAgentManager(BaseManager):
     async def configure_ttl_settings(self):
         """Configure TTL settings."""
         try:
-            self.console.print("[yellow]TTL configuration would set default expiration times[/yellow]")
+            self.console.print(
+                "[yellow]TTL configuration would set default expiration times[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -979,7 +1128,9 @@ class MemoryAgentManager(BaseManager):
     async def set_capacity_limits(self):
         """Set memory capacity limits."""
         try:
-            self.console.print("[yellow]Capacity limits would configure maximum memory usage[/yellow]")
+            self.console.print(
+                "[yellow]Capacity limits would configure maximum memory usage[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -988,7 +1139,9 @@ class MemoryAgentManager(BaseManager):
     async def configure_redis_integration(self):
         """Configure Redis integration."""
         try:
-            self.console.print("[yellow]Redis configuration would set connection and pub/sub settings[/yellow]")
+            self.console.print(
+                "[yellow]Redis configuration would set connection and pub/sub settings[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -997,7 +1150,9 @@ class MemoryAgentManager(BaseManager):
     async def memory_agent_settings(self):
         """Configure memory agent settings."""
         try:
-            self.console.print("[yellow]Memory agent settings would configure general behavior[/yellow]")
+            self.console.print(
+                "[yellow]Memory agent settings would configure general behavior[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1006,8 +1161,12 @@ class MemoryAgentManager(BaseManager):
     async def store_memory_from_cli(self, memory_request: Dict[str, Any]):
         """Store memory item for CLI usage (no interactive prompts)."""
         try:
-            with self.console.status(f"[bold green]Storing memory item...[/bold green]") as status:
-                response = await self.clients.post_json("memory-agent/memory/put", memory_request)
+            with self.console.status(
+                f"[bold green]Storing memory item...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "memory-agent/memory/put", memory_request
+                )
 
             if response.get("data"):
                 self.console.print("[green]✅ Memory item stored successfully[/green]")

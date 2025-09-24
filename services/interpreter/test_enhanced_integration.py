@@ -17,7 +17,6 @@ from modules.orchestrator_integration import orchestrator_integration
 from modules.prompt_engineering import prompt_engineer
 
 
-
 class TestEcosystemContextIntegration:
     """Test ecosystem context awareness capabilities."""
 
@@ -62,13 +61,17 @@ class TestEcosystemContextIntegration:
     async def test_workflow_mapping(self):
         """Test query to workflow mapping."""
         # Test document analysis mapping
-        workflow = ecosystem_context.map_query_to_workflow("analyze this document", {"document_type": ["code"]})
+        workflow = ecosystem_context.map_query_to_workflow(
+            "analyze this document", {"document_type": ["code"]}
+        )
         assert workflow is not None
         assert "services" in workflow
         assert "document_store" in workflow["services"]
 
         # Test unknown query
-        unknown_workflow = ecosystem_context.map_query_to_workflow("do something unknown", {})
+        unknown_workflow = ecosystem_context.map_query_to_workflow(
+            "do something unknown", {}
+        )
         assert unknown_workflow is None
 
 
@@ -116,10 +119,14 @@ class TestOrchestratorIntegration:
             ],
         }
 
-        with patch.object(ecosystem_context, "validate_workflow_compatibility") as mock_validate:
+        with patch.object(
+            ecosystem_context, "validate_workflow_compatibility"
+        ) as mock_validate:
             mock_validate.return_value = {"valid": True, "workflow": valid_workflow}
 
-            result = await orchestrator_integration.validate_workflow_execution(valid_workflow)
+            result = await orchestrator_integration.validate_workflow_execution(
+                valid_workflow
+            )
             assert result["valid"] is True
 
     @pytest.mark.asyncio
@@ -127,8 +134,14 @@ class TestOrchestratorIntegration:
         """Test orchestrator tools discovery."""
         with patch.object(orchestrator_integration.client, "post_json") as mock_post:
             mock_tools = {
-                "document_store_retrieve": {"name": "retrieve", "service": "document_store"},
-                "analysis_service_analyze": {"name": "analyze", "service": "analysis_service"},
+                "document_store_retrieve": {
+                    "name": "retrieve",
+                    "service": "document_store",
+                },
+                "analysis_service_analyze": {
+                    "name": "analyze",
+                    "service": "analysis_service",
+                },
             }
             mock_post.return_value = {"success": True, "data": mock_tools}
 
@@ -147,10 +160,16 @@ class TestPromptEngineering:
         intent = "analyze_document"
         entities = {"document_type": ["general"]}
 
-        with patch.object(ecosystem_context, "get_service_capabilities") as mock_capabilities:
+        with patch.object(
+            ecosystem_context, "get_service_capabilities"
+        ) as mock_capabilities:
             mock_capabilities.return_value = {
-                "document_store": {"capabilities": ["store_documents", "retrieve_documents"]},
-                "analysis_service": {"capabilities": ["analyze_documents", "quality_check"]},
+                "document_store": {
+                    "capabilities": ["store_documents", "retrieve_documents"]
+                },
+                "analysis_service": {
+                    "capabilities": ["analyze_documents", "quality_check"]
+                },
             }
 
             result = await prompt_engineer.translate_query_to_workflow(
@@ -169,10 +188,14 @@ class TestPromptEngineering:
         intent = "unknown"
         entities = {}
 
-        with patch.object(ecosystem_context, "get_service_capabilities") as mock_capabilities:
+        with patch.object(
+            ecosystem_context, "get_service_capabilities"
+        ) as mock_capabilities:
             mock_capabilities.return_value = {}
 
-            result = await prompt_engineer.translate_query_to_workflow(query, intent, entities, {})
+            result = await prompt_engineer.translate_query_to_workflow(
+                query, intent, entities, {}
+            )
 
             assert result["workflow_type"] == "clarification_needed"
             assert "suggestions" in result["parameters"]
@@ -180,7 +203,10 @@ class TestPromptEngineering:
     @pytest.mark.asyncio
     async def test_workflow_optimization(self):
         """Test workflow optimization capabilities."""
-        workflow = {"services": ["document_store", "analysis_service"], "parameters": {"doc_id": "test"}}
+        workflow = {
+            "services": ["document_store", "analysis_service"],
+            "parameters": {"doc_id": "test"},
+        }
 
         result = await prompt_engineer.optimize_workflow(workflow, {})
         assert "optimized_workflow" in result
@@ -195,8 +221,14 @@ class TestLangGraphDiscovery:
         """Test LangGraph workflow discovery."""
         with patch.object(langgraph_discovery.client, "get_json") as mock_get:
             mock_workflows = {
-                "document-analysis": {"type": "langgraph", "description": "Analyze documents"},
-                "code-documentation": {"type": "langgraph", "description": "Generate docs"},
+                "document-analysis": {
+                    "type": "langgraph",
+                    "description": "Analyze documents",
+                },
+                "code-documentation": {
+                    "type": "langgraph",
+                    "description": "Generate docs",
+                },
             }
             mock_get.return_value = {"success": True, "data": mock_workflows}
 
@@ -222,7 +254,9 @@ class TestLangGraphDiscovery:
             }
         }
 
-        match = await langgraph_discovery.find_matching_langgraph_workflow(query, intent, entities)
+        match = await langgraph_discovery.find_matching_langgraph_workflow(
+            query, intent, entities
+        )
 
         assert match is not None
         assert match["workflow_name"] == "document-analysis"
@@ -236,20 +270,28 @@ class TestLangGraphDiscovery:
         invalid_params = {"invalid_param": "value"}
 
         # Mock discovered workflows
-        langgraph_discovery.discovered_workflows = {"document-analysis": {"parameters": {"doc_id": "string"}}}
+        langgraph_discovery.discovered_workflows = {
+            "document-analysis": {"parameters": {"doc_id": "string"}}
+        }
 
         # Test valid parameters
-        valid_result = await langgraph_discovery.validate_langgraph_workflow(workflow_name, valid_params)
+        valid_result = await langgraph_discovery.validate_langgraph_workflow(
+            workflow_name, valid_params
+        )
         assert valid_result["valid"] is True
 
         # Test invalid parameters
-        await langgraph_discovery.validate_langgraph_workflow(workflow_name, invalid_params)
+        await langgraph_discovery.validate_langgraph_workflow(
+            workflow_name, invalid_params
+        )
         assert valid_result["valid"] is True  # Should still be valid for unknown params
 
     @pytest.mark.asyncio
     async def test_workflow_execution(self):
         """Test LangGraph workflow execution."""
-        with patch.object(langgraph_discovery, "execute_langgraph_workflow") as mock_execute:
+        with patch.object(
+            langgraph_discovery, "execute_langgraph_workflow"
+        ) as mock_execute:
             mock_execute.return_value = {"status": "success", "result": "completed"}
 
             result = await langgraph_discovery.execute_langgraph_workflow(
@@ -312,7 +354,10 @@ class TestEnhancedInterpreterAPI:
 
     def test_prompt_translation(self, client):
         """Test prompt translation endpoint."""
-        query_data = {"query": "analyze document quality and generate a report", "user_id": "test-user"}
+        query_data = {
+            "query": "analyze document quality and generate a report",
+            "user_id": "test-user",
+        }
 
         response = client.post("/prompt/translate", json=query_data)
 
@@ -330,9 +375,13 @@ class TestIntegrationScenarios:
     async def test_complete_natural_language_workflow(self):
         """Test complete natural language to workflow execution."""
         # Mock all dependencies
-        with patch.object(ecosystem_context, "get_service_capabilities") as mock_capabilities, patch.object(
+        with patch.object(
+            ecosystem_context, "get_service_capabilities"
+        ) as mock_capabilities, patch.object(
             orchestrator_integration, "execute_workflow"
-        ) as mock_execute, patch.object(langgraph_discovery, "find_matching_langgraph_workflow") as mock_find:
+        ) as mock_execute, patch.object(
+            langgraph_discovery, "find_matching_langgraph_workflow"
+        ) as mock_find:
 
             # Setup mocks
             mock_capabilities.return_value = {
@@ -368,26 +417,42 @@ class TestIntegrationScenarios:
             assert match["workflow_name"] == "document-analysis"
 
             # 3. Execute workflow
-            result = await mock_execute("document_analysis", {"doc_id": "test"}, "test-user")
+            result = await mock_execute(
+                "document_analysis", {"doc_id": "test"}, "test-user"
+            )
             assert result["status"] == "success"
 
     @pytest.mark.asyncio
     async def test_error_handling_and_fallbacks(self):
         """Test error handling and fallback mechanisms."""
         # Test ecosystem context fallback
-        with patch.object(ecosystem_context, "get_service_capabilities", side_effect=Exception("Network error")):
+        with patch.object(
+            ecosystem_context,
+            "get_service_capabilities",
+            side_effect=Exception("Network error"),
+        ):
             capabilities = await ecosystem_context.get_service_capabilities()
             assert isinstance(capabilities, dict)  # Should return empty dict on error
 
         # Test orchestrator integration fallback
-        with patch.object(orchestrator_integration.client, "post_json", side_effect=Exception("Connection failed")):
+        with patch.object(
+            orchestrator_integration.client,
+            "post_json",
+            side_effect=Exception("Connection failed"),
+        ):
             result = await orchestrator_integration.execute_workflow("test", {}, None)
             assert result["status"] == "error"
             assert "Connection failed" in result["error"]
 
         # Test prompt engineering fallback
-        with patch.object(prompt_engineer, "_rule_based_translation", side_effect=Exception("Translation failed")):
-            result = await prompt_engineer.translate_query_to_workflow("test", "unknown", {}, {})
+        with patch.object(
+            prompt_engineer,
+            "_rule_based_translation",
+            side_effect=Exception("Translation failed"),
+        ):
+            result = await prompt_engineer.translate_query_to_workflow(
+                "test", "unknown", {}, {}
+            )
             assert result["workflow_type"] == "help"  # Should fallback to help
 
     @pytest.mark.asyncio

@@ -32,7 +32,12 @@ class SagaService:
             )
             saga_steps.append(step)
 
-        saga = SagaInstance(saga_type=saga_type, correlation_id=correlation_id, steps=saga_steps, metadata=metadata)
+        saga = SagaInstance(
+            saga_type=saga_type,
+            correlation_id=correlation_id,
+            steps=saga_steps,
+            metadata=metadata,
+        )
 
         self._active_sagas[saga.saga_id] = saga
         return saga
@@ -155,26 +160,36 @@ class SagaService:
         completed_sagas = list(self._completed_sagas.values())
 
         total_completed = len(completed_sagas)
-        successful_sagas = len([s for s in completed_sagas if s.status == SagaStatus.COMPLETED])
-        failed_sagas = len([s for s in completed_sagas if s.status == SagaStatus.FAILED])
+        successful_sagas = len(
+            [s for s in completed_sagas if s.status == SagaStatus.COMPLETED]
+        )
+        failed_sagas = len(
+            [s for s in completed_sagas if s.status == SagaStatus.FAILED]
+        )
 
         return {
             "active_sagas": len(active_sagas),
             "completed_sagas": total_completed,
             "successful_sagas": successful_sagas,
             "failed_sagas": failed_sagas,
-            "success_rate": successful_sagas / total_completed if total_completed > 0 else 0,
+            "success_rate": (
+                successful_sagas / total_completed if total_completed > 0 else 0
+            ),
             "avg_completion_time": self._calculate_avg_completion_time(completed_sagas),
         }
 
-    def _calculate_avg_completion_time(self, sagas: List[SagaInstance]) -> Optional[float]:
+    def _calculate_avg_completion_time(
+        self, sagas: List[SagaInstance]
+    ) -> Optional[float]:
         """Calculate average completion time for sagas."""
         completion_times = []
         for saga in sagas:
             if saga.duration_seconds is not None:
                 completion_times.append(saga.duration_seconds)
 
-        return sum(completion_times) / len(completion_times) if completion_times else None
+        return (
+            sum(completion_times) / len(completion_times) if completion_times else None
+        )
 
     def cleanup_completed_sagas(self, max_age_days: int = 30) -> int:
         """Clean up old completed sagas. Returns count removed."""

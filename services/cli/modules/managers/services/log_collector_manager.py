@@ -20,7 +20,9 @@ from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 class LogCollectorManager(BaseManager):
     """Manager for log collector power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -35,7 +37,9 @@ class LogCollectorManager(BaseManager):
     async def log_collector_menu(self):
         """Main log collector menu."""
         while True:
-            menu = create_menu_table("Log Collector Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Log Collector Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -118,24 +122,39 @@ class LogCollectorManager(BaseManager):
                 return
 
             # Optional context
-            add_context = Confirm.ask("[bold cyan]Add context data?[/bold cyan]", default=False)
+            add_context = Confirm.ask(
+                "[bold cyan]Add context data?[/bold cyan]", default=False
+            )
             context = None
             if add_context:
-                context_input = Prompt.ask("[bold cyan]Context (JSON)[/bold cyan]", default="{}")
+                context_input = Prompt.ask(
+                    "[bold cyan]Context (JSON)[/bold cyan]", default="{}"
+                )
                 try:
                     context = json.loads(context_input)
                 except json.JSONDecodeError:
-                    self.console.print("[yellow]Invalid JSON, using empty context[/yellow]")
+                    self.console.print(
+                        "[yellow]Invalid JSON, using empty context[/yellow]"
+                    )
 
-            log_entry = {"service": service, "level": level, "message": message, "context": context}
+            log_entry = {
+                "service": service,
+                "level": level,
+                "message": message,
+                "context": context,
+            }
 
-            with self.console.status("[bold green]Submitting log entry...[/bold green]") as status:
+            with self.console.status(
+                "[bold green]Submitting log entry...[/bold green]"
+            ) as status:
                 response = await self.clients.post_json("log-collector/logs", log_entry)
 
             if response:
                 self.console.print("[green]✅ Log entry submitted successfully[/green]")
                 if response.get("count"):
-                    self.console.print(f"[green]Total logs stored: {response['count']}[/green]")
+                    self.console.print(
+                        f"[green]Total logs stored: {response['count']}[/green]"
+                    )
             else:
                 self.console.print("[red]❌ Failed to submit log entry[/red]")
 
@@ -145,32 +164,51 @@ class LogCollectorManager(BaseManager):
     async def submit_batch_logs(self):
         """Submit multiple log entries in batch."""
         try:
-            batch_size = int(Prompt.ask("[bold cyan]Number of log entries to create[/bold cyan]", default="5"))
+            batch_size = int(
+                Prompt.ask(
+                    "[bold cyan]Number of log entries to create[/bold cyan]",
+                    default="5",
+                )
+            )
 
             batch_entries = []
             for i in range(batch_size):
                 service = Prompt.ask(
-                    f"[bold cyan]Service name for entry {i+1}[/bold cyan]", default=f"test-service-{i+1}"
+                    f"[bold cyan]Service name for entry {i+1}[/bold cyan]",
+                    default=f"test-service-{i+1}",
                 )
-                level = Prompt.ask(f"[bold cyan]Log level for entry {i+1}[/bold cyan]", default="info")
+                level = Prompt.ask(
+                    f"[bold cyan]Log level for entry {i+1}[/bold cyan]", default="info"
+                )
                 message = Prompt.ask(
-                    f"[bold cyan]Message for entry {i+1}[/bold cyan]", default=f"Test log message {i+1}"
+                    f"[bold cyan]Message for entry {i+1}[/bold cyan]",
+                    default=f"Test log message {i+1}",
                 )
 
-                batch_entries.append({"service": service, "level": level, "message": message})
+                batch_entries.append(
+                    {"service": service, "level": level, "message": message}
+                )
 
-            self.console.print(f"[yellow]Created {len(batch_entries)} log entries for batch submission[/yellow]")
+            self.console.print(
+                f"[yellow]Created {len(batch_entries)} log entries for batch submission[/yellow]"
+            )
 
             confirm = Confirm.ask("[bold cyan]Submit batch?[/bold cyan]", default=True)
 
             if confirm:
                 batch_request = {"items": batch_entries}
 
-                with self.console.status("[bold green]Submitting batch logs...[/bold green]") as status:
-                    response = await self.clients.post_json("log-collector/logs/batch", batch_request)
+                with self.console.status(
+                    "[bold green]Submitting batch logs...[/bold green]"
+                ) as status:
+                    response = await self.clients.post_json(
+                        "log-collector/logs/batch", batch_request
+                    )
 
                 if response:
-                    self.console.print("[green]✅ Batch logs submitted successfully[/green]")
+                    self.console.print(
+                        "[green]✅ Batch logs submitted successfully[/green]"
+                    )
                     if response.get("count") and response.get("added"):
                         self.console.print(
                             f"[green]Added {response['added']} logs, total stored: {response['count']}[/green]"
@@ -184,7 +222,9 @@ class LogCollectorManager(BaseManager):
     async def import_logs_from_file(self):
         """Import logs from a JSON file."""
         try:
-            file_path = Prompt.ask("[bold cyan]JSON file path containing log entries[/bold cyan]")
+            file_path = Prompt.ask(
+                "[bold cyan]JSON file path containing log entries[/bold cyan]"
+            )
 
             if not os.path.exists(file_path):
                 self.console.print(f"[red]File not found: {file_path}[/red]")
@@ -199,18 +239,26 @@ class LogCollectorManager(BaseManager):
             elif isinstance(log_data, list):
                 log_entries = log_data
             else:
-                self.console.print("[red]Invalid JSON format. Expected object or array[/red]")
+                self.console.print(
+                    "[red]Invalid JSON format. Expected object or array[/red]"
+                )
                 return
 
-            self.console.print(f"[yellow]Found {len(log_entries)} log entries to import[/yellow]")
+            self.console.print(
+                f"[yellow]Found {len(log_entries)} log entries to import[/yellow]"
+            )
 
             confirm = Confirm.ask("[bold cyan]Import logs?[/bold cyan]", default=True)
 
             if confirm:
                 batch_request = {"items": log_entries}
 
-                with self.console.status("[bold green]Importing logs from file...[/bold green]") as status:
-                    response = await self.clients.post_json("log-collector/logs/batch", batch_request)
+                with self.console.status(
+                    "[bold green]Importing logs from file...[/bold green]"
+                ) as status:
+                    response = await self.clients.post_json(
+                        "log-collector/logs/batch", batch_request
+                    )
 
                 if response:
                     self.console.print("[green]✅ Logs imported successfully[/green]")
@@ -227,8 +275,16 @@ class LogCollectorManager(BaseManager):
     async def generate_test_logs(self):
         """Generate test log entries for testing purposes."""
         try:
-            count = int(Prompt.ask("[bold cyan]Number of test logs to generate[/bold cyan]", default="10"))
-            service = Prompt.ask("[bold cyan]Service name for test logs[/bold cyan]", default="test-service")
+            count = int(
+                Prompt.ask(
+                    "[bold cyan]Number of test logs to generate[/bold cyan]",
+                    default="10",
+                )
+            )
+            service = Prompt.ask(
+                "[bold cyan]Service name for test logs[/bold cyan]",
+                default="test-service",
+            )
 
             test_logs = []
             levels = ["debug", "info", "warning", "error"]
@@ -239,14 +295,21 @@ class LogCollectorManager(BaseManager):
                         "service": service,
                         "level": levels[i % len(levels)],
                         "message": f"Test log message {i+1} - {datetime.now().isoformat()}",
-                        "context": {"test_id": i + 1, "generated_by": "cli_test_generator"},
+                        "context": {
+                            "test_id": i + 1,
+                            "generated_by": "cli_test_generator",
+                        },
                     }
                 )
 
             batch_request = {"items": test_logs}
 
-            with self.console.status(f"[bold green]Generating {count} test logs...[/bold green]") as status:
-                response = await self.clients.post_json("log-collector/logs/batch", batch_request)
+            with self.console.status(
+                f"[bold green]Generating {count} test logs...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "log-collector/logs/batch", batch_request
+                )
 
             if response:
                 self.console.print("[green]✅ Test logs generated successfully[/green]")
@@ -263,7 +326,9 @@ class LogCollectorManager(BaseManager):
     async def log_submission_templates(self):
         """Manage log submission templates."""
         try:
-            self.console.print("[yellow]Log submission templates would provide reusable log formats[/yellow]")
+            self.console.print(
+                "[yellow]Log submission templates would provide reusable log formats[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -309,7 +374,11 @@ class LogCollectorManager(BaseManager):
     async def query_all_logs(self):
         """Query all logs with optional limit."""
         try:
-            limit = int(Prompt.ask("[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"))
+            limit = int(
+                Prompt.ask(
+                    "[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"
+                )
+            )
 
             params = {"limit": limit}
 
@@ -317,7 +386,9 @@ class LogCollectorManager(BaseManager):
 
             if response and "items" in response:
                 logs = response["items"]
-                await self.display_logs(logs, f"All Logs (showing {len(logs)} of {limit} requested)")
+                await self.display_logs(
+                    logs, f"All Logs (showing {len(logs)} of {limit} requested)"
+                )
             else:
                 self.console.print("[yellow]No logs found[/yellow]")
 
@@ -328,7 +399,11 @@ class LogCollectorManager(BaseManager):
         """Filter logs by service name."""
         try:
             service = Prompt.ask("[bold cyan]Service name to filter by[/bold cyan]")
-            limit = int(Prompt.ask("[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"))
+            limit = int(
+                Prompt.ask(
+                    "[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"
+                )
+            )
 
             params = {"service": service, "limit": limit}
 
@@ -336,9 +411,13 @@ class LogCollectorManager(BaseManager):
 
             if response and "items" in response:
                 logs = response["items"]
-                await self.display_logs(logs, f"Logs for service '{service}' ({len(logs)} found)")
+                await self.display_logs(
+                    logs, f"Logs for service '{service}' ({len(logs)} found)"
+                )
             else:
-                self.console.print(f"[yellow]No logs found for service '{service}'[/yellow]")
+                self.console.print(
+                    f"[yellow]No logs found for service '{service}'[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error filtering by service: {e}[/red]")
@@ -347,7 +426,11 @@ class LogCollectorManager(BaseManager):
         """Filter logs by log level."""
         try:
             level = Prompt.ask("[bold cyan]Log level to filter by[/bold cyan]")
-            limit = int(Prompt.ask("[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"))
+            limit = int(
+                Prompt.ask(
+                    "[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"
+                )
+            )
 
             params = {"level": level, "limit": limit}
 
@@ -355,9 +438,13 @@ class LogCollectorManager(BaseManager):
 
             if response and "items" in response:
                 logs = response["items"]
-                await self.display_logs(logs, f"Logs with level '{level}' ({len(logs)} found)")
+                await self.display_logs(
+                    logs, f"Logs with level '{level}' ({len(logs)} found)"
+                )
             else:
-                self.console.print(f"[yellow]No logs found with level '{level}'[/yellow]")
+                self.console.print(
+                    f"[yellow]No logs found with level '{level}'[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error filtering by level: {e}[/red]")
@@ -365,9 +452,17 @@ class LogCollectorManager(BaseManager):
     async def advanced_filtering(self):
         """Advanced log filtering with multiple criteria."""
         try:
-            service = Prompt.ask("[bold cyan]Service filter (optional)[/bold cyan]", default="")
-            level = Prompt.ask("[bold cyan]Level filter (optional)[/bold cyan]", default="")
-            limit = int(Prompt.ask("[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"))
+            service = Prompt.ask(
+                "[bold cyan]Service filter (optional)[/bold cyan]", default=""
+            )
+            level = Prompt.ask(
+                "[bold cyan]Level filter (optional)[/bold cyan]", default=""
+            )
+            limit = int(
+                Prompt.ask(
+                    "[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"
+                )
+            )
 
             params = {"limit": limit}
             if service:
@@ -386,9 +481,13 @@ class LogCollectorManager(BaseManager):
 
             if response and "items" in response:
                 logs = response["items"]
-                await self.display_logs(logs, f"Advanced filtered logs ({filter_str}) - {len(logs)} found")
+                await self.display_logs(
+                    logs, f"Advanced filtered logs ({filter_str}) - {len(logs)} found"
+                )
             else:
-                self.console.print(f"[yellow]No logs found with filters: {filter_str}[/yellow]")
+                self.console.print(
+                    f"[yellow]No logs found with filters: {filter_str}[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error in advanced filtering: {e}[/red]")
@@ -396,8 +495,14 @@ class LogCollectorManager(BaseManager):
     async def search_log_messages(self):
         """Search log messages for specific text."""
         try:
-            search_term = Prompt.ask("[bold cyan]Text to search for in log messages[/bold cyan]")
-            limit = int(Prompt.ask("[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"))
+            search_term = Prompt.ask(
+                "[bold cyan]Text to search for in log messages[/bold cyan]"
+            )
+            limit = int(
+                Prompt.ask(
+                    "[bold cyan]Maximum logs to retrieve[/bold cyan]", default="50"
+                )
+            )
 
             # Get all logs and filter client-side
             params = {"limit": min(limit * 2, 1000)}  # Get more to filter
@@ -413,9 +518,14 @@ class LogCollectorManager(BaseManager):
                         if len(matching_logs) >= limit:
                             break
 
-                await self.display_logs(matching_logs, f"Logs containing '{search_term}' ({len(matching_logs)} found)")
+                await self.display_logs(
+                    matching_logs,
+                    f"Logs containing '{search_term}' ({len(matching_logs)} found)",
+                )
             else:
-                self.console.print(f"[yellow]No logs found containing '{search_term}'[/yellow]")
+                self.console.print(
+                    f"[yellow]No logs found containing '{search_term}'[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error searching log messages: {e}[/red]")
@@ -423,7 +533,9 @@ class LogCollectorManager(BaseManager):
     async def real_time_log_streaming(self):
         """Real-time log streaming (placeholder for future implementation)."""
         try:
-            self.console.print("[yellow]Real-time log streaming would show live log entries[/yellow]")
+            self.console.print(
+                "[yellow]Real-time log streaming would show live log entries[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -460,7 +572,10 @@ class LogCollectorManager(BaseManager):
                 timestamp = timestamp[:19]  # Truncate to fit
 
             table.add_row(
-                log.get("service", "unknown"), f"[{level_color}]{level.upper()}[/{level_color}]", message, timestamp
+                log.get("service", "unknown"),
+                f"[{level_color}]{level.upper()}[/{level_color}]",
+                message,
+                timestamp,
             )
 
         self.console.print(table)
@@ -471,7 +586,9 @@ class LogCollectorManager(BaseManager):
     async def log_statistics_menu(self):
         """Log statistics and analytics submenu."""
         while True:
-            menu = create_menu_table("Log Statistics & Analytics", ["Option", "Description"])
+            menu = create_menu_table(
+                "Log Statistics & Analytics", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -531,7 +648,9 @@ class LogCollectorManager(BaseManager):
         level_distribution = stats.get("level_distribution", {})
         if level_distribution:
             content += "\n[bold green]Log Levels:[/bold green]\n"
-            for level, count in sorted(level_distribution.items(), key=lambda x: x[1], reverse=True):
+            for level, count in sorted(
+                level_distribution.items(), key=lambda x: x[1], reverse=True
+            ):
                 percentage = (count / stats.get("total_logs", 1)) * 100
                 level_color = {
                     "debug": "dim",
@@ -546,7 +665,9 @@ class LogCollectorManager(BaseManager):
         service_distribution = stats.get("service_distribution", {})
         if service_distribution:
             content += "\n[bold cyan]Top Services:[/bold cyan]\n"
-            top_services = sorted(service_distribution.items(), key=lambda x: x[1], reverse=True)[:5]
+            top_services = sorted(
+                service_distribution.items(), key=lambda x: x[1], reverse=True
+            )[:5]
             for service, count in top_services:
                 percentage = (count / stats.get("total_logs", 1)) * 100
                 content += f"• {service}: {count} ({percentage:.1f}%)\n"
@@ -591,13 +712,17 @@ class LogCollectorManager(BaseManager):
                     table.add_column("Percentage", style="yellow", justify="right")
 
                     total_logs = response.get("total_logs", 1)
-                    for service, count in sorted(service_stats.items(), key=lambda x: x[1], reverse=True):
+                    for service, count in sorted(
+                        service_stats.items(), key=lambda x: x[1], reverse=True
+                    ):
                         percentage = (count / total_logs) * 100
                         table.add_row(service, str(count), f"{percentage:.1f}%")
 
                     self.console.print(table)
                 else:
-                    self.console.print("[yellow]No service statistics available[/yellow]")
+                    self.console.print(
+                        "[yellow]No service statistics available[/yellow]"
+                    )
             else:
                 self.console.print("[red]Failed to retrieve service statistics[/red]")
 
@@ -621,7 +746,9 @@ class LogCollectorManager(BaseManager):
 [bold blue]Total Logs Analyzed:[/bold blue] {total}
 """
 
-                    for level, count in sorted(level_stats.items(), key=lambda x: x[1], reverse=True):
+                    for level, count in sorted(
+                        level_stats.items(), key=lambda x: x[1], reverse=True
+                    ):
                         percentage = (count / total) * 100
                         bar_length = int((count / total) * 40)  # 40 chars max bar
                         bar = "█" * bar_length
@@ -638,7 +765,9 @@ class LogCollectorManager(BaseManager):
 
                     print_panel(self.console, content, border_style="green")
                 else:
-                    self.console.print("[yellow]No level distribution data available[/yellow]")
+                    self.console.print(
+                        "[yellow]No level distribution data available[/yellow]"
+                    )
             else:
                 self.console.print("[red]Failed to retrieve level analysis[/red]")
 
@@ -671,10 +800,16 @@ class LogCollectorManager(BaseManager):
                 error_patterns = response.get("error_patterns", {})
                 if error_patterns:
                     content += "\n[bold magenta]Common Error Patterns:[/bold magenta]\n"
-                    for pattern, count in sorted(error_patterns.items(), key=lambda x: x[1], reverse=True)[:5]:
+                    for pattern, count in sorted(
+                        error_patterns.items(), key=lambda x: x[1], reverse=True
+                    )[:5]:
                         content += f"• {pattern}: {count} occurrences\n"
 
-                print_panel(self.console, content, border_style="red" if error_rate > 5 else "yellow")
+                print_panel(
+                    self.console,
+                    content,
+                    border_style="red" if error_rate > 5 else "yellow",
+                )
             else:
                 self.console.print("[red]Failed to retrieve error analysis[/red]")
 
@@ -684,7 +819,9 @@ class LogCollectorManager(BaseManager):
     async def time_based_analytics(self):
         """Show time-based log analytics."""
         try:
-            self.console.print("[yellow]Time-based analytics would show log patterns over time[/yellow]")
+            self.console.print(
+                "[yellow]Time-based analytics would show log patterns over time[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -693,7 +830,9 @@ class LogCollectorManager(BaseManager):
     async def log_volume_trends(self):
         """Show log volume trends."""
         try:
-            self.console.print("[yellow]Log volume trends would show log ingestion patterns[/yellow]")
+            self.console.print(
+                "[yellow]Log volume trends would show log ingestion patterns[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -702,7 +841,9 @@ class LogCollectorManager(BaseManager):
     async def log_monitoring_menu(self):
         """Log monitoring and alerting submenu."""
         while True:
-            menu = create_menu_table("Log Monitoring & Alerting", ["Option", "Description"])
+            menu = create_menu_table(
+                "Log Monitoring & Alerting", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -736,7 +877,9 @@ class LogCollectorManager(BaseManager):
     async def setup_log_alerts(self):
         """Set up log-based alerts."""
         try:
-            self.console.print("[yellow]Log alert setup would configure notifications for log patterns[/yellow]")
+            self.console.print(
+                "[yellow]Log alert setup would configure notifications for log patterns[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -745,7 +888,9 @@ class LogCollectorManager(BaseManager):
     async def monitor_error_rates(self):
         """Monitor error rates in real-time."""
         try:
-            self.console.print("[yellow]Error rate monitoring would track error percentages[/yellow]")
+            self.console.print(
+                "[yellow]Error rate monitoring would track error percentages[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -754,7 +899,9 @@ class LogCollectorManager(BaseManager):
     async def service_health_monitoring(self):
         """Monitor service health through logs."""
         try:
-            self.console.print("[yellow]Service health monitoring would analyze logs for health indicators[/yellow]")
+            self.console.print(
+                "[yellow]Service health monitoring would analyze logs for health indicators[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -763,7 +910,9 @@ class LogCollectorManager(BaseManager):
     async def anomaly_detection(self):
         """Detect anomalous log patterns."""
         try:
-            self.console.print("[yellow]Anomaly detection would identify unusual log patterns[/yellow]")
+            self.console.print(
+                "[yellow]Anomaly detection would identify unusual log patterns[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -772,7 +921,9 @@ class LogCollectorManager(BaseManager):
     async def alert_history(self):
         """View alert history."""
         try:
-            self.console.print("[yellow]Alert history would show past alert notifications[/yellow]")
+            self.console.print(
+                "[yellow]Alert history would show past alert notifications[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -781,7 +932,9 @@ class LogCollectorManager(BaseManager):
     async def log_export_menu(self):
         """Log export and archiving submenu."""
         while True:
-            menu = create_menu_table("Log Export & Archiving", ["Option", "Description"])
+            menu = create_menu_table(
+                "Log Export & Archiving", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -815,8 +968,14 @@ class LogCollectorManager(BaseManager):
     async def export_logs_json(self):
         """Export logs to JSON format."""
         try:
-            file_path = Prompt.ask("[bold cyan]Export file path[/bold cyan]", default="logs_export.json")
-            limit = int(Prompt.ask("[bold cyan]Maximum logs to export[/bold cyan]", default="1000"))
+            file_path = Prompt.ask(
+                "[bold cyan]Export file path[/bold cyan]", default="logs_export.json"
+            )
+            limit = int(
+                Prompt.ask(
+                    "[bold cyan]Maximum logs to export[/bold cyan]", default="1000"
+                )
+            )
 
             params = {"limit": limit}
             response = await self.clients.get_json("log-collector/logs", params=params)
@@ -827,7 +986,9 @@ class LogCollectorManager(BaseManager):
                 with open(file_path, "w") as f:
                     json.dump(logs, f, indent=2, default=str)
 
-                self.console.print(f"[green]✅ Exported {len(logs)} logs to {file_path}[/green]")
+                self.console.print(
+                    f"[green]✅ Exported {len(logs)} logs to {file_path}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to retrieve logs for export[/red]")
 
@@ -837,8 +998,14 @@ class LogCollectorManager(BaseManager):
     async def export_logs_csv(self):
         """Export logs to CSV format."""
         try:
-            file_path = Prompt.ask("[bold cyan]Export file path[/bold cyan]", default="logs_export.csv")
-            limit = int(Prompt.ask("[bold cyan]Maximum logs to export[/bold cyan]", default="1000"))
+            file_path = Prompt.ask(
+                "[bold cyan]Export file path[/bold cyan]", default="logs_export.csv"
+            )
+            limit = int(
+                Prompt.ask(
+                    "[bold cyan]Maximum logs to export[/bold cyan]", default="1000"
+                )
+            )
 
             params = {"limit": limit}
             response = await self.clients.get_json("log-collector/logs", params=params)
@@ -864,7 +1031,9 @@ class LogCollectorManager(BaseManager):
                                 row["context"] = json.dumps(row["context"])
                             writer.writerow(row)
 
-                    self.console.print(f"[green]✅ Exported {len(logs)} logs to {file_path}[/green]")
+                    self.console.print(
+                        f"[green]✅ Exported {len(logs)} logs to {file_path}[/green]"
+                    )
                 else:
                     self.console.print("[yellow]No logs to export[/yellow]")
             else:
@@ -876,7 +1045,9 @@ class LogCollectorManager(BaseManager):
     async def filtered_log_export(self):
         """Export filtered logs."""
         try:
-            self.console.print("[yellow]Filtered log export would allow exporting with specific criteria[/yellow]")
+            self.console.print(
+                "[yellow]Filtered log export would allow exporting with specific criteria[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -885,7 +1056,9 @@ class LogCollectorManager(BaseManager):
     async def log_archiving(self):
         """Archive old logs."""
         try:
-            self.console.print("[yellow]Log archiving would move old logs to long-term storage[/yellow]")
+            self.console.print(
+                "[yellow]Log archiving would move old logs to long-term storage[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -894,7 +1067,9 @@ class LogCollectorManager(BaseManager):
     async def bulk_log_operations(self):
         """Perform bulk log operations."""
         try:
-            self.console.print("[yellow]Bulk log operations would handle large-scale log processing[/yellow]")
+            self.console.print(
+                "[yellow]Bulk log operations would handle large-scale log processing[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -937,7 +1112,9 @@ class LogCollectorManager(BaseManager):
     async def identify_common_patterns(self):
         """Identify common log patterns."""
         try:
-            self.console.print("[yellow]Common pattern identification would find recurring log structures[/yellow]")
+            self.console.print(
+                "[yellow]Common pattern identification would find recurring log structures[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -946,7 +1123,9 @@ class LogCollectorManager(BaseManager):
     async def error_pattern_analysis(self):
         """Analyze error patterns in logs."""
         try:
-            self.console.print("[yellow]Error pattern analysis would categorize and analyze error logs[/yellow]")
+            self.console.print(
+                "[yellow]Error pattern analysis would categorize and analyze error logs[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -955,7 +1134,9 @@ class LogCollectorManager(BaseManager):
     async def service_interaction_analysis(self):
         """Analyze service interactions through logs."""
         try:
-            self.console.print("[yellow]Service interaction analysis would map service communication patterns[/yellow]")
+            self.console.print(
+                "[yellow]Service interaction analysis would map service communication patterns[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -964,7 +1145,9 @@ class LogCollectorManager(BaseManager):
     async def performance_pattern_detection(self):
         """Detect performance patterns."""
         try:
-            self.console.print("[yellow]Performance pattern detection would identify slow operations[/yellow]")
+            self.console.print(
+                "[yellow]Performance pattern detection would identify slow operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -973,7 +1156,9 @@ class LogCollectorManager(BaseManager):
     async def custom_pattern_matching(self):
         """Custom pattern matching."""
         try:
-            self.console.print("[yellow]Custom pattern matching would allow user-defined log pattern rules[/yellow]")
+            self.console.print(
+                "[yellow]Custom pattern matching would allow user-defined log pattern rules[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -982,7 +1167,9 @@ class LogCollectorManager(BaseManager):
     async def log_collector_health_menu(self):
         """Log collector health and configuration submenu."""
         while True:
-            menu = create_menu_table("Log Collector Health & Configuration", ["Option", "Description"])
+            menu = create_menu_table(
+                "Log Collector Health & Configuration", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -1047,7 +1234,11 @@ class LogCollectorManager(BaseManager):
                 capacity = 5000  # Default max logs
                 usage_percent = (total_logs / capacity) * 100
 
-                status = "🟢 Normal" if usage_percent < 70 else "🟡 Warning" if usage_percent < 90 else "🔴 Critical"
+                status = (
+                    "🟢 Normal"
+                    if usage_percent < 70
+                    else "🟡 Warning" if usage_percent < 90 else "🔴 Critical"
+                )
 
                 content = f"""
 [bold]Storage Capacity Monitoring[/bold]
@@ -1071,7 +1262,11 @@ class LogCollectorManager(BaseManager):
                 print_panel(
                     self.console,
                     content,
-                    border_style="red" if usage_percent > 90 else "yellow" if usage_percent > 70 else "green",
+                    border_style=(
+                        "red"
+                        if usage_percent > 90
+                        else "yellow" if usage_percent > 70 else "green"
+                    ),
                 )
             else:
                 self.console.print("[red]Failed to retrieve storage information[/red]")
@@ -1082,7 +1277,9 @@ class LogCollectorManager(BaseManager):
     async def performance_metrics(self):
         """View log collector performance metrics."""
         try:
-            self.console.print("[yellow]Performance metrics would show ingestion rates and query performance[/yellow]")
+            self.console.print(
+                "[yellow]Performance metrics would show ingestion rates and query performance[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1091,7 +1288,9 @@ class LogCollectorManager(BaseManager):
     async def configuration_settings(self):
         """View configuration settings."""
         try:
-            self.console.print("[yellow]Configuration settings would show current log collector parameters[/yellow]")
+            self.console.print(
+                "[yellow]Configuration settings would show current log collector parameters[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1100,7 +1299,9 @@ class LogCollectorManager(BaseManager):
     async def service_logs(self):
         """View log collector service logs."""
         try:
-            self.console.print("[yellow]Service logs would show log collector internal operations[/yellow]")
+            self.console.print(
+                "[yellow]Service logs would show log collector internal operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1109,8 +1310,12 @@ class LogCollectorManager(BaseManager):
     async def submit_log_from_cli(self, log_request: Dict[str, Any]):
         """Submit a single log entry for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Submitting log entry...[/bold green]") as status:
-                response = await self.clients.post_json("log-collector/logs", log_request)
+            with self.console.status(
+                f"[bold green]Submitting log entry...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "log-collector/logs", log_request
+                )
 
             if response:
                 self.console.print("[green]✅ Log entry submitted successfully[/green]")
@@ -1123,13 +1328,19 @@ class LogCollectorManager(BaseManager):
     async def submit_batch_logs_from_cli(self, batch_request: Dict[str, Any]):
         """Submit batch log entries for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Submitting batch logs...[/bold green]") as status:
-                response = await self.clients.post_json("log-collector/logs/batch", batch_request)
+            with self.console.status(
+                f"[bold green]Submitting batch logs...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "log-collector/logs/batch", batch_request
+                )
 
             if response:
                 added = response.get("added", 0)
                 total = response.get("count", 0)
-                self.console.print(f"[green]✅ Batch submitted: {added} logs added, {total} total[/green]")
+                self.console.print(
+                    f"[green]✅ Batch submitted: {added} logs added, {total} total[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to submit batch logs[/red]")
 

@@ -15,11 +15,25 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 
-# Service configuration
-SERVICE_NAME = "summarizer-hub"
-SERVICE_TITLE = "Summarizer Hub"
-SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5160
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="summarizer-hub",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Summarizer Hub"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Environment configuration
 LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")
@@ -35,7 +49,15 @@ app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Advanced document summarization, categorization, and AI-assisted peer review service",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
+
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=SERVICE_NAME)
+
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 
 class SummarizeRequest(BaseModel):
@@ -156,7 +178,9 @@ class RecommendationRequest(BaseModel):
     """Request model for document recommendations."""
 
     documents: List[Dict[str, Any]]
-    recommendation_types: Optional[List[str]] = None  # consolidation, duplicate, outdated, quality
+    recommendation_types: Optional[List[str]] = (
+        None  # consolidation, duplicate, outdated, quality
+    )
     confidence_threshold: float = 0.4
     include_jira_suggestions: bool = False
     create_jira_tickets: bool = False
@@ -227,17 +251,22 @@ class SimpleSummarizer:
             "Code Documentation",
         ]
 
-    async def summarize_with_llm(self, content: str, max_length: int = 500, style: str = "professional") -> str:
+    async def summarize_with_llm(
+        self, content: str, max_length: int = 500, style: str = "professional"
+    ) -> str:
         """Summarize content using LLM Gateway."""
         try:
-            prompt = (
-                f"Summarize the following content in a {style} style, keeping it under {max_length} words:\n\n{content}"
-            )
+            prompt = f"Summarize the following content in a {style} style, keeping it under {max_length} words:\n\n{content}"
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{LLM_GATEWAY_URL}/query",
-                    json={"prompt": prompt, "provider": "ollama", "model": "llama2", "max_tokens": max_length},
+                    json={
+                        "prompt": prompt,
+                        "provider": "ollama",
+                        "model": "llama2",
+                        "max_tokens": max_length,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -259,11 +288,15 @@ class SimpleSummarizer:
         # Simple truncation with sentence awareness
         truncated = " ".join(words[:max_length])
         last_period = truncated.rfind(".")
-        if last_period > max_length * 0.7:  # If we can find a sentence ending in the last 30%
+        if (
+            last_period > max_length * 0.7
+        ):  # If we can find a sentence ending in the last 30%
             return truncated[: last_period + 1]
         return truncated + "..."
 
-    async def categorize_with_llm(self, content: str, candidate_categories: List[str] = None) -> Dict[str, Any]:
+    async def categorize_with_llm(
+        self, content: str, candidate_categories: List[str] = None
+    ) -> Dict[str, Any]:
         """Categorize content using LLM Gateway."""
         categories = candidate_categories or self.categories
         try:
@@ -272,7 +305,12 @@ class SimpleSummarizer:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{LLM_GATEWAY_URL}/query",
-                    json={"prompt": prompt, "provider": "ollama", "model": "llama2", "max_tokens": 200},
+                    json={
+                        "prompt": prompt,
+                        "provider": "ollama",
+                        "model": "llama2",
+                        "max_tokens": 200,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -286,7 +324,9 @@ class SimpleSummarizer:
             print(f"LLM categorization failed: {e}")
             return self.fallback_categorize(content, categories)
 
-    def parse_categorization_response(self, response: str, categories: List[str]) -> Dict[str, Any]:
+    def parse_categorization_response(
+        self, response: str, categories: List[str]
+    ) -> Dict[str, Any]:
         """Parse LLM categorization response."""
         response_lower = response.lower()
 
@@ -303,33 +343,68 @@ class SimpleSummarizer:
                         conf_val = float(conf_match.group(1))
                         confidence = conf_val / 100 if conf_val > 1 else conf_val
 
-                return {"category": category, "confidence": confidence, "explanation": response.strip()}
+                return {
+                    "category": category,
+                    "confidence": confidence,
+                    "explanation": response.strip(),
+                }
 
         # Fallback to first category
-        return {"category": categories[0], "confidence": 0.5, "explanation": "Category assigned by fallback logic"}
+        return {
+            "category": categories[0],
+            "confidence": 0.5,
+            "explanation": "Category assigned by fallback logic",
+        }
 
-    def fallback_categorize(self, content: str, categories: List[str]) -> Dict[str, Any]:
+    def fallback_categorize(
+        self, content: str, categories: List[str]
+    ) -> Dict[str, Any]:
         """Fallback categorization without LLM."""
         content_lower = content.lower()
 
         # Simple keyword matching
-        if any(word in content_lower for word in ["api", "endpoint", "request", "response"]):
-            return {"category": "API Documentation", "confidence": 0.7, "explanation": "Contains API-related keywords"}
-        elif any(word in content_lower for word in ["architecture", "system", "design"]):
+        if any(
+            word in content_lower for word in ["api", "endpoint", "request", "response"]
+        ):
+            return {
+                "category": "API Documentation",
+                "confidence": 0.7,
+                "explanation": "Contains API-related keywords",
+            }
+        elif any(
+            word in content_lower for word in ["architecture", "system", "design"]
+        ):
             return {
                 "category": "Architecture Documentation",
                 "confidence": 0.7,
                 "explanation": "Contains architecture-related keywords",
             }
-        elif any(word in content_lower for word in ["user", "guide", "tutorial", "how to"]):
-            return {"category": "User Guide", "confidence": 0.7, "explanation": "Contains user guide keywords"}
+        elif any(
+            word in content_lower for word in ["user", "guide", "tutorial", "how to"]
+        ):
+            return {
+                "category": "User Guide",
+                "confidence": 0.7,
+                "explanation": "Contains user guide keywords",
+            }
         elif any(word in content_lower for word in ["meeting", "notes", "discussion"]):
-            return {"category": "Meeting Notes", "confidence": 0.7, "explanation": "Contains meeting-related keywords"}
+            return {
+                "category": "Meeting Notes",
+                "confidence": 0.7,
+                "explanation": "Contains meeting-related keywords",
+            }
         else:
-            return {"category": "Technical Documentation", "confidence": 0.5, "explanation": "Default categorization"}
+            return {
+                "category": "Technical Documentation",
+                "confidence": 0.5,
+                "explanation": "Default categorization",
+            }
 
     async def analyze_alignment(
-        self, documents: List[Dict[str, Any]], analysis_types: List[str] = None, strictness_level: str = "medium"
+        self,
+        documents: List[Dict[str, Any]],
+        analysis_types: List[str] = None,
+        strictness_level: str = "medium",
     ) -> Dict[str, Any]:
         """Analyze documentation alignment across multiple documents."""
         if analysis_types is None:
@@ -349,12 +424,14 @@ class SimpleSummarizer:
 
         # Perform different types of alignment analysis
         if "terminology" in analysis_types:
-            alignment_results["terminology_analysis"] = await self._analyze_terminology_alignment(
-                documents, strictness_level
+            alignment_results["terminology_analysis"] = (
+                await self._analyze_terminology_alignment(documents, strictness_level)
             )
 
         if "consistency" in analysis_types:
-            alignment_results["consistency_report"] = self._analyze_consistency(documents)
+            alignment_results["consistency_report"] = self._analyze_consistency(
+                documents
+            )
 
         if "patterns" in analysis_types:
             alignment_results["pattern_analysis"] = self._analyze_patterns(documents)
@@ -363,7 +440,9 @@ class SimpleSummarizer:
             alignment_results["conflict_detection"] = self._analyze_conflicts(documents)
 
         # Calculate overall alignment score
-        alignment_results["overall_alignment_score"] = self._calculate_alignment_score(alignment_results)
+        alignment_results["overall_alignment_score"] = self._calculate_alignment_score(
+            alignment_results
+        )
 
         # Generate alignment recommendations
         alignment_results["recommendations"] = self._generate_alignment_recommendations(
@@ -371,7 +450,9 @@ class SimpleSummarizer:
         )
 
         # Collect all alignment issues
-        alignment_results["alignment_issues"] = self._collect_alignment_issues(alignment_results)
+        alignment_results["alignment_issues"] = self._collect_alignment_issues(
+            alignment_results
+        )
 
         alignment_results["processing_time"] = time.time() - start_time
 
@@ -396,7 +477,11 @@ class SimpleSummarizer:
 
             # Simple term extraction (could be enhanced with NLP)
             terms = self._extract_key_terms(content)
-            doc_terms[doc_id] = {"terms": terms, "term_count": len(terms), "unique_terms": len(set(terms))}
+            doc_terms[doc_id] = {
+                "terms": terms,
+                "term_count": len(terms),
+                "unique_terms": len(set(terms)),
+            }
 
         # Analyze term consistency across documents
         all_terms = set()
@@ -423,7 +508,9 @@ class SimpleSummarizer:
         # This is a simplified analysis - in practice, you'd use more sophisticated NLP
         inconsistent_terms = []
         for term, docs in term_document_mapping.items():
-            if len(docs) > len(documents) * 0.5:  # Terms appearing in more than half the documents
+            if (
+                len(docs) > len(documents) * 0.5
+            ):  # Terms appearing in more than half the documents
                 inconsistent_terms.append(
                     {
                         "term": term,
@@ -454,8 +541,12 @@ class SimpleSummarizer:
 
         consistency_report["format_consistency"] = {
             "formats_found": formats,
-            "most_common_format": max(formats.keys(), key=lambda x: formats[x]) if formats else "unknown",
-            "format_consistency_score": max(formats.values()) / len(documents) if documents else 0,
+            "most_common_format": (
+                max(formats.keys(), key=lambda x: formats[x]) if formats else "unknown"
+            ),
+            "format_consistency_score": (
+                max(formats.values()) / len(documents) if documents else 0
+            ),
         }
 
         # Check structure consistency
@@ -466,7 +557,11 @@ class SimpleSummarizer:
 
         consistency_report["structure_consistency"] = {
             "structures": structures,
-            "structure_variability": len(set(str(s) for s in structures)) / len(structures) if structures else 0,
+            "structure_variability": (
+                len(set(str(s) for s in structures)) / len(structures)
+                if structures
+                else 0
+            ),
         }
 
         return consistency_report
@@ -495,7 +590,9 @@ class SimpleSummarizer:
 
             patterns["headers"].append({"doc_id": doc_id, "count": header_count})
             patterns["lists"].append({"doc_id": doc_id, "count": list_count})
-            patterns["code_blocks"].append({"doc_id": doc_id, "count": code_block_count})
+            patterns["code_blocks"].append(
+                {"doc_id": doc_id, "count": code_block_count}
+            )
             patterns["links"].append({"doc_id": doc_id, "count": link_count})
 
         pattern_analysis["pattern_coverage"] = patterns
@@ -505,7 +602,9 @@ class SimpleSummarizer:
             if pattern_data:
                 counts = [item["count"] for item in pattern_data]
                 avg_count = sum(counts) / len(counts)
-                std_dev = (sum((x - avg_count) ** 2 for x in counts) / len(counts)) ** 0.5
+                std_dev = (
+                    sum((x - avg_count) ** 2 for x in counts) / len(counts)
+                ) ** 0.5
 
                 deviations = []
                 for item in pattern_data:
@@ -600,7 +699,9 @@ class SimpleSummarizer:
 
         # Weighted average
         weights = {"terminology": 0.4, "patterns": 0.4, "conflicts": 0.2}
-        overall_score = sum(score * weights.get(component, 0) for component, score in score_components)
+        overall_score = sum(
+            score * weights.get(component, 0) for component, score in score_components
+        )
 
         return round(overall_score * 100, 2)
 
@@ -633,7 +734,9 @@ class SimpleSummarizer:
                     "type": "pattern_standardization",
                     "priority": "medium",
                     "description": f"Standardize documentation patterns across {len(pattern_deviations)} documents",
-                    "affected_patterns": list(set(dev["pattern"] for dev in pattern_deviations)),
+                    "affected_patterns": list(
+                        set(dev["pattern"] for dev in pattern_deviations)
+                    ),
                     "action": "Create documentation templates and style guides",
                 }
             )
@@ -647,14 +750,18 @@ class SimpleSummarizer:
                     "type": "conflict_resolution",
                     "priority": "high",
                     "description": f"Resolve version conflicts found in {len(version_conflicts)} areas",
-                    "conflict_areas": [conflict["type"] for conflict in version_conflicts],
+                    "conflict_areas": [
+                        conflict["type"] for conflict in version_conflicts
+                    ],
                     "action": "Review and reconcile conflicting information",
                 }
             )
 
         return recommendations
 
-    def _collect_alignment_issues(self, alignment_results: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _collect_alignment_issues(
+        self, alignment_results: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Collect all alignment issues from analysis results."""
         issues = []
 
@@ -760,7 +867,9 @@ class SimpleSummarizer:
             "has_lists": "- " in content or "* " in content,
             "has_code_blocks": "```" in content,
             "has_links": "[" in content and "](" in content,
-            "paragraph_count": len([line for line in content.split("\n") if line.strip()]),
+            "paragraph_count": len(
+                [line for line in content.split("\n") if line.strip()]
+            ),
             "word_count": len(content.split()),
         }
 
@@ -777,7 +886,12 @@ class SimpleSummarizer:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{LLM_GATEWAY_URL}/query",
-                    json={"prompt": prompt, "provider": "ollama", "model": "llama2", "max_tokens": 800},
+                    json={
+                        "prompt": prompt,
+                        "provider": "ollama",
+                        "model": "llama2",
+                        "max_tokens": 800,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -791,7 +905,9 @@ class SimpleSummarizer:
             print(f"LLM peer review failed: {e}")
             return self.fallback_review(content, focus)
 
-    def parse_review_response(self, response: str, focus_areas: List[str]) -> Dict[str, Any]:
+    def parse_review_response(
+        self, response: str, focus_areas: List[str]
+    ) -> Dict[str, Any]:
         """Parse LLM review response."""
         suggestions = []
 
@@ -799,8 +915,14 @@ class SimpleSummarizer:
         lines = response.split("\n")
         for line in lines:
             line = line.strip()
-            if line and (line.startswith("-") or line.startswith("•") or "suggest" in line.lower()):
-                suggestions.append({"type": "improvement", "suggestion": line, "priority": "medium"})
+            if line and (
+                line.startswith("-")
+                or line.startswith("•")
+                or "suggest" in line.lower()
+            ):
+                suggestions.append(
+                    {"type": "improvement", "suggestion": line, "priority": "medium"}
+                )
 
         # Extract score
         import re
@@ -809,15 +931,33 @@ class SimpleSummarizer:
         score = float(score_match.group(1)) if score_match else 7.5
 
         if not suggestions:
-            suggestions = [{"type": "general", "suggestion": "Overall content is well-structured", "priority": "low"}]
+            suggestions = [
+                {
+                    "type": "general",
+                    "suggestion": "Overall content is well-structured",
+                    "priority": "low",
+                }
+            ]
 
-        return {"suggestions": suggestions, "overall_score": score, "review_text": response}
+        return {
+            "suggestions": suggestions,
+            "overall_score": score,
+            "review_text": response,
+        }
 
     def fallback_review(self, content: str, focus_areas: List[str]) -> Dict[str, Any]:
         """Fallback review without LLM."""
         suggestions = [
-            {"type": "clarity", "suggestion": "Consider adding more examples to improve clarity", "priority": "medium"},
-            {"type": "structure", "suggestion": "Content structure is adequate", "priority": "low"},
+            {
+                "type": "clarity",
+                "suggestion": "Consider adding more examples to improve clarity",
+                "priority": "medium",
+            },
+            {
+                "type": "structure",
+                "suggestion": "Content structure is adequate",
+                "priority": "low",
+            },
         ]
 
         # Simple scoring based on content length and structure
@@ -851,19 +991,27 @@ class SimpleSummarizer:
 
         # Generate recommendations for each type
         if "consolidation" in recommendation_types:
-            consolidation_recs = await self._generate_consolidation_recommendations(documents, confidence_threshold)
+            consolidation_recs = await self._generate_consolidation_recommendations(
+                documents, confidence_threshold
+            )
             all_recommendations.extend(consolidation_recs)
 
         if "duplicate" in recommendation_types:
-            duplicate_recs = await self._generate_duplicate_recommendations(documents, confidence_threshold)
+            duplicate_recs = await self._generate_duplicate_recommendations(
+                documents, confidence_threshold
+            )
             all_recommendations.extend(duplicate_recs)
 
         if "outdated" in recommendation_types:
-            outdated_recs = await self._generate_outdated_recommendations(documents, confidence_threshold)
+            outdated_recs = await self._generate_outdated_recommendations(
+                documents, confidence_threshold
+            )
             all_recommendations.extend(outdated_recs)
 
         if "quality" in recommendation_types:
-            quality_recs = await self._generate_quality_recommendations(documents, confidence_threshold)
+            quality_recs = await self._generate_quality_recommendations(
+                documents, confidence_threshold
+            )
             all_recommendations.extend(quality_recs)
 
         # Sort by priority and confidence
@@ -888,13 +1036,17 @@ class SimpleSummarizer:
         # Generate Jira ticket suggestions if requested
         jira_ticket_creation = {}
         if include_jira_suggestions and all_recommendations:
-            jira_suggestions = self._generate_jira_ticket_suggestions(all_recommendations, documents)
+            jira_suggestions = self._generate_jira_ticket_suggestions(
+                all_recommendations, documents
+            )
             result["suggested_jira_tickets"] = jira_suggestions
 
             # Create actual Jira tickets if requested
             if create_jira_tickets:
-                ticket_creation_result = await jira_client.create_jira_tickets_from_suggestions(
-                    jira_suggestions, jira_project_key
+                ticket_creation_result = (
+                    await jira_client.create_jira_tickets_from_suggestions(
+                        jira_suggestions, jira_project_key
+                    )
                 )
                 jira_ticket_creation = ticket_creation_result
 
@@ -916,7 +1068,9 @@ class SimpleSummarizer:
 
         # Add timeline analysis if timeline is provided
         if timeline:
-            timeline_analysis = self._analyze_timeline_and_documents(documents, timeline)
+            timeline_analysis = self._analyze_timeline_and_documents(
+                documents, timeline
+            )
             result["timeline_analysis"] = timeline_analysis
 
         return result
@@ -942,7 +1096,9 @@ class SimpleSummarizer:
             if len(docs_in_type) >= 3:
                 # Calculate similarity within the group
                 avg_similarity = self._calculate_group_similarity(docs_in_type)
-                type_confidence = self._calculate_type_consolidation_confidence(docs_in_type, avg_similarity)
+                type_confidence = self._calculate_type_consolidation_confidence(
+                    docs_in_type, avg_similarity
+                )
 
                 if type_confidence >= confidence_threshold:
                     recommendations.append(
@@ -952,10 +1108,16 @@ class SimpleSummarizer:
                             "description": f"Consolidate {len(docs_in_type)} {doc_type} documents into a comprehensive guide",
                             "affected_documents": [doc["id"] for doc in docs_in_type],
                             "confidence_score": type_confidence,
-                            "priority": "high" if type_confidence > 0.8 or len(docs_in_type) > 5 else "medium",
+                            "priority": (
+                                "high"
+                                if type_confidence > 0.8 or len(docs_in_type) > 5
+                                else "medium"
+                            ),
                             "rationale": f"{len(docs_in_type)} {doc_type} documents with {avg_similarity:.1%} average similarity",
                             "expected_impact": f"Reduce maintenance overhead by {max(20, len(docs_in_type) * 15)}%",
-                            "effort_level": "medium" if len(docs_in_type) <= 5 else "high",
+                            "effort_level": (
+                                "medium" if len(docs_in_type) <= 5 else "high"
+                            ),
                             "tags": ["consolidation", doc_type],
                             "metadata": {
                                 "document_type": doc_type,
@@ -984,7 +1146,9 @@ class SimpleSummarizer:
                 if i >= j:
                     continue
 
-                pair_key = f"{min(doc1['id'], doc2['id'])}_{max(doc1['id'], doc2['id'])}"
+                pair_key = (
+                    f"{min(doc1['id'], doc2['id'])}_{max(doc1['id'], doc2['id'])}"
+                )
                 if pair_key in processed_pairs:
                     continue
 
@@ -1028,7 +1192,9 @@ class SimpleSummarizer:
             age_days = (current_time - reference_date).days
 
             if age_days > 365:
-                confidence = min(age_days / (365 * 2), 0.9)  # Reduced denominator for higher confidence
+                confidence = min(
+                    age_days / (365 * 2), 0.9
+                )  # Reduced denominator for higher confidence
                 if confidence >= confidence_threshold:
                     priority = "high" if age_days > (365 * 2) else "medium"
 
@@ -1045,7 +1211,13 @@ class SimpleSummarizer:
                             "effort_level": "medium",
                             "tags": ["outdated", "maintenance"],
                             "age_days": age_days,
-                            "metadata": {"last_updated": reference_date.isoformat() if reference_date else None},
+                            "metadata": {
+                                "last_updated": (
+                                    reference_date.isoformat()
+                                    if reference_date
+                                    else None
+                                )
+                            },
                         }
                     )
 
@@ -1063,7 +1235,9 @@ class SimpleSummarizer:
             metrics = quality_analysis["metrics"]
 
             if issues:
-                confidence = min(len(issues) / 4.0, 0.9)  # More reasonable confidence scaling
+                confidence = min(
+                    len(issues) / 4.0, 0.9
+                )  # More reasonable confidence scaling
                 if confidence >= confidence_threshold:
                     priority = self._determine_quality_priority(issues, metrics)
 
@@ -1076,21 +1250,30 @@ class SimpleSummarizer:
                             "confidence_score": confidence,
                             "priority": priority,
                             "rationale": f"Comprehensive quality analysis identified {len(issues)} issues with {metrics['overall_score']:.1f} quality score",
-                            "expected_impact": self._calculate_quality_impact(issues, metrics),
-                            "effort_level": self._estimate_quality_effort(issues, metrics),
-                            "tags": ["quality", "improvement"] + [issue["type"] for issue in issues[:3]],
+                            "expected_impact": self._calculate_quality_impact(
+                                issues, metrics
+                            ),
+                            "effort_level": self._estimate_quality_effort(
+                                issues, metrics
+                            ),
+                            "tags": ["quality", "improvement"]
+                            + [issue["type"] for issue in issues[:3]],
                             "metadata": {
                                 "issues": issues,
                                 "metrics": metrics,
                                 "quality_score": metrics["overall_score"],
-                                "severity_breakdown": self._categorize_issue_severity(issues),
+                                "severity_breakdown": self._categorize_issue_severity(
+                                    issues
+                                ),
                             },
                         }
                     )
 
         return recommendations
 
-    async def _analyze_document_quality_comprehensive(self, document: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_document_quality_comprehensive(
+        self, document: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Perform comprehensive quality analysis on a document."""
         content = document.get("content", "")
         title = document.get("title", "")
@@ -1132,7 +1315,9 @@ class SimpleSummarizer:
         issues.extend(accuracy_issues)
 
         # 4. Structure and Organization Analysis
-        structure_issues = self._analyze_structure_and_organization(content, title, metrics)
+        structure_issues = self._analyze_structure_and_organization(
+            content, title, metrics
+        )
         issues.extend(structure_issues)
 
         # 5. Consistency Analysis
@@ -1144,11 +1329,15 @@ class SimpleSummarizer:
         issues.extend(completeness_issues)
 
         # Calculate overall quality score
-        metrics["overall_score"] = self._calculate_overall_quality_score(metrics, issues)
+        metrics["overall_score"] = self._calculate_overall_quality_score(
+            metrics, issues
+        )
 
         return {"issues": issues, "metrics": metrics}
 
-    def _analyze_content_length(self, content: str, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _analyze_content_length(
+        self, content: str, metrics: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Analyze content length for quality issues."""
         issues = []
         word_count = metrics["word_count"]
@@ -1174,7 +1363,9 @@ class SimpleSummarizer:
 
         return issues
 
-    def _analyze_clarity_and_readability(self, content: str, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _analyze_clarity_and_readability(
+        self, content: str, metrics: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Analyze clarity and readability issues."""
         issues = []
         sentences = [s.strip() for s in content.split(".") if s.strip()]
@@ -1198,7 +1389,9 @@ class SimpleSummarizer:
 
         # Check for passive voice (simplified)
         passive_indicators = ["is", "are", "was", "were", "be", "been", "being"]
-        passive_count = sum(1 for word in content.lower().split() if word in passive_indicators)
+        passive_count = sum(
+            1 for word in content.lower().split() if word in passive_indicators
+        )
         passive_ratio = passive_count / max(1, len(content.split()))
 
         if passive_ratio > 0.15:  # More than 15% passive voice
@@ -1235,7 +1428,10 @@ class SimpleSummarizer:
         content_lower = content.lower()
 
         # Check for code-like content without proper formatting
-        if any(keyword in content_lower for keyword in ["function", "class", "import", "def ", "return "]):
+        if any(
+            keyword in content_lower
+            for keyword in ["function", "class", "import", "def ", "return "]
+        ):
             if "```" not in content or content.count("```") < 2:
                 issues.append(
                     {
@@ -1250,7 +1446,8 @@ class SimpleSummarizer:
         if "api" in content_lower:
             api_references = content_lower.count("api")
             if api_references > 3 and not any(
-                term in content_lower for term in ["endpoint", "method", "request", "response"]
+                term in content_lower
+                for term in ["endpoint", "method", "request", "response"]
             ):
                 issues.append(
                     {
@@ -1275,7 +1472,9 @@ class SimpleSummarizer:
                 }
             )
 
-        metrics["technical_accuracy"] = 1.0 - (len(issues) * 0.2)  # Reduce score for each issue
+        metrics["technical_accuracy"] = 1.0 - (
+            len(issues) * 0.2
+        )  # Reduce score for each issue
 
         return issues
 
@@ -1320,8 +1519,16 @@ class SimpleSummarizer:
                     break
 
         # Check for logical flow
-        transition_words = ["however", "therefore", "additionally", "furthermore", "consequently"]
-        transition_count = sum(1 for word in transition_words if word in content.lower())
+        transition_words = [
+            "however",
+            "therefore",
+            "additionally",
+            "furthermore",
+            "consequently",
+        ]
+        transition_count = sum(
+            1 for word in transition_words if word in content.lower()
+        )
 
         if len(content.split()) > 300 and transition_count < 2:
             issues.append(
@@ -1337,7 +1544,9 @@ class SimpleSummarizer:
 
         return issues
 
-    def _analyze_consistency(self, content: str, metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _analyze_consistency(
+        self, content: str, metrics: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Analyze consistency issues in the document."""
         issues = []
 
@@ -1366,7 +1575,9 @@ class SimpleSummarizer:
 
         # Check for formatting consistency
         lines = content.split("\n")
-        bullet_points = [line for line in lines if line.strip().startswith(("- ", "* ", "+ "))]
+        bullet_points = [
+            line for line in lines if line.strip().startswith(("- ", "* ", "+ "))
+        ]
 
         if len(bullet_points) > 5:
             bullet_styles = set(line.strip()[0] for line in bullet_points)
@@ -1392,8 +1603,15 @@ class SimpleSummarizer:
         content_lower = content.lower()
 
         # Check for tutorial-like content missing key sections
-        if any(word in content_lower for word in ["tutorial", "guide", "how to", "learn"]):
-            required_sections = ["prerequisites", "requirements", "example", "conclusion"]
+        if any(
+            word in content_lower for word in ["tutorial", "guide", "how to", "learn"]
+        ):
+            required_sections = [
+                "prerequisites",
+                "requirements",
+                "example",
+                "conclusion",
+            ]
             missing_sections = []
 
             for section in required_sections:
@@ -1413,7 +1631,9 @@ class SimpleSummarizer:
         # Check for API documentation completeness
         if "api" in content_lower:
             api_elements = ["endpoint", "method", "parameter", "response", "example"]
-            missing_elements = [elem for elem in api_elements if elem not in content_lower]
+            missing_elements = [
+                elem for elem in api_elements if elem not in content_lower
+            ]
 
             if len(missing_elements) > 2:
                 issues.append(
@@ -1426,7 +1646,10 @@ class SimpleSummarizer:
                 )
 
         # Check for contact/support information
-        if not any(term in content_lower for term in ["contact", "support", "help", "email", "github"]):
+        if not any(
+            term in content_lower
+            for term in ["contact", "support", "help", "email", "github"]
+        ):
             issues.append(
                 {
                     "type": "missing_support_info",
@@ -1440,7 +1663,9 @@ class SimpleSummarizer:
 
         return issues
 
-    def _calculate_overall_quality_score(self, metrics: Dict[str, Any], issues: List[Dict[str, Any]]) -> float:
+    def _calculate_overall_quality_score(
+        self, metrics: Dict[str, Any], issues: List[Dict[str, Any]]
+    ) -> float:
         """Calculate overall quality score based on metrics and issues."""
         # Base score from individual metrics
         base_score = (
@@ -1454,11 +1679,15 @@ class SimpleSummarizer:
         # Reduce score based on issue severity
         severity_penalty = {"critical": 0.3, "high": 0.2, "medium": 0.1, "low": 0.05}
 
-        total_penalty = sum(severity_penalty.get(issue.get("severity", "low"), 0.05) for issue in issues)
+        total_penalty = sum(
+            severity_penalty.get(issue.get("severity", "low"), 0.05) for issue in issues
+        )
 
         return max(0.0, min(1.0, base_score - total_penalty))
 
-    def _determine_quality_priority(self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]) -> str:
+    def _determine_quality_priority(
+        self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]
+    ) -> str:
         """Determine priority for quality recommendations."""
         severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
 
@@ -1472,20 +1701,26 @@ class SimpleSummarizer:
         else:
             return "low"
 
-    def _build_quality_description(self, document: Dict[str, Any], issues: List[Dict[str, Any]]) -> str:
+    def _build_quality_description(
+        self, document: Dict[str, Any], issues: List[Dict[str, Any]]
+    ) -> str:
         """Build human-readable quality description."""
         title = document.get("title", "Unknown Document")
         critical_issues = [i for i in issues if i.get("severity") == "critical"]
         high_issues = [i for i in issues if i.get("severity") == "high"]
 
         if critical_issues:
-            return f"Critical quality issues in '{title}' - immediate attention required"
+            return (
+                f"Critical quality issues in '{title}' - immediate attention required"
+            )
         elif high_issues:
             return f"Multiple quality issues in '{title}' - {len(issues)} issues identified"
         else:
             return f"Quality improvements needed for '{title}' - {len(issues)} issues to address"
 
-    def _calculate_quality_impact(self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]) -> str:
+    def _calculate_quality_impact(
+        self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]
+    ) -> str:
         """Calculate expected impact of quality improvements."""
         quality_score = metrics.get("overall_score", 0.5)
         issue_count = len(issues)
@@ -1497,7 +1732,9 @@ class SimpleSummarizer:
         else:
             return "Moderate improvement in document quality and readability"
 
-    def _estimate_quality_effort(self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]) -> str:
+    def _estimate_quality_effort(
+        self, issues: List[Dict[str, Any]], metrics: Dict[str, Any]
+    ) -> str:
         """Estimate effort level for quality improvements."""
         issue_count = len(issues)
         word_count = metrics.get("word_count", 0)
@@ -1509,7 +1746,9 @@ class SimpleSummarizer:
         else:
             return "low"
 
-    def _categorize_issue_severity(self, issues: List[Dict[str, Any]]) -> Dict[str, int]:
+    def _categorize_issue_severity(
+        self, issues: List[Dict[str, Any]]
+    ) -> Dict[str, int]:
         """Categorize issues by severity."""
         severity_counts = {"critical": 0, "high": 0, "medium": 0, "low": 0}
 
@@ -1536,14 +1775,18 @@ class SimpleSummarizer:
 
         return total_similarity / pair_count if pair_count > 0 else 0.0
 
-    def _calculate_type_consolidation_confidence(self, documents: List[Dict[str, Any]], avg_similarity: float) -> float:
+    def _calculate_type_consolidation_confidence(
+        self, documents: List[Dict[str, Any]], avg_similarity: float
+    ) -> float:
         """Calculate confidence for type-based consolidation."""
         doc_count = len(documents)
         count_factor = min(doc_count / 5.0, 0.6)
         similarity_factor = avg_similarity * 0.4
         return min(count_factor + similarity_factor, 0.95)
 
-    def _calculate_simple_similarity(self, doc1: Dict[str, Any], doc2: Dict[str, Any]) -> float:
+    def _calculate_simple_similarity(
+        self, doc1: Dict[str, Any], doc2: Dict[str, Any]
+    ) -> float:
         """Calculate simple similarity score between two documents."""
         title1 = doc1.get("title", "").lower()
         title2 = doc2.get("title", "").lower()
@@ -1553,7 +1796,9 @@ class SimpleSummarizer:
         title_words1 = set(title1.split())
         title_words2 = set(title2.split())
         title_similarity = (
-            len(title_words1 & title_words2) / len(title_words1 | title_words2) if (title_words1 | title_words2) else 0
+            len(title_words1 & title_words2) / len(title_words1 | title_words2)
+            if (title_words1 | title_words2)
+            else 0
         )
 
         content_words1 = set(content1.split())
@@ -1589,7 +1834,9 @@ class SimpleSummarizer:
 class JiraClient:
     """Jira API client for creating and managing tickets."""
 
-    def __init__(self, base_url: str = None, username: str = None, api_token: str = None):
+    def __init__(
+        self, base_url: str = None, username: str = None, api_token: str = None
+    ):
         self.base_url = base_url or JIRA_BASE_URL
         self.username = username or JIRA_USERNAME
         self.api_token = api_token or JIRA_API_TOKEN
@@ -1606,7 +1853,9 @@ class JiraClient:
 
     def is_configured(self) -> bool:
         """Check if Jira client is properly configured."""
-        return bool(self.base_url and self.username and self.api_token and self.auth_header)
+        return bool(
+            self.base_url and self.username and self.api_token and self.auth_header
+        )
 
     async def create_issue(
         self,
@@ -1622,7 +1871,9 @@ class JiraClient:
     ) -> Dict[str, Any]:
         """Create a Jira issue."""
         if not self.is_configured():
-            raise HTTPException(status_code=500, detail="Jira client not properly configured")
+            raise HTTPException(
+                status_code=500, detail="Jira client not properly configured"
+            )
 
         url = f"{self.base_url}/rest/api/2/issue"
 
@@ -1650,7 +1901,10 @@ class JiraClient:
         if custom_fields:
             issue_data["fields"].update(custom_fields)
 
-        headers = {"Authorization": self.auth_header, "Content-Type": "application/json"}
+        headers = {
+            "Authorization": self.auth_header,
+            "Content-Type": "application/json",
+        }
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -1668,7 +1922,9 @@ class JiraClient:
                     error_detail = response.text
                     try:
                         error_json = response.json()
-                        error_detail = error_json.get("errors", {}).get("summary", [error_detail])[0]
+                        error_detail = error_json.get("errors", {}).get(
+                            "summary", [error_detail]
+                        )[0]
                     except Exception:
                         pass
 
@@ -1697,15 +1953,24 @@ class JiraClient:
                     project_data = response.json()
                     return {
                         "success": True,
-                        "project": {"key": project_data["key"], "name": project_data["name"], "id": project_data["id"]},
+                        "project": {
+                            "key": project_data["key"],
+                            "name": project_data["name"],
+                            "id": project_data["id"],
+                        },
                     }
                 else:
-                    return {"success": False, "error": f"Project not found: {response.status_code}"}
+                    return {
+                        "success": False,
+                        "error": f"Project not found: {response.status_code}",
+                    }
 
         except Exception as e:
             return {"success": False, "error": f"Failed to get project: {str(e)}"}
 
-    def map_recommendation_to_jira(self, recommendation: Dict[str, Any]) -> Dict[str, Any]:
+    def map_recommendation_to_jira(
+        self, recommendation: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Map a recommendation to Jira ticket parameters."""
         rec_type = recommendation.get("type", "general")
         priority = recommendation.get("priority", "medium")
@@ -2022,13 +2287,19 @@ class JiraClient:
                     # Parse last updated date
                     if isinstance(last_updated, str):
                         if "T" in last_updated:
-                            last_updated_date = datetime.fromisoformat(last_updated.replace("Z", "+00:00"))
+                            last_updated_date = datetime.fromisoformat(
+                                last_updated.replace("Z", "+00:00")
+                            )
                         else:
-                            last_updated_date = datetime.strptime(last_updated, "%Y-%m-%d")
+                            last_updated_date = datetime.strptime(
+                                last_updated, "%Y-%m-%d"
+                            )
                     else:
                         last_updated_date = last_updated
 
-                    days_since_update = (datetime.now() - last_updated_date.replace(tzinfo=None)).days
+                    days_since_update = (
+                        datetime.now() - last_updated_date.replace(tzinfo=None)
+                    ).days
 
                     if days_since_update > 365:  # Over a year old
                         documentation_drift_issues.append(
@@ -2037,7 +2308,9 @@ class JiraClient:
                                 "document_title": title,
                                 "drift_type": "outdated_content",
                                 "days_since_update": days_since_update,
-                                "severity": "high" if days_since_update > 730 else "medium",
+                                "severity": (
+                                    "high" if days_since_update > 730 else "medium"
+                                ),
                                 "recommendation": "Review and update documentation content for currency",
                             }
                         )
@@ -2088,10 +2361,14 @@ class JiraClient:
                 "api_drift_count": len(api_drift_issues),
                 "documentation_drift_count": len(documentation_drift_issues),
             },
-            "critical_alerts": [alert for alert in drift_alerts if alert.get("severity") == "high"],
+            "critical_alerts": [
+                alert for alert in drift_alerts if alert.get("severity") == "high"
+            ],
         }
 
-    def _check_documentation_alignment(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _check_documentation_alignment(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Check documentation alignment across the document set."""
         alignment_issues = []
         alignment_score = 1.0
@@ -2111,7 +2388,9 @@ class JiraClient:
         for doc in documents:
             content = doc.get("content", "").lower()
             # Extract potential technical terms (capitalized words, API endpoints, etc.)
-            terms = re.findall(r"\b[A-Z][a-zA-Z]*\b|\bapi/[a-zA-Z_]+\b|\b[A-Z_][A-Z_]+\b", content)
+            terms = re.findall(
+                r"\b[A-Z][a-zA-Z]*\b|\bapi/[a-zA-Z_]+\b|\b[A-Z_][A-Z_]+\b", content
+            )
             all_terms.extend(terms)
 
         # Count term frequencies
@@ -2121,7 +2400,9 @@ class JiraClient:
         # Check for inconsistent terminology usage
         inconsistent_terms = []
         for term, count in term_frequency.items():
-            if count == 1 and len(term) > 3:  # Terms used only once might indicate inconsistency
+            if (
+                count == 1 and len(term) > 3
+            ):  # Terms used only once might indicate inconsistency
                 inconsistent_terms.append(term)
 
         if inconsistent_terms:
@@ -2141,9 +2422,17 @@ class JiraClient:
         for doc in documents:
             content = doc.get("content", "")
             # Look for common structural elements
-            has_intro = bool(re.search(r"\b(intro|overview|summary)\b", content, re.IGNORECASE))
-            has_examples = bool(re.search(r"\b(example|sample|code)\b", content, re.IGNORECASE))
-            has_prerequisites = bool(re.search(r"\b(prereq|requirement|before|needed)\b", content, re.IGNORECASE))
+            has_intro = bool(
+                re.search(r"\b(intro|overview|summary)\b", content, re.IGNORECASE)
+            )
+            has_examples = bool(
+                re.search(r"\b(example|sample|code)\b", content, re.IGNORECASE)
+            )
+            has_prerequisites = bool(
+                re.search(
+                    r"\b(prereq|requirement|before|needed)\b", content, re.IGNORECASE
+                )
+            )
 
             structure_patterns.append(
                 {
@@ -2155,7 +2444,9 @@ class JiraClient:
             )
 
         # Check consistency in structure
-        intro_consistency = len([p for p in structure_patterns if p["has_intro"]]) / len(structure_patterns)
+        intro_consistency = len(
+            [p for p in structure_patterns if p["has_intro"]]
+        ) / len(structure_patterns)
         if intro_consistency < 0.7:
             alignment_issues.append(
                 {
@@ -2172,10 +2463,14 @@ class JiraClient:
         for doc in documents:
             content = doc.get("content", "")
             # Look for see also, refer to, etc.
-            cross_refs = re.findall(r"\b(see also|refer to|see|reference|link)\b", content, re.IGNORECASE)
+            cross_refs = re.findall(
+                r"\b(see also|refer to|see|reference|link)\b", content, re.IGNORECASE
+            )
             cross_ref_count += len(cross_refs)
 
-        if cross_ref_count < len(documents) * 0.5:  # Less than 0.5 cross-refs per document
+        if (
+            cross_ref_count < len(documents) * 0.5
+        ):  # Less than 0.5 cross-refs per document
             alignment_issues.append(
                 {
                     "type": "poor_cross_referencing",
@@ -2195,13 +2490,17 @@ class JiraClient:
             "alignment_score": alignment_score,
             "issues": alignment_issues,
             "structure_analysis": structure_patterns,
-            "terminology_consistency": 1.0 - (len(inconsistent_terms) / max(len(term_frequency), 1)),
+            "terminology_consistency": 1.0
+            - (len(inconsistent_terms) / max(len(term_frequency), 1)),
             "cross_reference_density": cross_ref_count / len(documents),
             "recommendations": [issue["recommendation"] for issue in alignment_issues],
         }
 
     def _handle_inconclusive_recommendations(
-        self, documents: List[Dict[str, Any]], recommendations: List[Dict[str, Any]], confidence_threshold: float
+        self,
+        documents: List[Dict[str, Any]],
+        recommendations: List[Dict[str, Any]],
+        confidence_threshold: float,
     ) -> Dict[str, Any]:
         """Handle cases where information is insufficient for confident recommendations."""
         inconclusive_handling = {
@@ -2221,7 +2520,9 @@ class JiraClient:
 
             if confidence_scores:
                 avg_confidence = sum(confidence_scores) / len(confidence_scores)
-                low_confidence_count = len([c for c in confidence_scores if c < confidence_threshold])
+                low_confidence_count = len(
+                    [c for c in confidence_scores if c < confidence_threshold]
+                )
 
                 data_sufficiency[rec_type] = {
                     "recommendations_count": len(type_recs),
@@ -2243,15 +2544,21 @@ class JiraClient:
 
         # Assess overall data quality
         total_docs = len(documents)
-        avg_doc_length = sum(len(doc.get("content", "")) for doc in documents) / max(total_docs, 1)
-        docs_with_dates = len([d for d in documents if d.get("last_updated") or d.get("dateUpdated")])
+        avg_doc_length = sum(len(doc.get("content", "")) for doc in documents) / max(
+            total_docs, 1
+        )
+        docs_with_dates = len(
+            [d for d in documents if d.get("last_updated") or d.get("dateUpdated")]
+        )
 
         inconclusive_handling["data_quality_assessment"] = {
             "total_documents": total_docs,
             "average_document_length": avg_doc_length,
             "documents_with_dates": docs_with_dates,
             "date_coverage": docs_with_dates / max(total_docs, 1),
-            "data_quality_score": min(1.0, (avg_doc_length / 1000) * (docs_with_dates / max(total_docs, 1))),
+            "data_quality_score": min(
+                1.0, (avg_doc_length / 1000) * (docs_with_dates / max(total_docs, 1))
+            ),
         }
 
         # Generate confidence analysis
@@ -2259,9 +2566,19 @@ class JiraClient:
             "overall_confidence_threshold": confidence_threshold,
             "recommendation_types_analysis": data_sufficiency,
             "confidence_distribution": {
-                "high": len([r for r in recommendations if r.get("confidence_score", 0) >= 0.8]),
-                "medium": len([r for r in recommendations if 0.5 <= r.get("confidence_score", 0) < 0.8]),
-                "low": len([r for r in recommendations if r.get("confidence_score", 0) < 0.5]),
+                "high": len(
+                    [r for r in recommendations if r.get("confidence_score", 0) >= 0.8]
+                ),
+                "medium": len(
+                    [
+                        r
+                        for r in recommendations
+                        if 0.5 <= r.get("confidence_score", 0) < 0.8
+                    ]
+                ),
+                "low": len(
+                    [r for r in recommendations if r.get("confidence_score", 0) < 0.5]
+                ),
             },
         }
 
@@ -2332,7 +2649,9 @@ class JiraClient:
             return timeline_analysis
 
         # Analyze timeline structure
-        total_duration = sum(phase.get("duration_weeks", 0) for phase in timeline_phases)
+        total_duration = sum(
+            phase.get("duration_weeks", 0) for phase in timeline_phases
+        )
         timeline_analysis["timeline_structure"] = {
             "phase_count": len(timeline_phases),
             "total_duration_weeks": total_duration,
@@ -2341,22 +2660,30 @@ class JiraClient:
         }
 
         # Analyze document placement on timeline
-        document_placements = self._analyze_document_timeline_placement(documents, timeline_phases)
+        document_placements = self._analyze_document_timeline_placement(
+            documents, timeline_phases
+        )
         timeline_analysis["document_placement"] = document_placements
 
         # Calculate placement score
         total_docs = len(documents)
-        placed_docs = len([p for p in document_placements if p.get("placement_reason") != "unplaced"])
+        placed_docs = len(
+            [p for p in document_placements if p.get("placement_reason") != "unplaced"]
+        )
         placement_score = placed_docs / total_docs if total_docs > 0 else 0.0
         timeline_analysis["placement_score"] = placement_score
 
         # Generate timeline recommendations
-        timeline_analysis["timeline_recommendations"] = self._generate_timeline_recommendations(
-            document_placements, timeline_phases, placement_score
+        timeline_analysis["timeline_recommendations"] = (
+            self._generate_timeline_recommendations(
+                document_placements, timeline_phases, placement_score
+            )
         )
 
         # Identify gaps
-        timeline_analysis["gaps_identified"] = self._identify_timeline_gaps(document_placements, timeline_phases)
+        timeline_analysis["gaps_identified"] = self._identify_timeline_gaps(
+            document_placements, timeline_phases
+        )
 
         return timeline_analysis
 
@@ -2382,18 +2709,24 @@ class JiraClient:
                 try:
                     if isinstance(last_updated, str):
                         if "T" in last_updated:
-                            doc_date = datetime.fromisoformat(last_updated.replace("Z", "+00:00"))
+                            doc_date = datetime.fromisoformat(
+                                last_updated.replace("Z", "+00:00")
+                            )
                         else:
                             doc_date = datetime.strptime(last_updated, "%Y-%m-%d")
                     else:
                         doc_date = last_updated
 
                     # Find the most relevant phase for this document
-                    relevant_phase = self._find_relevant_timeline_phase(doc_date, timeline_phases)
+                    relevant_phase = self._find_relevant_timeline_phase(
+                        doc_date, timeline_phases
+                    )
                     if relevant_phase:
                         placement["placement_phase"] = relevant_phase["name"]
                         placement["placement_reason"] = "timestamp_match"
-                        placement["relevance_score"] = self._calculate_timeline_relevance(doc_date, relevant_phase)
+                        placement["relevance_score"] = (
+                            self._calculate_timeline_relevance(doc_date, relevant_phase)
+                        )
                         placement["timeline_context"] = {
                             "phase_start": relevant_phase.get("start_week", 0),
                             "phase_duration": relevant_phase.get("duration_weeks", 0),
@@ -2404,7 +2737,9 @@ class JiraClient:
 
             # If no timestamp match, try content-based placement
             if placement["placement_reason"] == "unplaced":
-                content_placement = self._analyze_content_based_placement(doc, timeline_phases)
+                content_placement = self._analyze_content_based_placement(
+                    doc, timeline_phases
+                )
                 if content_placement:
                     placement.update(content_placement)
 
@@ -2424,7 +2759,9 @@ class JiraClient:
                 return phase
         return None
 
-    def _calculate_timeline_relevance(self, doc_date: datetime, phase: Dict[str, Any]) -> float:
+    def _calculate_timeline_relevance(
+        self, doc_date: datetime, phase: Dict[str, Any]
+    ) -> float:
         """Calculate how relevant a document is to a timeline phase."""
         # Placeholder relevance calculation
         # In practice, this would consider phase duration, document recency, etc.
@@ -2459,7 +2796,10 @@ class JiraClient:
         return None
 
     def _generate_timeline_recommendations(
-        self, placements: List[Dict[str, Any]], timeline_phases: List[Dict[str, Any]], placement_score: float
+        self,
+        placements: List[Dict[str, Any]],
+        timeline_phases: List[Dict[str, Any]],
+        placement_score: float,
     ) -> List[str]:
         """Generate recommendations based on timeline analysis."""
         recommendations = []
@@ -2470,7 +2810,9 @@ class JiraClient:
             )
 
         if placement_score > 0.8:
-            recommendations.append("Excellent document-timeline alignment. Documentation appears well-structured.")
+            recommendations.append(
+                "Excellent document-timeline alignment. Documentation appears well-structured."
+            )
 
         # Check for phase coverage
         phase_coverage = {}
@@ -2483,7 +2825,9 @@ class JiraClient:
             phase_name = phase.get("name", "")
             doc_count = phase_coverage.get(phase_name, 0)
             if doc_count == 0:
-                recommendations.append(f"No documents found for phase '{phase_name}'. Consider adding documentation.")
+                recommendations.append(
+                    f"No documents found for phase '{phase_name}'. Consider adding documentation."
+                )
 
         return recommendations
 
@@ -2557,20 +2901,36 @@ class JiraClient:
                     labels=ticket.get("labels", []),
                     components=ticket.get("components", []),
                     custom_fields={
-                        "customfield_10010": ticket.get("epic_link", "Documentation Quality Initiative")  # Epic Link
+                        "customfield_10010": ticket.get(
+                            "epic_link", "Documentation Quality Initiative"
+                        )  # Epic Link
                     },
                 )
 
                 if create_result["success"]:
                     created_count += 1
-                    results.append({"suggestion": ticket, "creation_result": create_result, "status": "created"})
+                    results.append(
+                        {
+                            "suggestion": ticket,
+                            "creation_result": create_result,
+                            "status": "created",
+                        }
+                    )
                 else:
                     failed_count += 1
-                    results.append({"suggestion": ticket, "creation_result": create_result, "status": "failed"})
+                    results.append(
+                        {
+                            "suggestion": ticket,
+                            "creation_result": create_result,
+                            "status": "failed",
+                        }
+                    )
 
             except Exception as e:
                 failed_count += 1
-                results.append({"suggestion": ticket, "error": str(e), "status": "error"})
+                results.append(
+                    {"suggestion": ticket, "error": str(e), "status": "error"}
+                )
 
         return {
             "success": created_count > 0,
@@ -2582,7 +2942,10 @@ class JiraClient:
         }
 
     async def create_jira_tickets_for_recommendations(
-        self, recommendations: List[Dict[str, Any]], documents: List[Dict[str, Any]] = None, project_key: str = None
+        self,
+        recommendations: List[Dict[str, Any]],
+        documents: List[Dict[str, Any]] = None,
+        project_key: str = None,
     ) -> Dict[str, Any]:
         """Create Jira tickets directly from recommendations."""
         if not self.is_configured():
@@ -2610,15 +2973,38 @@ jira_client = JiraClient()
 
 @app.get("/health")
 async def health():
-    """Health check endpoint."""
-    return {
-        "status": "healthy",
-        "service": SERVICE_NAME,
-        "version": SERVICE_VERSION,
-        "timestamp": time.time(),
-        "environment": ENVIRONMENT,
-        "llm_gateway_url": LLM_GATEWAY_URL,
-    }
+    """Health check endpoint with standardized response."""
+    try:
+        # Test LLM gateway connectivity
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            try:
+                response = await client.get(f"{LLM_GATEWAY_URL}/health")
+                llm_gateway_status = "healthy" if response.status_code == 200 else "unhealthy"
+            except Exception:
+                llm_gateway_status = "unreachable"
+
+        return create_success_response(
+            data={
+                "status": "healthy",
+                "service": SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "environment": ENVIRONMENT,
+                "llm_gateway_status": llm_gateway_status,
+                "features": {
+                    "summarization": True,
+                    "categorization": True,
+                    "peer_review": True,
+                    "jira_integration": bool(JIRA_API_TOKEN),
+                }
+            },
+            message="Service is healthy"
+        )
+    except Exception as e:
+        return create_error_response(
+            message=f"Health check failed: {str(e)}",
+            error_code="HEALTH_CHECK_FAILED",
+            details={"error": str(e)}
+        )
 
 
 @app.get("/")
@@ -2663,7 +3049,13 @@ async def get_capabilities():
         },
         "peer_review": {
             "review_types": ["general", "technical", "editorial", "compliance"],
-            "focus_areas": ["clarity", "completeness", "accuracy", "style", "structure"],
+            "focus_areas": [
+                "clarity",
+                "completeness",
+                "accuracy",
+                "style",
+                "structure",
+            ],
             "scoring": "0-10 scale",
         },
         "recommendations": {
@@ -2681,7 +3073,9 @@ async def summarize_document(request: SummarizeRequest):
     """Summarize a document."""
     try:
         summary = await summarizer.summarize_with_llm(
-            request.content, request.max_length, getattr(request, "style", "professional")
+            request.content,
+            request.max_length,
+            getattr(request, "style", "professional"),
         )
 
         return SummarizeResponse(
@@ -2690,7 +3084,9 @@ async def summarize_document(request: SummarizeRequest):
                 "summary": summary,
                 "original_length": len(request.content.split()),
                 "summary_length": len(summary.split()),
-                "compression_ratio": len(summary) / len(request.content) if request.content else 0,
+                "compression_ratio": (
+                    len(summary) / len(request.content) if request.content else 0
+                ),
                 "format": request.format,
             },
         )
@@ -2704,7 +3100,9 @@ async def categorize_document(request: CategorizeRequest):
     """Categorize a document."""
     try:
         content = request.document.get("content", "")
-        result = await summarizer.categorize_with_llm(content, request.candidate_categories)
+        result = await summarizer.categorize_with_llm(
+            content, request.candidate_categories
+        )
 
         return CategorizeResponse(
             success=True,
@@ -2714,7 +3112,8 @@ async def categorize_document(request: CategorizeRequest):
             explanation=result["explanation"],
             metadata={
                 "use_zero_shot": request.use_zero_shot,
-                "candidate_categories": request.candidate_categories or summarizer.categories,
+                "candidate_categories": request.candidate_categories
+                or summarizer.categories,
                 "content_length": len(content),
             },
         )
@@ -2727,7 +3126,9 @@ async def categorize_document(request: CategorizeRequest):
 async def peer_review_document(request: PeerReviewRequest):
     """Perform peer review on a document."""
     try:
-        result = await summarizer.peer_review_with_llm(request.content, request.review_type, request.focus_areas)
+        result = await summarizer.peer_review_with_llm(
+            request.content, request.review_type, request.focus_areas
+        )
 
         return PeerReviewResponse(
             success=True,
@@ -2736,7 +3137,8 @@ async def peer_review_document(request: PeerReviewRequest):
             overall_score=result["overall_score"],
             metadata={
                 "review_type": request.review_type,
-                "focus_areas": request.focus_areas or ["clarity", "completeness", "accuracy"],
+                "focus_areas": request.focus_areas
+                or ["clarity", "completeness", "accuracy"],
                 "content_length": len(request.content),
                 "review_timestamp": time.time(),
             },
@@ -2855,7 +3257,9 @@ async def create_jira_tickets(request: JiraTicketRequest):
                 detail="Jira client not configured. Please set JIRA_BASE_URL, JIRA_USERNAME, and JIRA_API_TOKEN environment variables.",
             )
 
-        result = await jira_client.create_jira_tickets_from_suggestions(request.suggested_tickets, request.project_key)
+        result = await jira_client.create_jira_tickets_from_suggestions(
+            request.suggested_tickets, request.project_key
+        )
 
         return JiraTicketResponse(
             success=result["success"],
@@ -2867,7 +3271,9 @@ async def create_jira_tickets(request: JiraTicketRequest):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Jira ticket creation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Jira ticket creation failed: {str(e)}"
+        )
 
 
 @app.get("/test/alignment")
@@ -2897,12 +3303,20 @@ async def analyze_alignment_simple(request: Dict[str, Any]):
                     "type": "terminology_inconsistency",
                     "severity": "medium",
                     "description": "Found potential terminology inconsistencies",
-                    "affected_documents": [doc.get("id", "unknown") for doc in documents[:2]],
+                    "affected_documents": [
+                        doc.get("id", "unknown") for doc in documents[:2]
+                    ],
                     "recommendation": "Review terminology usage across documents",
                 }
             ],
-            "consistency_report": {"format_consistency_score": 0.8, "structure_consistency_score": 0.7},
-            "terminology_analysis": {"cross_document_terms": 15, "inconsistent_terms": 3},
+            "consistency_report": {
+                "format_consistency_score": 0.8,
+                "structure_consistency_score": 0.7,
+            },
+            "terminology_analysis": {
+                "cross_document_terms": 15,
+                "inconsistent_terms": 3,
+            },
             "pattern_analysis": {"pattern_deviations": 2},
             "conflict_detection": {"version_conflicts": 0},
             "recommendations": [
@@ -2961,7 +3375,9 @@ async def summarize_v1(request: SummarizeRequest):
 
         # Generate summary
         summary_text = await summarizer.summarize_with_llm(
-            request.content, max_length=request.max_length, style=request.style or "professional"
+            request.content,
+            max_length=request.max_length,
+            style=request.style or "professional",
         )
 
         # Get content analysis
@@ -2974,7 +3390,9 @@ async def summarize_v1(request: SummarizeRequest):
             "summary_id": str(uuid.uuid4()),
             "original_length": len(request.content),
             "summary_length": len(summary_text),
-            "compression_ratio": len(summary_text) / len(request.content) if request.content else 0,
+            "compression_ratio": (
+                len(summary_text) / len(request.content) if request.content else 0
+            ),
             "summary": summary_text,
             "format": request.format,
             "style": request.style,
@@ -2983,7 +3401,11 @@ async def summarize_v1(request: SummarizeRequest):
             "content_analysis": analysis,
             "processing_time": 0.5,  # Mock processing time
             "timestamp": time.time(),
-            "metadata": {"llm_model": "llama2", "provider": "ollama", "version": SERVICE_VERSION},
+            "metadata": {
+                "llm_model": "llama2",
+                "provider": "ollama",
+                "version": SERVICE_VERSION,
+            },
         }
 
         return SummarizeResponse(success=True, data=response_data)
@@ -3001,7 +3423,10 @@ async def test_llm_connection():
             if response.status_code == 200:
                 return {"llm_gateway_status": "connected", "response": response.json()}
             else:
-                return {"llm_gateway_status": "error", "status_code": response.status_code}
+                return {
+                    "llm_gateway_status": "error",
+                    "status_code": response.status_code,
+                }
     except Exception as e:
         return {"llm_gateway_status": "unreachable", "error": str(e)}
 

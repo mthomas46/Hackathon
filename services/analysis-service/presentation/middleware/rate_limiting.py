@@ -17,7 +17,11 @@ class RateLimitExceeded(HTTPException):
 
     def __init__(self, retry_after: int):
         """Initialize rate limit exception."""
-        super().__init__(status_code=429, detail="Rate limit exceeded", headers={"Retry-After": str(retry_after)})
+        super().__init__(
+            status_code=429,
+            detail="Rate limit exceeded",
+            headers={"Retry-After": str(retry_after)},
+        )
 
 
 class InMemoryRateLimiter:
@@ -62,7 +66,9 @@ class InMemoryRateLimiter:
 
             # Clean up expired entries
             for key in list(self.requests.keys()):
-                self.requests[key][:] = [t for t in self.requests[key] if now - t < 3600]  # 1 hour window
+                self.requests[key][:] = [
+                    t for t in self.requests[key] if now - t < 3600
+                ]  # 1 hour window
                 if not self.requests[key]:
                     del self.requests[key]
 
@@ -102,7 +108,9 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
         limit, window = self.rate_limits.get(endpoint_type, self.rate_limits["default"])
 
         # Check rate limit
-        allowed, retry_after = self.rate_limiter.is_allowed(rate_limit_key, limit, window)
+        allowed, retry_after = self.rate_limiter.is_allowed(
+            rate_limit_key, limit, window
+        )
 
         if not allowed:
             # Return rate limit exceeded response
@@ -116,7 +124,9 @@ class RateLimitingMiddleware(BaseHTTPMiddleware):
             )
 
             return JSONResponse(
-                status_code=429, content=error_response.dict(), headers={"Retry-After": str(retry_after)}
+                status_code=429,
+                content=error_response.dict(),
+                headers={"Retry-After": str(retry_after)},
             )
 
         # Add rate limit headers to response
@@ -196,7 +206,9 @@ class EndpointRateLimiter:
     def is_allowed(self, endpoint: str, client_ip: str) -> Tuple[bool, int]:
         """Check if request is allowed for endpoint."""
         # Find matching endpoint limit
-        limit, window = self.endpoint_limits.get(endpoint, (30, 60))  # Default: 30 per minute
+        limit, window = self.endpoint_limits.get(
+            endpoint, (30, 60)
+        )  # Default: 30 per minute
 
         key = f"{client_ip}:{endpoint}"
         return self.rate_limiter.is_allowed(key, limit, window)
@@ -208,6 +220,12 @@ adaptive_rate_limiter = AdaptiveRateLimiter()
 endpoint_rate_limiter = EndpointRateLimiter()
 
 # Pre-configure endpoint-specific limits
-endpoint_rate_limiter.set_endpoint_limit("/analyze/*", 10, 60)  # 10 per minute for analysis
-endpoint_rate_limiter.set_endpoint_limit("/distributed/*", 5, 60)  # 5 per minute for distributed tasks
-endpoint_rate_limiter.set_endpoint_limit("/reports/*", 3, 60)  # 3 per minute for reports
+endpoint_rate_limiter.set_endpoint_limit(
+    "/analyze/*", 10, 60
+)  # 10 per minute for analysis
+endpoint_rate_limiter.set_endpoint_limit(
+    "/distributed/*", 5, 60
+)  # 5 per minute for distributed tasks
+endpoint_rate_limiter.set_endpoint_limit(
+    "/reports/*", 3, 60
+)  # 3 per minute for reports

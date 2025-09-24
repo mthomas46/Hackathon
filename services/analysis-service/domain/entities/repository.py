@@ -94,7 +94,9 @@ class Repository:
             "language": self.language,
             "topics": self.topics,
             "metadata": self.metadata,
-            "last_synced_at": self.last_synced_at.isoformat() if self.last_synced_at else None,
+            "last_synced_at": (
+                self.last_synced_at.isoformat() if self.last_synced_at else None
+            ),
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "is_synced_recently": self.is_synced_recently,

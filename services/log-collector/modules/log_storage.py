@@ -69,7 +69,10 @@ class LogStorage:
         return len(self._logs)
 
     def get_logs(
-        self, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100
+        self,
+        service: Optional[str] = None,
+        level: Optional[str] = None,
+        limit: int = 100,
     ) -> List[Dict[str, Any]]:
         """Retrieve filtered logs with optional pagination.
 

@@ -10,7 +10,10 @@ from .connection import prompt_store_db_connection
 
 
 def execute_query(
-    query: str, params: Optional[Tuple] = None, fetch_one: bool = False, fetch_all: bool = False
+    query: str,
+    params: Optional[Tuple] = None,
+    fetch_one: bool = False,
+    fetch_all: bool = False,
 ) -> Union[None, Dict, List[Dict]]:
     """Execute a database query with proper connection management."""
     with prompt_store_db_connection() as conn:
@@ -95,7 +98,9 @@ def build_where_clause(filters: Dict[str, Any]) -> Tuple[str, Tuple]:
     return where_clause, tuple(params)
 
 
-def build_order_clause(order_by: Optional[str] = None, order_direction: str = "ASC") -> str:
+def build_order_clause(
+    order_by: Optional[str] = None, order_direction: str = "ASC"
+) -> str:
     """Build ORDER BY clause."""
     if not order_by:
         return ""
@@ -104,7 +109,9 @@ def build_order_clause(order_by: Optional[str] = None, order_direction: str = "A
     return f"ORDER BY {order_by} {direction}"
 
 
-def build_limit_clause(limit: Optional[int] = None, offset: Optional[int] = 0) -> Tuple[str, Tuple]:
+def build_limit_clause(
+    limit: Optional[int] = None, offset: Optional[int] = 0
+) -> Tuple[str, Tuple]:
     """Build LIMIT and OFFSET clause."""
     if not limit:
         return "", ()
@@ -148,7 +155,13 @@ def execute_paged_query(
 
     has_more = limit and offset is not None and (offset + limit) < total
 
-    return {"items": items, "total": total, "has_more": has_more, "limit": limit, "offset": offset or 0}
+    return {
+        "items": items,
+        "total": total,
+        "has_more": has_more,
+        "limit": limit,
+        "offset": offset or 0,
+    }
 
 
 def execute_search_query(
@@ -164,7 +177,13 @@ def execute_search_query(
 
     # Use FTS table for content search
     fts_table = f"{table}_fts"
-    search_fields = search_fields or ["name", "category", "description", "content", "tags"]
+    search_fields = search_fields or [
+        "name",
+        "category",
+        "description",
+        "content",
+        "tags",
+    ]
 
     # Build FTS query
     fts_query = f"SELECT rowid FROM {fts_table} WHERE {' OR '.join([f'{field} MATCH ?' for field in search_fields])}"

@@ -37,7 +37,10 @@ class ApplicationService(ABC):
     """Base class for application services with cross-cutting concerns."""
 
     def __init__(
-        self, service_name: str, event_bus: Optional[EventBus] = None, logger: Optional[logging.Logger] = None
+        self,
+        service_name: str,
+        event_bus: Optional[EventBus] = None,
+        logger: Optional[logging.Logger] = None,
     ):
         """Initialize application service."""
         self.service_name = service_name
@@ -74,7 +77,9 @@ class ApplicationService(ABC):
         return self._running
 
     @asynccontextmanager
-    async def operation_context(self, operation_name: str, context: Optional[ServiceContext] = None):
+    async def operation_context(
+        self, operation_name: str, context: Optional[ServiceContext] = None
+    ):
         """Context manager for service operations with monitoring."""
         if context is None:
             context = ServiceContext()
@@ -124,7 +129,11 @@ class ApplicationService(ABC):
             # Publish operation failed event
             if self.event_bus:
                 await self._publish_operation_event(
-                    "operation_failed", operation_name, context, error=str(e), duration=operation_duration
+                    "operation_failed",
+                    operation_name,
+                    context,
+                    error=str(e),
+                    duration=operation_duration,
                 )
 
             raise
@@ -137,11 +146,16 @@ class ApplicationService(ABC):
             "service": self.service_name,
             "status": "healthy" if self._running else "stopped",
             "timestamp": current_time,
-            "uptime": current_time - self._last_health_check if self._last_health_check > 0 else 0,
+            "uptime": (
+                current_time - self._last_health_check
+                if self._last_health_check > 0
+                else 0
+            ),
             "operations": {
                 "total": self._operation_count,
                 "errors": self._error_count,
-                "success_rate": (self._operation_count - self._error_count) / max(1, self._operation_count),
+                "success_rate": (self._operation_count - self._error_count)
+                / max(1, self._operation_count),
             },
         }
 
@@ -161,7 +175,11 @@ class ApplicationService(ABC):
             service_version=getattr(self, "version", "1.0.0"),
             health_status=event_type,
             response_time_ms=0.0,
-            system_metrics={"operation_count": self._operation_count, "error_count": self._error_count, **kwargs},
+            system_metrics={
+                "operation_count": self._operation_count,
+                "error_count": self._error_count,
+                **kwargs,
+            },
         )
 
         await self.event_bus.publish(event)
@@ -202,7 +220,12 @@ class ServiceRegistry:
         self._startup_order: list = []
         self._shutdown_order: list = []
 
-    def register(self, service: ApplicationService, startup_priority: int = 50, shutdown_priority: int = 50) -> None:
+    def register(
+        self,
+        service: ApplicationService,
+        startup_priority: int = 50,
+        shutdown_priority: int = 50,
+    ) -> None:
         """Register a service."""
         service_name = service.service_name
 
@@ -237,8 +260,14 @@ class ServiceRegistry:
         """Unregister a service."""
         if service_name in self.services:
             del self.services[service_name]
-            self._startup_order = [(name, pri) for name, pri in self._startup_order if name != service_name]
-            self._shutdown_order = [(name, pri) for name, pri in self._shutdown_order if name != service_name]
+            self._startup_order = [
+                (name, pri) for name, pri in self._startup_order if name != service_name
+            ]
+            self._shutdown_order = [
+                (name, pri)
+                for name, pri in self._shutdown_order
+                if name != service_name
+            ]
             logger.info(f"Unregistered service: {service_name}")
 
     async def start_all(self) -> None:
@@ -251,7 +280,9 @@ class ServiceRegistry:
                 await service.start()
                 logger.info(f"Started service: {service_name}")
             except Exception as e:
-                logger.error(f"Failed to start service {service_name}: {e}", exc_info=True)
+                logger.error(
+                    f"Failed to start service {service_name}: {e}", exc_info=True
+                )
                 raise
 
         logger.info("All services started")
@@ -266,7 +297,9 @@ class ServiceRegistry:
                 await service.stop()
                 logger.info(f"Stopped service: {service_name}")
             except Exception as e:
-                logger.error(f"Error stopping service {service_name}: {e}", exc_info=True)
+                logger.error(
+                    f"Error stopping service {service_name}: {e}", exc_info=True
+                )
 
         logger.info("All services stopped")
 
@@ -280,7 +313,11 @@ class ServiceRegistry:
                 results[service_name] = health
             except Exception as e:
                 logger.error(f"Health check failed for {service_name}: {e}")
-                results[service_name] = {"service": service_name, "status": "error", "error": str(e)}
+                results[service_name] = {
+                    "service": service_name,
+                    "status": "error",
+                    "error": str(e),
+                }
 
         return results
 

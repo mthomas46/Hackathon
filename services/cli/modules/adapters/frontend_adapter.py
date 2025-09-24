@@ -24,7 +24,14 @@ class FrontendAdapter(BaseServiceAdapter):
             name="frontend",
             version="1.0.0",
             description="Web interface and user interaction service",
-            endpoints=["/health", "/api/status", "/api/config", "/api/services", "/static", "/"],
+            endpoints=[
+                "/health",
+                "/api/status",
+                "/api/config",
+                "/api/services",
+                "/static",
+                "/",
+            ],
             dependencies=["fastapi", "static-files"],
         )
 
@@ -68,7 +75,9 @@ class FrontendAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get Frontend status: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get Frontend status: {str(e)}"
+            )
 
     async def _get_config(self) -> CommandResult:
         """Get Frontend configuration"""
@@ -85,7 +94,9 @@ class FrontendAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get Frontend config: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get Frontend config: {str(e)}"
+            )
 
     async def _get_services(self) -> CommandResult:
         """Get services available through the frontend"""
@@ -102,7 +113,9 @@ class FrontendAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get frontend services: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get frontend services: {str(e)}"
+            )
 
     async def _list_pages(self) -> CommandResult:
         """List available frontend pages"""
@@ -118,7 +131,9 @@ class FrontendAdapter(BaseServiceAdapter):
 
             for page in pages:
                 try:
-                    page_response = await self.clients.get_text(f"{self.base_url}{page}")
+                    page_response = await self.clients.get_text(
+                        f"{self.base_url}{page}"
+                    )
                     if page_response:
                         available_pages.append({"path": page, "status": "available"})
                 except Exception:
@@ -133,7 +148,9 @@ class FrontendAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list frontend pages: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list frontend pages: {str(e)}"
+            )
 
     async def _check_assets(self) -> CommandResult:
         """Check static assets availability"""
@@ -146,7 +163,9 @@ class FrontendAdapter(BaseServiceAdapter):
 
             for asset in assets_to_check:
                 try:
-                    asset_response = await self.clients.get_text(f"{self.base_url}{asset}")
+                    asset_response = await self.clients.get_text(
+                        f"{self.base_url}{asset}"
+                    )
                     status = "available" if asset_response else "not found"
                 except Exception:
                     status = "error"
@@ -162,7 +181,9 @@ class FrontendAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to check frontend assets: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to check frontend assets: {str(e)}"
+            )
 
     async def _test_ui(self) -> CommandResult:
         """Test UI responsiveness"""
@@ -186,7 +207,10 @@ class FrontendAdapter(BaseServiceAdapter):
                     "load_time": main_load_time,
                     "size": len(main_page) if main_page else 0,
                 },
-                "api_health": {"responded": bool(api_response), "load_time": api_load_time},
+                "api_health": {
+                    "responded": bool(api_response),
+                    "load_time": api_load_time,
+                },
                 "overall_status": "pass" if main_page and api_response else "fail",
             }
 
@@ -215,7 +239,11 @@ class FrontendAdapter(BaseServiceAdapter):
             stats = {
                 "health": health_response,
                 "status": status_response,
-                "service_uptime": status_response.get("uptime", "unknown") if status_response else "unknown",
+                "service_uptime": (
+                    status_response.get("uptime", "unknown")
+                    if status_response
+                    else "unknown"
+                ),
             }
 
             return CommandResult(
@@ -225,7 +253,9 @@ class FrontendAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get Frontend stats: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get Frontend stats: {str(e)}"
+            )
 
     def format_response(self, result: CommandResult, command: str) -> None:
         """Format and display the command result"""
@@ -252,10 +282,14 @@ class FrontendAdapter(BaseServiceAdapter):
             # Generic formatting
             self.console.print(f"[green]✅ {result.message}[/green]")
             if result.data:
-                self.console.print(Panel(str(result.data), title="Response Data", border_style="blue"))
+                self.console.print(
+                    Panel(str(result.data), title="Response Data", border_style="blue")
+                )
 
         if result.execution_time:
-            self.console.print(f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]")
+            self.console.print(
+                f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]"
+            )
 
     def _format_status_response(self, data: Dict[str, Any]) -> None:
         """Format status response"""
@@ -335,7 +369,10 @@ class FrontendAdapter(BaseServiceAdapter):
             status_color = "green" if status == "available" else "red"
             status_icon = "✅" if status == "available" else "❌"
 
-            table.add_row(page.get("path", "N/A"), f"{status_icon} [{status_color}]{status}[/{status_color}]")
+            table.add_row(
+                page.get("path", "N/A"),
+                f"{status_icon} [{status_color}]{status}[/{status_color}]",
+            )
 
         self.console.print(table)
 
@@ -352,10 +389,19 @@ class FrontendAdapter(BaseServiceAdapter):
 
         for asset in assets:
             status = asset.get("status", "unknown")
-            status_color = "green" if status == "available" else "red" if status == "error" else "yellow"
-            status_icon = "✅" if status == "available" else "❌" if status == "error" else "⚠️"
+            status_color = (
+                "green"
+                if status == "available"
+                else "red" if status == "error" else "yellow"
+            )
+            status_icon = (
+                "✅" if status == "available" else "❌" if status == "error" else "⚠️"
+            )
 
-            table.add_row(asset.get("path", "N/A"), f"{status_icon} [{status_color}]{status}[/{status_color}]")
+            table.add_row(
+                asset.get("path", "N/A"),
+                f"{status_icon} [{status_color}]{status}[/{status_color}]",
+            )
 
         self.console.print(table)
 

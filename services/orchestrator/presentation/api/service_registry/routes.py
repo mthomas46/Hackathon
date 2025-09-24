@@ -46,7 +46,9 @@ async def register_service(request: ServiceRegistrationRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to register service: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to register service: {str(e)}"
+        )
 
 
 @router.delete("/unregister", response_model=dict)
@@ -64,7 +66,9 @@ async def unregister_service(request: ServiceUnregistrationRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to unregister service: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to unregister service: {str(e)}"
+        )
 
 
 @router.get("/services/{service_name}", response_model=ServiceInfoResponse)
@@ -98,7 +102,11 @@ async def list_services(
         from ....application.service_registry.queries import ListServicesQuery
 
         query = ListServicesQuery(
-            category_filter=category, capability_filter=capability, status_filter=status, limit=limit, offset=offset
+            category_filter=category,
+            capability_filter=capability,
+            status_filter=status,
+            limit=limit,
+            offset=offset,
         )
         result = await container.list_services_use_case.execute(query)
         if result.is_failure():
@@ -107,7 +115,9 @@ async def list_services(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list services: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to list services: {str(e)}"
+        )
 
 
 @router.post("/poll-openapi", response_model=dict)
@@ -122,7 +132,9 @@ async def poll_openapi_specs(request: PollOpenAPIRequest):
             "force_refresh": request.force_refresh,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to poll OpenAPI specs: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to poll OpenAPI specs: {str(e)}"
+        )
 
 
 @router.get("/capabilities", response_model=dict)
@@ -147,7 +159,9 @@ async def list_service_capabilities():
             "services_by_capability": {},  # Would map capabilities to service lists
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list capabilities: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to list capabilities: {str(e)}"
+        )
 
 
 @router.get("/health", response_model=dict)
@@ -159,12 +173,16 @@ async def get_registry_health():
         )
         return {
             "status": "healthy",
-            "total_services": len(services.data.services) if services.is_success() else 0,
+            "total_services": (
+                len(services.data.services) if services.is_success() else 0
+            ),
             "timestamp": "2024-01-01T00:00:00Z",  # Would use actual timestamp
             "uptime": "99.9%",  # Would calculate actual uptime
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get registry health: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get registry health: {str(e)}"
+        )
 
 
 @router.post("/services/{service_name}/ping", response_model=dict)

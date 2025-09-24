@@ -5,7 +5,10 @@ Handles search-related HTTP requests and responses.
 
 from typing import Any, Dict
 
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 from ...core.models import SearchRequest, SearchResponse
 from ...db.queries import search_documents
@@ -21,7 +24,9 @@ class SearchHandlers:
             results = search_documents(request.query, request.limit or 50)
 
             # Format response
-            response_data = SearchResponse(items=results, total=len(results), query=request.query)
+            response_data = SearchResponse(
+                items=results, total=len(results), query=request.query
+            )
 
             return create_success_response(
                 "Documents searched successfully",
@@ -32,7 +37,9 @@ class SearchHandlers:
         except ValueError as e:
             return create_error_response(str(e), "VALIDATION_ERROR")
         except Exception as e:
-            return create_error_response(f"Failed to search documents: {str(e)}", "INTERNAL_ERROR")
+            return create_error_response(
+                f"Failed to search documents: {str(e)}", "INTERNAL_ERROR"
+            )
 
 
 # Global instance for backward compatibility

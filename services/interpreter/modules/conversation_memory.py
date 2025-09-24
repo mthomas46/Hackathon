@@ -63,17 +63,25 @@ class ConversationMemory:
     # MEMORY-AGENT INTEGRATION METHODS
     # ============================================================================
 
-    async def _store_memory(self, key: str, data: Any, ttl_seconds: Optional[int] = None) -> bool:
+    async def _store_memory(
+        self, key: str, data: Any, ttl_seconds: Optional[int] = None
+    ) -> bool:
         """Store data in memory-agent with optional TTL."""
         try:
             memory_key = f"{self.interpreter_namespace}:{key}"
 
-            payload = {"key": memory_key, "data": data, "namespace": self.interpreter_namespace}
+            payload = {
+                "key": memory_key,
+                "data": data,
+                "namespace": self.interpreter_namespace,
+            }
 
             if ttl_seconds:
                 payload["ttl_seconds"] = ttl_seconds
 
-            response = await self.client.post_json(f"{self.memory_agent_url}/memory/store", payload)
+            response = await self.client.post_json(
+                f"{self.memory_agent_url}/memory/store", payload
+            )
 
             return response.get("success", False)
 
@@ -168,10 +176,14 @@ class ConversationMemory:
 
                 if "recent_workflows" in stored_context:
                     workflows_list = stored_context["recent_workflows"]
-                    stored_context["recent_workflows"] = deque(workflows_list, maxlen=20)
+                    stored_context["recent_workflows"] = deque(
+                        workflows_list, maxlen=20
+                    )
 
                 if "frequent_patterns" in stored_context:
-                    stored_context["frequent_patterns"] = defaultdict(int, stored_context["frequent_patterns"])
+                    stored_context["frequent_patterns"] = defaultdict(
+                        int, stored_context["frequent_patterns"]
+                    )
 
                 return stored_context
 
@@ -186,7 +198,9 @@ class ConversationMemory:
             )
             return self.cache[user_id]
 
-    async def _save_user_context_to_memory(self, user_id: str, context: Dict[str, Any]) -> bool:
+    async def _save_user_context_to_memory(
+        self, user_id: str, context: Dict[str, Any]
+    ) -> bool:
         """Save user conversation context to memory-agent."""
         try:
             # Prepare data for storage (convert deques to lists)
@@ -196,10 +210,14 @@ class ConversationMemory:
                 storage_data["sessions"] = list(storage_data["sessions"])
 
             if "recent_workflows" in storage_data:
-                storage_data["recent_workflows"] = list(storage_data["recent_workflows"])
+                storage_data["recent_workflows"] = list(
+                    storage_data["recent_workflows"]
+                )
 
             if "frequent_patterns" in storage_data:
-                storage_data["frequent_patterns"] = dict(storage_data["frequent_patterns"])
+                storage_data["frequent_patterns"] = dict(
+                    storage_data["frequent_patterns"]
+                )
 
             context_key = f"user_context:{user_id}"
 
@@ -265,7 +283,11 @@ class ConversationMemory:
 
             # Check if context has expired
             last_activity = user_data.get("last_activity")
-            if last_activity and datetime.fromisoformat(last_activity) < datetime.utcnow() - self.session_timeout:
+            if (
+                last_activity
+                and datetime.fromisoformat(last_activity)
+                < datetime.utcnow() - self.session_timeout
+            ):
                 await self._start_new_session(user_id)
                 # Reload updated context
                 user_data = await self._load_user_context_from_memory(user_id)
@@ -296,7 +318,9 @@ class ConversationMemory:
             )
             return {}
 
-    async def update_conversation(self, user_id: str, query: str, workflow_name: str, result: Dict[str, Any]) -> bool:
+    async def update_conversation(
+        self, user_id: str, query: str, workflow_name: str, result: Dict[str, Any]
+    ) -> bool:
         """Update conversation with new interaction."""
         try:
             if not user_id:
@@ -321,8 +345,12 @@ class ConversationMemory:
                 "workflow": workflow_name,
                 "status": result.get("status", "unknown"),
                 "confidence": result.get("confidence", 0.0),
-                "services_used": result.get("execution_metadata", {}).get("services_used", []),
-                "execution_time": result.get("execution_metadata", {}).get("execution_time"),
+                "services_used": result.get("execution_metadata", {}).get(
+                    "services_used", []
+                ),
+                "execution_time": result.get("execution_metadata", {}).get(
+                    "execution_time"
+                ),
                 "entities_extracted": result.get("entities", {}),
                 "intent": result.get("intent", "unknown"),
             }
@@ -407,7 +435,10 @@ class ConversationMemory:
             return True
 
         # Check timeout
-        if datetime.fromisoformat(last_activity) < datetime.utcnow() - self.session_timeout:
+        if (
+            datetime.fromisoformat(last_activity)
+            < datetime.utcnow() - self.session_timeout
+        ):
             return True
 
         # Check interaction count (start new session after 50 interactions)
@@ -417,7 +448,9 @@ class ConversationMemory:
 
         return False
 
-    async def _update_patterns(self, user_id: str, query: str, workflow_name: str, interaction: Dict[str, Any]):
+    async def _update_patterns(
+        self, user_id: str, query: str, workflow_name: str, interaction: Dict[str, Any]
+    ):
         """Update usage patterns for learning."""
         user_data = self.user_conversations[user_id]
 
@@ -481,7 +514,9 @@ class ConversationMemory:
         else:
             return "general_query"
 
-    async def _update_preferences(self, user_id: str, workflow_name: str, interaction: Dict[str, Any]):
+    async def _update_preferences(
+        self, user_id: str, workflow_name: str, interaction: Dict[str, Any]
+    ):
         """Update user preferences based on successful interactions."""
         user_data = self.user_conversations[user_id]
         preferences = user_data["preferences"]
@@ -514,7 +549,9 @@ class ConversationMemory:
             elif preferences["confidence_preference"] == "medium":
                 preferences["confidence_preference"] = "high"
 
-    async def _update_domain_context(self, user_id: str, workflow_name: str, interaction: Dict[str, Any]):
+    async def _update_domain_context(
+        self, user_id: str, workflow_name: str, interaction: Dict[str, Any]
+    ):
         """Update domain context based on interaction patterns."""
         user_data = self.user_conversations[user_id]
         domain_context = user_data["domain_context"]
@@ -547,12 +584,17 @@ class ConversationMemory:
                 domain_context["secondary_domains"][domain] += 1
 
                 # Switch primary domain if secondary becomes more frequent
-                if domain_context["secondary_domains"][domain] > domain_context["domain_confidence"]:
-                    domain_context["secondary_domains"][domain_context["primary_domain"]] = domain_context[
-                        "domain_confidence"
-                    ]
+                if (
+                    domain_context["secondary_domains"][domain]
+                    > domain_context["domain_confidence"]
+                ):
+                    domain_context["secondary_domains"][
+                        domain_context["primary_domain"]
+                    ] = domain_context["domain_confidence"]
                     domain_context["primary_domain"] = domain
-                    domain_context["domain_confidence"] = domain_context["secondary_domains"][domain]
+                    domain_context["domain_confidence"] = domain_context[
+                        "secondary_domains"
+                    ][domain]
 
     async def _build_implied_context(self, user_data: Dict[str, Any]) -> str:
         """Build implied context from recent interactions."""
@@ -567,7 +609,11 @@ class ConversationMemory:
             return ""
 
         # Get last few interactions for context
-        last_interactions = recent_interactions[-3:] if len(recent_interactions) >= 3 else recent_interactions
+        last_interactions = (
+            recent_interactions[-3:]
+            if len(recent_interactions) >= 3
+            else recent_interactions
+        )
 
         # Extract common themes
         common_services = defaultdict(int)
@@ -606,7 +652,9 @@ class ConversationMemory:
         user_data = await self._load_user_context_from_memory(user_id)
         return user_data["preferences"]
 
-    async def get_conversation_history(self, user_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+    async def get_conversation_history(
+        self, user_id: str, limit: int = 10
+    ) -> List[Dict[str, Any]]:
         """Get conversation history for a user."""
         if not user_id:
             return []
@@ -619,7 +667,9 @@ class ConversationMemory:
         for session in reversed(user_data["sessions"]):
             session_interactions = session.get("interactions", [])
             for interaction in reversed(session_interactions):
-                all_interactions.append({**interaction, "session_id": session.get("session_id", "unknown")})
+                all_interactions.append(
+                    {**interaction, "session_id": session.get("session_id", "unknown")}
+                )
 
                 if len(all_interactions) >= limit:
                     break
@@ -641,7 +691,9 @@ class ConversationMemory:
         # Suggest based on preferred workflows
         preferred_workflows = preferences.get("preferred_workflows", {})
         if preferred_workflows:
-            top_workflows = sorted(preferred_workflows.items(), key=lambda x: x[1], reverse=True)[:3]
+            top_workflows = sorted(
+                preferred_workflows.items(), key=lambda x: x[1], reverse=True
+            )[:3]
             for workflow_name, count in top_workflows:
                 suggestions.append(
                     {
@@ -716,7 +768,9 @@ class ConversationMemory:
                     "total_users": total_users,
                     "total_interactions": total_interactions,
                     "global_patterns": dict(global_patterns),
-                    "workflow_transitions": {k: dict(v) for k, v in self.workflow_transitions.items()},
+                    "workflow_transitions": {
+                        k: dict(v) for k, v in self.workflow_transitions.items()
+                    },
                     "active_users": total_users,  # Simplified - all stored users are considered active
                     "storage_backend": "memory-agent",
                     "namespace": self.interpreter_namespace,
@@ -727,7 +781,9 @@ class ConversationMemory:
                     "total_users": 0,
                     "total_interactions": 0,
                     "global_patterns": dict(self.global_patterns),
-                    "workflow_transitions": {k: dict(v) for k, v in self.workflow_transitions.items()},
+                    "workflow_transitions": {
+                        k: dict(v) for k, v in self.workflow_transitions.items()
+                    },
                     "active_users": 0,
                     "storage_backend": "memory-agent",
                     "error": "Failed to load analytics from memory-agent",
@@ -752,7 +808,10 @@ class ConversationMemory:
 
                         if last_activity:
                             current_time = datetime.utcnow()
-                            if datetime.fromisoformat(last_activity) < current_time - self.context_retention:
+                            if (
+                                datetime.fromisoformat(last_activity)
+                                < current_time - self.context_retention
+                            ):
                                 # Delete expired context
                                 await self._delete_memory(f"user_context:{user_id}")
                                 expired_count += 1

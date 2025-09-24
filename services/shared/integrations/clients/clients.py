@@ -59,32 +59,60 @@ class ServiceClients:
         # Read defaults from shared config with env override
         try:
             self.timeout = int(
-                get_config_value("timeout", str(timeout), section="http_client", env_key="HTTP_CLIENT_TIMEOUT")
+                get_config_value(
+                    "timeout",
+                    str(timeout),
+                    section="http_client",
+                    env_key="HTTP_CLIENT_TIMEOUT",
+                )
             )
         except Exception:
             self.timeout = timeout
         try:
             self.retry_attempts = int(
-                get_config_value("retry_attempts", 3, section="http_client", env_key="HTTP_RETRY_ATTEMPTS")
+                get_config_value(
+                    "retry_attempts",
+                    3,
+                    section="http_client",
+                    env_key="HTTP_RETRY_ATTEMPTS",
+                )
             )
         except Exception:
             self.retry_attempts = 3
         try:
             self.retry_base_ms = int(
-                get_config_value("retry_base_ms", 150, section="http_client", env_key="HTTP_RETRY_BASE_MS")
+                get_config_value(
+                    "retry_base_ms",
+                    150,
+                    section="http_client",
+                    env_key="HTTP_RETRY_BASE_MS",
+                )
             )
         except Exception:
             self.retry_base_ms = 150
-        raw_circuit = get_config_value("circuit_enabled", False, section="http_client", env_key="HTTP_CIRCUIT_ENABLED")
+        raw_circuit = get_config_value(
+            "circuit_enabled",
+            False,
+            section="http_client",
+            env_key="HTTP_CIRCUIT_ENABLED",
+        )
         self.circuit_enabled = str(raw_circuit).strip().lower() in ("1", "true", "yes")
 
     def github_agent_url(self) -> str:
         return get_config_value(
-            "GITHUB_AGENT_URL", "http://github-agent:5000", section="services", env_key="GITHUB_AGENT_URL"
+            "GITHUB_AGENT_URL",
+            "http://github-agent:5000",
+            section="services",
+            env_key="GITHUB_AGENT_URL",
         )
 
     def reporting_url(self) -> str:
-        return get_config_value("REPORTING_URL", "http://reporting:5030", section="services", env_key="REPORTING_URL")
+        return get_config_value(
+            "REPORTING_URL",
+            "http://reporting:5030",
+            section="services",
+            env_key="REPORTING_URL",
+        )
 
     def consistency_engine_url(self) -> str:
         return get_config_value(
@@ -96,12 +124,18 @@ class ServiceClients:
 
     def jira_agent_url(self) -> str:
         return get_config_value(
-            "JIRA_AGENT_URL", "http://jira-agent:5001", section="services", env_key="JIRA_AGENT_URL"
+            "JIRA_AGENT_URL",
+            "http://jira-agent:5001",
+            section="services",
+            env_key="JIRA_AGENT_URL",
         )
 
     def confluence_agent_url(self) -> str:
         return get_config_value(
-            "CONFLUENCE_AGENT_URL", "http://confluence-agent:5050", section="services", env_key="CONFLUENCE_AGENT_URL"
+            "CONFLUENCE_AGENT_URL",
+            "http://confluence-agent:5050",
+            section="services",
+            env_key="CONFLUENCE_AGENT_URL",
         )
 
     # ============================================================================
@@ -111,18 +145,29 @@ class ServiceClients:
     def prompt_store_url(self) -> str:
         """Get Prompt Store service URL."""
         return get_config_value(
-            "PROMPT_STORE_URL", "http://prompt-store:5110", section="services", env_key="PROMPT_STORE_URL"
+            "PROMPT_STORE_URL",
+            "http://prompt-store:5110",
+            section="services",
+            env_key="PROMPT_STORE_URL",
         )
 
     def interpreter_url(self) -> str:
         """Get Interpreter service URL."""
         return get_config_value(
-            "INTERPRETER_URL", "http://interpreter:5120", section="services", env_key="INTERPRETER_URL"
+            "INTERPRETER_URL",
+            "http://interpreter:5120",
+            section="services",
+            env_key="INTERPRETER_URL",
         )
 
     def cli_service_url(self) -> str:
         """Get CLI service URL."""
-        return get_config_value("CLI_SERVICE_URL", "http://cli:5130", section="services", env_key="CLI_SERVICE_URL")
+        return get_config_value(
+            "CLI_SERVICE_URL",
+            "http://cli:5130",
+            section="services",
+            env_key="CLI_SERVICE_URL",
+        )
 
     # ============================================================================
     # EXISTING SERVICE URLS (UPDATED)
@@ -131,23 +176,37 @@ class ServiceClients:
     def orchestrator_url(self) -> str:
         """Get Orchestrator service URL."""
         return get_config_value(
-            "ORCHESTRATOR_URL", "http://orchestrator:5000", section="services", env_key="ORCHESTRATOR_URL"
+            "ORCHESTRATOR_URL",
+            "http://orchestrator:5000",
+            section="services",
+            env_key="ORCHESTRATOR_URL",
         )
 
     def analysis_service_url(self) -> str:
         """Get Analysis Service URL."""
         return get_config_value(
-            "ANALYSIS_SERVICE_URL", "http://analysis-service:5020", section="services", env_key="ANALYSIS_SERVICE_URL"
+            "ANALYSIS_SERVICE_URL",
+            "http://analysis-service:5020",
+            section="services",
+            env_key="ANALYSIS_SERVICE_URL",
         )
 
     def doc_store_url(self) -> str:
         """Get Doc Store service URL."""
-        return get_config_value("DOC_STORE_URL", "http://doc_store:5010", section="services", env_key="DOC_STORE_URL")
+        return get_config_value(
+            "DOC_STORE_URL",
+            "http://doc_store:5010",
+            section="services",
+            env_key="DOC_STORE_URL",
+        )
 
     def source_agent_url(self) -> str:
         """Get Source Agent service URL."""
         return get_config_value(
-            "SOURCE_AGENT_URL", "http://source-agent:5000", section="services", env_key="SOURCE_AGENT_URL"
+            "SOURCE_AGENT_URL",
+            "http://source-agent:5000",
+            section="services",
+            env_key="SOURCE_AGENT_URL",
         )
 
     # ============================================================================
@@ -157,41 +216,64 @@ class ServiceClients:
     def discovery_agent_url(self) -> str:
         """Get Discovery Agent service URL."""
         return get_config_value(
-            "DISCOVERY_AGENT_URL", "http://discovery-agent:5140", section="services", env_key="DISCOVERY_AGENT_URL"
+            "DISCOVERY_AGENT_URL",
+            "http://discovery-agent:5140",
+            section="services",
+            env_key="DISCOVERY_AGENT_URL",
         )
 
     def frontend_url(self) -> str:
         """Get Frontend service URL."""
-        return get_config_value("FRONTEND_URL", "http://frontend:5150", section="services", env_key="FRONTEND_URL")
+        return get_config_value(
+            "FRONTEND_URL",
+            "http://frontend:5150",
+            section="services",
+            env_key="FRONTEND_URL",
+        )
 
     def summarizer_hub_url(self) -> str:
         """Get Summarizer Hub service URL."""
         return get_config_value(
-            "SUMMARIZER_HUB_URL", "http://summarizer-hub:5160", section="services", env_key="SUMMARIZER_HUB_URL"
+            "SUMMARIZER_HUB_URL",
+            "http://summarizer-hub:5160",
+            section="services",
+            env_key="SUMMARIZER_HUB_URL",
         )
 
     def secure_analyzer_url(self) -> str:
         """Get Secure Analyzer service URL."""
         return get_config_value(
-            "SECURE_ANALYZER_URL", "http://secure-analyzer:5170", section="services", env_key="SECURE_ANALYZER_URL"
+            "SECURE_ANALYZER_URL",
+            "http://secure-analyzer:5170",
+            section="services",
+            env_key="SECURE_ANALYZER_URL",
         )
 
     def memory_agent_url(self) -> str:
         """Get Memory Agent service URL."""
         return get_config_value(
-            "MEMORY_AGENT_URL", "http://memory-agent:5180", section="services", env_key="MEMORY_AGENT_URL"
+            "MEMORY_AGENT_URL",
+            "http://memory-agent:5180",
+            section="services",
+            env_key="MEMORY_AGENT_URL",
         )
 
     def code_analyzer_url(self) -> str:
         """Get Code Analyzer service URL."""
         return get_config_value(
-            "CODE_ANALYZER_URL", "http://code-analyzer:5190", section="services", env_key="CODE_ANALYZER_URL"
+            "CODE_ANALYZER_URL",
+            "http://code-analyzer:5190",
+            section="services",
+            env_key="CODE_ANALYZER_URL",
         )
 
     def log_collector_url(self) -> str:
         """Get Log Collector service URL."""
         return get_config_value(
-            "LOG_COLLECTOR_URL", "http://log-collector:5200", section="services", env_key="LOG_COLLECTOR_URL"
+            "LOG_COLLECTOR_URL",
+            "http://log-collector:5200",
+            section="services",
+            env_key="LOG_COLLECTOR_URL",
         )
 
     def notification_service_url(self) -> str:
@@ -246,7 +328,9 @@ class ServiceClients:
 
         return await self.get_json(url)
 
-    async def interpret_query(self, query: str, user_id: Optional[str] = None) -> Dict[str, Any]:
+    async def interpret_query(
+        self, query: str, user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Send query to Interpreter service for natural language processing."""
         url = f"{self.interpreter_url()}/interpret"
         payload = {"query": query}
@@ -255,7 +339,9 @@ class ServiceClients:
 
         return await self.post_json(url, payload)
 
-    async def execute_workflow(self, query: str, user_id: Optional[str] = None) -> Dict[str, Any]:
+    async def execute_workflow(
+        self, query: str, user_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Execute workflow through Interpreter service."""
         url = f"{self.interpreter_url()}/execute"
         payload = {"query": query}
@@ -309,7 +395,14 @@ class ServiceClients:
 
     async def get_system_health(self) -> Dict[str, Any]:
         """Get health status of all services."""
-        services = ["orchestrator", "analysis-service", "doc_store", "source-agent", "prompt-store", "interpreter"]
+        services = [
+            "orchestrator",
+            "analysis-service",
+            "doc_store",
+            "source-agent",
+            "prompt-store",
+            "interpreter",
+        ]
 
         health_status = {}
         for service in services:
@@ -331,7 +424,9 @@ class ServiceClients:
     # CONVENIENCE METHODS FOR COMMON OPERATIONS
     # ============================================================================
 
-    async def analyze_document(self, doc_id: str, analysis_type: str = "consistency") -> Dict[str, Any]:
+    async def analyze_document(
+        self, doc_id: str, analysis_type: str = "consistency"
+    ) -> Dict[str, Any]:
         """Convenience method for document analysis."""
         url = f"{self.analysis_service_url()}/analyze"
         payload = {"targets": [doc_id], "analysis_type": analysis_type}
@@ -344,7 +439,9 @@ class ServiceClients:
         url = f"{self.doc_store_url()}/documents"
         return await self.post_json(url, document_data)
 
-    async def _store_document_local(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _store_document_local(
+        self, document_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Store document directly in local database."""
         import hashlib
         import json
@@ -375,13 +472,18 @@ class ServiceClients:
             )
             conn.commit()
 
-            return {"status": "success", "data": {"id": document_data.get("id"), "content_hash": content_hash}}
+            return {
+                "status": "success",
+                "data": {"id": document_data.get("id"), "content_hash": content_hash},
+            }
         except Exception as e:
             return {"status": "error", "error": str(e)}
         finally:
             conn.close()
 
-    async def _get_docstore_local(self, url: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _get_docstore_local(
+        self, url: str, params: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle doc_store requests locally from database."""
 
         db_path = os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3")
@@ -426,7 +528,9 @@ class ServiceClients:
         finally:
             conn.close()
 
-    async def _list_documents_local(self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _list_documents_local(
+        self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """List documents from local database."""
         limit = int(params.get("limit", 10)) if params else 10
         offset = int(params.get("offset", 0)) if params else 0
@@ -454,7 +558,9 @@ class ServiceClients:
 
         return {"documents": documents}
 
-    async def _get_document_local(self, conn: sqlite3.Connection, doc_id: str) -> Dict[str, Any]:
+    async def _get_document_local(
+        self, conn: sqlite3.Connection, doc_id: str
+    ) -> Dict[str, Any]:
         """Get document by ID from local database."""
         cur = conn.execute("SELECT * FROM documents WHERE id=?", (doc_id,))
         row = cur.fetchone()
@@ -500,11 +606,15 @@ class ServiceClients:
                 "document_count": doc_count,
                 "analysis_count": analysis_count,
                 "document_types": document_types,
-                "database_path": os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3"),
+                "database_path": os.environ.get(
+                    "DOCSTORE_DB", "services/doc_store/db.sqlite3"
+                ),
             },
         }
 
-    async def _search_local(self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _search_local(
+        self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Search documents in local database."""
         query = params.get("q", "") if params else ""
         limit = int(params.get("limit", 10)) if params else 10
@@ -557,7 +667,9 @@ class ServiceClients:
                 flags.append("code_content")
 
             # Calculate score (0-1)
-            score = min(1.0, (content_length / 1000) * 0.5 + (0.5 if has_metadata else 0))
+            score = min(
+                1.0, (content_length / 1000) * 0.5 + (0.5 if has_metadata else 0)
+            )
 
             items.append(
                 {
@@ -573,7 +685,9 @@ class ServiceClients:
 
         return {"status": "success", "data": {"items": items}}
 
-    async def _list_analyses_local(self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _list_analyses_local(
+        self, conn: sqlite3.Connection, params: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """List analyses from local database."""
         limit = int(params.get("limit", 10)) if params else 10
 
@@ -602,7 +716,9 @@ class ServiceClients:
 
         return {"status": "success", "data": {"items": items}}
 
-    async def _get_analysis_local(self, conn: sqlite3.Connection, analysis_id: str) -> Dict[str, Any]:
+    async def _get_analysis_local(
+        self, conn: sqlite3.Connection, analysis_id: str
+    ) -> Dict[str, Any]:
         """Get analysis by ID from local database."""
         cur = conn.execute("SELECT * FROM analyses WHERE id=?", (analysis_id,))
         row = cur.fetchone()
@@ -662,14 +778,18 @@ class ServiceClients:
         return {
             "status": "success",
             "data": {
-                "database_path": os.environ.get("DOCSTORE_DB", "services/doc_store/db.sqlite3"),
+                "database_path": os.environ.get(
+                    "DOCSTORE_DB", "services/doc_store/db.sqlite3"
+                ),
                 "doc_store_url": os.environ.get("DOC_STORE_URL", "local"),
                 "timeout": 30,
                 "retry_attempts": 3,
             },
         }
 
-    async def _get_storage_stats_local(self, conn: sqlite3.Connection) -> Dict[str, Any]:
+    async def _get_storage_stats_local(
+        self, conn: sqlite3.Connection
+    ) -> Dict[str, Any]:
         """Get storage statistics."""
         cur = conn.execute("SELECT COUNT(*), SUM(LENGTH(content)) FROM documents")
         row = cur.fetchone()
@@ -707,7 +827,10 @@ class ServiceClients:
         return await self.get_json(url)
 
     async def post_json(
-        self, url: str, payload: Dict[str, Any], headers: Optional[Dict[str, str]] = None
+        self,
+        url: str,
+        payload: Dict[str, Any],
+        headers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """POST JSON and parse JSON response.
 
@@ -730,10 +853,15 @@ class ServiceClients:
                     return await with_circuit(cb, _call)
                 return await _call()
 
-            return await with_retries(_op, attempts=self.retry_attempts, base_delay_ms=self.retry_base_ms)
+            return await with_retries(
+                _op, attempts=self.retry_attempts, base_delay_ms=self.retry_base_ms
+            )
 
     async def get_json(
-        self, url: str, params: Optional[Dict[str, Any]] = None, headers: Optional[Dict[str, str]] = None
+        self,
+        url: str,
+        params: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         """GET JSON and parse JSON response."""
         # Check for local database access
@@ -743,7 +871,9 @@ class ServiceClients:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
 
             async def _call():
-                kwargs: Dict[str, Any] = {"params": params} if params is not None else {}
+                kwargs: Dict[str, Any] = (
+                    {"params": params} if params is not None else {}
+                )
                 if headers is not None:
                     kwargs["headers"] = headers
                 r = await client.get(url, **kwargs)
@@ -756,4 +886,6 @@ class ServiceClients:
                     return await with_circuit(cb, _call)
                 return await _call()
 
-            return await with_retries(_op, attempts=self.retry_attempts, base_delay_ms=self.retry_base_ms)
+            return await with_retries(
+                _op, attempts=self.retry_attempts, base_delay_ms=self.retry_base_ms
+            )

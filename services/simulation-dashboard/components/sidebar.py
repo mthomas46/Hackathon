@@ -21,7 +21,9 @@ def render_sidebar(pages: Dict[str, Dict[str, Any]]) -> str:
 
     # Environment indicator
     if config.environment != "production":
-        env_color = {"development": "🟢", "staging": "🟡", "testing": "🔵"}.get(config.environment, "⚪")
+        env_color = {"development": "🟢", "staging": "🟡", "testing": "🔵"}.get(
+            config.environment, "⚪"
+        )
 
         st.sidebar.markdown(f"{env_color} **{config.environment.title()}**")
 
@@ -112,12 +114,16 @@ def render_quick_actions():
     col1, col2 = st.sidebar.columns(2)
 
     with col1:
-        if st.sidebar.button("➕ New Simulation", key="quick_new_sim", use_container_width=True):
+        if st.sidebar.button(
+            "➕ New Simulation", key="quick_new_sim", use_container_width=True
+        ):
             st.session_state.current_page = "create"
             st.rerun()
 
     with col2:
-        if st.sidebar.button("📊 Monitor", key="quick_monitor", use_container_width=True):
+        if st.sidebar.button(
+            "📊 Monitor", key="quick_monitor", use_container_width=True
+        ):
             st.session_state.current_page = "monitor"
             st.rerun()
 
@@ -131,10 +137,18 @@ def render_quick_actions():
             recent_sims = simulations_data["simulations"][:5]
 
             sim_options = ["Select simulation..."]
-            sim_options.extend([f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}" for sim in recent_sims])
+            sim_options.extend(
+                [
+                    f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}"
+                    for sim in recent_sims
+                ]
+            )
 
             selected_sim = st.sidebar.selectbox(
-                "Quick Access:", options=sim_options, key="quick_sim_select", label_visibility="collapsed"
+                "Quick Access:",
+                options=sim_options,
+                key="quick_sim_select",
+                label_visibility="collapsed",
             )
 
             if selected_sim and selected_sim != "Select simulation...":

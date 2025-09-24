@@ -5,7 +5,6 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 
 
-
 class DLQEvent:
     """Value object representing an event in the Dead Letter Queue."""
 

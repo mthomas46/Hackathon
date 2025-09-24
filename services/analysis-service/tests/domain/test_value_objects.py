@@ -1,6 +1,5 @@
 """Tests for domain value objects."""
 
-
 import pytest
 
 from ...domain.value_objects.analysis_type import AnalysisType
@@ -57,7 +56,9 @@ class TestConfidenceValueObject:
         str_repr = str(confidence)
         assert "0.75" in str_repr
 
-    def test_confidence_comparison(self, confidence_high, confidence_medium, confidence_low):
+    def test_confidence_comparison(
+        self, confidence_high, confidence_medium, confidence_low
+    ):
         """Test confidence comparison operations."""
         assert confidence_high > confidence_medium
         assert confidence_medium > confidence_low
@@ -126,7 +127,13 @@ class TestLocationValueObjects:
     def test_code_location_validation(self):
         """Test code location validation."""
         # Valid location
-        location = CodeLocation(file_path="/src/file.py", start_line=10, end_line=15, start_column=5, end_column=20)
+        location = CodeLocation(
+            file_path="/src/file.py",
+            start_line=10,
+            end_line=15,
+            start_column=5,
+            end_column=20,
+        )
         assert location.start_line < location.end_line
         assert location.start_column < location.end_column
 
@@ -158,16 +165,22 @@ class TestAnalysisMetricsValueObject:
     def test_analysis_metrics_validation(self):
         """Test analysis metrics validation."""
         # Valid metrics
-        metrics = AnalysisMetrics(processing_time_seconds=5.0, memory_usage_mb=100.0, confidence_score=0.9)
+        metrics = AnalysisMetrics(
+            processing_time_seconds=5.0, memory_usage_mb=100.0, confidence_score=0.9
+        )
         assert metrics.processing_time_seconds == 5.0
 
         # Test negative values (should be allowed for metrics)
         metrics = AnalysisMetrics(
-            processing_time_seconds=-1.0, memory_usage_mb=0.0, confidence_score=0.5  # Might indicate error
+            processing_time_seconds=-1.0,
+            memory_usage_mb=0.0,
+            confidence_score=0.5,  # Might indicate error
         )
         assert metrics.processing_time_seconds == -1.0
 
-    def test_analysis_metrics_string_representation(self, analysis_metrics: AnalysisMetrics):
+    def test_analysis_metrics_string_representation(
+        self, analysis_metrics: AnalysisMetrics
+    ):
         """Test analysis metrics string representation."""
         str_repr = str(analysis_metrics)
         assert "3.5" in str_repr
@@ -197,12 +210,18 @@ class TestQualityMetricsValueObject:
         """Test quality metrics validation."""
         # Test boundary values
         metrics = QualityMetrics(
-            readability_score=0.0, complexity_score=0.0, maintainability_index=0.0, duplication_percentage=0.0
+            readability_score=0.0,
+            complexity_score=0.0,
+            maintainability_index=0.0,
+            duplication_percentage=0.0,
         )
         assert metrics.readability_score == 0.0
 
         metrics = QualityMetrics(
-            readability_score=100.0, complexity_score=100.0, maintainability_index=100.0, duplication_percentage=100.0
+            readability_score=100.0,
+            complexity_score=100.0,
+            maintainability_index=100.0,
+            duplication_percentage=100.0,
         )
         assert metrics.readability_score == 100.0
 
@@ -222,7 +241,9 @@ class TestQualityMetricsValueObject:
         # Duplication percentage is typically 0-100
         assert 0 <= metrics.duplication_percentage <= 100
 
-    def test_quality_metrics_string_representation(self, quality_metrics: QualityMetrics):
+    def test_quality_metrics_string_representation(
+        self, quality_metrics: QualityMetrics
+    ):
         """Test quality metrics string representation."""
         str_repr = str(quality_metrics)
         assert "85.0" in str_repr

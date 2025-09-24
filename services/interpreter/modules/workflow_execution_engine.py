@@ -62,12 +62,18 @@ class WorkflowExecutionEngine:
         }
 
     async def execute_workflow(
-        self, execution_plan: Dict[str, Any], user_id: str = None, callback: Callable = None, priority: str = "normal"
+        self,
+        execution_plan: Dict[str, Any],
+        user_id: str = None,
+        callback: Callable = None,
+        priority: str = "normal",
     ) -> Dict[str, Any]:
         """Execute a workflow with comprehensive monitoring and management."""
         try:
             # Generate execution ID
-            execution_id = f"exec_{int(datetime.utcnow().timestamp())}_{user_id or 'anon'}"
+            execution_id = (
+                f"exec_{int(datetime.utcnow().timestamp())}_{user_id or 'anon'}"
+            )
 
             # Check execution limits
             if len(self.active_executions) >= self.max_concurrent_executions:
@@ -96,7 +102,9 @@ class WorkflowExecutionEngine:
                 "error": str(e),
                 "error_type": type(e).__name__,
                 "timestamp": datetime.utcnow().isoformat(),
-                "recovery_suggestions": await self._generate_recovery_suggestions(execution_plan, str(e)),
+                "recovery_suggestions": await self._generate_recovery_suggestions(
+                    execution_plan, str(e)
+                ),
             }
 
             fire_and_forget(
@@ -109,7 +117,12 @@ class WorkflowExecutionEngine:
             return error_result
 
     async def _prepare_execution_context(
-        self, execution_id: str, execution_plan: Dict[str, Any], user_id: str, callback: Callable, priority: str
+        self,
+        execution_id: str,
+        execution_plan: Dict[str, Any],
+        user_id: str,
+        callback: Callable,
+        priority: str,
     ) -> Dict[str, Any]:
         """Prepare comprehensive execution context."""
         context = {
@@ -130,7 +143,9 @@ class WorkflowExecutionEngine:
             },
             "resources": {
                 "allocated_memory": 0,
-                "estimated_duration": execution_plan.get("estimated_duration", "unknown"),
+                "estimated_duration": execution_plan.get(
+                    "estimated_duration", "unknown"
+                ),
                 "services_allocated": [],
                 "dependencies_checked": False,
             },
@@ -143,16 +158,22 @@ class WorkflowExecutionEngine:
             "execution_metadata": {
                 "workflow_name": execution_plan.get("workflow_name", "unknown"),
                 "workflow_type": execution_plan.get("workflow_type", "unknown"),
-                "orchestrator_endpoint": execution_plan.get("orchestrator_endpoint", ""),
+                "orchestrator_endpoint": execution_plan.get(
+                    "orchestrator_endpoint", ""
+                ),
                 "execution_method": execution_plan.get("execution_method", "standard"),
                 "parameters": execution_plan.get("parameters", {}),
-                "interpreter_confidence": execution_plan.get("parameters", {}).get("interpreter_confidence", 0.0),
+                "interpreter_confidence": execution_plan.get("parameters", {}).get(
+                    "interpreter_confidence", 0.0
+                ),
             },
         }
 
         return context
 
-    async def _execute_workflow_async(self, execution_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_workflow_async(
+        self, execution_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute workflow asynchronously with monitoring."""
         execution_id = execution_context["execution_id"]
         execution_plan = execution_context["execution_plan"]
@@ -160,19 +181,29 @@ class WorkflowExecutionEngine:
         try:
             # Update status to preparing
             execution_context["status"] = ExecutionStatus.PREPARING
-            await self._log_execution_step(execution_id, "preparation_started", "Preparing workflow execution")
+            await self._log_execution_step(
+                execution_id, "preparation_started", "Preparing workflow execution"
+            )
 
             # Pre-execution checks
-            validation_result = await self._validate_execution_requirements(execution_context)
+            validation_result = await self._validate_execution_requirements(
+                execution_context
+            )
             if not validation_result["valid"]:
-                return await self._handle_validation_failure(execution_context, validation_result)
+                return await self._handle_validation_failure(
+                    execution_context, validation_result
+                )
 
             # Update status to executing
             execution_context["status"] = ExecutionStatus.EXECUTING
-            await self._log_execution_step(execution_id, "execution_started", "Starting workflow execution")
+            await self._log_execution_step(
+                execution_id, "execution_started", "Starting workflow execution"
+            )
 
             # Execute based on method
-            execution_method = execution_plan.get("execution_method", "orchestrator_standard")
+            execution_method = execution_plan.get(
+                "execution_method", "orchestrator_standard"
+            )
 
             if execution_method == "orchestrator_langgraph":
                 result = await self._execute_langgraph_workflow(execution_context)
@@ -184,12 +215,16 @@ class WorkflowExecutionEngine:
             await self._monitor_execution_completion(execution_context, result)
 
             # Enhance result with execution metadata
-            enhanced_result = await self._enhance_execution_result(execution_context, result)
+            enhanced_result = await self._enhance_execution_result(
+                execution_context, result
+            )
 
             # Update status to completed
             execution_context["status"] = ExecutionStatus.COMPLETED
             await self._log_execution_step(
-                execution_id, "execution_completed", "Workflow execution completed successfully"
+                execution_id,
+                "execution_completed",
+                "Workflow execution completed successfully",
             )
 
             return enhanced_result
@@ -201,9 +236,16 @@ class WorkflowExecutionEngine:
             execution_context["status"] = ExecutionStatus.FAILED
             return await self._handle_execution_error(execution_context, e)
 
-    async def _validate_execution_requirements(self, execution_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_execution_requirements(
+        self, execution_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Validate all requirements for workflow execution."""
-        validation_result = {"valid": True, "issues": [], "warnings": [], "requirements_checked": []}
+        validation_result = {
+            "valid": True,
+            "issues": [],
+            "warnings": [],
+            "requirements_checked": [],
+        }
 
         execution_plan = execution_context["execution_plan"]
 
@@ -214,34 +256,50 @@ class WorkflowExecutionEngine:
                 # Quick health check for service
                 service_health = await ecosystem_context.check_service_health(service)
                 if not service_health.get("healthy", False):
-                    validation_result["issues"].append(f"Service {service} is not healthy")
+                    validation_result["issues"].append(
+                        f"Service {service} is not healthy"
+                    )
                     validation_result["valid"] = False
                 else:
-                    validation_result["requirements_checked"].append(f"{service}_health")
+                    validation_result["requirements_checked"].append(
+                        f"{service}_health"
+                    )
             except Exception as e:
-                validation_result["warnings"].append(f"Could not verify {service} health: {str(e)}")
+                validation_result["warnings"].append(
+                    f"Could not verify {service} health: {str(e)}"
+                )
 
         # Check parameter completeness
         parameters = execution_plan.get("parameters", {})
-        required_params = await self._get_required_parameters(execution_plan.get("workflow_name", ""))
+        required_params = await self._get_required_parameters(
+            execution_plan.get("workflow_name", "")
+        )
 
         for param in required_params:
             if param not in parameters or not parameters[param]:
-                validation_result["issues"].append(f"Required parameter '{param}' is missing or empty")
+                validation_result["issues"].append(
+                    f"Required parameter '{param}' is missing or empty"
+                )
                 validation_result["valid"] = False
             else:
                 validation_result["requirements_checked"].append(f"parameter_{param}")
 
         # Check orchestrator availability
         try:
-            orchestrator_health = await orchestrator_integration.check_orchestrator_health()
+            orchestrator_health = (
+                await orchestrator_integration.check_orchestrator_health()
+            )
             if not orchestrator_health.get("healthy", False):
-                validation_result["issues"].append("Orchestrator service is not available")
+                validation_result["issues"].append(
+                    "Orchestrator service is not available"
+                )
                 validation_result["valid"] = False
             else:
                 validation_result["requirements_checked"].append("orchestrator_health")
         except Exception as e:
-            validation_result["issues"].append(f"Could not verify orchestrator health: {str(e)}")
+            validation_result["issues"].append(
+                f"Could not verify orchestrator health: {str(e)}"
+            )
             validation_result["valid"] = False
 
         # Check execution capacity
@@ -253,7 +311,9 @@ class WorkflowExecutionEngine:
 
         return validation_result
 
-    async def _execute_langgraph_workflow(self, execution_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_langgraph_workflow(
+        self, execution_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute LangGraph workflow through orchestrator."""
         execution_plan = execution_context["execution_plan"]
         user_id = execution_context["user_id"]
@@ -266,16 +326,22 @@ class WorkflowExecutionEngine:
         parameters["interpreter_source"] = True
 
         # Execute through orchestrator integration
-        result = await orchestrator_integration.execute_langgraph_workflow(workflow_type, parameters, user_id)
+        result = await orchestrator_integration.execute_langgraph_workflow(
+            workflow_type, parameters, user_id
+        )
 
         # Track execution steps
         await self._log_execution_step(
-            execution_context["execution_id"], "langgraph_execution", f"Executed LangGraph workflow: {workflow_type}"
+            execution_context["execution_id"],
+            "langgraph_execution",
+            f"Executed LangGraph workflow: {workflow_type}",
         )
 
         return result
 
-    async def _execute_standard_workflow(self, execution_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_standard_workflow(
+        self, execution_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute standard workflow through orchestrator."""
         execution_plan = execution_context["execution_plan"]
         user_id = execution_context["user_id"]
@@ -288,16 +354,22 @@ class WorkflowExecutionEngine:
         parameters["interpreter_source"] = True
 
         # Execute through orchestrator integration
-        result = await orchestrator_integration.execute_workflow(workflow_name, parameters, user_id)
+        result = await orchestrator_integration.execute_workflow(
+            workflow_name, parameters, user_id
+        )
 
         # Track execution steps
         await self._log_execution_step(
-            execution_context["execution_id"], "standard_execution", f"Executed standard workflow: {workflow_name}"
+            execution_context["execution_id"],
+            "standard_execution",
+            f"Executed standard workflow: {workflow_name}",
         )
 
         return result
 
-    async def _monitor_execution_completion(self, execution_context: Dict[str, Any], result: Dict[str, Any]):
+    async def _monitor_execution_completion(
+        self, execution_context: Dict[str, Any], result: Dict[str, Any]
+    ):
         """Monitor workflow execution for completion."""
         execution_context["execution_id"]
 
@@ -306,7 +378,9 @@ class WorkflowExecutionEngine:
             workflow_execution_id = result.get("workflow_execution_id")
             if workflow_execution_id:
                 # Monitor the workflow execution
-                await self._monitor_async_workflow(execution_context, workflow_execution_id)
+                await self._monitor_async_workflow(
+                    execution_context, workflow_execution_id
+                )
 
         # Update monitoring metrics
         execution_context["monitoring"]["last_heartbeat"] = datetime.utcnow()
@@ -318,7 +392,9 @@ class WorkflowExecutionEngine:
             }
         )
 
-    async def _monitor_async_workflow(self, execution_context: Dict[str, Any], workflow_execution_id: str):
+    async def _monitor_async_workflow(
+        self, execution_context: Dict[str, Any], workflow_execution_id: str
+    ):
         """Monitor asynchronous workflow execution."""
         execution_id = execution_context["execution_id"]
         max_monitoring_time = timedelta(minutes=30)
@@ -327,20 +403,28 @@ class WorkflowExecutionEngine:
         while datetime.utcnow() - start_time < max_monitoring_time:
             try:
                 # Check workflow status
-                status_result = await orchestrator_integration.get_workflow_status(workflow_execution_id)
+                status_result = await orchestrator_integration.get_workflow_status(
+                    workflow_execution_id
+                )
 
                 if status_result.get("status") == "completed":
-                    await self._log_execution_step(execution_id, "async_completed", "Async workflow completed")
+                    await self._log_execution_step(
+                        execution_id, "async_completed", "Async workflow completed"
+                    )
                     break
                 elif status_result.get("status") == "failed":
-                    await self._log_execution_step(execution_id, "async_failed", "Async workflow failed")
+                    await self._log_execution_step(
+                        execution_id, "async_failed", "Async workflow failed"
+                    )
                     break
 
                 # Wait before next check
                 await asyncio.sleep(self.monitoring_interval)
 
             except Exception as e:
-                await self._log_execution_step(execution_id, "monitoring_error", f"Monitoring error: {str(e)}")
+                await self._log_execution_step(
+                    execution_id, "monitoring_error", f"Monitoring error: {str(e)}"
+                )
                 break
 
     async def _enhance_execution_result(
@@ -368,30 +452,42 @@ class WorkflowExecutionEngine:
 
         # Add performance metrics
         enhanced_result["performance_metrics"] = {
-            "execution_efficiency": await self._calculate_execution_efficiency(execution_context),
-            "resource_utilization": await self._calculate_resource_utilization(execution_context),
-            "workflow_score": await self._calculate_workflow_score(execution_context, result),
+            "execution_efficiency": await self._calculate_execution_efficiency(
+                execution_context
+            ),
+            "resource_utilization": await self._calculate_resource_utilization(
+                execution_context
+            ),
+            "workflow_score": await self._calculate_workflow_score(
+                execution_context, result
+            ),
         }
 
         # Add follow-up recommendations
-        enhanced_result["recommendations"] = await self._generate_execution_recommendations(execution_context, result)
+        enhanced_result["recommendations"] = (
+            await self._generate_execution_recommendations(execution_context, result)
+        )
 
         # Add conversation context updates
         if execution_context["user_id"]:
-            enhanced_result["conversation_updates"] = await self._prepare_conversation_updates(
-                execution_context, result
+            enhanced_result["conversation_updates"] = (
+                await self._prepare_conversation_updates(execution_context, result)
             )
 
         return enhanced_result
 
-    async def _calculate_execution_efficiency(self, execution_context: Dict[str, Any]) -> float:
+    async def _calculate_execution_efficiency(
+        self, execution_context: Dict[str, Any]
+    ) -> float:
         """Calculate execution efficiency score."""
         start_time = execution_context["start_time"]
         end_time = datetime.utcnow()
         actual_duration = (end_time - start_time).total_seconds()
 
         # Get estimated duration
-        estimated_duration_str = execution_context["execution_metadata"].get("estimated_duration", "5-10 minutes")
+        estimated_duration_str = execution_context["execution_metadata"].get(
+            "estimated_duration", "5-10 minutes"
+        )
         estimated_seconds = await self._parse_duration_estimate(estimated_duration_str)
 
         if estimated_seconds <= 0:
@@ -401,19 +497,26 @@ class WorkflowExecutionEngine:
         efficiency = min(estimated_seconds / actual_duration, 1.0)
         return max(efficiency, 0.1)  # Minimum efficiency of 0.1
 
-    async def _calculate_resource_utilization(self, execution_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _calculate_resource_utilization(
+        self, execution_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Calculate resource utilization metrics."""
-        services_involved = execution_context["execution_plan"].get("services_involved", [])
+        services_involved = execution_context["execution_plan"].get(
+            "services_involved", []
+        )
 
         return {
             "services_count": len(services_involved),
             "concurrent_executions": len(self.active_executions),
             "max_concurrent_capacity": self.max_concurrent_executions,
-            "capacity_utilization": len(self.active_executions) / self.max_concurrent_executions,
+            "capacity_utilization": len(self.active_executions)
+            / self.max_concurrent_executions,
             "services_utilized": services_involved,
         }
 
-    async def _calculate_workflow_score(self, execution_context: Dict[str, Any], result: Dict[str, Any]) -> float:
+    async def _calculate_workflow_score(
+        self, execution_context: Dict[str, Any], result: Dict[str, Any]
+    ) -> float:
         """Calculate overall workflow execution score."""
         score = 0.0
 
@@ -424,7 +527,9 @@ class WorkflowExecutionEngine:
             score += 0.3
 
         # Confidence factor (20%)
-        interpreter_confidence = execution_context["execution_metadata"].get("interpreter_confidence", 0.0)
+        interpreter_confidence = execution_context["execution_metadata"].get(
+            "interpreter_confidence", 0.0
+        )
         score += interpreter_confidence * 0.2
 
         # Efficiency factor (20%)
@@ -511,15 +616,25 @@ class WorkflowExecutionEngine:
     ) -> Dict[str, Any]:
         """Prepare conversation context updates."""
         return {
-            "workflow_completed": execution_context["execution_metadata"]["workflow_name"],
+            "workflow_completed": execution_context["execution_metadata"][
+                "workflow_name"
+            ],
             "execution_status": result.get("status", "unknown"),
-            "services_used": execution_context["execution_plan"].get("services_involved", []),
-            "execution_duration": (datetime.utcnow() - execution_context["start_time"]).total_seconds(),
-            "confidence_achieved": execution_context["execution_metadata"].get("interpreter_confidence", 0.0),
+            "services_used": execution_context["execution_plan"].get(
+                "services_involved", []
+            ),
+            "execution_duration": (
+                datetime.utcnow() - execution_context["start_time"]
+            ).total_seconds(),
+            "confidence_achieved": execution_context["execution_metadata"].get(
+                "interpreter_confidence", 0.0
+            ),
             "should_update_preferences": result.get("status") == "success",
         }
 
-    async def _log_execution_step(self, execution_id: str, step_type: str, message: str):
+    async def _log_execution_step(
+        self, execution_id: str, step_type: str, message: str
+    ):
         """Log execution step for monitoring."""
         if execution_id in self.active_executions:
             log_entry = {
@@ -529,7 +644,9 @@ class WorkflowExecutionEngine:
                 "execution_id": execution_id,
             }
 
-            self.active_executions[execution_id]["monitoring"]["log_entries"].append(log_entry)
+            self.active_executions[execution_id]["monitoring"]["log_entries"].append(
+                log_entry
+            )
 
             fire_and_forget(
                 "workflow_execution_step",
@@ -538,7 +655,9 @@ class WorkflowExecutionEngine:
                 {"execution_id": execution_id, "step_type": step_type},
             )
 
-    async def _finalize_execution(self, execution_id: str, execution_result: Dict[str, Any]):
+    async def _finalize_execution(
+        self, execution_id: str, execution_result: Dict[str, Any]
+    ):
         """Finalize execution and cleanup."""
         if execution_id in self.active_executions:
             execution_context = self.active_executions[execution_id]
@@ -551,7 +670,9 @@ class WorkflowExecutionEngine:
                 self.execution_metrics["failed_executions"] += 1
 
             # Update average execution time
-            execution_duration = (datetime.utcnow() - execution_context["start_time"]).total_seconds()
+            execution_duration = (
+                datetime.utcnow() - execution_context["start_time"]
+            ).total_seconds()
             current_avg = self.execution_metrics["average_execution_time"]
             total_execs = self.execution_metrics["total_executions"]
             self.execution_metrics["average_execution_time"] = (
@@ -567,7 +688,9 @@ class WorkflowExecutionEngine:
                     "average_duration": 0.0,
                 }
 
-            workflow_perf = self.execution_metrics["workflow_performance"][workflow_name]
+            workflow_perf = self.execution_metrics["workflow_performance"][
+                workflow_name
+            ]
             workflow_perf["executions"] += 1
             if execution_result.get("status") == "success":
                 workflow_perf["successes"] += 1
@@ -604,7 +727,9 @@ class WorkflowExecutionEngine:
                         {"execution_id": execution_id, "error": str(e)},
                     )
 
-    async def _handle_execution_queue_full(self, execution_plan: Dict[str, Any], user_id: str) -> Dict[str, Any]:
+    async def _handle_execution_queue_full(
+        self, execution_plan: Dict[str, Any], user_id: str
+    ) -> Dict[str, Any]:
         """Handle case when execution queue is full."""
         return {
             "status": "queued",
@@ -636,7 +761,9 @@ class WorkflowExecutionEngine:
             ],
         }
 
-    async def _handle_execution_timeout(self, execution_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _handle_execution_timeout(
+        self, execution_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle execution timeout."""
         return {
             "status": "timeout",
@@ -652,7 +779,9 @@ class WorkflowExecutionEngine:
             ],
         }
 
-    async def _handle_execution_error(self, execution_context: Dict[str, Any], error: Exception) -> Dict[str, Any]:
+    async def _handle_execution_error(
+        self, execution_context: Dict[str, Any], error: Exception
+    ) -> Dict[str, Any]:
         """Handle execution error."""
         return {
             "status": "failed",
@@ -665,7 +794,9 @@ class WorkflowExecutionEngine:
             ),
         }
 
-    async def _generate_recovery_suggestions(self, execution_plan: Dict[str, Any], error_message: str) -> List[str]:
+    async def _generate_recovery_suggestions(
+        self, execution_plan: Dict[str, Any], error_message: str
+    ) -> List[str]:
         """Generate recovery suggestions based on error."""
         suggestions = []
 
@@ -770,7 +901,9 @@ class WorkflowExecutionEngine:
                 "status": context["status"].value,
                 "progress": context["progress"],
                 "start_time": context["start_time"].isoformat(),
-                "elapsed_time": (datetime.utcnow() - context["start_time"]).total_seconds(),
+                "elapsed_time": (
+                    datetime.utcnow() - context["start_time"]
+                ).total_seconds(),
                 "workflow_name": context["execution_metadata"]["workflow_name"],
                 "user_id": context["user_id"],
                 "monitoring": context["monitoring"],
@@ -784,7 +917,9 @@ class WorkflowExecutionEngine:
                     "status": execution["status"].value,
                     "progress": execution["progress"],
                     "start_time": execution["start_time"].isoformat(),
-                    "end_time": execution.get("end_time", datetime.utcnow()).isoformat(),
+                    "end_time": execution.get(
+                        "end_time", datetime.utcnow()
+                    ).isoformat(),
                     "final_result": execution.get("final_result", {}),
                     "workflow_name": execution["execution_metadata"]["workflow_name"],
                 }
@@ -795,29 +930,43 @@ class WorkflowExecutionEngine:
             "message": "Execution not found in active or historical records",
         }
 
-    async def cancel_execution(self, execution_id: str, user_id: str = None) -> Dict[str, Any]:
+    async def cancel_execution(
+        self, execution_id: str, user_id: str = None
+    ) -> Dict[str, Any]:
         """Cancel an active execution."""
         if execution_id not in self.active_executions:
-            return {"status": "error", "message": "Execution not found or already completed"}
+            return {
+                "status": "error",
+                "message": "Execution not found or already completed",
+            }
 
         context = self.active_executions[execution_id]
 
         # Check authorization
         if user_id and context["user_id"] != user_id:
-            return {"status": "error", "message": "Not authorized to cancel this execution"}
+            return {
+                "status": "error",
+                "message": "Not authorized to cancel this execution",
+            }
 
         # Update status
         context["status"] = ExecutionStatus.CANCELLED
         context["end_time"] = datetime.utcnow()
 
         # Log cancellation
-        await self._log_execution_step(execution_id, "execution_cancelled", "Execution cancelled by user")
+        await self._log_execution_step(
+            execution_id, "execution_cancelled", "Execution cancelled by user"
+        )
 
         # Move to history
         self.execution_history.append(context)
         del self.active_executions[execution_id]
 
-        return {"status": "success", "message": "Execution cancelled successfully", "execution_id": execution_id}
+        return {
+            "status": "success",
+            "message": "Execution cancelled successfully",
+            "execution_id": execution_id,
+        }
 
     async def get_execution_metrics(self) -> Dict[str, Any]:
         """Get execution engine metrics."""
@@ -825,11 +974,13 @@ class WorkflowExecutionEngine:
             "execution_metrics": self.execution_metrics,
             "active_executions": len(self.active_executions),
             "max_concurrent_executions": self.max_concurrent_executions,
-            "capacity_utilization": len(self.active_executions) / self.max_concurrent_executions,
+            "capacity_utilization": len(self.active_executions)
+            / self.max_concurrent_executions,
             "execution_history_size": len(self.execution_history),
             "average_execution_time": self.execution_metrics["average_execution_time"],
             "success_rate": (
-                self.execution_metrics["successful_executions"] / max(self.execution_metrics["total_executions"], 1)
+                self.execution_metrics["successful_executions"]
+                / max(self.execution_metrics["total_executions"], 1)
             ),
         }
 

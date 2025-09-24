@@ -149,7 +149,9 @@ class TeamMemberEntity:
 
         return has_skill or has_expertise
 
-    def get_productivity_for_task(self, task_type: str, complexity: str = "medium") -> float:
+    def get_productivity_for_task(
+        self, task_type: str, complexity: str = "medium"
+    ) -> float:
         """Get productivity multiplier for a specific task."""
         base_productivity = self.productivity_multiplier
 
@@ -181,7 +183,11 @@ class TeamMemberEntity:
 
     def is_high_performer(self) -> bool:
         """Check if member is a high performer."""
-        return self.productivity_multiplier >= 1.2 and self.morale_level.value >= 70 and self.burnout_risk.value <= 30
+        return (
+            self.productivity_multiplier >= 1.2
+            and self.morale_level.value >= 70
+            and self.burnout_risk.value <= 30
+        )
 
     def needs_attention(self) -> bool:
         """Check if member needs attention (low morale or high burnout risk)."""
@@ -202,12 +208,18 @@ class TeamDynamics:
 
     communication_score: Percentage = field(default_factory=lambda: Percentage(75))
     collaboration_score: Percentage = field(default_factory=lambda: Percentage(70))
-    conflict_resolution_score: Percentage = field(default_factory=lambda: Percentage(65))
+    conflict_resolution_score: Percentage = field(
+        default_factory=lambda: Percentage(65)
+    )
     trust_level: Percentage = field(default_factory=lambda: Percentage(80))
     last_assessment: datetime = field(default_factory=datetime.now)
 
     def update_scores(
-        self, communication: float, collaboration: float, conflict_resolution: float, trust: float
+        self,
+        communication: float,
+        collaboration: float,
+        conflict_resolution: float,
+        trust: float,
     ) -> None:
         """Update all dynamic scores."""
         self.communication_score = Percentage(communication)
@@ -267,7 +279,12 @@ class Team:
         self.updated_at = datetime.now()
 
         self._add_domain_event(
-            TeamMemberAdded(project_id=self.project_id, member_id=member.id, member_name=member.name, role=member.role)
+            TeamMemberAdded(
+                project_id=self.project_id,
+                member_id=member.id,
+                member_name=member.name,
+                role=member.role,
+            )
         )
 
     def remove_member(self, member_id: str) -> None:
@@ -277,7 +294,9 @@ class Team:
         self.updated_at = datetime.now()
 
         self._add_domain_event(
-            TeamMemberRemoved(project_id=self.project_id, member_id=member.id, member_name=member.name)
+            TeamMemberRemoved(
+                project_id=self.project_id, member_id=member.id, member_name=member.name
+            )
         )
 
     def add_role(self, role: TeamRole) -> None:
@@ -293,7 +312,9 @@ class Team:
         role = self._get_role(role_name)
 
         if not role.matches_member(member):
-            raise ValueError(f"Member {member.name} does not match requirements for role {role_name}")
+            raise ValueError(
+                f"Member {member.name} does not match requirements for role {role_name}"
+            )
 
         member.role = role_name
         self.updated_at = datetime.now()
@@ -302,9 +323,13 @@ class Team:
         """Get all members with a specific role."""
         return [member for member in self.members if member.role == role_name]
 
-    def get_members_by_expertise(self, expertise: ExpertiseLevel) -> List[TeamMemberEntity]:
+    def get_members_by_expertise(
+        self, expertise: ExpertiseLevel
+    ) -> List[TeamMemberEntity]:
         """Get all members with a specific expertise level."""
-        return [member for member in self.members if member.expertise_level == expertise]
+        return [
+            member for member in self.members if member.expertise_level == expertise
+        ]
 
     def get_high_performers(self) -> List[TeamMemberEntity]:
         """Get all high-performing team members."""
@@ -333,25 +358,42 @@ class Team:
 
         # Simple assessment algorithm
         avg_morale = sum(m.morale_level.value for m in self.members) / len(self.members)
-        avg_burnout = sum(m.burnout_risk.value for m in self.members) / len(self.members)
+        avg_burnout = sum(m.burnout_risk.value for m in self.members) / len(
+            self.members
+        )
 
         # Communication score based on diversity and collaboration styles
         communication_styles = [m.communication_style for m in self.members]
-        communication_diversity = len(set(communication_styles)) / len(communication_styles)
-        communication_score = 100 - (communication_diversity * 20)  # Less diversity = better communication
+        communication_diversity = len(set(communication_styles)) / len(
+            communication_styles
+        )
+        communication_score = 100 - (
+            communication_diversity * 20
+        )  # Less diversity = better communication
 
         # Collaboration score based on work styles
-        team_players = sum(1 for m in self.members if m.work_style == WorkStyle.TEAM_PLAYER)
+        team_players = sum(
+            1 for m in self.members if m.work_style == WorkStyle.TEAM_PLAYER
+        )
         collaboration_score = (team_players / len(self.members)) * 100
 
         # Conflict resolution based on supportive members
-        supportive_members = sum(1 for m in self.members if m.communication_style == CommunicationStyle.SUPPORTIVE)
+        supportive_members = sum(
+            1
+            for m in self.members
+            if m.communication_style == CommunicationStyle.SUPPORTIVE
+        )
         conflict_resolution_score = (supportive_members / len(self.members)) * 100
 
         # Trust level based on overall team health
         trust_score = (avg_morale + (100 - avg_burnout)) / 2
 
-        self.dynamics.update_scores(communication_score, collaboration_score, conflict_resolution_score, trust_score)
+        self.dynamics.update_scores(
+            communication_score,
+            collaboration_score,
+            conflict_resolution_score,
+            trust_score,
+        )
         self.updated_at = datetime.now()
 
     def get_team_productivity(self) -> float:
@@ -359,7 +401,9 @@ class Team:
         if not self.members:
             return 0.0
 
-        total_productivity = sum(member.productivity_multiplier for member in self.members)
+        total_productivity = sum(
+            member.productivity_multiplier for member in self.members
+        )
         return total_productivity / len(self.members)
 
     def get_team_morale(self) -> Percentage:
@@ -375,7 +419,9 @@ class Team:
         if not self.members:
             return Percentage(0)
 
-        avg_burnout = sum(m.burnout_risk.value for m in self.members) / len(self.members)
+        avg_burnout = sum(m.burnout_risk.value for m in self.members) / len(
+            self.members
+        )
         return Percentage(avg_burnout)
 
     def is_team_healthy(self) -> bool:
@@ -389,7 +435,9 @@ class Team:
     def get_optimal_team_size(self) -> int:
         """Get optimal team size based on current dynamics."""
         base_size = 5
-        health_adjustment = int(self.dynamics.get_overall_health().value / 20) - 2  # -2 to +3
+        health_adjustment = (
+            int(self.dynamics.get_overall_health().value / 20) - 2
+        )  # -2 to +3
         return max(3, min(15, base_size + health_adjustment))
 
     def _get_member(self, member_id: str) -> TeamMemberEntity:

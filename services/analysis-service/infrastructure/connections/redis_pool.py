@@ -47,7 +47,9 @@ class RedisConnectionPool(ConnectionPool):
 
                 self.aioredis = redis
             except ImportError:
-                raise ImportError("redis or redis-py is required for Redis connection pooling")
+                raise ImportError(
+                    "redis or redis-py is required for Redis connection pooling"
+                )
 
     async def create_connection(self) -> Any:
         """Create Redis connection."""
@@ -172,9 +174,13 @@ class RedisConnectionPool(ConnectionPool):
         """Add members to sorted set."""
         return await self.execute_command("ZADD", key, mapping)
 
-    async def zrange(self, key: str, start: int, end: int, withscores: bool = False) -> List[str]:
+    async def zrange(
+        self, key: str, start: int, end: int, withscores: bool = False
+    ) -> List[str]:
         """Get range from sorted set."""
-        return await self.execute_command("ZRANGE", key, start, end, withscores=withscores)
+        return await self.execute_command(
+            "ZRANGE", key, start, end, withscores=withscores
+        )
 
     async def zrem(self, key: str, *members: str) -> int:
         """Remove members from sorted set."""
@@ -220,7 +226,9 @@ class RedisClusterConnectionPool(ConnectionPool):
 
                 self.RedisCluster = RedisCluster
             except ImportError:
-                raise ImportError("redis-py-cluster is required for Redis Cluster connection pooling")
+                raise ImportError(
+                    "redis-py-cluster is required for Redis Cluster connection pooling"
+                )
 
     async def create_connection(self) -> Any:
         """Create Redis Cluster connection."""
@@ -228,7 +236,11 @@ class RedisClusterConnectionPool(ConnectionPool):
         loop = asyncio.get_event_loop()
 
         def _create_cluster():
-            return self.RedisCluster(startup_nodes=self.startup_nodes, password=self.password, **self.cluster_kwargs)
+            return self.RedisCluster(
+                startup_nodes=self.startup_nodes,
+                password=self.password,
+                **self.cluster_kwargs,
+            )
 
         return await loop.run_in_executor(None, _create_cluster)
 
@@ -294,12 +306,16 @@ class RedisSentinelConnectionPool(ConnectionPool):
 
             self.Sentinel = Sentinel
         except ImportError:
-            raise ImportError("redis-py is required for Redis Sentinel connection pooling")
+            raise ImportError(
+                "redis-py is required for Redis Sentinel connection pooling"
+            )
 
     async def create_connection(self) -> Any:
         """Create Redis Sentinel connection."""
         sentinel = self.Sentinel(
-            [(s["host"], s["port"]) for s in self.sentinels], password=self.password, **self.sentinel_kwargs
+            [(s["host"], s["port"]) for s in self.sentinels],
+            password=self.password,
+            **self.sentinel_kwargs,
         )
 
         # Get master connection
@@ -342,9 +358,13 @@ class RedisPoolFactory:
         **kwargs,
     ) -> RedisConnectionPool:
         """Create single Redis node connection pool."""
-        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=30.0)
+        config = ConnectionPoolConfig(
+            min_size=1, max_size=max_connections, acquire_timeout=30.0
+        )
 
-        return RedisConnectionPool(config=config, host=host, port=port, db=db, password=password, **kwargs)
+        return RedisConnectionPool(
+            config=config, host=host, port=port, db=db, password=password, **kwargs
+        )
 
     @staticmethod
     def create_cluster_pool(
@@ -354,9 +374,13 @@ class RedisPoolFactory:
         **kwargs,
     ) -> RedisClusterConnectionPool:
         """Create Redis Cluster connection pool."""
-        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=30.0)
+        config = ConnectionPoolConfig(
+            min_size=1, max_size=max_connections, acquire_timeout=30.0
+        )
 
-        return RedisClusterConnectionPool(config=config, startup_nodes=startup_nodes, password=password, **kwargs)
+        return RedisClusterConnectionPool(
+            config=config, startup_nodes=startup_nodes, password=password, **kwargs
+        )
 
     @staticmethod
     def create_sentinel_pool(
@@ -367,14 +391,22 @@ class RedisPoolFactory:
         **kwargs,
     ) -> RedisSentinelConnectionPool:
         """Create Redis Sentinel connection pool."""
-        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=30.0)
+        config = ConnectionPoolConfig(
+            min_size=1, max_size=max_connections, acquire_timeout=30.0
+        )
 
         return RedisSentinelConnectionPool(
-            config=config, sentinels=sentinels, service_name=service_name, password=password, **kwargs
+            config=config,
+            sentinels=sentinels,
+            service_name=service_name,
+            password=password,
+            **kwargs,
         )
 
     @staticmethod
-    def create_pool_from_url(redis_url: str, max_connections: int = 20) -> RedisConnectionPool:
+    def create_pool_from_url(
+        redis_url: str, max_connections: int = 20
+    ) -> RedisConnectionPool:
         """Create Redis pool from connection URL."""
         # Parse Redis URL (redis://[:password@]host[:port][/db])
         if redis_url.startswith("redis://"):
@@ -404,7 +436,11 @@ class RedisPoolFactory:
                 port = 6379
 
             return RedisPoolFactory.create_single_node_pool(
-                host=host, port=port, db=db, password=password, max_connections=max_connections
+                host=host,
+                port=port,
+                db=db,
+                password=password,
+                max_connections=max_connections,
             )
 
         elif redis_url.startswith("redis-cluster://"):

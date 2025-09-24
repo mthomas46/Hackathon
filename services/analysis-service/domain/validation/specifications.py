@@ -36,7 +36,9 @@ class AndSpecification(Specification):
 
     def is_satisfied_by(self, candidate: Any) -> bool:
         """Check if candidate satisfies both specifications."""
-        return self.left.is_satisfied_by(candidate) and self.right.is_satisfied_by(candidate)
+        return self.left.is_satisfied_by(candidate) and self.right.is_satisfied_by(
+            candidate
+        )
 
 
 class OrSpecification(Specification):
@@ -49,7 +51,9 @@ class OrSpecification(Specification):
 
     def is_satisfied_by(self, candidate: Any) -> bool:
         """Check if candidate satisfies either specification."""
-        return self.left.is_satisfied_by(candidate) or self.right.is_satisfied_by(candidate)
+        return self.left.is_satisfied_by(candidate) or self.right.is_satisfied_by(
+            candidate
+        )
 
 
 class NotSpecification(Specification):

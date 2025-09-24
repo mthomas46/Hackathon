@@ -16,7 +16,9 @@ SECURITY_PATTERNS = [
 ]
 
 
-def scan_for_sensitive_content(content: str, additional_keywords: List[str] = None) -> dict:
+def scan_for_sensitive_content(
+    content: str, additional_keywords: List[str] = None
+) -> dict:
     """Scan content for sensitive information and return findings.
 
     Args:

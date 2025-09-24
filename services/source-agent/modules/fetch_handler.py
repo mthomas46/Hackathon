@@ -32,7 +32,8 @@ class FetchHandler:
             try:
                 clients = ServiceClients(timeout=20)
                 mcp_resp = await clients.post_json(
-                    "github-mcp/tools/github.get_repo/invoke", {"arguments": {"owner": owner, "repo": repo}}
+                    "github-mcp/tools/github.get_repo/invoke",
+                    {"arguments": {"owner": owner, "repo": repo}},
                 )
                 result = (mcp_resp or {}).get("result", {})
                 f"{result.get('full_name', f'{owner}/{repo}')}"
@@ -40,7 +41,13 @@ class FetchHandler:
                 doc = build_readme_doc(owner, repo, content)
                 context = build_source_agent_context("fetch", req.source, doc.id)
                 return create_source_agent_success_response(
-                    "retrieved", {"document": doc.model_dump(), "source": req.source, "via": "github-mcp"}, **context
+                    "retrieved",
+                    {
+                        "document": doc.model_dump(),
+                        "source": req.source,
+                        "via": "github-mcp",
+                    },
+                    **context,
                 )
             except Exception:
                 # Fallback to direct GitHub fetch below

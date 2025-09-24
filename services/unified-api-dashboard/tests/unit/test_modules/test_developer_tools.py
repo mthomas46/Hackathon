@@ -25,7 +25,9 @@ class TestClientCodeGenerator:
     @pytest.mark.asyncio
     async def test_generate_client_python(self, client_generator, sample_openapi_spec):
         """Test Python client generation."""
-        client_code = await client_generator.generate_client("test-service", sample_openapi_spec, "python")
+        client_code = await client_generator.generate_client(
+            "test-service", sample_openapi_spec, "python"
+        )
 
         assert "class TestServiceClient" in client_code
         assert "def get_health" in client_code
@@ -33,9 +35,13 @@ class TestClientCodeGenerator:
         assert "def create_user" in client_code
 
     @pytest.mark.asyncio
-    async def test_generate_client_typescript(self, client_generator, sample_openapi_spec):
+    async def test_generate_client_typescript(
+        self, client_generator, sample_openapi_spec
+    ):
         """Test TypeScript client generation."""
-        client_code = await client_generator.generate_client("test-service", sample_openapi_spec, "typescript")
+        client_code = await client_generator.generate_client(
+            "test-service", sample_openapi_spec, "typescript"
+        )
 
         assert "class TestServiceClient" in client_code
         assert "async getHealth" in client_code
@@ -45,7 +51,9 @@ class TestClientCodeGenerator:
     @pytest.mark.asyncio
     async def test_generate_client_go(self, client_generator, sample_openapi_spec):
         """Test Go client generation."""
-        client_code = await client_generator.generate_client("test-service", sample_openapi_spec, "go")
+        client_code = await client_generator.generate_client(
+            "test-service", sample_openapi_spec, "go"
+        )
 
         assert "type TestServiceClient" in client_code
         assert "func (c *TestServiceClient) GetHealth" in client_code
@@ -54,7 +62,9 @@ class TestClientCodeGenerator:
     @pytest.mark.asyncio
     async def test_generate_client_java(self, client_generator, sample_openapi_spec):
         """Test Java client generation."""
-        client_code = await client_generator.generate_client("test-service", sample_openapi_spec, "java")
+        client_code = await client_generator.generate_client(
+            "test-service", sample_openapi_spec, "java"
+        )
 
         assert "public class TestServiceClient" in client_code
         assert "public void getHealth" in client_code
@@ -63,10 +73,14 @@ class TestClientCodeGenerator:
     @pytest.mark.asyncio
     async def test_generate_all_clients(self, client_generator, sample_openapi_spec):
         """Test generating clients for all supported languages."""
-        with patch.object(client_generator, "generate_client", new_callable=AsyncMock) as mock_gen:
+        with patch.object(
+            client_generator, "generate_client", new_callable=AsyncMock
+        ) as mock_gen:
             mock_gen.return_value = "// Generated client code"
 
-            clients = await client_generator.generate_all_clients("test-service", sample_openapi_spec)
+            clients = await client_generator.generate_all_clients(
+                "test-service", sample_openapi_spec
+            )
 
             assert "python" in clients
             assert "typescript" in clients
@@ -89,7 +103,9 @@ class TestClient:
         return "test"
 """
 
-        is_valid, errors = await client_generator.validate_generated_client(client_code, "python")
+        is_valid, errors = await client_generator.validate_generated_client(
+            client_code, "python"
+        )
 
         # Basic validation - should pass for syntactically correct code
         assert is_valid or len(errors) == 0  # Either valid or no critical errors
@@ -104,9 +120,13 @@ class TestAPIValidator:
         return APIValidator(mock_discovery_client, mock_api_catalog)
 
     @pytest.mark.asyncio
-    async def test_validate_openapi_spec_valid(self, api_validator, sample_openapi_spec):
+    async def test_validate_openapi_spec_valid(
+        self, api_validator, sample_openapi_spec
+    ):
         """Test validation of valid OpenAPI spec."""
-        is_valid, errors, warnings = await api_validator.validate_openapi_spec(sample_openapi_spec)
+        is_valid, errors, warnings = await api_validator.validate_openapi_spec(
+            sample_openapi_spec
+        )
 
         assert is_valid == True
         assert isinstance(errors, list)
@@ -121,23 +141,33 @@ class TestAPIValidator:
             # Missing required fields
         }
 
-        is_valid, errors, warnings = await api_validator.validate_openapi_spec(invalid_spec)
+        is_valid, errors, warnings = await api_validator.validate_openapi_spec(
+            invalid_spec
+        )
 
         assert is_valid == False
         assert len(errors) > 0
 
     @pytest.mark.asyncio
-    async def test_validate_api_request(self, api_validator, sample_openapi_spec, sample_api_request):
+    async def test_validate_api_request(
+        self, api_validator, sample_openapi_spec, sample_api_request
+    ):
         """Test API request validation against spec."""
-        is_valid, errors = await api_validator.validate_api_request(sample_api_request, sample_openapi_spec)
+        is_valid, errors = await api_validator.validate_api_request(
+            sample_api_request, sample_openapi_spec
+        )
 
         assert isinstance(is_valid, bool)
         assert isinstance(errors, list)
 
     @pytest.mark.asyncio
-    async def test_validate_service_compliance(self, api_validator, sample_openapi_spec):
+    async def test_validate_service_compliance(
+        self, api_validator, sample_openapi_spec
+    ):
         """Test service compliance validation."""
-        compliance_report = await api_validator.validate_service_compliance("test-service", sample_openapi_spec)
+        compliance_report = await api_validator.validate_service_compliance(
+            "test-service", sample_openapi_spec
+        )
 
         assert "overall_compliant" in compliance_report
         assert "structural_validation" in compliance_report
@@ -150,14 +180,22 @@ class TestIntegrationTester:
     """Test IntegrationTester functionality."""
 
     @pytest.fixture
-    def integration_tester(self, mock_discovery_client, mock_api_catalog, mock_api_tester):
+    def integration_tester(
+        self, mock_discovery_client, mock_api_catalog, mock_api_tester
+    ):
         """Create IntegrationTester instance for testing."""
-        return IntegrationTester(mock_discovery_client, mock_api_catalog, mock_api_tester, Mock())
+        return IntegrationTester(
+            mock_discovery_client, mock_api_catalog, mock_api_tester, Mock()
+        )
 
     @pytest.mark.asyncio
-    async def test_generate_test_suite_from_spec(self, integration_tester, sample_openapi_spec):
+    async def test_generate_test_suite_from_spec(
+        self, integration_tester, sample_openapi_spec
+    ):
         """Test test suite generation from OpenAPI spec."""
-        test_suite = await integration_tester.generate_test_suite_from_spec("test-service", sample_openapi_spec)
+        test_suite = await integration_tester.generate_test_suite_from_spec(
+            "test-service", sample_openapi_spec
+        )
 
         assert "service_name" in test_suite
         assert "endpoints" in test_suite
@@ -172,11 +210,18 @@ class TestIntegrationTester:
     async def test_run_test_suite(self, integration_tester, sample_openapi_spec):
         """Test test suite execution."""
         # Generate test suite first
-        test_suite = await integration_tester.generate_test_suite_from_spec("test-service", sample_openapi_spec)
+        test_suite = await integration_tester.generate_test_suite_from_spec(
+            "test-service", sample_openapi_spec
+        )
 
         # Mock the API tester to return success
         integration_tester.api_tester.execute_test = AsyncMock(
-            return_value={"success": True, "response_time": 150, "status_code": 200, "response_data": {"status": "ok"}}
+            return_value={
+                "success": True,
+                "response_time": 150,
+                "status_code": 200,
+                "response_data": {"status": "ok"},
+            }
         )
 
         results = await integration_tester.run_test_suite(test_suite)
@@ -236,7 +281,9 @@ class TestIntegrationTester:
             }
         )
 
-        results = await integration_tester.run_contract_test("test-service", sample_openapi_spec)
+        results = await integration_tester.run_contract_test(
+            "test-service", sample_openapi_spec
+        )
 
         assert "contract_compliant" in results
         assert "validation_errors" in results
@@ -249,25 +296,35 @@ class TestDeveloperToolsIntegration:
     """Integration tests for developer tools working together."""
 
     @pytest.fixture
-    async def dev_tools_suite(self, mock_discovery_client, mock_api_catalog, mock_api_tester):
+    async def dev_tools_suite(
+        self, mock_discovery_client, mock_api_catalog, mock_api_tester
+    ):
         """Create full developer tools suite for integration testing."""
         return {
-            "client_generator": ClientCodeGenerator(mock_discovery_client, mock_api_catalog),
+            "client_generator": ClientCodeGenerator(
+                mock_discovery_client, mock_api_catalog
+            ),
             "api_validator": APIValidator(mock_discovery_client, mock_api_catalog),
-            "integration_tester": IntegrationTester(mock_discovery_client, mock_api_catalog, mock_api_tester, Mock()),
+            "integration_tester": IntegrationTester(
+                mock_discovery_client, mock_api_catalog, mock_api_tester, Mock()
+            ),
         }
 
     @pytest.mark.asyncio
-    async def test_full_development_workflow(self, dev_tools_suite, sample_openapi_spec):
+    async def test_full_development_workflow(
+        self, dev_tools_suite, sample_openapi_spec
+    ):
         """Test complete development workflow from spec to client generation."""
         # Step 1: Validate the API spec
-        is_valid, errors, warnings = await dev_tools_suite["api_validator"].validate_openapi_spec(sample_openapi_spec)
+        is_valid, errors, warnings = await dev_tools_suite[
+            "api_validator"
+        ].validate_openapi_spec(sample_openapi_spec)
         assert is_valid == True
 
         # Step 2: Generate test suite
-        test_suite = await dev_tools_suite["integration_tester"].generate_test_suite_from_spec(
-            "test-service", sample_openapi_spec
-        )
+        test_suite = await dev_tools_suite[
+            "integration_tester"
+        ].generate_test_suite_from_spec("test-service", sample_openapi_spec)
         assert len(test_suite["test_cases"]) > 0
 
         # Step 3: Generate client code
@@ -278,9 +335,9 @@ class TestDeveloperToolsIntegration:
         assert "class TestServiceClient" in python_client
 
         # Step 4: Validate generated client
-        is_valid_client, client_errors = await dev_tools_suite["client_generator"].validate_generated_client(
-            python_client, "python"
-        )
+        is_valid_client, client_errors = await dev_tools_suite[
+            "client_generator"
+        ].validate_generated_client(python_client, "python")
         # Client validation may have minor issues but should not be completely broken
         assert isinstance(is_valid_client, bool)
 
@@ -304,7 +361,9 @@ class TestDeveloperToolsIntegration:
         }
 
         # Validate and get feedback
-        is_valid, errors, warnings = await dev_tools_suite["api_validator"].validate_openapi_spec(problematic_spec)
+        is_valid, errors, warnings = await dev_tools_suite[
+            "api_validator"
+        ].validate_openapi_spec(problematic_spec)
 
         # Should identify issues
         assert len(errors) > 0 or len(warnings) > 0

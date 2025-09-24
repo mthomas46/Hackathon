@@ -8,15 +8,15 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 from ...core.entities import LifecyclePolicy
-from ...core.repository import BaseRepository
+from services.shared.utilities import SqlRepository
 from ...db.queries import execute_query
 
 
-class LifecycleRepository(BaseRepository[LifecyclePolicy]):
+class LifecycleRepository(SqlRepository[LifecyclePolicy]):
     """Repository for lifecycle management data access."""
 
-    def __init__(self):
-        super().__init__("lifecycle_policies")
+    def __init__(self, connection_string: str):
+        super().__init__(LifecyclePolicy, connection_string)
 
     def _row_to_entity(self, row: Dict[str, Any]) -> LifecyclePolicy:
         """Convert database row to LifecyclePolicy entity."""
@@ -49,11 +49,14 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
     def get_enabled_policies(self) -> List[LifecyclePolicy]:
         """Get all enabled policies ordered by priority."""
         rows = execute_query(
-            f"SELECT * FROM {self.table_name} WHERE enabled = 1 ORDER BY priority DESC, created_at ASC", fetch_all=True
+            f"SELECT * FROM {self.table_name} WHERE enabled = 1 ORDER BY priority DESC, created_at ASC",
+            fetch_all=True,
         )
         return [self._row_to_entity(row) for row in rows]
 
-    def get_policies_for_document(self, document: Dict[str, Any]) -> List[LifecyclePolicy]:
+    def get_policies_for_document(
+        self, document: Dict[str, Any]
+    ) -> List[LifecyclePolicy]:
         """Get policies that match a specific document."""
         policies = self.get_enabled_policies()
         matching_policies = []
@@ -64,7 +67,9 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
 
         return matching_policies
 
-    def _policy_matches_document(self, policy: LifecyclePolicy, document: Dict[str, Any]) -> bool:
+    def _policy_matches_document(
+        self, policy: LifecyclePolicy, document: Dict[str, Any]
+    ) -> bool:
         """Check if a policy matches a document."""
         try:
             conditions = policy.conditions
@@ -101,7 +106,9 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
         except Exception:
             return False
 
-    def get_documents_for_lifecycle_transition(self, transition_type: str) -> List[Dict[str, Any]]:
+    def get_documents_for_lifecycle_transition(
+        self, transition_type: str
+    ) -> List[Dict[str, Any]]:
         """Get documents that need lifecycle transitions."""
         # Get all documents with their lifecycle info
         cutoff_date = (datetime.utcnow() - timedelta(days=1)).isoformat()
@@ -139,13 +146,17 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
 
         return rows
 
-    def update_document_lifecycle(self, document_id: str, phase: str, retention_days: int = None) -> None:
+    def update_document_lifecycle(
+        self, document_id: str, phase: str, retention_days: int = None
+    ) -> None:
         """Update document lifecycle information."""
         now = datetime.utcnow()
 
         if retention_days:
             archival_date = now + timedelta(days=retention_days)
-            deletion_date = archival_date + timedelta(days=365)  # Default 1 year retention
+            deletion_date = archival_date + timedelta(
+                days=365
+            )  # Default 1 year retention
         else:
             archival_date = None
             deletion_date = None
@@ -155,7 +166,7 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
             """
             INSERT OR REPLACE INTO document_lifecycle
             (document_id, current_phase, retention_period_days, archival_date, deletion_date,
-             last_reviewed, compliance_status, updated_at)
+            last_reviewed, compliance_status, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
@@ -206,7 +217,9 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
             fetch_all=True,
         )
 
-        compliance_stats = {row["compliance_status"]: row["count"] for row in compliance_rows}
+        compliance_stats = {
+            row["compliance_status"]: row["count"] for row in compliance_rows
+        }
 
         return {
             "phase_distribution": phase_stats,
@@ -214,7 +227,9 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
             "compliance_stats": compliance_stats,
         }
 
-    def log_lifecycle_event(self, document_id: str, event_type: str, details: Dict[str, Any] = None) -> None:
+    def log_lifecycle_event(
+        self, document_id: str, event_type: str, details: Dict[str, Any] = None
+    ) -> None:
         """Log a lifecycle event."""
         execute_query(
             """
@@ -222,5 +237,10 @@ class LifecycleRepository(BaseRepository[LifecyclePolicy]):
             (document_id, event_type, details, created_at)
             VALUES (?, ?, ?, ?)
         """,
-            (document_id, event_type, json.dumps(details or {}), datetime.utcnow().isoformat()),
+            (
+                document_id,
+                event_type,
+                json.dumps(details or {}),
+                datetime.utcnow().isoformat(),
+            ),
         )

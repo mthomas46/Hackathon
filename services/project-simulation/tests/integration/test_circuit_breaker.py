@@ -277,7 +277,9 @@ class TestEcosystemCircuitBreakerRegistry:
         assert results["doc_store"] == True
         assert results["mock_data_generator"] == True
         assert registry.breakers["doc_store"].state == CircuitBreakerState.CLOSED
-        assert registry.breakers["mock_data_generator"].state == CircuitBreakerState.CLOSED
+        assert (
+            registry.breakers["mock_data_generator"].state == CircuitBreakerState.CLOSED
+        )
 
 
 class TestResilientServiceClient:
@@ -287,7 +289,9 @@ class TestResilientServiceClient:
     def resilient_client(self):
         """Create resilient service client for testing."""
         # Mock the ecosystem client
-        with patch("simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client") as mock_get_client:
+        with patch(
+            "simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client"
+        ) as mock_get_client:
             mock_client = Mock()
             mock_get_client.return_value = mock_client
 
@@ -309,7 +313,9 @@ class TestResilientServiceClient:
     async def test_resilient_client_with_failure(self, resilient_client):
         """Test resilient client with underlying failure."""
         # Mock the underlying client method to fail
-        resilient_client.client.test_method = AsyncMock(side_effect=ValueError("Service error"))
+        resilient_client.client.test_method = AsyncMock(
+            side_effect=ValueError("Service error")
+        )
 
         with pytest.raises(ValueError, match="Service error"):
             await resilient_client.execute_request("test_method")
@@ -326,18 +332,24 @@ class TestResilientServiceClient:
     @pytest.mark.asyncio
     async def test_resilient_client_no_client_available(self):
         """Test resilient client when no underlying client is available."""
-        with patch("simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client") as mock_get_client:
+        with patch(
+            "simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client"
+        ) as mock_get_client:
             mock_get_client.return_value = None
 
             client = ResilientServiceClient("test_service")
 
-            with pytest.raises(ValueError, match="No client available for service test_service"):
+            with pytest.raises(
+                ValueError, match="No client available for service test_service"
+            ):
                 await client.execute_request("test_method")
 
     @pytest.mark.asyncio
     async def test_resilient_client_health_check_success(self, resilient_client):
         """Test health check through resilient client."""
-        resilient_client.client.health_check = AsyncMock(return_value=ServiceHealth.HEALTHY)
+        resilient_client.client.health_check = AsyncMock(
+            return_value=ServiceHealth.HEALTHY
+        )
 
         result = await resilient_client.health_check()
 
@@ -348,7 +360,9 @@ class TestResilientServiceClient:
     @pytest.mark.asyncio
     async def test_resilient_client_health_check_failure(self, resilient_client):
         """Test health check failure through resilient client."""
-        resilient_client.client.health_check = AsyncMock(side_effect=ConnectionError("Connection failed"))
+        resilient_client.client.health_check = AsyncMock(
+            side_effect=ConnectionError("Connection failed")
+        )
 
         result = await resilient_client.health_check()
 
@@ -494,7 +508,9 @@ class TestCircuitBreakerIntegrationSuite:
     @pytest.mark.asyncio
     async def test_full_circuit_breaker_lifecycle(self):
         """Test complete circuit breaker lifecycle."""
-        breaker = ServiceCircuitBreaker("integration_test", failure_threshold=2, success_threshold=2)
+        breaker = ServiceCircuitBreaker(
+            "integration_test", failure_threshold=2, success_threshold=2
+        )
 
         # Start in closed state
         assert breaker.state == CircuitBreakerState.CLOSED
@@ -556,7 +572,10 @@ class TestCircuitBreakerIntegrationSuite:
     def test_circuit_breaker_configuration_persistence(self):
         """Test that circuit breaker configuration is maintained."""
         breaker = ServiceCircuitBreaker(
-            "config_test", failure_threshold=10, recovery_timeout=120.0, success_threshold=5
+            "config_test",
+            failure_threshold=10,
+            recovery_timeout=120.0,
+            success_threshold=5,
         )
 
         # Verify configuration is preserved

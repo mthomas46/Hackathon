@@ -67,7 +67,9 @@ class IngestionOrchestratorService:
             IngestionResult: The initial ingestion result
         """
         # Create initial result
-        result = IngestionResult(request_id=request.request_id, status=IngestionStatus.QUEUED)
+        result = IngestionResult(
+            request_id=request.request_id, status=IngestionStatus.QUEUED
+        )
 
         # Store as active ingestion
         self._active_ingestions[result.ingestion_id] = result
@@ -77,7 +79,9 @@ class IngestionOrchestratorService:
 
         return result
 
-    async def _execute_ingestion(self, result: IngestionResult, request: IngestionRequest):
+    async def _execute_ingestion(
+        self, result: IngestionResult, request: IngestionRequest
+    ):
         """
         Execute the ingestion process.
 
@@ -101,16 +105,23 @@ class IngestionOrchestratorService:
             elif result.successful_items > 0:
                 result.mark_completed(IngestionStatus.COMPLETED)
             else:
-                result.mark_completed(IngestionStatus.FAILED, error_message="No items were successfully processed")
+                result.mark_completed(
+                    IngestionStatus.FAILED,
+                    error_message="No items were successfully processed",
+                )
 
         except Exception as e:
-            result.mark_completed(IngestionStatus.FAILED, error_message=f"Ingestion failed: {str(e)}")
+            result.mark_completed(
+                IngestionStatus.FAILED, error_message=f"Ingestion failed: {str(e)}"
+            )
 
         # Move to completed ingestions
         del self._active_ingestions[result.ingestion_id]
         self._completed_ingestions[result.ingestion_id] = result
 
-    async def _perform_discovery_phase(self, result: IngestionResult, request: IngestionRequest):
+    async def _perform_discovery_phase(
+        self, result: IngestionResult, request: IngestionRequest
+    ):
         """Perform the discovery phase of ingestion."""
         # Simulate discovery delay
         await asyncio.sleep(0.1)
@@ -126,7 +137,9 @@ class IngestionOrchestratorService:
         # Update result
         result._total_items = discovered_items
 
-    async def _perform_download_phase(self, result: IngestionResult, request: IngestionRequest):
+    async def _perform_download_phase(
+        self, result: IngestionResult, request: IngestionRequest
+    ):
         """Perform the download phase of ingestion."""
         # Simulate download delay
         await asyncio.sleep(0.2)
@@ -137,7 +150,9 @@ class IngestionOrchestratorService:
 
         result.update_counts(successful=successful, failed=failed)
 
-    async def _perform_processing_phase(self, result: IngestionResult, request: IngestionRequest):
+    async def _perform_processing_phase(
+        self, result: IngestionResult, request: IngestionRequest
+    ):
         """Perform the processing phase of ingestion."""
         # Simulate processing delay
         await asyncio.sleep(0.3)
@@ -147,7 +162,9 @@ class IngestionOrchestratorService:
             recovered = min(2, result.failed_items)  # Recover up to 2 failed items
             result.update_counts(successful=recovered, failed=-recovered)
 
-    async def _perform_validation_phase(self, result: IngestionResult, request: IngestionRequest):
+    async def _perform_validation_phase(
+        self, result: IngestionResult, request: IngestionRequest
+    ):
         """Perform the validation phase of ingestion."""
         # Simulate validation delay
         await asyncio.sleep(0.1)
@@ -156,7 +173,9 @@ class IngestionOrchestratorService:
         if result.successful_items > 0:
             # Randomly mark 5% as failed during validation
             validation_failures = max(1, int(result.successful_items * 0.05))
-            result.update_counts(successful=-validation_failures, failed=validation_failures)
+            result.update_counts(
+                successful=-validation_failures, failed=validation_failures
+            )
 
     def get_ingestion_status(self, ingestion_id: str) -> Optional[IngestionResult]:
         """
@@ -168,7 +187,9 @@ class IngestionOrchestratorService:
         Returns:
             IngestionResult or None: The ingestion result if found
         """
-        return self._active_ingestions.get(ingestion_id) or self._completed_ingestions.get(ingestion_id)
+        return self._active_ingestions.get(
+            ingestion_id
+        ) or self._completed_ingestions.get(ingestion_id)
 
     def get_request_ingestions(self, request_id: str) -> List[IngestionResult]:
         """
@@ -226,10 +247,14 @@ class IngestionOrchestratorService:
         active_count = len(self._active_ingestions)
         completed_count = len(self._completed_ingestions)
 
-        total_successful = sum(r.successful_items for r in self._completed_ingestions.values())
+        total_successful = sum(
+            r.successful_items for r in self._completed_ingestions.values()
+        )
         total_failed = sum(r.failed_items for r in self._completed_ingestions.values())
 
-        successful_ingestions = len([r for r in self._completed_ingestions.values() if r.is_successful])
+        successful_ingestions = len(
+            [r for r in self._completed_ingestions.values() if r.is_successful]
+        )
 
         return {
             "active_ingestions": active_count,
@@ -237,7 +262,9 @@ class IngestionOrchestratorService:
             "total_ingestions": active_count + completed_count,
             "successful_ingestions": successful_ingestions,
             "failed_ingestions": completed_count - successful_ingestions,
-            "success_rate": successful_ingestions / completed_count if completed_count > 0 else 0,
+            "success_rate": (
+                successful_ingestions / completed_count if completed_count > 0 else 0
+            ),
             "total_items_processed": total_successful + total_failed,
             "total_successful_items": total_successful,
             "total_failed_items": total_failed,
@@ -253,12 +280,19 @@ class IngestionOrchestratorService:
         Returns:
             int: Number of ingestions cleaned up
         """
-        cutoff_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        cutoff_date = datetime.utcnow().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
 
         to_remove = []
         for ingestion_id, result in self._completed_ingestions.items():
             if result.completed_at:
-                age_days = (cutoff_date - result.completed_at.replace(hour=0, minute=0, second=0, microsecond=0)).days
+                age_days = (
+                    cutoff_date
+                    - result.completed_at.replace(
+                        hour=0, minute=0, second=0, microsecond=0
+                    )
+                ).days
                 if age_days > max_age_days:
                     to_remove.append(ingestion_id)
 

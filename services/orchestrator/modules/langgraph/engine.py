@@ -36,23 +36,35 @@ class LangGraphWorkflowEngine:
         for service_name in service_names:
             try:
                 # First, try to use discovered tools from startup discovery
-                discovered_tools_data = await startup_discovery.get_discovered_tools(service_name)
+                discovered_tools_data = await startup_discovery.get_discovered_tools(
+                    service_name
+                )
 
                 if discovered_tools_data and "tools" in discovered_tools_data:
                     # Use discovered tools
-                    service_tools = await self._create_tools_from_discovery(service_name, discovered_tools_data)
-                    print(f"🔍 Using discovered tools for {service_name}: {len(service_tools)} tools")
+                    service_tools = await self._create_tools_from_discovery(
+                        service_name, discovered_tools_data
+                    )
+                    print(
+                        f"🔍 Using discovered tools for {service_name}: {len(service_tools)} tools"
+                    )
                 # 2. Try comprehensive service integrations
                 elif service_name in SERVICE_INTEGRATIONS:
                     integration_class = SERVICE_INTEGRATIONS[service_name]
                     integration = integration_class()
                     service_tools = await integration.initialize_tools()
-                    print(f"🔧 Using service integration for {service_name}: {len(service_tools)} tools")
+                    print(
+                        f"🔧 Using service integration for {service_name}: {len(service_tools)} tools"
+                    )
 
                 # 3. Fallback to manual tool creation
                 else:
-                    service_tools = await create_service_tools(service_name, self.service_client)
-                    print(f"⚙️ Created manual tools for {service_name}: {list(service_tools.keys())}")
+                    service_tools = await create_service_tools(
+                        service_name, self.service_client
+                    )
+                    print(
+                        f"⚙️ Created manual tools for {service_name}: {list(service_tools.keys())}"
+                    )
 
                 tools.update(service_tools)
 
@@ -76,12 +88,16 @@ class LangGraphWorkflowEngine:
                 if tool:
                     tools[tool.name] = tool
             except Exception as e:
-                print(f"⚠️ Failed to create tool '{tool_def.get('name', 'unknown')}' from discovery: {e}")
+                print(
+                    f"⚠️ Failed to create tool '{tool_def.get('name', 'unknown')}' from discovery: {e}"
+                )
                 continue
 
         return tools
 
-    async def _create_tool_from_definition(self, service_name: str, tool_def: Dict[str, Any]) -> Optional[BaseTool]:
+    async def _create_tool_from_definition(
+        self, service_name: str, tool_def: Dict[str, Any]
+    ) -> Optional[BaseTool]:
         """Create a LangChain tool from a discovered tool definition."""
 
         from langchain_core.tools import tool
@@ -103,7 +119,9 @@ class LangGraphWorkflowEngine:
                 path = tool_def.get("path", "")
 
                 if not service_url or not path:
-                    raise ValueError(f"Missing service_url or path for tool {tool_name}")
+                    raise ValueError(
+                        f"Missing service_url or path for tool {tool_name}"
+                    )
 
                 # Construct full URL
                 full_url = f"{service_url}{path}"
@@ -114,7 +132,9 @@ class LangGraphWorkflowEngine:
                     response = await self.service_client.post_json(full_url, kwargs)
                 elif http_method.upper() == "GET":
                     # For GET, pass kwargs as query parameters
-                    response = await self.service_client.get_json(full_url, params=kwargs)
+                    response = await self.service_client.get_json(
+                        full_url, params=kwargs
+                    )
                 else:
                     # For other methods, pass kwargs as JSON
                     response = await self.service_client.post_json(full_url, kwargs)
@@ -184,18 +204,26 @@ class LangGraphWorkflowEngine:
 
         # Get the compiled workflow
         if workflow_type not in self.workflows:
-            raise ValueError(f"Workflow '{workflow_type}' not found. Available: {list(self.workflows.keys())}")
+            raise ValueError(
+                f"Workflow '{workflow_type}' not found. Available: {list(self.workflows.keys())}"
+            )
 
         workflow = self.workflows[workflow_type]
 
         # Create initial workflow state
-        initial_state = create_workflow_state(workflow_type=workflow_type, input_data=input_data, user_id=user_id)
+        initial_state = create_workflow_state(
+            workflow_type=workflow_type, input_data=input_data, user_id=user_id
+        )
 
         # Log workflow start
         await self._log_workflow_event(
             initial_state.metadata.workflow_id,
             "started",
-            {"workflow_type": workflow_type, "input_data": input_data, "user_id": user_id},
+            {
+                "workflow_type": workflow_type,
+                "input_data": input_data,
+                "user_id": user_id,
+            },
         )
 
         try:
@@ -211,7 +239,13 @@ class LangGraphWorkflowEngine:
 
             # Update final state
             result.metadata.updated_at = end_time
-            result.update_metrics({"execution_time": execution_time, "success": True, "end_time": end_time})
+            result.update_metrics(
+                {
+                    "execution_time": execution_time,
+                    "success": True,
+                    "end_time": end_time,
+                }
+            )
 
             # Log successful completion
             await self._log_workflow_event(
@@ -238,17 +272,26 @@ class LangGraphWorkflowEngine:
         except Exception as e:
             # Log error
             await self._log_workflow_event(
-                initial_state.metadata.workflow_id, "failed", {"error": str(e), "error_type": type(e).__name__}
+                initial_state.metadata.workflow_id,
+                "failed",
+                {"error": str(e), "error_type": type(e).__name__},
             )
 
             # Re-raise the exception
             raise
 
-    async def _log_workflow_event(self, workflow_id: str, event_type: str, data: Dict[str, Any]):
+    async def _log_workflow_event(
+        self, workflow_id: str, event_type: str, data: Dict[str, Any]
+    ):
         """Log workflow events using the orchestrator's logging infrastructure."""
         try:
             # Use the existing logging infrastructure
-            log_data = {"workflow_id": workflow_id, "event_type": event_type, "timestamp": utc_now(), "data": data}
+            log_data = {
+                "workflow_id": workflow_id,
+                "event_type": event_type,
+                "timestamp": utc_now(),
+                "data": data,
+            }
 
             # This would integrate with your existing logging service
             # For now, we'll use a placeholder
@@ -267,7 +310,12 @@ class LangGraphWorkflowEngine:
     async def get_workflow_status(self, workflow_id: str) -> Dict[str, Any]:
         """Get the status of a running workflow."""
         # Placeholder - would query workflow state from storage
-        return {"workflow_id": workflow_id, "status": "running", "current_step": "processing", "progress": 0.5}
+        return {
+            "workflow_id": workflow_id,
+            "status": "running",
+            "current_step": "processing",
+            "progress": 0.5,
+        }
 
     async def cancel_workflow(self, workflow_id: str) -> bool:
         """Cancel a running workflow."""

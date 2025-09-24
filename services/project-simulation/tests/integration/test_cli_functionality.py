@@ -12,13 +12,14 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 
-
 class TestCLIScriptExecution:
     """Test cases for CLI script execution and basic functionality."""
 
     def test_monitor_simulation_script_exists_and_is_executable(self):
         """Test that monitor_simulation.py script exists and is executable."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        )
 
         assert script_path.exists(), "monitor_simulation.py script should exist"
         assert script_path.is_file(), "monitor_simulation.py should be a file"
@@ -30,7 +31,9 @@ class TestCLIScriptExecution:
 
     def test_manage_events_script_exists_and_is_executable(self):
         """Test that manage_events.py script exists and is executable."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        )
 
         assert script_path.exists(), "manage_events.py script should exist"
         assert script_path.is_file(), "manage_events.py should be a file"
@@ -56,13 +59,19 @@ class TestCLIScriptFunctionality:
     @patch("subprocess.run")
     def test_monitor_simulation_script_can_be_called(self, mock_subprocess):
         """Test that monitor_simulation.py can be executed."""
-        mock_subprocess.return_value = Mock(returncode=0, stdout="Monitoring simulation...", stderr="")
+        mock_subprocess.return_value = Mock(
+            returncode=0, stdout="Monitoring simulation...", stderr=""
+        )
 
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        )
 
         # This would normally run the script
         # For testing, we mock the subprocess call
-        result = subprocess.run([sys.executable, str(script_path), "--help"], capture_output=True, text=True)
+        result = subprocess.run(
+            [sys.executable, str(script_path), "--help"], capture_output=True, text=True
+        )
 
         # In a real scenario, this would test the actual script
         # For now, we just verify the script file exists and is callable
@@ -71,15 +80,21 @@ class TestCLIScriptFunctionality:
     @patch("subprocess.run")
     def test_manage_events_script_can_be_called(self, mock_subprocess):
         """Test that manage_events.py can be executed."""
-        mock_subprocess.return_value = Mock(returncode=0, stdout="Event management...", stderr="")
+        mock_subprocess.return_value = Mock(
+            returncode=0, stdout="Event management...", stderr=""
+        )
 
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        )
         assert script_path.exists()
 
     @patch("subprocess.run")
     def test_run_tests_script_can_be_called(self, mock_subprocess):
         """Test that run_tests.py can be executed."""
-        mock_subprocess.return_value = Mock(returncode=0, stdout="Running tests...", stderr="")
+        mock_subprocess.return_value = Mock(
+            returncode=0, stdout="Running tests...", stderr=""
+        )
 
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
         assert script_path.exists()
@@ -90,7 +105,9 @@ class TestCLIArgumentParsing:
 
     def test_monitor_simulation_accepts_simulation_id_argument(self):
         """Test that monitor_simulation accepts simulation ID argument."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        )
 
         # Read script content to verify argument parsing
         with open(script_path, "r") as f:
@@ -101,7 +118,9 @@ class TestCLIArgumentParsing:
 
     def test_manage_events_supports_multiple_commands(self):
         """Test that manage_events supports multiple subcommands."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -125,7 +144,9 @@ class TestCLIErrorHandling:
 
     def test_monitor_simulation_handles_invalid_simulation_id(self):
         """Test that monitor_simulation handles invalid simulation IDs gracefully."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -135,7 +156,9 @@ class TestCLIErrorHandling:
 
     def test_manage_events_validates_command_arguments(self):
         """Test that manage_events validates command arguments."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -151,7 +174,9 @@ class TestCLIErrorHandling:
             content = f.read()
 
         # Should handle missing files
-        assert "try:" in content or "except" in content or "FileNotFoundError" in content
+        assert (
+            "try:" in content or "except" in content or "FileNotFoundError" in content
+        )
 
 
 class TestCLIOutputFormatting:
@@ -159,7 +184,9 @@ class TestCLIOutputFormatting:
 
     def test_monitor_simulation_provides_clear_status_updates(self):
         """Test that monitor_simulation provides clear status updates."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -169,7 +196,9 @@ class TestCLIOutputFormatting:
 
     def test_manage_events_provides_feedback_on_operations(self):
         """Test that manage_events provides feedback on operations."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -216,7 +245,9 @@ class TestCLIConfiguration:
                 content = f.read()
 
             # Should support environment variables
-            assert "os.environ" in content or "getenv" in content or "environ" in content
+            assert (
+                "os.environ" in content or "getenv" in content or "environ" in content
+            )
 
 
 class TestCLISecurity:

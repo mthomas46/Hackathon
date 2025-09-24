@@ -12,7 +12,9 @@ from .document_analysis_manager import DocumentAnalysisManager
 class AnalysisServiceManager(BaseManager):
     """Main analysis service manager coordinating all analysis operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
         # Initialize specialized managers
@@ -49,19 +51,25 @@ class AnalysisServiceManager(BaseManager):
     async def findings_management_menu(self):
         """Findings management submenu."""
         self.display.show_info("Findings management feature coming soon!")
-        self.display.show_info("This will include viewing, filtering, and managing analysis findings")
+        self.display.show_info(
+            "This will include viewing, filtering, and managing analysis findings"
+        )
         Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     async def report_generation_menu(self):
         """Report generation submenu."""
         self.display.show_info("Report generation feature coming soon!")
-        self.display.show_info("This will include generating analysis reports and summaries")
+        self.display.show_info(
+            "This will include generating analysis reports and summaries"
+        )
         Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     async def analysis_configuration_menu(self):
         """Analysis configuration submenu."""
         self.display.show_info("Analysis configuration feature coming soon!")
-        self.display.show_info("This will include detector and analysis template configuration")
+        self.display.show_info(
+            "This will include detector and analysis template configuration"
+        )
         Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     async def integration_analysis_menu(self):
@@ -74,7 +82,9 @@ class AnalysisServiceManager(BaseManager):
     async def analyze_document_from_cli(self, analysis_request: Dict[str, Any]):
         """Analyze document for CLI integration."""
         try:
-            response = await self.clients.post_json("analysis-service/analyze", analysis_request)
+            response = await self.clients.post_json(
+                "analysis-service/analyze", analysis_request
+            )
 
             if response.get("success"):
                 results = response.get("results", [])
@@ -90,18 +100,24 @@ class AnalysisServiceManager(BaseManager):
                     for result in results:
                         for finding in result.get("findings", []):
                             severity = finding.get("severity", "info")
-                            severity_counts[severity] = severity_counts.get(severity, 0) + 1
+                            severity_counts[severity] = (
+                                severity_counts.get(severity, 0) + 1
+                            )
 
                     if severity_counts:
                         severity_data = []
                         for severity, count in severity_counts.items():
                             severity_data.append([severity.upper(), str(count)])
 
-                        self.display.show_table("Findings by Severity", ["Severity", "Count"], severity_data)
+                        self.display.show_table(
+                            "Findings by Severity", ["Severity", "Count"], severity_data
+                        )
                 else:
                     self.display.show_info("No analysis results found")
             else:
-                self.display.show_error(f"Analysis failed: {response.get('message', 'Unknown error')}")
+                self.display.show_error(
+                    f"Analysis failed: {response.get('message', 'Unknown error')}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error analyzing document: {e}")
@@ -133,15 +149,21 @@ class AnalysisServiceManager(BaseManager):
                         )
 
                     self.display.show_table(
-                        "Analysis Findings", ["Document", "Type", "Severity", "Description"], findings_data
+                        "Analysis Findings",
+                        ["Document", "Type", "Severity", "Description"],
+                        findings_data,
                     )
 
                     if len(findings) > 10:
-                        self.display.show_info(f"... and {len(findings) - 10} more findings")
+                        self.display.show_info(
+                            f"... and {len(findings) - 10} more findings"
+                        )
                 else:
                     self.display.show_info("No findings found matching criteria")
             else:
-                self.display.show_error(f"Failed to get findings: {response.get('message', 'Unknown error')}")
+                self.display.show_error(
+                    f"Failed to get findings: {response.get('message', 'Unknown error')}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error getting findings: {e}")
@@ -149,30 +171,48 @@ class AnalysisServiceManager(BaseManager):
     async def generate_report_from_cli(self, report_request: Dict[str, Any]):
         """Generate report for CLI integration."""
         try:
-            response = await self.clients.post_json("analysis-service/reports/generate", report_request)
+            response = await self.clients.post_json(
+                "analysis-service/reports/generate", report_request
+            )
 
             if response.get("success"):
                 report_data = response.get("report", {})
                 report_type = report_request.get("type", "unknown")
 
-                self.display.show_success(f"{report_type.title()} report generated successfully")
+                self.display.show_success(
+                    f"{report_type.title()} report generated successfully"
+                )
 
                 # Show report summary
                 if report_type == "summary":
                     summary = report_data.get("summary", {})
-                    self.display.show_info(f"Total documents: {summary.get('total_documents', 0)}")
-                    self.display.show_info(f"Total findings: {summary.get('total_findings', 0)}")
-                    self.display.show_info(f"Documents analyzed: {summary.get('analyzed_documents', 0)}")
+                    self.display.show_info(
+                        f"Total documents: {summary.get('total_documents', 0)}"
+                    )
+                    self.display.show_info(
+                        f"Total findings: {summary.get('total_findings', 0)}"
+                    )
+                    self.display.show_info(
+                        f"Documents analyzed: {summary.get('analyzed_documents', 0)}"
+                    )
 
                 elif report_type == "trends":
                     trends = report_data.get("trends", {})
-                    self.display.show_info(f"Analysis period: {trends.get('period', 'Unknown')}")
-                    self.display.show_info(f"Trend direction: {trends.get('direction', 'Unknown')}")
+                    self.display.show_info(
+                        f"Analysis period: {trends.get('period', 'Unknown')}"
+                    )
+                    self.display.show_info(
+                        f"Trend direction: {trends.get('direction', 'Unknown')}"
+                    )
 
                 elif report_type == "quality":
                     quality = report_data.get("quality", {})
-                    self.display.show_info(f"Average quality score: {quality.get('average_score', 0):.2f}")
-                    self.display.show_info(f"Quality threshold: {quality.get('threshold', 0)}")
+                    self.display.show_info(
+                        f"Average quality score: {quality.get('average_score', 0):.2f}"
+                    )
+                    self.display.show_info(
+                        f"Quality threshold: {quality.get('threshold', 0)}"
+                    )
 
                 # Offer to save report
                 if await self.confirm_action("Save report to file?"):
@@ -187,7 +227,9 @@ class AnalysisServiceManager(BaseManager):
                         self.display.show_success(f"Report saved to {filename}")
 
             else:
-                self.display.show_error(f"Report generation failed: {response.get('message', 'Unknown error')}")
+                self.display.show_error(
+                    f"Report generation failed: {response.get('message', 'Unknown error')}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error generating report: {e}")

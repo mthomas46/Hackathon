@@ -58,7 +58,9 @@ class PerformanceLogger:
         """
         return PerformanceTimer(self, operation, **context)
 
-    def time_async_operation(self, operation: str, **context) -> "AsyncPerformanceTimer":
+    def time_async_operation(
+        self, operation: str, **context
+    ) -> "AsyncPerformanceTimer":
         """Create an async performance timer for an operation.
 
         Args:
@@ -121,7 +123,9 @@ class PerformanceLogger:
 
         return decorator
 
-    def monitor_threshold(self, operation: str, threshold_seconds: float, **context) -> "ThresholdTimer":
+    def monitor_threshold(
+        self, operation: str, threshold_seconds: float, **context
+    ) -> "ThresholdTimer":
         """Monitor operation against performance threshold.
 
         Args:
@@ -142,7 +146,9 @@ class PerformanceLogger:
 class PerformanceTimer:
     """Timer for synchronous operations with performance logging."""
 
-    def __init__(self, perf_logger: PerformanceLogger, operation: str, **context) -> None:
+    def __init__(
+        self, perf_logger: PerformanceLogger, operation: str, **context
+    ) -> None:
         """Initialize performance timer.
 
         Args:
@@ -182,7 +188,12 @@ class PerformanceTimer:
             duration: Operation duration in seconds
             had_error: Whether operation had an error
         """
-        context = {**self._context, **self._additional_context, "success": not had_error, "error_occurred": had_error}
+        context = {
+            **self._context,
+            **self._additional_context,
+            "success": not had_error,
+            "error_occurred": had_error,
+        }
 
         self._perf_logger.log_performance(self._operation, duration, **context)
 
@@ -190,7 +201,9 @@ class PerformanceTimer:
 class AsyncPerformanceTimer:
     """Timer for asynchronous operations with performance logging."""
 
-    def __init__(self, perf_logger: PerformanceLogger, operation: str, **context) -> None:
+    def __init__(
+        self, perf_logger: PerformanceLogger, operation: str, **context
+    ) -> None:
         """Initialize async performance timer.
 
         Args:
@@ -245,7 +258,13 @@ class AsyncPerformanceTimer:
 class ThresholdTimer(PerformanceTimer):
     """Performance timer that monitors against thresholds."""
 
-    def __init__(self, perf_logger: PerformanceLogger, operation: str, threshold_seconds: float, **context) -> None:
+    def __init__(
+        self,
+        perf_logger: PerformanceLogger,
+        operation: str,
+        threshold_seconds: float,
+        **context,
+    ) -> None:
         """Initialize threshold timer.
 
         Args:
@@ -272,7 +291,9 @@ class ThresholdTimer(PerformanceTimer):
             "error_occurred": had_error,
             "threshold_seconds": self._threshold,
             "threshold_exceeded": duration > self._threshold,
-            "performance_ratio": duration / self._threshold if self._threshold > 0 else 0,
+            "performance_ratio": (
+                duration / self._threshold if self._threshold > 0 else 0
+            ),
         }
 
         # Log with appropriate level based on threshold
@@ -357,4 +378,6 @@ def monitor_performance(operation: str, threshold_seconds: float, **context):
         with monitor_performance("heavy_calculation", 5.0):
             result = perform_heavy_calculation()
     """
-    return get_performance_logger().monitor_threshold(operation, threshold_seconds, **context)
+    return get_performance_logger().monitor_threshold(
+        operation, threshold_seconds, **context
+    )

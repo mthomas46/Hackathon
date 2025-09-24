@@ -62,7 +62,9 @@ class CacheBackend(ABC):
         """Get value from cache."""
 
     @abstractmethod
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: Any, ttl_seconds: Optional[int] = None
+    ) -> None:
         """Set value in cache."""
 
     @abstractmethod
@@ -112,7 +114,9 @@ class InMemoryCacheBackend(CacheBackend):
 
             return None
 
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: Any, ttl_seconds: Optional[int] = None
+    ) -> None:
         """Set value in cache."""
         async with self.lock:
             # Remove if exists
@@ -212,7 +216,9 @@ class RedisCacheBackend(CacheBackend):
 
                 entry.access()
                 # Update access info in Redis
-                await self.redis.set(redis_key, json.dumps(entry.to_dict()), ex=entry.ttl_seconds)
+                await self.redis.set(
+                    redis_key, json.dumps(entry.to_dict()), ex=entry.ttl_seconds
+                )
 
                 return entry.value
 
@@ -221,7 +227,9 @@ class RedisCacheBackend(CacheBackend):
 
         return None
 
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: Any, ttl_seconds: Optional[int] = None
+    ) -> None:
         """Set value in Redis."""
         if not self.redis:
             return
@@ -347,7 +355,9 @@ class ApplicationCache:
 
         return None
 
-    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
+    async def set(
+        self, key: str, value: Any, ttl_seconds: Optional[int] = None
+    ) -> None:
         """Set value in all backends."""
         ttl = ttl_seconds or self.default_ttl
 
@@ -403,7 +413,10 @@ class CachingService(ApplicationService):
     """Application caching service with multi-level caching."""
 
     def __init__(
-        self, cache_backends: Optional[List[CacheBackend]] = None, default_ttl: int = 300, cleanup_interval: int = 60
+        self,
+        cache_backends: Optional[List[CacheBackend]] = None,
+        default_ttl: int = 300,
+        cleanup_interval: int = 60,
     ):
         """Initialize caching service."""
         super().__init__("caching_service")
@@ -452,13 +465,19 @@ class CachingService(ApplicationService):
             except Exception as e:
                 self.logger.error(f"Error in cache cleanup: {e}")
 
-    async def get(self, key: str, context: Optional[ServiceContext] = None) -> Optional[Any]:
+    async def get(
+        self, key: str, context: Optional[ServiceContext] = None
+    ) -> Optional[Any]:
         """Get value from cache."""
         async with self.operation_context("cache_get", context):
             return await self.cache.get(key)
 
     async def set(
-        self, key: str, value: Any, ttl_seconds: Optional[int] = None, context: Optional[ServiceContext] = None
+        self,
+        key: str,
+        value: Any,
+        ttl_seconds: Optional[int] = None,
+        context: Optional[ServiceContext] = None,
     ) -> None:
         """Set value in cache."""
         async with self.operation_context("cache_set", context):
@@ -506,15 +525,23 @@ class CachingService(ApplicationService):
 
     async def get_cache_stats(self) -> Dict[str, Any]:
         """Get cache statistics."""
-        stats = {"backends": len(self.cache.backends), "default_ttl": self.cache.default_ttl}
+        stats = {
+            "backends": len(self.cache.backends),
+            "default_ttl": self.cache.default_ttl,
+        }
 
         for i, backend in enumerate(self.cache.backends):
             try:
-                backend_stats = {"type": backend.__class__.__name__, "size": await backend.size()}
+                backend_stats = {
+                    "type": backend.__class__.__name__,
+                    "size": await backend.size(),
+                }
 
                 if hasattr(backend, "max_size"):
                     backend_stats["max_size"] = backend.max_size
-                    backend_stats["utilization"] = backend_stats["size"] / backend.max_size
+                    backend_stats["utilization"] = (
+                        backend_stats["size"] / backend.max_size
+                    )
 
                 stats[f"backend_{i}"] = backend_stats
 

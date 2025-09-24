@@ -78,7 +78,9 @@ class TestCompleteUserWorkflows:
         """
 
     @pytest.mark.asyncio
-    async def test_document_upload_and_analysis_workflow(self, client, sample_document_content):
+    async def test_document_upload_and_analysis_workflow(
+        self, client, sample_document_content
+    ):
         """Test complete workflow: document upload → analysis → findings retrieval."""
         # Step 1: Simulate document upload (in a real system, this would be an upload endpoint)
         document_data = {
@@ -120,18 +122,28 @@ class TestCompleteUserWorkflows:
                 analysis_type="semantic_similarity",
                 targets=["doc-1", "doc-2", "doc-3"],
                 status="completed",
-                similarity_matrix=[[1.0, 0.85, 0.65], [0.85, 1.0, 0.72], [0.65, 0.72, 1.0]],
+                similarity_matrix=[
+                    [1.0, 0.85, 0.65],
+                    [0.85, 1.0, 0.72],
+                    [0.65, 0.72, 1.0],
+                ],
                 similar_pairs=[
                     {"source": "doc-1", "target": "doc-2", "similarity": 0.85},
                     {"source": "doc-2", "target": "doc-3", "similarity": 0.72},
                 ],
-                summary={"total_pairs": 3, "highly_similar_pairs": 2, "average_similarity": 0.775},
+                summary={
+                    "total_pairs": 3,
+                    "highly_similar_pairs": 2,
+                    "average_similarity": 0.775,
+                },
                 execution_time_seconds=2.1,
                 error_message=None,
             )
             mock_similarity.return_value = mock_response
 
-            response = client.post("/analyze/semantic-similarity", json=similarity_request)
+            response = client.post(
+                "/analyze/semantic-similarity", json=similarity_request
+            )
             assert response.status_code == 200
 
             similarity_data = response.json()
@@ -198,10 +210,18 @@ class TestCompleteUserWorkflows:
                 document_id="workflow-doc-001",
                 overall_score=84.5,
                 quality_breakdown={
-                    "readability": {"score": 82.0, "level": "good", "issues": ["sentence_length"]},
+                    "readability": {
+                        "score": 82.0,
+                        "level": "good",
+                        "issues": ["sentence_length"],
+                    },
                     "grammar": {"score": 88.0, "level": "excellent", "issues": []},
                     "structure": {"score": 86.0, "level": "excellent", "issues": []},
-                    "completeness": {"score": 82.0, "level": "good", "issues": ["missing_examples"]},
+                    "completeness": {
+                        "score": 82.0,
+                        "level": "good",
+                        "issues": ["missing_examples"],
+                    },
                 },
                 recommendations=[
                     "Consider shortening some sentences for better readability",
@@ -270,8 +290,12 @@ class TestCompleteUserWorkflows:
             assert findings_data["total_count"] == 2
 
             # Verify findings content
-            sentiment_finding = next(f for f in findings_data["findings"] if f["category"] == "sentiment")
-            quality_finding = next(f for f in findings_data["findings"] if f["category"] == "readability")
+            sentiment_finding = next(
+                f for f in findings_data["findings"] if f["category"] == "sentiment"
+            )
+            quality_finding = next(
+                f for f in findings_data["findings"] if f["category"] == "readability"
+            )
 
             assert sentiment_finding["severity"] == "info"
             assert sentiment_finding["confidence"] == 0.88
@@ -279,7 +303,9 @@ class TestCompleteUserWorkflows:
             assert "recommendation" in quality_finding
 
     @pytest.mark.asyncio
-    async def test_multi_user_concurrent_workflow(self, client, sample_document_content):
+    async def test_multi_user_concurrent_workflow(
+        self, client, sample_document_content
+    ):
         """Test concurrent workflows from multiple users."""
 
         async def user_workflow(user_id: int):
@@ -290,7 +316,10 @@ class TestCompleteUserWorkflows:
             with patch(
                 "services.analysis_service.presentation.controllers.analysis_controller.analysis_handlers.handle_create_document"
             ) as mock_create:
-                mock_create.return_value = {"document_id": user_doc_id, "status": "created"}
+                mock_create.return_value = {
+                    "document_id": user_doc_id,
+                    "status": "created",
+                }
 
                 doc_data = {
                     "id": user_doc_id,
@@ -316,9 +345,14 @@ class TestCompleteUserWorkflows:
                 )
                 mock_similarity.return_value = mock_response
 
-                similarity_request = {"targets": [f"doc-{user_id}-1", f"doc-{user_id}-2"], "threshold": 0.8}
+                similarity_request = {
+                    "targets": [f"doc-{user_id}-1", f"doc-{user_id}-2"],
+                    "threshold": 0.8,
+                }
 
-                response = client.post("/analyze/semantic-similarity", json=similarity_request)
+                response = client.post(
+                    "/analyze/semantic-similarity", json=similarity_request
+                )
                 assert response.status_code == 200
 
                 data = response.json()
@@ -386,7 +420,9 @@ class TestCompleteUserWorkflows:
             # Simulate error in analysis
             mock_similarity.side_effect = Exception("Document not found")
 
-            response = client.post("/analyze/semantic-similarity", json=similarity_request)
+            response = client.post(
+                "/analyze/semantic-similarity", json=similarity_request
+            )
 
             # Should handle error gracefully
             assert response.status_code in [400, 404, 500]
@@ -395,7 +431,10 @@ class TestCompleteUserWorkflows:
         with patch(
             "services.analysis_service.presentation.controllers.analysis_controller.analysis_handlers.handle_create_document"
         ) as mock_create:
-            mock_create.return_value = {"document_id": "recovery-doc", "status": "created"}
+            mock_create.return_value = {
+                "document_id": "recovery-doc",
+                "status": "created",
+            }
 
             # Create valid document
             doc_data = {
@@ -424,7 +463,9 @@ class TestCompleteUserWorkflows:
             )
             mock_similarity.return_value = mock_response
 
-            response = client.post("/analyze/semantic-similarity", json=valid_similarity_request)
+            response = client.post(
+                "/analyze/semantic-similarity", json=valid_similarity_request
+            )
             assert response.status_code == 200
 
             data = response.json()
@@ -436,7 +477,11 @@ class TestCompleteUserWorkflows:
         # Step 1: Submit distributed task
         task_request = {
             "task_type": "semantic_similarity",
-            "data": {"document_ids": ["doc-1", "doc-2", "doc-3", "doc-4", "doc-5"], "threshold": 0.8, "batch_size": 32},
+            "data": {
+                "document_ids": ["doc-1", "doc-2", "doc-3", "doc-4", "doc-5"],
+                "threshold": 0.8,
+                "batch_size": 32,
+            },
             "priority": "high",
         }
 
@@ -488,7 +533,12 @@ class TestCompleteUserWorkflows:
                 "status": "completed",
                 "progress": 1.0,
                 "completed_at": datetime.now(timezone.utc).isoformat(),
-                "result": {"total_processed": 5, "successful": 5, "failed": 0, "average_processing_time": 8.5},
+                "result": {
+                    "total_processed": 5,
+                    "successful": 5,
+                    "failed": 0,
+                    "average_processing_time": 8.5,
+                },
             }
 
             response = client.get(f"/distributed/tasks/{task_id}")
@@ -543,10 +593,22 @@ class TestCompleteUserWorkflows:
                     "data": {"document_ids": ["batch-doc-1", "batch-doc-2"]},
                     "priority": "high",
                 },
-                {"task_type": "sentiment_analysis", "data": {"document_id": "batch-doc-3"}, "priority": "normal"},
-                {"task_type": "content_quality", "data": {"document_id": "batch-doc-4"}, "priority": "low"},
+                {
+                    "task_type": "sentiment_analysis",
+                    "data": {"document_id": "batch-doc-3"},
+                    "priority": "normal",
+                },
+                {
+                    "task_type": "content_quality",
+                    "data": {"document_id": "batch-doc-4"},
+                    "priority": "low",
+                },
             ],
-            "batch_options": {"parallel_execution": True, "max_concurrent": 3, "timeout_seconds": 300},
+            "batch_options": {
+                "parallel_execution": True,
+                "max_concurrent": 3,
+                "timeout_seconds": 300,
+            },
         }
 
         with patch(
@@ -745,7 +807,9 @@ class TestCompleteUserWorkflows:
                 "generated_at": datetime.now(timezone.utc).isoformat(),
             }
 
-            response = client.get(f"/findings/export?analysis_id={analysis_id}&format=json")
+            response = client.get(
+                f"/findings/export?analysis_id={analysis_id}&format=json"
+            )
             assert response.status_code == 200
 
             export_data = response.json()
@@ -763,7 +827,12 @@ class TestCompleteUserWorkflows:
             mock_health.return_value = {
                 "status": "healthy",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "services": {"database": "healthy", "cache": "healthy", "external_apis": "healthy", "queue": "healthy"},
+                "services": {
+                    "database": "healthy",
+                    "cache": "healthy",
+                    "external_apis": "healthy",
+                    "queue": "healthy",
+                },
                 "metrics": {
                     "uptime_seconds": 86400,
                     "total_requests": 15420,
@@ -804,7 +873,9 @@ class TestCompleteUserWorkflows:
 
             analytics_data = response.json()
             assert analytics_data["total_requests"] == 15420
-            assert "/analyze/semantic-similarity" in analytics_data["requests_by_endpoint"]
+            assert (
+                "/analyze/semantic-similarity" in analytics_data["requests_by_endpoint"]
+            )
             assert analytics_data["error_rate_percentage"] < 1.0  # Less than 1%
 
         # Step 3: Test system performance metrics
@@ -814,7 +885,11 @@ class TestCompleteUserWorkflows:
             mock_metrics.return_value = {
                 "response_times": {"p50": 0.8, "p95": 2.1, "p99": 5.2, "max": 12.5},
                 "throughput": {"requests_per_second": 15.5, "requests_per_minute": 930},
-                "resource_usage": {"cpu_percent": 45.2, "memory_mb": 1024.5, "disk_mb": 256.8},
+                "resource_usage": {
+                    "cpu_percent": 45.2,
+                    "memory_mb": 1024.5,
+                    "disk_mb": 256.8,
+                },
                 "error_rates": {"http_4xx": 0.5, "http_5xx": 0.1, "total_errors": 0.6},
             }
 
@@ -822,6 +897,10 @@ class TestCompleteUserWorkflows:
             assert response.status_code == 200
 
             metrics_data = response.json()
-            assert metrics_data["response_times"]["p95"] < 3.0  # 95th percentile under 3 seconds
+            assert (
+                metrics_data["response_times"]["p95"] < 3.0
+            )  # 95th percentile under 3 seconds
             assert metrics_data["throughput"]["requests_per_second"] > 10
-            assert metrics_data["error_rates"]["total_errors"] < 1.0  # Less than 1% error rate
+            assert (
+                metrics_data["error_rates"]["total_errors"] < 1.0
+            )  # Less than 1% error rate

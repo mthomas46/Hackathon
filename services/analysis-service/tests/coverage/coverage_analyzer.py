@@ -178,7 +178,7 @@ class CoverageAnalyzer:
         return report
 
     def _generate_recommendations(self, layer_analysis: Dict[str, Dict[str, Any]],
-                                 critical_uncovered: Dict[str, List[str]]) -> List[str]:
+                                critical_uncovered: Dict[str, List[str]]) -> List[str]:
         """Generate recommendations for improving coverage."""
         recommendations = []
 
@@ -279,7 +279,7 @@ class CoverageEnforcer:
         for layer_name, layer_data in layer_coverage.items():
             if layer_data['status'] == 'fail':
                 print(f"❌ Layer {layer_name} coverage requirement not met: "
-                      f"{layer_data['coverage_percentage']:.1f}% < {layer_data['target_percentage']:.1f}%")
+                        f"{layer_data['coverage_percentage']:.1f}% < {layer_data['target_percentage']:.1f}%")
                 return False
 
         print(f"✅ All coverage requirements met: {overall_coverage:.1f}% >= {self.min_coverage:.1f}%")
@@ -450,7 +450,7 @@ def get_coverage_trends():
     print("="*50)
 
     print(f"Overall: {trends['overall_trend']['direction']} "
-          f"({trends['overall_trend']['magnitude']:.2f}%)")
+        f"({trends['overall_trend']['magnitude']:.2f}%)")
 
     print("\nLayer Trends:")
     for layer, trend in trends['layer_trends'].items():

@@ -32,7 +32,9 @@ class BaseResponse(BaseModel):
     """Base response model for all API responses."""
 
     status: ResponseStatus = Field(..., description="Response status")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Response timestamp"
+    )
     request_id: Optional[str] = Field(None, description="Unique request identifier")
 
     class Config:
@@ -55,14 +57,22 @@ class ErrorResponse(BaseResponse):
 
     status: ResponseStatus = ResponseStatus.ERROR
     error: ErrorDetail = Field(..., description="Error details")
-    details: Optional[List[ErrorDetail]] = Field(None, description="Additional error details")
+    details: Optional[List[ErrorDetail]] = Field(
+        None, description="Additional error details"
+    )
 
     @classmethod
     def from_exception(
-        cls, exception: Exception, status_code: int = 500, request_id: Optional[str] = None
+        cls,
+        exception: Exception,
+        status_code: int = 500,
+        request_id: Optional[str] = None,
     ) -> "ErrorResponse":
         """Create error response from exception."""
-        error_detail = ErrorDetail(message=str(exception), code=getattr(exception, "code", ErrorCode.INTERNAL_ERROR))
+        error_detail = ErrorDetail(
+            message=str(exception),
+            code=getattr(exception, "code", ErrorCode.INTERNAL_ERROR),
+        )
 
         return cls(error=error_detail, request_id=request_id)
 
@@ -75,7 +85,9 @@ class SuccessResponse(BaseResponse):
     message: Optional[str] = Field(None, description="Success message")
 
     @classmethod
-    def with_data(cls, data: Any, message: Optional[str] = None, request_id: Optional[str] = None) -> "SuccessResponse":
+    def with_data(
+        cls, data: Any, message: Optional[str] = None, request_id: Optional[str] = None
+    ) -> "SuccessResponse":
         """Create success response with data."""
         return cls(data=data, message=message, request_id=request_id)
 
@@ -92,7 +104,12 @@ class PaginatedResponse(BaseResponse, Generic[T]):
 
     @classmethod
     def create(
-        cls, items: List[T], page: int = 1, page_size: int = 20, total: int = 0, request_id: Optional[str] = None
+        cls,
+        items: List[T],
+        page: int = 1,
+        page_size: int = 20,
+        total: int = 0,
+        request_id: Optional[str] = None,
     ) -> "PaginatedResponse[T]":
         """Create paginated response."""
         total_pages = (total + page_size - 1) // page_size  # Ceiling division
@@ -116,7 +133,9 @@ class HealthResponse(BaseResponse):
     service: str = Field(..., description="Service name")
     version: str = Field(..., description="Service version")
     uptime: Optional[float] = Field(None, description="Service uptime in seconds")
-    dependencies: Optional[Dict[str, Any]] = Field(None, description="Dependency health status")
+    dependencies: Optional[Dict[str, Any]] = Field(
+        None, description="Dependency health status"
+    )
 
     @classmethod
     def healthy(
@@ -128,7 +147,13 @@ class HealthResponse(BaseResponse):
         request_id: Optional[str] = None,
     ) -> "HealthResponse":
         """Create healthy response."""
-        return cls(service=service, version=version, uptime=uptime, dependencies=dependencies, request_id=request_id)
+        return cls(
+            service=service,
+            version=version,
+            uptime=uptime,
+            dependencies=dependencies,
+            request_id=request_id,
+        )
 
 
 class MetadataResponse(BaseResponse):

@@ -10,10 +10,21 @@ from ...domain.entities.document import Document, DocumentStatus
 from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence
-from ...infrastructure.repositories.analysis_repository import AnalysisRepository, InMemoryAnalysisRepository
-from ...infrastructure.repositories.document_repository import DocumentRepository, InMemoryDocumentRepository
-from ...infrastructure.repositories.finding_repository import FindingRepository, InMemoryFindingRepository
-from ...infrastructure.repositories.sqlite_document_repository import SQLiteDocumentRepository
+from ...infrastructure.repositories.analysis_repository import (
+    AnalysisRepository,
+    InMemoryAnalysisRepository,
+)
+from ...infrastructure.repositories.document_repository import (
+    DocumentRepository,
+    InMemoryDocumentRepository,
+)
+from ...infrastructure.repositories.finding_repository import (
+    FindingRepository,
+    InMemoryFindingRepository,
+)
+from ...infrastructure.repositories.sqlite_document_repository import (
+    SQLiteDocumentRepository,
+)
 
 
 class TestDocumentRepositoryInterface:
@@ -22,12 +33,16 @@ class TestDocumentRepositoryInterface:
     def test_repository_interface_definition(self):
         """Test that DocumentRepository defines the expected interface."""
         # This is a base class test to ensure the interface is properly defined
-        repo_methods = [method for method in dir(DocumentRepository) if not method.startswith("_")]
+        repo_methods = [
+            method for method in dir(DocumentRepository) if not method.startswith("_")
+        ]
 
         expected_methods = ["save", "get_by_id", "get_all", "get_by_author", "delete"]
 
         for method in expected_methods:
-            assert method in repo_methods, f"Method {method} should be defined in DocumentRepository"
+            assert (
+                method in repo_methods
+            ), f"Method {method} should be defined in DocumentRepository"
 
     def test_abstract_methods_are_abstract(self):
         """Test that repository methods are properly marked as abstract."""
@@ -204,9 +219,21 @@ class TestInMemoryDocumentRepository:
         repo1 = InMemoryDocumentRepository()
         repo2 = InMemoryDocumentRepository()
 
-        doc1 = Document(id="doc-1", title="Document 1", content="Content 1", repository_id="repo-1", author="author-1")
+        doc1 = Document(
+            id="doc-1",
+            title="Document 1",
+            content="Content 1",
+            repository_id="repo-1",
+            author="author-1",
+        )
 
-        doc2 = Document(id="doc-2", title="Document 2", content="Content 2", repository_id="repo-2", author="author-2")
+        doc2 = Document(
+            id="doc-2",
+            title="Document 2",
+            content="Content 2",
+            repository_id="repo-2",
+            author="author-2",
+        )
 
         # Save to repo1
         await repo1.save(doc1)
@@ -293,11 +320,19 @@ class TestInMemoryAnalysisRepository:
     @pytest.mark.asyncio
     async def test_get_by_status(self, repository):
         """Test getting analyses by status."""
-        statuses = [AnalysisStatus.PENDING, AnalysisStatus.RUNNING, AnalysisStatus.COMPLETED, AnalysisStatus.FAILED]
+        statuses = [
+            AnalysisStatus.PENDING,
+            AnalysisStatus.RUNNING,
+            AnalysisStatus.COMPLETED,
+            AnalysisStatus.FAILED,
+        ]
 
         for i, status in enumerate(statuses):
             analysis = Analysis(
-                id=f"analysis-{i}", document_id="doc-123", analysis_type=AnalysisType.SEMANTIC_SIMILARITY, status=status
+                id=f"analysis-{i}",
+                document_id="doc-123",
+                analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
+                status=status,
             )
             await repository.save(analysis)
 
@@ -310,16 +345,25 @@ class TestInMemoryAnalysisRepository:
     @pytest.mark.asyncio
     async def test_get_by_analysis_type(self, repository):
         """Test getting analyses by analysis type."""
-        types = [AnalysisType.SEMANTIC_SIMILARITY, AnalysisType.CODE_QUALITY, AnalysisType.SECURITY_SCAN]
+        types = [
+            AnalysisType.SEMANTIC_SIMILARITY,
+            AnalysisType.CODE_QUALITY,
+            AnalysisType.SECURITY_SCAN,
+        ]
 
         for i, analysis_type in enumerate(types):
             analysis = Analysis(
-                id=f"analysis-{i}", document_id="doc-123", analysis_type=analysis_type, status=AnalysisStatus.COMPLETED
+                id=f"analysis-{i}",
+                document_id="doc-123",
+                analysis_type=analysis_type,
+                status=AnalysisStatus.COMPLETED,
             )
             await repository.save(analysis)
 
         # Get semantic similarity analyses
-        semantic_analyses = await repository.get_by_analysis_type(AnalysisType.SEMANTIC_SIMILARITY)
+        semantic_analyses = await repository.get_by_analysis_type(
+            AnalysisType.SEMANTIC_SIMILARITY
+        )
 
         assert len(semantic_analyses) == 1
         assert semantic_analyses[0].analysis_type == AnalysisType.SEMANTIC_SIMILARITY
@@ -395,7 +439,11 @@ class TestInMemoryFindingRepository:
     async def test_get_by_document_id(self, repository):
         """Test getting findings by document ID."""
         # Create findings for different documents
-        documents = ["doc-1", "doc-2", "doc-1"]  # 2 docs, 3 findings (2 for doc-1, 1 for doc-2)
+        documents = [
+            "doc-1",
+            "doc-2",
+            "doc-1",
+        ]  # 2 docs, 3 findings (2 for doc-1, 1 for doc-2)
 
         for i, doc_id in enumerate(documents):
             finding = Finding(
@@ -617,7 +665,11 @@ class TestRepositoryIntegration:
 
         # Create related entities
         doc = Document(
-            id="doc-123", title="Test Document", content="Test content", repository_id="repo-456", author="test-author"
+            id="doc-123",
+            title="Test Document",
+            content="Test content",
+            repository_id="repo-456",
+            author="test-author",
         )
 
         analysis = Analysis(
@@ -782,7 +834,10 @@ class TestRepositoryErrorHandling:
         # Document constructor should handle validation
         try:
             invalid_doc = Document(
-                id="", title="Invalid Document", content="Content", repository_id="repo-123"  # Invalid empty ID
+                id="",
+                title="Invalid Document",
+                content="Content",
+                repository_id="repo-123",  # Invalid empty ID
             )
             # If we get here, the repository should handle it gracefully
             await repo.save(invalid_doc)

@@ -20,7 +20,9 @@ class NormalizeHandler:
     """Handles data normalization from various sources."""
 
     @staticmethod
-    def normalize_github_data(data: Dict[str, Any], correlation_id: Optional[str] = None) -> Optional[DocumentEnvelope]:
+    def normalize_github_data(
+        data: Dict[str, Any], correlation_id: Optional[str] = None
+    ) -> Optional[DocumentEnvelope]:
         """Normalize GitHub data."""
         if data.get("type") == "pr":
             # GitHub PR normalization
@@ -43,7 +45,11 @@ class NormalizeHandler:
             doc.url = pr_data.get("html_url", "")
             doc.project = pr_data.get("base", {}).get("repo", {}).get("full_name", "")
 
-            envelope = DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
+            envelope = DocumentEnvelope(
+                id=f"env:{doc.id}",
+                correlation_id=correlation_id,
+                document=doc.model_dump(),
+            )
             return envelope
 
         elif data.get("type") == "readme":
@@ -58,7 +64,11 @@ class NormalizeHandler:
                 content=content,
                 metadata={"type": "readme", "url": readme.get("html_url")},
             )
-            return DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
+            return DocumentEnvelope(
+                id=f"env:{doc.id}",
+                correlation_id=correlation_id,
+                document=doc.model_dump(),
+            )
 
         else:
             # Generic normalization for arbitrary GitHub-derived content
@@ -71,15 +81,25 @@ class NormalizeHandler:
                 content=content,
                 metadata=data.get("metadata") or {},
             )
-            return DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
+            return DocumentEnvelope(
+                id=f"env:{doc.id}",
+                correlation_id=correlation_id,
+                document=doc.model_dump(),
+            )
 
     @staticmethod
-    def normalize_jira_data(data: Dict[str, Any], correlation_id: Optional[str] = None) -> Optional[DocumentEnvelope]:
+    def normalize_jira_data(
+        data: Dict[str, Any], correlation_id: Optional[str] = None
+    ) -> Optional[DocumentEnvelope]:
         """Normalize Jira data."""
         if data.get("key"):
             # Jira issue normalization
             doc = build_jira_doc(data["key"], data)
-            return DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
+            return DocumentEnvelope(
+                id=f"env:{doc.id}",
+                correlation_id=correlation_id,
+                document=doc.model_dump(),
+            )
         return None
 
     @staticmethod
@@ -90,11 +110,17 @@ class NormalizeHandler:
         if data.get("id"):
             # Confluence page normalization
             doc = build_confluence_doc(data["id"], data)
-            return DocumentEnvelope(id=f"env:{doc.id}", correlation_id=correlation_id, document=doc.model_dump())
+            return DocumentEnvelope(
+                id=f"env:{doc.id}",
+                correlation_id=correlation_id,
+                document=doc.model_dump(),
+            )
         return None
 
     @staticmethod
-    def normalize_data(source: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> Dict[str, Any]:
+    def normalize_data(
+        source: str, data: Dict[str, Any], correlation_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Normalize data from specified source."""
         envelope = None
 
@@ -112,7 +138,9 @@ class NormalizeHandler:
             # Ensure correlation_id is included
             if correlation_id is not None:
                 envelope_dict["correlation_id"] = correlation_id
-            return create_source_agent_success_response("normalized", {"envelope": envelope_dict}, **context)
+            return create_source_agent_success_response(
+                "normalized", {"envelope": envelope_dict}, **context
+            )
         else:
             from fastapi import HTTPException
 

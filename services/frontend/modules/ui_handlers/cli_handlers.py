@@ -4,7 +4,6 @@ Handles terminal pass-through interface for CLI service operations,
 providing a web-based terminal for full CLI functionality.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..cli_monitor import cli_monitor
@@ -691,4 +690,8 @@ class CLIUIHandlers:
 """
             return create_html_response(html, "CLI Terminal")
         except Exception as e:
-            return handle_frontend_error("render CLI terminal", e, **build_frontend_context("render_cli_terminal"))
+            return handle_frontend_error(
+                "render CLI terminal",
+                e,
+                **build_frontend_context("render_cli_terminal")
+            )

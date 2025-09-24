@@ -45,13 +45,19 @@ class TeamMember:
 
     def can_handle_task(self, task_type: str) -> bool:
         """Check if team member can handle a specific task type."""
-        return task_type in self.specialization or self.expertise_level in ["expert", "advanced", "senior"]
+        return task_type in self.specialization or self.expertise_level in [
+            "expert",
+            "advanced",
+            "senior",
+        ]
 
     def get_productivity_for_task(self, task_type: str) -> float:
         """Get productivity multiplier for a specific task."""
         if self.can_handle_task(task_type):
             return self.productivity_multiplier
-        return self.productivity_multiplier * 0.7  # Reduced productivity for non-specialized work
+        return (
+            self.productivity_multiplier * 0.7
+        )  # Reduced productivity for non-specialized work
 
 
 @dataclass
@@ -134,7 +140,11 @@ class Project:
                 ProjectPhase(
                     name="planning",
                     duration_days=7,
-                    deliverables=["requirements", "architecture_overview", "project_plan"],
+                    deliverables=[
+                        "requirements",
+                        "architecture_overview",
+                        "project_plan",
+                    ],
                     team_allocation={"product_manager": 1, "technical_lead": 1},
                 ),
                 ProjectPhase(
@@ -142,7 +152,11 @@ class Project:
                     duration_days=10,
                     deliverables=["technical_design", "user_stories", "wireframes"],
                     dependencies=["planning"],
-                    team_allocation={"designer": 1, "developer": 2, "technical_lead": 1},
+                    team_allocation={
+                        "designer": 1,
+                        "developer": 2,
+                        "technical_lead": 1,
+                    },
                 ),
                 ProjectPhase(
                     name="development",
@@ -191,7 +205,11 @@ class Project:
                 ProjectPhase(
                     name="validation",
                     duration_days=4,
-                    deliverables=["security_audit", "performance_test", "documentation_review"],
+                    deliverables=[
+                        "security_audit",
+                        "performance_test",
+                        "documentation_review",
+                    ],
                     dependencies=["implementation"],
                     team_allocation={"qa_engineer": 1, "security_engineer": 1},
                 ),
@@ -201,7 +219,9 @@ class Project:
     def add_team_member(self, member: TeamMember) -> None:
         """Add a team member to the project."""
         if len(self.team_members) >= self.team_size:
-            raise ValueError(f"Project already has maximum team size of {self.team_size}")
+            raise ValueError(
+                f"Project already has maximum team size of {self.team_size}"
+            )
 
         if any(m.id == member.id for m in self.team_members):
             raise ValueError(f"Team member with ID {member.id} already exists")
@@ -222,7 +242,9 @@ class Project:
         for dep in phase.dependencies:
             dep_phase = self._get_phase(dep)
             if not dep_phase.is_completed():
-                raise ValueError(f"Cannot start phase {phase_name}: dependency {dep} not completed")
+                raise ValueError(
+                    f"Cannot start phase {phase_name}: dependency {dep} not completed"
+                )
 
         phase.start_phase(datetime.now())
         self.updated_at = datetime.now()

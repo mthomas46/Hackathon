@@ -47,8 +47,12 @@ class CodeAnalyzerMonitor:
                 "available_styles": style_response.get("examples", []),
                 "analysis_stats": self._calculate_analysis_stats(),
                 "recent_analyses": self._analyses[-10:] if self._analyses else [],
-                "recent_security_scans": self._security_scans[-10:] if self._security_scans else [],
-                "recent_style_checks": self._style_checks[-10:] if self._style_checks else [],
+                "recent_security_scans": (
+                    self._security_scans[-10:] if self._security_scans else []
+                ),
+                "recent_style_checks": (
+                    self._style_checks[-10:] if self._style_checks else []
+                ),
                 "last_updated": utc_now().isoformat(),
             }
 
@@ -69,7 +73,9 @@ class CodeAnalyzerMonitor:
                 "last_updated": utc_now().isoformat(),
             }
 
-    async def analyze_text(self, text: str, analysis_type: str = "general") -> Dict[str, Any]:
+    async def analyze_text(
+        self, text: str, analysis_type: str = "general"
+    ) -> Dict[str, Any]:
         """Analyze text content and cache the result."""
         try:
             clients = get_frontend_clients()
@@ -93,12 +99,18 @@ class CodeAnalyzerMonitor:
             if len(self._analyses) > 50:
                 self._analyses = self._analyses[:50]
 
-            return {"success": True, "analysis_id": analysis_result["id"], "result": response}
+            return {
+                "success": True,
+                "analysis_id": analysis_result["id"],
+                "result": response,
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e), "result": None}
 
-    async def analyze_files(self, files: List[str], analysis_type: str = "general") -> Dict[str, Any]:
+    async def analyze_files(
+        self, files: List[str], analysis_type: str = "general"
+    ) -> Dict[str, Any]:
         """Analyze files and cache the result."""
         try:
             clients = get_frontend_clients()
@@ -123,7 +135,11 @@ class CodeAnalyzerMonitor:
             if len(self._analyses) > 50:
                 self._analyses = self._analyses[:50]
 
-            return {"success": True, "analysis_id": analysis_result["id"], "result": response}
+            return {
+                "success": True,
+                "analysis_id": analysis_result["id"],
+                "result": response,
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e), "result": None}
@@ -163,7 +179,9 @@ class CodeAnalyzerMonitor:
 
             payload = {"code": code, "style": style}
 
-            response = await clients.post_json(f"{analyzer_url}/style/examples", payload)
+            response = await clients.post_json(
+                f"{analyzer_url}/style/examples", payload
+            )
 
             # Cache the style check
             style_result = {

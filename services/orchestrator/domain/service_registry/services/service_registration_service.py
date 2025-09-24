@@ -1,7 +1,9 @@
-"""Service Registration Domain Service"""
+"""Service Registration Domain Service using standardized BaseService"""
 
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
+
+from services.shared.utilities import BaseService
 
 from ..entities.service import Service
 from ..value_objects.service_capability import ServiceCapability
@@ -9,12 +11,39 @@ from ..value_objects.service_endpoint import ServiceEndpoint
 from ..value_objects.service_id import ServiceId
 
 
-class ServiceRegistrationService:
+class ServiceRegistrationService(BaseService[Service]):
     """Domain service for registering and managing service instances."""
 
     def __init__(self):
         """Initialize the registration service."""
         self._registered_services: Dict[str, Service] = {}
+
+    def _validate_entity(self, entity: Service) -> None:
+        """Validate service entity using standardized validation."""
+        if not entity.name or not entity.name.strip():
+            raise ValueError("Service name cannot be empty")
+        if not entity.service_id or not entity.service_id.value:
+            raise ValueError("Service ID cannot be empty")
+        if not entity.category or not entity.category.strip():
+            raise ValueError("Service category cannot be empty")
+
+    async def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> Service:
+        """Create service entity from data using standardized factory pattern."""
+        from ..factories.service_factory import ServiceFactory
+
+        return ServiceFactory.create_service(
+            service_id=data.get("service_id", entity_id),
+            name=data.get("name", ""),
+            description=data.get("description", ""),
+            category=data.get("category", ""),
+            base_url=data.get("base_url"),
+            openapi_url=data.get("openapi_url"),
+            capabilities=data.get("capabilities", []),
+            endpoints=data.get("endpoints", []),
+            metadata=data.get("metadata", {}),
+        )
 
     def register_service(
         self,

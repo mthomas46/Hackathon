@@ -72,7 +72,9 @@ class IAnalysisService(Protocol):
     providing status tracking and result retrieval capabilities.
     """
 
-    async def analyze_documents(self, targets: List[str], analysis_type: str, **kwargs) -> Dict[str, Any]:
+    async def analyze_documents(
+        self, targets: List[str], analysis_type: str, **kwargs
+    ) -> Dict[str, Any]:
         """Analyze documents using specified analysis type.
 
         Performs comprehensive analysis on the specified documents based on
@@ -133,7 +135,9 @@ class IDocumentService(Protocol):
         """Get document by ID."""
         ...
 
-    async def list_documents(self, filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    async def list_documents(
+        self, filters: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """List documents with filters."""
         ...
 
@@ -324,15 +328,21 @@ class ILoggerService(Protocol):
 class IMetricsService(Protocol):
     """Metrics service interface."""
 
-    def increment_counter(self, name: str, value: float = 1.0, tags: Optional[Dict[str, str]] = None) -> None:
+    def increment_counter(
+        self, name: str, value: float = 1.0, tags: Optional[Dict[str, str]] = None
+    ) -> None:
         """Increment counter metric."""
         ...
 
-    def record_histogram(self, name: str, value: float, tags: Optional[Dict[str, str]] = None) -> None:
+    def record_histogram(
+        self, name: str, value: float, tags: Optional[Dict[str, str]] = None
+    ) -> None:
         """Record histogram metric."""
         ...
 
-    def record_gauge(self, name: str, value: float, tags: Optional[Dict[str, str]] = None) -> None:
+    def record_gauge(
+        self, name: str, value: float, tags: Optional[Dict[str, str]] = None
+    ) -> None:
         """Record gauge metric."""
         ...
 
@@ -381,7 +391,9 @@ class ISemanticAnalyzer(Protocol):
         """Analyze semantic similarity."""
         ...
 
-    async def find_similar(self, target: str, candidates: List[str], **kwargs) -> List[Dict[str, Any]]:
+    async def find_similar(
+        self, target: str, candidates: List[str], **kwargs
+    ) -> List[Dict[str, Any]]:
         """Find similar texts."""
         ...
 
@@ -512,7 +524,9 @@ class IValidator(Protocol):
 class IBusinessRuleValidator(Protocol):
     """Business rule validator interface."""
 
-    async def validate_business_rule(self, entity: Any, rule_name: str) -> Dict[str, Any]:
+    async def validate_business_rule(
+        self, entity: Any, rule_name: str
+    ) -> Dict[str, Any]:
         """Validate business rule."""
         ...
 
@@ -525,7 +539,9 @@ class IBusinessRuleValidator(Protocol):
 class BaseService(ABC):
     """Base service class with common functionality."""
 
-    def __init__(self, logger: ILoggerService, metrics: Optional[IMetricsService] = None) -> None:
+    def __init__(
+        self, logger: ILoggerService, metrics: Optional[IMetricsService] = None
+    ) -> None:
         self._logger = logger
         self._metrics = metrics
 
@@ -543,7 +559,11 @@ class BaseService(ABC):
 class BaseRepository(ABC):
     """Base repository class with common functionality."""
 
-    def __init__(self, cache: Optional[ICacheService] = None, logger: Optional[ILoggerService] = None) -> None:
+    def __init__(
+        self,
+        cache: Optional[ICacheService] = None,
+        logger: Optional[ILoggerService] = None,
+    ) -> None:
         self._cache = cache
         self._logger = logger
 
@@ -553,7 +573,9 @@ class BaseRepository(ABC):
             return await self._cache.get(key)
         return None
 
-    async def _set_cached(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+    async def _set_cached(
+        self, key: str, value: Any, ttl: Optional[int] = None
+    ) -> None:
         """Set value in cache if available."""
         if self._cache:
             await self._cache.set(key, value, ttl)

@@ -13,7 +13,9 @@ from .dashboard_manager import DashboardManager
 class AdvancedMonitoringManager(BaseManager):
     """Main advanced monitoring manager coordinating all monitoring operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
         # Initialize specialized managers
@@ -57,7 +59,9 @@ class AdvancedMonitoringManager(BaseManager):
     async def slo_sla_monitoring_menu(self):
         """SLO/SLA monitoring submenu."""
         self.display.show_info("SLO/SLA monitoring feature coming soon!")
-        self.display.show_info("This will include service level objective and agreement monitoring")
+        self.display.show_info(
+            "This will include service level objective and agreement monitoring"
+        )
         Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     async def real_time_metrics_menu(self):
@@ -69,7 +73,9 @@ class AdvancedMonitoringManager(BaseManager):
     async def anomaly_detection_menu(self):
         """Anomaly detection submenu."""
         self.display.show_info("Anomaly detection feature coming soon!")
-        self.display.show_info("This will include automated anomaly detection for metrics")
+        self.display.show_info(
+            "This will include automated anomaly detection for metrics"
+        )
         Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     async def performance_analytics_menu(self):
@@ -81,7 +87,9 @@ class AdvancedMonitoringManager(BaseManager):
     async def monitoring_configuration_menu(self):
         """Monitoring configuration submenu."""
         self.display.show_info("Monitoring configuration feature coming soon!")
-        self.display.show_info("This will include monitoring system settings and integrations")
+        self.display.show_info(
+            "This will include monitoring system settings and integrations"
+        )
         Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
     # CLI integration methods for backward compatibility

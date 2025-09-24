@@ -13,7 +13,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.logging import get_simulation_logger
 
@@ -54,7 +56,9 @@ except ImportError:
 
         def deregister(self, service_id: str):
             for service_list in self.services.values():
-                service_list[:] = [s for s in service_list if s.service_id != service_id]
+                service_list[:] = [
+                    s for s in service_list if s.service_id != service_id
+                ]
 
         def get_instances(self, service_name: str) -> List[ServiceInstance]:
             return self.services.get(service_name, [])
@@ -259,7 +263,9 @@ class SimulationServiceDiscovery:
         self._running = True
 
         # Start background threads
-        self._discovery_thread = threading.Thread(target=self._discovery_worker, daemon=True)
+        self._discovery_thread = threading.Thread(
+            target=self._discovery_worker, daemon=True
+        )
         self._health_thread = threading.Thread(target=self._health_worker, daemon=True)
 
         self._discovery_thread.start()
@@ -312,10 +318,16 @@ class SimulationServiceDiscovery:
     def get_ecosystem_health_overview(self) -> Dict[str, Any]:
         """Get comprehensive ecosystem health overview."""
         total_services = len(self._service_endpoints)
-        healthy_services = sum(1 for status in self._health_status.values() if status == ServiceStatus.UP)
-        unhealthy_services = sum(1 for status in self._health_status.values() if status == ServiceStatus.DOWN)
+        healthy_services = sum(
+            1 for status in self._health_status.values() if status == ServiceStatus.UP
+        )
+        unhealthy_services = sum(
+            1 for status in self._health_status.values() if status == ServiceStatus.DOWN
+        )
 
-        health_percentage = (healthy_services / total_services * 100) if total_services > 0 else 0
+        health_percentage = (
+            (healthy_services / total_services * 100) if total_services > 0 else 0
+        )
 
         # Service health breakdown
         service_health = {}
@@ -334,7 +346,9 @@ class SimulationServiceDiscovery:
             "dependency_graph": self._build_dependency_graph(),
         }
 
-    def register_simulation_service(self, service_name: str, url: str, metadata: Dict[str, Any] = None):
+    def register_simulation_service(
+        self, service_name: str, url: str, metadata: Dict[str, Any] = None
+    ):
         """Register the simulation service itself."""
         with self._lock:
             instance = ServiceInstance(
@@ -352,7 +366,9 @@ class SimulationServiceDiscovery:
             self._service_metadata[service_name] = metadata or {}
             self._health_status[service_name] = ServiceStatus.UP
 
-            self.logger.info("Simulation service registered", service_name=service_name, url=url)
+            self.logger.info(
+                "Simulation service registered", service_name=service_name, url=url
+            )
 
     def _discovery_worker(self):
         """Background worker for service discovery."""
@@ -399,7 +415,9 @@ class SimulationServiceDiscovery:
                     instance.last_heartbeat = datetime.now()
 
             except Exception as e:
-                self.logger.warning("Health check failed", service=service_name, error=str(e))
+                self.logger.warning(
+                    "Health check failed", service=service_name, error=str(e)
+                )
                 self._health_status[service_name] = ServiceStatus.DOWN
                 self._health_timestamps[service_name] = datetime.now()
 

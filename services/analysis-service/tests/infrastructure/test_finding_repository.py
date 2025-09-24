@@ -7,8 +7,13 @@ import pytest
 from ...domain.entities.finding import Finding, FindingSeverity
 from ...domain.value_objects.confidence import Confidence
 from ...domain.value_objects.location import CodeLocation, FileLocation
-from ...infrastructure.repositories.finding_repository import FindingRepository, InMemoryFindingRepository
-from ...infrastructure.repositories.sqlite_finding_repository import SQLiteFindingRepository
+from ...infrastructure.repositories.finding_repository import (
+    FindingRepository,
+    InMemoryFindingRepository,
+)
+from ...infrastructure.repositories.sqlite_finding_repository import (
+    SQLiteFindingRepository,
+)
 
 
 class TestFindingRepositoryInterface:
@@ -16,7 +21,9 @@ class TestFindingRepositoryInterface:
 
     def test_repository_interface_definition(self):
         """Test that FindingRepository defines the expected interface."""
-        repo_methods = [method for method in dir(FindingRepository) if not method.startswith("_")]
+        repo_methods = [
+            method for method in dir(FindingRepository) if not method.startswith("_")
+        ]
 
         expected_methods = [
             "save",
@@ -29,7 +36,9 @@ class TestFindingRepositoryInterface:
         ]
 
         for method in expected_methods:
-            assert method in repo_methods, f"Method {method} should be defined in FindingRepository"
+            assert (
+                method in repo_methods
+            ), f"Method {method} should be defined in FindingRepository"
 
 
 class TestInMemoryFindingRepository:
@@ -160,7 +169,12 @@ class TestInMemoryFindingRepository:
     @pytest.mark.asyncio
     async def test_get_by_severity(self, repository):
         """Test getting findings by severity."""
-        severities = [FindingSeverity.LOW, FindingSeverity.MEDIUM, FindingSeverity.HIGH, FindingSeverity.CRITICAL]
+        severities = [
+            FindingSeverity.LOW,
+            FindingSeverity.MEDIUM,
+            FindingSeverity.HIGH,
+            FindingSeverity.CRITICAL,
+        ]
 
         for i, severity in enumerate(severities):
             finding = Finding(
@@ -231,7 +245,13 @@ class TestInMemoryFindingRepository:
     @pytest.mark.asyncio
     async def test_finding_with_code_location(self, repository):
         """Test finding with code location."""
-        location = CodeLocation(file_path="/src/parser.py", start_line=25, end_line=35, start_column=10, end_column=25)
+        location = CodeLocation(
+            file_path="/src/parser.py",
+            start_line=25,
+            end_line=35,
+            start_column=10,
+            end_column=25,
+        )
 
         finding = Finding(
             id="code-location-finding",
@@ -272,7 +292,9 @@ class TestInMemoryFindingRepository:
 
         retrieved = await repository.get_by_id("recommendation-finding")
         assert retrieved is not None
-        assert retrieved.recommendation == "Consider using more descriptive variable names"
+        assert (
+            retrieved.recommendation == "Consider using more descriptive variable names"
+        )
 
     @pytest.mark.asyncio
     async def test_finding_with_metadata(self, repository):
@@ -436,7 +458,9 @@ class TestFindingRepositoryIntegration:
     @pytest.mark.asyncio
     async def test_finding_repository_with_analysis_repository(self):
         """Test finding repository integration with analysis repository."""
-        from ...infrastructure.repositories.analysis_repository import InMemoryAnalysisRepository
+        from ...infrastructure.repositories.analysis_repository import (
+            InMemoryAnalysisRepository,
+        )
 
         analysis_repo = InMemoryAnalysisRepository()
         finding_repo = InMemoryFindingRepository()
@@ -467,7 +491,9 @@ class TestFindingRepositoryIntegration:
             findings.append(finding)
 
         # Verify the relationship
-        analysis_findings = await finding_repo.get_by_analysis_id("integration-analysis")
+        analysis_findings = await finding_repo.get_by_analysis_id(
+            "integration-analysis"
+        )
         assert len(analysis_findings) == 3
 
         for finding in analysis_findings:
@@ -725,11 +751,17 @@ class TestFindingRepositoryEdgeCases:
             "rule_id": "COMPLEX-001",
             "tags": [f"tag-{i}" for i in range(100)],  # 100 tags
             "code_snippet": "x" * 5000,  # 5KB code snippet
-            "related_findings": [f"finding-{i}" for i in range(200)],  # 200 related findings
+            "related_findings": [
+                f"finding-{i}" for i in range(200)
+            ],  # 200 related findings
             "analysis_context": {
                 "file_dependencies": [f"/src/dep-{i}.py" for i in range(50)],
-                "function_calls": [{"name": f"func-{i}", "line": i * 10} for i in range(100)],
-                "variable_usage": {f"var-{i}": [f"usage-{j}" for j in range(20)] for i in range(30)},
+                "function_calls": [
+                    {"name": f"func-{i}", "line": i * 10} for i in range(100)
+                ],
+                "variable_usage": {
+                    f"var-{i}": [f"usage-{j}" for j in range(20)] for i in range(30)
+                },
             },
             "performance_impact": {
                 "complexity_increase": 25.5,

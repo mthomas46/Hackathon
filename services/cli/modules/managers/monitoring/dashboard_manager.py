@@ -15,7 +15,9 @@ from ...base.base_manager import BaseManager
 class DashboardManager(BaseManager):
     """Manager for dashboard operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
         self.dashboards = {}
 
@@ -77,16 +79,28 @@ class DashboardManager(BaseManager):
                 self.console.print(table)
 
                 # Option to view dashboard details
-                show_details = Confirm.ask("[bold cyan]Show detailed view of a dashboard?[/bold cyan]", default=False)
+                show_details = Confirm.ask(
+                    "[bold cyan]Show detailed view of a dashboard?[/bold cyan]",
+                    default=False,
+                )
 
                 if show_details:
                     dashboard_names = list(dashboards.keys())
-                    selected_dashboard = Prompt.ask("[bold cyan]Select dashboard[/bold cyan]", choices=dashboard_names)
+                    selected_dashboard = Prompt.ask(
+                        "[bold cyan]Select dashboard[/bold cyan]",
+                        choices=dashboard_names,
+                    )
 
-                    await self._display_dashboard_details(dashboards[selected_dashboard])
+                    await self._display_dashboard_details(
+                        dashboards[selected_dashboard]
+                    )
             else:
-                self.display.show_warning("No dashboards found. Grafana integration may not be available.")
-                self.display.show_info("To enable dashboards, ensure Grafana is running with dashboard provisioning.")
+                self.display.show_warning(
+                    "No dashboards found. Grafana integration may not be available."
+                )
+                self.display.show_info(
+                    "To enable dashboards, ensure Grafana is running with dashboard provisioning."
+                )
 
         except Exception as e:
             self.display.show_error(f"Error viewing dashboards: {e}")
@@ -126,12 +140,18 @@ class DashboardManager(BaseManager):
                 dashboard_config["panels"] = self._get_application_dashboard_panels()
 
             # Save dashboard configuration
-            success = await self._save_dashboard_config(dashboard_name, dashboard_config)
+            success = await self._save_dashboard_config(
+                dashboard_name, dashboard_config
+            )
 
             if success:
                 self.dashboards[dashboard_name] = dashboard_config
-                self.display.show_success(f"Dashboard '{dashboard_name}' created successfully")
-                self.display.show_info(f"Dashboard includes {len(dashboard_config['panels'])} default panels")
+                self.display.show_success(
+                    f"Dashboard '{dashboard_name}' created successfully"
+                )
+                self.display.show_info(
+                    f"Dashboard includes {len(dashboard_config['panels'])} default panels"
+                )
             else:
                 self.display.show_error("Failed to create dashboard")
 
@@ -148,7 +168,9 @@ class DashboardManager(BaseManager):
                 return
 
             dashboard_names = list(dashboards.keys())
-            selected_dashboard = await self.select_from_list(dashboard_names, "Select dashboard to edit")
+            selected_dashboard = await self.select_from_list(
+                dashboard_names, "Select dashboard to edit"
+            )
 
             if not selected_dashboard:
                 return
@@ -167,22 +189,30 @@ class DashboardManager(BaseManager):
                     dashboard_config["description"] = new_description
                     dashboard_config["updated_at"] = self._get_timestamp()
 
-                    success = await self._save_dashboard_config(selected_dashboard, dashboard_config)
+                    success = await self._save_dashboard_config(
+                        selected_dashboard, dashboard_config
+                    )
                     if success:
                         self.display.show_success("Dashboard description updated")
                     else:
                         self.display.show_error("Failed to update dashboard")
 
                 # Option to add panels
-                add_panel = await self.confirm_action("Add a new panel to the dashboard?")
+                add_panel = await self.confirm_action(
+                    "Add a new panel to the dashboard?"
+                )
 
                 if add_panel:
                     await self._add_panel_to_dashboard(dashboard_config)
-                    success = await self._save_dashboard_config(selected_dashboard, dashboard_config)
+                    success = await self._save_dashboard_config(
+                        selected_dashboard, dashboard_config
+                    )
                     if success:
                         self.display.show_success("Panel added to dashboard")
             else:
-                self.display.show_error(f"Could not load dashboard configuration for {selected_dashboard}")
+                self.display.show_error(
+                    f"Could not load dashboard configuration for {selected_dashboard}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error editing dashboard: {e}")
@@ -202,7 +232,9 @@ class DashboardManager(BaseManager):
                 elif file_path.endswith((".yaml", ".yml")):
                     dashboard_config = yaml.safe_load(f)
                 else:
-                    self.display.show_error("Unsupported file format. Use .json or .yaml/.yml")
+                    self.display.show_error(
+                        "Unsupported file format. Use .json or .yaml/.yml"
+                    )
                     return
 
             dashboard_name = dashboard_config.get("name", Path(file_path).stem)
@@ -212,12 +244,18 @@ class DashboardManager(BaseManager):
                 self.display.show_error("Invalid dashboard configuration")
                 return
 
-            success = await self._save_dashboard_config(dashboard_name, dashboard_config)
+            success = await self._save_dashboard_config(
+                dashboard_name, dashboard_config
+            )
 
             if success:
                 self.dashboards[dashboard_name] = dashboard_config
-                self.display.show_success(f"Dashboard '{dashboard_name}' imported successfully")
-                self.display.show_info(f"Imported {len(dashboard_config.get('panels', []))} panels")
+                self.display.show_success(
+                    f"Dashboard '{dashboard_name}' imported successfully"
+                )
+                self.display.show_info(
+                    f"Imported {len(dashboard_config.get('panels', []))} panels"
+                )
             else:
                 self.display.show_error("Failed to import dashboard")
 
@@ -234,7 +272,9 @@ class DashboardManager(BaseManager):
                 return
 
             dashboard_names = list(dashboards.keys())
-            selected_dashboard = await self.select_from_list(dashboard_names, "Select dashboard to export")
+            selected_dashboard = await self.select_from_list(
+                dashboard_names, "Select dashboard to export"
+            )
 
             if not selected_dashboard:
                 return
@@ -242,7 +282,9 @@ class DashboardManager(BaseManager):
             dashboard_config = await self._load_dashboard_config(selected_dashboard)
 
             if dashboard_config:
-                format_choice = await self.select_from_list(["json", "yaml"], "Export format")
+                format_choice = await self.select_from_list(
+                    ["json", "yaml"], "Export format"
+                )
                 if not format_choice:
                     format_choice = "json"
 
@@ -260,7 +302,9 @@ class DashboardManager(BaseManager):
 
                 self.display.show_success(f"Dashboard exported to {file_path}")
             else:
-                self.display.show_error(f"Could not load dashboard configuration for {selected_dashboard}")
+                self.display.show_error(
+                    f"Could not load dashboard configuration for {selected_dashboard}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error exporting dashboard: {e}")
@@ -271,7 +315,9 @@ class DashboardManager(BaseManager):
             dashboards = self._discover_dashboards()
 
             if not dashboards:
-                self.display.show_warning("No dashboards available for performance analysis")
+                self.display.show_warning(
+                    "No dashboards available for performance analysis"
+                )
                 return
 
             # Generate mock performance metrics
@@ -349,7 +395,11 @@ Panels: {dashboard_info.get('panels', 0)}
             {"type": "graph", "title": "CPU Usage", "targets": ["cpu_usage"]},
             {"type": "graph", "title": "Memory Usage", "targets": ["memory_usage"]},
             {"type": "graph", "title": "Disk I/O", "targets": ["disk_io"]},
-            {"type": "graph", "title": "Network Traffic", "targets": ["network_traffic"]},
+            {
+                "type": "graph",
+                "title": "Network Traffic",
+                "targets": ["network_traffic"],
+            },
         ]
 
     def _get_application_dashboard_panels(self) -> List[Dict[str, Any]]:
@@ -378,10 +428,17 @@ Panels: {dashboard_info.get('panels', 0)}
     async def _add_panel_to_dashboard(self, dashboard_config: Dict[str, Any]):
         """Add a new panel to dashboard configuration."""
         panel_title = await self.get_user_input("Panel title")
-        panel_type = await self.select_from_list(["graph", "table", "singlestat", "heatmap"], "Panel type")
+        panel_type = await self.select_from_list(
+            ["graph", "table", "singlestat", "heatmap"], "Panel type"
+        )
 
         if panel_title and panel_type:
-            new_panel = {"type": panel_type, "title": panel_title, "targets": [], "added_at": self._get_timestamp()}
+            new_panel = {
+                "type": panel_type,
+                "title": panel_title,
+                "targets": [],
+                "added_at": self._get_timestamp(),
+            }
             dashboard_config["panels"].append(new_panel)
 
     def _validate_dashboard_config(self, config: Dict[str, Any]) -> bool:

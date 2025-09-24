@@ -56,9 +56,13 @@ class WebhookEntity(BaseEntity):
         webhook.timeout_seconds = data.get("timeout_seconds", 30)
         webhook.created_by = data.get("created_by", "")
         if "created_at" in data:
-            webhook.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            webhook.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "updated_at" in data:
-            webhook.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            webhook.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
         return webhook
 
 
@@ -85,7 +89,9 @@ class NotificationEntity(BaseEntity):
             "recipient_type": self.recipient_type,
             "recipient_id": self.recipient_id,
             "status": self.status,
-            "delivered_at": self.delivered_at.isoformat() if self.delivered_at else None,
+            "delivered_at": (
+                self.delivered_at.isoformat() if self.delivered_at else None
+            ),
             "error_message": self.error_message,
             "retry_count": self.retry_count,
             "created_at": self.created_at.isoformat(),
@@ -103,13 +109,19 @@ class NotificationEntity(BaseEntity):
         notification.recipient_id = data["recipient_id"]
         notification.status = data.get("status", "pending")
         if "delivered_at" in data and data["delivered_at"]:
-            notification.delivered_at = datetime.fromisoformat(data["delivered_at"].replace("Z", "+00:00"))
+            notification.delivered_at = datetime.fromisoformat(
+                data["delivered_at"].replace("Z", "+00:00")
+            )
         notification.error_message = data.get("error_message")
         notification.retry_count = data.get("retry_count", 0)
         if "created_at" in data:
-            notification.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            notification.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "updated_at" in data:
-            notification.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            notification.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
         return notification
 
 
@@ -136,13 +148,22 @@ class NotificationsRepository:
         "refinement.failed",
     }
 
-    def __init__(self):
+    def __init__(self, connection_string: str):
+        from ...db.connection import get_prompt_store_connection_string
+
+        self.connection_string = (
+            connection_string or get_prompt_store_connection_string()
+        )
         self.webhooks_table = "webhooks"
         self.notifications_table = "notifications"
         self.deliveries_table = "webhook_deliveries"
 
         # Validate table names to prevent SQL injection
-        for table_name in [self.webhooks_table, self.notifications_table, self.deliveries_table]:
+        for table_name in [
+            self.webhooks_table,
+            self.notifications_table,
+            self.deliveries_table,
+        ]:
             if not validate_sql_identifier(table_name):
                 raise ValueError(f"Invalid table name: {table_name}")
 
@@ -191,7 +212,7 @@ class NotificationsRepository:
         """Get webhook by ID."""
         query = f"""
             SELECT id, name, url, events, secret, is_active, retry_count, timeout_seconds,
-                   created_by, created_at, updated_at
+                    created_by, created_at, updated_at
             FROM {self.webhooks_table}
             WHERE id = ?
         """  # nosec: Table name validated in __init__
@@ -208,7 +229,7 @@ class NotificationsRepository:
         """Get all active webhooks that should receive a specific event type."""
         query = f"""
             SELECT id, name, url, events, secret, is_active, retry_count, timeout_seconds,
-                   created_by, created_at, updated_at
+                    created_by, created_at, updated_at
             FROM {self.webhooks_table}
             WHERE is_active = 1 AND events LIKE ?
         """
@@ -228,7 +249,7 @@ class NotificationsRepository:
         """Get all webhooks."""
         query = f"""
             SELECT id, name, url, events, secret, is_active, retry_count, timeout_seconds,
-                   created_by, created_at, updated_at
+                    created_by, created_at, updated_at
             FROM {self.webhooks_table}
         """
         if active_only:
@@ -250,7 +271,14 @@ class NotificationsRepository:
         update_fields = []
         params = []
 
-        for field in ["name", "url", "secret", "is_active", "retry_count", "timeout_seconds"]:
+        for field in [
+            "name",
+            "url",
+            "secret",
+            "is_active",
+            "retry_count",
+            "timeout_seconds",
+        ]:
             if field in updates:
                 if field == "events":
                     update_fields.append("events = ?")
@@ -283,7 +311,11 @@ class NotificationsRepository:
 
     # Notification operations
     def create_notification(
-        self, event_type: str, event_data: Dict[str, Any], recipient_type: str, recipient_id: str
+        self,
+        event_type: str,
+        event_data: Dict[str, Any],
+        recipient_type: str,
+        recipient_id: str,
     ) -> NotificationEntity:
         """Create a notification event."""
 
@@ -326,7 +358,7 @@ class NotificationsRepository:
         """Get pending notifications for delivery."""
         query = f"""
             SELECT id, event_type, event_data, recipient_type, recipient_id, status,
-                   delivered_at, error_message, retry_count, created_at, updated_at
+                    delivered_at, error_message, retry_count, created_at, updated_at
             FROM {self.notifications_table}
             WHERE status = 'pending'
             ORDER BY created_at ASC
@@ -337,7 +369,9 @@ class NotificationsRepository:
 
         notifications = []
         for row in rows:
-            row["event_data"] = json.loads(row["event_data"]) if row["event_data"] else {}
+            row["event_data"] = (
+                json.loads(row["event_data"]) if row["event_data"] else {}
+            )
             notifications.append(NotificationEntity.from_dict(row))
 
         return notifications
@@ -353,10 +387,20 @@ class NotificationsRepository:
             WHERE id = ?
         """
 
-        delivered_at = utc_now().isoformat() if status in ["delivered", "failed"] else None
+        delivered_at = (
+            utc_now().isoformat() if status in ["delivered", "failed"] else None
+        )
 
         execute_query(
-            query, (status, error_message, delivered_at, utc_now().isoformat(), notification_id), fetch_all=False
+            query,
+            (
+                status,
+                error_message,
+                delivered_at,
+                utc_now().isoformat(),
+                notification_id,
+            ),
+            fetch_all=False,
         )
 
         return True
@@ -390,14 +434,19 @@ class NotificationsRepository:
         """
         recent_rows = execute_query(recent_query, fetch_all=True)
         recent_events = [
-            {"id": row["id"], "event_type": row["event_type"], "status": row["status"], "created_at": row["created_at"]}
+            {
+                "id": row["id"],
+                "event_type": row["event_type"],
+                "status": row["status"],
+                "created_at": row["created_at"],
+            }
             for row in recent_rows
         ]
 
         # Webhook stats
         webhook_query = f"""
             SELECT COUNT(*) as total_webhooks,
-                   SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_webhooks
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_webhooks
             FROM {self.webhooks_table}
         """
         webhook_row = execute_query(webhook_query, fetch_one=True)

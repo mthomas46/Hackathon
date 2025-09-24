@@ -54,7 +54,9 @@ def render_prediction_chart(
 
             # Ensure we have the required columns
             if "timestamp" not in df.columns or "predicted_value" not in df.columns:
-                st.error("❌ Prediction data missing required columns (timestamp, predicted_value)")
+                st.error(
+                    "❌ Prediction data missing required columns (timestamp, predicted_value)"
+                )
                 return
 
             # Convert timestamp if needed
@@ -98,7 +100,11 @@ def render_prediction_chart(
 
             # Update layout
             fig.update_layout(
-                width=width, height=height, xaxis_title="Time", yaxis_title="Predicted Value", showlegend=True
+                width=width,
+                height=height,
+                xaxis_title="Time",
+                yaxis_title="Predicted Value",
+                showlegend=True,
             )
 
             st.plotly_chart(fig, use_container_width=True)
@@ -171,7 +177,13 @@ def render_forecast_comparison_chart(
             )
 
         # Update layout
-        fig.update_layout(title=title, xaxis_title="Time", yaxis_title="Value", width=width, height=height)
+        fig.update_layout(
+            title=title,
+            xaxis_title="Time",
+            yaxis_title="Value",
+            width=width,
+            height=height,
+        )
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -252,7 +264,13 @@ def render_prediction_confidence_chart(
                 )
             )
 
-        fig.update_layout(title=title, xaxis_title="Time", yaxis_title="Predicted Value", width=width, height=height)
+        fig.update_layout(
+            title=title,
+            xaxis_title="Time",
+            yaxis_title="Predicted Value",
+            width=width,
+            height=height,
+        )
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -299,9 +317,16 @@ def render_model_performance_chart(
             return
 
         # Create bar chart
-        fig = px.bar(x=metrics, y=values, title=title, labels={"x": "Metric", "y": "Value"})
+        fig = px.bar(
+            x=metrics, y=values, title=title, labels={"x": "Metric", "y": "Value"}
+        )
 
-        fig.update_layout(width=width, height=height, xaxis_title="Performance Metric", yaxis_title="Value")
+        fig.update_layout(
+            width=width,
+            height=height,
+            xaxis_title="Performance Metric",
+            yaxis_title="Value",
+        )
 
         st.plotly_chart(fig, use_container_width=True)
 

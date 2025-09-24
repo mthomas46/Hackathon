@@ -66,10 +66,16 @@ class CircuitBreaker:
 # Global circuit breaker instance with environment-configurable settings
 circuit_breaker = CircuitBreaker(
     max_failures=int(
-        os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES", str(DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES))
+        os.environ.get(
+            "SECURE_ANALYZER_CIRCUIT_BREAKER_MAX_FAILURES",
+            str(DEFAULT_CIRCUIT_BREAKER_MAX_FAILURES),
+        )
     ),
     timeout_seconds=int(
-        os.environ.get("SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT", str(DEFAULT_CIRCUIT_BREAKER_TIMEOUT))
+        os.environ.get(
+            "SECURE_ANALYZER_CIRCUIT_BREAKER_TIMEOUT",
+            str(DEFAULT_CIRCUIT_BREAKER_TIMEOUT),
+        )
     ),
 )
 
@@ -92,16 +98,22 @@ async def operation_timeout_context(operation_name: str, timeout_seconds: int = 
         Any exception raised by the wrapped operation code
     """
     operation_start_time = time.time()
-    print(f"[SECURE_ANALYZER] Starting operation: {operation_name} at {operation_start_time}")
+    print(
+        f"[SECURE_ANALYZER] Starting operation: {operation_name} at {operation_start_time}"
+    )
 
     try:
         yield
         operation_duration = time.time() - operation_start_time
-        print(f"[SECURE_ANALYZER] Completed operation: {operation_name} in {operation_duration:.2f}s")
+        print(
+            f"[SECURE_ANALYZER] Completed operation: {operation_name} in {operation_duration:.2f}s"
+        )
         circuit_breaker.reset()  # Reset circuit breaker on successful operation
 
     except Exception as e:
         operation_duration = time.time() - operation_start_time
-        print(f"[SECURE_ANALYZER] ERROR in operation {operation_name}: {str(e)} after {operation_duration:.2f}s")
+        print(
+            f"[SECURE_ANALYZER] ERROR in operation {operation_name}: {str(e)} after {operation_duration:.2f}s"
+        )
         circuit_breaker.record_failure()  # Record failure for circuit breaker
         raise

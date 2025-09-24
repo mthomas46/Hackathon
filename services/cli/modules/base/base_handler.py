@@ -10,7 +10,9 @@ from rich.prompt import Confirm, Prompt
 class BaseHandler(ABC):
     """Base class for CLI command handlers."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         self.console = console
         self.clients = clients
         self.cache = cache or {}
@@ -41,7 +43,9 @@ class BaseHandler(ABC):
 
                     if "min_length" in rules and isinstance(value, str):
                         if len(value) < rules["min_length"]:
-                            errors[field] = f"Must be at least {rules['min_length']} characters"
+                            errors[field] = (
+                                f"Must be at least {rules['min_length']} characters"
+                            )
 
                     if "choices" in rules and value not in rules["choices"]:
                         errors[field] = f"Must be one of: {', '.join(rules['choices'])}"
@@ -64,7 +68,9 @@ class BaseHandler(ABC):
             if validator and callable(validator):
                 try:
                     if not validator(value):
-                        self.console.print(f"[red]❌ {field_name} failed validation[/red]")
+                        self.console.print(
+                            f"[red]❌ {field_name} failed validation[/red]"
+                        )
                         return False
                 except Exception:
                     self.console.print(f"[red]❌ {field_name} failed validation[/red]")
@@ -95,7 +101,9 @@ class BaseHandler(ABC):
             except ValueError:
                 self.console.print("[red]Please enter a valid number[/red]")
 
-    async def handle_errors_gracefully(self, operation: str, error: Exception) -> Dict[str, Any]:
+    async def handle_errors_gracefully(
+        self, operation: str, error: Exception
+    ) -> Dict[str, Any]:
         """Handle errors gracefully and return error response."""
         from ..utils.error_utils import handle_cli_error
 
@@ -108,7 +116,11 @@ class BaseHandler(ABC):
         log_cli_command(command, **context)
 
     async def execute_with_retry(
-        self, coro: Callable, max_retries: int = 3, backoff_factor: float = 1.0, error_handler=None
+        self,
+        coro: Callable,
+        max_retries: int = 3,
+        backoff_factor: float = 1.0,
+        error_handler=None,
     ) -> Any:
         """Execute coroutine with retry logic."""
         import asyncio
@@ -128,7 +140,9 @@ class BaseHandler(ABC):
                         pass  # Ignore errors in error handler
 
                 wait_time = backoff_factor * (2**attempt)
-                self.console.print(f"[yellow]Attempt {attempt + 1} failed, retrying in {wait_time:.1f}s...[/yellow]")
+                self.console.print(
+                    f"[yellow]Attempt {attempt + 1} failed, retrying in {wait_time:.1f}s...[/yellow]"
+                )
                 await asyncio.sleep(wait_time)
 
         return None  # Should not reach here

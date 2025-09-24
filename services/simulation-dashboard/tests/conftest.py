@@ -21,7 +21,11 @@ def mock_config():
     config.debug = True
     config.service_name = "simulation-dashboard-test"
     config.simulation_service = SimulationServiceConfig(
-        host="localhost", port=5075, base_url="http://localhost:5075", timeout=5.0, retry_attempts=1
+        host="localhost",
+        port=5075,
+        base_url="http://localhost:5075",
+        timeout=5.0,
+        retry_attempts=1,
     )
     return config
 
@@ -30,10 +34,17 @@ def mock_config():
 def mock_simulation_client():
     """Create a mock simulation service client."""
     client = MagicMock()
-    client.get_health = AsyncMock(return_value={"status": "healthy", "version": "1.0.0", "uptime": "1h 30m"})
+    client.get_health = AsyncMock(
+        return_value={"status": "healthy", "version": "1.0.0", "uptime": "1h 30m"}
+    )
     client.list_simulations = AsyncMock(
         return_value=[
-            {"id": "sim_001", "name": "Test Simulation", "status": "completed", "created_at": "2024-01-15T10:00:00Z"}
+            {
+                "id": "sim_001",
+                "name": "Test Simulation",
+                "status": "completed",
+                "created_at": "2024-01-15T10:00:00Z",
+            }
         ]
     )
     client.create_simulation = AsyncMock(
@@ -202,7 +213,9 @@ def mock_streamlit_context():
         def checkbox(self, label, value=False, key=None, **kwargs):
             return value
 
-        def slider(self, label, min_value=None, max_value=None, value=None, key=None, **kwargs):
+        def slider(
+            self, label, min_value=None, max_value=None, value=None, key=None, **kwargs
+        ):
             return value
 
         def date_input(self, label, value=None, key=None, **kwargs):
@@ -293,7 +306,9 @@ def mock_streamlit_context():
         def checkbox(self, label, value=False, key=None, **kwargs):
             return value
 
-        def slider(self, label, min_value=None, max_value=None, value=None, key=None, **kwargs):
+        def slider(
+            self, label, min_value=None, max_value=None, value=None, key=None, **kwargs
+        ):
             return value
 
         def date_input(self, label, value=None, key=None, **kwargs):

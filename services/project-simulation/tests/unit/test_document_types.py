@@ -71,13 +71,19 @@ class TestDocumentTypeValidation:
 
         # Test that all expected types exist in the enum
         for doc_type_name in expected_types:
-            assert hasattr(DocumentType, doc_type_name), f"Missing document type: {doc_type_name}"
+            assert hasattr(
+                DocumentType, doc_type_name
+            ), f"Missing document type: {doc_type_name}"
             doc_type = DocumentType[doc_type_name]
-            assert doc_type.value == doc_type_name.lower(), f"Wrong value for {doc_type_name}"
+            assert (
+                doc_type.value == doc_type_name.lower()
+            ), f"Wrong value for {doc_type_name}"
 
         # Test that we get all document types
         all_types = get_all_document_types()
-        assert len(all_types) >= 35, f"Should have at least 35 document types, got {len(all_types)}"
+        assert (
+            len(all_types) >= 35
+        ), f"Should have at least 35 document types, got {len(all_types)}"
 
     def test_document_type_string_representation(self):
         """Test document type string representations."""
@@ -98,7 +104,11 @@ class TestDocumentTypeValidation:
     def test_document_type_categories(self):
         """Test document type categorization."""
         # Define expected categories
-        communication_docs = [DocumentType.SLACK_MESSAGE, DocumentType.EMAIL, DocumentType.MEETING_NOTES]
+        communication_docs = [
+            DocumentType.SLACK_MESSAGE,
+            DocumentType.EMAIL,
+            DocumentType.MEETING_NOTES,
+        ]
 
         project_docs = [
             DocumentType.PROJECT_REQUIREMENTS,
@@ -286,7 +296,11 @@ class TestDocumentStructureValidation:
             "space": "Engineering",
             "parent_page": "Project Documentation",
             "labels": ["requirements", "project"],
-            "metadata": {"author": "product@example.com", "created": datetime.now().isoformat(), "version": "1.2"},
+            "metadata": {
+                "author": "product@example.com",
+                "created": datetime.now().isoformat(),
+                "version": "1.2",
+            },
         }
 
         # Validate required fields
@@ -371,7 +385,11 @@ class TestDocumentStructureValidation:
             "cc": ["manager@example.com"],
             "body": "Dear Team,\n\nHere's the weekly status update...\n\nBest regards,\nProject Manager",
             "attachments": ["status_report.pdf", "burndown_chart.png"],
-            "metadata": {"sent_at": datetime.now().isoformat(), "importance": "normal", "sensitivity": "normal"},
+            "metadata": {
+                "sent_at": datetime.now().isoformat(),
+                "importance": "normal",
+                "sensitivity": "normal",
+            },
         }
 
         # Validate email structure
@@ -411,7 +429,11 @@ class TestDocumentStructureValidation:
                     "due_date": (datetime.now() + timedelta(days=3)).isoformat(),
                 },
             ],
-            "metadata": {"meeting_type": "sprint_planning", "duration_minutes": 90, "recorded_by": "Bob Smith"},
+            "metadata": {
+                "meeting_type": "sprint_planning",
+                "duration_minutes": 90,
+                "recorded_by": "Bob Smith",
+            },
         }
 
         # Validate meeting notes structure
@@ -429,10 +451,22 @@ class TestDocumentTypeRelationships:
         """Test document type hierarchy and relationships."""
         # Define document relationships
         parent_child_relationships = {
-            DocumentType.PROJECT_REQUIREMENTS: [DocumentType.USER_STORY, DocumentType.TECHNICAL_DESIGN],
-            DocumentType.TECHNICAL_DESIGN: [DocumentType.ARCHITECTURE_DIAGRAM, DocumentType.CODE_REVIEW_COMMENTS],
-            DocumentType.TEST_SCENARIOS: [DocumentType.CODE_REVIEW_COMMENTS, DocumentType.USER_STORY],
-            DocumentType.CHANGE_LOG: [DocumentType.TEAM_RETROSPECTIVE, DocumentType.MAINTENANCE_DOCS],
+            DocumentType.PROJECT_REQUIREMENTS: [
+                DocumentType.USER_STORY,
+                DocumentType.TECHNICAL_DESIGN,
+            ],
+            DocumentType.TECHNICAL_DESIGN: [
+                DocumentType.ARCHITECTURE_DIAGRAM,
+                DocumentType.CODE_REVIEW_COMMENTS,
+            ],
+            DocumentType.TEST_SCENARIOS: [
+                DocumentType.CODE_REVIEW_COMMENTS,
+                DocumentType.USER_STORY,
+            ],
+            DocumentType.CHANGE_LOG: [
+                DocumentType.TEAM_RETROSPECTIVE,
+                DocumentType.MAINTENANCE_DOCS,
+            ],
         }
 
         # Validate relationship structure
@@ -464,10 +498,22 @@ class TestDocumentTypeRelationships:
         """Test document dependency mapping."""
         # Define document dependencies
         dependencies = {
-            DocumentType.TECHNICAL_DESIGN: [DocumentType.USER_STORY, DocumentType.CODE_REVIEW_COMMENTS],
-            DocumentType.DEPLOYMENT_GUIDE: [DocumentType.ARCHITECTURE_DIAGRAM, DocumentType.TEST_SCENARIOS],
-            DocumentType.MAINTENANCE_DOCS: [DocumentType.CHANGE_LOG, DocumentType.TEAM_RETROSPECTIVE],
-            DocumentType.CODE_REVIEW_COMMENTS: [DocumentType.CODE_REVIEW_COMMENTS, DocumentType.TEST_SCENARIOS],
+            DocumentType.TECHNICAL_DESIGN: [
+                DocumentType.USER_STORY,
+                DocumentType.CODE_REVIEW_COMMENTS,
+            ],
+            DocumentType.DEPLOYMENT_GUIDE: [
+                DocumentType.ARCHITECTURE_DIAGRAM,
+                DocumentType.TEST_SCENARIOS,
+            ],
+            DocumentType.MAINTENANCE_DOCS: [
+                DocumentType.CHANGE_LOG,
+                DocumentType.TEAM_RETROSPECTIVE,
+            ],
+            DocumentType.CODE_REVIEW_COMMENTS: [
+                DocumentType.CODE_REVIEW_COMMENTS,
+                DocumentType.TEST_SCENARIOS,
+            ],
         }
 
         # Validate dependency structure
@@ -502,7 +548,12 @@ class TestDocumentQualityValidation:
         """Test document completeness validation."""
         # Define completeness requirements by document type
         completeness_requirements = {
-            DocumentType.PROJECT_REQUIREMENTS: ["title", "content", "author", "created_date"],
+            DocumentType.PROJECT_REQUIREMENTS: [
+                "title",
+                "content",
+                "author",
+                "created_date",
+            ],
             DocumentType.USER_STORY: ["summary", "description", "assignee", "priority"],
             DocumentType.TECHNICAL_DESIGN: ["title", "body", "assignees", "labels"],
             DocumentType.CHANGE_LOG: ["subject", "from", "to", "body"],
@@ -517,7 +568,9 @@ class TestDocumentQualityValidation:
         }
 
         required_fields = completeness_requirements[DocumentType.USER_STORY]
-        completeness_score = sum(1 for field in required_fields if field in jira_ticket) / len(required_fields)
+        completeness_score = sum(
+            1 for field in required_fields if field in jira_ticket
+        ) / len(required_fields)
 
         assert completeness_score == 1.0  # All required fields present
 
@@ -603,7 +656,11 @@ class TestDocumentGenerationPatterns:
 
         # Define context to inject
         context = {
-            "project": {"name": "Web App Project", "phase": "Development", "sprint": 15},
+            "project": {
+                "name": "Web App Project",
+                "phase": "Development",
+                "sprint": 15,
+            },
             "team": {"size": 8, "scrum_master": "Alice Johnson"},
             "meeting": {"date": datetime.now().date().isoformat(), "duration": 90},
         }
@@ -623,9 +680,21 @@ class TestDocumentGenerationPatterns:
 
         # Personalize for different audiences
         audiences = {
-            "developer": {"topic": "API implementation", "tone": "technical", "detail_level": "high"},
-            "manager": {"topic": "project timeline", "tone": "business", "detail_level": "medium"},
-            "stakeholder": {"topic": "business benefits", "tone": "executive", "detail_level": "low"},
+            "developer": {
+                "topic": "API implementation",
+                "tone": "technical",
+                "detail_level": "high",
+            },
+            "manager": {
+                "topic": "project timeline",
+                "tone": "business",
+                "detail_level": "medium",
+            },
+            "stakeholder": {
+                "topic": "business benefits",
+                "tone": "executive",
+                "detail_level": "low",
+            },
         }
 
         # Generate personalized content

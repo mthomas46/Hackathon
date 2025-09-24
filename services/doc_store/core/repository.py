@@ -5,12 +5,12 @@ Demonstrates 70% code reduction through base class inheritance.
 
 from typing import Any, Dict, Optional
 
-from services.shared.utilities import SqlRepository, Document
+from services.shared.utilities import SqlRepository
 
-from .entities import Document as DocumentEntity
+from .entities import Document
 
 
-class DocumentRepository(SqlRepository[DocumentEntity]):
+class DocumentRepository(SqlRepository[Document]):
     """Document repository using standardized base repository.
 
     This replaces ~100 lines of boilerplate code with ~20 lines of
@@ -19,25 +19,24 @@ class DocumentRepository(SqlRepository[DocumentEntity]):
 
     def __init__(self, connection_string: str):
         """Initialize with SQLite connection string."""
-        super().__init__(DocumentEntity, connection_string)
+        super().__init__(Document, connection_string)
 
-    def _dict_to_entity(self, data: Dict[str, Any]) -> DocumentEntity:
+    def _dict_to_entity(self, data: Dict[str, Any]) -> Document:
         """Convert database row to document entity."""
-        return DocumentEntity(**data)
+        return Document(**data)
 
-    async def find_by_content_hash(self, content_hash: str) -> Optional[DocumentEntity]:
+    async def find_by_content_hash(self, content_hash: str) -> Optional[Document]:
         """Find document by content hash (service-specific method)."""
         results = await self._execute_query(
-            "SELECT * FROM documents WHERE content_hash = ?",
-            (content_hash,)
+            "SELECT * FROM documents WHERE content_hash = ?", (content_hash,)
         )
         return self._dict_to_entity(results[0]) if results else None
 
-    async def search_by_content(self, query: str, limit: int = 50) -> list[DocumentEntity]:
+    async def search_by_content(self, query: str, limit: int = 50) -> list[Document]:
         """Search documents by content (service-specific method)."""
         # This would use FTS in a real implementation
         results = await self._execute_query(
             "SELECT * FROM documents WHERE content LIKE ? LIMIT ?",
-            (f"%{query}%", limit)
+            (f"%{query}%", limit),
         )
         return [self._dict_to_entity(row) for row in results]

@@ -60,7 +60,12 @@ class ConnectionPool:
     """
 
     def __init__(
-        self, dsn: str, min_size: int = 5, max_size: int = 20, max_idle_time: int = 300, health_check_interval: int = 60
+        self,
+        dsn: str,
+        min_size: int = 5,
+        max_size: int = 20,
+        max_idle_time: int = 300,
+        health_check_interval: int = 60,
     ):
         self.dsn = dsn
         self.min_size = min_size
@@ -259,7 +264,9 @@ class AsyncQueryExecutor:
             if conn:
                 await self.connection_pool.return_connection(conn)
 
-    async def execute_query(self, sql: str, params: tuple = None, timeout: float = 30.0) -> List[Dict]:
+    async def execute_query(
+        self, sql: str, params: tuple = None, timeout: float = 30.0
+    ) -> List[Dict]:
         """Execute a query with automatic retries and monitoring."""
         query_id = f"query_{int(time.time() * 1000000)}"
         start_time = time.time()
@@ -270,7 +277,9 @@ class AsyncQueryExecutor:
                     connection_time = time.time() - start_time
 
                     # Execute query with timeout
-                    result = await asyncio.wait_for(self._execute_query_impl(conn, sql, params), timeout=timeout)
+                    result = await asyncio.wait_for(
+                        self._execute_query_impl(conn, sql, params), timeout=timeout
+                    )
 
                     execution_time = time.time() - start_time
 
@@ -297,7 +306,10 @@ class AsyncQueryExecutor:
                 if attempt == self.max_retries - 1:
                     # Record failed metrics
                     metrics = QueryMetrics(
-                        query_id=query_id, sql=sql, execution_time=time.time() - start_time, error=str(e)
+                        query_id=query_id,
+                        sql=sql,
+                        execution_time=time.time() - start_time,
+                        error=str(e),
                     )
                     async with self._lock:
                         self.query_metrics.append(metrics)
@@ -338,7 +350,9 @@ class AsyncQueryExecutor:
                 # Allow other tasks to run
                 await asyncio.sleep(0)
 
-    async def _execute_query_impl(self, conn: Any, sql: str, params: tuple = None) -> List[Dict]:
+    async def _execute_query_impl(
+        self, conn: Any, sql: str, params: tuple = None
+    ) -> List[Dict]:
         """Actual query execution implementation."""
         # This would be implemented based on the specific database driver
         # Placeholder implementation
@@ -358,10 +372,14 @@ class AsyncQueryExecutor:
             failed_queries = [m for m in self.query_metrics if m.error]
 
             avg_execution_time = (
-                sum(m.execution_time for m in successful_queries) / len(successful_queries) if successful_queries else 0
+                sum(m.execution_time for m in successful_queries)
+                / len(successful_queries)
+                if successful_queries
+                else 0
             )
             avg_connection_time = (
-                sum(m.connection_time for m in successful_queries) / len(successful_queries)
+                sum(m.connection_time for m in successful_queries)
+                / len(successful_queries)
                 if successful_queries
                 else 0
             )
@@ -372,7 +390,9 @@ class AsyncQueryExecutor:
                 "failed_queries": len(failed_queries),
                 "average_execution_time": avg_execution_time,
                 "average_connection_time": avg_connection_time,
-                "success_rate": len(successful_queries) / total_queries if total_queries > 0 else 0,
+                "success_rate": (
+                    len(successful_queries) / total_queries if total_queries > 0 else 0
+                ),
                 "recent_queries": self.query_metrics[-10:],  # Last 10 queries
             }
 
@@ -405,16 +425,24 @@ class QueryOptimizer:
 
         # Check for common optimization opportunities
         if "SELECT *" in sql.upper():
-            analysis["optimization_suggestions"].append("Consider selecting specific columns instead of SELECT *")
+            analysis["optimization_suggestions"].append(
+                "Consider selecting specific columns instead of SELECT *"
+            )
 
         if "WHERE" in sql.upper() and "INDEX" not in sql.upper():
-            analysis["optimization_suggestions"].append("Consider adding indexes on WHERE clause columns")
+            analysis["optimization_suggestions"].append(
+                "Consider adding indexes on WHERE clause columns"
+            )
 
         if "JOIN" in sql.upper():
-            analysis["optimization_suggestions"].append("Review JOIN operations for optimization opportunities")
+            analysis["optimization_suggestions"].append(
+                "Review JOIN operations for optimization opportunities"
+            )
 
         if execution_time > 1.0:
-            analysis["optimization_suggestions"].append("Query execution time is high, consider optimization")
+            analysis["optimization_suggestions"].append(
+                "Query execution time is high, consider optimization"
+            )
 
         return analysis
 
@@ -449,7 +477,9 @@ class QueryOptimizer:
             suggestions.append("Consider adding index on frequently queried columns")
 
         if execution_time > 2.0:
-            suggestions.append("High execution time suggests index optimization may be needed")
+            suggestions.append(
+                "High execution time suggests index optimization may be needed"
+            )
 
         return suggestions
 
@@ -458,7 +488,9 @@ class QueryOptimizer:
         report = await self.executor.get_performance_report()
 
         patterns = {
-            "slow_queries": [m for m in report.get("recent_queries", []) if m.execution_time > 1.0],
+            "slow_queries": [
+                m for m in report.get("recent_queries", []) if m.execution_time > 1.0
+            ],
             "frequent_queries": {},  # Would group by SQL hash
             "optimization_opportunities": [],
         }

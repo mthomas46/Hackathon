@@ -28,7 +28,9 @@ def get_workflow_container():
 
 
 @router.post("", response_model=WorkflowResponse)
-async def create_workflow(request: CreateWorkflowRequest, container=Depends(get_workflow_container)):
+async def create_workflow(
+    request: CreateWorkflowRequest, container=Depends(get_workflow_container)
+):
     """Create a new workflow."""
     try:
         # Create command
@@ -64,12 +66,16 @@ async def create_workflow(request: CreateWorkflowRequest, container=Depends(get_
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create workflow: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create workflow: {str(e)}"
+        )
 
 
 @router.post("/{workflow_id}/execute", response_model=WorkflowExecutionResponse)
 async def execute_workflow(
-    workflow_id: str, request: ExecuteWorkflowRequest, container=Depends(get_workflow_container)
+    workflow_id: str,
+    request: ExecuteWorkflowRequest,
+    container=Depends(get_workflow_container),
 ):
     """Execute a workflow."""
     try:
@@ -108,7 +114,9 @@ async def execute_workflow(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to execute workflow: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to execute workflow: {str(e)}"
+        )
 
 
 @router.get("/{workflow_id}", response_model=WorkflowResponse)
@@ -150,7 +158,10 @@ async def get_workflow(workflow_id: str, container=Depends(get_workflow_containe
 
 @router.get("", response_model=WorkflowListResponse)
 async def list_workflows(
-    workflow_type: Optional[str] = None, limit: int = 50, offset: int = 0, container=Depends(get_workflow_container)
+    workflow_type: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    container=Depends(get_workflow_container),
 ):
     """List workflows with optional filtering."""
     try:
@@ -158,7 +169,9 @@ async def list_workflows(
         from ....application.workflow_management.queries import ListWorkflowsQuery
 
         query = ListWorkflowsQuery(
-            name_filter=workflow_type, limit=limit, offset=offset  # Use workflow_type as name filter
+            name_filter=workflow_type,
+            limit=limit,
+            offset=offset,  # Use workflow_type as name filter
         )
 
         # Execute use case
@@ -190,19 +203,28 @@ async def list_workflows(
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list workflows: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to list workflows: {str(e)}"
+        )
 
 
 @router.get("/executions", response_model=ExecutionListResponse)
 async def list_executions(
-    workflow_id: Optional[str] = None, limit: int = 50, offset: int = 0, container=Depends(get_workflow_container)
+    workflow_id: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    container=Depends(get_workflow_container),
 ):
     """List workflow executions with optional filtering."""
     try:
         # Create query
-        from ....application.workflow_management.queries import ListWorkflowExecutionsQuery
+        from ....application.workflow_management.queries import (
+            ListWorkflowExecutionsQuery,
+        )
 
-        query = ListWorkflowExecutionsQuery(workflow_id=workflow_id, limit=limit, offset=offset)
+        query = ListWorkflowExecutionsQuery(
+            workflow_id=workflow_id, limit=limit, offset=offset
+        )
 
         # Execute use case
         result = await container.list_workflow_executions_use_case.execute(query)
@@ -227,10 +249,14 @@ async def list_executions(
                 )
             )
 
-        return ExecutionListResponse(executions=executions, total=result.total, limit=limit, offset=offset)
+        return ExecutionListResponse(
+            executions=executions, total=result.total, limit=limit, offset=offset
+        )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list executions: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to list executions: {str(e)}"
+        )
 
 
 @router.get("/executions/{execution_id}", response_model=WorkflowExecutionResponse)
@@ -238,7 +264,9 @@ async def get_execution(execution_id: str, container=Depends(get_workflow_contai
     """Get a workflow execution by ID."""
     try:
         # Create query
-        from ....application.workflow_management.queries import GetWorkflowExecutionQuery
+        from ....application.workflow_management.queries import (
+            GetWorkflowExecutionQuery,
+        )
 
         query = GetWorkflowExecutionQuery(execution_id=execution_id)
 
@@ -266,4 +294,6 @@ async def get_execution(execution_id: str, container=Depends(get_workflow_contai
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get execution: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get execution: {str(e)}"
+        )

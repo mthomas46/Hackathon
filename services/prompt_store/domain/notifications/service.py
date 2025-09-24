@@ -24,7 +24,9 @@ class NotificationsService:
     """Service for managing notifications and webhooks."""
 
     def __init__(self):
-        self.repo = NotificationsRepository()
+        from ...db.connection import get_prompt_store_connection_string
+
+        self.repo = NotificationsRepository(get_prompt_store_connection_string())
         self.clients = ServiceClients()
 
     # Webhook management
@@ -68,7 +70,9 @@ class NotificationsService:
             "active_only": active_only,
         }
 
-    async def update_webhook(self, webhook_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_webhook(
+        self, webhook_id: str, updates: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update webhook configuration."""
 
         # Validate updates
@@ -84,7 +88,11 @@ class NotificationsService:
         await prompt_store_cache.delete("webhooks:all")
         await prompt_store_cache.delete("webhooks:active")
 
-        return {"webhook_id": webhook_id, "updated": True, "updated_at": utc_now().isoformat()}
+        return {
+            "webhook_id": webhook_id,
+            "updated": True,
+            "updated_at": utc_now().isoformat(),
+        }
 
     async def delete_webhook(self, webhook_id: str) -> Dict[str, Any]:
         """Delete a webhook."""
@@ -96,11 +104,18 @@ class NotificationsService:
         await prompt_store_cache.delete("webhooks:all")
         await prompt_store_cache.delete("webhooks:active")
 
-        return {"webhook_id": webhook_id, "deleted": True, "deleted_at": utc_now().isoformat()}
+        return {
+            "webhook_id": webhook_id,
+            "deleted": True,
+            "deleted_at": utc_now().isoformat(),
+        }
 
     # Event notification
     async def notify_event(
-        self, event_type: str, event_data: Dict[str, Any], owners: Optional[List[str]] = None
+        self,
+        event_type: str,
+        event_data: Dict[str, Any],
+        owners: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Send notifications for an event using both webhooks and notification service.
 
@@ -131,10 +146,14 @@ class NotificationsService:
         for webhook in webhooks:
             try:
                 # Create notification record
-                notification = self.repo.create_notification(event_type, event_data, "webhook", webhook.id)
+                notification = self.repo.create_notification(
+                    event_type, event_data, "webhook", webhook.id
+                )
 
                 # Send webhook asynchronously
-                asyncio.create_task(self._send_webhook_notification(webhook, notification))
+                asyncio.create_task(
+                    self._send_webhook_notification(webhook, notification)
+                )
 
                 webhook_sent += 1
 
@@ -155,7 +174,11 @@ class NotificationsService:
                     event_type=event_type,
                     message=message,
                     owners=owners,
-                    metadata={"event_data": event_data, "source": "prompt_store", "timestamp": utc_now().isoformat()},
+                    metadata={
+                        "event_data": event_data,
+                        "source": "prompt_store",
+                        "timestamp": utc_now().isoformat(),
+                    },
                 )
 
                 if service_result["status"] == "sent":
@@ -168,14 +191,20 @@ class NotificationsService:
                 results["service_notifications"]["failed"] = 1
 
         # Calculate totals
-        results["total_sent"] = results["webhook_notifications"]["sent"] + results["service_notifications"]["sent"]
+        results["total_sent"] = (
+            results["webhook_notifications"]["sent"]
+            + results["service_notifications"]["sent"]
+        )
         results["total_failed"] = (
-            results["webhook_notifications"]["failed"] + results["service_notifications"]["failed"]
+            results["webhook_notifications"]["failed"]
+            + results["service_notifications"]["failed"]
         )
 
         return results
 
-    def _create_notification_message(self, event_type: str, event_data: Dict[str, Any]) -> str:
+    def _create_notification_message(
+        self, event_type: str, event_data: Dict[str, Any]
+    ) -> str:
         """Create a human-readable notification message based on event type."""
         if event_type == "prompt.created":
             prompt_id = event_data.get("id", "unknown")
@@ -186,7 +215,9 @@ class NotificationsService:
             prompt_id = event_data.get("id", "unknown")
             prompt_name = event_data.get("name", "unknown")
             version = event_data.get("version", "unknown")
-            return f"Prompt '{prompt_name}' updated to version {version} (ID: {prompt_id})"
+            return (
+                f"Prompt '{prompt_name}' updated to version {version} (ID: {prompt_id})"
+            )
 
         elif event_type == "prompt.lifecycle_changed":
             prompt_id = event_data.get("id", "unknown")
@@ -216,7 +247,11 @@ class NotificationsService:
             return f"Prompt Store event: {event_type}"
 
     async def send_notification_via_service(
-        self, event_type: str, message: str, owners: List[str], metadata: Optional[Dict[str, Any]] = None
+        self,
+        event_type: str,
+        message: str,
+        owners: List[str],
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Send notification via the centralized notification service.
 
@@ -258,9 +293,15 @@ class NotificationsService:
                 }
 
         except Exception as e:
-            return {"status": "error", "error": str(e), "message": "Exception occurred while sending notification"}
+            return {
+                "status": "error",
+                "error": str(e),
+                "message": "Exception occurred while sending notification",
+            }
 
-    async def send_bulk_notifications(self, notifications: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def send_bulk_notifications(
+        self, notifications: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Send multiple notifications in batch via notification service.
 
         Args:
@@ -311,7 +352,9 @@ class NotificationsService:
                         delivered += 1
                     else:
                         # Mark as failed if webhook doesn't exist or is inactive
-                        self.repo.update_notification_status(notification.id, "failed", "Webhook not found or inactive")
+                        self.repo.update_notification_status(
+                            notification.id, "failed", "Webhook not found or inactive"
+                        )
                         failed += 1
                 else:
                     # Handle other recipient types (email, etc.)
@@ -340,7 +383,11 @@ class NotificationsService:
         """Clean up old notification records."""
         deleted_count = self.repo.cleanup_old_notifications(days_old)
 
-        return {"cleanup_days": days_old, "records_deleted": deleted_count, "cleanup_at": utc_now().isoformat()}
+        return {
+            "cleanup_days": days_old,
+            "records_deleted": deleted_count,
+            "cleanup_at": utc_now().isoformat(),
+        }
 
     # Internal helper methods
     def _validate_webhook_data(self, data: Dict[str, Any]) -> None:
@@ -361,11 +408,15 @@ class NotificationsService:
 
     def _validate_event_types(self, events: List[str]) -> None:
         """Validate that event types are supported."""
-        invalid_events = [event for event in events if event not in self.repo.VALID_EVENT_TYPES]
+        invalid_events = [
+            event for event in events if event not in self.repo.VALID_EVENT_TYPES
+        ]
         if invalid_events:
             raise ValueError(f"Invalid event types: {', '.join(invalid_events)}")
 
-    async def _send_webhook_notification(self, webhook: WebhookEntity, notification: NotificationEntity) -> None:
+    async def _send_webhook_notification(
+        self, webhook: WebhookEntity, notification: NotificationEntity
+    ) -> None:
         """Send a notification to a webhook endpoint."""
 
         payload = {
@@ -385,41 +436,67 @@ class NotificationsService:
 
         # Add signature if secret is configured
         if webhook.secret:
-            signature = self._generate_webhook_signature(webhook.secret, payload, notification.created_at.isoformat())
+            signature = self._generate_webhook_signature(
+                webhook.secret, payload, notification.created_at.isoformat()
+            )
             headers["X-Signature"] = signature
 
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=webhook.timeout_seconds)) as session:
-                async with session.post(webhook.url, json=payload, headers=headers) as response:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=webhook.timeout_seconds)
+            ) as session:
+                async with session.post(
+                    webhook.url, json=payload, headers=headers
+                ) as response:
                     if response.status >= 200 and response.status < 300:
                         # Success
-                        self.repo.update_notification_status(notification.id, "delivered")
+                        self.repo.update_notification_status(
+                            notification.id, "delivered"
+                        )
                     else:
                         # HTTP error
                         error_text = await response.text()
                         self.repo.update_notification_status(
-                            notification.id, "failed", f"HTTP {response.status}: {error_text}"
+                            notification.id,
+                            "failed",
+                            f"HTTP {response.status}: {error_text}",
                         )
 
         except asyncio.TimeoutError:
-            self.repo.update_notification_status(notification.id, "failed", "Request timeout")
+            self.repo.update_notification_status(
+                notification.id, "failed", "Request timeout"
+            )
         except Exception as e:
-            self.repo.update_notification_status(notification.id, "failed", f"Request failed: {str(e)}")
+            self.repo.update_notification_status(
+                notification.id, "failed", f"Request failed: {str(e)}"
+            )
 
-    def _generate_webhook_signature(self, secret: str, payload: Dict[str, Any], timestamp: str) -> str:
+    def _generate_webhook_signature(
+        self, secret: str, payload: Dict[str, Any], timestamp: str
+    ) -> str:
         """Generate HMAC signature for webhook payload."""
         payload_str = f"{timestamp}.{str(payload)}"
-        signature = hmac.new(secret.encode(), payload_str.encode(), hashlib.sha256).hexdigest()
+        signature = hmac.new(
+            secret.encode(), payload_str.encode(), hashlib.sha256
+        ).hexdigest()
         return f"sha256={signature}"
 
     # Convenience methods for triggering notifications from other domains
-    async def notify_prompt_created(self, prompt_id: str, prompt_data: Dict[str, Any]) -> None:
+    async def notify_prompt_created(
+        self, prompt_id: str, prompt_data: Dict[str, Any]
+    ) -> None:
         """Notify about prompt creation."""
-        await self.notify_event("prompt.created", {"prompt_id": prompt_id, "prompt_data": prompt_data})
+        await self.notify_event(
+            "prompt.created", {"prompt_id": prompt_id, "prompt_data": prompt_data}
+        )
 
-    async def notify_prompt_updated(self, prompt_id: str, changes: Dict[str, Any]) -> None:
+    async def notify_prompt_updated(
+        self, prompt_id: str, changes: Dict[str, Any]
+    ) -> None:
         """Notify about prompt updates."""
-        await self.notify_event("prompt.updated", {"prompt_id": prompt_id, "changes": changes})
+        await self.notify_event(
+            "prompt.updated", {"prompt_id": prompt_id, "changes": changes}
+        )
 
     async def notify_lifecycle_changed(
         self, prompt_id: str, old_status: str, new_status: str, reason: str = ""
@@ -427,15 +504,27 @@ class NotificationsService:
         """Notify about lifecycle status changes."""
         await self.notify_event(
             "prompt.lifecycle_changed",
-            {"prompt_id": prompt_id, "old_status": old_status, "new_status": new_status, "reason": reason},
+            {
+                "prompt_id": prompt_id,
+                "old_status": old_status,
+                "new_status": new_status,
+                "reason": reason,
+            },
         )
 
-    async def notify_ab_test_completed(self, test_id: str, results: Dict[str, Any]) -> None:
+    async def notify_ab_test_completed(
+        self, test_id: str, results: Dict[str, Any]
+    ) -> None:
         """Notify about A/B test completion."""
-        await self.notify_event("ab_test.completed", {"test_id": test_id, "results": results})
+        await self.notify_event(
+            "ab_test.completed", {"test_id": test_id, "results": results}
+        )
 
     async def notify_bulk_operation_completed(
         self, operation_id: str, operation_type: str, results: Dict[str, Any]
     ) -> None:
         """Notify about bulk operation completion."""
-        await self.notify_event(f"bulk_operation.{operation_type}", {"operation_id": operation_id, "results": results})
+        await self.notify_event(
+            f"bulk_operation.{operation_type}",
+            {"operation_id": operation_id, "results": results},
+        )

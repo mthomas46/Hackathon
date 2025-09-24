@@ -239,7 +239,9 @@ class ConnectionPool(ABC, Generic[T]):
                 else:
                     # Wait for available connection
                     try:
-                        pooled_conn = await asyncio.wait_for(self._available.get(), timeout=self.config.acquire_timeout)
+                        pooled_conn = await asyncio.wait_for(
+                            self._available.get(), timeout=self.config.acquire_timeout
+                        )
                     except asyncio.TimeoutError:
                         raise RuntimeError("Connection acquire timeout")
 
@@ -263,7 +265,11 @@ class ConnectionPool(ABC, Generic[T]):
             self._in_use.remove(pooled_conn)
 
         # Check if connection should be destroyed
-        if pooled_conn.is_expired or pooled_conn.is_idle_expired or pooled_conn.error_count > 3:
+        if (
+            pooled_conn.is_expired
+            or pooled_conn.is_idle_expired
+            or pooled_conn.error_count > 3
+        ):
             await self._destroy_connection(pooled_conn)
             return
 
@@ -356,7 +362,11 @@ class ConnectionPool(ABC, Generic[T]):
 
         return {
             "healthy": not self._closed and connection_test_passed,
-            "status": "healthy" if (not self._closed and connection_test_passed) else "unhealthy",
+            "status": (
+                "healthy"
+                if (not self._closed and connection_test_passed)
+                else "unhealthy"
+            ),
             "pool_stats": stats,
             "connection_test_passed": connection_test_passed,
             "timestamp": datetime.utcnow().isoformat(),

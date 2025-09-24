@@ -101,11 +101,18 @@ class ProcessMonitor:
         self._lock = threading.Lock()
 
     def register_process(
-        self, service_name: str, process_id: Optional[int] = None, container_id: Optional[str] = None
+        self,
+        service_name: str,
+        process_id: Optional[int] = None,
+        container_id: Optional[str] = None,
     ) -> None:
         """Register a process for monitoring."""
         with self._lock:
-            instance = ServiceInstance(service_name=service_name, process_id=process_id, container_id=container_id)
+            instance = ServiceInstance(
+                service_name=service_name,
+                process_id=process_id,
+                container_id=container_id,
+            )
             self._monitored_processes[service_name] = instance
             logger.info(f"Registered process monitoring for {service_name}")
 
@@ -125,7 +132,9 @@ class ProcessMonitor:
                     # Check if process is still running
                     if not process.is_running():
                         instance.health_status = "crashed"
-                        logger.warning(f"Process {instance.process_id} for {service_name} has crashed")
+                        logger.warning(
+                            f"Process {instance.process_id} for {service_name} has crashed"
+                        )
 
                 elif instance.container_id:
                     # For containers, we'd use Docker API here
@@ -141,11 +150,15 @@ class ProcessMonitor:
         with self._lock:
             return self._monitored_processes.get(service_name)
 
-    def detect_memory_leak(self, service_name: str, threshold_mb: float = 1000.0) -> bool:
+    def detect_memory_leak(
+        self, service_name: str, threshold_mb: float = 1000.0
+    ) -> bool:
         """Detect potential memory leaks."""
         instance = self.get_process_info(service_name)
         if instance and instance.memory_usage_mb > threshold_mb:
-            logger.warning(f"Potential memory leak detected for {service_name}: {instance.memory_usage_mb:.1f}MB")
+            logger.warning(
+                f"Potential memory leak detected for {service_name}: {instance.memory_usage_mb:.1f}MB"
+            )
             return True
         return False
 
@@ -178,28 +191,47 @@ class ServiceRestarter:
         with self._restart_lock:
             for attempt in range(max_attempts):
                 try:
-                    logger.info(f"Attempting to restart service {service_name} (attempt {attempt + 1}/{max_attempts})")
+                    logger.info(
+                        f"Attempting to restart service {service_name} (attempt {attempt + 1}/{max_attempts})"
+                    )
 
                     # Stop the service
-                    stop_cmd = ["docker-compose", "-f", self.docker_compose_file, "stop", service_name]
+                    stop_cmd = [
+                        "docker-compose",
+                        "-f",
+                        self.docker_compose_file,
+                        "stop",
+                        service_name,
+                    ]
                     subprocess.run(stop_cmd, check=True, timeout=30)
 
                     # Wait a moment
                     await asyncio.sleep(2)
 
                     # Start the service
-                    start_cmd = ["docker-compose", "-f", self.docker_compose_file, "up", "-d", service_name]
+                    start_cmd = [
+                        "docker-compose",
+                        "-f",
+                        self.docker_compose_file,
+                        "up",
+                        "-d",
+                        service_name,
+                    ]
                     subprocess.run(start_cmd, check=True, timeout=60)
 
                     logger.info(f"Successfully restarted service {service_name}")
                     return True
 
                 except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-                    logger.error(f"Failed to restart {service_name} (attempt {attempt + 1}): {e}")
+                    logger.error(
+                        f"Failed to restart {service_name} (attempt {attempt + 1}): {e}"
+                    )
                     if attempt < max_attempts - 1:
                         await asyncio.sleep(5 * (attempt + 1))  # Exponential backoff
 
-            logger.error(f"Failed to restart {service_name} after {max_attempts} attempts")
+            logger.error(
+                f"Failed to restart {service_name} after {max_attempts} attempts"
+            )
             return False
 
     async def restart_container(self, container_id: str) -> bool:
@@ -262,7 +294,9 @@ class DataConsistencyChecker:
                 return True
             else:
                 check.consecutive_failures += 1
-                logger.warning(f"Data consistency check failed: {check_name} (failures: {check.consecutive_failures})")
+                logger.warning(
+                    f"Data consistency check failed: {check_name} (failures: {check.consecutive_failures})"
+                )
 
                 # Attempt repair if available
                 if check.repair_func and check.consecutive_failures >= 3:
@@ -344,7 +378,10 @@ class SelfHealingService:
         logger.info(f"Added healing rule: {rule.name}")
 
     def register_service(
-        self, service_name: str, process_id: Optional[int] = None, container_id: Optional[str] = None
+        self,
+        service_name: str,
+        process_id: Optional[int] = None,
+        container_id: Optional[str] = None,
     ) -> None:
         """Register a service for monitoring and healing."""
         self._process_monitor.register_process(service_name, process_id, container_id)
@@ -353,7 +390,9 @@ class SelfHealingService:
         """Add a data consistency check."""
         self._data_checker.register_check(check)
 
-    def add_alert_callback(self, callback: Callable[[str, Dict[str, Any]], None]) -> None:
+    def add_alert_callback(
+        self, callback: Callable[[str, Dict[str, Any]], None]
+    ) -> None:
         """Add callback for healing alerts."""
         self._alert_callbacks.append(callback)
 
@@ -371,7 +410,10 @@ class SelfHealingService:
                 continue
 
             # Check cooldown
-            if rule.last_executed and time.time() - rule.last_executed < rule.cooldown_seconds:
+            if (
+                rule.last_executed
+                and time.time() - rule.last_executed < rule.cooldown_seconds
+            ):
                 continue
 
             # Check max executions
@@ -396,7 +438,11 @@ class SelfHealingService:
                         # Alert
                         await self._trigger_alert(
                             "healing_action_executed",
-                            {"rule_name": rule.name, "action": rule.action.value, "context": context},
+                            {
+                                "rule_name": rule.name,
+                                "action": rule.action.value,
+                                "context": context,
+                            },
                         )
                     else:
                         logger.error(f"Healing action failed: {rule.name}")
@@ -406,11 +452,15 @@ class SelfHealingService:
 
         # Run data consistency checks
         consistency_results = await self._data_checker.run_all_checks()
-        failed_checks = [name for name, success in consistency_results.items() if not success]
+        failed_checks = [
+            name for name, success in consistency_results.items() if not success
+        ]
 
         if failed_checks:
             logger.warning(f"Data consistency checks failed: {failed_checks}")
-            executed_actions.extend([f"consistency_check_{name}" for name in failed_checks])
+            executed_actions.extend(
+                [f"consistency_check_{name}" for name in failed_checks]
+            )
 
         return executed_actions
 
@@ -419,7 +469,10 @@ class SelfHealingService:
         context = {"timestamp": time.time(), "rule_name": rule.name}
 
         # Add service-specific information
-        for service_name, instance in self._process_monitor._monitored_processes.items():
+        for (
+            service_name,
+            instance,
+        ) in self._process_monitor._monitored_processes.items():
             context[f"{service_name}_status"] = instance.health_status
             context[f"{service_name}_memory_mb"] = instance.memory_usage_mb
             context[f"{service_name}_cpu_percent"] = instance.cpu_usage_percent
@@ -428,7 +481,9 @@ class SelfHealingService:
 
         return context
 
-    async def _execute_healing_action(self, action: HealingAction, context: Dict[str, Any]) -> bool:
+    async def _execute_healing_action(
+        self, action: HealingAction, context: Dict[str, Any]
+    ) -> bool:
         """Execute a healing action."""
         try:
             if action == HealingAction.RESTART_SERVICE:
@@ -499,7 +554,10 @@ class SelfHealingService:
             )
 
         services_status = {}
-        for service_name, instance in self._process_monitor._monitored_processes.items():
+        for (
+            service_name,
+            instance,
+        ) in self._process_monitor._monitored_processes.items():
             services_status[service_name] = {
                 "health_status": instance.health_status,
                 "memory_usage_mb": instance.memory_usage_mb,
@@ -517,7 +575,9 @@ class SelfHealingService:
     async def start_monitoring(self, check_interval: float = 60.0) -> None:
         """Start background healing monitoring."""
         if self._monitoring_task is None:
-            self._monitoring_task = asyncio.create_task(self._monitoring_loop(check_interval))
+            self._monitoring_task = asyncio.create_task(
+                self._monitoring_loop(check_interval)
+            )
             logger.info("Self-healing monitoring started")
 
     async def stop_monitoring(self) -> None:
@@ -564,7 +624,9 @@ async def trigger_healing_check() -> List[str]:
 
 
 def register_service_for_healing(
-    service_name: str, process_id: Optional[int] = None, container_id: Optional[str] = None
+    service_name: str,
+    process_id: Optional[int] = None,
+    container_id: Optional[str] = None,
 ) -> None:
     """Convenience function to register service for healing."""
     service = get_self_healing_service()

@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 # Import shared DI patterns (with fallbacks)
 try:
@@ -29,7 +31,9 @@ except ImportError:
             pass
 
 
-from simulation.infrastructure.execution.simulation_execution_engine import SimulationExecutionEngine
+from simulation.infrastructure.execution.simulation_execution_engine import (
+    SimulationExecutionEngine,
+)
 from simulation.infrastructure.health.simulation_health import (
     get_simulation_health_checker,
     get_simulation_health_endpoint,
@@ -45,9 +49,15 @@ except ImportError:
         """Mock health endpoints function."""
 
 
-from simulation.application.services.simulation_application_service import SimulationApplicationService
-from simulation.domain.services.simulation_domain_service import get_simulation_domain_service
-from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
+from simulation.application.services.simulation_application_service import (
+    SimulationApplicationService,
+)
+from simulation.domain.services.simulation_domain_service import (
+    get_simulation_domain_service,
+)
+from simulation.infrastructure.monitoring.simulation_monitoring import (
+    get_simulation_monitoring_service,
+)
 from simulation.infrastructure.repositories.in_memory_repositories import (
     get_project_repository,
     get_team_repository,
@@ -102,14 +112,23 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         """Register infrastructure services with enhanced monitoring."""
         # Core logging
         self._singletons["logger"] = get_simulation_logger()
-        self._service_metadata["logger"] = {"type": "infrastructure", "tags": ["core", "logging"]}
+        self._service_metadata["logger"] = {
+            "type": "infrastructure",
+            "tags": ["core", "logging"],
+        }
 
         # Enhanced health monitoring
         self._singletons["health_checker"] = get_simulation_health_checker()
-        self._service_metadata["health_checker"] = {"type": "infrastructure", "tags": ["health", "monitoring", "core"]}
+        self._service_metadata["health_checker"] = {
+            "type": "infrastructure",
+            "tags": ["health", "monitoring", "core"],
+        }
 
         self._singletons["health_endpoint"] = get_simulation_health_endpoint()
-        self._service_metadata["health_endpoint"] = {"type": "infrastructure", "tags": ["health", "api", "monitoring"]}
+        self._service_metadata["health_endpoint"] = {
+            "type": "infrastructure",
+            "tags": ["health", "api", "monitoring"],
+        }
 
         # Comprehensive monitoring
         self._singletons["monitoring_service"] = get_simulation_monitoring_service()
@@ -132,7 +151,10 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         }
 
         self._singletons["team_repository"] = get_team_repository()
-        self._service_metadata["team_repository"] = {"type": "infrastructure", "tags": ["repository", "data", "team"]}
+        self._service_metadata["team_repository"] = {
+            "type": "infrastructure",
+            "tags": ["repository", "data", "team"],
+        }
 
         # Use SQLite repository for persistence
         from .repositories.sqlite_repositories import get_sqlite_simulation_repository
@@ -147,7 +169,10 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         """Register domain services with dependency injection."""
         # Enhanced domain service
         self._singletons["domain_service"] = get_simulation_domain_service()
-        self._service_metadata["domain_service"] = {"type": "domain", "tags": ["domain", "business_logic", "core"]}
+        self._service_metadata["domain_service"] = {
+            "type": "domain",
+            "tags": ["domain", "business_logic", "core"],
+        }
 
     def _register_application_services(self) -> None:
         """Register application services with comprehensive dependencies."""
@@ -164,7 +189,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                 logger=self.get_service("logger"),
             )
 
-        self._factories["simulation_application_service"] = create_simulation_app_service
+        self._factories["simulation_application_service"] = (
+            create_simulation_app_service
+        )
         self._service_metadata["simulation_application_service"] = {
             "type": "application",
             "tags": ["application", "orchestration", "core"],
@@ -188,7 +215,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                 team_repository=self.get_service("team_repository"),
             )
 
-        self._factories["simulation_execution_engine"] = create_simulation_execution_engine
+        self._factories["simulation_execution_engine"] = (
+            create_simulation_execution_engine
+        )
         self._service_metadata["simulation_execution_engine"] = {
             "type": "infrastructure",
             "tags": ["execution", "simulation", "core"],
@@ -198,27 +227,45 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         """Register utility services for validation, formatting, and resilience."""
         # Data validation
         self._singletons["validator"] = get_simulation_validator()
-        self._service_metadata["validator"] = {"type": "utility", "tags": ["validation", "data", "quality"]}
+        self._service_metadata["validator"] = {
+            "type": "utility",
+            "tags": ["validation", "data", "quality"],
+        }
 
         # Data formatting
         self._singletons["formatter"] = get_simulation_formatter()
-        self._service_metadata["formatter"] = {"type": "utility", "tags": ["formatting", "presentation", "data"]}
+        self._service_metadata["formatter"] = {
+            "type": "utility",
+            "tags": ["formatting", "presentation", "data"],
+        }
 
         # Caching
         self._singletons["cache"] = get_simulation_cache()
-        self._service_metadata["cache"] = {"type": "utility", "tags": ["caching", "performance", "infrastructure"]}
+        self._service_metadata["cache"] = {
+            "type": "utility",
+            "tags": ["caching", "performance", "infrastructure"],
+        }
 
         # Async task management
         self._singletons["task_manager"] = get_simulation_task_manager()
-        self._service_metadata["task_manager"] = {"type": "utility", "tags": ["async", "tasks", "concurrency"]}
+        self._service_metadata["task_manager"] = {
+            "type": "utility",
+            "tags": ["async", "tasks", "concurrency"],
+        }
 
         # Error handling
         self._singletons["error_handler"] = get_simulation_error_handler()
-        self._service_metadata["error_handler"] = {"type": "utility", "tags": ["error", "resilience", "handling"]}
+        self._service_metadata["error_handler"] = {
+            "type": "utility",
+            "tags": ["error", "resilience", "handling"],
+        }
 
         # Retry management
         self._singletons["retry_manager"] = get_simulation_retry_manager()
-        self._service_metadata["retry_manager"] = {"type": "utility", "tags": ["retry", "resilience", "reliability"]}
+        self._service_metadata["retry_manager"] = {
+            "type": "utility",
+            "tags": ["retry", "resilience", "reliability"],
+        }
 
         # Performance tracking
         self._singletons["performance_tracker"] = get_simulation_performance_tracker()
@@ -230,14 +277,18 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
     def _register_external_services(self) -> None:
         """Register external service integrations."""
         # Document generation service (mock-data-generator integration)
-        self._factories["document_generation_service"] = self._create_document_generation_service
+        self._factories["document_generation_service"] = (
+            self._create_document_generation_service
+        )
         self._service_metadata["document_generation_service"] = {
             "type": "external",
             "tags": ["external", "documents", "generation"],
         }
 
         # Workflow execution service (orchestrator integration)
-        self._factories["workflow_execution_service"] = self._create_workflow_execution_service
+        self._factories["workflow_execution_service"] = (
+            self._create_workflow_execution_service
+        )
         self._service_metadata["workflow_execution_service"] = {
             "type": "external",
             "tags": ["external", "workflow", "orchestration"],
@@ -253,7 +304,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                 self.retry_manager = retry_manager or get_simulation_retry_manager()
                 self.logger = get_simulation_logger()
 
-            async def generate_project_documents(self, project_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+            async def generate_project_documents(
+                self, project_config: Dict[str, Any]
+            ) -> List[Dict[str, Any]]:
                 """Generate project documents using enhanced mock-data-generator integration."""
                 try:
                     # Use cache if available
@@ -274,7 +327,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                     self.logger.error("Document generation failed", error=str(e))
                     return []
 
-            async def _generate_with_retry(self, project_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+            async def _generate_with_retry(
+                self, project_config: Dict[str, Any]
+            ) -> List[Dict[str, Any]]:
                 """Generate documents with retry logic."""
 
                 async def generate_attempt():
@@ -287,7 +342,12 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                             "title": f"{project_config.get('name', 'Project')} Requirements",
                             "content": f"Requirements for {project_config.get('name', 'the project')}",
                             "quality_score": 0.85,
-                            "metadata": {"phase": "planning", "complexity": project_config.get("complexity", "medium")},
+                            "metadata": {
+                                "phase": "planning",
+                                "complexity": project_config.get(
+                                    "complexity", "medium"
+                                ),
+                            },
                         },
                         {
                             "id": f"arch_{project_config.get('id', 'unknown')}",
@@ -295,11 +355,18 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                             "title": f"{project_config.get('name', 'Project')} Architecture",
                             "content": "System architecture documentation",
                             "quality_score": 0.92,
-                            "metadata": {"phase": "design", "complexity": project_config.get("complexity", "medium")},
+                            "metadata": {
+                                "phase": "design",
+                                "complexity": project_config.get(
+                                    "complexity", "medium"
+                                ),
+                            },
                         },
                     ]
 
-                return await self.retry_manager.execute_with_simulation_retry("document_generation", generate_attempt)
+                return await self.retry_manager.execute_with_simulation_retry(
+                    "document_generation", generate_attempt
+                )
 
             async def generate_phase_documents(
                 self, project_config: Dict[str, Any], phase_name: str
@@ -313,7 +380,12 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                             "title": f"{phase_name} Phase Documentation",
                             "content": f"Documentation for {phase_name} phase",
                             "quality_score": 0.88,
-                            "metadata": {"phase": phase_name, "complexity": project_config.get("complexity", "medium")},
+                            "metadata": {
+                                "phase": phase_name,
+                                "complexity": project_config.get(
+                                    "complexity", "medium"
+                                ),
+                            },
                         }
                     ]
 
@@ -324,7 +396,8 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                     return []
 
         return EnhancedDocumentGenerationService(
-            cache_manager=self.get_service("cache"), retry_manager=self.get_service("retry_manager")
+            cache_manager=self.get_service("cache"),
+            retry_manager=self.get_service("retry_manager"),
         )
 
     def _create_workflow_execution_service(self):
@@ -334,29 +407,40 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
         class EnhancedWorkflowExecutionService:
             def __init__(self, task_manager=None, monitoring_service=None, logger=None):
                 self.task_manager = task_manager or get_simulation_task_manager()
-                self.monitoring = monitoring_service or get_simulation_monitoring_service()
+                self.monitoring = (
+                    monitoring_service or get_simulation_monitoring_service()
+                )
                 self.logger = logger or get_simulation_logger()
 
-            async def execute_document_analysis_workflow(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+            async def execute_document_analysis_workflow(
+                self, documents: List[Dict[str, Any]]
+            ) -> Dict[str, Any]:
                 """Execute document analysis workflow with comprehensive tracking."""
                 start_time = datetime.now()
 
                 try:
                     # Track workflow execution
-                    self.monitoring.record_simulation_event("workflow_started", "analysis_workflow")
+                    self.monitoring.record_simulation_event(
+                        "workflow_started", "analysis_workflow"
+                    )
 
                     # Execute analysis tasks in parallel
                     analysis_tasks = []
                     for doc in documents:
                         task = self.task_manager.run_simulation_task(
-                            f"analyze_{doc.get('id', 'unknown')}", self._analyze_document(doc)
+                            f"analyze_{doc.get('id', 'unknown')}",
+                            self._analyze_document(doc),
                         )
                         analysis_tasks.append(task)
 
-                    results = await asyncio.gather(*analysis_tasks, return_exceptions=True)
+                    results = await asyncio.gather(
+                        *analysis_tasks, return_exceptions=True
+                    )
 
                     # Process results
-                    successful_analyses = [r for r in results if not isinstance(r, Exception)]
+                    successful_analyses = [
+                        r for r in results if not isinstance(r, Exception)
+                    ]
                     failed_analyses = [r for r in results if isinstance(r, Exception)]
 
                     execution_time = (datetime.now() - start_time).total_seconds()
@@ -387,24 +471,35 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                         "error": str(e),
                     }
 
-            async def execute_team_dynamics_workflow(self, team_config: Dict[str, Any]) -> Dict[str, Any]:
+            async def execute_team_dynamics_workflow(
+                self, team_config: Dict[str, Any]
+            ) -> Dict[str, Any]:
                 """Execute team dynamics analysis workflow."""
                 start_time = datetime.now()
 
                 try:
                     # Track workflow execution
-                    self.monitoring.record_simulation_event("workflow_started", "team_dynamics_workflow")
+                    self.monitoring.record_simulation_event(
+                        "workflow_started", "team_dynamics_workflow"
+                    )
 
                     # Analyze team composition and dynamics
                     analysis_result = await self._analyze_team_dynamics(team_config)
 
                     execution_time = (datetime.now() - start_time).total_seconds()
 
-                    result = {"success": True, "execution_time": execution_time, "team_analysis": analysis_result}
+                    result = {
+                        "success": True,
+                        "execution_time": execution_time,
+                        "team_analysis": analysis_result,
+                    }
 
                     # Track completion
                     self.monitoring.record_simulation_event(
-                        "workflow_completed", "team_dynamics_workflow", duration_seconds=execution_time, success=True
+                        "workflow_completed",
+                        "team_dynamics_workflow",
+                        duration_seconds=execution_time,
+                        success=True,
                     )
 
                     return result
@@ -417,7 +512,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                         "error": str(e),
                     }
 
-            async def _analyze_document(self, document: Dict[str, Any]) -> Dict[str, Any]:
+            async def _analyze_document(
+                self, document: Dict[str, Any]
+            ) -> Dict[str, Any]:
                 """Analyze a single document."""
                 # Simulate document analysis
                 await asyncio.sleep(0.1)  # Simulate processing time
@@ -429,7 +526,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                     "recommendations": ["Review content for completeness"],
                 }
 
-            async def _analyze_team_dynamics(self, team_config: Dict[str, Any]) -> Dict[str, Any]:
+            async def _analyze_team_dynamics(
+                self, team_config: Dict[str, Any]
+            ) -> Dict[str, Any]:
                 """Analyze team dynamics."""
                 # Simulate team analysis
                 await asyncio.sleep(0.05)  # Simulate processing time
@@ -461,7 +560,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                     self.logger.debug(f"Created service instance: {service_name}")
                     return instance
                 except Exception as e:
-                    self.logger.error(f"Failed to create service {service_name}", error=str(e))
+                    self.logger.error(
+                        f"Failed to create service {service_name}", error=str(e)
+                    )
                     raise
 
             # Check legacy services
@@ -469,14 +570,20 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                 try:
                     return self._services[service_name]()
                 except Exception as e:
-                    self.logger.error(f"Failed to create legacy service {service_name}", error=str(e))
+                    self.logger.error(
+                        f"Failed to create legacy service {service_name}", error=str(e)
+                    )
                     raise
 
             raise ValueError(f"Service '{service_name}' not registered")
 
     def has_service(self, service_name: str) -> bool:
         """Check if a service is registered."""
-        return service_name in self._singletons or service_name in self._factories or service_name in self._services
+        return (
+            service_name in self._singletons
+            or service_name in self._factories
+            or service_name in self._services
+        )
 
     def get_all_services(self) -> Dict[str, Any]:
         """Get all registered services with metadata."""
@@ -493,7 +600,9 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
                     "metadata": self._service_metadata.get(service_name, {}),
                 }
             except Exception as e:
-                self.logger.warning(f"Could not instantiate service {service_name}", error=str(e))
+                self.logger.warning(
+                    f"Could not instantiate service {service_name}", error=str(e)
+                )
                 all_services[service_name] = {
                     "instance": None,
                     "metadata": self._service_metadata.get(service_name, {}),
@@ -508,11 +617,19 @@ class EnhancedSimulationServiceProvider(IServiceProvider):
 
     def get_services_by_type(self, service_type: str) -> List[str]:
         """Get all services of a specific type."""
-        return [name for name, metadata in self._service_metadata.items() if metadata.get("type") == service_type]
+        return [
+            name
+            for name, metadata in self._service_metadata.items()
+            if metadata.get("type") == service_type
+        ]
 
     def get_services_by_tag(self, tag: str) -> List[str]:
         """Get all services with a specific tag."""
-        return [name for name, metadata in self._service_metadata.items() if tag in metadata.get("tags", [])]
+        return [
+            name
+            for name, metadata in self._service_metadata.items()
+            if tag in metadata.get("tags", [])
+        ]
 
     def get_service_health_status(self) -> Dict[str, Any]:
         """Get health status of all services."""
@@ -593,17 +710,22 @@ class EnhancedSimulationContainer(Container):
             tags = metadata.get("tags", [])
 
             # Count by type
-            summary["services_by_type"][service_type] = summary["services_by_type"].get(service_type, 0) + 1
+            summary["services_by_type"][service_type] = (
+                summary["services_by_type"].get(service_type, 0) + 1
+            )
 
             # Count by tags
             for tag in tags:
-                summary["services_by_tag"][tag] = summary["services_by_tag"].get(tag, 0) + 1
+                summary["services_by_tag"][tag] = (
+                    summary["services_by_tag"].get(tag, 0) + 1
+                )
 
             # Service details
             summary["service_details"][service_name] = {
                 "type": service_type,
                 "tags": tags,
-                "healthy": all_services.get(service_name, {}).get("instance") is not None,
+                "healthy": all_services.get(service_name, {}).get("instance")
+                is not None,
             }
 
             if summary["service_details"][service_name]["healthy"]:
@@ -863,7 +985,10 @@ def injectable_service(cls):
         for param_name, param in parameters.items():
             if param_name == "self":
                 continue
-            if param_name not in kwargs and param_name not in signature.bind_partial(self, *args).arguments:
+            if (
+                param_name not in kwargs
+                and param_name not in signature.bind_partial(self, *args).arguments
+            ):
                 # Try to resolve from container
                 if container.has_service(param_name):
                     kwargs[param_name] = container.resolve(param_name)

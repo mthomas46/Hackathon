@@ -20,7 +20,7 @@ from typing import Any, Dict, Optional
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 
-from services.shared.core.constants_new import ServiceNames
+from services.shared.infrastructure.config import load_service_config
 
 # ============================================================================
 # SHARED MODULES - Following ecosystem patterns
@@ -34,7 +34,11 @@ from services.shared.monitoring.metrics import (
     record_architecture_digitizer_file_upload,
     record_architecture_digitizer_request,
 )
-from services.shared.utilities import attach_self_register, get_service_client, setup_common_middleware
+from services.shared.utilities import (
+    attach_self_register,
+    get_service_client,
+    setup_common_middleware,
+)
 
 # from services.shared.utilities.logging_client import get_log_collector_client
 
@@ -78,7 +82,10 @@ except ImportError:
 
 
 async def store_architecture_in_docstore(
-    system: str, board_id: str, normalized_data: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
+    system: str,
+    board_id: str,
+    normalized_data: Dict[str, Any],
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Store normalized architecture data in doc_store."""
     try:
@@ -121,7 +128,11 @@ async def store_architecture_in_docstore(
 
         # Store in doc_store
         result = await client.store_document(
-            {"content": content, "metadata": doc_metadata, "id": f"architecture:{system}:{board_id}"}
+            {
+                "content": content,
+                "metadata": doc_metadata,
+                "id": f"architecture:{system}:{board_id}",
+            }
         )
 
         return result
@@ -129,7 +140,8 @@ async def store_architecture_in_docstore(
     except Exception as e:
         # Log error but don't fail the request
         fire_and_forget(
-            "architecture_digitizer_docstore_error", {"system": system, "board_id": board_id, "error": str(e)}
+            "architecture_digitizer_docstore_error",
+            {"system": system, "board_id": board_id, "error": str(e)},
         )
         return {"status": "error", "error": f"Failed to store in doc_store: {e}"}
 
@@ -147,9 +159,15 @@ class APIResponse(BaseModel):
     success: bool = Field(..., description="Whether the operation was successful")
     message: str = Field(..., description="Human-readable response message")
     data: Optional[Any] = Field(None, description="Response data payload")
-    request_id: Optional[str] = Field(None, description="Unique request identifier for tracing")
-    timestamp: Optional[str] = Field(None, description="Response timestamp in ISO 8601 format")
-    processing_time_ms: Optional[float] = Field(None, description="Processing time in milliseconds")
+    request_id: Optional[str] = Field(
+        None, description="Unique request identifier for tracing"
+    )
+    timestamp: Optional[str] = Field(
+        None, description="Response timestamp in ISO 8601 format"
+    )
+    processing_time_ms: Optional[float] = Field(
+        None, description="Processing time in milliseconds"
+    )
 
 
 class ErrorResponse(BaseModel):
@@ -159,7 +177,9 @@ class ErrorResponse(BaseModel):
 
     success: bool = Field(default=False, description="Always false for error responses")
     error: Dict[str, Any] = Field(..., description="Error details")
-    request_id: Optional[str] = Field(None, description="Unique request identifier for tracing")
+    request_id: Optional[str] = Field(
+        None, description="Unique request identifier for tracing"
+    )
     timestamp: str = Field(..., description="Error timestamp in ISO 8601 format")
 
 
@@ -171,18 +191,34 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Service health status")
     service: str = Field(..., description="Service name")
     version: str = Field(..., description="Service version")
-    uptime_seconds: Optional[float] = Field(None, description="Service uptime in seconds")
-    last_health_check: Optional[str] = Field(None, description="Last health check timestamp")
-    supported_systems_count: int = Field(..., description="Number of supported diagram systems")
-    file_formats_supported: int = Field(..., description="Number of supported file formats")
-    normalization_engine_active: bool = Field(..., description="Whether normalization engine is active")
+    uptime_seconds: Optional[float] = Field(
+        None, description="Service uptime in seconds"
+    )
+    last_health_check: Optional[str] = Field(
+        None, description="Last health check timestamp"
+    )
+    supported_systems_count: int = Field(
+        ..., description="Number of supported diagram systems"
+    )
+    file_formats_supported: int = Field(
+        ..., description="Number of supported file formats"
+    )
+    normalization_engine_active: bool = Field(
+        ..., description="Whether normalization engine is active"
+    )
 
 
-# Service configuration constants
-SERVICE_NAME = "architecture-digitizer"
-SERVICE_TITLE = "Architecture Digitizer"
-SERVICE_VERSION = "1.0.0"
-DEFAULT_PORT = 5105
+# Load standardized configuration
+config = load_service_config(
+    service_type="architecture-digitizer",
+    config_file="./config.yaml",  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Architecture Digitizer"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Initialize metrics
 metrics = get_service_metrics(SERVICE_NAME)
@@ -307,20 +343,20 @@ app = FastAPI(
     ### **Normalize Miro Board**
     ```bash
     curl -X POST http://localhost:5105/normalize \
-      -H "Content-Type: application/json" \
-      -d '{
+        -H "Content-Type: application/json" \
+        -d '{
         "system": "miro",
         "board_id": "board123",
         "auth_token": "miro_token_here"
-      }'
+        }'
     ```
 
     ### **Process Architecture Diagram File**
     ```bash
     curl -X POST http://localhost:5105/normalize-file \
-      -F "file=@architecture-diagram.png" \
-      -F "system=miro" \
-      -F "metadata={\"project\": \"ecommerce-platform\"}"
+        -F "file=@architecture-diagram.png" \
+        -F "system=miro" \
+        -F "metadata={\"project\": \"ecommerce-platform\"}"
     ```
 
     ### **Get Supported Systems**
@@ -336,18 +372,20 @@ app = FastAPI(
     ### **Advanced Architecture Analysis**
     ```bash
     curl -X POST http://localhost:5105/normalize \
-      -H "Content-Type: application/json" \
-      -d '{
+        -H "Content-Type: application/json" \
+        -d '{
         "system": "lucid",
         "board_id": "arch456",
         "options": {
-          "extract_patterns": true,
-          "validate_compliance": true,
-          "generate_insights": true
+        "extract_patterns": true,
+        "validate_compliance": true,
+        "generate_insights": true
         }
-      }'
+        }'
     ```
     """,
+    docs_url="/docs",
+    redoc_url="/redoc",
     contact={
         "name": "Architecture Digitizer Team",
         "url": "https://github.com/your-org/architecture-digitizer",
@@ -363,7 +401,10 @@ app = FastAPI(
             "name": "Architecture Normalization",
             "description": "Diagram normalization, component extraction, and architecture analysis",
         },
-        {"name": "File Processing", "description": "File upload processing, format detection, and batch operations"},
+        {
+            "name": "File Processing",
+            "description": "File upload processing, format detection, and batch operations",
+        },
         {
             "name": "System Capabilities",
             "description": "Supported systems listing, capabilities discovery, and integration details",
@@ -400,8 +441,21 @@ async def startup_event():
                         "external_api_integration",
                         "file_upload_processing",
                     ],
-                    "integrations": ["miro", "figjam", "lucid", "confluence", "log_collector"],
-                    "supported_formats": ["miro", "figjam", "lucid", "confluence", "json", "xml"],
+                    "integrations": [
+                        "miro",
+                        "figjam",
+                        "lucid",
+                        "confluence",
+                        "log_collector",
+                    ],
+                    "supported_formats": [
+                        "miro",
+                        "figjam",
+                        "lucid",
+                        "confluence",
+                        "json",
+                        "xml",
+                    ],
                     "features": [
                         "authentication_handling",
                         "error_recovery",
@@ -434,9 +488,7 @@ async def shutdown_event():
 
 
 # Use common middleware setup and error handlers
-setup_common_middleware(
-    app, ServiceNames.ARCHITECTURE_DIGITIZER if hasattr(ServiceNames, "ARCHITECTURE_DIGITIZER") else SERVICE_NAME
-)
+setup_common_middleware(app, config.service_name)
 
 # ============================================================================
 # CUSTOM HEALTH ENDPOINT - Override shared health with detailed architecture processing
@@ -599,7 +651,11 @@ async def health():
         normalization_engine_active = False  # Degraded state
 
     # Determine overall health based on operational metrics
-    if supported_systems_count >= 6 and file_formats_supported >= 8 and normalization_engine_active:
+    if (
+        supported_systems_count >= 6
+        and file_formats_supported >= 8
+        and normalization_engine_active
+    ):
         status = "healthy"
     elif supported_systems_count >= 4 and normalization_engine_active:
         status = "degraded"
@@ -621,12 +677,10 @@ async def health():
 # Register health endpoints and auto-register with orchestrator
 register_health_endpoints(
     app,
-    ServiceNames.ARCHITECTURE_DIGITIZER if hasattr(ServiceNames, "ARCHITECTURE_DIGITIZER") else SERVICE_NAME,
+    config.service_name,
     SERVICE_VERSION,
 )
-attach_self_register(
-    app, ServiceNames.ARCHITECTURE_DIGITIZER if hasattr(ServiceNames, "ARCHITECTURE_DIGITIZER") else SERVICE_NAME
-)
+attach_self_register(app, config.service_name)
 
 # Add metrics endpoint
 app.add_route("/metrics", metrics_endpoint(SERVICE_NAME))
@@ -705,7 +759,9 @@ async def normalize_architecture(request: NormalizeRequest):
                     },
                 )
 
-            raise HTTPException(status_code=400, detail=f"Unsupported system: {request.system}")
+            raise HTTPException(
+                status_code=400, detail=f"Unsupported system: {request.system}"
+            )
 
         # Fetch and normalize the data
         result = await normalizer.normalize(request.board_id, request.token)
@@ -717,7 +773,9 @@ async def normalize_architecture(request: NormalizeRequest):
         data_size = len(str(result)) if result else 0
 
         # Record successful metrics
-        record_architecture_digitizer_request(metrics, request.system, "success", processing_time)
+        record_architecture_digitizer_request(
+            metrics, request.system, "success", processing_time
+        )
 
         # Store normalized data in doc_store (fire and forget)
         fire_and_forget(
@@ -772,8 +830,12 @@ async def normalize_architecture(request: NormalizeRequest):
     except Exception as e:
         # Record failure metrics
         error_time = time.time() - start_time
-        record_architecture_digitizer_request(metrics, getattr(request, "system", "unknown"), "error", error_time)
-        record_architecture_digitizer_api_failure(metrics, getattr(request, "system", "unknown"), type(e).__name__)
+        record_architecture_digitizer_request(
+            metrics, getattr(request, "system", "unknown"), "error", error_time
+        )
+        record_architecture_digitizer_api_failure(
+            metrics, getattr(request, "system", "unknown"), type(e).__name__
+        )
 
         # Log normalization failure
         if logger_client:
@@ -809,7 +871,9 @@ async def normalize_architecture(request: NormalizeRequest):
 @app.post("/normalize-file", response_model=FileNormalizeResponse)
 async def normalize_file_upload(
     file: UploadFile = File(...),
-    system: str = Form(..., description="Diagram system (miro, figjam, lucid, confluence)"),
+    system: str = Form(
+        ..., description="Diagram system (miro, figjam, lucid, confluence)"
+    ),
     file_format: str = Form(..., description="File format (json, xml, html)"),
 ):
     """
@@ -829,7 +893,9 @@ async def normalize_file_upload(
         file_size = len(content)
 
         if file_size > 10 * 1024 * 1024:  # 10MB limit
-            raise HTTPException(status_code=413, detail="File too large. Maximum size is 10MB.")
+            raise HTTPException(
+                status_code=413, detail="File too large. Maximum size is 10MB."
+            )
 
         # Reset file pointer
         await file.seek(0)
@@ -844,19 +910,24 @@ async def normalize_file_upload(
         if not file_normalizer.supports_format(file_format):
             record_architecture_digitizer_request(metrics, system, "error")
             raise HTTPException(
-                status_code=400, detail=f"File format '{file_format}' not supported for system '{system}'"
+                status_code=400,
+                detail=f"File format '{file_format}' not supported for system '{system}'",
             )
 
         # Read file content
         content = await file.read()
 
         # Normalize the file
-        result = await file_normalizer.normalize_file(content, file.filename, file_format)
+        result = await file_normalizer.normalize_file(
+            content, file.filename, file_format
+        )
 
         # Record successful metrics
         duration = time.time() - start_time
         record_architecture_digitizer_request(metrics, system, "success", duration)
-        record_architecture_digitizer_file_upload(metrics, system, file_format, file_size, "success", duration)
+        record_architecture_digitizer_file_upload(
+            metrics, system, file_format, file_size, "success", duration
+        )
 
         # Store normalized data in doc_store (fire and forget)
         fire_and_forget(
@@ -903,7 +974,9 @@ async def normalize_file_upload(
         duration = time.time() - start_time
         record_architecture_digitizer_request(metrics, system, "error", duration)
         record_architecture_digitizer_api_failure(metrics, system, type(e).__name__)
-        record_architecture_digitizer_file_upload(metrics, system, file_format, file_size, "error", duration)
+        record_architecture_digitizer_file_upload(
+            metrics, system, file_format, file_size, "error", duration
+        )
 
         error_msg = f"Failed to normalize {system} file: {str(e)}"
 
@@ -944,14 +1017,19 @@ async def get_supported_systems():
     return SupportedSystemsResponse(systems=systems_info, count=len(systems_info))
 
 
-@app.get("/supported-file-formats/{system}", response_model=SupportedFileFormatsResponse)
+@app.get(
+    "/supported-file-formats/{system}", response_model=SupportedFileFormatsResponse
+)
 async def get_supported_file_formats(system: str):
     """Get supported file formats for a specific diagram system."""
     from .modules.normalizers import get_file_normalizer
 
     file_normalizer = get_file_normalizer(system)
     if not file_normalizer:
-        raise HTTPException(status_code=404, detail=f"System '{system}' not found or not supported for file uploads")
+        raise HTTPException(
+            status_code=404,
+            detail=f"System '{system}' not found or not supported for file uploads",
+        )
 
     supported_formats = file_normalizer.get_supported_formats()
 

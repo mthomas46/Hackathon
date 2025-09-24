@@ -66,7 +66,11 @@ class TestRecommendationEndpoints:
                         "expected_impact": "Reduce maintenance overhead by 40%",
                         "effort_level": "medium",
                         "tags": ["consolidation", "api_docs"],
-                        "metadata": {"document_type": "api_docs", "document_count": 2, "average_similarity": 0.85},
+                        "metadata": {
+                            "document_type": "api_docs",
+                            "document_count": 2,
+                            "average_similarity": 0.85,
+                        },
                     },
                     {
                         "id": "rec2",
@@ -86,7 +90,12 @@ class TestRecommendationEndpoints:
                 "total_documents": 3,
                 "recommendations_count": 2,
                 "processing_time": 0.5,
-                "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"],
+                "recommendation_types": [
+                    "consolidation",
+                    "duplicate",
+                    "outdated",
+                    "quality",
+                ],
                 "confidence_threshold": 0.4,
             }
 
@@ -124,21 +133,35 @@ class TestRecommendationEndpoints:
         """Test recommendations endpoint with invalid data."""
         # Test with missing content field
         response = self.client.post(
-            "/api/v1/recommendations", json={"documents": [{"id": "doc1", "title": "Test"}]}  # Missing content
+            "/api/v1/recommendations",
+            json={"documents": [{"id": "doc1", "title": "Test"}]},  # Missing content
         )
         assert response.status_code == 422
 
         # Test with missing id field
         response = self.client.post(
-            "/api/v1/recommendations", json={"documents": [{"title": "Test", "content": "Test content"}]}  # Missing id
+            "/api/v1/recommendations",
+            json={
+                "documents": [{"title": "Test", "content": "Test content"}]
+            },  # Missing id
         )
         assert response.status_code == 422
 
     def test_recommendations_endpoint_filters_by_type(self):
         """Test that recommendations can be filtered by type."""
         documents = [
-            {"id": "doc1", "title": "API Guide", "content": "API content", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"},
+            {
+                "id": "doc1",
+                "title": "API Guide",
+                "content": "API content",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc2",
+                "title": "API Reference",
+                "content": "API content",
+                "type": "api_docs",
+            },
         ]
 
         with patch("main.SimpleSummarizer.generate_recommendations") as mock_generate:
@@ -167,7 +190,11 @@ class TestRecommendationEndpoints:
 
             # Test with specific recommendation types
             response = self.client.post(
-                "/api/v1/recommendations", json={"documents": documents, "recommendation_types": ["consolidation"]}
+                "/api/v1/recommendations",
+                json={
+                    "documents": documents,
+                    "recommendation_types": ["consolidation"],
+                },
             )
 
             assert response.status_code == 200
@@ -179,7 +206,12 @@ class TestRecommendationEndpoints:
     def test_recommendations_endpoint_respects_confidence_threshold(self):
         """Test that confidence threshold filtering works."""
         documents = [
-            {"id": "doc1", "title": "High Quality", "content": "Excellent content", "type": "guide"},
+            {
+                "id": "doc1",
+                "title": "High Quality",
+                "content": "Excellent content",
+                "type": "guide",
+            },
             {"id": "doc2", "title": "Low Quality", "content": "Poor", "type": "guide"},
         ]
 
@@ -209,7 +241,8 @@ class TestRecommendationEndpoints:
 
             # Test with high confidence threshold
             response = self.client.post(
-                "/api/v1/recommendations", json={"documents": documents, "confidence_threshold": 0.8}
+                "/api/v1/recommendations",
+                json={"documents": documents, "confidence_threshold": 0.8},
             )
 
             assert response.status_code == 200
@@ -237,26 +270,50 @@ class TestSimpleSummarizerRecommendations:
     def test_generate_recommendations_single_document(self):
         """Test recommendations with single document."""
         documents = [
-            {"id": "doc1", "title": "Single Document", "content": "This is a single document.", "type": "guide"}
+            {
+                "id": "doc1",
+                "title": "Single Document",
+                "content": "This is a single document.",
+                "type": "guide",
+            }
         ]
 
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
         # Single document should not generate consolidation recommendations
-        consolidation_recs = [r for r in result["recommendations"] if r["type"] == "consolidation"]
+        consolidation_recs = [
+            r for r in result["recommendations"] if r["type"] == "consolidation"
+        ]
         assert len(consolidation_recs) == 0
 
     def test_generate_recommendations_consolidation_logic(self):
         """Test consolidation recommendation generation."""
         documents = [
-            {"id": "doc1", "title": "API Guide", "content": "API documentation content", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API documentation content", "type": "api_docs"},
-            {"id": "doc3", "title": "API Examples", "content": "API documentation content", "type": "api_docs"},
+            {
+                "id": "doc1",
+                "title": "API Guide",
+                "content": "API documentation content",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc2",
+                "title": "API Reference",
+                "content": "API documentation content",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc3",
+                "title": "API Examples",
+                "content": "API documentation content",
+                "type": "api_docs",
+            },
         ]
 
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
 
         # Should generate consolidation recommendation for 3 similar documents
-        consolidation_recs = [r for r in result["recommendations"] if r["type"] == "consolidation"]
+        consolidation_recs = [
+            r for r in result["recommendations"] if r["type"] == "consolidation"
+        ]
         assert len(consolidation_recs) >= 1
 
         rec = consolidation_recs[0]
@@ -290,7 +347,9 @@ class TestSimpleSummarizerRecommendations:
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
 
         # Should detect duplicates between doc1 and doc2
-        duplicate_recs = [r for r in result["recommendations"] if r["type"] == "duplicate"]
+        duplicate_recs = [
+            r for r in result["recommendations"] if r["type"] == "duplicate"
+        ]
         assert len(duplicate_recs) >= 1
 
         rec = duplicate_recs[0]
@@ -299,7 +358,9 @@ class TestSimpleSummarizerRecommendations:
 
     def test_generate_recommendations_outdated_detection(self):
         """Test outdated document recommendation generation."""
-        old_date = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%dT%H:%M:%S")  # Over a year old
+        old_date = (datetime.now() - timedelta(days=400)).strftime(
+            "%Y-%m-%dT%H:%M:%S"
+        )  # Over a year old
         recent_date = datetime.now().isoformat()
 
         documents = [
@@ -324,7 +385,9 @@ class TestSimpleSummarizerRecommendations:
         result = asyncio.run(self.summarizer.generate_recommendations(documents))
 
         # Should generate outdated recommendation for doc1
-        outdated_recs = [r for r in result["recommendations"] if r["type"] == "outdated"]
+        outdated_recs = [
+            r for r in result["recommendations"] if r["type"] == "outdated"
+        ]
         assert len(outdated_recs) >= 1
 
         rec = outdated_recs[0]
@@ -357,14 +420,33 @@ class TestSimpleSummarizerRecommendations:
 
         rec = quality_recs[0]
         assert rec["affected_documents"] == ["doc1"]
-        assert "quality" in rec["description"].lower() or "issues" in rec["description"].lower()
+        assert (
+            "quality" in rec["description"].lower()
+            or "issues" in rec["description"].lower()
+        )
 
     def test_generate_recommendations_comprehensive_types(self):
         """Test that comprehensive recommendations include all types."""
         documents = [
-            {"id": "doc1", "title": "API Guide", "content": "API content", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"},
-            {"id": "doc3", "title": "Old Doc", "content": "Old content", "dateCreated": "2020-01-01", "type": "guide"},
+            {
+                "id": "doc1",
+                "title": "API Guide",
+                "content": "API content",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc2",
+                "title": "API Reference",
+                "content": "API content",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc3",
+                "title": "Old Doc",
+                "content": "Old content",
+                "dateCreated": "2020-01-01",
+                "type": "guide",
+            },
             {"id": "doc4", "title": "Short Doc", "content": "Short", "type": "guide"},
         ]
 
@@ -382,12 +464,26 @@ class TestSimpleSummarizerRecommendations:
     def test_generate_recommendations_confidence_threshold(self):
         """Test that confidence threshold filtering works."""
         documents = [
-            {"id": "doc1", "title": "API Guide", "content": "API content", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"},
+            {
+                "id": "doc1",
+                "title": "API Guide",
+                "content": "API content",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc2",
+                "title": "API Reference",
+                "content": "API content",
+                "type": "api_docs",
+            },
         ]
 
         # Test with very high confidence threshold
-        result = asyncio.run(self.summarizer.generate_recommendations(documents, confidence_threshold=0.9))
+        result = asyncio.run(
+            self.summarizer.generate_recommendations(
+                documents, confidence_threshold=0.9
+            )
+        )
 
         # Should filter out low-confidence recommendations
         for rec in result["recommendations"]:
@@ -396,14 +492,32 @@ class TestSimpleSummarizerRecommendations:
     def test_generate_recommendations_specific_types(self):
         """Test that specific recommendation types can be requested."""
         documents = [
-            {"id": "doc1", "title": "API Guide", "content": "API content", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API content", "type": "api_docs"},
-            {"id": "doc3", "title": "Old Doc", "content": "Old content", "dateCreated": "2020-01-01", "type": "guide"},
+            {
+                "id": "doc1",
+                "title": "API Guide",
+                "content": "API content",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc2",
+                "title": "API Reference",
+                "content": "API content",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc3",
+                "title": "Old Doc",
+                "content": "Old content",
+                "dateCreated": "2020-01-01",
+                "type": "guide",
+            },
         ]
 
         # Test requesting only consolidation recommendations
         result = asyncio.run(
-            self.summarizer.generate_recommendations(documents, recommendation_types=["consolidation"])
+            self.summarizer.generate_recommendations(
+                documents, recommendation_types=["consolidation"]
+            )
         )
 
         # Should only include consolidation recommendations
@@ -421,12 +535,15 @@ class TestRecommendationDataValidation:
     def test_recommendations_endpoint_validation(self):
         """Test comprehensive input validation."""
         # Test invalid document structure
-        response = self.client.post("/api/v1/recommendations", json={"documents": "not_a_list"})
+        response = self.client.post(
+            "/api/v1/recommendations", json={"documents": "not_a_list"}
+        )
         assert response.status_code == 422
 
         # Test document without required fields
         response = self.client.post(
-            "/api/v1/recommendations", json={"documents": [{"title": "Test"}]}  # Missing id and content
+            "/api/v1/recommendations",
+            json={"documents": [{"title": "Test"}]},  # Missing id and content
         )
         assert response.status_code == 422
 
@@ -434,7 +551,9 @@ class TestRecommendationDataValidation:
         response = self.client.post(
             "/api/v1/recommendations",
             json={
-                "documents": [{"id": "doc1", "title": "Test", "content": "Test content"}],
+                "documents": [
+                    {"id": "doc1", "title": "Test", "content": "Test content"}
+                ],
                 "recommendation_types": "not_a_list",
             },
         )
@@ -444,7 +563,9 @@ class TestRecommendationDataValidation:
         response = self.client.post(
             "/api/v1/recommendations",
             json={
-                "documents": [{"id": "doc1", "title": "Test", "content": "Test content"}],
+                "documents": [
+                    {"id": "doc1", "title": "Test", "content": "Test content"}
+                ],
                 "confidence_threshold": "not_a_number",
             },
         )
@@ -455,10 +576,17 @@ class TestRecommendationDataValidation:
         documents = [{"id": "doc1", "title": "Test", "content": "Test content"}]
 
         # Mock an exception in the summarizer
-        with patch("main.SimpleSummarizer.generate_recommendations", side_effect=Exception("Test error")):
-            response = self.client.post("/api/v1/recommendations", json={"documents": documents})
+        with patch(
+            "main.SimpleSummarizer.generate_recommendations",
+            side_effect=Exception("Test error"),
+        ):
+            response = self.client.post(
+                "/api/v1/recommendations", json={"documents": documents}
+            )
 
-            assert response.status_code == 200  # Should still return 200 with error in response
+            assert (
+                response.status_code == 200
+            )  # Should still return 200 with error in response
             data = response.json()
             assert data["success"] is False
             assert "error" in data
@@ -475,7 +603,9 @@ class TestComprehensiveQualityAnalysis:
         """Test quality analysis with empty content."""
         document = {"id": "doc1", "title": "Empty Doc", "content": ""}
 
-        result = asyncio.run(self.summarizer._analyze_document_quality_comprehensive(document))
+        result = asyncio.run(
+            self.summarizer._analyze_document_quality_comprehensive(document)
+        )
 
         assert len(result["issues"]) == 1
         assert result["issues"][0]["type"] == "missing_content"
@@ -510,7 +640,7 @@ Retrieve a list of users.
 **Response:**
 ```json
 {
-  "users": [...]
+    "users": [...]
 }
 ```
 
@@ -531,7 +661,9 @@ For help, contact support@example.com or visit our GitHub repository.
 """,
         }
 
-        result = asyncio.run(self.summarizer._analyze_document_quality_comprehensive(document))
+        result = asyncio.run(
+            self.summarizer._analyze_document_quality_comprehensive(document)
+        )
 
         # Should have minimal issues for a well-structured document
         assert len(result["issues"]) <= 5  # Allow some minor issues
@@ -546,7 +678,9 @@ For help, contact support@example.com or visit our GitHub repository.
             "content": "This is a very short document. It has some stuff but not much. It uses passive voice a lot and doesn't explain anything clearly. There are some things that could be better but it's not clear what to do. The document lacks structure and examples.",
         }
 
-        result = asyncio.run(self.summarizer._analyze_document_quality_comprehensive(document))
+        result = asyncio.run(
+            self.summarizer._analyze_document_quality_comprehensive(document)
+        )
 
         # Should identify multiple quality issues
         assert len(result["issues"]) >= 3
@@ -580,7 +714,9 @@ For help, contact support@example.com or visit our GitHub repository.
         # Test complex sentences - make one very long sentence
         complex_content = "This is a very long and complex sentence that contains many words and intricate ideas with multiple clauses and complex concepts that might be quite difficult for readers to understand and process effectively without considerable mental effort and deep concentration as they navigate through the various layers of meaning and technical details presented in this extended textual construction which continues for an extended period of time."
         metrics = {"word_count": len(complex_content.split())}
-        issues = self.summarizer._analyze_clarity_and_readability(complex_content, metrics)
+        issues = self.summarizer._analyze_clarity_and_readability(
+            complex_content, metrics
+        )
 
         print(f"Complex content word count: {len(complex_content.split())}")
         print(f"Issues found: {len(issues)}")
@@ -594,11 +730,11 @@ For help, contact support@example.com or visit our GitHub repository.
         assert has_complex or has_passive
 
         # Test passive voice detection
-        passive_content = (
-            "The system is used by users. Data is processed by the server. Results are returned to the client."
-        )
+        passive_content = "The system is used by users. Data is processed by the server. Results are returned to the client."
         metrics = {"word_count": len(passive_content.split())}
-        issues = self.summarizer._analyze_clarity_and_readability(passive_content, metrics)
+        issues = self.summarizer._analyze_clarity_and_readability(
+            passive_content, metrics
+        )
 
         passive_issues = [i for i in issues if i["type"] == "passive_voice"]
         assert len(passive_issues) >= 1
@@ -606,10 +742,14 @@ For help, contact support@example.com or visit our GitHub repository.
     def test_analyze_technical_accuracy(self):
         """Test technical accuracy analysis."""
         # Test unformatted code detection
-        code_content = "function processData(data) { return data.map(item => item.value); }"
+        code_content = (
+            "function processData(data) { return data.map(item => item.value); }"
+        )
         document = {"id": "doc1", "title": "Code Example"}
         metrics = {"technical_accuracy": 1.0}
-        issues = self.summarizer._analyze_technical_accuracy(code_content, document, metrics)
+        issues = self.summarizer._analyze_technical_accuracy(
+            code_content, document, metrics
+        )
 
         assert len(issues) >= 1
         assert any(issue["type"] == "unformatted_code" for issue in issues)
@@ -618,7 +758,9 @@ For help, contact support@example.com or visit our GitHub repository.
         api_content = "Our API is great. It has many features. API API API."
         document = {"id": "doc2", "title": "API Overview"}
         metrics = {"technical_accuracy": 1.0}
-        issues = self.summarizer._analyze_technical_accuracy(api_content, document, metrics)
+        issues = self.summarizer._analyze_technical_accuracy(
+            api_content, document, metrics
+        )
 
         api_issues = [i for i in issues if "api" in i["type"]]
         assert len(api_issues) >= 1
@@ -633,7 +775,9 @@ For help, contact support@example.com or visit our GitHub repository.
         )
         title = "Long Document"
         metrics = {"structure_score": 1.0}
-        issues = self.summarizer._analyze_structure_and_organization(unstructured_content, title, metrics)
+        issues = self.summarizer._analyze_structure_and_organization(
+            unstructured_content, title, metrics
+        )
 
         print(f"Unstructured content word count: {len(unstructured_content.split())}")
         print(f"Issues found: {len(issues)}")
@@ -661,10 +805,14 @@ Final section content.
 """
         title = "Well Structured Document"
         metrics = {"structure_score": 1.0}
-        issues = self.summarizer._analyze_structure_and_organization(structured_content, title, metrics)
+        issues = self.summarizer._analyze_structure_and_organization(
+            structured_content, title, metrics
+        )
 
         # Should have fewer or no structural issues
-        structural_issues = [i for i in issues if "structure" in i["type"] or "flow" in i["type"]]
+        structural_issues = [
+            i for i in issues if "structure" in i["type"] or "flow" in i["type"]
+        ]
         assert len(structural_issues) <= 1
 
     def test_analyze_consistency(self):
@@ -683,7 +831,9 @@ Final section content.
         tutorial_content = "This is a tutorial about getting started. It explains how to begin but doesn't have prerequisites or examples or a conclusion."
         document = {"id": "doc1", "title": "Tutorial", "type": "tutorial"}
         metrics = {"completeness_score": 1.0}
-        issues = self.summarizer._analyze_completeness(tutorial_content, document, metrics)
+        issues = self.summarizer._analyze_completeness(
+            tutorial_content, document, metrics
+        )
 
         completeness_issues = [i for i in issues if "missing_sections" in i["type"]]
         assert len(completeness_issues) >= 1
@@ -711,7 +861,11 @@ Final section content.
             "completeness_score": 0.3,
             "word_count": 20,
         }
-        issues = [{"severity": "high"}, {"severity": "critical"}, {"severity": "medium"}]
+        issues = [
+            {"severity": "high"},
+            {"severity": "critical"},
+            {"severity": "medium"},
+        ]
 
         score = self.summarizer._calculate_overall_quality_score(metrics, issues)
         assert score < 0.5
@@ -760,24 +914,24 @@ Retrieve a list of users from the system.
 **Response:**
 ```json
 {
-  "users": [
+    "users": [
     {
-      "id": 123,
-      "name": "John Doe",
-      "email": "john@example.com"
+        "id": 123,
+        "name": "John Doe",
+        "email": "john@example.com"
     }
-  ],
-  "total": 100,
-  "limit": 20,
-  "offset": 0
+    ],
+    "total": 100,
+    "limit": 20,
+    "offset": 0
 }
 ```
 
 **Example:**
 ```bash
 curl -H "Authorization: Bearer your_token_here" \\
-     -H "Content-Type: application/json" \\
-     "https://api.example.com/users?limit=10"
+    -H "Content-Type: application/json" \\
+    "https://api.example.com/users?limit=10"
 ```
 
 ## Error Handling

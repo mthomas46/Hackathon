@@ -1,2 +1,1 @@
 """Shared Application Layer Components"""
-

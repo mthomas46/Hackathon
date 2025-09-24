@@ -61,7 +61,9 @@ async def run_workflow(req: WorkflowRunRequest):
         result = await workflow_handlers.handle_workflow_run(req)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Workflow execution failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Workflow execution failed: {str(e)}"
+        )
 
 
 @router.post("/workflows/ai/{workflow_type}")
@@ -79,7 +81,9 @@ async def run_langgraph_workflow(workflow_type: str, req: LangGraphWorkflowReque
         result = await workflow_handlers.handle_workflow_run(workflow_req)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LangGraph workflow execution failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"LangGraph workflow execution failed: {str(e)}"
+        )
 
 
 @router.post("/workflows/ai/document-analysis")
@@ -96,7 +100,9 @@ async def run_document_analysis_workflow(req: LangGraphWorkflowRequest):
         result = await workflow_handlers.handle_workflow_run(workflow_req)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Document analysis workflow failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Document analysis workflow failed: {str(e)}"
+        )
 
 
 @router.post("/workflows/ai/code-documentation")
@@ -113,7 +119,9 @@ async def run_code_documentation_workflow(req: LangGraphWorkflowRequest):
         result = await workflow_handlers.handle_workflow_run(workflow_req)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Code documentation workflow failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Code documentation workflow failed: {str(e)}"
+        )
 
 
 @router.post("/workflows/ai/quality-assurance")
@@ -130,7 +138,9 @@ async def run_quality_assurance_workflow(req: LangGraphWorkflowRequest):
         result = await workflow_handlers.handle_workflow_run(workflow_req)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Quality assurance workflow failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Quality assurance workflow failed: {str(e)}"
+        )
 
 
 @router.get("/workflows/history")
@@ -182,7 +192,7 @@ async def discover_tools(req: ToolDiscoveryRequest):
     - auto_register: Automatically register discovered tools
     """
     try:
-        from services.shared.core.responses.responses import create_success_response
+        from services.shared.presentation.responses import create_success_response
         from services.shared.integrations.clients.clients import ServiceClients
 
         client = ServiceClients()
@@ -221,7 +231,11 @@ async def discover_tools(req: ToolDiscoveryRequest):
                 service_url = service_url_map.get(service_name)
                 if not service_url:
                     results.append(
-                        {"service_name": service_name, "status": "error", "error": f"Unknown service: {service_name}"}
+                        {
+                            "service_name": service_name,
+                            "status": "error",
+                            "error": f"Unknown service: {service_name}",
+                        }
                     )
                     continue
 
@@ -233,7 +247,9 @@ async def discover_tools(req: ToolDiscoveryRequest):
                     "dry_run": req.dry_run,
                 }
 
-                response = await client.post_json(f"{discovery_agent_url}/discover/tools", discovery_payload)
+                response = await client.post_json(
+                    f"{discovery_agent_url}/discover/tools", discovery_payload
+                )
 
                 if response.get("success"):
                     tools_discovered = response["data"]["tools_discovered"]
@@ -245,7 +261,9 @@ async def discover_tools(req: ToolDiscoveryRequest):
                             "status": "success",
                             "tools_discovered": tools_discovered,
                             "tool_categories": response["data"].get("categories", []),
-                            "registration_status": response["data"].get("registration_status", "pending"),
+                            "registration_status": response["data"].get(
+                                "registration_status", "pending"
+                            ),
                         }
                     )
                 else:
@@ -258,11 +276,15 @@ async def discover_tools(req: ToolDiscoveryRequest):
                     )
 
             except Exception as e:
-                results.append({"service_name": service_name, "status": "error", "error": str(e)})
+                results.append(
+                    {"service_name": service_name, "status": "error", "error": str(e)}
+                )
 
         summary = {
             "total_services": len(req.services),
-            "successful_discoveries": len([r for r in results if r["status"] == "success"]),
+            "successful_discoveries": len(
+                [r for r in results if r["status"] == "success"]
+            ),
             "failed_discoveries": len([r for r in results if r["status"] == "error"]),
             "total_tools_discovered": total_tools,
             "dry_run": req.dry_run,

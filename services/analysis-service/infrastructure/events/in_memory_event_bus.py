@@ -4,7 +4,13 @@ import asyncio
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from .event_bus import DomainEvent, EventBus, EventEnvelope, EventPublisher, EventSubscriber
+from .event_bus import (
+    DomainEvent,
+    EventBus,
+    EventEnvelope,
+    EventPublisher,
+    EventSubscriber,
+)
 
 
 class InMemoryEventBus(EventBus):
@@ -21,7 +27,9 @@ class InMemoryEventBus(EventBus):
         self.messages_received = 0
         self.errors_count = 0
 
-    async def publish(self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None) -> None:
+    async def publish(
+        self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None
+    ) -> None:
         """Publish an event in memory."""
         try:
             # Convert to envelope if needed
@@ -46,7 +54,11 @@ class InMemoryEventBus(EventBus):
             self.errors_count += 1
             raise RuntimeError(f"Failed to publish event: {e}") from e
 
-    async def publish_batch(self, events: List[Union[DomainEvent, EventEnvelope]], topic: Optional[str] = None) -> None:
+    async def publish_batch(
+        self,
+        events: List[Union[DomainEvent, EventEnvelope]],
+        topic: Optional[str] = None,
+    ) -> None:
         """Publish multiple events in batch."""
         try:
             envelopes = []
@@ -66,7 +78,9 @@ class InMemoryEventBus(EventBus):
 
             if len(self._published_events) > self._max_stored_events:
                 # Keep only the most recent events
-                self._published_events = self._published_events[-self._max_stored_events :]
+                self._published_events = self._published_events[
+                    -self._max_stored_events :
+                ]
 
             # Deliver to subscribers
             for envelope in envelopes:
@@ -125,7 +139,9 @@ class InMemoryEventBus(EventBus):
         """Get all available topics."""
         return list(self._handlers.keys())
 
-    def get_published_events(self, topic: Optional[str] = None, limit: Optional[int] = None) -> List[EventEnvelope]:
+    def get_published_events(
+        self, topic: Optional[str] = None, limit: Optional[int] = None
+    ) -> List[EventEnvelope]:
         """Get published events for inspection."""
         events = self._published_events
 
@@ -153,7 +169,9 @@ class InMemoryEventBus(EventBus):
             "status": "healthy",
             "in_memory": True,
             "active_topics": len(self._handlers),
-            "total_subscribers": sum(len(handlers) for handlers in self._handlers.values()),
+            "total_subscribers": sum(
+                len(handlers) for handlers in self._handlers.values()
+            ),
             "stored_events": len(self._published_events),
             "max_stored_events": self._max_stored_events,
             "messages_published": self.messages_published,
@@ -217,8 +235,12 @@ class SharedInMemoryEventBus(InMemoryEventBus):
             # Copy state from existing instance
             self._handlers = SharedInMemoryEventBus._instance._handlers
             self._published_events = SharedInMemoryEventBus._instance._published_events
-            self._max_stored_events = SharedInMemoryEventBus._instance._max_stored_events
-            self.messages_published = SharedInMemoryEventBus._instance.messages_published
+            self._max_stored_events = (
+                SharedInMemoryEventBus._instance._max_stored_events
+            )
+            self.messages_published = (
+                SharedInMemoryEventBus._instance.messages_published
+            )
             self.messages_received = SharedInMemoryEventBus._instance.messages_received
             self.errors_count = SharedInMemoryEventBus._instance.errors_count
 
@@ -301,13 +323,19 @@ class TestEventBus(InMemoryEventBus):
 
     def get_events_by_type(self, event_type: str) -> List[EventEnvelope]:
         """Get events by type."""
-        return [event for event in self._published_events if event.event.event_type.value == event_type]
+        return [
+            event
+            for event in self._published_events
+            if event.event.event_type.value == event_type
+        ]
 
     def get_events_by_topic(self, topic: str) -> List[EventEnvelope]:
         """Get events by topic."""
         return [event for event in self._published_events if event.topic == topic]
 
-    def assert_event_published(self, event_type: str, topic: Optional[str] = None) -> bool:
+    def assert_event_published(
+        self, event_type: str, topic: Optional[str] = None
+    ) -> bool:
         """Assert that an event was published."""
         events = self.get_events_by_type(event_type)
         if topic:

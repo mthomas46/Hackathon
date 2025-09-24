@@ -31,7 +31,9 @@ class CacheEntry:
 
     def is_expired(self) -> bool:
         """Check if cache entry is expired."""
-        return self.expires_at is not None and datetime.now(timezone.utc) > self.expires_at
+        return (
+            self.expires_at is not None and datetime.now(timezone.utc) > self.expires_at
+        )
 
     def access(self) -> None:
         """Record access to this entry."""
@@ -42,7 +44,9 @@ class CacheEntry:
         """Calculate approximate size of the entry in bytes."""
         try:
             # Rough size calculation
-            value_size = len(pickle.dumps(self.value))  # nosec: Safe for size calculation only
+            value_size = len(
+                pickle.dumps(self.value)
+            )  # nosec: Safe for size calculation only
             metadata_size = len(
                 pickle.dumps(
                     {  # nosec: Safe for size calculation only
@@ -134,7 +138,12 @@ class MemoryCache(CacheBackend):
                 expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)
 
             # Create cache entry
-            entry = CacheEntry(key=key, value=value, created_at=datetime.now(timezone.utc), expires_at=expires_at)
+            entry = CacheEntry(
+                key=key,
+                value=value,
+                created_at=datetime.now(timezone.utc),
+                expires_at=expires_at,
+            )
             entry.calculate_size()
 
             # Check if we need to evict
@@ -200,7 +209,11 @@ class MemoryCache(CacheBackend):
                 "total_size_bytes": total_size,
                 "hits": self._hits,
                 "misses": self._misses,
-                "hit_rate": self._hits / (self._hits + self._misses) if (self._hits + self._misses) > 0 else 0,
+                "hit_rate": (
+                    self._hits / (self._hits + self._misses)
+                    if (self._hits + self._misses) > 0
+                    else 0
+                ),
                 "evictions": self._evictions,
                 "default_ttl": self._default_ttl,
             }
@@ -269,7 +282,9 @@ class RedisCache(CacheBackend):
             cache_key = self._make_key(key)
             value_bytes = await self._redis.get(cache_key)
             if value_bytes:
-                return pickle.loads(value_bytes)  # nosec: Controlled data from Redis cache
+                return pickle.loads(
+                    value_bytes
+                )  # nosec: Controlled data from Redis cache
         except Exception:
             pass  # Cache miss or error
 
@@ -282,7 +297,9 @@ class RedisCache(CacheBackend):
 
         try:
             cache_key = self._make_key(key)
-            value_bytes = pickle.dumps(value)  # nosec: Serializing controlled application data
+            value_bytes = pickle.dumps(
+                value
+            )  # nosec: Serializing controlled application data
             ttl_seconds = ttl or self._default_ttl
 
             if ttl_seconds:

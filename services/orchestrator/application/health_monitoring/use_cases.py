@@ -2,7 +2,12 @@
 
 from typing import Any, Dict
 
-from ...domain.health_monitoring import HealthCheckService, ServiceHealth, SystemHealth, SystemMonitoringService
+from ...domain.health_monitoring import (
+    HealthCheckService,
+    ServiceHealth,
+    SystemHealth,
+    SystemMonitoringService,
+)
 from ...shared.application import UseCase
 from ...shared.domain import DomainResult
 from .commands import *
@@ -15,13 +20,20 @@ class CheckSystemHealthUseCase(UseCase):
     def __init__(self, system_monitoring_service: SystemMonitoringService):
         self.system_monitoring_service = system_monitoring_service
 
-    async def execute(self, command: CheckSystemHealthCommand) -> DomainResult[SystemHealth]:
+    async def execute(
+        self, command: CheckSystemHealthCommand
+    ) -> DomainResult[SystemHealth]:
         """Execute the check system health use case."""
         try:
-            system_health = await self.system_monitoring_service.perform_system_health_check(
-                timeout_seconds=command.timeout_seconds, include_metrics=command.include_metrics
+            system_health = (
+                await self.system_monitoring_service.perform_system_health_check(
+                    timeout_seconds=command.timeout_seconds,
+                    include_metrics=command.include_metrics,
+                )
             )
-            return DomainResult.success_result(system_health, "System health check completed")
+            return DomainResult.success_result(
+                system_health, "System health check completed"
+            )
         except Exception as e:
             return DomainResult.single_error(f"Failed to check system health: {str(e)}")
 
@@ -32,15 +44,21 @@ class CheckServiceHealthUseCase(UseCase):
     def __init__(self, health_check_service: HealthCheckService):
         self.health_check_service = health_check_service
 
-    async def execute(self, command: CheckServiceHealthCommand) -> DomainResult[ServiceHealth]:
+    async def execute(
+        self, command: CheckServiceHealthCommand
+    ) -> DomainResult[ServiceHealth]:
         """Execute the check service health use case."""
         try:
             service_health = await self.health_check_service.check_service_health(
                 command.service_name, command.timeout_seconds
             )
-            return DomainResult.success_result(service_health, f"Health check completed for {command.service_name}")
+            return DomainResult.success_result(
+                service_health, f"Health check completed for {command.service_name}"
+            )
         except Exception as e:
-            return DomainResult.single_error(f"Failed to check service health: {str(e)}")
+            return DomainResult.single_error(
+                f"Failed to check service health: {str(e)}"
+            )
 
 
 class GetSystemHealthUseCase(UseCase):
@@ -52,10 +70,15 @@ class GetSystemHealthUseCase(UseCase):
     async def execute(self, query: GetSystemHealthQuery) -> DomainResult[SystemHealth]:
         """Execute the get system health use case."""
         try:
-            system_health = await self.system_monitoring_service.perform_system_health_check(
-                timeout_seconds=query.timeout_seconds, include_metrics=query.include_metrics
+            system_health = (
+                await self.system_monitoring_service.perform_system_health_check(
+                    timeout_seconds=query.timeout_seconds,
+                    include_metrics=query.include_metrics,
+                )
             )
-            return DomainResult.success_result(system_health, "System health retrieved successfully")
+            return DomainResult.success_result(
+                system_health, "System health retrieved successfully"
+            )
         except Exception as e:
             return DomainResult.single_error(f"Failed to get system health: {str(e)}")
 
@@ -66,13 +89,19 @@ class GetServiceHealthUseCase(UseCase):
     def __init__(self, system_monitoring_service: SystemMonitoringService):
         self.system_monitoring_service = system_monitoring_service
 
-    async def execute(self, query: GetServiceHealthQuery) -> DomainResult[ServiceHealth]:
+    async def execute(
+        self, query: GetServiceHealthQuery
+    ) -> DomainResult[ServiceHealth]:
         """Execute the get service health use case."""
         try:
-            service_health = await self.system_monitoring_service.get_service_health_details(
-                query.service_name, query.timeout_seconds
+            service_health = (
+                await self.system_monitoring_service.get_service_health_details(
+                    query.service_name, query.timeout_seconds
+                )
             )
-            return DomainResult.success_result(service_health, f"Service health retrieved for {query.service_name}")
+            return DomainResult.success_result(
+                service_health, f"Service health retrieved for {query.service_name}"
+            )
         except Exception as e:
             return DomainResult.single_error(f"Failed to get service health: {str(e)}")
 
@@ -87,7 +116,9 @@ class GetSystemInfoUseCase(UseCase):
         """Execute the get system info use case."""
         try:
             system_info = self.system_monitoring_service.get_system_info()
-            return DomainResult.success_result(system_info, "System information retrieved successfully")
+            return DomainResult.success_result(
+                system_info, "System information retrieved successfully"
+            )
         except Exception as e:
             return DomainResult.single_error(f"Failed to get system info: {str(e)}")
 
@@ -98,11 +129,15 @@ class GetSystemMetricsUseCase(UseCase):
     def __init__(self, system_monitoring_service: SystemMonitoringService):
         self.system_monitoring_service = system_monitoring_service
 
-    async def execute(self, query: GetSystemMetricsQuery) -> DomainResult[Dict[str, Any]]:
+    async def execute(
+        self, query: GetSystemMetricsQuery
+    ) -> DomainResult[Dict[str, Any]]:
         """Execute the get system metrics use case."""
         try:
             metrics = self.system_monitoring_service.get_system_metrics()
-            return DomainResult.success_result(metrics, "System metrics retrieved successfully")
+            return DomainResult.success_result(
+                metrics, "System metrics retrieved successfully"
+            )
         except Exception as e:
             return DomainResult.single_error(f"Failed to get system metrics: {str(e)}")
 
@@ -113,11 +148,15 @@ class GetSystemConfigUseCase(UseCase):
     def __init__(self, system_monitoring_service: SystemMonitoringService):
         self.system_monitoring_service = system_monitoring_service
 
-    async def execute(self, query: GetSystemConfigQuery) -> DomainResult[Dict[str, Any]]:
+    async def execute(
+        self, query: GetSystemConfigQuery
+    ) -> DomainResult[Dict[str, Any]]:
         """Execute the get system config use case."""
         try:
             config = self.system_monitoring_service.get_system_config()
-            return DomainResult.success_result(config, "System configuration retrieved successfully")
+            return DomainResult.success_result(
+                config, "System configuration retrieved successfully"
+            )
         except Exception as e:
             return DomainResult.single_error(f"Failed to get system config: {str(e)}")
 
@@ -128,7 +167,9 @@ class CheckSystemReadinessUseCase(UseCase):
     def __init__(self, system_monitoring_service: SystemMonitoringService):
         self.system_monitoring_service = system_monitoring_service
 
-    async def execute(self, query: CheckSystemReadinessQuery) -> DomainResult[Dict[str, Any]]:
+    async def execute(
+        self, query: CheckSystemReadinessQuery
+    ) -> DomainResult[Dict[str, Any]]:
         """Execute the check system readiness use case."""
         try:
             is_ready = self.system_monitoring_service.is_system_ready()
@@ -139,7 +180,9 @@ class CheckSystemReadinessUseCase(UseCase):
             }
             return DomainResult.success_result(result, "Readiness check completed")
         except Exception as e:
-            return DomainResult.single_error(f"Failed to check system readiness: {str(e)}")
+            return DomainResult.single_error(
+                f"Failed to check system readiness: {str(e)}"
+            )
 
 
 class ListWorkflowsUseCase(UseCase):
@@ -174,7 +217,11 @@ class ListWorkflowsUseCase(UseCase):
                     "id": "quality_assessment",
                     "name": "Quality Assessment",
                     "description": "Assess overall documentation quality",
-                    "steps": ["collect_metrics", "analyze_quality", "generate_insights"],
+                    "steps": [
+                        "collect_metrics",
+                        "analyze_quality",
+                        "generate_insights",
+                    ],
                     "required_services": ["doc_store", "analysis-service"],
                     "estimated_duration": 450,
                 },
@@ -186,6 +233,8 @@ class ListWorkflowsUseCase(UseCase):
             paginated_workflows = workflows[start_idx:end_idx]
 
             result = {"workflows": paginated_workflows}
-            return DomainResult.success_result(result, "Workflows retrieved successfully")
+            return DomainResult.success_result(
+                result, "Workflows retrieved successfully"
+            )
         except Exception as e:
             return DomainResult.single_error(f"Failed to list workflows: {str(e)}")

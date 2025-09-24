@@ -63,7 +63,10 @@ class CDNManager:
         self.performance_metrics: Dict[str, Any] = {}
 
     async def upload_asset(
-        self, local_path: str, remote_path: str, content_type: str = "application/octet-stream"
+        self,
+        local_path: str,
+        remote_path: str,
+        content_type: str = "application/octet-stream",
     ) -> bool:
         """Upload asset to CDN."""
 
@@ -164,7 +167,9 @@ class CDNManager:
             "cache_ttl_seconds": self.config.cache_ttl,
         }
 
-    async def _upload_to_provider(self, content: bytes, metadata: AssetMetadata) -> bool:
+    async def _upload_to_provider(
+        self, content: bytes, metadata: AssetMetadata
+    ) -> bool:
         """Upload to specific CDN provider."""
 
         if self.config.provider == "cloudflare":
@@ -257,7 +262,9 @@ class AssetOptimizer:
 
                     # Optimize individual asset
                     content_type = self._get_content_type(path)
-                    optimized = await self.cdn_manager.optimize_asset(content, content_type)
+                    optimized = await self.cdn_manager.optimize_asset(
+                        content, content_type
+                    )
 
                     bundle_content += optimized + b"\n"
             except Exception as e:
@@ -275,12 +282,18 @@ class AssetOptimizer:
 
         # Upload to CDN
         remote_path = f"bundles/{bundle_filename}"
-        success = await self.cdn_manager.upload_asset(bundle_path, remote_path, f"application/{bundle_type}")
+        success = await self.cdn_manager.upload_asset(
+            bundle_path, remote_path, f"application/{bundle_type}"
+        )
 
         if success:
             # Record bundle metadata
             processing_time = time.time() - start_time
-            compression_ratio = len(bundle_content) / total_original_size if total_original_size > 0 else 1
+            compression_ratio = (
+                len(bundle_content) / total_original_size
+                if total_original_size > 0
+                else 1
+            )
 
             self.asset_bundles[bundle_name] = asset_paths
             self.optimization_stats[bundle_name] = {
@@ -298,7 +311,9 @@ class AssetOptimizer:
 
         return ""
 
-    async def extract_critical_css(self, html_content: str, css_files: List[str]) -> tuple[str, str]:
+    async def extract_critical_css(
+        self, html_content: str, css_files: List[str]
+    ) -> tuple[str, str]:
         """Extract critical CSS for above-the-fold content."""
 
         # This would analyze HTML and extract critical CSS
@@ -318,8 +333,12 @@ class AssetOptimizer:
     async def get_optimization_report(self) -> Dict[str, Any]:
         """Generate asset optimization report."""
 
-        total_original = sum(stats["original_size"] for stats in self.optimization_stats.values())
-        total_optimized = sum(stats["optimized_size"] for stats in self.optimization_stats.values())
+        total_original = sum(
+            stats["original_size"] for stats in self.optimization_stats.values()
+        )
+        total_optimized = sum(
+            stats["optimized_size"] for stats in self.optimization_stats.values()
+        )
         avg_compression = total_optimized / total_original if total_original > 0 else 1
 
         return {

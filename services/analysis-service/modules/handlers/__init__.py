@@ -1,9 +1,19 @@
 """Handlers Package - Analysis handlers with dependency injection."""
 
-from .base_handler import AnalysisResult, BaseAnalysisHandler, HandlerRegistry, handler_registry
+from .base_handler import (
+    AnalysisResult,
+    BaseAnalysisHandler,
+    HandlerRegistry,
+    handler_registry,
+)
 from .cross_repository_handler import CrossRepositoryAnalysisHandler
 from .distributed_handler import DistributedAnalysisHandler
-from .factory import HandlerFactory, create_handler, get_handler_factory, initialize_handlers
+from .factory import (
+    HandlerFactory,
+    create_handler,
+    get_handler_factory,
+    initialize_handlers,
+)
 from .impact_handler import ChangeImpactAnalysisHandler
 from .maintenance_handler import MaintenanceAnalysisHandler
 from .quality_handler import QualityAnalysisHandler

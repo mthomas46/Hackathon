@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from services.shared.core.di.services import ILoggerService
-from services.shared.core.logging.logger import get_logger
+# Using standardized shared services
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class TaskStatus(Enum):
@@ -88,7 +88,11 @@ class DistributedProcessor:
         if not task:
             return None
 
-        return {"task_id": task.task_id, "status": task.status.value, "assigned_worker": task.assigned_worker}
+        return {
+            "task_id": task.task_id,
+            "status": task.status.value,
+            "assigned_worker": task.assigned_worker,
+        }
 
     async def _process_task(self, task: Task, worker: Worker) -> None:
         """Process a task."""

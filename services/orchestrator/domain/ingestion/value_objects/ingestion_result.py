@@ -39,7 +39,9 @@ class IngestionResult:
 
         # Calculate duration if both timestamps are available
         if self._started_at and self._completed_at:
-            self._duration_seconds = (self._completed_at - self._started_at).total_seconds()
+            self._duration_seconds = (
+                self._completed_at - self._started_at
+            ).total_seconds()
         else:
             self._duration_seconds = duration_seconds
 
@@ -54,7 +56,9 @@ class IngestionResult:
             raise ValueError("Status must be a valid IngestionStatus")
 
         # Ensure item counts are consistent
-        processed_items = self._successful_items + self._failed_items + self._skipped_items
+        processed_items = (
+            self._successful_items + self._failed_items + self._skipped_items
+        )
         if processed_items > self._total_items:
             raise ValueError("Processed items cannot exceed total items")
 
@@ -152,9 +156,15 @@ class IngestionResult:
         """Check if ingestion was successful."""
         return self._status.is_successful
 
-    def add_error(self, error_type: str, message: str, details: Optional[Dict[str, Any]] = None):
+    def add_error(
+        self, error_type: str, message: str, details: Optional[Dict[str, Any]] = None
+    ):
         """Add an error to the result."""
-        error = {"type": error_type, "message": message, "timestamp": datetime.utcnow().isoformat()}
+        error = {
+            "type": error_type,
+            "message": message,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
         if details:
             error["details"] = details
 
@@ -179,13 +189,17 @@ class IngestionResult:
         """Mark the ingestion as started."""
         self._started_at = timestamp or datetime.utcnow()
 
-    def mark_completed(self, status: IngestionStatus, timestamp: Optional[datetime] = None):
+    def mark_completed(
+        self, status: IngestionStatus, timestamp: Optional[datetime] = None
+    ):
         """Mark the ingestion as completed."""
         self._status = status
         self._completed_at = timestamp or datetime.utcnow()
 
         if self._started_at and self._completed_at:
-            self._duration_seconds = (self._completed_at - self._started_at).total_seconds()
+            self._duration_seconds = (
+                self._completed_at - self._started_at
+            ).total_seconds()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""

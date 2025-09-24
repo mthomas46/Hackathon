@@ -72,40 +72,64 @@ class ConfigManager(BaseManager):
             if choice == "1":
                 services = await self._get_available_services()
                 if services:
-                    selected_service = await self.select_from_list(services, "Select service")
+                    selected_service = await self.select_from_list(
+                        services, "Select service"
+                    )
                     if selected_service:
-                        config_files = await self.service_manager.list_service_config_files(selected_service)
+                        config_files = (
+                            await self.service_manager.list_service_config_files(
+                                selected_service
+                            )
+                        )
                         if config_files:
-                            table_data = [[str(f), f.stat().st_size] for f in config_files]
+                            table_data = [
+                                [str(f), f.stat().st_size] for f in config_files
+                            ]
                             self.display.show_table(
-                                f"Configuration Files for {selected_service}", ["File Path", "Size (bytes)"], table_data
+                                f"Configuration Files for {selected_service}",
+                                ["File Path", "Size (bytes)"],
+                                table_data,
                             )
                         else:
-                            self.display.show_warning(f"No configuration files found for {selected_service}")
+                            self.display.show_warning(
+                                f"No configuration files found for {selected_service}"
+                            )
                 await self._pause_continue()
 
             elif choice == "2":
                 services = await self._get_available_services()
                 if services:
-                    selected_service = await self.select_from_list(services, "Select service to view config")
+                    selected_service = await self.select_from_list(
+                        services, "Select service to view config"
+                    )
                     if selected_service:
-                        await self.service_manager.view_service_configuration(selected_service)
+                        await self.service_manager.view_service_configuration(
+                            selected_service
+                        )
                 await self._pause_continue()
 
             elif choice == "3":
                 services = await self._get_available_services()
                 if services:
-                    selected_service = await self.select_from_list(services, "Select service to edit config")
+                    selected_service = await self.select_from_list(
+                        services, "Select service to edit config"
+                    )
                     if selected_service:
-                        await self.service_manager.edit_service_configuration(selected_service)
+                        await self.service_manager.edit_service_configuration(
+                            selected_service
+                        )
                 await self._pause_continue()
 
             elif choice == "4":
                 services = await self._get_available_services()
                 if services:
-                    selected_service = await self.select_from_list(services, "Select service to show hierarchy")
+                    selected_service = await self.select_from_list(
+                        services, "Select service to show hierarchy"
+                    )
                     if selected_service:
-                        await self.service_manager.show_configuration_hierarchy(selected_service)
+                        await self.service_manager.show_configuration_hierarchy(
+                            selected_service
+                        )
                 await self._pause_continue()
 
             elif choice.lower() in ["b", "back"]:

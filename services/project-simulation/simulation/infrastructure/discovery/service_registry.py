@@ -26,7 +26,9 @@ class ServiceRegistry:
         with self._lock:
             return self._services.get(service_name)
 
-    def update_service(self, service_name: str, updated_registration: ServiceRegistration) -> bool:
+    def update_service(
+        self, service_name: str, updated_registration: ServiceRegistration
+    ) -> bool:
         """Update an existing service registration."""
         with self._lock:
             if service_name in self._services:
@@ -50,7 +52,11 @@ class ServiceRegistry:
     def get_services_by_pattern(self, pattern: str) -> List[ServiceRegistration]:
         """Get services whose names match the given pattern."""
         with self._lock:
-            return [service for service in self._services.values() if pattern.lower() in service.service_name.lower()]
+            return [
+                service
+                for service in self._services.values()
+                if pattern.lower() in service.service_name.lower()
+            ]
 
     def clear_all(self) -> None:
         """Clear all service registrations (for testing)."""

@@ -6,7 +6,8 @@ configurations with defaults for consistent service operation.
 
 from typing import Any, Dict
 
-from services.shared.core.config.config import get_config_value, load_yaml_config
+# Config now handled by standardized config system in main.py
+import os
 
 
 class ConfigManager:
@@ -27,10 +28,25 @@ class ConfigManager:
         Returns:
             Dictionary containing hub configuration, or empty dict if loading fails
         """
-        config_path = get_config_value(
-            "SH_CONFIG", "services/summarizer-hub/config.yaml", section="summarizer_hub", env_key="SH_CONFIG"
-        )
-        return load_yaml_config(config_path)
+        # Try to load from environment variable or default path
+        config_path = os.getenv("SH_CONFIG", "config.yaml")
+
+        try:
+            import yaml
+            with open(config_path, 'r') as f:
+                return yaml.safe_load(f)
+        except (FileNotFoundError, yaml.YAMLError):
+            # Return default configuration if file not found or invalid
+            return {
+                "providers": {
+                    "openai": {"enabled": True, "model": "gpt-3.5-turbo"},
+                    "anthropic": {"enabled": True, "model": "claude-3-haiku"},
+                    "ollama": {"enabled": True, "model": "llama2"}
+                },
+                "default_provider": "ollama",
+                "max_tokens": 500,
+                "temperature": 0.7
+            }
 
     @staticmethod
     def merge_provider_from_config(provider_config, hub_config: Dict[str, Any]):
@@ -54,15 +70,21 @@ class ConfigManager:
 
         # Find matching provider by name (case-insensitive)
         for hub_provider_entry in hub_providers:
-            if str(hub_provider_entry.get("name", "")).lower() == provider_config.name.lower():
+            if (
+                str(hub_provider_entry.get("name", "")).lower()
+                == provider_config.name.lower()
+            ):
                 # Merge configurations, with request values taking precedence
                 return ProviderConfig(
                     name=provider_config.name,
                     model=provider_config.model or hub_provider_entry.get("model"),
-                    endpoint=provider_config.endpoint or hub_provider_entry.get("endpoint"),
-                    api_key=provider_config.api_key or hub_provider_entry.get("api_key"),
+                    endpoint=provider_config.endpoint
+                    or hub_provider_entry.get("endpoint"),
+                    api_key=provider_config.api_key
+                    or hub_provider_entry.get("api_key"),
                     region=provider_config.region or hub_provider_entry.get("region"),
-                    profile=provider_config.profile or hub_provider_entry.get("profile"),
+                    profile=provider_config.profile
+                    or hub_provider_entry.get("profile"),
                 )
 
         # Return original config if no hub defaults found

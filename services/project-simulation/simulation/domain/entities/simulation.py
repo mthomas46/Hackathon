@@ -12,7 +12,13 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
-from ..events import DocumentGenerated, SimulationCompleted, SimulationFailed, SimulationStarted, WorkflowExecuted
+from ..events import (
+    DocumentGenerated,
+    SimulationCompleted,
+    SimulationFailed,
+    SimulationStarted,
+    WorkflowExecuted,
+)
 from ..value_objects import DocumentType, SimulationMetrics, SimulationStatus
 
 
@@ -201,7 +207,9 @@ class Simulation:
         self.progress.start_time = self.started_at
 
         # Estimate completion time
-        self.progress.estimated_completion_time = self.started_at + self.configuration.get_max_execution_time()
+        self.progress.estimated_completion_time = (
+            self.started_at + self.configuration.get_max_execution_time()
+        )
 
         self._add_domain_event(
             SimulationStarted(
@@ -215,14 +223,20 @@ class Simulation:
         self.status = SimulationStatus.RUNNING
 
     def update_progress(
-        self, phase_name: str, documents_count: int = 0, workflows_count: int = 0, completed: bool = False
+        self,
+        phase_name: str,
+        documents_count: int = 0,
+        workflows_count: int = 0,
+        completed: bool = False,
     ) -> None:
         """Update simulation progress."""
         self.progress.update_phase_progress(phase_name, completed)
         self.progress.increment_documents(documents_count)
         self.progress.increment_workflows(workflows_count)
 
-    def record_document_generation(self, document_type: DocumentType, title: str, word_count: int) -> None:
+    def record_document_generation(
+        self, document_type: DocumentType, title: str, word_count: int
+    ) -> None:
         """Record a document generation event."""
         self.progress.increment_documents()
 
@@ -236,7 +250,9 @@ class Simulation:
             )
         )
 
-    def record_workflow_execution(self, workflow_type: str, execution_time_seconds: float, success: bool) -> None:
+    def record_workflow_execution(
+        self, workflow_type: str, execution_time_seconds: float, success: bool
+    ) -> None:
         """Record a workflow execution event."""
         self.progress.increment_workflows()
 
@@ -250,11 +266,15 @@ class Simulation:
             )
         )
 
-    def complete_simulation(self, success: bool, execution_time: float, metrics: SimulationMetrics) -> None:
+    def complete_simulation(
+        self, success: bool, execution_time: float, metrics: SimulationMetrics
+    ) -> None:
         """Complete the simulation."""
         self.status = SimulationStatus.COMPLETED if success else SimulationStatus.FAILED
         self.completed_at = datetime.now()
-        self.result = SimulationResult(success=success, execution_time_seconds=execution_time, metrics=metrics)
+        self.result = SimulationResult(
+            success=success, execution_time_seconds=execution_time, metrics=metrics
+        )
 
         self._add_domain_event(
             SimulationCompleted(
@@ -304,7 +324,11 @@ class Simulation:
 
     def is_completed(self) -> bool:
         """Check if simulation is completed."""
-        return self.status in [SimulationStatus.COMPLETED, SimulationStatus.FAILED, SimulationStatus.CANCELLED]
+        return self.status in [
+            SimulationStatus.COMPLETED,
+            SimulationStatus.FAILED,
+            SimulationStatus.CANCELLED,
+        ]
 
     def get_elapsed_time(self) -> Optional[timedelta]:
         """Get elapsed time since simulation started."""
@@ -326,7 +350,11 @@ class Simulation:
 
     def should_continue(self) -> bool:
         """Check if simulation should continue running."""
-        return self.is_running() and self.is_within_time_limit() and not self.is_completed()
+        return (
+            self.is_running()
+            and self.is_within_time_limit()
+            and not self.is_completed()
+        )
 
     def get_simulation_summary(self) -> Dict[str, Any]:
         """Get a summary of the simulation."""

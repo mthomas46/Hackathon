@@ -41,7 +41,8 @@ class DatabaseConfig:
             max_connections=int(os.getenv("DB_MAX_CONNECTIONS", "10")),
             min_connections=int(os.getenv("DB_MIN_CONNECTIONS", "1")),
             connection_timeout=int(os.getenv("DB_CONNECTION_TIMEOUT", "30")),
-            enable_migrations=os.getenv("DB_ENABLE_MIGRATIONS", "true").lower() == "true",
+            enable_migrations=os.getenv("DB_ENABLE_MIGRATIONS", "true").lower()
+            == "true",
         )
 
     def get_connection_string(self, db_type: str = "sqlite") -> str:
@@ -49,7 +50,9 @@ class DatabaseConfig:
         if db_type == "sqlite":
             return f"sqlite:///{self.sqlite_path}"
         elif db_type == "postgresql":
-            if not all([self.postgres_host, self.postgres_database, self.postgres_user]):
+            if not all(
+                [self.postgres_host, self.postgres_database, self.postgres_user]
+            ):
                 raise ValueError("PostgreSQL configuration incomplete")
             return f"postgresql://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_database}"
         else:
@@ -86,7 +89,9 @@ class DatabaseConfig:
             if not self.postgres_user:
                 errors.append("PostgreSQL user must be specified")
         else:
-            errors.append("Either SQLite path or PostgreSQL configuration must be provided")
+            errors.append(
+                "Either SQLite path or PostgreSQL configuration must be provided"
+            )
 
         if self.max_connections < self.min_connections:
             errors.append("Max connections must be >= min connections")

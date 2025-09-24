@@ -6,10 +6,14 @@ Only contains business-specific validation and logic.
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import BaseService, create_validation_error, create_duplicate_error
+from services.shared.utilities import (
+    BaseService,
+    create_validation_error,
+    create_duplicate_error,
+)
 
 from ...core.entities import Document
-from .repository import DocumentRepository
+from ...core.repository import DocumentRepository
 
 
 class DocumentService(BaseService[Document]):
@@ -24,6 +28,7 @@ class DocumentService(BaseService[Document]):
         if repository is None:
             # TODO: Get from dependency injection container
             from ...db.connection import get_document_connection_string
+
             repository = DocumentRepository(get_document_connection_string())
         super().__init__(repository)
 
@@ -34,12 +39,16 @@ class DocumentService(BaseService[Document]):
             raise create_validation_error("content", "Document content cannot be empty")
 
         if len(entity.content) > 10485760:  # 10MB limit
-            raise create_validation_error("content", "Document content exceeds 10MB limit")
+            raise create_validation_error(
+                "content", "Document content exceeds 10MB limit"
+            )
 
         # Metadata validation
         self._validate_metadata(entity.metadata)
 
-    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> Document:
+    async def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> Document:
         """Create document entity with business logic."""
         content = data.get("content", "").strip()
         if not content:
@@ -70,6 +79,7 @@ class DocumentService(BaseService[Document]):
     def _calculate_content_hash(self, content: str) -> str:
         """Calculate content hash for duplicate detection."""
         import hashlib
+
         return hashlib.sha256(content.encode()).hexdigest()
 
     def _validate_metadata(self, metadata: Dict[str, Any]) -> None:
@@ -79,12 +89,16 @@ class DocumentService(BaseService[Document]):
 
         # Business rule: Max 50 metadata keys
         if len(metadata) > 50:
-            raise create_validation_error("metadata", "Metadata cannot have more than 50 keys")
+            raise create_validation_error(
+                "metadata", "Metadata cannot have more than 50 keys"
+            )
 
         # Validate metadata key names (business rule)
         for key in metadata.keys():
             if not isinstance(key, str) or len(key) > 100:
-                raise create_validation_error("metadata", f"Metadata key '{key}' is invalid")
+                raise create_validation_error(
+                    "metadata", f"Metadata key '{key}' is invalid"
+                )
 
     # Business-specific methods (not provided by base class)
 

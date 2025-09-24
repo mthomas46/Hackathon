@@ -17,7 +17,9 @@ from ...shared_utils import add_menu_rows, create_menu_table
 class ArchitectureDigitizerManager(BaseManager):
     """Manager for architecture digitizer CLI operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def get_required_services(self) -> List[str]:
@@ -26,7 +28,11 @@ class ArchitectureDigitizerManager(BaseManager):
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for architecture digitizer operations."""
-        return [("1", "Architecture Analysis"), ("2", "System Modeling"), ("3", "Documentation Generation")]
+        return [
+            ("1", "Architecture Analysis"),
+            ("2", "System Modeling"),
+            ("3", "Documentation Generation"),
+        ]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -36,7 +42,9 @@ class ArchitectureDigitizerManager(BaseManager):
     async def architecture_digitizer_menu(self):
         """Main architecture digitizer menu."""
         while True:
-            menu = create_menu_table("Architecture Digitizer", ["Option", "Description"])
+            menu = create_menu_table(
+                "Architecture Digitizer", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -117,7 +125,8 @@ class ArchitectureDigitizerManager(BaseManager):
         try:
             with self.console.status("[bold green]Normalizing Miro board...") as status:
                 response = await self.clients.post_json(
-                    "architecture-digitizer/normalize", {"system": "miro", "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize",
+                    {"system": "miro", "board_id": board_id, "token": token},
                 )
 
             self._display_normalization_result(response)
@@ -136,9 +145,12 @@ class ArchitectureDigitizerManager(BaseManager):
             return
 
         try:
-            with self.console.status("[bold green]Normalizing FigJam board...") as status:
+            with self.console.status(
+                "[bold green]Normalizing FigJam board..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "architecture-digitizer/normalize", {"system": "figjam", "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize",
+                    {"system": "figjam", "board_id": board_id, "token": token},
                 )
 
             self._display_normalization_result(response)
@@ -157,9 +169,12 @@ class ArchitectureDigitizerManager(BaseManager):
             return
 
         try:
-            with self.console.status("[bold green]Normalizing Lucid document...") as status:
+            with self.console.status(
+                "[bold green]Normalizing Lucid document..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "architecture-digitizer/normalize", {"system": "lucid", "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize",
+                    {"system": "lucid", "board_id": board_id, "token": token},
                 )
 
             self._display_normalization_result(response)
@@ -178,9 +193,12 @@ class ArchitectureDigitizerManager(BaseManager):
             return
 
         try:
-            with self.console.status("[bold green]Normalizing Confluence page...") as status:
+            with self.console.status(
+                "[bold green]Normalizing Confluence page..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "architecture-digitizer/normalize", {"system": "confluence", "board_id": page_id, "token": token}
+                    "architecture-digitizer/normalize",
+                    {"system": "confluence", "board_id": page_id, "token": token},
                 )
 
             self._display_normalization_result(response)
@@ -194,7 +212,9 @@ class ArchitectureDigitizerManager(BaseManager):
             # Get supported systems for file upload
             await self._get_supported_systems()
 
-            menu = create_menu_table("Upload & Normalize File", ["Option", "Description"])
+            menu = create_menu_table(
+                "Upload & Normalize File", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -225,7 +245,9 @@ class ArchitectureDigitizerManager(BaseManager):
 
     async def upload_and_normalize_file(self, system: str, file_format: str):
         """Upload and normalize a file."""
-        self.console.print(f"\n[bold green]Upload {system.title()} {file_format.upper()} File[/bold green]")
+        self.console.print(
+            f"\n[bold green]Upload {system.title()} {file_format.upper()} File[/bold green]"
+        )
 
         file_path = Prompt.ask(f"Path to {file_format.upper()} file")
 
@@ -239,7 +261,9 @@ class ArchitectureDigitizerManager(BaseManager):
             self.console.print("[red]File too large. Maximum size is 10MB.[/red]")
             return
 
-        if not Confirm.ask(f"Upload and normalize {os.path.basename(file_path)} ({file_size} bytes)?"):
+        if not Confirm.ask(
+            f"Upload and normalize {os.path.basename(file_path)} ({file_size} bytes)?"
+        ):
             return
 
         try:
@@ -247,26 +271,34 @@ class ArchitectureDigitizerManager(BaseManager):
             with open(file_path, "rb") as f:
                 file_content = f.read()
 
-            with self.console.status(f"[bold green]Uploading and normalizing {system} file...") as status:
+            with self.console.status(
+                f"[bold green]Uploading and normalizing {system} file..."
+            ) as status:
                 # Create multipart form data
                 import aiohttp
                 from aiohttp import FormData
 
                 data = FormData()
-                data.add_field("file", file_content, filename=os.path.basename(file_path))
+                data.add_field(
+                    "file", file_content, filename=os.path.basename(file_path)
+                )
                 data.add_field("system", system)
                 data.add_field("file_format", file_format)
 
                 # Use raw HTTP client for multipart upload
                 async with aiohttp.ClientSession() as session:
-                    url = f"{self.clients.base_url}/architecture-digitizer/normalize-file"
+                    url = (
+                        f"{self.clients.base_url}/architecture-digitizer/normalize-file"
+                    )
                     async with session.post(url, data=data) as resp:
                         if resp.status == 200:
                             response = await resp.json()
                             self._display_file_normalization_result(response)
                         else:
                             error_text = await resp.text()
-                            self.console.print(f"[red]Upload failed: {error_text}[/red]")
+                            self.console.print(
+                                f"[red]Upload failed: {error_text}[/red]"
+                            )
 
         except Exception as e:
             self.console.print(f"[red]Error uploading file: {e}[/red]")
@@ -274,8 +306,12 @@ class ArchitectureDigitizerManager(BaseManager):
     async def view_supported_systems(self):
         """View supported diagram systems."""
         try:
-            with self.console.status("[bold green]Fetching supported systems...") as status:
-                response = await self.clients.get_json("architecture-digitizer/supported-systems")
+            with self.console.status(
+                "[bold green]Fetching supported systems..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "architecture-digitizer/supported-systems"
+                )
 
             table = Table(title="Supported Diagram Systems")
             table.add_column("System", style="cyan")
@@ -284,7 +320,9 @@ class ArchitectureDigitizerManager(BaseManager):
 
             for system in response.get("systems", []):
                 table.add_row(
-                    system.get("name", "").title(), system.get("description", ""), system.get("auth_type", "")
+                    system.get("name", "").title(),
+                    system.get("description", ""),
+                    system.get("auth_type", ""),
                 )
 
             self.console.print(table)
@@ -305,7 +343,9 @@ class ArchitectureDigitizerManager(BaseManager):
 
             for system in systems:
                 try:
-                    response = await self.clients.get_json(f"architecture-digitizer/supported-file-formats/{system}")
+                    response = await self.clients.get_json(
+                        f"architecture-digitizer/supported-file-formats/{system}"
+                    )
                     for fmt in response.get("supported_formats", []):
                         table.add_row(
                             system.title(),
@@ -327,12 +367,16 @@ class ArchitectureDigitizerManager(BaseManager):
         # This would typically fetch from a history endpoint
         # For now, show a placeholder
         self.console.print("[yellow]Digitization history feature coming soon![/yellow]")
-        self.console.print("[dim]This will show recent normalization operations and their results.[/dim]")
+        self.console.print(
+            "[dim]This will show recent normalization operations and their results.[/dim]"
+        )
 
     def _display_normalization_result(self, response: Dict[str, Any]):
         """Display normalization result."""
         if response.get("success"):
-            self.console.print(f"[green]✅ Successfully normalized {response.get('system')} diagram![/green]")
+            self.console.print(
+                f"[green]✅ Successfully normalized {response.get('system')} diagram![/green]"
+            )
 
             data = response.get("data", {})
             components = data.get("components", [])
@@ -355,12 +399,16 @@ class ArchitectureDigitizerManager(BaseManager):
                 self.console.print(table)
 
         else:
-            self.console.print(f"[red]❌ Normalization failed: {response.get('message', 'Unknown error')}[/red]")
+            self.console.print(
+                f"[red]❌ Normalization failed: {response.get('message', 'Unknown error')}[/red]"
+            )
 
     def _display_file_normalization_result(self, response: Dict[str, Any]):
         """Display file normalization result."""
         if response.get("success"):
-            self.console.print(f"[green]✅ Successfully normalized {response.get('system')} file![/green]")
+            self.console.print(
+                f"[green]✅ Successfully normalized {response.get('system')} file![/green]"
+            )
             self.console.print(f"📁 Filename: {response.get('filename')}")
             self.console.print(f"📄 Format: {response.get('file_format', '').upper()}")
 
@@ -385,7 +433,9 @@ class ArchitectureDigitizerManager(BaseManager):
                 self.console.print(table)
 
         else:
-            self.console.print(f"[red]❌ File normalization failed: {response.get('message', 'Unknown error')}[/red]")
+            self.console.print(
+                f"[red]❌ File normalization failed: {response.get('message', 'Unknown error')}[/red]"
+            )
 
     async def _get_supported_systems(self) -> List[str]:
         """Get supported systems from cache or API."""
@@ -399,7 +449,9 @@ class ArchitectureDigitizerManager(BaseManager):
 
         # Fetch from API
         try:
-            response = await self.clients.get_json("architecture-digitizer/supported-systems")
+            response = await self.clients.get_json(
+                "architecture-digitizer/supported-systems"
+            )
             systems = [s.get("name") for s in response.get("systems", [])]
 
             # Cache result

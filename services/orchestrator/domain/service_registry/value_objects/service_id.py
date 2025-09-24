@@ -1,7 +1,6 @@
 """Service ID Value Object"""
 
 
-
 class ServiceId:
     """Value object representing a service identifier."""
 

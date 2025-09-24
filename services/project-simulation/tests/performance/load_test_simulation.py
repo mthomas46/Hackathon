@@ -14,7 +14,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.logging import get_simulation_logger
 
@@ -23,7 +25,10 @@ class SimulationLoadTester:
     """Load testing framework for concurrent simulation execution."""
 
     def __init__(
-        self, base_url: str = "http://localhost:5075", max_concurrent: int = 10, test_duration_seconds: int = 300
+        self,
+        base_url: str = "http://localhost:5075",
+        max_concurrent: int = 10,
+        test_duration_seconds: int = 300,
     ):
         """Initialize load tester.
 
@@ -71,7 +76,9 @@ class SimulationLoadTester:
 
             # Test 2: Sustained concurrent load
             sustained_results = await self._test_sustained_load()
-            test_results.append({"test": "sustained_load", "results": sustained_results})
+            test_results.append(
+                {"test": "sustained_load", "results": sustained_results}
+            )
 
             # Test 3: Burst load testing
             burst_results = await self._test_burst_load()
@@ -177,7 +184,9 @@ class SimulationLoadTester:
             interval_duration = time.time() - interval_start
 
             # Record interval metrics
-            successful = sum(1 for r in interval_results if not isinstance(r, Exception))
+            successful = sum(
+                1 for r in interval_results if not isinstance(r, Exception)
+            )
             failed = len(interval_results) - successful
 
             interval_metrics = {
@@ -215,7 +224,10 @@ class SimulationLoadTester:
             burst_start = time.time()
 
             # Create burst of concurrent requests
-            tasks = [self._run_single_simulation_test() for _ in range(scenario["concurrency"])]
+            tasks = [
+                self._run_single_simulation_test()
+                for _ in range(scenario["concurrency"])
+            ]
 
             # Execute burst
             burst_results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -255,9 +267,24 @@ class SimulationLoadTester:
 
         # Different workload patterns
         patterns = [
-            {"name": "read_heavy", "create_ratio": 0.2, "execute_ratio": 0.3, "status_ratio": 0.5},
-            {"name": "write_heavy", "create_ratio": 0.6, "execute_ratio": 0.3, "status_ratio": 0.1},
-            {"name": "balanced", "create_ratio": 0.4, "execute_ratio": 0.4, "status_ratio": 0.2},
+            {
+                "name": "read_heavy",
+                "create_ratio": 0.2,
+                "execute_ratio": 0.3,
+                "status_ratio": 0.5,
+            },
+            {
+                "name": "write_heavy",
+                "create_ratio": 0.6,
+                "execute_ratio": 0.3,
+                "status_ratio": 0.1,
+            },
+            {
+                "name": "balanced",
+                "create_ratio": 0.4,
+                "execute_ratio": 0.4,
+                "status_ratio": 0.2,
+            },
         ]
 
         for pattern in patterns:
@@ -277,21 +304,33 @@ class SimulationLoadTester:
                 tasks.append(self._run_simulation_creation_only())
 
             # Add execute simulation tasks (need existing simulations)
-            for i in range(min(execute_count, self.metrics["total_simulations_created"])):
+            for i in range(
+                min(execute_count, self.metrics["total_simulations_created"])
+            ):
                 if i < len(self.created_simulation_ids):
-                    tasks.append(self._run_simulation_execution_only(self.created_simulation_ids[i]))
+                    tasks.append(
+                        self._run_simulation_execution_only(
+                            self.created_simulation_ids[i]
+                        )
+                    )
 
             # Add status check tasks
-            for i in range(min(status_count, self.metrics["total_simulations_created"])):
+            for i in range(
+                min(status_count, self.metrics["total_simulations_created"])
+            ):
                 if i < len(self.created_simulation_ids):
-                    tasks.append(self._run_simulation_status_only(self.created_simulation_ids[i]))
+                    tasks.append(
+                        self._run_simulation_status_only(self.created_simulation_ids[i])
+                    )
 
             # Execute mixed workload
             if tasks:
                 mixed_results = await asyncio.gather(*tasks, return_exceptions=True)
                 pattern_duration = time.time() - pattern_start
 
-                successful = sum(1 for r in mixed_results if not isinstance(r, Exception))
+                successful = sum(
+                    1 for r in mixed_results if not isinstance(r, Exception)
+                )
                 failed = len(mixed_results) - successful
 
                 pattern_metrics = {
@@ -301,12 +340,16 @@ class SimulationLoadTester:
                     "successful_requests": successful,
                     "failed_requests": failed,
                     "success_rate": successful / len(tasks) if tasks else 0,
-                    "throughput_per_second": len(tasks) / pattern_duration if pattern_duration > 0 else 0,
+                    "throughput_per_second": (
+                        len(tasks) / pattern_duration if pattern_duration > 0 else 0
+                    ),
                 }
 
                 results["workload_patterns"].append(pattern_metrics)
 
-        results["metrics"] = self._analyze_mixed_workload_results(results["workload_patterns"])
+        results["metrics"] = self._analyze_mixed_workload_results(
+            results["workload_patterns"]
+        )
         return results
 
     async def _run_single_simulation_test(self) -> Dict[str, Any]:
@@ -320,7 +363,9 @@ class SimulationLoadTester:
             simulation_data = self._generate_random_simulation_data()
 
             async with httpx.AsyncClient(timeout=30.0) as client:
-                create_response = await client.post(f"{self.base_url}/api/v1/simulations", json=simulation_data)
+                create_response = await client.post(
+                    f"{self.base_url}/api/v1/simulations", json=simulation_data
+                )
 
                 if create_response.status_code != 201:
                     raise Exception(f"Create failed: {create_response.status_code}")
@@ -331,7 +376,9 @@ class SimulationLoadTester:
                 self.metrics["total_simulations_created"] += 1
 
                 # Execute simulation
-                execute_response = await client.post(f"{self.base_url}/api/v1/simulations/{simulation_id}/execute")
+                execute_response = await client.post(
+                    f"{self.base_url}/api/v1/simulations/{simulation_id}/execute"
+                )
 
                 if execute_response.status_code not in [200, 202]:
                     raise Exception(f"Execute failed: {execute_response.status_code}")
@@ -342,13 +389,21 @@ class SimulationLoadTester:
                 response_time = time.time() - start_time
                 self.metrics["response_times"].append(response_time)
 
-                return {"success": True, "simulation_id": simulation_id, "response_time": response_time}
+                return {
+                    "success": True,
+                    "simulation_id": simulation_id,
+                    "response_time": response_time,
+                }
 
         except Exception as e:
             response_time = time.time() - start_time
             self.metrics["failed_simulations"] += 1
             self.metrics["errors"].append(
-                {"error": str(e), "response_time": response_time, "timestamp": datetime.now().isoformat()}
+                {
+                    "error": str(e),
+                    "response_time": response_time,
+                    "timestamp": datetime.now().isoformat(),
+                }
             )
 
             return {"success": False, "error": str(e), "response_time": response_time}
@@ -363,7 +418,9 @@ class SimulationLoadTester:
             simulation_data = self._generate_random_simulation_data()
 
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(f"{self.base_url}/api/v1/simulations", json=simulation_data)
+                response = await client.post(
+                    f"{self.base_url}/api/v1/simulations", json=simulation_data
+                )
 
                 if response.status_code != 201:
                     raise Exception(f"Create failed: {response.status_code}")
@@ -376,10 +433,14 @@ class SimulationLoadTester:
 
         except Exception as e:
             response_time = time.time() - start_time
-            self.metrics["errors"].append({"error": str(e), "response_time": response_time, "operation": "create"})
+            self.metrics["errors"].append(
+                {"error": str(e), "response_time": response_time, "operation": "create"}
+            )
             return {"success": False, "error": str(e)}
 
-    async def _run_simulation_execution_only(self, simulation_id: str) -> Dict[str, Any]:
+    async def _run_simulation_execution_only(
+        self, simulation_id: str
+    ) -> Dict[str, Any]:
         """Run simulation execution only."""
         import httpx
 
@@ -387,7 +448,9 @@ class SimulationLoadTester:
 
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(f"{self.base_url}/api/v1/simulations/{simulation_id}/execute")
+                response = await client.post(
+                    f"{self.base_url}/api/v1/simulations/{simulation_id}/execute"
+                )
 
                 if response.status_code not in [200, 202]:
                     raise Exception(f"Execute failed: {response.status_code}")
@@ -417,7 +480,9 @@ class SimulationLoadTester:
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{self.base_url}/api/v1/simulations/{simulation_id}")
+                response = await client.get(
+                    f"{self.base_url}/api/v1/simulations/{simulation_id}"
+                )
 
                 if response.status_code != 200:
                     raise Exception(f"Status check failed: {response.status_code}")
@@ -430,7 +495,12 @@ class SimulationLoadTester:
         except Exception as e:
             response_time = time.time() - start_time
             self.metrics["errors"].append(
-                {"error": str(e), "response_time": response_time, "operation": "status", "simulation_id": simulation_id}
+                {
+                    "error": str(e),
+                    "response_time": response_time,
+                    "operation": "status",
+                    "simulation_id": simulation_id,
+                }
             )
             return {"success": False, "error": str(e)}
 
@@ -438,7 +508,13 @@ class SimulationLoadTester:
         """Generate random simulation data for testing."""
         import random
 
-        project_types = ["web_application", "api_service", "mobile_application", "data_science", "devops_tool"]
+        project_types = [
+            "web_application",
+            "api_service",
+            "mobile_application",
+            "data_science",
+            "devops_tool",
+        ]
         complexities = ["simple", "medium", "complex"]
 
         return {
@@ -450,7 +526,9 @@ class SimulationLoadTester:
             "duration_weeks": random.randint(4, 12),
         }
 
-    def _calculate_final_metrics(self, test_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _calculate_final_metrics(
+        self, test_results: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Calculate final comprehensive metrics."""
         if not self.metrics["response_times"]:
             return {}
@@ -462,14 +540,18 @@ class SimulationLoadTester:
             "total_simulations_executed": self.metrics["total_simulations_executed"],
             "successful_simulations": self.metrics["successful_simulations"],
             "failed_simulations": self.metrics["failed_simulations"],
-            "success_rate": self.metrics["successful_simulations"] / max(self.metrics["total_simulations_created"], 1),
+            "success_rate": self.metrics["successful_simulations"]
+            / max(self.metrics["total_simulations_created"], 1),
             "average_response_time": statistics.mean(response_times),
             "median_response_time": statistics.median(response_times),
             "min_response_time": min(response_times),
             "max_response_time": max(response_times),
-            "response_time_stddev": statistics.stdev(response_times) if len(response_times) > 1 else 0,
+            "response_time_stddev": (
+                statistics.stdev(response_times) if len(response_times) > 1 else 0
+            ),
             "total_test_duration_seconds": self.test_duration_seconds,
-            "average_throughput_per_second": len(response_times) / self.test_duration_seconds,
+            "average_throughput_per_second": len(response_times)
+            / self.test_duration_seconds,
             "error_rate": len(self.metrics["errors"]) / max(len(response_times), 1),
             "error_breakdown": self._analyze_errors(),
             "performance_score": self._calculate_performance_score(),
@@ -488,11 +570,17 @@ class SimulationLoadTester:
             "optimal_concurrency": phases[-1]["concurrency_level"] if phases else 0,
             "average_success_rate": statistics.mean(success_rates),
             "max_throughput": max(throughputs),
-            "throughput_stability": statistics.stdev(throughputs) / statistics.mean(throughputs) if throughputs else 0,
+            "throughput_stability": (
+                statistics.stdev(throughputs) / statistics.mean(throughputs)
+                if throughputs
+                else 0
+            ),
             "bottleneck_concurrency": self._find_bottleneck_concurrency(phases),
         }
 
-    def _analyze_sustained_results(self, intervals: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_sustained_results(
+        self, intervals: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze sustained load test results."""
         if not intervals:
             return {}
@@ -502,10 +590,18 @@ class SimulationLoadTester:
 
         return {
             "average_success_rate": statistics.mean(success_rates),
-            "success_rate_stability": statistics.stdev(success_rates) if len(success_rates) > 1 else 0,
+            "success_rate_stability": (
+                statistics.stdev(success_rates) if len(success_rates) > 1 else 0
+            ),
             "average_throughput": statistics.mean(throughputs),
-            "throughput_stability": statistics.stdev(throughputs) / statistics.mean(throughputs) if throughputs else 0,
-            "performance_degradation": self._calculate_performance_degradation(intervals),
+            "throughput_stability": (
+                statistics.stdev(throughputs) / statistics.mean(throughputs)
+                if throughputs
+                else 0
+            ),
+            "performance_degradation": self._calculate_performance_degradation(
+                intervals
+            ),
         }
 
     def _analyze_burst_results(self, bursts: List[Dict[str, Any]]) -> Dict[str, Any]:
@@ -522,7 +618,9 @@ class SimulationLoadTester:
             "burst_resilience_score": self._calculate_burst_resilience(bursts),
         }
 
-    def _analyze_mixed_workload_results(self, patterns: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_mixed_workload_results(
+        self, patterns: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze mixed workload test results."""
         if not patterns:
             return {}
@@ -537,8 +635,12 @@ class SimulationLoadTester:
 
         return {
             "pattern_performance": pattern_performance,
-            "best_performing_pattern": max(pattern_performance.items(), key=lambda x: x[1]["throughput"]),
-            "worst_performing_pattern": min(pattern_performance.items(), key=lambda x: x[1]["throughput"]),
+            "best_performing_pattern": max(
+                pattern_performance.items(), key=lambda x: x[1]["throughput"]
+            ),
+            "worst_performing_pattern": min(
+                pattern_performance.items(), key=lambda x: x[1]["throughput"]
+            ),
         }
 
     def _analyze_errors(self) -> Dict[str, Any]:
@@ -554,7 +656,9 @@ class SimulationLoadTester:
         return {
             "total_errors": len(self.metrics["errors"]),
             "error_types": error_types,
-            "most_common_error": max(error_types.items(), key=lambda x: x[1]) if error_types else None,
+            "most_common_error": (
+                max(error_types.items(), key=lambda x: x[1]) if error_types else None
+            ),
         }
 
     def _find_bottleneck_concurrency(self, phases: List[Dict[str, Any]]) -> int:
@@ -572,7 +676,9 @@ class SimulationLoadTester:
 
         return phases[-1]["concurrency_level"]
 
-    def _calculate_performance_degradation(self, intervals: List[Dict[str, Any]]) -> float:
+    def _calculate_performance_degradation(
+        self, intervals: List[Dict[str, Any]]
+    ) -> float:
         """Calculate performance degradation over time."""
         if len(intervals) < 2:
             return 0.0
@@ -607,7 +713,9 @@ class SimulationLoadTester:
 
         # Performance score based on response time and success rate
         avg_response_time = statistics.mean(response_times)
-        success_rate = self.metrics["successful_simulations"] / max(self.metrics["total_simulations_created"], 1)
+        success_rate = self.metrics["successful_simulations"] / max(
+            self.metrics["total_simulations_created"], 1
+        )
 
         # Normalize response time (faster is better)
         response_score = max(0, 1 - (avg_response_time / 10))  # 10 seconds as baseline
@@ -653,7 +761,9 @@ class SimulationLoadTester:
             recommendations.append("Implement load balancing and horizontal scaling")
 
         if not recommendations:
-            recommendations.append("System performance is excellent - continue monitoring")
+            recommendations.append(
+                "System performance is excellent - continue monitoring"
+            )
 
         return recommendations
 
@@ -678,20 +788,26 @@ _load_tester: Optional[SimulationLoadTester] = None
 
 
 def get_simulation_load_tester(
-    base_url: str = "http://localhost:5075", max_concurrent: int = 10, test_duration_seconds: int = 300
+    base_url: str = "http://localhost:5075",
+    max_concurrent: int = 10,
+    test_duration_seconds: int = 300,
 ) -> SimulationLoadTester:
     """Get the global simulation load tester instance."""
     global _load_tester
     if _load_tester is None:
         _load_tester = SimulationLoadTester(
-            base_url=base_url, max_concurrent=max_concurrent, test_duration_seconds=test_duration_seconds
+            base_url=base_url,
+            max_concurrent=max_concurrent,
+            test_duration_seconds=test_duration_seconds,
         )
         _load_tester.__init_tracking()
     return _load_tester
 
 
 async def run_load_test(
-    base_url: str = "http://localhost:5075", max_concurrent: int = 10, test_duration_seconds: int = 300
+    base_url: str = "http://localhost:5075",
+    max_concurrent: int = 10,
+    test_duration_seconds: int = 300,
 ) -> Dict[str, Any]:
     """Run a comprehensive load test."""
     tester = get_simulation_load_tester(base_url, max_concurrent, test_duration_seconds)

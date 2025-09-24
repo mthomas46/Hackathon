@@ -9,7 +9,7 @@ Provides seamless integration between workflow operations and event emission/per
 from datetime import datetime
 from typing import Any, Dict, List
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import generate_id
 
@@ -35,21 +35,35 @@ class WorkflowEventBridge:
         if not self.event_handlers_registered:
             await self._register_event_handlers()
             self.event_handlers_registered = True
-            fire_and_forget("info", "Workflow-event bridge initialized", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "info", "Workflow-event bridge initialized", "orchestrator"
+            )
 
     async def _register_event_handlers(self):
         """Register event handlers for workflow events."""
         # Register handlers in event store
-        event_store.register_event_handler(EventType.WORKFLOW_STARTED, self._handle_workflow_started_event)
-        event_store.register_event_handler(EventType.WORKFLOW_COMPLETED, self._handle_workflow_completed_event)
-        event_store.register_event_handler(EventType.WORKFLOW_FAILED, self._handle_workflow_failed_event)
+        event_store.register_event_handler(
+            EventType.WORKFLOW_STARTED, self._handle_workflow_started_event
+        )
+        event_store.register_event_handler(
+            EventType.WORKFLOW_COMPLETED, self._handle_workflow_completed_event
+        )
+        event_store.register_event_handler(
+            EventType.WORKFLOW_FAILED, self._handle_workflow_failed_event
+        )
 
         # Register handlers in event-driven engine
         from .event_driven_orchestration import event_driven_engine
 
-        event_driven_engine.register_event_processor(EventType.WORKFLOW_STARTED, self._process_workflow_started)
-        event_driven_engine.register_event_processor(EventType.WORKFLOW_COMPLETED, self._process_workflow_completed)
-        event_driven_engine.register_event_processor(EventType.WORKFLOW_FAILED, self._process_workflow_failed)
+        event_driven_engine.register_event_processor(
+            EventType.WORKFLOW_STARTED, self._process_workflow_started
+        )
+        event_driven_engine.register_event_processor(
+            EventType.WORKFLOW_COMPLETED, self._process_workflow_completed
+        )
+        event_driven_engine.register_event_processor(
+            EventType.WORKFLOW_FAILED, self._process_workflow_failed
+        )
 
     async def emit_workflow_event(
         self,
@@ -78,13 +92,21 @@ class WorkflowEventBridge:
         success_count = 0
 
         # 1. Publish to Redis pub/sub
-        redis_success = await publish_orchestrator_event(f"workflow.{event_type}", event_payload, correlation_id)
+        redis_success = await publish_orchestrator_event(
+            f"workflow.{event_type}", event_payload, correlation_id
+        )
         if redis_success:
             success_count += 1
-            fire_and_forget("debug", f"Published workflow event to Redis: {event_type}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "debug",
+                f"Published workflow event to Redis: {event_type}",
+                "orchestrator",
+            )
         else:
             fire_and_forget(
-                "warning", f"Failed to publish workflow event to Redis: {event_type}", ServiceNames.ORCHESTRATOR
+                "warning",
+                f"Failed to publish workflow event to Redis: {event_type}",
+                "orchestrator",
             )
 
         # 2. Store in event store (for event sourcing)
@@ -96,7 +118,10 @@ class WorkflowEventBridge:
                 aggregate_id=workflow_id,
                 correlation_id=correlation_id,
                 payload=workflow_data,
-                metadata={"source": "workflow_bridge", "event_category": "workflow_lifecycle"},
+                metadata={
+                    "source": "workflow_bridge",
+                    "event_category": "workflow_lifecycle",
+                },
                 user_id=user_id,
             )
 
@@ -104,13 +129,23 @@ class WorkflowEventBridge:
             if store_success:
                 success_count += 1
                 fire_and_forget(
-                    "debug", f"Stored workflow event in event store: {event_type}", ServiceNames.ORCHESTRATOR
+                    "debug",
+                    f"Stored workflow event in event store: {event_type}",
+                    "orchestrator",
                 )
             else:
-                fire_and_forget("warning", f"Failed to store workflow event: {event_type}", ServiceNames.ORCHESTRATOR)
+                fire_and_forget(
+                    "warning",
+                    f"Failed to store workflow event: {event_type}",
+                    "orchestrator",
+                )
 
         except Exception as e:
-            fire_and_forget("error", f"Event store error for workflow {workflow_id}: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "error",
+                f"Event store error for workflow {workflow_id}: {e}",
+                "orchestrator",
+            )
 
         # 3. Publish to event streaming (if available)
         if EVENT_STREAMING_AVAILABLE:
@@ -120,26 +155,35 @@ class WorkflowEventBridge:
                     event_name=f"workflow_{event_type}",
                     payload=event_payload,
                     correlation_id=correlation_id,
-                    metadata={"workflow_id": workflow_id, "event_category": "workflow_lifecycle"},
+                    metadata={
+                        "workflow_id": workflow_id,
+                        "event_category": "workflow_lifecycle",
+                    },
                 )
 
-                stream_success = await event_stream_processor.publish_event("workflow_events", stream_event)
+                stream_success = await event_stream_processor.publish_event(
+                    "workflow_events", stream_event
+                )
 
                 if stream_success:
                     success_count += 1
                     fire_and_forget(
-                        "debug", f"Published workflow event to stream: {event_type}", ServiceNames.ORCHESTRATOR
+                        "debug",
+                        f"Published workflow event to stream: {event_type}",
+                        "orchestrator",
                     )
                 else:
                     fire_and_forget(
                         "warning",
                         f"Failed to publish workflow event to stream: {event_type}",
-                        ServiceNames.ORCHESTRATOR,
+                        "orchestrator",
                     )
 
             except Exception as e:
                 fire_and_forget(
-                    "error", f"Event streaming error for workflow {workflow_id}: {e}", ServiceNames.ORCHESTRATOR
+                    "error",
+                    f"Event streaming error for workflow {workflow_id}: {e}",
+                    "orchestrator",
                 )
 
         # Log overall success
@@ -147,7 +191,7 @@ class WorkflowEventBridge:
             fire_and_forget(
                 "info",
                 f"Workflow event emitted successfully: {event_type} ({success_count} channels)",
-                ServiceNames.ORCHESTRATOR,
+                "orchestrator",
                 {
                     "workflow_id": workflow_id,
                     "event_type": event_type,
@@ -159,7 +203,7 @@ class WorkflowEventBridge:
             fire_and_forget(
                 "error",
                 f"Workflow event emission failed completely: {event_type}",
-                ServiceNames.ORCHESTRATOR,
+                "orchestrator",
                 {"workflow_id": workflow_id, "correlation_id": correlation_id},
             )
 
@@ -179,7 +223,9 @@ class WorkflowEventBridge:
         }
         return mapping.get(event_type, EventType.STATE_CHANGED)
 
-    async def emit_workflow_created(self, workflow_id: str, workflow_data: Dict[str, Any], user_id: str = None) -> bool:
+    async def emit_workflow_created(
+        self, workflow_id: str, workflow_data: Dict[str, Any], user_id: str = None
+    ) -> bool:
         """Emit workflow creation event."""
         return await self.emit_workflow_event(
             "created",
@@ -195,7 +241,11 @@ class WorkflowEventBridge:
         )
 
     async def emit_workflow_started(
-        self, workflow_id: str, execution_id: str, parameters: Dict[str, Any], user_id: str = None
+        self,
+        workflow_id: str,
+        execution_id: str,
+        parameters: Dict[str, Any],
+        user_id: str = None,
     ) -> bool:
         """Emit workflow execution started event."""
         return await self.emit_workflow_event(
@@ -211,7 +261,12 @@ class WorkflowEventBridge:
         )
 
     async def emit_workflow_completed(
-        self, workflow_id: str, execution_id: str, result: Dict[str, Any], duration: float, user_id: str = None
+        self,
+        workflow_id: str,
+        execution_id: str,
+        result: Dict[str, Any],
+        duration: float,
+        user_id: str = None,
     ) -> bool:
         """Emit workflow execution completed event."""
         return await self.emit_workflow_event(
@@ -228,7 +283,12 @@ class WorkflowEventBridge:
         )
 
     async def emit_workflow_failed(
-        self, workflow_id: str, execution_id: str, error: str, duration: float, user_id: str = None
+        self,
+        workflow_id: str,
+        execution_id: str,
+        error: str,
+        duration: float,
+        user_id: str = None,
     ) -> bool:
         """Emit workflow execution failed event."""
         return await self.emit_workflow_event(
@@ -277,7 +337,7 @@ class WorkflowEventBridge:
         fire_and_forget(
             "info",
             f"Workflow started event received: {event.workflow_id}",
-            ServiceNames.ORCHESTRATOR,
+            "orchestrator",
             {"event_id": event.event_id, "correlation_id": event.correlation_id},
         )
 
@@ -286,7 +346,7 @@ class WorkflowEventBridge:
         fire_and_forget(
             "info",
             f"Workflow completed event received: {event.workflow_id}",
-            ServiceNames.ORCHESTRATOR,
+            "orchestrator",
             {
                 "event_id": event.event_id,
                 "correlation_id": event.correlation_id,
@@ -299,27 +359,45 @@ class WorkflowEventBridge:
         fire_and_forget(
             "warning",
             f"Workflow failed event received: {event.workflow_id}",
-            ServiceNames.ORCHESTRATOR,
-            {"event_id": event.event_id, "correlation_id": event.correlation_id, "error": event.payload.get("error")},
+            "orchestrator",
+            {
+                "event_id": event.event_id,
+                "correlation_id": event.correlation_id,
+                "error": event.payload.get("error"),
+            },
         )
 
     # Event processor methods for event-driven engine
     async def _process_workflow_started(self, event: WorkflowEvent):
         """Process workflow started event in event-driven engine."""
         # Could trigger additional workflows, notifications, etc.
-        fire_and_forget("debug", f"Processing workflow started: {event.workflow_id}", ServiceNames.ORCHESTRATOR)
+        fire_and_forget(
+            "debug",
+            f"Processing workflow started: {event.workflow_id}",
+            "orchestrator",
+        )
 
     async def _process_workflow_completed(self, event: WorkflowEvent):
         """Process workflow completed event in event-driven engine."""
         # Could trigger cleanup, notifications, analytics, etc.
-        fire_and_forget("debug", f"Processing workflow completed: {event.workflow_id}", ServiceNames.ORCHESTRATOR)
+        fire_and_forget(
+            "debug",
+            f"Processing workflow completed: {event.workflow_id}",
+            "orchestrator",
+        )
 
     async def _process_workflow_failed(self, event: WorkflowEvent):
         """Process workflow failed event in event-driven engine."""
         # Could trigger error handling, retries, notifications, etc.
-        fire_and_forget("debug", f"Processing workflow failed: {event.workflow_id}", ServiceNames.ORCHESTRATOR)
+        fire_and_forget(
+            "debug",
+            f"Processing workflow failed: {event.workflow_id}",
+            "orchestrator",
+        )
 
-    async def get_workflow_events(self, workflow_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_workflow_events(
+        self, workflow_id: str, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """Get events for a specific workflow."""
         try:
             events = await event_store.get_aggregate_events(workflow_id, "workflow")
@@ -341,7 +419,11 @@ class WorkflowEventBridge:
             return event_list
 
         except Exception as e:
-            fire_and_forget("error", f"Failed to get workflow events for {workflow_id}: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "error",
+                f"Failed to get workflow events for {workflow_id}: {e}",
+                "orchestrator",
+            )
             return []
 
     async def replay_workflow_events(self, workflow_id: str) -> Dict[str, Any]:
@@ -351,7 +433,9 @@ class WorkflowEventBridge:
             return state
         except Exception as e:
             fire_and_forget(
-                "error", f"Failed to replay workflow events for {workflow_id}: {e}", ServiceNames.ORCHESTRATOR
+                "error",
+                f"Failed to replay workflow events for {workflow_id}: {e}",
+                "orchestrator",
             )
             return {"error": str(e)}
 
@@ -363,34 +447,54 @@ workflow_event_bridge = WorkflowEventBridge()
 async def initialize_workflow_event_bridge():
     """Initialize the workflow event bridge."""
     await workflow_event_bridge.initialize_bridge()
-    fire_and_forget("info", "Workflow event bridge initialized", ServiceNames.ORCHESTRATOR)
+    fire_and_forget(
+        "info", "Workflow event bridge initialized", "orchestrator"
+    )
 
 
 # Convenience functions for easy access
-async def emit_workflow_created_event(workflow_id: str, workflow_data: Dict[str, Any], user_id: str = None) -> bool:
+async def emit_workflow_created_event(
+    workflow_id: str, workflow_data: Dict[str, Any], user_id: str = None
+) -> bool:
     """Emit workflow created event."""
-    return await workflow_event_bridge.emit_workflow_created(workflow_id, workflow_data, user_id)
+    return await workflow_event_bridge.emit_workflow_created(
+        workflow_id, workflow_data, user_id
+    )
 
 
 async def emit_workflow_started_event(
     workflow_id: str, execution_id: str, parameters: Dict[str, Any], user_id: str = None
 ) -> bool:
     """Emit workflow started event."""
-    return await workflow_event_bridge.emit_workflow_started(workflow_id, execution_id, parameters, user_id)
+    return await workflow_event_bridge.emit_workflow_started(
+        workflow_id, execution_id, parameters, user_id
+    )
 
 
 async def emit_workflow_completed_event(
-    workflow_id: str, execution_id: str, result: Dict[str, Any], duration: float, user_id: str = None
+    workflow_id: str,
+    execution_id: str,
+    result: Dict[str, Any],
+    duration: float,
+    user_id: str = None,
 ) -> bool:
     """Emit workflow completed event."""
-    return await workflow_event_bridge.emit_workflow_completed(workflow_id, execution_id, result, duration, user_id)
+    return await workflow_event_bridge.emit_workflow_completed(
+        workflow_id, execution_id, result, duration, user_id
+    )
 
 
 async def emit_workflow_failed_event(
-    workflow_id: str, execution_id: str, error: str, duration: float, user_id: str = None
+    workflow_id: str,
+    execution_id: str,
+    error: str,
+    duration: float,
+    user_id: str = None,
 ) -> bool:
     """Emit workflow failed event."""
-    return await workflow_event_bridge.emit_workflow_failed(workflow_id, execution_id, error, duration, user_id)
+    return await workflow_event_bridge.emit_workflow_failed(
+        workflow_id, execution_id, error, duration, user_id
+    )
 
 
 async def emit_step_event(
@@ -408,7 +512,9 @@ async def emit_step_event(
     )
 
 
-async def get_workflow_events(workflow_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+async def get_workflow_events(
+    workflow_id: str, limit: int = 100
+) -> List[Dict[str, Any]]:
     """Get events for a workflow."""
     return await workflow_event_bridge.get_workflow_events(workflow_id, limit)
 

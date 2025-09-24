@@ -17,7 +17,11 @@ class APICatalogManager:
         self.catalog_cache: Dict[str, Any] = {}
 
     async def get_catalog(
-        self, service_filter: Optional[str] = None, search_term: Optional[str] = None, limit: int = 50, offset: int = 0
+        self,
+        service_filter: Optional[str] = None,
+        search_term: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
     ) -> Dict[str, Any]:
         """Get API catalog with filtering and pagination."""
         try:
@@ -26,8 +30,18 @@ class APICatalogManager:
             return {
                 "services": ["user-service", "order-service", "payment-service"],
                 "endpoints": [
-                    {"service": "user-service", "path": "/users", "method": "GET", "summary": "List users"},
-                    {"service": "order-service", "path": "/orders", "method": "POST", "summary": "Create order"},
+                    {
+                        "service": "user-service",
+                        "path": "/users",
+                        "method": "GET",
+                        "summary": "List users",
+                    },
+                    {
+                        "service": "order-service",
+                        "path": "/orders",
+                        "method": "POST",
+                        "summary": "Create order",
+                    },
                 ],
                 "total": 25,
                 "limit": limit,

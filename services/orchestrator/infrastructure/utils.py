@@ -7,7 +7,7 @@ These functions handle service communication, URL resolution, and request prepar
 import os
 from typing import Any, Dict
 
-from services.shared.core.constants_new import EnvVars
+# Environment variables now handled by standardized config system
 
 
 def get_service_url(service_name: str, default_url: str) -> str:
@@ -49,4 +49,8 @@ def build_service_request_context(operation: str, **kwargs) -> Dict[str, Any]:
     return context
 
 
-__all__ = ["get_service_url", "prepare_correlation_headers", "build_service_request_context"]
+__all__ = [
+    "get_service_url",
+    "prepare_correlation_headers",
+    "build_service_request_context",
+]

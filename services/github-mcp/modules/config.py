@@ -52,7 +52,9 @@ class Config:
     @staticmethod
     def get_official_mcp_base_url() -> str:
         """Get base URL for official GitHub MCP server."""
-        return os.environ.get("OFFICIAL_GH_MCP_BASE_URL", "http://github-mcp-server:8060")
+        return os.environ.get(
+            "OFFICIAL_GH_MCP_BASE_URL", "http://github-mcp-server:8060"
+        )
 
 
 # Create singleton instance

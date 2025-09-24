@@ -74,7 +74,9 @@ class BaseServiceAdapter(ABC):
     - Error handling
     """
 
-    def __init__(self, service_name: str, base_url: str, console: Console, clients: Any):
+    def __init__(
+        self, service_name: str, base_url: str, console: Console, clients: Any
+    ):
         self.service_name = service_name
         self.base_url = base_url
         self.console = console
@@ -117,7 +119,9 @@ class BaseServiceAdapter(ABC):
                 )
             else:
                 return CommandResult(
-                    success=False, error=f"{self.service_name} is not responding", execution_time=execution_time
+                    success=False,
+                    error=f"{self.service_name} is not responding",
+                    execution_time=execution_time,
                 )
         except Exception as e:
             return CommandResult(success=False, error=f"Connection failed: {str(e)}")
@@ -137,7 +141,9 @@ class BaseServiceAdapter(ABC):
         info_table.add_row("Status", info.status.value)
         info_table.add_row("Description", info.description)
 
-        self.console.print(Panel(info_table, title=f"[bold green]{info.name} Information[/bold green]"))
+        self.console.print(
+            Panel(info_table, title=f"[bold green]{info.name} Information[/bold green]")
+        )
 
         # Display features
         if info.features:
@@ -176,6 +182,8 @@ class BaseServiceAdapter(ABC):
                 result = await self.execute_command(command_name)
                 results[command_name] = result
             except Exception as e:
-                results[command_name] = CommandResult(success=False, error=f"Command test failed: {str(e)}")
+                results[command_name] = CommandResult(
+                    success=False, error=f"Command test failed: {str(e)}"
+                )
 
         return results

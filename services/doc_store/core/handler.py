@@ -7,7 +7,10 @@ import asyncio
 from abc import ABC
 from typing import Any, Dict
 
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 from services.shared.utilities.error_handling import ServiceException
 
 
@@ -17,7 +20,9 @@ class BaseHandler(ABC):
     def __init__(self, service):
         self.service = service
 
-    async def _handle_request(self, operation: callable, *args, **kwargs) -> Dict[str, Any]:
+    async def _handle_request(
+        self, operation: callable, *args, **kwargs
+    ) -> Dict[str, Any]:
         """Handle request with common error handling."""
         try:
             result = operation(*args, **kwargs)
@@ -46,19 +51,27 @@ class BaseHandler(ABC):
             return entity
         return create_error_response("Entity not found", "NOT_FOUND")
 
-    async def handle_update(self, entity_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_update(
+        self, entity_id: str, updates: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle entity update."""
-        return await self._handle_request(self.service.update_entity, entity_id, updates)
+        return await self._handle_request(
+            self.service.update_entity, entity_id, updates
+        )
 
     async def handle_delete(self, entity_id: str) -> Dict[str, Any]:
         """Handle entity deletion."""
         return await self._handle_request(self.service.delete_entity, entity_id)
 
-    async def handle_list(self, limit: int = 50, offset: int = 0, **filters) -> Dict[str, Any]:
+    async def handle_list(
+        self, limit: int = 50, offset: int = 0, **filters
+    ) -> Dict[str, Any]:
         """Handle entity listing."""
         return await self._handle_request(self.service.list_entities, limit, offset)
 
-    def _validate_request_data(self, data: Dict[str, Any], required_fields: list) -> None:
+    def _validate_request_data(
+        self, data: Dict[str, Any], required_fields: list
+    ) -> None:
         """Validate request data has required fields."""
         missing = [field for field in required_fields if field not in data]
         if missing:

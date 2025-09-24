@@ -4,7 +4,6 @@ Handles memory agent service visualization, including operational
 context storage, event summaries, and memory item management.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..memory_agent_monitor import memory_agent_monitor
@@ -693,5 +692,7 @@ class MemoryAgentUIHandlers:
             return create_html_response(html, "Memory Agent Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render memory agent dashboard", e, **build_frontend_context("render_memory_agent_dashboard")
+                "render memory agent dashboard",
+                e,
+                **build_frontend_context("render_memory_agent_dashboard")
             )

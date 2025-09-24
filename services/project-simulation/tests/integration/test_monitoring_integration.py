@@ -18,7 +18,12 @@ class TestHealthCheckIntegration:
         """Test that health endpoint returns proper JSON format."""
         # This test assumes the service is running
         # In a real CI/CD environment, this would test against a running container
-        health_response = {"status": "healthy", "timestamp": "2024-01-01T00:00:00Z", "version": "1.0.0", "uptime": 3600}
+        health_response = {
+            "status": "healthy",
+            "timestamp": "2024-01-01T00:00:00Z",
+            "version": "1.0.0",
+            "uptime": 3600,
+        }
 
         # Validate required fields
         assert "status" in health_response
@@ -32,7 +37,11 @@ class TestHealthCheckIntegration:
             "status": "healthy",
             "timestamp": "2024-01-01T00:00:00Z",
             "version": "1.0.0",
-            "services": {"database": "healthy", "redis": "healthy", "ecosystem": "healthy"},
+            "services": {
+                "database": "healthy",
+                "redis": "healthy",
+                "ecosystem": "healthy",
+            },
             "uptime": 3600,
             "memory_usage": 85.5,
             "cpu_usage": 12.3,
@@ -41,13 +50,17 @@ class TestHealthCheckIntegration:
         # Validate schema
         required_fields = ["status", "timestamp", "version"]
         for field in required_fields:
-            assert field in mock_response, f"Health response missing required field: {field}"
+            assert (
+                field in mock_response
+            ), f"Health response missing required field: {field}"
 
         # Validate optional fields
         optional_fields = ["services", "uptime", "memory_usage", "cpu_usage"]
         for field in optional_fields:
             if field in mock_response:
-                assert isinstance(mock_response[field], (dict, int, float)), f"Field {field} has invalid type"
+                assert isinstance(
+                    mock_response[field], (dict, int, float)
+                ), f"Field {field} has invalid type"
 
     @pytest.mark.integration
     def test_health_endpoint_http_status(self):
@@ -69,7 +82,9 @@ class TestHealthCheckIntegration:
             content = compose_path.read_text()
 
             # Should have health check configuration
-            assert "healthcheck:" in content, "docker-compose should have healthcheck configuration"
+            assert (
+                "healthcheck:" in content
+            ), "docker-compose should have healthcheck configuration"
             assert "test:" in content, "healthcheck should have test command"
             assert "interval:" in content, "healthcheck should have interval"
             assert "timeout:" in content, "healthcheck should have timeout"
@@ -85,13 +100,17 @@ class TestMetricsEndpointIntegration:
         prometheus_config = Path("monitoring/prometheus.yml")
         if prometheus_config.exists():
             content = prometheus_config.read_text()
-            assert "metrics_path" in content, "Prometheus config should reference metrics endpoint"
+            assert (
+                "metrics_path" in content
+            ), "Prometheus config should reference metrics endpoint"
         else:
             # If no Prometheus config, check docker-compose for monitoring services
             compose_path = Path("docker-compose.yml")
             if compose_path.exists():
                 content = compose_path.read_text()
-                assert "prometheus" in content, "docker-compose should have Prometheus service"
+                assert (
+                    "prometheus" in content
+                ), "docker-compose should have Prometheus service"
 
     def test_prometheus_metrics_format(self):
         """Test Prometheus metrics format compliance."""
@@ -145,7 +164,9 @@ class TestMonitoringConfiguration:
 
         content = prometheus_config.read_text()
         assert "global:" in content, "Prometheus config should have global section"
-        assert "scrape_configs:" in content, "Prometheus config should have scrape configs"
+        assert (
+            "scrape_configs:" in content
+        ), "Prometheus config should have scrape configs"
 
     def test_prometheus_scrape_targets(self):
         """Test Prometheus scrape target configuration."""
@@ -154,10 +175,14 @@ class TestMonitoringConfiguration:
             content = prometheus_config.read_text()
 
             # Should scrape the application
-            assert "project-simulation" in content, "Should scrape project-simulation service"
+            assert (
+                "project-simulation" in content
+            ), "Should scrape project-simulation service"
 
             # Should have proper scrape interval
-            assert "scrape_interval:" in content, "Should have scrape interval configured"
+            assert (
+                "scrape_interval:" in content
+            ), "Should have scrape interval configured"
 
     def test_alert_rules_configuration(self):
         """Test alert rules configuration."""
@@ -184,7 +209,9 @@ class TestMonitoringConfiguration:
             assert "labels:" in content, "Should have container labels for monitoring"
 
             # Should have service identification labels
-            assert "com.hackathon.service" in content, "Should have service identification labels"
+            assert (
+                "com.hackathon.service" in content
+            ), "Should have service identification labels"
 
 
 class TestLogAggregationIntegration:
@@ -197,7 +224,9 @@ class TestLogAggregationIntegration:
             content = compose_path.read_text()
 
             # Should have logging configuration
-            assert "logging:" in content, "docker-compose should have logging configuration"
+            assert (
+                "logging:" in content
+            ), "docker-compose should have logging configuration"
 
             # Should specify log driver
             assert "driver:" in content, "logging should specify driver"
@@ -219,7 +248,13 @@ class TestLogAggregationIntegration:
                 assert field in log_data, f"Log entry missing required field: {field}"
 
             # Should have valid log level
-            assert log_data["level"] in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], "Log level should be valid"
+            assert log_data["level"] in [
+                "DEBUG",
+                "INFO",
+                "WARNING",
+                "ERROR",
+                "CRITICAL",
+            ], "Log level should be valid"
 
     def test_log_aggregation_setup(self):
         """Test log aggregation service configuration."""
@@ -229,11 +264,17 @@ class TestLogAggregationIntegration:
 
             # Should have log aggregation service (if configured)
             # This is optional but good to have in production
-            has_log_aggregation = "log-collector" in content or "fluentd" in content or "logstash" in content
+            has_log_aggregation = (
+                "log-collector" in content
+                or "fluentd" in content
+                or "logstash" in content
+            )
             if has_log_aggregation:
                 assert True, "Log aggregation service is configured"
             else:
-                pytest.skip("Log aggregation not configured - optional for this environment")
+                pytest.skip(
+                    "Log aggregation not configured - optional for this environment"
+                )
 
 
 class TestResourceMonitoringIntegration:
@@ -249,7 +290,9 @@ class TestResourceMonitoringIntegration:
             assert "limits:" in content, "Should have resource limits configured"
 
             # Should have CPU and memory limits
-            assert "cpus:" in content or "cpu_shares:" in content, "Should have CPU limits"
+            assert (
+                "cpus:" in content or "cpu_shares:" in content
+            ), "Should have CPU limits"
             assert "memory:" in content, "Should have memory limits"
 
     def test_monitoring_dashboards_configuration(self):
@@ -257,8 +300,12 @@ class TestResourceMonitoringIntegration:
         grafana_config = Path("monitoring/grafana")
         if grafana_config.exists():
             # Should have dashboard configurations
-            dashboard_files = list(grafana_config.glob("**/*.json")) + list(grafana_config.glob("**/*.yaml"))
-            assert len(dashboard_files) > 0, "Should have Grafana dashboard configurations"
+            dashboard_files = list(grafana_config.glob("**/*.json")) + list(
+                grafana_config.glob("**/*.yaml")
+            )
+            assert (
+                len(dashboard_files) > 0
+            ), "Should have Grafana dashboard configurations"
 
     def test_alert_thresholds_configuration(self):
         """Test alert thresholds configuration."""
@@ -268,7 +315,9 @@ class TestResourceMonitoringIntegration:
 
             # Should have alert thresholds
             assert "expr:" in content, "Alert rules should have expressions"
-            assert "for:" in content or "duration:" in content, "Should have alert duration/for clause"
+            assert (
+                "for:" in content or "duration:" in content
+            ), "Should have alert duration/for clause"
 
     @pytest.mark.performance
     def test_monitoring_performance_impact(self):
@@ -281,8 +330,12 @@ class TestResourceMonitoringIntegration:
         monitored_response_time = 110  # ms
 
         # Monitoring overhead should be minimal (< 20%)
-        overhead_percentage = ((monitored_response_time - baseline_response_time) / baseline_response_time) * 100
-        assert overhead_percentage < 20, f"Monitoring overhead too high: {overhead_percentage}%"
+        overhead_percentage = (
+            (monitored_response_time - baseline_response_time) / baseline_response_time
+        ) * 100
+        assert (
+            overhead_percentage < 20
+        ), f"Monitoring overhead too high: {overhead_percentage}%"
 
 
 class TestServiceDiscoveryIntegration:
@@ -298,7 +351,9 @@ class TestServiceDiscoveryIntegration:
             # Should have service names for discovery
             service_names = ["project-simulation", "postgres", "redis"]
             for service_name in service_names:
-                assert service_name in content, f"Should have service {service_name} for discovery"
+                assert (
+                    service_name in content
+                ), f"Should have service {service_name} for discovery"
 
     def test_health_check_based_discovery(self):
         """Test health check based service discovery."""
@@ -307,7 +362,9 @@ class TestServiceDiscoveryIntegration:
             content = compose_path.read_text()
 
             # Should have health checks for service discovery
-            assert "healthcheck:" in content, "Should have health checks for service discovery"
+            assert (
+                "healthcheck:" in content
+            ), "Should have health checks for service discovery"
 
             # Should have depends_on with condition
             assert "condition:" in content, "Should have conditional dependencies"
@@ -327,9 +384,13 @@ class TestServiceDiscoveryIntegration:
         # Validate registration structure
         required_fields = ["service", "address", "port"]
         for field in required_fields:
-            assert field in mock_registration, f"Service registration missing field: {field}"
+            assert (
+                field in mock_registration
+            ), f"Service registration missing field: {field}"
 
-        assert "health_check" in mock_registration, "Should have health check configuration"
+        assert (
+            "health_check" in mock_registration
+        ), "Should have health check configuration"
 
 
 class TestObservabilityIntegration:
@@ -343,7 +404,9 @@ class TestObservabilityIntegration:
             content = compose_path.read_text()
 
             # Should have tracing headers or service (optional)
-            has_tracing = "jaeger" in content or "zipkin" in content or "tracing" in content
+            has_tracing = (
+                "jaeger" in content or "zipkin" in content or "tracing" in content
+            )
             if has_tracing:
                 assert True, "Distributed tracing is configured"
             else:

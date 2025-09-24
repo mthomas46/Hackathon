@@ -10,9 +10,19 @@ from ...domain.entities import Analysis, Finding
 from ...domain.entities.value_objects import AnalysisConfiguration, AnalysisType
 from ...domain.exceptions import DocumentNotFoundException
 from ...domain.services import AnalysisService, FindingService
-from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
+from ...infrastructure.repositories import (
+    AnalysisRepository,
+    DocumentRepository,
+    FindingRepository,
+)
 from ..dto import AnalysisResultResponse, FindingResponse
-from ..events import AnalysisCompletedEvent, AnalysisFailedEvent, AnalysisRequestedEvent, EventBus, FindingCreatedEvent
+from ..events import (
+    AnalysisCompletedEvent,
+    AnalysisFailedEvent,
+    AnalysisRequestedEvent,
+    EventBus,
+    FindingCreatedEvent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +111,9 @@ class PerformAnalysisUseCase:
 
             # Create analysis entity
             analysis = self.analysis_service.create_analysis(
-                document=document, analysis_type=AnalysisType(command.analysis_type), configuration=analysis_config
+                document=document,
+                analysis_type=AnalysisType(command.analysis_type),
+                configuration=analysis_config,
             )
 
             # Save analysis
@@ -227,7 +239,9 @@ class PerformAnalysisUseCase:
                 events=events,
             )
 
-    async def _process_findings(self, analysis: Analysis, findings_data: List[Dict[str, Any]]) -> List[Finding]:
+    async def _process_findings(
+        self, analysis: Analysis, findings_data: List[Dict[str, Any]]
+    ) -> List[Finding]:
         """Process findings from analysis result."""
         findings = []
 
@@ -251,6 +265,8 @@ class PerformAnalysisUseCase:
 
     def to_response(self, result: PerformAnalysisResult) -> AnalysisResultResponse:
         """Convert result to response DTO."""
-        findings_responses = [FindingResponse.from_domain(finding) for finding in result.findings]
+        findings_responses = [
+            FindingResponse.from_domain(finding) for finding in result.findings
+        ]
 
         return AnalysisResultResponse.create(result.analysis, findings_responses)

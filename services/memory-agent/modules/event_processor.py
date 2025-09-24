@@ -12,7 +12,12 @@ except Exception:
     aioredis = None
 
 from .memory_state import _memory
-from .shared_utils import create_memory_item, extract_endpoint_from_text, get_memory_max_items, get_memory_ttl_seconds
+from .shared_utils import (
+    create_memory_item,
+    extract_endpoint_from_text,
+    get_memory_max_items,
+    get_memory_ttl_seconds,
+)
 
 
 class EventProcessor:
@@ -68,12 +73,18 @@ class EventProcessor:
                 data = message.get("data")
 
                 try:
-                    payload = json.loads(data) if isinstance(data, (bytes, str)) else {"raw": str(data)}
+                    payload = (
+                        json.loads(data)
+                        if isinstance(data, (bytes, str))
+                        else {"raw": str(data)}
+                    )
                 except Exception:
                     payload = {"raw": str(data)}
 
                 # Create memory item from event
-                memory_item = await self._create_memory_item_from_event(channel, payload)
+                memory_item = await self._create_memory_item_from_event(
+                    channel, payload
+                )
                 _memory.append(memory_item)
 
                 # Maintain memory size limits
@@ -91,7 +102,9 @@ class EventProcessor:
             if self.client:
                 await self.client.aclose()
 
-    async def _create_memory_item_from_event(self, channel: str, payload: Dict[str, Any]):
+    async def _create_memory_item_from_event(
+        self, channel: str, payload: Dict[str, Any]
+    ):
         """Create a memory item from a Redis event."""
         # Determine memory item type and summary
         if channel == "ingestion.requested":

@@ -13,7 +13,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.content.context_aware_generation import (
     get_context_aware_generator,
@@ -77,22 +79,35 @@ class TimelineAwareContentGenerator:
         """Generate content with full timeline awareness."""
         try:
             # Build timeline intelligence
-            timeline_intelligence = self._build_timeline_intelligence(timeline, current_phase)
+            timeline_intelligence = self._build_timeline_intelligence(
+                timeline, current_phase
+            )
 
             # Generate historical context
-            historical_context = self._generate_historical_context(timeline_intelligence)
+            historical_context = self._generate_historical_context(
+                timeline_intelligence
+            )
 
             # Generate current state content
             current_content = self._generate_current_state_content(
-                document_type, project_config, team_members, timeline_intelligence, **kwargs
+                document_type,
+                project_config,
+                team_members,
+                timeline_intelligence,
+                **kwargs,
             )
 
             # Generate future projections
-            future_projections = self._generate_future_projections(timeline_intelligence)
+            future_projections = self._generate_future_projections(
+                timeline_intelligence
+            )
 
             # Combine all temporal aspects
             timeline_aware_content = self._combine_temporal_content(
-                historical_context, current_content, future_projections, timeline_intelligence
+                historical_context,
+                current_content,
+                future_projections,
+                timeline_intelligence,
             )
 
             # Add temporal metadata
@@ -107,13 +122,19 @@ class TimelineAwareContentGenerator:
             return timeline_aware_content
 
         except Exception as e:
-            self.logger.error("Timeline-aware content generation failed", document_type=document_type, error=str(e))
+            self.logger.error(
+                "Timeline-aware content generation failed",
+                document_type=document_type,
+                error=str(e),
+            )
             # Fallback to basic generation
             return self.context_generator.generate_context_aware_document(
                 document_type, project_config, team_members, timeline, **kwargs
             )
 
-    def _build_timeline_intelligence(self, timeline: Dict[str, Any], current_phase: Optional[str]) -> Dict[str, Any]:
+    def _build_timeline_intelligence(
+        self, timeline: Dict[str, Any], current_phase: Optional[str]
+    ) -> Dict[str, Any]:
         """Build comprehensive timeline intelligence."""
         phases = timeline.get("phases", [])
         current_time = datetime.now()
@@ -122,7 +143,9 @@ class TimelineAwareContentGenerator:
         timeline_metrics = self._calculate_timeline_metrics(phases, current_time)
 
         # Identify current phase
-        current_phase_info = self._identify_current_phase(phases, current_phase, current_time)
+        current_phase_info = self._identify_current_phase(
+            phases, current_phase, current_time
+        )
 
         # Build phase progression
         phase_progression = self._build_phase_progression(phases, current_phase_info)
@@ -131,7 +154,9 @@ class TimelineAwareContentGenerator:
         timeline_events = self._generate_timeline_events(phases, current_phase_info)
 
         # Build temporal relationships
-        temporal_relationships = self._build_temporal_relationships(phases, timeline_events)
+        temporal_relationships = self._build_temporal_relationships(
+            phases, timeline_events
+        )
 
         return {
             "timeline_metrics": timeline_metrics,
@@ -142,10 +167,17 @@ class TimelineAwareContentGenerator:
             "analysis_timestamp": current_time,
         }
 
-    def _calculate_timeline_metrics(self, phases: List[Dict[str, Any]], current_time: datetime) -> Dict[str, Any]:
+    def _calculate_timeline_metrics(
+        self, phases: List[Dict[str, Any]], current_time: datetime
+    ) -> Dict[str, Any]:
         """Calculate comprehensive timeline metrics."""
         if not phases:
-            return {"total_duration": 0, "elapsed_duration": 0, "remaining_duration": 0, "progress_percentage": 0}
+            return {
+                "total_duration": 0,
+                "elapsed_duration": 0,
+                "remaining_duration": 0,
+                "progress_percentage": 0,
+            }
 
         # Calculate total duration
         start_date = None
@@ -166,13 +198,20 @@ class TimelineAwareContentGenerator:
                 end_date = phase_end
 
         if not start_date or not end_date:
-            return {"total_duration": 0, "elapsed_duration": 0, "remaining_duration": 0, "progress_percentage": 0}
+            return {
+                "total_duration": 0,
+                "elapsed_duration": 0,
+                "remaining_duration": 0,
+                "progress_percentage": 0,
+            }
 
         total_duration = (end_date - start_date).days
         elapsed_duration = (current_time - start_date).days
         remaining_duration = (end_date - current_time).days
 
-        progress_percentage = min(100.0, max(0.0, (elapsed_duration / max(1, total_duration)) * 100))
+        progress_percentage = min(
+            100.0, max(0.0, (elapsed_duration / max(1, total_duration)) * 100)
+        )
 
         return {
             "total_duration_days": total_duration,
@@ -180,11 +219,16 @@ class TimelineAwareContentGenerator:
             "remaining_duration_days": remaining_duration,
             "progress_percentage": progress_percentage,
             "is_ahead": elapsed_duration < (total_duration * progress_percentage / 100),
-            "is_behind": elapsed_duration > (total_duration * progress_percentage / 100),
-            "time_pressure_factor": self._calculate_time_pressure(total_duration, elapsed_duration, remaining_duration),
+            "is_behind": elapsed_duration
+            > (total_duration * progress_percentage / 100),
+            "time_pressure_factor": self._calculate_time_pressure(
+                total_duration, elapsed_duration, remaining_duration
+            ),
         }
 
-    def _calculate_time_pressure(self, total: int, elapsed: int, remaining: int) -> float:
+    def _calculate_time_pressure(
+        self, total: int, elapsed: int, remaining: int
+    ) -> float:
         """Calculate time pressure factor."""
         if total <= 0:
             return 1.0
@@ -199,7 +243,10 @@ class TimelineAwareContentGenerator:
             return 1.0
 
     def _identify_current_phase(
-        self, phases: List[Dict[str, Any]], current_phase: Optional[str], current_time: datetime
+        self,
+        phases: List[Dict[str, Any]],
+        current_phase: Optional[str],
+        current_time: datetime,
     ) -> Dict[str, Any]:
         """Identify the current active phase."""
         if current_phase:
@@ -289,11 +336,15 @@ class TimelineAwareContentGenerator:
         progression["phase_dependencies"] = self._build_phase_dependencies(phases)
 
         # Identify critical path
-        progression["critical_path"] = self._identify_critical_path(phases, current_index)
+        progression["critical_path"] = self._identify_critical_path(
+            phases, current_index
+        )
 
         return progression
 
-    def _build_phase_dependencies(self, phases: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+    def _build_phase_dependencies(
+        self, phases: List[Dict[str, Any]]
+    ) -> Dict[str, List[str]]:
         """Build phase dependency relationships."""
         dependencies = {}
 
@@ -319,7 +370,9 @@ class TimelineAwareContentGenerator:
 
         return dependencies
 
-    def _identify_critical_path(self, phases: List[Dict[str, Any]], current_index: int) -> List[str]:
+    def _identify_critical_path(
+        self, phases: List[Dict[str, Any]], current_index: int
+    ) -> List[str]:
         """Identify the critical path through phases."""
         critical_path = []
 
@@ -382,7 +435,9 @@ class TimelineAwareContentGenerator:
 
         return events
 
-    def _generate_milestone_events(self, phases: List[Dict[str, Any]], current_index: int) -> List[Dict[str, Any]]:
+    def _generate_milestone_events(
+        self, phases: List[Dict[str, Any]], current_index: int
+    ) -> List[Dict[str, Any]]:
         """Generate milestone events."""
         milestones = []
 
@@ -397,7 +452,9 @@ class TimelineAwareContentGenerator:
                             "timestamp": phase.get("end_date"),
                             "description": "Requirements finalized and approved",
                             "impact": "critical",
-                            "temporal_context": "past" if i < current_index else "future",
+                            "temporal_context": (
+                                "past" if i < current_index else "future"
+                            ),
                         }
                     )
                 elif "design" in phase["name"].lower():
@@ -408,7 +465,9 @@ class TimelineAwareContentGenerator:
                             "timestamp": phase.get("end_date"),
                             "description": "Architecture and design completed",
                             "impact": "critical",
-                            "temporal_context": "past" if i < current_index else "future",
+                            "temporal_context": (
+                                "past" if i < current_index else "future"
+                            ),
                         }
                     )
                 elif "deployment" in phase["name"].lower():
@@ -419,7 +478,9 @@ class TimelineAwareContentGenerator:
                             "timestamp": phase.get("end_date"),
                             "description": "Production deployment completed",
                             "impact": "critical",
-                            "temporal_context": "past" if i < current_index else "future",
+                            "temporal_context": (
+                                "past" if i < current_index else "future"
+                            ),
                         }
                     )
 
@@ -429,7 +490,11 @@ class TimelineAwareContentGenerator:
         self, phases: List[Dict[str, Any]], events: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Build temporal relationships between events and phases."""
-        relationships = {"phase_sequence": [], "event_dependencies": {}, "temporal_flow": []}
+        relationships = {
+            "phase_sequence": [],
+            "event_dependencies": {},
+            "temporal_flow": [],
+        }
 
         # Build phase sequence
         for i in range(len(phases) - 1):
@@ -469,7 +534,9 @@ class TimelineAwareContentGenerator:
 
         return relationships
 
-    def _build_temporal_flow(self, events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _build_temporal_flow(
+        self, events: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Build temporal flow of events."""
         # Sort events by timestamp
         sorted_events = sorted(events, key=lambda e: e.get("timestamp") or datetime.max)
@@ -483,14 +550,18 @@ class TimelineAwareContentGenerator:
                 {
                     "from_event": f"{current_event['type']}:{current_event['phase']}",
                     "to_event": f"{next_event['type']}:{next_event['phase']}",
-                    "time_gap_days": self._calculate_time_gap(current_event, next_event),
+                    "time_gap_days": self._calculate_time_gap(
+                        current_event, next_event
+                    ),
                     "relationship": TemporalRelationship.PRECEDES.value,
                 }
             )
 
         return flow
 
-    def _calculate_time_gap(self, event1: Dict[str, Any], event2: Dict[str, Any]) -> Optional[int]:
+    def _calculate_time_gap(
+        self, event1: Dict[str, Any], event2: Dict[str, Any]
+    ) -> Optional[int]:
         """Calculate time gap between two events."""
         timestamp1 = event1.get("timestamp")
         timestamp2 = event2.get("timestamp")
@@ -505,7 +576,9 @@ class TimelineAwareContentGenerator:
 
         return (timestamp2 - timestamp1).days
 
-    def _generate_historical_context(self, timeline_intelligence: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_historical_context(
+        self, timeline_intelligence: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate historical context from timeline intelligence."""
         historical_events = []
         lessons_learned = []
@@ -516,7 +589,9 @@ class TimelineAwareContentGenerator:
                 historical_events.append(event)
 
         # Generate lessons learned from past events
-        lessons_learned = self._generate_lessons_learned(historical_events, timeline_intelligence)
+        lessons_learned = self._generate_lessons_learned(
+            historical_events, timeline_intelligence
+        )
 
         return {
             "past_events": historical_events,
@@ -532,27 +607,41 @@ class TimelineAwareContentGenerator:
         lessons = []
 
         # Analyze phase completion patterns
-        phase_events = [e for e in past_events if e["type"] == TimelineEventType.PHASE_END.value]
+        phase_events = [
+            e for e in past_events if e["type"] == TimelineEventType.PHASE_END.value
+        ]
 
         if len(phase_events) > 0:
-            lessons.append("Previous phases have established solid foundations for current work")
+            lessons.append(
+                "Previous phases have established solid foundations for current work"
+            )
 
         # Analyze milestone achievements
-        milestone_events = [e for e in past_events if e["type"] == TimelineEventType.MILESTONE.value]
+        milestone_events = [
+            e for e in past_events if e["type"] == TimelineEventType.MILESTONE.value
+        ]
 
         if len(milestone_events) > 0:
-            lessons.append("Key milestones have been achieved on schedule, demonstrating good planning")
+            lessons.append(
+                "Key milestones have been achieved on schedule, demonstrating good planning"
+            )
 
         # Timeline performance lessons
         metrics = timeline_intelligence["timeline_metrics"]
         if metrics.get("is_ahead", False):
-            lessons.append("Project has been running ahead of schedule, indicating efficient execution")
+            lessons.append(
+                "Project has been running ahead of schedule, indicating efficient execution"
+            )
         elif metrics.get("is_behind", False):
-            lessons.append("Previous delays provide opportunity to optimize remaining phases")
+            lessons.append(
+                "Previous delays provide opportunity to optimize remaining phases"
+            )
 
         return lessons
 
-    def _analyze_historical_patterns(self, past_events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_historical_patterns(
+        self, past_events: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze patterns in historical events."""
         patterns = {
             "phase_completion_rate": 0.0,
@@ -566,20 +655,42 @@ class TimelineAwareContentGenerator:
 
         # Calculate completion rates
         phase_events = [e for e in past_events if "phase" in e["type"]]
-        milestone_events = [e for e in past_events if e["type"] == TimelineEventType.MILESTONE.value]
+        milestone_events = [
+            e for e in past_events if e["type"] == TimelineEventType.MILESTONE.value
+        ]
 
         patterns["phase_completion_rate"] = len(phase_events) / max(1, len(past_events))
-        patterns["milestone_success_rate"] = len(milestone_events) / max(1, len(past_events))
+        patterns["milestone_success_rate"] = len(milestone_events) / max(
+            1, len(past_events)
+        )
 
         return patterns
 
-    def _build_experience_base(self, past_events: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _build_experience_base(
+        self, past_events: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Build experience base from past events."""
         return {
-            "completed_phases": len([e for e in past_events if e["type"] == TimelineEventType.PHASE_END.value]),
-            "achieved_milestones": len([e for e in past_events if e["type"] == TimelineEventType.MILESTONE.value]),
+            "completed_phases": len(
+                [
+                    e
+                    for e in past_events
+                    if e["type"] == TimelineEventType.PHASE_END.value
+                ]
+            ),
+            "achieved_milestones": len(
+                [
+                    e
+                    for e in past_events
+                    if e["type"] == TimelineEventType.MILESTONE.value
+                ]
+            ),
             "learned_patterns": "Iterative development with regular milestones",
-            "success_factors": ["Clear planning", "Regular communication", "Quality focus"],
+            "success_factors": [
+                "Clear planning",
+                "Regular communication",
+                "Quality focus",
+            ],
         }
 
     def _generate_current_state_content(
@@ -596,13 +707,18 @@ class TimelineAwareContentGenerator:
             document_type,
             project_config,
             team_members,
-            {"phases": [], **timeline_intelligence},  # Add timeline intelligence to timeline
+            {
+                "phases": [],
+                **timeline_intelligence,
+            },  # Add timeline intelligence to timeline
             phase_context=timeline_intelligence["current_phase"],
             **kwargs,
         )
 
         # Enhance with timeline-specific content
-        enhanced_content = self._enhance_with_timeline_context(current_content, timeline_intelligence)
+        enhanced_content = self._enhance_with_timeline_context(
+            current_content, timeline_intelligence
+        )
 
         return enhanced_content
 
@@ -617,12 +733,18 @@ class TimelineAwareContentGenerator:
             for section_name, section_content in enhanced["content"].items():
                 if isinstance(section_content, str):
                     # Add timeline context to the section
-                    timeline_context = self._generate_timeline_section_context(section_name, timeline_intelligence)
-                    enhanced["content"][section_name] = section_content + timeline_context
+                    timeline_context = self._generate_timeline_section_context(
+                        section_name, timeline_intelligence
+                    )
+                    enhanced["content"][section_name] = (
+                        section_content + timeline_context
+                    )
 
         return enhanced
 
-    def _generate_timeline_section_context(self, section_name: str, timeline_intelligence: Dict[str, Any]) -> str:
+    def _generate_timeline_section_context(
+        self, section_name: str, timeline_intelligence: Dict[str, Any]
+    ) -> str:
         """Generate timeline-specific context for a content section."""
         current_phase = timeline_intelligence["current_phase"]["name"]
         progress = timeline_intelligence["timeline_metrics"]["progress_percentage"]
@@ -636,7 +758,9 @@ class TimelineAwareContentGenerator:
 
         return context_templates.get(section_name, "")
 
-    def _generate_future_projections(self, timeline_intelligence: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_future_projections(
+        self, timeline_intelligence: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate future projections based on timeline intelligence."""
         future_events = []
         projections = {}
@@ -648,30 +772,45 @@ class TimelineAwareContentGenerator:
 
         # Generate projections
         projections["upcoming_milestones"] = [
-            event for event in future_events if event["type"] == TimelineEventType.MILESTONE.value
+            event
+            for event in future_events
+            if event["type"] == TimelineEventType.MILESTONE.value
         ]
 
         projections["phase_transitions"] = [
-            event for event in future_events if event["type"] == TimelineEventType.PHASE_START.value
+            event
+            for event in future_events
+            if event["type"] == TimelineEventType.PHASE_START.value
         ]
 
-        projections["timeline_projections"] = self._build_timeline_projections(timeline_intelligence)
+        projections["timeline_projections"] = self._build_timeline_projections(
+            timeline_intelligence
+        )
 
         return projections
 
-    def _build_timeline_projections(self, timeline_intelligence: Dict[str, Any]) -> Dict[str, Any]:
+    def _build_timeline_projections(
+        self, timeline_intelligence: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Build detailed timeline projections."""
         metrics = timeline_intelligence["timeline_metrics"]
         remaining_days = metrics["remaining_duration_days"]
 
         return {
-            "estimated_completion_date": datetime.now() + timedelta(days=remaining_days),
-            "remaining_critical_path": timeline_intelligence["phase_progression"]["critical_path"],
+            "estimated_completion_date": datetime.now()
+            + timedelta(days=remaining_days),
+            "remaining_critical_path": timeline_intelligence["phase_progression"][
+                "critical_path"
+            ],
             "risk_factors": self._identify_future_risks(timeline_intelligence),
-            "recommended_actions": self._generate_future_recommendations(timeline_intelligence),
+            "recommended_actions": self._generate_future_recommendations(
+                timeline_intelligence
+            ),
         }
 
-    def _identify_future_risks(self, timeline_intelligence: Dict[str, Any]) -> List[str]:
+    def _identify_future_risks(
+        self, timeline_intelligence: Dict[str, Any]
+    ) -> List[str]:
         """Identify future risks based on timeline intelligence."""
         risks = []
         metrics = timeline_intelligence["timeline_metrics"]
@@ -688,16 +827,22 @@ class TimelineAwareContentGenerator:
 
         return risks
 
-    def _generate_future_recommendations(self, timeline_intelligence: Dict[str, Any]) -> List[str]:
+    def _generate_future_recommendations(
+        self, timeline_intelligence: Dict[str, Any]
+    ) -> List[str]:
         """Generate recommendations for future project phases."""
         recommendations = []
         metrics = timeline_intelligence["timeline_metrics"]
 
         if metrics.get("time_pressure_factor", 1.0) > 1.4:
-            recommendations.append("Consider resource augmentation for remaining phases")
+            recommendations.append(
+                "Consider resource augmentation for remaining phases"
+            )
 
         if len(timeline_intelligence["phase_progression"]["upcoming_phases"]) > 2:
-            recommendations.append("Plan detailed execution strategy for upcoming phases")
+            recommendations.append(
+                "Plan detailed execution strategy for upcoming phases"
+            )
 
         recommendations.append("Maintain momentum from completed phases")
         recommendations.append("Leverage lessons learned for remaining work")
@@ -729,7 +874,9 @@ class TimelineAwareContentGenerator:
             "current_focus": timeline_intelligence["current_phase"]["name"],
             "future_commitments": len(future.get("upcoming_milestones", [])),
             "timeline_health": (
-                "good" if timeline_intelligence["timeline_metrics"]["progress_percentage"] > 60 else "needs_attention"
+                "good"
+                if timeline_intelligence["timeline_metrics"]["progress_percentage"] > 60
+                else "needs_attention"
             ),
         }
 
@@ -748,4 +895,9 @@ def get_timeline_aware_generator() -> TimelineAwareContentGenerator:
     return _timeline_aware_generator
 
 
-__all__ = ["TimelineEventType", "TemporalRelationship", "TimelineAwareContentGenerator", "get_timeline_aware_generator"]
+__all__ = [
+    "TimelineEventType",
+    "TemporalRelationship",
+    "TimelineAwareContentGenerator",
+    "get_timeline_aware_generator",
+]

@@ -1,6 +1,5 @@
 """Tests for domain services."""
 
-
 import pytest
 
 from ...domain.entities.analysis import AnalysisStatus
@@ -24,7 +23,9 @@ class TestAnalysisService:
         assert service.document_repository == document_repository
 
     @pytest.mark.asyncio
-    async def test_start_analysis_success(self, analysis_service, document_repository, sample_document):
+    async def test_start_analysis_success(
+        self, analysis_service, document_repository, sample_document
+    ):
         """Test starting analysis successfully."""
         # Setup
         await document_repository.save(sample_document)
@@ -32,7 +33,9 @@ class TestAnalysisService:
         analysis_type = AnalysisType.SEMANTIC_SIMILARITY
 
         # Execute
-        analysis = await analysis_service.start_analysis(document_id=sample_document.id, analysis_type=analysis_type)
+        analysis = await analysis_service.start_analysis(
+            document_id=sample_document.id, analysis_type=analysis_type
+        )
 
         # Assert
         assert analysis.document_id == sample_document.id
@@ -108,7 +111,9 @@ class TestDocumentService:
         assert service.document_repository == document_repository
 
     @pytest.mark.asyncio
-    async def test_create_document_success(self, document_service, sample_document_data):
+    async def test_create_document_success(
+        self, document_service, sample_document_data
+    ):
         """Test creating document successfully."""
         # Execute
         document = await document_service.create_document(**sample_document_data)
@@ -157,7 +162,9 @@ class TestDocumentService:
         assert archived_doc.status == DocumentStatus.ARCHIVED
 
     @pytest.mark.asyncio
-    async def test_get_documents_by_repository(self, document_service, test_data_populator):
+    async def test_get_documents_by_repository(
+        self, document_service, test_data_populator
+    ):
         """Test getting documents by repository."""
         # Setup test data
         test_data_populator.create_test_documents(3)
@@ -196,8 +203,12 @@ class TestFindingService:
         """Test getting findings by analysis."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
-        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 3)
+        analyses = test_data_populator.create_test_analyses(
+            [doc.id for doc in documents], 1
+        )
+        test_data_populator.create_test_findings(
+            [analysis.id for analysis in analyses], 3
+        )
 
         analysis_id = analyses[0].id
 
@@ -214,11 +225,17 @@ class TestFindingService:
         """Test getting findings by severity."""
         # Setup test data with different severities
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
-        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 1)
+        analyses = test_data_populator.create_test_analyses(
+            [doc.id for doc in documents], 1
+        )
+        test_data_populator.create_test_findings(
+            [analysis.id for analysis in analyses], 1
+        )
 
         # Execute
-        high_severity_findings = await finding_service.get_findings_by_severity(FindingSeverity.HIGH)
+        high_severity_findings = await finding_service.get_findings_by_severity(
+            FindingSeverity.HIGH
+        )
 
         # Assert
         for finding in high_severity_findings:
@@ -289,8 +306,12 @@ class TestDomainServiceIntegration:
         """Test data consistency across services."""
         # Setup test data
         documents = test_data_populator.create_test_documents(2)
-        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 2)
-        findings = test_data_populator.create_test_findings([analysis.id for analysis in analyses], 2)
+        analyses = test_data_populator.create_test_analyses(
+            [doc.id for doc in documents], 2
+        )
+        findings = test_data_populator.create_test_findings(
+            [analysis.id for analysis in analyses], 2
+        )
 
         # Verify document-analysis relationship
         for analysis in analyses:
@@ -309,7 +330,9 @@ class TestDomainServiceErrorHandling:
     """Test error handling in domain services."""
 
     @pytest.mark.asyncio
-    async def test_analysis_service_concurrent_access(self, analysis_service, sample_analysis):
+    async def test_analysis_service_concurrent_access(
+        self, analysis_service, sample_analysis
+    ):
         """Test concurrent access to analysis service."""
         # This test would need proper async concurrency testing
         # For now, just test basic functionality
@@ -354,7 +377,11 @@ class TestDomainServicePerformance:
 
     @pytest.mark.asyncio
     async def test_analysis_service_bulk_operations(
-        self, analysis_service, document_repository, test_data_populator, performance_timer
+        self,
+        analysis_service,
+        document_repository,
+        test_data_populator,
+        performance_timer,
     ):
         """Test bulk analysis operations performance."""
         # Setup multiple documents
@@ -374,12 +401,16 @@ class TestDomainServicePerformance:
         performance_timer.stop()
 
         # Assert reasonable performance (less than 1 second for 10 operations)
-        performance_timer.assert_less_than(1.0, "Bulk analysis operations took too long")
+        performance_timer.assert_less_than(
+            1.0, "Bulk analysis operations took too long"
+        )
 
         assert len(analyses) == 10
 
     @pytest.mark.asyncio
-    async def test_document_service_query_performance(self, document_service, test_data_populator, performance_timer):
+    async def test_document_service_query_performance(
+        self, document_service, test_data_populator, performance_timer
+    ):
         """Test document query performance."""
         # Setup test data
         test_data_populator.create_test_documents(50)

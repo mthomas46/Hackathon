@@ -35,19 +35,29 @@ class LogCache:
             self._logs = self._logs[excess:]
 
     def get_recent_logs(
-        self, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100, since: Optional[str] = None
+        self,
+        service: Optional[str] = None,
+        level: Optional[str] = None,
+        limit: int = 100,
+        since: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Get recent logs with optional filtering."""
         filtered_logs = self._logs
 
         # Filter by service
         if service:
-            filtered_logs = [log for log in filtered_logs if log.get("service") == service]
+            filtered_logs = [
+                log for log in filtered_logs if log.get("service") == service
+            ]
 
         # Filter by level
         if level:
             level_lower = level.lower()
-            filtered_logs = [log for log in filtered_logs if log.get("level", "").lower() == level_lower]
+            filtered_logs = [
+                log
+                for log in filtered_logs
+                if log.get("level", "").lower() == level_lower
+            ]
 
         # Filter by timestamp
         if since:
@@ -56,7 +66,10 @@ class LogCache:
                 filtered_logs = [
                     log
                     for log in filtered_logs
-                    if datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00")) > since_dt
+                    if datetime.fromisoformat(
+                        log.get("timestamp", "").replace("Z", "+00:00")
+                    )
+                    > since_dt
                 ]
             except (ValueError, AttributeError):
                 pass  # Invalid timestamp format, ignore filter
@@ -66,7 +79,9 @@ class LogCache:
     def get_stats(self) -> Optional[Dict[str, Any]]:
         """Get cached statistics if still fresh."""
         if self._stats_cache and self._last_stats_update:
-            if utc_now() - self._last_stats_update < timedelta(seconds=self._stats_cache_ttl):
+            if utc_now() - self._last_stats_update < timedelta(
+                seconds=self._stats_cache_ttl
+            ):
                 return self._stats_cache
         return None
 
@@ -78,7 +93,13 @@ class LogCache:
     def get_log_summary(self) -> Dict[str, Any]:
         """Get a summary of cached logs."""
         if not self._logs:
-            return {"total_logs": 0, "services": [], "levels": [], "time_range": None, "last_log_time": None}
+            return {
+                "total_logs": 0,
+                "services": [],
+                "levels": [],
+                "time_range": None,
+                "last_log_time": None,
+            }
 
         services = set()
         levels = set()
@@ -89,7 +110,9 @@ class LogCache:
             levels.add(log.get("level", "unknown"))
 
             try:
-                ts = datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00"))
+                ts = datetime.fromisoformat(
+                    log.get("timestamp", "").replace("Z", "+00:00")
+                )
                 timestamps.append(ts)
             except (ValueError, AttributeError):
                 pass
@@ -150,7 +173,13 @@ async def fetch_logs_from_collector(
         return logs
 
     except Exception as e:
-        return [{"error": f"Failed to fetch logs: {str(e)}", "level": "error", "service": "frontend"}]
+        return [
+            {
+                "error": f"Failed to fetch logs: {str(e)}",
+                "level": "error",
+                "service": "frontend",
+            }
+        ]
 
 
 async def fetch_log_stats_from_collector() -> Dict[str, Any]:
@@ -179,14 +208,18 @@ async def stream_logs(
     while True:
         try:
             # Get recent logs since last poll
-            logs = await fetch_logs_from_collector(service=service, level=level, limit=50)
+            logs = await fetch_logs_from_collector(
+                service=service, level=level, limit=50
+            )
 
             # Filter for new logs only
             if last_timestamp:
                 new_logs = []
                 for log in logs:
                     try:
-                        log_ts = datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00"))
+                        log_ts = datetime.fromisoformat(
+                            log.get("timestamp", "").replace("Z", "+00:00")
+                        )
                         if log_ts > last_timestamp:
                             new_logs.append(log)
                     except (ValueError, AttributeError):
@@ -197,7 +230,9 @@ async def stream_logs(
             if logs:
                 try:
                     latest_ts = max(
-                        datetime.fromisoformat(log.get("timestamp", "").replace("Z", "+00:00"))
+                        datetime.fromisoformat(
+                            log.get("timestamp", "").replace("Z", "+00:00")
+                        )
                         for log in logs
                         if log.get("timestamp")
                     )
@@ -210,7 +245,11 @@ async def stream_logs(
                 yield log
 
         except Exception as e:
-            yield {"error": f"Streaming error: {str(e)}", "level": "error", "service": "frontend"}
+            yield {
+                "error": f"Streaming error: {str(e)}",
+                "level": "error",
+                "service": "frontend",
+            }
             await asyncio.sleep(1)  # Brief pause on error
 
         # Wait before next poll
@@ -258,7 +297,11 @@ def analyze_log_patterns(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
                 log_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
                 if log_time > recent_cutoff:
                     patterns["recent_errors"].append(
-                        {"service": service, "message": message[:100], "timestamp": timestamp}
+                        {
+                            "service": service,
+                            "message": message[:100],
+                            "timestamp": timestamp,
+                        }
                     )
             except (ValueError, AttributeError):
                 pass
@@ -270,21 +313,29 @@ def analyze_log_patterns(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     # Calculate error rate
     total_logs = len(logs)
-    error_count = patterns["levels_distribution"].get("error", 0) + patterns["levels_distribution"].get("fatal", 0)
+    error_count = patterns["levels_distribution"].get("error", 0) + patterns[
+        "levels_distribution"
+    ].get("fatal", 0)
     patterns["error_rate"] = (error_count / total_logs) * 100 if total_logs > 0 else 0
 
     patterns["services_active"] = list(patterns["services_active"])
 
     # Get top frequent messages
-    top_messages = sorted(patterns["frequent_messages"].items(), key=lambda x: x[1], reverse=True)[:5]
-    patterns["frequent_messages"] = [{"message": msg, "count": count} for msg, count in top_messages]
+    top_messages = sorted(
+        patterns["frequent_messages"].items(), key=lambda x: x[1], reverse=True
+    )[:5]
+    patterns["frequent_messages"] = [
+        {"message": msg, "count": count} for msg, count in top_messages
+    ]
 
     # Generate insights
     insights = []
     if patterns["error_rate"] > 10:
         insights.append("High error rate detected (>10%)")
     if len(patterns["recent_errors"]) > 5:
-        insights.append(f"Multiple recent errors: {len(patterns['recent_errors'])} in last 5 minutes")
+        insights.append(
+            f"Multiple recent errors: {len(patterns['recent_errors'])} in last 5 minutes"
+        )
     if len(patterns["services_active"]) < 3:
         insights.append("Limited service activity detected")
 

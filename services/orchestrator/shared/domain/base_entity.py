@@ -20,10 +20,14 @@ class BaseEntity(ABC):
                 result[key] = value.value
             elif isinstance(value, dict):
                 # Handle nested dictionaries
-                result[key] = {k: v.value if hasattr(v, "value") else v for k, v in value.items()}
+                result[key] = {
+                    k: v.value if hasattr(v, "value") else v for k, v in value.items()
+                }
             elif isinstance(value, list):
                 # Handle lists
-                result[key] = [item.value if hasattr(item, "value") else item for item in value]
+                result[key] = [
+                    item.value if hasattr(item, "value") else item for item in value
+                ]
             else:
                 result[key] = value
         return result

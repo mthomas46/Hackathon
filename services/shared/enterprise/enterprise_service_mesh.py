@@ -212,7 +212,9 @@ class CertificateAuthority:
         """Initialize the Certificate Authority."""
         if cryptography:
             # Generate CA private key
-            self.ca_private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+            self.ca_private_key = rsa.generate_private_key(
+                public_exponent=65537, key_size=2048
+            )
 
             # Generate CA certificate (simplified)
             self.ca_certificate = "SIMULATED_CA_CERTIFICATE"
@@ -221,7 +223,9 @@ class CertificateAuthority:
             self.ca_private_key = "SIMULATED_PRIVATE_KEY"
             self.ca_certificate = "SIMULATED_CA_CERTIFICATE"
 
-    def issue_certificate(self, service_name: str, validity_days: int = 365) -> ServiceIdentity:
+    def issue_certificate(
+        self, service_name: str, validity_days: int = 365
+    ) -> ServiceIdentity:
         """Issue a certificate for a service."""
         service_identity = ServiceIdentity(
             service_name=service_name,
@@ -258,7 +262,9 @@ class JWTAuthenticator:
         self.issued_tokens: Dict[str, Dict[str, Any]] = {}
         self.revoked_tokens: Set[str] = set()
 
-    def issue_token(self, service_name: str, permissions: List[str], expires_in_hours: int = 24) -> str:
+    def issue_token(
+        self, service_name: str, permissions: List[str], expires_in_hours: int = 24
+    ) -> str:
         """Issue a JWT token for a service."""
         if not jwt:
             # Mock JWT for environments without PyJWT
@@ -276,7 +282,9 @@ class JWTAuthenticator:
             "service_name": service_name,
             "permissions": permissions,
             "iat": int(time.time()),
-            "exp": int((datetime.now() + timedelta(hours=expires_in_hours)).timestamp()),
+            "exp": int(
+                (datetime.now() + timedelta(hours=expires_in_hours)).timestamp()
+            ),
         }
 
         token = jwt.encode(payload, self.secret_key, algorithm="HS256")
@@ -291,7 +299,10 @@ class JWTAuthenticator:
             # Mock validation
             if token.startswith("mock_jwt_"):
                 token_id = token.replace("mock_jwt_", "")
-                if token_id in self.issued_tokens and token_id not in self.revoked_tokens:
+                if (
+                    token_id in self.issued_tokens
+                    and token_id not in self.revoked_tokens
+                ):
                     token_data = self.issued_tokens[token_id]
                     if token_data["expires_at"] > datetime.now():
                         return token_data
@@ -328,16 +339,22 @@ class AuthorizationEngine:
         self.permissions: Dict[str, Dict[str, AuthorizationLevel]] = defaultdict(dict)
         self.role_permissions: Dict[str, Set[str]] = defaultdict(set)
 
-    def grant_permission(self, service_name: str, resource: str, level: AuthorizationLevel):
+    def grant_permission(
+        self, service_name: str, resource: str, level: AuthorizationLevel
+    ):
         """Grant permission to a service for a resource."""
         self.permissions[service_name][resource] = level
 
-    def check_permission(self, service_name: str, resource: str, required_level: AuthorizationLevel) -> bool:
+    def check_permission(
+        self, service_name: str, resource: str, required_level: AuthorizationLevel
+    ) -> bool:
         """Check if service has required permission level."""
         if service_name not in self.permissions:
             return False
 
-        granted_level = self.permissions[service_name].get(resource, AuthorizationLevel.NONE)
+        granted_level = self.permissions[service_name].get(
+            resource, AuthorizationLevel.NONE
+        )
 
         # Define permission hierarchy
         hierarchy = {
@@ -353,7 +370,9 @@ class AuthorizationEngine:
         """Assign a role to a service."""
         self.role_permissions[service_name].add(role)
 
-    def get_service_permissions(self, service_name: str) -> Dict[str, AuthorizationLevel]:
+    def get_service_permissions(
+        self, service_name: str
+    ) -> Dict[str, AuthorizationLevel]:
         """Get all permissions for a service."""
         return dict(self.permissions.get(service_name, {}))
 
@@ -455,7 +474,9 @@ class EnterpriseServiceMesh:
         print("   • Rate Limiting: Active")
         print("   • mTLS: Enabled")
 
-    async def register_service(self, service_name: str, permissions: List[str]) -> ServiceIdentity:
+    async def register_service(
+        self, service_name: str, permissions: List[str]
+    ) -> ServiceIdentity:
         """Register a service with the mesh."""
         # Issue certificate
         service_identity = self.ca.issue_certificate(service_name)
@@ -469,7 +490,9 @@ class EnterpriseServiceMesh:
         # Store token in identity metadata
         service_identity.metadata["jwt_token"] = token
 
-        print(f"📝 Registered service: {service_name} (ID: {service_identity.service_id[:8]}...)")
+        print(
+            f"📝 Registered service: {service_name} (ID: {service_identity.service_id[:8]}...)"
+        )
         return service_identity
 
     async def configure_endpoints(self):
@@ -527,8 +550,14 @@ class EnterpriseServiceMesh:
                 ("reports", AuthorizationLevel.WRITE),
                 ("analysis", AuthorizationLevel.WRITE),
             ],
-            "doc_store": [("documents", AuthorizationLevel.WRITE), ("storage", AuthorizationLevel.ADMIN)],
-            "prompt_store": [("prompts", AuthorizationLevel.WRITE), ("optimization", AuthorizationLevel.WRITE)],
+            "doc_store": [
+                ("documents", AuthorizationLevel.WRITE),
+                ("storage", AuthorizationLevel.ADMIN),
+            ],
+            "prompt_store": [
+                ("prompts", AuthorizationLevel.WRITE),
+                ("optimization", AuthorizationLevel.WRITE),
+            ],
             "orchestrator": [
                 ("workflows", AuthorizationLevel.ADMIN),
                 ("coordination", AuthorizationLevel.ADMIN),
@@ -540,7 +569,10 @@ class EnterpriseServiceMesh:
                 ("interpretation", AuthorizationLevel.WRITE),
                 ("documents", AuthorizationLevel.READ),
             ],
-            "source_agent": [("documents", AuthorizationLevel.WRITE), ("data_ingestion", AuthorizationLevel.WRITE)],
+            "source_agent": [
+                ("documents", AuthorizationLevel.WRITE),
+                ("data_ingestion", AuthorizationLevel.WRITE),
+            ],
         }
 
         for service_name, permissions in permissions_map.items():
@@ -565,7 +597,9 @@ class EnterpriseServiceMesh:
             # Find the service for this endpoint
             for endpoint_key, endpoint in self.endpoints.items():
                 if endpoint.endpoint_path == endpoint_path:
-                    self.rate_limiter.set_limit(endpoint.service_name, endpoint_path, limit)
+                    self.rate_limiter.set_limit(
+                        endpoint.service_name, endpoint_path, limit
+                    )
                     break
 
         print(f"⚡ Configured rate limiting for {len(rate_limits)} endpoints")
@@ -583,7 +617,8 @@ class EnterpriseServiceMesh:
 
             if not auth_result["success"]:
                 return self._create_error_response(
-                    "Authentication failed", auth_result.get("error", "Unknown authentication error")
+                    "Authentication failed",
+                    auth_result.get("error", "Unknown authentication error"),
                 )
 
             request.authenticated = True
@@ -596,7 +631,8 @@ class EnterpriseServiceMesh:
 
             if not authz_result["success"]:
                 return self._create_error_response(
-                    "Authorization failed", authz_result.get("error", "Insufficient permissions")
+                    "Authorization failed",
+                    authz_result.get("error", "Insufficient permissions"),
                 )
 
             request.authorized = True
@@ -604,10 +640,14 @@ class EnterpriseServiceMesh:
 
             # Step 3: Rate Limiting
             request.add_processing_step("Checking rate limits")
-            rate_limit_ok = self.rate_limiter.check_limit(request.target_service, request.endpoint_path)
+            rate_limit_ok = self.rate_limiter.check_limit(
+                request.target_service, request.endpoint_path
+            )
 
             if not rate_limit_ok:
-                return self._create_error_response("Rate limit exceeded", "Too many requests. Please try again later.")
+                return self._create_error_response(
+                    "Rate limit exceeded", "Too many requests. Please try again later."
+                )
 
             # Step 4: Traffic Metrics
             request.add_processing_step("Recording metrics")
@@ -623,7 +663,8 @@ class EnterpriseServiceMesh:
             metrics_key = f"{request.target_service}:{request.endpoint_path}"
             if metrics_key not in self.traffic_metrics:
                 self.traffic_metrics[metrics_key] = TrafficMetrics(
-                    service_name=request.target_service, endpoint_path=request.endpoint_path
+                    service_name=request.target_service,
+                    endpoint_path=request.endpoint_path,
                 )
 
             self.traffic_metrics[metrics_key].update_metrics(processing_time, True)
@@ -641,7 +682,9 @@ class EnterpriseServiceMesh:
 
             return self._create_error_response("Service mesh error", str(e))
 
-    async def _authenticate_request(self, request: ServiceMeshRequest) -> Dict[str, Any]:
+    async def _authenticate_request(
+        self, request: ServiceMeshRequest
+    ) -> Dict[str, Any]:
         """Authenticate the incoming request."""
 
         # Check for JWT token in headers
@@ -651,7 +694,11 @@ class EnterpriseServiceMesh:
             token_data = self.jwt_auth.validate_token(token)
 
             if token_data:
-                return {"success": True, "identity": token_data["service_name"], "method": AuthenticationMethod.JWT}
+                return {
+                    "success": True,
+                    "identity": token_data["service_name"],
+                    "method": AuthenticationMethod.JWT,
+                }
 
         # Check for mTLS certificate
         client_cert = request.headers.get("X-Client-Certificate")
@@ -665,7 +712,10 @@ class EnterpriseServiceMesh:
                         "method": AuthenticationMethod.MTLS,
                     }
 
-        return {"success": False, "error": "No valid authentication credentials provided"}
+        return {
+            "success": False,
+            "error": "No valid authentication credentials provided",
+        }
 
     async def _authorize_request(self, request: ServiceMeshRequest) -> Dict[str, Any]:
         """Authorize the authenticated request."""
@@ -685,7 +735,9 @@ class EnterpriseServiceMesh:
 
         # Check authorization
         authorized = self.auth_engine.check_permission(
-            request.authenticated_identity, endpoint.endpoint_path, endpoint.authorization_level
+            request.authenticated_identity,
+            endpoint.endpoint_path,
+            endpoint.authorization_level,
         )
 
         if authorized:
@@ -712,17 +764,33 @@ class EnterpriseServiceMesh:
                 "results": {"findings": 5, "quality_score": 0.85},
             }
         elif target_service == "doc_store" and "/documents" in endpoint_path:
-            return {"status": "success", "message": "Document operation completed", "document_id": str(uuid.uuid4())}
+            return {
+                "status": "success",
+                "message": "Document operation completed",
+                "document_id": str(uuid.uuid4()),
+            }
         elif target_service == "prompt_store" and "/prompts" in endpoint_path:
-            return {"status": "success", "message": "Prompt operation completed", "prompt_id": str(uuid.uuid4())}
+            return {
+                "status": "success",
+                "message": "Prompt operation completed",
+                "prompt_id": str(uuid.uuid4()),
+            }
         else:
-            return {"status": "success", "message": f"Request processed by {target_service}", "endpoint": endpoint_path}
+            return {
+                "status": "success",
+                "message": f"Request processed by {target_service}",
+                "endpoint": endpoint_path,
+            }
 
     def _create_error_response(self, error_type: str, message: str) -> Dict[str, Any]:
         """Create a standardized error response."""
         return {
             "status": "error",
-            "error": {"type": error_type, "message": message, "timestamp": datetime.now().isoformat()},
+            "error": {
+                "type": error_type,
+                "message": message,
+                "timestamp": datetime.now().isoformat(),
+            },
             "mesh_processed": True,
         }
 
@@ -732,12 +800,16 @@ class EnterpriseServiceMesh:
             "mesh_config": self.mesh_config,
             "registered_services": len(self.services),
             "configured_endpoints": len(self.endpoints),
-            "active_certificates": len([s for s in self.services.values() if s.is_valid()]),
+            "active_certificates": len(
+                [s for s in self.services.values() if s.is_valid()]
+            ),
             "traffic_metrics": {
                 key: {
                     "total_requests": metrics.total_requests,
                     "success_rate": (
-                        (metrics.successful_requests / metrics.total_requests) if metrics.total_requests > 0 else 0
+                        (metrics.successful_requests / metrics.total_requests)
+                        if metrics.total_requests > 0
+                        else 0
                     ),
                     "average_response_time": metrics.average_response_time,
                 }

@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 from services.shared.enterprise_error_handling import (
     ErrorCategory,
     ErrorSeverity,
@@ -34,7 +34,7 @@ class AnalysisServiceLangGraphIntegration:
     """Enterprise-grade LangGraph integration for Analysis Service."""
 
     def __init__(self):
-        self.service_name = ServiceNames.ANALYSIS_SERVICE
+        self.service_name = "analysis-service"
         self.service_client = get_service_client()
         self.workflow_context = {}
         self.cache = get_service_cache(self.service_name)
@@ -51,11 +51,16 @@ class AnalysisServiceLangGraphIntegration:
         """Initialize LangGraph tools for analysis service."""
 
         @with_error_handling(
-            self.service_name, "analyze_document_langgraph", ErrorSeverity.HIGH, ErrorCategory.INTERNAL
+            self.service_name,
+            "analyze_document_langgraph",
+            ErrorSeverity.HIGH,
+            ErrorCategory.INTERNAL,
         )
         @tool
         async def analyze_document_langgraph(
-            doc_id: str, analysis_types: List[str], workflow_context: Optional[Dict[str, Any]] = None
+            doc_id: str,
+            analysis_types: List[str],
+            workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Analyze a document within a LangGraph workflow context with enterprise-grade features."""
             start_time = time.time()
@@ -67,7 +72,11 @@ class AnalysisServiceLangGraphIntegration:
                     workflow_id = current_workflow.workflow_id
                     current_workflow.user_id
                 else:
-                    workflow_id = workflow_context.get("workflow_id") if workflow_context else None
+                    workflow_id = (
+                        workflow_context.get("workflow_id")
+                        if workflow_context
+                        else None
+                    )
                     workflow_context.get("user_id") if workflow_context else None
 
                 # Check cache first
@@ -75,9 +84,9 @@ class AnalysisServiceLangGraphIntegration:
                 cached_result = await self.cache.get(cache_key, workflow_id)
 
                 if cached_result:
-                    self.performance_metrics["cache_hit_rate"] = (self.performance_metrics.get("cache_hits", 0) + 1) / (
-                        self.performance_metrics.get("total_analyses", 0) + 1
-                    )
+                    self.performance_metrics["cache_hit_rate"] = (
+                        self.performance_metrics.get("cache_hits", 0) + 1
+                    ) / (self.performance_metrics.get("total_analyses", 0) + 1)
                     return {
                         "success": True,
                         "analysis_result": cached_result,
@@ -100,15 +109,23 @@ class AnalysisServiceLangGraphIntegration:
                 async with self.service_mesh_client as client:
                     result = await client.post(
                         f"/api/v1/analyze",
-                        json={"document_id": doc_id, "analysis_types": analysis_types, "context": enhanced_context},
+                        json={
+                            "document_id": doc_id,
+                            "analysis_types": analysis_types,
+                            "context": enhanced_context,
+                        },
                     )
 
                 # Update performance metrics
                 processing_time = time.time() - start_time
-                self._update_performance_metrics(success=True, processing_time=processing_time)
+                self._update_performance_metrics(
+                    success=True, processing_time=processing_time
+                )
 
                 # Cache the result
-                await self.cache.set(cache_key, result, ttl_seconds=3600, workflow_id=workflow_id)  # 1 hour TTL
+                await self.cache.set(
+                    cache_key, result, ttl_seconds=3600, workflow_id=workflow_id
+                )  # 1 hour TTL
 
                 # Store workflow context for future use
                 if workflow_id:
@@ -130,7 +147,9 @@ class AnalysisServiceLangGraphIntegration:
             except Exception as e:
                 # Update failure metrics
                 processing_time = time.time() - start_time
-                self._update_performance_metrics(success=False, processing_time=processing_time)
+                self._update_performance_metrics(
+                    success=False, processing_time=processing_time
+                )
 
                 # Error will be handled by the decorator
                 raise e
@@ -152,7 +171,10 @@ class AnalysisServiceLangGraphIntegration:
         ) / total_count
 
         @with_error_handling(
-            self.service_name, "get_confidence_score_langgraph", ErrorSeverity.MEDIUM, ErrorCategory.INTERNAL
+            self.service_name,
+            "get_confidence_score_langgraph",
+            ErrorSeverity.MEDIUM,
+            ErrorCategory.INTERNAL,
         )
         @tool
         async def get_confidence_score_langgraph(
@@ -180,7 +202,9 @@ class AnalysisServiceLangGraphIntegration:
 
                 # Use service mesh client for resilient communication
                 async with self.service_mesh_client as client:
-                    result = await client.get(f"/api/v1/analysis/{analysis_id}/confidence")
+                    result = await client.get(
+                        f"/api/v1/analysis/{analysis_id}/confidence"
+                    )
 
                 # Enhance result with workflow context
                 result["workflow_integration"] = {
@@ -191,10 +215,14 @@ class AnalysisServiceLangGraphIntegration:
 
                 # Update performance metrics
                 processing_time = time.time() - start_time
-                self._update_performance_metrics(success=True, processing_time=processing_time)
+                self._update_performance_metrics(
+                    success=True, processing_time=processing_time
+                )
 
                 # Cache the result
-                await self.cache.set(cache_key, result, ttl_seconds=1800, workflow_id=workflow_id)  # 30 minute TTL
+                await self.cache.set(
+                    cache_key, result, ttl_seconds=1800, workflow_id=workflow_id
+                )  # 30 minute TTL
 
                 return {
                     "success": True,
@@ -206,12 +234,16 @@ class AnalysisServiceLangGraphIntegration:
             except Exception as e:
                 # Update failure metrics
                 processing_time = time.time() - start_time
-                self._update_performance_metrics(success=False, processing_time=processing_time)
+                self._update_performance_metrics(
+                    success=False, processing_time=processing_time
+                )
                 raise e
 
         @tool
         async def cross_reference_analysis_langgraph(
-            doc_ids: List[str], reference_docs: List[str], workflow_context: Optional[Dict[str, Any]] = None
+            doc_ids: List[str],
+            reference_docs: List[str],
+            workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Perform cross-reference analysis within LangGraph workflow."""
             try:
@@ -227,13 +259,23 @@ class AnalysisServiceLangGraphIntegration:
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/cross-reference",
-                    {"document_ids": doc_ids, "reference_documents": reference_docs, "context": enhanced_context},
+                    {
+                        "document_ids": doc_ids,
+                        "reference_documents": reference_docs,
+                        "context": enhanced_context,
+                    },
                 )
 
-                return {"success": True, "cross_reference_result": result, "workflow_integration": "completed"}
+                return {
+                    "success": True,
+                    "cross_reference_result": result,
+                    "workflow_integration": "completed",
+                }
 
             except Exception as e:
-                fire_and_forget("error", f"LangGraph cross-reference failed: {e}", self.service_name)
+                fire_and_forget(
+                    "error", f"LangGraph cross-reference failed: {e}", self.service_name
+                )
                 return {"success": False, "error": str(e)}
 
         @tool
@@ -260,7 +302,11 @@ class AnalysisServiceLangGraphIntegration:
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/reports/generate",
-                    {"analysis_ids": analysis_ids, "report_type": report_type, "context": workflow_optimized_context},
+                    {
+                        "analysis_ids": analysis_ids,
+                        "report_type": report_type,
+                        "context": workflow_optimized_context,
+                    },
                 )
 
                 return {
@@ -274,7 +320,11 @@ class AnalysisServiceLangGraphIntegration:
                 }
 
             except Exception as e:
-                fire_and_forget("error", f"LangGraph report generation failed: {e}", self.service_name)
+                fire_and_forget(
+                    "error",
+                    f"LangGraph report generation failed: {e}",
+                    self.service_name,
+                )
                 return {"success": False, "error": str(e)}
 
         return {
@@ -284,7 +334,9 @@ class AnalysisServiceLangGraphIntegration:
             "generate_workflow_report_langgraph": generate_workflow_report_langgraph,
         }
 
-    async def handle_langgraph_workflow_message(self, message: BaseMessage) -> Dict[str, Any]:
+    async def handle_langgraph_workflow_message(
+        self, message: BaseMessage
+    ) -> Dict[str, Any]:
         """Handle incoming LangGraph workflow messages."""
         try:
             if isinstance(message, HumanMessage):
@@ -297,7 +349,9 @@ class AnalysisServiceLangGraphIntegration:
                 return {"status": "ignored", "message_type": type(message).__name__}
 
         except Exception as e:
-            fire_and_forget("error", f"LangGraph message handling failed: {e}", self.service_name)
+            fire_and_forget(
+                "error", f"LangGraph message handling failed: {e}", self.service_name
+            )
             return {"status": "error", "error": str(e)}
 
     async def _process_workflow_instruction(self, instruction: str) -> Dict[str, Any]:
@@ -310,7 +364,11 @@ class AnalysisServiceLangGraphIntegration:
                 "action": "analyze_document",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["document_analysis", "confidence_scoring", "cross_reference"],
+                "capabilities": [
+                    "document_analysis",
+                    "confidence_scoring",
+                    "cross_reference",
+                ],
             }
 
         elif "confidence" in instruction_lower or "score" in instruction_lower:
@@ -334,7 +392,11 @@ class AnalysisServiceLangGraphIntegration:
                 "action": "general_analysis",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["document_analysis", "quality_assessment", "consistency_checking"],
+                "capabilities": [
+                    "document_analysis",
+                    "quality_assessment",
+                    "consistency_checking",
+                ],
             }
 
     async def _process_workflow_response(self, response: str) -> Dict[str, Any]:
@@ -366,8 +428,18 @@ class AnalysisServiceLangGraphIntegration:
                 "consistency_checking",
                 "enterprise_workflow_integration",
             ],
-            "tool_categories": ["analysis_tools", "confidence_tools", "reporting_tools", "enterprise_tools"],
-            "message_types": ["human_instructions", "ai_responses", "workflow_commands", "enterprise_messages"],
+            "tool_categories": [
+                "analysis_tools",
+                "confidence_tools",
+                "reporting_tools",
+                "enterprise_tools",
+            ],
+            "message_types": [
+                "human_instructions",
+                "ai_responses",
+                "workflow_commands",
+                "enterprise_messages",
+            ],
             "integration_features": [
                 "workflow_context_awareness",
                 "enhanced_reporting",
@@ -384,7 +456,11 @@ class AnalysisServiceLangGraphIntegration:
                 "caching_strategy": "intelligent_multi_level",
                 "monitoring_level": "detailed",
                 "resilience_patterns": ["circuit_breaker", "retry", "fallback"],
-                "performance_optimization": ["caching", "connection_pooling", "async_processing"],
+                "performance_optimization": [
+                    "caching",
+                    "connection_pooling",
+                    "async_processing",
+                ],
             },
             "performance_metrics": self.get_performance_metrics(),
         }
@@ -398,11 +474,19 @@ class AnalysisServiceLangGraphIntegration:
             "total_analyses": total_analyses,
             "successful_analyses": successful_analyses,
             "failed_analyses": self.performance_metrics["failed_analyses"],
-            "success_rate": (successful_analyses / total_analyses) * 100 if total_analyses > 0 else 0,
-            "average_processing_time": self.performance_metrics["average_processing_time"],
+            "success_rate": (
+                (successful_analyses / total_analyses) * 100
+                if total_analyses > 0
+                else 0
+            ),
+            "average_processing_time": self.performance_metrics[
+                "average_processing_time"
+            ],
             "cache_hit_rate": self.performance_metrics.get("cache_hit_rate", 0),
             "cache_performance": self.cache.get_cache_stats() if self.cache else {},
-            "error_statistics": enterprise_error_handler.get_error_statistics(self.service_name),
+            "error_statistics": enterprise_error_handler.get_error_statistics(
+                self.service_name
+            ),
             "last_updated": datetime.now().isoformat(),
         }
 
@@ -416,7 +500,9 @@ class AnalysisServiceLangGraphIntegration:
                 "service_name": self.service_name,
                 "status": "unknown",
                 "langgraph_integration": "active",
-                "cache_status": self.cache.get_cache_stats() if self.cache else "no_cache",
+                "cache_status": (
+                    self.cache.get_cache_stats() if self.cache else "no_cache"
+                ),
                 "performance_metrics": self.get_performance_metrics(),
                 "last_check": datetime.now().isoformat(),
             }
@@ -427,11 +513,23 @@ class AnalysisServiceLangGraphIntegration:
                 "langgraph_integration": {
                     "status": "active",
                     "tools_initialized": len(self.workflow_context) > 0,
-                    "active_workflows": len([k for k in self.workflow_context.keys() if k.startswith("workflow_")]),
+                    "active_workflows": len(
+                        [
+                            k
+                            for k in self.workflow_context.keys()
+                            if k.startswith("workflow_")
+                        ]
+                    ),
                     "performance_metrics": self.get_performance_metrics(),
                 },
-                "cache_status": self.cache.get_cache_stats() if self.cache else "no_cache",
-                "enterprise_features": {"error_handling": "active", "service_mesh": "active", "monitoring": "active"},
+                "cache_status": (
+                    self.cache.get_cache_stats() if self.cache else "no_cache"
+                ),
+                "enterprise_features": {
+                    "error_handling": "active",
+                    "service_mesh": "active",
+                    "monitoring": "active",
+                },
             }
         )
 
@@ -451,7 +549,11 @@ class AnalysisServiceLangGraphIntegration:
         if workflow_cache_data:
             await self.cache.warmup_cache(workflow_cache_data)
 
-        fire_and_forget("info", f"Optimized analysis service for workflow {workflow_id}", self.service_name)
+        fire_and_forget(
+            "info",
+            f"Optimized analysis service for workflow {workflow_id}",
+            self.service_name,
+        )
 
     async def cleanup_workflow_resources(self, workflow_id: str):
         """Clean up resources for completed workflow."""
@@ -462,13 +564,18 @@ class AnalysisServiceLangGraphIntegration:
         workflow_keys = [
             k
             for k in self.workflow_context.keys()
-            if isinstance(self.workflow_context[k], dict) and self.workflow_context[k].get("workflow_id") == workflow_id
+            if isinstance(self.workflow_context[k], dict)
+            and self.workflow_context[k].get("workflow_id") == workflow_id
         ]
 
         for key in workflow_keys:
             del self.workflow_context[key]
 
-        fire_and_forget("info", f"Cleaned up resources for workflow {workflow_id}", self.service_name)
+        fire_and_forget(
+            "info",
+            f"Cleaned up resources for workflow {workflow_id}",
+            self.service_name,
+        )
 
     def get_workflow_integration_status(self) -> Dict[str, Any]:
         """Get current workflow integration status."""
@@ -476,7 +583,9 @@ class AnalysisServiceLangGraphIntegration:
             "service": self.service_name,
             "langgraph_integration": "active",
             "tools_initialized": len(self.workflow_context) > 0,
-            "active_workflows": len([k for k in self.workflow_context.keys() if k.startswith("workflow_")]),
+            "active_workflows": len(
+                [k for k in self.workflow_context.keys() if k.startswith("workflow_")]
+            ),
             "last_activity": datetime.now().isoformat(),
             "capabilities_ready": True,
         }

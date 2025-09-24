@@ -52,17 +52,23 @@ class ValidationManager(BaseManager):
             table_data = []
             for result in validation_results:
                 status = "✅ Valid" if result["valid"] else "❌ Invalid"
-                message = "OK" if result["valid"] else result.get("error", "Unknown error")
+                message = (
+                    "OK" if result["valid"] else result.get("error", "Unknown error")
+                )
                 table_data.append([result["file"], status, message])
 
             self.display.show_table(
-                f"YAML Syntax Validation ({valid_count}/{total_count} valid)", ["File", "Status", "Message"], table_data
+                f"YAML Syntax Validation ({valid_count}/{total_count} valid)",
+                ["File", "Status", "Message"],
+                table_data,
             )
 
             if valid_count == total_count:
                 self.display.show_success("All YAML files are syntactically valid!")
             else:
-                self.display.show_error(f"{total_count - valid_count} YAML files have syntax errors")
+                self.display.show_error(
+                    f"{total_count - valid_count} YAML files have syntax errors"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error validating YAML syntax: {e}")
@@ -71,7 +77,9 @@ class ValidationManager(BaseManager):
         """Validate configuration against schemas."""
         try:
             self.display.show_info("Schema validation feature coming soon!")
-            self.display.show_info("This will validate configurations against JSON schemas")
+            self.display.show_info(
+                "This will validate configurations against JSON schemas"
+            )
 
         except Exception as e:
             self.display.show_error(f"Error validating configuration schema: {e}")
@@ -93,10 +101,19 @@ class ValidationManager(BaseManager):
                     if issue["severity"] == "critical"
                     else "🟡 Warning" if issue["severity"] == "warning" else "ℹ️ Info"
                 )
-                table_data.append([issue["service"], severity, issue["issue"], issue.get("suggestion", "")])
+                table_data.append(
+                    [
+                        issue["service"],
+                        severity,
+                        issue["issue"],
+                        issue.get("suggestion", ""),
+                    ]
+                )
 
             self.display.show_table(
-                "Configuration Consistency Issues", ["Service", "Severity", "Issue", "Suggestion"], table_data
+                "Configuration Consistency Issues",
+                ["Service", "Severity", "Issue", "Suggestion"],
+                table_data,
             )
 
         except Exception as e:
@@ -105,8 +122,12 @@ class ValidationManager(BaseManager):
     async def validate_environment_references(self):
         """Validate environment variable references in configurations."""
         try:
-            self.display.show_info("Environment reference validation feature coming soon!")
-            self.display.show_info("This will check that all ${VAR} references are defined")
+            self.display.show_info(
+                "Environment reference validation feature coming soon!"
+            )
+            self.display.show_info(
+                "This will check that all ${VAR} references are defined"
+            )
 
         except Exception as e:
             self.display.show_error(f"Error validating environment references: {e}")
@@ -117,7 +138,9 @@ class ValidationManager(BaseManager):
             health_results = await self._perform_configuration_health_check()
 
             # Overall health score
-            healthy_items = sum(1 for result in health_results.values() if result[0] == "healthy")
+            healthy_items = sum(
+                1 for result in health_results.values() if result[0] == "healthy"
+            )
             total_items = len(health_results)
 
             health_score = (healthy_items / total_items * 100) if total_items > 0 else 0
@@ -129,15 +152,25 @@ class ValidationManager(BaseManager):
             # Display detailed results
             table_data = []
             for check_name, (status, message) in health_results.items():
-                status_icon = "✅" if status == "healthy" else "❌" if status == "unhealthy" else "⚠️"
+                status_icon = (
+                    "✅"
+                    if status == "healthy"
+                    else "❌" if status == "unhealthy" else "⚠️"
+                )
                 table_data.append([check_name, f"{status_icon} {status}", message])
 
-            self.display.show_table("Configuration Health Check Results", ["Check", "Status", "Details"], table_data)
+            self.display.show_table(
+                "Configuration Health Check Results",
+                ["Check", "Status", "Details"],
+                table_data,
+            )
 
             if health_score >= 90:
                 self.display.show_success("Configuration health is excellent!")
             elif health_score >= 70:
-                self.display.show_warning("Configuration health is good but could be improved")
+                self.display.show_warning(
+                    "Configuration health is good but could be improved"
+                )
             else:
                 self.display.show_error("Configuration health needs attention")
 
@@ -210,7 +243,10 @@ class ValidationManager(BaseManager):
             # Check for missing required configurations
             for service_name, configs in service_configs.items():
                 # Check if service has a main config file
-                has_main_config = any("config.yaml" in str(c) or f"{service_name}.yaml" in str(c) for c in configs)
+                has_main_config = any(
+                    "config.yaml" in str(c) or f"{service_name}.yaml" in str(c)
+                    for c in configs
+                )
                 if not has_main_config:
                     issues.append(
                         {
@@ -223,7 +259,9 @@ class ValidationManager(BaseManager):
 
                 # Check for duplicate configurations
                 config_names = [c.name for c in configs]
-                duplicates = set([name for name in config_names if config_names.count(name) > 1])
+                duplicates = set(
+                    [name for name in config_names if config_names.count(name) > 1]
+                )
                 if duplicates:
                     issues.append(
                         {
@@ -276,7 +314,11 @@ class ValidationManager(BaseManager):
 
             health_results["required_configs"] = (
                 "healthy" if not missing_configs else "unhealthy",
-                f"Missing: {', '.join(missing_configs)}" if missing_configs else "All required configs present",
+                (
+                    f"Missing: {', '.join(missing_configs)}"
+                    if missing_configs
+                    else "All required configs present"
+                ),
             )
 
             # Check environment variables
@@ -288,7 +330,10 @@ class ValidationManager(BaseManager):
             health_results["service_configurations"] = service_issues
 
         except Exception as e:
-            health_results["health_check_error"] = ("unhealthy", f"Health check failed: {e}")
+            health_results["health_check_error"] = (
+                "unhealthy",
+                f"Health check failed: {e}",
+            )
 
         return health_results
 
@@ -304,7 +349,10 @@ class ValidationManager(BaseManager):
                     missing_critical.append(var)
 
             if missing_critical:
-                return "unhealthy", f"Missing critical variables: {', '.join(missing_critical)}"
+                return (
+                    "unhealthy",
+                    f"Missing critical variables: {', '.join(missing_critical)}",
+                )
             else:
                 return "healthy", "Critical environment variables are set"
 
@@ -322,14 +370,21 @@ class ValidationManager(BaseManager):
             configured_services = 0
 
             for service_dir in service_dirs:
-                config_files = list(service_dir.glob("*.yaml")) + list(service_dir.glob("config/*.yaml"))
+                config_files = list(service_dir.glob("*.yaml")) + list(
+                    service_dir.glob("config/*.yaml")
+                )
                 if config_files:
                     configured_services += 1
 
-            health_percentage = (configured_services / len(service_dirs) * 100) if service_dirs else 0
+            health_percentage = (
+                (configured_services / len(service_dirs) * 100) if service_dirs else 0
+            )
 
             if health_percentage >= 80:
-                return "healthy", f"{configured_services}/{len(service_dirs)} services configured"
+                return (
+                    "healthy",
+                    f"{configured_services}/{len(service_dirs)} services configured",
+                )
             elif health_percentage >= 50:
                 return (
                     "warning",

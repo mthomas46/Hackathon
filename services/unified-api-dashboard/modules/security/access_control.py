@@ -101,7 +101,9 @@ class PermissionManager:
 
     def __init__(self):
         self.grants: Dict[str, PermissionGrant] = {}
-        self.role_permissions: Dict[UserRole, Set[Permission]] = self._get_default_role_permissions()
+        self.role_permissions: Dict[UserRole, Set[Permission]] = (
+            self._get_default_role_permissions()
+        )
 
     def _get_default_role_permissions(self) -> Dict[UserRole, Set[Permission]]:
         """Get default permissions for each role."""
@@ -172,7 +174,9 @@ class PermissionManager:
             return True
         return False
 
-    async def get_user_permissions(self, user_id: str, resource: str = None) -> Set[Permission]:
+    async def get_user_permissions(
+        self, user_id: str, resource: str = None
+    ) -> Set[Permission]:
         """Get effective permissions for a user, optionally for a specific resource."""
         permissions = set()
 
@@ -189,14 +193,18 @@ class PermissionManager:
                     continue
 
                 # Check resource pattern
-                if resource and not self._matches_pattern(resource, grant.resource_pattern):
+                if resource and not self._matches_pattern(
+                    resource, grant.resource_pattern
+                ):
                     continue
 
                 permissions.update(grant.permissions)
 
         return permissions
 
-    async def check_delegation_allowed(self, granter_id: str, permissions: Set[Permission]) -> bool:
+    async def check_delegation_allowed(
+        self, granter_id: str, permissions: Set[Permission]
+    ) -> bool:
         """Check if a user can delegate specific permissions."""
         granter_permissions = await self.get_user_permissions(granter_id)
         return permissions.issubset(granter_permissions)
@@ -280,7 +288,13 @@ class AccessControlManager:
                         "type": "business_hours",
                         "timezone": "UTC",
                         "business_hours": {"start": "09:00", "end": "17:00"},
-                        "business_days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
+                        "business_days": [
+                            "monday",
+                            "tuesday",
+                            "wednesday",
+                            "thursday",
+                            "friday",
+                        ],
                     }
                 },
                 priority=10,
@@ -296,7 +310,11 @@ class AccessControlManager:
                 conditions={
                     "ip_restriction": {
                         "type": "country_block",
-                        "blocked_countries": ["KP", "IR", "CU"],  # North Korea, Iran, Cuba
+                        "blocked_countries": [
+                            "KP",
+                            "IR",
+                            "CU",
+                        ],  # North Korea, Iran, Cuba
                     }
                 },
                 priority=5,
@@ -304,11 +322,18 @@ class AccessControlManager:
         }
 
     async def register_resource(
-        self, resource_id: str, resource_type: ResourceType, owner_id: str, attributes: Dict[str, Any] = None
+        self,
+        resource_id: str,
+        resource_type: ResourceType,
+        owner_id: str,
+        attributes: Dict[str, Any] = None,
     ) -> Resource:
         """Register a resource for access control."""
         resource = Resource(
-            resource_id=resource_id, resource_type=resource_type, owner_id=owner_id, attributes=attributes or {}
+            resource_id=resource_id,
+            resource_type=resource_type,
+            owner_id=owner_id,
+            attributes=attributes or {},
         )
 
         self.resources[resource_id] = resource
@@ -352,7 +377,9 @@ class AccessControlManager:
         Returns (decision, reason, matched_policy)
         """
         # Sort policies by priority (highest first)
-        sorted_policies = sorted(self.policies.values(), key=lambda p: p.priority, reverse=True)
+        sorted_policies = sorted(
+            self.policies.values(), key=lambda p: p.priority, reverse=True
+        )
 
         for policy in sorted_policies:
             if not policy.enabled:
@@ -367,7 +394,9 @@ class AccessControlManager:
         # Default deny
         return AccessDecision.DENY, "No matching policy found", None
 
-    async def _matches_policy(self, policy: AccessPolicy, request: AccessRequest) -> Tuple[bool, str]:
+    async def _matches_policy(
+        self, policy: AccessPolicy, request: AccessRequest
+    ) -> Tuple[bool, str]:
         """Check if request matches a policy."""
         # Check principal
         if not self._matches_principal(policy.principals, request.user):
@@ -430,7 +459,9 @@ class AccessControlManager:
         regex_pattern = pattern.replace("*", ".*").replace("?", ".")
         return bool(re.match(f"^{regex_pattern}$", value))
 
-    async def _evaluate_conditions(self, conditions: Dict[str, Any], request: AccessRequest) -> bool:
+    async def _evaluate_conditions(
+        self, conditions: Dict[str, Any], request: AccessRequest
+    ) -> bool:
         """Evaluate policy conditions."""
         for condition_name, condition_config in conditions.items():
             condition_type = condition_config.get("type")
@@ -441,7 +472,9 @@ class AccessControlManager:
 
             elif condition_type == "ip_restriction":
                 client_ip = request.context.get("ip_address")
-                if client_ip and not self._check_ip_restriction(condition_config, client_ip):
+                if client_ip and not self._check_ip_restriction(
+                    condition_config, client_ip
+                ):
                     return False
 
             elif condition_type == "time_window":
@@ -450,7 +483,9 @@ class AccessControlManager:
 
         return True
 
-    def _check_business_hours(self, config: Dict[str, Any], timestamp: datetime) -> bool:
+    def _check_business_hours(
+        self, config: Dict[str, Any], timestamp: datetime
+    ) -> bool:
         """Check if timestamp falls within business hours."""
         business_hours = config.get("business_hours", {})
         business_days = config.get("business_days", [])
@@ -495,7 +530,9 @@ class AccessControlManager:
 
         return True
 
-    async def get_policies_for_user(self, user: User, resource: Optional[Resource] = None) -> List[AccessPolicy]:
+    async def get_policies_for_user(
+        self, user: User, resource: Optional[Resource] = None
+    ) -> List[AccessPolicy]:
         """Get all policies that apply to a user and optional resource."""
         applicable_policies = []
 
@@ -504,7 +541,9 @@ class AccessControlManager:
                 continue
 
             if self._matches_principal(policy.principals, user):
-                if resource is None or self._matches_resource(policy.resources, resource):
+                if resource is None or self._matches_resource(
+                    policy.resources, resource
+                ):
                     applicable_policies.append(policy)
 
         return sorted(applicable_policies, key=lambda p: p.priority, reverse=True)

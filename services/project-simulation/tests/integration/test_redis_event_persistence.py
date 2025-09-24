@@ -60,7 +60,9 @@ class TestRedisEventStore:
         """Test event persistence in Redis."""
         mock_redis = Mock()
 
-        event_store = RedisEventStore(redis_client=mock_redis, key_prefix="simulation_events")
+        event_store = RedisEventStore(
+            redis_client=mock_redis, key_prefix="simulation_events"
+        )
 
         # Create test event
         test_event = SimulationEvent(
@@ -221,7 +223,9 @@ class TestRedisEventStore:
         """Test event TTL (time-to-live) expiration."""
         mock_redis = Mock()
 
-        event_store = RedisEventStore(redis_client=mock_redis, event_ttl_seconds=3600)  # 1 hour
+        event_store = RedisEventStore(
+            redis_client=mock_redis, event_ttl_seconds=3600
+        )  # 1 hour
 
         test_event = SimulationEvent(
             event_id="test-event-123",
@@ -319,7 +323,9 @@ class TestEventReplayManager:
             await asyncio.sleep(0.01)  # Simulate processing time
 
         # Replay events
-        replay_result = asyncio.run(replay_manager.replay_events("sim-123", mock_handler))
+        replay_result = asyncio.run(
+            replay_manager.replay_events("sim-123", mock_handler)
+        )
 
         assert replay_result["total_events"] == 2
         assert replay_result["successful_events"] == 2
@@ -373,7 +379,9 @@ class TestEventReplayManager:
 
         # Replay only phase_completed events
         replay_result = asyncio.run(
-            replay_manager.replay_events("sim-123", mock_handler, event_types=["phase_completed"])
+            replay_manager.replay_events(
+                "sim-123", mock_handler, event_types=["phase_completed"]
+            )
         )
 
         assert replay_result["total_events"] == 1
@@ -413,7 +421,9 @@ class TestEventReplayManager:
 
         # Replay events with performance monitoring
         start_time = time.time()
-        replay_result = asyncio.run(replay_manager.replay_events("sim-123", mock_handler))
+        replay_result = asyncio.run(
+            replay_manager.replay_events("sim-123", mock_handler)
+        )
         total_time = time.time() - start_time
 
         # Verify performance metrics
@@ -465,7 +475,9 @@ class TestEventReplayManager:
             handled_events.append(event)
 
         # Replay events with error handling
-        replay_result = asyncio.run(replay_manager.replay_events("sim-123", mock_handler))
+        replay_result = asyncio.run(
+            replay_manager.replay_events("sim-123", mock_handler)
+        )
 
         assert replay_result["total_events"] == 2
         assert replay_result["successful_events"] == 1
@@ -516,7 +528,9 @@ class TestEventReplayManager:
 
         # With 2x speed, 5-minute gap should take ~2.5 seconds instead of 5
         # Allow some tolerance for processing overhead
-        assert total_time < 4.0, f"Replay with 2x speed took too long: {total_time:.2f}s"
+        assert (
+            total_time < 4.0
+        ), f"Replay with 2x speed took too long: {total_time:.2f}s"
 
         print("✅ Event replay speed control validated")
 
@@ -648,7 +662,9 @@ class TestRedisEventPersistenceIntegration:
         retrieval_time = time.time() - retrieval_start
 
         assert len(retrieved_events) == num_events
-        assert retrieval_time < 2.0, f"Event retrieval took too long: {retrieval_time:.2f}s"
+        assert (
+            retrieval_time < 2.0
+        ), f"Event retrieval took too long: {retrieval_time:.2f}s"
 
         print("✅ Event persistence under load validated")
 
@@ -733,10 +749,16 @@ class TestRedisEventPersistenceIntegration:
 
         async def debug_handler(event):
             debug_log.append(
-                {"timestamp": event.timestamp.isoformat(), "event_type": event.event_type, "data": event.data}
+                {
+                    "timestamp": event.timestamp.isoformat(),
+                    "event_type": event.event_type,
+                    "data": event.data,
+                }
             )
 
-        replay_result = asyncio.run(replay_manager.replay_events("failed-sim", debug_handler))
+        replay_result = asyncio.run(
+            replay_manager.replay_events("failed-sim", debug_handler)
+        )
 
         assert replay_result["total_events"] == 4
         assert len(debug_log) == 4
@@ -745,7 +767,9 @@ class TestRedisEventPersistenceIntegration:
         failure_events = [log for log in debug_log if "fail" in log["event_type"]]
         assert len(failure_events) >= 2  # Should have failure events
 
-        service_failure = next((log for log in debug_log if log["event_type"] == "service_failure"), None)
+        service_failure = next(
+            (log for log in debug_log if log["event_type"] == "service_failure"), None
+        )
         assert service_failure is not None
         assert service_failure["data"]["service"] == "mock_data_generator"
 
@@ -789,7 +813,11 @@ class RedisEventStore:
     """Mock Redis event store for testing."""
 
     def __init__(
-        self, redis_client=None, key_prefix="simulation_events", max_events_per_key=1000, event_ttl_seconds=86400 * 30
+        self,
+        redis_client=None,
+        key_prefix="simulation_events",
+        max_events_per_key=1000,
+        event_ttl_seconds=86400 * 30,
     ):
         self.redis_client = redis_client or Mock()
         self.key_prefix = key_prefix
@@ -872,14 +900,20 @@ class RedisEventStore:
 class EventReplayManager:
     """Mock event replay manager for testing."""
 
-    def __init__(self, event_store=None, max_replay_events=10000, replay_speed_multiplier=1.0):
+    def __init__(
+        self, event_store=None, max_replay_events=10000, replay_speed_multiplier=1.0
+    ):
         self.event_store = event_store or Mock()
         self.max_replay_events = max_replay_events
         self.replay_speed_multiplier = replay_speed_multiplier
 
-    async def replay_events(self, simulation_id, event_handler, event_types=None, speed_multiplier=None):
+    async def replay_events(
+        self, simulation_id, event_handler, event_types=None, speed_multiplier=None
+    ):
         """Replay events for a simulation."""
-        events = self.event_store.get_events(simulation_id, limit=self.max_replay_events)
+        events = self.event_store.get_events(
+            simulation_id, limit=self.max_replay_events
+        )
 
         if event_types:
             events = [e for e in events if e.event_type in event_types]
@@ -913,7 +947,9 @@ class EventReplayManager:
             "total_events": len(events),
             "successful_events": successful,
             "failed_events": failed,
-            "average_processing_time": sum(processing_times) / len(processing_times) if processing_times else 0,
+            "average_processing_time": (
+                sum(processing_times) / len(processing_times) if processing_times else 0
+            ),
             "total_replay_time": sum(processing_times),
         }
 

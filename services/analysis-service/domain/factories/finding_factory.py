@@ -135,13 +135,17 @@ class FindingFactory:
 
         for finding_data in analysis_result["findings"]:
             finding = self._create_from_data(
-                document_id=document_id, analysis_id=analysis_id, finding_data=finding_data
+                document_id=document_id,
+                analysis_id=analysis_id,
+                finding_data=finding_data,
             )
             findings.append(finding)
 
         return findings
 
-    def create_staleness_finding(self, document_id: str, analysis_id: str, days_since_update: int) -> Finding:
+    def create_staleness_finding(
+        self, document_id: str, analysis_id: str, days_since_update: int
+    ) -> Finding:
         """Create a finding for stale documentation."""
         severity = self._calculate_staleness_severity(days_since_update)
 
@@ -166,7 +170,11 @@ class FindingFactory:
         )
 
     def create_complexity_finding(
-        self, document_id: str, analysis_id: str, complexity_score: float, readability_score: float
+        self,
+        document_id: str,
+        analysis_id: str,
+        complexity_score: float,
+        readability_score: float,
     ) -> Finding:
         """Create a finding for complex or hard-to-read documentation."""
         severity = self._calculate_complexity_severity(complexity_score)
@@ -202,7 +210,8 @@ class FindingFactory:
         description = f"Found inconsistency in {inconsistency_type}: {details}"
 
         suggestion = (
-            f"Standardize {inconsistency_type} throughout the documentation. " "Create and follow style guidelines."
+            f"Standardize {inconsistency_type} throughout the documentation. "
+            "Create and follow style guidelines."
         )
 
         return self.create_consistency_finding(
@@ -219,7 +228,10 @@ class FindingFactory:
     ) -> Finding:
         """Create a finding for missing documentation elements."""
         title = "Missing documentation elements"
-        description = f"The following elements are missing from the documentation: " f"{', '.join(missing_elements)}"
+        description = (
+            f"The following elements are missing from the documentation: "
+            f"{', '.join(missing_elements)}"
+        )
 
         suggestion = (
             f"Add the missing elements: {', '.join(missing_elements)}. "
@@ -236,11 +248,17 @@ class FindingFactory:
         )
 
     def create_outdated_reference_finding(
-        self, document_id: str, analysis_id: str, reference: str, location: Dict[str, Any]
+        self,
+        document_id: str,
+        analysis_id: str,
+        reference: str,
+        location: Dict[str, Any],
     ) -> Finding:
         """Create a finding for outdated references."""
         title = f"Outdated reference: {reference}"
-        description = f"The reference '{reference}' appears to be outdated or no longer valid."
+        description = (
+            f"The reference '{reference}' appears to be outdated or no longer valid."
+        )
 
         suggestion = "Update the reference to the current valid location or remove if no longer applicable."
 
@@ -281,7 +299,9 @@ class FindingFactory:
             suggestion=suggestion,
         )
 
-    def _create_from_data(self, document_id: str, analysis_id: str, finding_data: Dict[str, Any]) -> Finding:
+    def _create_from_data(
+        self, document_id: str, analysis_id: str, finding_data: Dict[str, Any]
+    ) -> Finding:
         """Create finding from raw data dictionary."""
         return self._create_finding(
             document_id=document_id,
@@ -333,10 +353,16 @@ class FindingFactory:
             if field not in finding_data:
                 errors.append(f"Missing required field: {field}")
 
-        if "category" in finding_data and finding_data["category"] not in self.get_finding_categories():
+        if (
+            "category" in finding_data
+            and finding_data["category"] not in self.get_finding_categories()
+        ):
             errors.append(f"Invalid category: {finding_data['category']}")
 
-        if "severity" in finding_data and finding_data["severity"] not in self.get_severity_levels():
+        if (
+            "severity" in finding_data
+            and finding_data["severity"] not in self.get_severity_levels()
+        ):
             errors.append(f"Invalid severity: {finding_data['severity']}")
 
         return errors

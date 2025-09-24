@@ -35,7 +35,8 @@ class BaseResponse(BaseModel):
     success: bool = Field(..., description="Operation success status")
     message: Optional[str] = Field(None, description="Human-readable message")
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="Response timestamp"
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Response timestamp",
     )
     request_id: Optional[str] = Field(None, description="Request correlation ID")
 
@@ -51,14 +52,20 @@ class ErrorResponse(BaseResponse):
     """Standard error response."""
 
     success: bool = False
-    error_code: Optional[str] = Field(None, description="Error code for programmatic handling")
-    details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
+    error_code: Optional[str] = Field(
+        None, description="Error code for programmatic handling"
+    )
+    details: Optional[Dict[str, Any]] = Field(
+        None, description="Additional error details"
+    )
 
 
 class ValidationErrorResponse(ErrorResponse):
     """Validation error response with field-level details."""
 
-    field_errors: Optional[Dict[str, List[str]]] = Field(None, description="Field-specific validation errors")
+    field_errors: Optional[Dict[str, List[str]]] = Field(
+        None, description="Field-specific validation errors"
+    )
 
 
 # ============================================================================
@@ -106,7 +113,9 @@ class CreateResponse(BaseResponse):
 
     success: bool = True
     id: str = Field(..., description="ID of created resource")
-    resource_url: Optional[str] = Field(None, description="URL to access created resource")
+    resource_url: Optional[str] = Field(
+        None, description="URL to access created resource"
+    )
 
 
 class UpdateResponse(BaseResponse):
@@ -114,7 +123,9 @@ class UpdateResponse(BaseResponse):
 
     success: bool = True
     id: str = Field(..., description="ID of updated resource")
-    updated_fields: Optional[List[str]] = Field(None, description="Fields that were updated")
+    updated_fields: Optional[List[str]] = Field(
+        None, description="Fields that were updated"
+    )
     version: Optional[int] = Field(None, description="New version number")
 
 
@@ -134,8 +145,12 @@ class BulkOperationResponse(BaseResponse):
     total_requested: int = Field(..., description="Total items requested for operation")
     successful: int = Field(..., description="Number of successful operations")
     failed: int = Field(..., description="Number of failed operations")
-    results: Optional[List[Dict[str, Any]]] = Field(None, description="Detailed results per item")
-    errors: Optional[List[Dict[str, Any]]] = Field(None, description="Detailed errors per item")
+    results: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Detailed results per item"
+    )
+    errors: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Detailed errors per item"
+    )
 
 
 # ============================================================================
@@ -149,7 +164,9 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Health status")
     service: str = Field(..., description="Service name")
     version: Optional[str] = Field(None, description="Service version")
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
     uptime_seconds: Optional[float] = None
     environment: Optional[str] = None
     dependencies: Optional[Dict[str, str]] = None
@@ -162,7 +179,9 @@ class SystemHealthResponse(BaseModel):
     services_checked: int
     services_healthy: int
     services_unhealthy: int
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
     service_details: Dict[str, Dict[str, Any]]
     environment_info: Dict[str, Any]
 
@@ -222,7 +241,9 @@ class SearchResponse(BaseModel):
 
 
 def create_success_response(
-    message: str = "Operation successful", data: Any = None, request_id: Optional[str] = None
+    message: str = "Operation successful",
+    data: Any = None,
+    request_id: Optional[str] = None,
 ) -> SuccessResponse:
     """Create a standard success response."""
     return SuccessResponse(message=message, data=data, request_id=request_id)
@@ -235,18 +256,28 @@ def create_error_response(
     request_id: Optional[str] = None,
 ) -> ErrorResponse:
     """Create a standard error response."""
-    return ErrorResponse(message=message, error_code=error_code, details=details, request_id=request_id)
+    return ErrorResponse(
+        message=message, error_code=error_code, details=details, request_id=request_id
+    )
 
 
 def create_validation_error_response(
-    field_errors: Dict[str, List[str]], message: str = "Validation failed", request_id: Optional[str] = None
+    field_errors: Dict[str, List[str]],
+    message: str = "Validation failed",
+    request_id: Optional[str] = None,
 ) -> ValidationErrorResponse:
     """Create a validation error response."""
-    return ValidationErrorResponse(message=message, field_errors=field_errors, request_id=request_id)
+    return ValidationErrorResponse(
+        message=message, field_errors=field_errors, request_id=request_id
+    )
 
 
 def create_paginated_response(
-    items: List[Any], page: int, page_size: int, total_items: int, request_id: Optional[str] = None
+    items: List[Any],
+    page: int,
+    page_size: int,
+    total_items: int,
+    request_id: Optional[str] = None,
 ) -> PaginatedResponse:
     """Create a paginated response."""
     total_pages = (total_items + page_size - 1) // page_size  # Ceiling division
@@ -269,11 +300,17 @@ def create_list_response(
     items: List[Any], message: str = "Items retrieved", request_id: Optional[str] = None
 ) -> ListResponse:
     """Create a list response."""
-    return ListResponse(data=items, count=len(items), message=message, request_id=request_id)
+    return ListResponse(
+        data=items, count=len(items), message=message, request_id=request_id
+    )
 
 
 def create_crud_response(
-    operation: str, resource_id: str, success: bool = True, message: Optional[str] = None, **kwargs
+    operation: str,
+    resource_id: str,
+    success: bool = True,
+    message: Optional[str] = None,
+    **kwargs,
 ) -> Union[CreateResponse, UpdateResponse, DeleteResponse]:
     """Create a CRUD operation response."""
     if not message:
@@ -337,7 +374,11 @@ def get_status_code(error_code: Optional[str] = None) -> int:
 
 def format_error_details(exc: Exception) -> Dict[str, Any]:
     """Format exception details for error responses."""
-    return {"type": type(exc).__name__, "message": str(exc), "module": type(exc).__module__}
+    return {
+        "type": type(exc).__name__,
+        "message": str(exc),
+        "module": type(exc).__module__,
+    }
 
 
 def format_validation_errors(validation_errors: Dict[str, Any]) -> Dict[str, List[str]]:

@@ -47,9 +47,15 @@ class AnalyticsService:
         # Add computed percentages
         total_docs = self.repository.get_basic_counts()["documents"]
         if total_docs > 0:
-            metrics["stale_percentage"] = (metrics["stale_documents"] / total_docs) * 100
-            metrics["redundant_percentage"] = (metrics["redundant_documents"] / total_docs) * 100
-            metrics["analyzed_percentage"] = ((total_docs - metrics["orphaned_analyses"]) / total_docs) * 100
+            metrics["stale_percentage"] = (
+                metrics["stale_documents"] / total_docs
+            ) * 100
+            metrics["redundant_percentage"] = (
+                metrics["redundant_documents"] / total_docs
+            ) * 100
+            metrics["analyzed_percentage"] = (
+                (total_docs - metrics["orphaned_analyses"]) / total_docs
+            ) * 100
 
         return metrics
 
@@ -77,14 +83,20 @@ class AnalyticsService:
             },
             "quality": {
                 "stale_documents": analytics.quality_metrics.get("stale_documents", 0),
-                "redundant_documents": analytics.quality_metrics.get("redundant_documents", 0),
+                "redundant_documents": analytics.quality_metrics.get(
+                    "redundant_documents", 0
+                ),
                 "quality_score": (
-                    "Good" if analytics.quality_metrics.get("stale_percentage", 0) < 20 else "Needs Attention"
+                    "Good"
+                    if analytics.quality_metrics.get("stale_percentage", 0) < 20
+                    else "Needs Attention"
                 ),
             },
             "storage": {
-                "total_size_mb": analytics.storage_stats.get("total_size_bytes", 0) / (1024 * 1024),
-                "avg_size_kb": analytics.storage_stats.get("avg_document_size", 0) / 1024,
+                "total_size_mb": analytics.storage_stats.get("total_size_bytes", 0)
+                / (1024 * 1024),
+                "avg_size_kb": analytics.storage_stats.get("avg_document_size", 0)
+                / 1024,
             },
             "insights": [],
         }
@@ -126,7 +138,10 @@ class AnalyticsService:
             )
 
         # Relationship insights
-        if analytics.relationship_insights.get("total_relationships", 0) < analytics.total_documents * 0.1:
+        if (
+            analytics.relationship_insights.get("total_relationships", 0)
+            < analytics.total_documents * 0.1
+        ):
             insights.append(
                 {
                     "type": "info",

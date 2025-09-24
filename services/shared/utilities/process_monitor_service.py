@@ -138,7 +138,9 @@ class ProcessAlert:
 class MemoryLeakDetector:
     """Advanced memory leak detection using multiple strategies."""
 
-    def __init__(self, leak_threshold_mb: float = 50.0, growth_rate_threshold: float = 1.0):
+    def __init__(
+        self, leak_threshold_mb: float = 50.0, growth_rate_threshold: float = 1.0
+    ):
         self.leak_threshold_mb = leak_threshold_mb
         self.growth_rate_threshold = growth_rate_threshold
         self.snapshots: List[MemorySnapshot] = []
@@ -171,7 +173,9 @@ class MemoryLeakDetector:
 
         if self.tracemalloc_enabled:
             try:
-                snapshot.tracemalloc_stats = tracemalloc.take_snapshot().statistics("lineno")
+                snapshot.tracemalloc_stats = tracemalloc.take_snapshot().statistics(
+                    "lineno"
+                )
             except Exception as e:
                 logger.debug(f"Could not take tracemalloc snapshot: {e}")
 
@@ -219,10 +223,14 @@ class MemoryLeakDetector:
             # Check growth rate
             if len(recent_snapshots) >= 3:
                 time_diffs = [
-                    s2.timestamp - s1.timestamp for s1, s2 in zip(recent_snapshots[:-1], recent_snapshots[1:])
+                    s2.timestamp - s1.timestamp
+                    for s1, s2 in zip(recent_snapshots[:-1], recent_snapshots[1:])
                 ]
                 growth_rates = [
-                    (m2 - m1) / t for (m1, m2), t in zip(zip(memory_values[:-1], memory_values[1:]), time_diffs)
+                    (m2 - m1) / t
+                    for (m1, m2), t in zip(
+                        zip(memory_values[:-1], memory_values[1:]), time_diffs
+                    )
                 ]
 
                 avg_growth_rate = sum(growth_rates) / len(growth_rates)
@@ -394,7 +402,9 @@ class ProcessMonitorService:
             ),
         }
 
-    def set_threshold(self, resource_type: ResourceType, threshold: ResourceThreshold) -> None:
+    def set_threshold(
+        self, resource_type: ResourceType, threshold: ResourceThreshold
+    ) -> None:
         """Set custom threshold for a resource type."""
         self.resource_thresholds[resource_type] = threshold
 
@@ -448,7 +458,9 @@ class ProcessMonitorService:
             measurement = self.take_measurement(resource_type)
 
             # Update trend
-            measurement_obj = ResourceMeasurement(timestamp=time.time(), value=measurement, resource_type=resource_type)
+            measurement_obj = ResourceMeasurement(
+                timestamp=time.time(), value=measurement, resource_type=resource_type
+            )
             self.resource_trends[resource_type].add_measurement(measurement_obj)
 
             # Check thresholds
@@ -486,7 +498,9 @@ class ProcessMonitorService:
 
         return alerts
 
-    def _get_recommendations(self, resource_type: ResourceType, severity: AlertSeverity) -> List[str]:
+    def _get_recommendations(
+        self, resource_type: ResourceType, severity: AlertSeverity
+    ) -> List[str]:
         """Get recommendations based on resource type and severity."""
         recommendations = []
 
@@ -535,7 +549,9 @@ class ProcessMonitorService:
             threshold = self.resource_thresholds.get(resource_type)
 
             summary[resource_type.value] = {
-                "current_value": trend.measurements[-1].value if trend.measurements else 0,
+                "current_value": (
+                    trend.measurements[-1].value if trend.measurements else 0
+                ),
                 "average": trend.get_average(),
                 "trend": trend.get_trend_description(),
                 "unit": threshold.measurement_unit if threshold else "",
@@ -543,7 +559,9 @@ class ProcessMonitorService:
                     {
                         "warning": threshold.warning_threshold if threshold else None,
                         "critical": threshold.critical_threshold if threshold else None,
-                        "emergency": threshold.emergency_threshold if threshold else None,
+                        "emergency": (
+                            threshold.emergency_threshold if threshold else None
+                        ),
                     }
                     if threshold
                     else None

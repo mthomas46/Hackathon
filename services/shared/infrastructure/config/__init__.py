@@ -5,11 +5,20 @@ for all services in the LLM Documentation Ecosystem. Consolidates
 46+ individual config files into a unified, type-safe configuration framework.
 """
 
-from .base_config import BaseConfig, ConfigValidationError
-from .config_loader import ConfigLoader
-from .environment_config import EnvironmentConfig
-from .file_config import FileConfig
-from .service_config import ServiceConfig
+from .base_config import BaseConfig, ConfigValidationError, ConfigLoader
+from .service_config import (
+    ServiceConfig,
+    load_service_config,
+    create_service_config,
+    DocStoreConfig,
+    AnalysisServiceConfig,
+    OrchestratorConfig,
+    PromptStoreConfig,
+    DiscoveryAgentConfig,
+    FrontendConfig,
+    CLIConfig,
+    SummarizerHubConfig,
+)
 
 __all__ = [
     "BaseConfig",
@@ -17,5 +26,15 @@ __all__ = [
     "ConfigLoader",
     "EnvironmentConfig",
     "FileConfig",
-    "ServiceConfig"
+    "ServiceConfig",
+    "load_service_config",
+    "create_service_config",
+    "DocStoreConfig",
+    "AnalysisServiceConfig",
+    "OrchestratorConfig",
+    "PromptStoreConfig",
+    "DiscoveryAgentConfig",
+    "FrontendConfig",
+    "CLIConfig",
+    "SummarizerHubConfig",
 ]

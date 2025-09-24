@@ -40,7 +40,9 @@ class BedrockProxyMonitor:
             status_data = {
                 "health": health_response,
                 "invocation_stats": self._calculate_invocation_stats(),
-                "recent_invocations": self._invocations[-10:] if self._invocations else [],  # Last 10 invocations
+                "recent_invocations": (
+                    self._invocations[-10:] if self._invocations else []
+                ),  # Last 10 invocations
                 "last_updated": utc_now().isoformat(),
             }
 
@@ -109,9 +111,17 @@ class BedrockProxyMonitor:
                 if len(self._invocations) > 50:
                     self._invocations = self._invocations[:50]
 
-                return {"success": True, "invocation_id": invocation_result["id"], "response": response}
+                return {
+                    "success": True,
+                    "invocation_id": invocation_result["id"],
+                    "response": response,
+                }
 
-            return {"success": False, "error": "Invocation failed", "response": response}
+            return {
+                "success": False,
+                "error": "Invocation failed",
+                "response": response,
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e), "response": None}
@@ -119,7 +129,12 @@ class BedrockProxyMonitor:
     def _calculate_invocation_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached invocations."""
         if not self._invocations:
-            return {"total_invocations": 0, "unique_models": 0, "unique_templates": 0, "average_response_time": 0}
+            return {
+                "total_invocations": 0,
+                "unique_models": 0,
+                "unique_templates": 0,
+                "average_response_time": 0,
+            }
 
         total = len(self._invocations)
 

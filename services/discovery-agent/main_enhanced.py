@@ -30,7 +30,10 @@ from fastapi import Body, FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.core.responses.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
@@ -69,25 +72,37 @@ class DiscoverRequest(BaseModel):
 class BulkDiscoverRequest(BaseModel):
     """Request model for bulk service discovery"""
 
-    services: List[Dict[str, str]] = Field(..., description="List of services to discover")
-    auto_detect: bool = Field(False, description="Auto-detect services in Docker network")
-    include_health_check: bool = Field(True, description="Check service health before discovery")
+    services: List[Dict[str, str]] = Field(
+        ..., description="List of services to discover"
+    )
+    auto_detect: bool = Field(
+        False, description="Auto-detect services in Docker network"
+    )
+    include_health_check: bool = Field(
+        True, description="Check service health before discovery"
+    )
     dry_run: bool = Field(False, description="Dry run mode for testing")
 
 
 class SecurityScanRequest(BaseModel):
     """Request model for security scanning"""
 
-    tools: Optional[List[Dict[str, Any]]] = Field(None, description="Specific tools to scan")
+    tools: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Specific tools to scan"
+    )
     scan_all_discovered: bool = Field(True, description="Scan all discovered tools")
-    include_recommendations: bool = Field(True, description="Include security recommendations")
+    include_recommendations: bool = Field(
+        True, description="Include security recommendations"
+    )
 
 
 class AIToolSelectionRequest(BaseModel):
     """Request model for AI tool selection"""
 
     task_description: str = Field(..., description="Description of the task")
-    available_tools: Optional[List[Dict[str, Any]]] = Field(None, description="Available tools")
+    available_tools: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Available tools"
+    )
     use_discovered_tools: bool = Field(True, description="Use tools from registry")
     max_tools: int = Field(5, description="Maximum number of tools to select")
 
@@ -96,15 +111,21 @@ class SemanticAnalysisRequest(BaseModel):
     """Request model for semantic analysis"""
 
     tools: Optional[List[Dict[str, Any]]] = Field(None, description="Tools to analyze")
-    analyze_all_discovered: bool = Field(True, description="Analyze all discovered tools")
+    analyze_all_discovered: bool = Field(
+        True, description="Analyze all discovered tools"
+    )
     include_relationships: bool = Field(True, description="Include tool relationships")
 
 
 class WorkflowCreationRequest(BaseModel):
     """Request model for AI workflow creation"""
 
-    workflow_description: str = Field(..., description="Description of desired workflow")
-    available_tools: Optional[List[Dict[str, Any]]] = Field(None, description="Available tools")
+    workflow_description: str = Field(
+        ..., description="Description of desired workflow"
+    )
+    available_tools: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Available tools"
+    )
     workflow_type: str = Field("general", description="Type of workflow")
 
 
@@ -161,7 +182,9 @@ async def discover_service(request: DiscoverRequest):
         # Normalize URLs for Docker networking
         normalized_base_url = normalize_service_url(request.base_url, request.name)
         normalized_openapi_url = (
-            normalize_service_url(request.openapi_url, request.name) if request.openapi_url else None
+            normalize_service_url(request.openapi_url, request.name)
+            if request.openapi_url
+            else None
         )
 
         # Log the discovery attempt
@@ -201,7 +224,8 @@ async def discover_service(request: DiscoverRequest):
 
         if not discovery_request.openapi_url and not discovery_request.spec:
             raise HTTPException(
-                status_code=400, detail="Either openapi_url or spec must be provided, and auto-detection failed"
+                status_code=400,
+                detail="Either openapi_url or spec must be provided, and auto-detection failed",
             )
 
         # Fetch and parse OpenAPI spec
@@ -215,7 +239,9 @@ async def discover_service(request: DiscoverRequest):
 
         # Extract endpoints and tools
         endpoints = extract_endpoints_from_spec(spec)
-        tools = tool_discovery.generate_langraph_tools(endpoints, discovery_request.name)
+        tools = tool_discovery.generate_langraph_tools(
+            endpoints, discovery_request.name
+        )
 
         # Store in registry if not dry run
         if not discovery_request.dry_run:
@@ -270,21 +296,35 @@ async def discover_service(request: DiscoverRequest):
     except httpx.HTTPError as e:
         error_msg = f"Failed to fetch OpenAPI spec from {discovery_request.openapi_url if hasattr(discovery_request, 'openapi_url') else 'unknown URL'}"
         monitoring.log_discovery_event(
-            "service_discovery_failed", {"service_name": request.name, "error": str(e), "error_type": "http_error"}
+            "service_discovery_failed",
+            {"service_name": request.name, "error": str(e), "error_type": "http_error"},
         )
         return create_error_response(
             message="Failed to discover endpoints",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": error_msg, "service": ServiceNames.DISCOVERY_AGENT, "service_name": request.name},
+            details={
+                "error": error_msg,
+                "service": ServiceNames.DISCOVERY_AGENT,
+                "service_name": request.name,
+            },
         )
     except Exception as e:
         monitoring.log_discovery_event(
-            "service_discovery_failed", {"service_name": request.name, "error": str(e), "error_type": "general_error"}
+            "service_discovery_failed",
+            {
+                "service_name": request.name,
+                "error": str(e),
+                "error_type": "general_error",
+            },
         )
         return create_error_response(
             message="Discovery failed",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e), "service": ServiceNames.DISCOVERY_AGENT, "service_name": request.name},
+            details={
+                "error": str(e),
+                "service": ServiceNames.DISCOVERY_AGENT,
+                "service_name": request.name,
+            },
         )
 
 
@@ -294,7 +334,11 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
     try:
         monitoring.log_discovery_event(
             "ecosystem_discovery_started",
-            {"auto_detect": request.auto_detect, "services_count": len(request.services), "dry_run": request.dry_run},
+            {
+                "auto_detect": request.auto_detect,
+                "services_count": len(request.services),
+                "dry_run": request.dry_run,
+            },
         )
 
         services_to_discover = []
@@ -326,7 +370,9 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                 if request.include_health_check:
                     # Check if service is healthy before adding
                     try:
-                        health_url = f"http://{service['name']}:{service['port']}/health"
+                        health_url = (
+                            f"http://{service['name']}:{service['port']}/health"
+                        )
                         async with httpx.AsyncClient(timeout=5.0) as client:
                             response = await client.get(health_url)
                             if response.status_code == 200:
@@ -352,10 +398,14 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
         for service in request.services:
             service_data = {
                 "name": service.get("name"),
-                "base_url": normalize_service_url(service.get("base_url"), service.get("name")),
+                "base_url": normalize_service_url(
+                    service.get("base_url"), service.get("name")
+                ),
             }
             if "openapi_url" in service:
-                service_data["openapi_url"] = normalize_service_url(service["openapi_url"], service.get("name"))
+                service_data["openapi_url"] = normalize_service_url(
+                    service["openapi_url"], service.get("name")
+                )
             services_to_discover.append(service_data)
 
         # Discover all services
@@ -385,11 +435,16 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                     successful_discoveries += 1
                 else:
                     failed_discoveries.append(
-                        {"service": service_data["name"], "error": result.get("message", "Unknown error")}
+                        {
+                            "service": service_data["name"],
+                            "error": result.get("message", "Unknown error"),
+                        }
                     )
 
             except Exception as e:
-                failed_discoveries.append({"service": service_data["name"], "error": str(e)})
+                failed_discoveries.append(
+                    {"service": service_data["name"], "error": str(e)}
+                )
 
         # Save ecosystem discovery results
         if not request.dry_run and successful_discoveries > 0:
@@ -399,7 +454,10 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                 "successful_discoveries": successful_discoveries,
                 "failed_discoveries": len(failed_discoveries),
                 "total_tools_discovered": total_tools,
-                "services": {name: {"tools": result.get("tools", [])} for name, result in discovery_results.items()},
+                "services": {
+                    name: {"tools": result.get("tools", [])}
+                    for name, result in discovery_results.items()
+                },
             }
             registry_storage.save_discovery_results(ecosystem_result)
 
@@ -428,7 +486,10 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
         )
 
     except Exception as e:
-        monitoring.log_discovery_event("ecosystem_discovery_failed", {"error": str(e), "error_type": "general_error"})
+        monitoring.log_discovery_event(
+            "ecosystem_discovery_failed",
+            {"error": str(e), "error_type": "general_error"},
+        )
         return create_error_response(
             message="Ecosystem discovery failed",
             error_code=ErrorCodes.INTERNAL_ERROR,
@@ -449,19 +510,27 @@ async def get_registry_tools(
 ):
     """Query discovered tools from registry"""
     try:
-        tools = registry_storage.query_tools(service_name=service_name, category=category, limit=limit)
+        tools = registry_storage.query_tools(
+            service_name=service_name, category=category, limit=limit
+        )
 
         return create_success_response(
             {
                 "tools": tools,
                 "total_found": len(tools),
-                "filters_applied": {"service_name": service_name, "category": category, "limit": limit},
+                "filters_applied": {
+                    "service_name": service_name,
+                    "category": category,
+                    "limit": limit,
+                },
             }
         )
 
     except Exception as e:
         return create_error_response(
-            message="Failed to query registry tools", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Failed to query registry tools",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -474,7 +543,9 @@ async def get_registry_stats():
 
     except Exception as e:
         return create_error_response(
-            message="Failed to get registry stats", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Failed to get registry stats",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -511,7 +582,9 @@ async def scan_tools_security(request: SecurityScanRequest):
             "security_scan_completed",
             {
                 "tools_scanned": len(tools_to_scan),
-                "high_risk_tools": len([r for r in scan_results if r.get("overall_risk") == "HIGH"]),
+                "high_risk_tools": len(
+                    [r for r in scan_results if r.get("overall_risk") == "HIGH"]
+                ),
                 "scan_timestamp": datetime.utcnow().isoformat(),
             },
         )
@@ -522,9 +595,19 @@ async def scan_tools_security(request: SecurityScanRequest):
                     "tools_scanned": len(tools_to_scan),
                     "scan_results": scan_results,
                     "summary": {
-                        "high_risk": len([r for r in scan_results if r.get("overall_risk") == "HIGH"]),
-                        "medium_risk": len([r for r in scan_results if r.get("overall_risk") == "MEDIUM"]),
-                        "low_risk": len([r for r in scan_results if r.get("overall_risk") == "LOW"]),
+                        "high_risk": len(
+                            [r for r in scan_results if r.get("overall_risk") == "HIGH"]
+                        ),
+                        "medium_risk": len(
+                            [
+                                r
+                                for r in scan_results
+                                if r.get("overall_risk") == "MEDIUM"
+                            ]
+                        ),
+                        "low_risk": len(
+                            [r for r in scan_results if r.get("overall_risk") == "LOW"]
+                        ),
                     },
                 }
             }
@@ -532,7 +615,9 @@ async def scan_tools_security(request: SecurityScanRequest):
 
     except Exception as e:
         return create_error_response(
-            message="Security scanning failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Security scanning failed",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -565,12 +650,18 @@ async def get_monitoring_events(
     try:
         events = monitoring.get_recent_events(limit=limit, event_type=event_type)
         return create_success_response(
-            {"events": events, "total_returned": len(events), "filters": {"limit": limit, "event_type": event_type}}
+            {
+                "events": events,
+                "total_returned": len(events),
+                "filters": {"limit": limit, "event_type": event_type},
+            }
         )
 
     except Exception as e:
         return create_error_response(
-            message="Failed to get monitoring events", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Failed to get monitoring events",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -595,12 +686,16 @@ async def ai_select_tools(request: AIToolSelectionRequest):
             return create_error_response(
                 message="No tools available for selection",
                 error_code=ErrorCodes.VALIDATION_ERROR,
-                details={"message": "Enable use_discovered_tools or provide available_tools"},
+                details={
+                    "message": "Enable use_discovered_tools or provide available_tools"
+                },
             )
 
         # AI tool selection
         selection_result = await ai_selector.select_tools_for_task(
-            task_description=request.task_description, available_tools=available_tools, max_tools=request.max_tools
+            task_description=request.task_description,
+            available_tools=available_tools,
+            max_tools=request.max_tools,
         )
 
         monitoring.log_discovery_event(
@@ -616,7 +711,9 @@ async def ai_select_tools(request: AIToolSelectionRequest):
 
     except Exception as e:
         return create_error_response(
-            message="AI tool selection failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="AI tool selection failed",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -651,7 +748,9 @@ async def ai_create_workflow(request: WorkflowCreationRequest):
 
     except Exception as e:
         return create_error_response(
-            message="AI workflow creation failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="AI workflow creation failed",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -696,7 +795,9 @@ async def semantic_analyze_tools(request: SemanticAnalysisRequest):
 
     except Exception as e:
         return create_error_response(
-            message="Semantic analysis failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Semantic analysis failed",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -724,7 +825,9 @@ async def optimize_performance():
 
     except Exception as e:
         return create_error_response(
-            message="Performance optimization failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Performance optimization failed",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -733,13 +836,17 @@ async def analyze_tool_dependencies():
     """Analyze dependencies between discovered tools"""
     try:
         tools = registry_storage.query_tools()
-        dependency_analysis = await performance_optimizer.analyze_tool_dependencies(tools)
+        dependency_analysis = await performance_optimizer.analyze_tool_dependencies(
+            tools
+        )
 
         return create_success_response(dependency_analysis)
 
     except Exception as e:
         return create_error_response(
-            message="Dependency analysis failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Dependency analysis failed",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -750,7 +857,9 @@ async def analyze_tool_dependencies():
 
 @app.post("/orchestrator/register-tools")
 async def register_tools_with_orchestrator(
-    service_names: Optional[List[str]] = Body(None, description="Specific services to register"),
+    service_names: Optional[List[str]] = Body(
+        None, description="Specific services to register"
+    ),
     register_all: bool = Body(True, description="Register all discovered tools"),
 ):
     """Register discovered tools with orchestrator"""
@@ -761,7 +870,9 @@ async def register_tools_with_orchestrator(
             tools_to_register = registry_storage.query_tools()
         elif service_names:
             for service_name in service_names:
-                tools_to_register.extend(registry_storage.query_tools(service_name=service_name))
+                tools_to_register.extend(
+                    registry_storage.query_tools(service_name=service_name)
+                )
 
         if not tools_to_register:
             return create_error_response(
@@ -771,7 +882,9 @@ async def register_tools_with_orchestrator(
             )
 
         # Register with orchestrator
-        registration_result = await orchestrator_integration.register_discovered_tools(tools_to_register)
+        registration_result = await orchestrator_integration.register_discovered_tools(
+            tools_to_register
+        )
 
         monitoring.log_discovery_event(
             "orchestrator_registration",
@@ -785,7 +898,9 @@ async def register_tools_with_orchestrator(
 
     except Exception as e:
         return create_error_response(
-            message="Orchestrator registration failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Orchestrator registration failed",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 

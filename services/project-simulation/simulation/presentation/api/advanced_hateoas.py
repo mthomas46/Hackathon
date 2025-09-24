@@ -20,7 +20,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.logging import get_simulation_logger
 
@@ -60,7 +62,11 @@ class LinkTemplate:
     """Template for generating parameterized links."""
 
     def __init__(
-        self, relation: LinkRelation, template: str, parameters: Dict[str, Any] = None, conditions: List[str] = None
+        self,
+        relation: LinkRelation,
+        template: str,
+        parameters: Dict[str, Any] = None,
+        conditions: List[str] = None,
     ):
         """Initialize link template."""
         self.relation = relation
@@ -72,7 +78,12 @@ class LinkTemplate:
         """Generate link from template with parameters."""
         try:
             url = self.template.format(**kwargs)
-            return {"rel": self.relation.value, "href": url, "templated": True, "parameters": self.parameters}
+            return {
+                "rel": self.relation.value,
+                "href": url,
+                "templated": True,
+                "parameters": self.parameters,
+            }
         except KeyError as e:
             raise ValueError(f"Missing parameter for link template: {e}")
 
@@ -118,7 +129,12 @@ class HypermediaResource:
         templated: bool = False,
     ):
         """Add a link to the resource."""
-        link = {"rel": relation.value, "href": href, "method": method, "templated": templated}
+        link = {
+            "rel": relation.value,
+            "href": href,
+            "method": method,
+            "templated": templated,
+        }
 
         if title:
             link["title"] = title
@@ -147,7 +163,11 @@ class HypermediaResource:
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to hypermedia dictionary representation."""
-        result = {"links": self.links, "_embedded": self.embedded, "_actions": self.actions}
+        result = {
+            "links": self.links,
+            "_embedded": self.embedded,
+            "_actions": self.actions,
+        }
 
         if self.resource_id:
             result["id"] = self.resource_id
@@ -318,7 +338,12 @@ class SimulationResource(HypermediaResource):
 
         # Collection-level actions
         links.append(
-            {"rel": "create-form", "href": "/api/v1/simulations", "method": "POST", "title": "Create new simulation"}
+            {
+                "rel": "create-form",
+                "href": "/api/v1/simulations",
+                "method": "POST",
+                "title": "Create new simulation",
+            }
         )
 
         return links
@@ -328,10 +353,17 @@ class AnalyticsResource(HypermediaResource):
     """Hypermedia resource for analytics and insights."""
 
     @staticmethod
-    def create_analytics_links(simulation_id: str, available_analyses: List[str] = None) -> List[Dict[str, Any]]:
+    def create_analytics_links(
+        simulation_id: str, available_analyses: List[str] = None
+    ) -> List[Dict[str, Any]]:
         """Create links for analytics resources."""
         links = []
-        available_analyses = available_analyses or ["quality", "performance", "risk", "benefits"]
+        available_analyses = available_analyses or [
+            "quality",
+            "performance",
+            "risk",
+            "benefits",
+        ]
 
         # Base analytics link
         links.append(
@@ -375,7 +407,9 @@ class AnalyticsResource(HypermediaResource):
         return links
 
     @staticmethod
-    def create_workflow_links(workflow_id: str, status: str = "pending") -> List[Dict[str, Any]]:
+    def create_workflow_links(
+        workflow_id: str, status: str = "pending"
+    ) -> List[Dict[str, Any]]:
         """Create links for workflow resources."""
         links = []
 
@@ -415,7 +449,9 @@ class ReportResource(HypermediaResource):
     """Hypermedia resource for reports."""
 
     @staticmethod
-    def create_report_links(simulation_id: str, report_types: List[str] = None) -> List[Dict[str, Any]]:
+    def create_report_links(
+        simulation_id: str, report_types: List[str] = None
+    ) -> List[Dict[str, Any]]:
         """Create links for report resources."""
         links = []
         report_types = report_types or ["summary", "detailed", "executive", "technical"]
@@ -503,7 +539,11 @@ class AdvancedHATEOASManager:
         )
 
     def create_resource_response(
-        self, resource_type: str, resource_id: Optional[str] = None, data: Any = None, context: Dict[str, Any] = None
+        self,
+        resource_type: str,
+        resource_id: Optional[str] = None,
+        data: Any = None,
+        context: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         """Create a comprehensive hypermedia response for a resource."""
         context = context or {}
@@ -529,7 +569,9 @@ class AdvancedHATEOASManager:
             )
 
         # Generate actions based on context
-        actions = self._generate_context_aware_actions(resource_type, resource_id, context)
+        actions = self._generate_context_aware_actions(
+            resource_type, resource_id, context
+        )
         for action in actions:
             resource.add_action(**action)
 
@@ -551,17 +593,25 @@ class AdvancedHATEOASManager:
 
         if resource_type == "simulation":
             status = context.get("status", "pending")
-            links.extend(SimulationResource.create_simulation_links(resource_id, status))
+            links.extend(
+                SimulationResource.create_simulation_links(resource_id, status)
+            )
 
         elif resource_type == "analytics":
             simulation_id = context.get("simulation_id", resource_id)
             available_analyses = context.get("available_analyses", [])
-            links.extend(AnalyticsResource.create_analytics_links(simulation_id, available_analyses))
+            links.extend(
+                AnalyticsResource.create_analytics_links(
+                    simulation_id, available_analyses
+                )
+            )
 
         elif resource_type == "reports":
             simulation_id = context.get("simulation_id", resource_id)
             report_types = context.get("report_types", [])
-            links.extend(ReportResource.create_report_links(simulation_id, report_types))
+            links.extend(
+                ReportResource.create_report_links(simulation_id, report_types)
+            )
 
         # Add common navigation links
         links.extend(self._generate_common_links(resource_type, resource_id, context))
@@ -615,11 +665,23 @@ class AdvancedHATEOASManager:
 
         # Health link
         links.append(
-            {"rel": LinkRelation.HEALTH.value, "href": "/health", "method": "GET", "title": "Service health status"}
+            {
+                "rel": LinkRelation.HEALTH.value,
+                "href": "/health",
+                "method": "GET",
+                "title": "Service health status",
+            }
         )
 
         # API documentation
-        links.append({"rel": "documentation", "href": "/docs", "method": "GET", "title": "API documentation"})
+        links.append(
+            {
+                "rel": "documentation",
+                "href": "/docs",
+                "method": "GET",
+                "title": "API documentation",
+            }
+        )
 
         # Root resource
         links.append({"rel": "root", "href": "/", "method": "GET", "title": "API root"})
@@ -627,7 +689,11 @@ class AdvancedHATEOASManager:
         return links
 
     def create_state_machine_links(
-        self, current_state: str, resource_type: str, resource_id: str, allowed_transitions: List[str] = None
+        self,
+        current_state: str,
+        resource_type: str,
+        resource_id: str,
+        allowed_transitions: List[str] = None,
     ) -> List[Dict[str, Any]]:
         """Create links based on state machine transitions."""
         links = []
@@ -641,7 +707,9 @@ class AdvancedHATEOASManager:
             "failed": ["retry", "delete"],
         }
 
-        allowed_transitions = allowed_transitions or state_transitions.get(current_state, [])
+        allowed_transitions = allowed_transitions or state_transitions.get(
+            current_state, []
+        )
 
         for transition in allowed_transitions:
             if transition == "execute":
@@ -707,7 +775,14 @@ class AdvancedHATEOASManager:
         # Time-based links
         current_hour = conditions.get("current_hour", datetime.now().hour)
         if 9 <= current_hour <= 17:  # Business hours
-            links.append({"rel": "support", "href": "/support/chat", "method": "GET", "title": "Live support"})
+            links.append(
+                {
+                    "rel": "support",
+                    "href": "/support/chat",
+                    "method": "GET",
+                    "title": "Live support",
+                }
+            )
 
         return links
 
@@ -722,7 +797,10 @@ class AdvancedHATEOASManager:
             },
             "servers": [
                 {"url": "http://localhost:5075", "description": "Development server"},
-                {"url": "https://api.project-simulation.com", "description": "Production server"},
+                {
+                    "url": "https://api.project-simulation.com",
+                    "description": "Production server",
+                },
             ],
             "links": self._generate_api_root_links(),
             "components": {"linkRelations": self._generate_link_relations_spec()},
@@ -734,7 +812,11 @@ class AdvancedHATEOASManager:
         """Generate links for API root."""
         return [
             {"rel": "self", "href": "/", "title": "API Root"},
-            {"rel": "simulations", "href": "/api/v1/simulations", "title": "Simulations collection"},
+            {
+                "rel": "simulations",
+                "href": "/api/v1/simulations",
+                "title": "Simulations collection",
+            },
             {"rel": "health", "href": "/health", "title": "Service health"},
             {"rel": "docs", "href": "/docs", "title": "API documentation"},
         ]
@@ -743,10 +825,22 @@ class AdvancedHATEOASManager:
         """Generate specification for custom link relations."""
         return {
             "simulate": {"description": "Execute a simulation", "methods": ["POST"]},
-            "execute": {"description": "Execute or run a resource", "methods": ["POST"]},
-            "analytics": {"description": "Access analytics and insights", "methods": ["GET"]},
-            "reports": {"description": "Generate and access reports", "methods": ["GET", "POST"]},
-            "metrics": {"description": "Access performance metrics", "methods": ["GET"]},
+            "execute": {
+                "description": "Execute or run a resource",
+                "methods": ["POST"],
+            },
+            "analytics": {
+                "description": "Access analytics and insights",
+                "methods": ["GET"],
+            },
+            "reports": {
+                "description": "Generate and access reports",
+                "methods": ["GET", "POST"],
+            },
+            "metrics": {
+                "description": "Access performance metrics",
+                "methods": ["GET"],
+            },
         }
 
 

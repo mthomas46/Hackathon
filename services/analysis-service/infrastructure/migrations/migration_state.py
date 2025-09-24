@@ -14,7 +14,9 @@ class MigrationStateManager:
 
     def __init__(self, state_file: Optional[str] = None):
         """Initialize state manager."""
-        self.state_file = Path(state_file) if state_file else Path("migration_state.json")
+        self.state_file = (
+            Path(state_file) if state_file else Path("migration_state.json")
+        )
         self.executed_migrations: Set[str] = set()
         self.migration_history: List[Dict[str, Any]] = []
         self.checksums: Dict[str, str] = {}
@@ -68,10 +70,16 @@ class MigrationStateManager:
         """Check if migration has been executed."""
         return migration_id in self.executed_migrations
 
-    def get_execution_history(self, migration_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_execution_history(
+        self, migration_id: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """Get execution history."""
         if migration_id:
-            return [entry for entry in self.migration_history if entry["migration_id"] == migration_id]
+            return [
+                entry
+                for entry in self.migration_history
+                if entry["migration_id"] == migration_id
+            ]
 
         return self.migration_history.copy()
 
@@ -90,11 +98,19 @@ class MigrationStateManager:
 
     def get_pending_migrations(self, migrations: List[Migration]) -> List[Migration]:
         """Get migrations that haven't been executed."""
-        return [migration for migration in migrations if not self.is_executed(migration.migration_id)]
+        return [
+            migration
+            for migration in migrations
+            if not self.is_executed(migration.migration_id)
+        ]
 
     def get_executed_migrations(self, migrations: List[Migration]) -> List[Migration]:
         """Get migrations that have been executed."""
-        return [migration for migration in migrations if self.is_executed(migration.migration_id)]
+        return [
+            migration
+            for migration in migrations
+            if self.is_executed(migration.migration_id)
+        ]
 
     def get_changed_migrations(self, migrations: List[Migration]) -> List[Migration]:
         """Get migrations that have changed since execution."""
@@ -170,7 +186,9 @@ class MigrationStateManager:
 
         if self.migration_history:
             # Get last execution
-            sorted_history = sorted(self.migration_history, key=lambda x: x["executed_at"], reverse=True)
+            sorted_history = sorted(
+                self.migration_history, key=lambda x: x["executed_at"], reverse=True
+            )
             stats["last_execution"] = sorted_history[0]
 
             # Count by status
@@ -206,7 +224,9 @@ class MigrationStateManager:
         if not self.migration_history:
             return 0
 
-        cutoff_date = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        cutoff_date = datetime.utcnow().replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         cutoff_date = cutoff_date.replace(day=cutoff_date.day - days_to_keep)
 
         original_count = len(self.migration_history)
@@ -241,12 +261,16 @@ class MigrationStateManager:
         # Check for missing checksums
         for migration_id in self.executed_migrations:
             if migration_id not in self.checksums:
-                issues.append(f"Missing checksum for executed migration: {migration_id}")
+                issues.append(
+                    f"Missing checksum for executed migration: {migration_id}"
+                )
 
         # Check for orphaned checksums
         for migration_id in self.checksums:
             if migration_id not in self.executed_migrations:
-                issues.append(f"Orphaned checksum for non-executed migration: {migration_id}")
+                issues.append(
+                    f"Orphaned checksum for non-executed migration: {migration_id}"
+                )
 
         # Check history consistency
         history_migration_ids = set()
@@ -257,7 +281,9 @@ class MigrationStateManager:
 
         missing_from_history = self.executed_migrations - history_migration_ids
         if missing_from_history:
-            issues.append(f"Migrations executed but missing from history: {missing_from_history}")
+            issues.append(
+                f"Migrations executed but missing from history: {missing_from_history}"
+            )
 
         return {
             "valid": len(issues) == 0,
@@ -274,7 +300,9 @@ class MigrationStateValidator:
         """Initialize state validator."""
         self.state_manager = state_manager
 
-    def validate_against_migrations(self, migrations: List[Migration]) -> Dict[str, Any]:
+    def validate_against_migrations(
+        self, migrations: List[Migration]
+    ) -> Dict[str, Any]:
         """Validate state against available migrations."""
         issues = []
 
@@ -288,7 +316,9 @@ class MigrationStateValidator:
         # Check for checksum mismatches
         for migration in migrations:
             if self.state_manager.has_changed(migration):
-                issues.append(f"Migration has changed since execution: {migration.migration_id}")
+                issues.append(
+                    f"Migration has changed since execution: {migration.migration_id}"
+                )
 
         return {
             "valid": len(issues) == 0,
@@ -326,7 +356,11 @@ class MigrationStateValidator:
                     drift_info["checksum_mismatches"].append(migration.migration_id)
 
         drift_info["has_drift"] = any(
-            [drift_info["missing_executions"], drift_info["unexpected_executions"], drift_info["checksum_mismatches"]]
+            [
+                drift_info["missing_executions"],
+                drift_info["unexpected_executions"],
+                drift_info["checksum_mismatches"],
+            ]
         )
 
         return drift_info
@@ -336,7 +370,9 @@ class MigrationStateValidator:
         suggestions = []
 
         if drift_info["missing_executions"]:
-            suggestions.append(f"Execute missing migrations: {drift_info['missing_executions']}")
+            suggestions.append(
+                f"Execute missing migrations: {drift_info['missing_executions']}"
+            )
 
         if drift_info["unexpected_executions"]:
             suggestions.append(

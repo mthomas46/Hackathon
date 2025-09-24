@@ -107,14 +107,18 @@ class RecommendationBatch:
     def remove_recommendation(self, recommendation_id: str) -> bool:
         """Remove a recommendation from the batch."""
         original_length = len(self.recommendations)
-        self.recommendations = [r for r in self.recommendations if r.id != recommendation_id]
+        self.recommendations = [
+            r for r in self.recommendations if r.id != recommendation_id
+        ]
 
         if len(self.recommendations) < original_length:
             self._update_totals()
             return True
         return False
 
-    def get_recommendations_by_type(self, rec_type: RecommendationType) -> List[Recommendation]:
+    def get_recommendations_by_type(
+        self, rec_type: RecommendationType
+    ) -> List[Recommendation]:
         """Get recommendations filtered by type."""
         return [r for r in self.recommendations if r.type == rec_type]
 
@@ -124,17 +128,23 @@ class RecommendationBatch:
 
     def sort_by_confidence(self, descending: bool = True) -> List[Recommendation]:
         """Sort recommendations by confidence score."""
-        return sorted(self.recommendations, key=lambda r: r.confidence_score, reverse=descending)
+        return sorted(
+            self.recommendations, key=lambda r: r.confidence_score, reverse=descending
+        )
 
     def sort_by_priority(self) -> List[Recommendation]:
         """Sort recommendations by priority (high to low)."""
         priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-        return sorted(self.recommendations, key=lambda r: priority_order.get(r.priority, 2))
+        return sorted(
+            self.recommendations, key=lambda r: priority_order.get(r.priority, 2)
+        )
 
     def _update_totals(self) -> None:
         """Update total confidence score."""
         if self.recommendations:
-            self.total_confidence = sum(r.confidence_score for r in self.recommendations) / len(self.recommendations)
+            self.total_confidence = sum(
+                r.confidence_score for r in self.recommendations
+            ) / len(self.recommendations)
         else:
             self.total_confidence = 0.0
 

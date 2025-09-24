@@ -50,11 +50,20 @@ class DisplayManager:
 
         if max_rows and len(rows) > max_rows:
             table.add_row(*["[dim]...[/dim]"] * len(rows[0]))
-            table.add_row(*[f"[dim]+{len(rows) - max_rows} more[/dim]"] + [""] * (len(rows[0]) - 1))
+            table.add_row(
+                *[f"[dim]+{len(rows) - max_rows} more[/dim]"]
+                + [""] * (len(rows[0]) - 1)
+            )
 
         self.console.print(table)
 
-    def show_panel(self, content: str, title: Optional[str] = None, border_style: str = "blue", expand: bool = False):
+    def show_panel(
+        self,
+        content: str,
+        title: Optional[str] = None,
+        border_style: str = "blue",
+        expand: bool = False,
+    ):
         """Show content in a styled panel."""
         panel = Panel(content, title=title, border_style=border_style, expand=expand)
         self.console.print(panel)

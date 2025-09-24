@@ -6,7 +6,6 @@ These tests are written FIRST (RED phase) and will initially FAIL.
 They define the expected behavior before implementation.
 """
 
-
 import pytest
 
 # Import the modules we'll be testing (these may not exist yet - that's why tests will fail)
@@ -34,7 +33,9 @@ class TestSimulationAnalyzer:
         ]
 
         # Act
-        analysis_result = await self.analyzer.analyze_documents(simulation_id, documents)
+        analysis_result = await self.analyzer.analyze_documents(
+            simulation_id, documents
+        )
 
         # Assert
         assert isinstance(analysis_result, AnalysisResult)
@@ -49,8 +50,18 @@ class TestSimulationAnalyzer:
         # Arrange
         simulation_id = "sim_123"
         timeline = [
-            {"phase": "Planning", "start_week": 0, "duration_weeks": 2, "milestones": ["Complete planning"]},
-            {"phase": "Development", "start_week": 2, "duration_weeks": 4, "milestones": ["Complete development"]},
+            {
+                "phase": "Planning",
+                "start_week": 0,
+                "duration_weeks": 2,
+                "milestones": ["Complete planning"],
+            },
+            {
+                "phase": "Development",
+                "start_week": 2,
+                "duration_weeks": 4,
+                "milestones": ["Complete development"],
+            },
         ]
 
         # Act
@@ -69,12 +80,24 @@ class TestSimulationAnalyzer:
         # Arrange
         simulation_id = "sim_123"
         team_members = [
-            {"id": "member1", "role": "developer", "skills": ["python", "api"], "experience_years": 3},
-            {"id": "member2", "role": "qa_engineer", "skills": ["testing", "automation"], "experience_years": 2},
+            {
+                "id": "member1",
+                "role": "developer",
+                "skills": ["python", "api"],
+                "experience_years": 3,
+            },
+            {
+                "id": "member2",
+                "role": "qa_engineer",
+                "skills": ["testing", "automation"],
+                "experience_years": 2,
+            },
         ]
 
         # Act
-        analysis_result = await self.analyzer.analyze_team_dynamics(simulation_id, team_members)
+        analysis_result = await self.analyzer.analyze_team_dynamics(
+            simulation_id, team_members
+        )
 
         # Assert
         assert isinstance(analysis_result, AnalysisResult)
@@ -96,7 +119,9 @@ class TestSimulationAnalyzer:
         }
 
         # Act
-        analysis_result = await self.analyzer.assess_risks(simulation_id, simulation_data)
+        analysis_result = await self.analyzer.assess_risks(
+            simulation_id, simulation_data
+        )
 
         # Assert
         assert isinstance(analysis_result, AnalysisResult)
@@ -118,7 +143,9 @@ class TestSimulationAnalyzer:
         }
 
         # Act
-        analysis_result = await self.analyzer.analyze_cost_benefit(simulation_id, cost_data)
+        analysis_result = await self.analyzer.analyze_cost_benefit(
+            simulation_id, cost_data
+        )
 
         # Assert
         assert isinstance(analysis_result, AnalysisResult)
@@ -141,11 +168,15 @@ class TestSimulationAnalyzer:
         }
 
         # Act
-        analysis_results = await self.analyzer.perform_comprehensive_analysis(simulation_id, simulation_data)
+        analysis_results = await self.analyzer.perform_comprehensive_analysis(
+            simulation_id, simulation_data
+        )
 
         # Assert
         assert isinstance(analysis_results, list)
-        assert len(analysis_results) >= 3  # At least document, timeline, and team analysis
+        assert (
+            len(analysis_results) >= 3
+        )  # At least document, timeline, and team analysis
 
         analysis_types = [result.analysis_type for result in analysis_results]
         assert AnalysisType.DOCUMENT_ANALYSIS in analysis_types
@@ -160,7 +191,9 @@ class TestSimulationAnalyzer:
         empty_documents = []
 
         # Act
-        analysis_result = await self.analyzer.analyze_documents(simulation_id, empty_documents)
+        analysis_result = await self.analyzer.analyze_documents(
+            simulation_id, empty_documents
+        )
 
         # Assert
         assert isinstance(analysis_result, AnalysisResult)
@@ -209,7 +242,9 @@ class TestReportGenerator:
         ]
 
         # Act
-        summary_report = self.report_generator.generate_summary_report(simulation_id, analysis_results)
+        summary_report = self.report_generator.generate_summary_report(
+            simulation_id, analysis_results
+        )
 
         # Assert
         assert "simulation_id" in summary_report
@@ -232,7 +267,9 @@ class TestReportGenerator:
         )
 
         # Act
-        detailed_report = self.report_generator.generate_detailed_report(analysis_result)
+        detailed_report = self.report_generator.generate_detailed_report(
+            analysis_result
+        )
 
         # Assert
         assert "analysis_type" in detailed_report
@@ -306,8 +343,16 @@ class TestSummaryProcessor:
         """Test identification of action items from summaries."""
         # Arrange
         summary_data = {
-            "findings": ["High risk timeline", "Resource shortage", "Documentation incomplete"],
-            "recommendations": ["Add team member", "Review timeline", "Complete documentation"],
+            "findings": [
+                "High risk timeline",
+                "Resource shortage",
+                "Documentation incomplete",
+            ],
+            "recommendations": [
+                "Add team member",
+                "Review timeline",
+                "Complete documentation",
+            ],
         }
 
         # Act
@@ -333,7 +378,9 @@ class TestSummaryProcessor:
         ]
 
         # Act
-        confidence_score = self.summary_processor.calculate_confidence_score(analysis_results)
+        confidence_score = self.summary_processor.calculate_confidence_score(
+            analysis_results
+        )
 
         # Assert
         assert isinstance(confidence_score, float)

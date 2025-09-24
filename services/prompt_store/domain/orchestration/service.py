@@ -16,7 +16,9 @@ class PromptOrchestrator:
         self.clients = ServiceClients()
         self.active_pipelines: Dict[str, Dict[str, Any]] = {}
 
-    async def create_conditional_chain(self, chain_definition: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_conditional_chain(
+        self, chain_definition: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create a conditional prompt chain."""
         chain_id = generate_id()
 
@@ -35,7 +37,9 @@ class PromptOrchestrator:
 
         return chain
 
-    async def execute_conditional_chain(self, chain_id: str, initial_context: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_conditional_chain(
+        self, chain_id: str, initial_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a conditional prompt chain."""
         # Get chain definition
         chain = await prompt_store_cache.get(f"chain:{chain_id}")
@@ -87,7 +91,9 @@ class PromptOrchestrator:
 
         return execution
 
-    async def _check_step_conditions(self, step: Dict[str, Any], context: Dict[str, Any]) -> bool:
+    async def _check_step_conditions(
+        self, step: Dict[str, Any], context: Dict[str, Any]
+    ) -> bool:
         """Check if conditions are met for executing a step."""
         conditions = step.get("conditions", [])
 
@@ -115,7 +121,9 @@ class PromptOrchestrator:
 
         return True
 
-    async def _execute_step(self, step: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_step(
+        self, step: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a single step in the chain."""
         step_type = step.get("type", "prompt")
 
@@ -130,7 +138,9 @@ class PromptOrchestrator:
         else:
             return {"error": f"Unknown step type: {step_type}"}
 
-    async def _execute_prompt_step(self, step: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_prompt_step(
+        self, step: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a prompt step using the prompt store."""
         prompt_id = step.get("prompt_id")
         variables = step.get("variables", {})
@@ -141,11 +151,16 @@ class PromptOrchestrator:
 
         try:
             # Call interpreter service to execute the prompt
-            prompt_data = {"prompt_id": prompt_id, "variables": final_variables, "context": context}
+            prompt_data = {
+                "prompt_id": prompt_id,
+                "variables": final_variables,
+                "context": context,
+            }
 
             # This would call the interpreter service
             response = await self.clients.interpret_query(
-                f"Execute prompt {prompt_id} with variables: {final_variables}", "orchestrator"
+                f"Execute prompt {prompt_id} with variables: {final_variables}",
+                "orchestrator",
             )
 
             return {
@@ -159,9 +174,16 @@ class PromptOrchestrator:
             }
 
         except Exception as e:
-            return {"step_type": "prompt", "prompt_id": prompt_id, "success": False, "error": str(e)}
+            return {
+                "step_type": "prompt",
+                "prompt_id": prompt_id,
+                "success": False,
+                "error": str(e),
+            }
 
-    async def _execute_llm_step(self, step: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_llm_step(
+        self, step: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a direct LLM call step."""
         prompt_template = step.get("prompt_template", "")
         service = step.get("llm_service", "interpreter")
@@ -176,25 +198,43 @@ class PromptOrchestrator:
                 "step_type": "llm_call",
                 "service": service,
                 "success": True,
-                "outputs": {"response": response.get("data", {}).get("response_text", ""), "raw_response": response},
+                "outputs": {
+                    "response": response.get("data", {}).get("response_text", ""),
+                    "raw_response": response,
+                },
             }
 
         except Exception as e:
-            return {"step_type": "llm_call", "service": service, "success": False, "error": str(e)}
+            return {
+                "step_type": "llm_call",
+                "service": service,
+                "success": False,
+                "error": str(e),
+            }
 
-    async def _execute_condition_step(self, step: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_condition_step(
+        self, step: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a condition checking step."""
         conditions = step.get("check_conditions", [])
         all_met = True
 
         for condition in conditions:
-            if not await self._check_step_conditions({"conditions": [condition]}, context):
+            if not await self._check_step_conditions(
+                {"conditions": [condition]}, context
+            ):
                 all_met = False
                 break
 
-        return {"step_type": "condition_check", "conditions_met": all_met, "outputs": {"condition_result": all_met}}
+        return {
+            "step_type": "condition_check",
+            "conditions_met": all_met,
+            "outputs": {"condition_result": all_met},
+        }
 
-    async def _execute_transformation_step(self, step: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_transformation_step(
+        self, step: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a data transformation step."""
         transformations = step.get("transformations", [])
 
@@ -230,7 +270,11 @@ class PromptOrchestrator:
                 except Exception:
                     transformed_data[output_field] = input_value
 
-        return {"step_type": "data_transformation", "success": True, "outputs": transformed_data}
+        return {
+            "step_type": "data_transformation",
+            "success": True,
+            "outputs": transformed_data,
+        }
 
     def _fill_template(self, template: str, context: Dict[str, Any]) -> str:
         """Fill template variables with context values."""
@@ -241,7 +285,9 @@ class PromptOrchestrator:
         return result
 
     # Pipeline Management
-    async def create_pipeline(self, pipeline_definition: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_pipeline(
+        self, pipeline_definition: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create a prompt pipeline."""
         pipeline_id = generate_id()
 
@@ -258,7 +304,9 @@ class PromptOrchestrator:
         await prompt_store_cache.set(f"pipeline:{pipeline_id}", pipeline, ttl=3600)
         return pipeline
 
-    async def execute_pipeline(self, pipeline_id: str, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_pipeline(
+        self, pipeline_id: str, input_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a pipeline with input data."""
         pipeline = await prompt_store_cache.get(f"pipeline:{pipeline_id}")
         if not pipeline:
@@ -281,7 +329,9 @@ class PromptOrchestrator:
                 execution["current_stage"] = stage_idx
 
                 # Execute stage
-                stage_result = await self._execute_pipeline_stage(stage, execution["data"])
+                stage_result = await self._execute_pipeline_stage(
+                    stage, execution["data"]
+                )
                 execution["stage_results"].append(stage_result)
 
                 # Update data with stage outputs
@@ -295,10 +345,14 @@ class PromptOrchestrator:
             execution["status"] = "failed"
             execution["error"] = str(e)
 
-        await prompt_store_cache.set(f"pipeline_execution:{execution_id}", execution, ttl=3600)
+        await prompt_store_cache.set(
+            f"pipeline_execution:{execution_id}", execution, ttl=3600
+        )
         return execution
 
-    async def _execute_pipeline_stage(self, stage: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_pipeline_stage(
+        self, stage: Dict[str, Any], data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a single pipeline stage."""
         stage_type = stage.get("type")
 
@@ -311,7 +365,9 @@ class PromptOrchestrator:
         else:
             return {"error": f"Unknown stage type: {stage_type}"}
 
-    async def _execute_parallel_stage(self, stage: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_parallel_stage(
+        self, stage: Dict[str, Any], data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute prompts in parallel."""
         prompts = stage.get("prompts", [])
 
@@ -333,7 +389,9 @@ class PromptOrchestrator:
 
         return {"stage_type": "parallel_prompts", "success": True, "outputs": outputs}
 
-    async def _execute_sequential_stage(self, stage: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_sequential_stage(
+        self, stage: Dict[str, Any], data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute prompts sequentially, passing results between them."""
         prompts = stage.get("prompts", [])
         current_data = data.copy()
@@ -343,9 +401,15 @@ class PromptOrchestrator:
             if result.get("success"):
                 current_data.update(result.get("outputs", {}))
 
-        return {"stage_type": "sequential_prompts", "success": True, "outputs": current_data}
+        return {
+            "stage_type": "sequential_prompts",
+            "success": True,
+            "outputs": current_data,
+        }
 
-    async def _execute_aggregation_stage(self, stage: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_aggregation_stage(
+        self, stage: Dict[str, Any], data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Aggregate results from multiple sources."""
         aggregation_type = stage.get("aggregation_type", "concatenate")
         input_fields = stage.get("input_fields", [])
@@ -361,20 +425,33 @@ class PromptOrchestrator:
         elif aggregation_type == "summarize":
             # Use LLM to summarize
             summary_prompt = f"Summarize the following information: {' '.join(values)}"
-            llm_response = await self.clients.interpret_query(summary_prompt, "orchestrator")
+            llm_response = await self.clients.interpret_query(
+                summary_prompt, "orchestrator"
+            )
             result = llm_response.get("data", {}).get("response_text", " ".join(values))
         else:
             result = values[0] if values else ""
 
-        return {"stage_type": "aggregation", "success": True, "outputs": {output_field: result}}
+        return {
+            "stage_type": "aggregation",
+            "success": True,
+            "outputs": {output_field: result},
+        }
 
-    async def _execute_prompt_config(self, prompt_config: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_prompt_config(
+        self, prompt_config: Dict[str, Any], data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a single prompt configuration."""
         # Simplified version - would call actual prompt execution
-        return {"success": True, "outputs": {"result": f"Executed {prompt_config.get('name', 'prompt')}"}}
+        return {
+            "success": True,
+            "outputs": {"result": f"Executed {prompt_config.get('name', 'prompt')}"},
+        }
 
     # Context-Aware Prompt Selection
-    async def select_optimal_prompt(self, task_description: str, context: Dict[str, Any] = None) -> Optional[str]:
+    async def select_optimal_prompt(
+        self, task_description: str, context: Dict[str, Any] = None
+    ) -> Optional[str]:
         """Select the optimal prompt for a given task based on context."""
         context = context or {}
 
@@ -388,7 +465,11 @@ class PromptOrchestrator:
         """Get prompt recommendations for a task."""
         # Analyze task and context to recommend prompts
         recommendations = [
-            {"prompt_id": "code_generation_v1", "confidence": 0.85, "reason": "Best for code generation tasks"},
+            {
+                "prompt_id": "code_generation_v1",
+                "confidence": 0.85,
+                "reason": "Best for code generation tasks",
+            },
             {
                 "prompt_id": "content_writing_v2",
                 "confidence": 0.72,

@@ -7,7 +7,7 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import DocumentRelationship, GraphEdge, GraphNode
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from .repository import RelationshipsRepository
 
 
@@ -15,7 +15,9 @@ class RelationshipsService(BaseService[DocumentRelationship]):
     """Service for relationship business logic."""
 
     def __init__(self):
-        super().__init__(RelationshipsRepository())
+        from ...db.connection import get_document_connection_string
+
+        super().__init__(RelationshipsRepository(get_document_connection_string()))
 
     def _validate_entity(self, entity: DocumentRelationship) -> None:
         """Validate relationship before saving."""
@@ -31,7 +33,9 @@ class RelationshipsService(BaseService[DocumentRelationship]):
         if not entity.relationship_type:
             raise ValueError("Relationship type is required")
 
-    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> DocumentRelationship:
+    def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> DocumentRelationship:
         """Create relationship from data."""
         return DocumentRelationship(
             id=entity_id,
@@ -61,10 +65,16 @@ class RelationshipsService(BaseService[DocumentRelationship]):
         return self.create_entity(data)
 
     def get_relationships_for_document(
-        self, document_id: str, relationship_type: Optional[str] = None, direction: str = "both", limit: int = 50
+        self,
+        document_id: str,
+        relationship_type: Optional[str] = None,
+        direction: str = "both",
+        limit: int = 50,
     ) -> Dict[str, Any]:
         """Get relationships for a document with pagination."""
-        relationships = self.repository.get_relationships_for_document(document_id, relationship_type, direction, limit)
+        relationships = self.repository.get_relationships_for_document(
+            document_id, relationship_type, direction, limit
+        )
 
         return {
             "document_id": document_id,
@@ -75,7 +85,9 @@ class RelationshipsService(BaseService[DocumentRelationship]):
             "limit": limit,
         }
 
-    def find_paths(self, start_id: str, end_id: str, max_depth: int = 3) -> Dict[str, Any]:
+    def find_paths(
+        self, start_id: str, end_id: str, max_depth: int = 3
+    ) -> Dict[str, Any]:
         """Find paths between documents."""
         if max_depth < 1 or max_depth > 5:
             raise ValueError("Max depth must be between 1 and 5")
@@ -97,11 +109,19 @@ class RelationshipsService(BaseService[DocumentRelationship]):
         # Add computed metrics
         if stats["unique_documents"] > 0:
             # Network density (actual connections / possible connections)
-            possible_connections = stats["unique_documents"] * (stats["unique_documents"] - 1) / 2
-            stats["density"] = stats["total_relationships"] / possible_connections if possible_connections > 0 else 0
+            possible_connections = (
+                stats["unique_documents"] * (stats["unique_documents"] - 1) / 2
+            )
+            stats["density"] = (
+                stats["total_relationships"] / possible_connections
+                if possible_connections > 0
+                else 0
+            )
 
             # Clustering coefficient approximation
-            stats["avg_clustering"] = min(stats["avg_degree"] / stats["unique_documents"], 1.0)
+            stats["avg_clustering"] = min(
+                stats["avg_degree"] / stats["unique_documents"], 1.0
+            )
 
         return stats
 
@@ -155,7 +175,9 @@ class RelationshipsService(BaseService[DocumentRelationship]):
 
         return relationships
 
-    def build_graph(self, document_ids: Optional[List[str]] = None, max_depth: int = 2) -> Dict[str, Any]:
+    def build_graph(
+        self, document_ids: Optional[List[str]] = None, max_depth: int = 2
+    ) -> Dict[str, Any]:
         """Build a relationship graph for visualization."""
         if document_ids:
             # Start with specified documents
@@ -167,7 +189,9 @@ class RelationshipsService(BaseService[DocumentRelationship]):
                 nodes.append(GraphNode(document_id=doc_id).to_dict())
 
                 # Get relationships
-                relationships = self.repository.get_relationships_for_document(doc_id, limit=100)
+                relationships = self.repository.get_relationships_for_document(
+                    doc_id, limit=100
+                )
                 for rel in relationships:
                     edges.append(
                         GraphEdge(
@@ -180,8 +204,12 @@ class RelationshipsService(BaseService[DocumentRelationship]):
                     )
 
                     # Add target node if not already added
-                    if not any(n["document_id"] == rel.target_document_id for n in nodes):
-                        nodes.append(GraphNode(document_id=rel.target_document_id).to_dict())
+                    if not any(
+                        n["document_id"] == rel.target_document_id for n in nodes
+                    ):
+                        nodes.append(
+                            GraphNode(document_id=rel.target_document_id).to_dict()
+                        )
         else:
             # Build graph from all relationships (limited for performance)
             relationships = self.repository.get_all(limit=500)
@@ -204,4 +232,9 @@ class RelationshipsService(BaseService[DocumentRelationship]):
 
             nodes = [GraphNode(document_id=doc_id).to_dict() for doc_id in doc_ids]
 
-        return {"nodes": nodes, "edges": edges, "node_count": len(nodes), "edge_count": len(edges)}
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "node_count": len(nodes),
+            "edge_count": len(edges),
+        }

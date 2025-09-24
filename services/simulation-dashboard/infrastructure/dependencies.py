@@ -83,11 +83,17 @@ class DependencyManager:
 
             # Log appropriate message based on status
             if dependency.status == DependencyStatus.REQUIRED:
-                logger.error(f"❌ Required dependency {name} is missing: {dependency.fallback_message}")
+                logger.error(
+                    f"❌ Required dependency {name} is missing: {dependency.fallback_message}"
+                )
                 logger.error(f"   Install with: {dependency.install_command}")
             else:
-                logger.warning(f"⚠️ Optional dependency {name} is not available: {dependency.fallback_message}")
-                logger.info(f"   Some features will be limited. Install with: {dependency.install_command}")
+                logger.warning(
+                    f"⚠️ Optional dependency {name} is not available: {dependency.fallback_message}"
+                )
+                logger.info(
+                    f"   Some features will be limited. Install with: {dependency.install_command}"
+                )
 
             return False
 
@@ -125,7 +131,9 @@ class DependencyManager:
         self._feature_availability[feature_name] = all_available
 
         if not all_available:
-            logger.warning(f"⚠️ Feature '{feature_name}' is disabled due to missing dependencies: {required_deps}")
+            logger.warning(
+                f"⚠️ Feature '{feature_name}' is disabled due to missing dependencies: {required_deps}"
+            )
 
         return all_available
 
@@ -202,7 +210,12 @@ def initialize_dependencies():
             version_required=">=1.3.0",
             status=DependencyStatus.REQUIRED,
             description="Machine learning algorithms for pattern recognition and predictive modeling",
-            features_affected=["ai_insights", "pattern_recognition", "anomaly_detection", "ml_model_training"],
+            features_affected=[
+                "ai_insights",
+                "pattern_recognition",
+                "anomaly_detection",
+                "ml_model_training",
+            ],
             fallback_message="AI insights and ML-based features will be limited",
             install_command="pip install scikit-learn>=1.3.0",
         )
@@ -216,7 +229,11 @@ def initialize_dependencies():
             version_required=">=0.14.0",
             status=DependencyStatus.OPTIONAL,
             description="Statistical models and time series analysis",
-            features_affected=["time_series_forecasting", "causal_analysis", "predictive_analytics"],
+            features_affected=[
+                "time_series_forecasting",
+                "causal_analysis",
+                "predictive_analytics",
+            ],
             fallback_message="Advanced time series analysis will be limited",
             install_command="pip install statsmodels>=0.14.0",
         )
@@ -394,7 +411,15 @@ def safe_import(module_name: str, fallback=None):
 
 def check_ml_availability() -> Dict[str, bool]:
     """Check availability of ML libraries."""
-    ml_libs = ["scikit_learn", "statsmodels", "prophet", "xgboost", "lightgbm", "tensorflow", "torch"]
+    ml_libs = [
+        "scikit_learn",
+        "statsmodels",
+        "prophet",
+        "xgboost",
+        "lightgbm",
+        "tensorflow",
+        "torch",
+    ]
     return {lib: dependency_manager.check_dependency(lib) for lib in ml_libs}
 
 

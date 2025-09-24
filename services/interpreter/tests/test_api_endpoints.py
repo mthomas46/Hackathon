@@ -93,7 +93,9 @@ class TestSampleDocumentsAPI:
             assert response.status_code == 200
             assert "documents" in data
             assert "total_count" in data
-            print(f"✓ Documents endpoint working, returned {data.get('total_count', 0)} documents")
+            print(
+                f"✓ Documents endpoint working, returned {data.get('total_count', 0)} documents"
+            )
 
         except Exception as e:
             print(f"✗ Documents endpoint failed: {e}")
@@ -112,7 +114,9 @@ class TestSampleDocumentsAPI:
                 "context": {"demo_mode": True},
             }
 
-            response = await self.client.post("/documents/sample/context", json=test_query)
+            response = await self.client.post(
+                "/documents/sample/context", json=test_query
+            )
 
             print(f"Context endpoint status: {response.status_code}")
             data = response.json()
@@ -128,7 +132,9 @@ class TestSampleDocumentsAPI:
             assert response.status_code == 200
             assert "relevant_documents" in data
             assert "total_relevant" in data
-            print(f"✓ Context endpoint working, returned {data.get('total_relevant', 0)} relevant documents")
+            print(
+                f"✓ Context endpoint working, returned {data.get('total_relevant', 0)} relevant documents"
+            )
 
         except Exception as e:
             print(f"✗ Context endpoint failed: {e}")
@@ -147,7 +153,11 @@ class TestSampleDocumentsAPI:
             html_content = response.text
 
             # Check if our endpoints are in the docs
-            endpoints_to_check = ["/documents/sample", "/documents/sample/types", "/documents/sample/context"]
+            endpoints_to_check = [
+                "/documents/sample",
+                "/documents/sample/types",
+                "/documents/sample/context",
+            ]
 
             for endpoint in endpoints_to_check:
                 if endpoint in html_content:
@@ -227,7 +237,15 @@ async def run_api_tests():
         import subprocess
 
         result = subprocess.run(
-            ["docker-compose", "-f", "docker-compose.dev.yml", "restart", "interpreter"], capture_output=True, text=True
+            [
+                "docker-compose",
+                "-f",
+                "docker-compose.dev.yml",
+                "restart",
+                "interpreter",
+            ],
+            capture_output=True,
+            text=True,
         )
 
         if result.returncode == 0:

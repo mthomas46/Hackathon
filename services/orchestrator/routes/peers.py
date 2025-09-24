@@ -12,7 +12,11 @@ async def list_peers():
         "peers": [
             {"name": "doc_store", "url": "http://doc_store:8080", "status": "healthy"},
             {"name": "analyzer", "url": "http://analyzer:8080", "status": "healthy"},
-            {"name": "interpreter", "url": "http://interpreter:8080", "status": "healthy"},
+            {
+                "name": "interpreter",
+                "url": "http://interpreter:8080",
+                "status": "healthy",
+            },
         ],
         "total": 3,
     }

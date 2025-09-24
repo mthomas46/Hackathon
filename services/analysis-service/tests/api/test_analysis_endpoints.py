@@ -88,7 +88,9 @@ class TestAnalysisEndpoints:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_semantic_similarity_analysis_success(self, client, sample_semantic_similarity_request):
+    async def test_semantic_similarity_analysis_success(
+        self, client, sample_semantic_similarity_request
+    ):
         """Test successful semantic similarity analysis."""
         # Mock the analysis service to return success
         with patch(
@@ -104,13 +106,20 @@ class TestAnalysisEndpoints:
                     {"source": "doc-1", "target": "doc-2", "similarity": 0.8},
                     {"source": "doc-2", "target": "doc-3", "similarity": 0.7},
                 ],
-                summary={"total_pairs": 3, "highly_similar_pairs": 2, "average_similarity": 0.775},
+                summary={
+                    "total_pairs": 3,
+                    "highly_similar_pairs": 2,
+                    "average_similarity": 0.775,
+                },
                 execution_time_seconds=1.5,
                 error_message=None,
             )
             mock_handler.return_value = mock_response
 
-            response = client.post("/analyze/semantic-similarity", json=sample_semantic_similarity_request.dict())
+            response = client.post(
+                "/analyze/semantic-similarity",
+                json=sample_semantic_similarity_request.dict(),
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -121,7 +130,10 @@ class TestAnalysisEndpoints:
     @pytest.mark.asyncio
     async def test_semantic_similarity_analysis_with_invalid_data(self, client):
         """Test semantic similarity analysis with invalid data."""
-        invalid_request = {"targets": [], "threshold": 1.5}  # Empty targets  # Invalid threshold (> 1.0)
+        invalid_request = {
+            "targets": [],
+            "threshold": 1.5,
+        }  # Empty targets  # Invalid threshold (> 1.0)
 
         response = client.post("/analyze/semantic-similarity", json=invalid_request)
         assert response.status_code == 422  # Validation error
@@ -148,8 +160,16 @@ class TestAnalysisEndpoints:
                 scores={"positive": 0.85, "negative": 0.10, "neutral": 0.05},
                 detailed_analysis={
                     "sentence_sentiments": [
-                        {"text": "This is great documentation", "sentiment": "positive", "confidence": 0.9},
-                        {"text": "Could be improved", "sentiment": "neutral", "confidence": 0.6},
+                        {
+                            "text": "This is great documentation",
+                            "sentiment": "positive",
+                            "confidence": 0.9,
+                        },
+                        {
+                            "text": "Could be improved",
+                            "sentiment": "neutral",
+                            "confidence": 0.6,
+                        },
                     ],
                     "overall_tone": "professional",
                     "readability_score": 78.5,
@@ -186,7 +206,11 @@ class TestAnalysisEndpoints:
                 quality_breakdown={
                     "readability": {"score": 78.0, "level": "good", "issues": []},
                     "grammar": {"score": 85.0, "level": "excellent", "issues": []},
-                    "structure": {"score": 80.0, "level": "good", "issues": ["missing_table_of_contents"]},
+                    "structure": {
+                        "score": 80.0,
+                        "level": "good",
+                        "issues": ["missing_table_of_contents"],
+                    },
                     "completeness": {"score": 88.0, "level": "excellent", "issues": []},
                 },
                 recommendations=[
@@ -251,7 +275,10 @@ class TestAnalysisEndpoints:
                     "Complexity is stable with low volatility",
                     "Forecast indicates continued quality improvement",
                 ],
-                recommendations=["Continue current quality improvement practices", "Monitor complexity trends closely"],
+                recommendations=[
+                    "Continue current quality improvement practices",
+                    "Monitor complexity trends closely",
+                ],
                 forecast_accuracy=0.88,
                 execution_time_seconds=2.1,
                 error_message=None,
@@ -272,12 +299,16 @@ class TestAnalysisEndpoints:
         """Test error handling in analysis endpoints."""
         # Test with malformed JSON
         response = client.post(
-            "/analyze/semantic-similarity", data="invalid json", headers={"Content-Type": "application/json"}
+            "/analyze/semantic-similarity",
+            data="invalid json",
+            headers={"Content-Type": "application/json"},
         )
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_analysis_endpoint_timeout_handling(self, client, sample_semantic_similarity_request):
+    async def test_analysis_endpoint_timeout_handling(
+        self, client, sample_semantic_similarity_request
+    ):
         """Test timeout handling in analysis endpoints."""
         # Mock a handler that takes too long
         with patch(
@@ -297,7 +328,10 @@ class TestAnalysisEndpoints:
 
             mock_handler.side_effect = slow_handler
 
-            response = client.post("/analyze/semantic-similarity", json=sample_semantic_similarity_request.dict())
+            response = client.post(
+                "/analyze/semantic-similarity",
+                json=sample_semantic_similarity_request.dict(),
+            )
 
             # Should handle timeout gracefully
             assert response.status_code in [200, 408, 504]  # Success or timeout status
@@ -322,7 +356,9 @@ class TestAnalysisEndpoints:
                 )
                 mock_handler.return_value = mock_response
 
-                response = client.post("/analyze/semantic-similarity", json=request_data)
+                response = client.post(
+                    "/analyze/semantic-similarity", json=request_data
+                )
                 return response.status_code, response.json()
 
         # Make concurrent requests
@@ -339,7 +375,9 @@ class TestAnalysisEndpoints:
         assert len(set(analysis_ids)) == len(analysis_ids)
 
     @pytest.mark.asyncio
-    async def test_analysis_endpoint_resource_cleanup(self, client, sample_semantic_similarity_request):
+    async def test_analysis_endpoint_resource_cleanup(
+        self, client, sample_semantic_similarity_request
+    ):
         """Test that analysis endpoints properly clean up resources."""
         # This test ensures that connections, memory, and other resources
         # are properly cleaned up after analysis operations
@@ -358,7 +396,10 @@ class TestAnalysisEndpoints:
             mock_handler.return_value = mock_response
 
             # Make request
-            response = client.post("/analyze/semantic-similarity", json=sample_semantic_similarity_request.dict())
+            response = client.post(
+                "/analyze/semantic-similarity",
+                json=sample_semantic_similarity_request.dict(),
+            )
 
             assert response.status_code == 200
 
@@ -372,7 +413,9 @@ class TestAnalysisEndpoints:
             # - External service connections are cleaned up
 
     @pytest.mark.asyncio
-    async def test_analysis_endpoint_metrics_collection(self, client, sample_semantic_similarity_request):
+    async def test_analysis_endpoint_metrics_collection(
+        self, client, sample_semantic_similarity_request
+    ):
         """Test that analysis endpoints collect metrics."""
         # This test verifies that performance metrics are collected
         # during analysis operations
@@ -390,7 +433,10 @@ class TestAnalysisEndpoints:
             )
             mock_handler.return_value = mock_response
 
-            response = client.post("/analyze/semantic-similarity", json=sample_semantic_similarity_request.dict())
+            response = client.post(
+                "/analyze/semantic-similarity",
+                json=sample_semantic_similarity_request.dict(),
+            )
 
             assert response.status_code == 200
 
@@ -408,7 +454,10 @@ class TestAnalysisEndpoints:
 
         # Check for CORS headers
         headers = response.headers
-        assert "access-control-allow-origin" in headers or "Access-Control-Allow-Origin" in headers
+        assert (
+            "access-control-allow-origin" in headers
+            or "Access-Control-Allow-Origin" in headers
+        )
 
     def test_analysis_endpoint_content_type_validation(self, client):
         """Test that analysis endpoints validate content type."""
@@ -416,14 +465,18 @@ class TestAnalysisEndpoints:
 
         # Test with correct content type
         response = client.post(
-            "/analyze/semantic-similarity", json=request_data, headers={"Content-Type": "application/json"}
+            "/analyze/semantic-similarity",
+            json=request_data,
+            headers={"Content-Type": "application/json"},
         )
         # Should get validation error (expected since we're not mocking the handler)
         assert response.status_code == 422
 
         # Test with incorrect content type
         response = client.post(
-            "/analyze/semantic-similarity", data=str(request_data), headers={"Content-Type": "text/plain"}
+            "/analyze/semantic-similarity",
+            data=str(request_data),
+            headers={"Content-Type": "text/plain"},
         )
         assert response.status_code == 415  # Unsupported media type
 
@@ -444,7 +497,9 @@ class TestAnalysisEndpoints:
         assert response.status_code in [200, 413, 422]  # Success or size limit exceeded
 
     @pytest.mark.asyncio
-    async def test_analysis_endpoint_rate_limiting(self, client, sample_semantic_similarity_request):
+    async def test_analysis_endpoint_rate_limiting(
+        self, client, sample_semantic_similarity_request
+    ):
         """Test rate limiting on analysis endpoints."""
         # This test would verify that rate limiting is properly enforced
         # In a real implementation with rate limiting middleware
@@ -465,7 +520,10 @@ class TestAnalysisEndpoints:
             # Make multiple rapid requests
             responses = []
             for i in range(10):
-                response = client.post("/analyze/semantic-similarity", json=sample_semantic_similarity_request.dict())
+                response = client.post(
+                    "/analyze/semantic-similarity",
+                    json=sample_semantic_similarity_request.dict(),
+                )
                 responses.append(response)
 
             # In a rate-limited system, some requests might be rejected

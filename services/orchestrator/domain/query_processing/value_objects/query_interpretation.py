@@ -112,12 +112,19 @@ class QueryInterpretation:
     @property
     def can_execute(self) -> bool:
         """Check if interpretation can be executed."""
-        return self._intent.requires_execution and self._confidence.can_auto_execute and len(self._parameters) > 0
+        return (
+            self._intent.requires_execution
+            and self._confidence.can_auto_execute
+            and len(self._parameters) > 0
+        )
 
     @property
     def needs_clarification(self) -> bool:
         """Check if interpretation needs clarification."""
-        return self._confidence.requires_clarification or len(self._clarification_questions) > 0
+        return (
+            self._confidence.requires_clarification
+            or len(self._clarification_questions) > 0
+        )
 
     @property
     def has_alternatives(self) -> bool:

@@ -4,7 +4,10 @@ import asyncio
 from typing import Any, Dict
 
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import ServiceException, ValidationException
+from services.shared.utilities.error_handling import (
+    ServiceException,
+    ValidationException,
+)
 
 
 def handle_cli_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
@@ -33,7 +36,12 @@ def handle_cli_error(operation: str, error: Exception, **context) -> Dict[str, A
             "error_code": error.error_code,
         }
     elif isinstance(error, KeyboardInterrupt):
-        return {"success": False, "error": "interrupted", "message": "Operation was interrupted by user", "details": {}}
+        return {
+            "success": False,
+            "error": "interrupted",
+            "message": "Operation was interrupted by user",
+            "details": {},
+        }
     elif isinstance(error, TimeoutError) or isinstance(error, asyncio.TimeoutError):
         return {
             "success": False,
@@ -63,7 +71,9 @@ def create_user_friendly_error_message(error_response: Dict[str, Any]) -> str:
     error_type = error_response.get("error", "unknown")
 
     if error_type == "service_error":
-        return f"Service error: {error_response.get('message', 'Unknown service error')}"
+        return (
+            f"Service error: {error_response.get('message', 'Unknown service error')}"
+        )
     elif error_type == "validation_error":
         return f"Validation error: {error_response.get('message', 'Invalid input')}"
     elif error_type == "interrupted":
@@ -76,7 +86,9 @@ def create_user_friendly_error_message(error_response: Dict[str, Any]) -> str:
         return error_response.get("message", "An unexpected error occurred")
 
 
-def should_retry_operation(error_response: Dict[str, Any], attempt: int, max_attempts: int = 3) -> bool:
+def should_retry_operation(
+    error_response: Dict[str, Any], attempt: int, max_attempts: int = 3
+) -> bool:
     """Determine if an operation should be retried based on the error."""
     if attempt >= max_attempts:
         return False
@@ -89,7 +101,9 @@ def should_retry_operation(error_response: Dict[str, Any], attempt: int, max_att
     return error_type in retryable_errors
 
 
-def get_retry_delay(attempt: int, base_delay: float = 1.0, max_delay: float = 30.0) -> float:
+def get_retry_delay(
+    attempt: int, base_delay: float = 1.0, max_delay: float = 30.0
+) -> float:
     """Calculate retry delay using exponential backoff."""
     delay = base_delay * (2**attempt)
     return min(delay, max_delay)

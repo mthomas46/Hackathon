@@ -1,13 +1,18 @@
-"""Command handlers for CQRS pattern."""
+"""Command handlers for CQRS pattern using standardized base classes."""
 
-from abc import ABC, abstractmethod
 from typing import Optional
+
+from services.shared.utilities import CommandHandler, CommandResult
 
 from ...domain.entities import Document
 from ...domain.factories import DocumentFactory, FindingFactory
 from ...domain.services import AnalysisService, DocumentService, FindingService
 from ...domain.validation import DocumentValidator, FindingValidator
-from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
+from ...infrastructure.repositories import (
+    AnalysisRepository,
+    DocumentRepository,
+    FindingRepository,
+)
 from .commands import (
     CancelAnalysisCommand,
     CreateDocumentCommand,
@@ -20,15 +25,7 @@ from .commands import (
 )
 
 
-class CommandHandler(ABC):
-    """Base class for command handlers."""
-
-    @abstractmethod
-    async def handle(self, command):
-        """Handle the command."""
-
-
-class CreateDocumentCommandHandler(CommandHandler):
+class CreateDocumentCommandHandler(CommandHandler[CreateDocumentCommand]):
     """Handler for creating documents."""
 
     def __init__(
@@ -44,7 +41,7 @@ class CreateDocumentCommandHandler(CommandHandler):
         self.document_validator = document_validator
         self.document_repository = document_repository
 
-    async def handle(self, command: CreateDocumentCommand) -> Document:
+    async def _execute(self, command: CreateDocumentCommand) -> Document:
         """Handle create document command."""
         # Create document using factory
         document = self.document_factory.create_from_text(
@@ -64,7 +61,9 @@ class CreateDocumentCommandHandler(CommandHandler):
         # Validate for creation
         creation_validation = self.document_validator.validate_for_creation(document)
         if not creation_validation.is_valid:
-            raise ValueError(f"Document creation validation failed: {creation_validation.errors}")
+            raise ValueError(
+                f"Document creation validation failed: {creation_validation.errors}"
+            )
 
         # Save document
         await self.document_repository.save(document)
@@ -100,7 +99,11 @@ class UpdateDocumentCommandHandler(CommandHandler):
             pass
 
         if command.content is not None:
-            document.update_content(document.content.__class__(text=command.content, format=command.content.format))
+            document.update_content(
+                document.content.__class__(
+                    text=command.content, format=command.content.format
+                )
+            )
 
         if command.metadata is not None:
             from datetime import datetime
@@ -178,7 +181,9 @@ class PerformAnalysisCommandHandler(CommandHandler):
 
         # Create analysis entity
         analysis = self.analysis_service.create_analysis(
-            document=document, analysis_type=AnalysisType(command.analysis_type), configuration=analysis_config
+            document=document,
+            analysis_type=AnalysisType(command.analysis_type),
+            configuration=analysis_config,
         )
 
         # Save analysis
@@ -253,7 +258,9 @@ class CreateFindingCommandHandler(CommandHandler):
 class UpdateFindingCommandHandler(CommandHandler):
     """Handler for updating findings."""
 
-    def __init__(self, finding_validator: FindingValidator, finding_repository: FindingRepository):
+    def __init__(
+        self, finding_validator: FindingValidator, finding_repository: FindingRepository
+    ):
         """Initialize handler with dependencies."""
         self.finding_validator = finding_validator
         self.finding_repository = finding_repository

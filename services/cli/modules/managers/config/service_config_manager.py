@@ -41,7 +41,13 @@ class ServiceConfigManager(BaseManager):
 
     async def _select_service(self) -> Optional[str]:
         """Select a service to configure."""
-        services = ["orchestrator", "analysis-service", "bedrock-proxy", "frontend", "doc_store"]
+        services = [
+            "orchestrator",
+            "analysis-service",
+            "bedrock-proxy",
+            "frontend",
+            "doc_store",
+        ]
         service = await self.select_from_list(services, "Select service to configure")
         return service
 
@@ -56,7 +62,9 @@ class ServiceConfigManager(BaseManager):
                     f"Configuration Files for {service}",
                 )
             else:
-                self.display.show_warning(f"No configuration files found for service: {service}")
+                self.display.show_warning(
+                    f"No configuration files found for service: {service}"
+                )
         except Exception as e:
             self.display.show_error(f"Error listing configuration files: {e}")
 
@@ -96,9 +104,13 @@ class ServiceConfigManager(BaseManager):
             merged_config = await self._merge_config_hierarchy(hierarchy)
 
             if merged_config:
-                self.display.show_dict(merged_config, f"Configuration Hierarchy for {service}")
+                self.display.show_dict(
+                    merged_config, f"Configuration Hierarchy for {service}"
+                )
             else:
-                self.display.show_warning(f"No configuration found for service: {service}")
+                self.display.show_warning(
+                    f"No configuration found for service: {service}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error showing configuration hierarchy: {e}")
@@ -109,13 +121,17 @@ class ServiceConfigManager(BaseManager):
             config_files = await self.list_service_config_files(service)
 
             if not config_files:
-                self.display.show_warning(f"No configuration files found for service: {service}")
+                self.display.show_warning(
+                    f"No configuration files found for service: {service}"
+                )
                 return
 
             # Show available config files
             file_options = []
             for i, config_file in enumerate(config_files, 1):
-                file_options.append((str(i), f"{config_file.name} ({config_file.parent})"))
+                file_options.append(
+                    (str(i), f"{config_file.name} ({config_file.parent})")
+                )
 
             choice = await self.get_user_input("Select configuration file to view")
             if choice and choice.isdigit():
@@ -132,13 +148,17 @@ class ServiceConfigManager(BaseManager):
             config_files = await self.list_service_config_files(service)
 
             if not config_files:
-                self.display.show_warning(f"No configuration files found for service: {service}")
+                self.display.show_warning(
+                    f"No configuration files found for service: {service}"
+                )
                 return
 
             # Show available config files
             file_options = []
             for i, config_file in enumerate(config_files, 1):
-                file_options.append((str(i), f"{config_file.name} ({config_file.parent})"))
+                file_options.append(
+                    (str(i), f"{config_file.name} ({config_file.parent})")
+                )
 
             choice = await self.get_user_input("Select configuration file to edit")
             if choice and choice.isdigit():
@@ -238,7 +258,12 @@ class ServiceConfigManager(BaseManager):
 
     async def _build_config_hierarchy(self, service: str) -> Dict[str, List[str]]:
         """Build the configuration hierarchy for a service."""
-        hierarchy = {"service_specific": [], "service_level": [], "global_level": [], "environment_overrides": []}
+        hierarchy = {
+            "service_specific": [],
+            "service_level": [],
+            "global_level": [],
+            "environment_overrides": [],
+        }
 
         # Service-specific configs
         service_dir = Path("services") / service
@@ -264,7 +289,9 @@ class ServiceConfigManager(BaseManager):
 
         return hierarchy
 
-    async def _merge_config_hierarchy(self, hierarchy: Dict[str, List[str]]) -> Optional[Dict[str, Any]]:
+    async def _merge_config_hierarchy(
+        self, hierarchy: Dict[str, List[str]]
+    ) -> Optional[Dict[str, Any]]:
         """Merge configuration from hierarchy."""
         merged_config = {}
 

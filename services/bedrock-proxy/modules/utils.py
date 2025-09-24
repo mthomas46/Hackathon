@@ -38,7 +38,12 @@ def sanitize_for_response(text: str) -> str:
 
     # Remove SQL injection patterns
     text = re.sub(r";\s*--", "", text, flags=re.IGNORECASE)  # SQL comments
-    text = re.sub(r";\s*SELECT\s+.*?\s+FROM", "; SELECT * FROM dummy", text, flags=re.IGNORECASE | re.DOTALL)
+    text = re.sub(
+        r";\s*SELECT\s+.*?\s+FROM",
+        "; SELECT * FROM dummy",
+        text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
 
     # Remove environment variable patterns
     text = re.sub(r"\$\{[^}]+\}", "", text)
@@ -85,6 +90,9 @@ def bullets_from_text(text: str, max_items: int = 5) -> list[str]:
 
     # Provide helpful fallback content if no bullets were extracted
     if not bullets:
-        bullets = ["No content provided.", "Add more details to the prompt for better analysis."]
+        bullets = [
+            "No content provided.",
+            "Add more details to the prompt for better analysis.",
+        ]
 
     return bullets

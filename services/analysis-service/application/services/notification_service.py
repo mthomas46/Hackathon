@@ -101,7 +101,9 @@ class EmailNotificationChannel(NotificationChannel):
             # Add metadata as JSON attachment if present
             if message.metadata:
                 metadata_part = MIMEText(json.dumps(message.metadata, indent=2), "json")
-                metadata_part.add_header("Content-Disposition", "attachment", filename="metadata.json")
+                metadata_part.add_header(
+                    "Content-Disposition", "attachment", filename="metadata.json"
+                )
                 msg.attach(metadata_part)
 
             # Send email
@@ -156,7 +158,9 @@ class WebhookNotificationChannel(NotificationChannel):
 
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    self.webhook_url, json=payload, timeout=aiohttp.ClientTimeout(total=self.timeout_seconds)
+                    self.webhook_url,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=self.timeout_seconds),
                 ) as response:
                     return response.status == 200
 
@@ -204,7 +208,9 @@ class SlackNotificationChannel(NotificationChannel):
 
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    self.webhook_url, json=slack_message, timeout=aiohttp.ClientTimeout(total=10)
+                    self.webhook_url,
+                    json=slack_message,
+                    timeout=aiohttp.ClientTimeout(total=10),
                 ) as response:
                     return response.status == 200
 
@@ -214,7 +220,12 @@ class SlackNotificationChannel(NotificationChannel):
 
     def _get_color_for_priority(self, priority: str) -> str:
         """Get color for priority level."""
-        color_map = {"low": "good", "normal": "#439FE0", "high": "warning", "urgent": "danger"}
+        color_map = {
+            "low": "good",
+            "normal": "#439FE0",
+            "high": "warning",
+            "urgent": "danger",
+        }
         return color_map.get(priority, "#439FE0")
 
 
@@ -282,9 +293,13 @@ class ApplicationNotifier:
 
     def get_available_channels(self) -> List[str]:
         """Get list of available channels."""
-        return [name for name, channel in self.channels.items() if channel.is_available()]
+        return [
+            name for name, channel in self.channels.items() if channel.is_available()
+        ]
 
-    async def send_notification(self, channels: List[str], message: NotificationMessage) -> Dict[str, bool]:
+    async def send_notification(
+        self, channels: List[str], message: NotificationMessage
+    ) -> Dict[str, bool]:
         """Send notification through specified channels."""
         results = {}
 
@@ -298,7 +313,9 @@ class ApplicationNotifier:
 
         return results
 
-    async def send_notification_by_rule(self, rule_name: str, event_data: Dict[str, Any]) -> Dict[str, bool]:
+    async def send_notification_by_rule(
+        self, rule_name: str, event_data: Dict[str, Any]
+    ) -> Dict[str, bool]:
         """Send notification based on rule."""
         if rule_name not in self.notification_rules:
             return {}
@@ -315,7 +332,9 @@ class ApplicationNotifier:
         # Send notification
         return await self.send_notification(rule["channels"], message)
 
-    def _check_conditions(self, conditions: Dict[str, Any], event_data: Dict[str, Any]) -> bool:
+    def _check_conditions(
+        self, conditions: Dict[str, Any], event_data: Dict[str, Any]
+    ) -> bool:
         """Check if conditions are met."""
         for key, expected_value in conditions.items():
             actual_value = event_data.get(key)
@@ -335,7 +354,9 @@ class ApplicationNotifier:
 
         return True
 
-    def _create_message_from_rule(self, rule: Dict[str, Any], event_data: Dict[str, Any]) -> NotificationMessage:
+    def _create_message_from_rule(
+        self, rule: Dict[str, Any], event_data: Dict[str, Any]
+    ) -> NotificationMessage:
         """Create notification message from rule."""
         event_type = rule["event_type"]
 
@@ -360,7 +381,11 @@ class ApplicationNotifier:
             message_type = "warning"
 
         return NotificationMessage(
-            recipient=recipient, subject=subject, body=body, message_type=message_type, metadata=event_data
+            recipient=recipient,
+            subject=subject,
+            body=body,
+            message_type=message_type,
+            metadata=event_data,
         )
 
 
@@ -396,12 +421,18 @@ class NotificationService(ApplicationService):
 
         # System health alerts
         self.notifier.add_notification_rule(
-            "system_critical", "system_health_check", ["console"], {"status": "critical"}
+            "system_critical",
+            "system_health_check",
+            ["console"],
+            {"status": "critical"},
         )
 
         # High-priority findings
         self.notifier.add_notification_rule(
-            "high_priority_finding", "finding_created", ["console"], {"severity": "critical"}
+            "high_priority_finding",
+            "finding_created",
+            ["console"],
+            {"severity": "critical"},
         )
 
     async def send_notification(
@@ -432,14 +463,20 @@ class NotificationService(ApplicationService):
             failed_channels = [ch for ch, success in results.items() if not success]
 
             if successful_channels:
-                self.logger.info(f"Notification sent successfully to: {successful_channels}")
+                self.logger.info(
+                    f"Notification sent successfully to: {successful_channels}"
+                )
 
             if failed_channels:
-                self.logger.error(f"Notification failed for channels: {failed_channels}")
+                self.logger.error(
+                    f"Notification failed for channels: {failed_channels}"
+                )
 
             return results
 
-    async def add_notification_channel(self, name: str, channel_type: str, config: Dict[str, Any]) -> None:
+    async def add_notification_channel(
+        self, name: str, channel_type: str, config: Dict[str, Any]
+    ) -> None:
         """Add notification channel."""
         async with self.operation_context("add_notification_channel"):
             channel = None
@@ -468,10 +505,14 @@ class NotificationService(ApplicationService):
     ) -> None:
         """Add notification rule."""
         async with self.operation_context("add_notification_rule"):
-            self.notifier.add_notification_rule(rule_name, event_type, channels, conditions, template)
+            self.notifier.add_notification_rule(
+                rule_name, event_type, channels, conditions, template
+            )
             self.logger.info(f"Added notification rule: {rule_name}")
 
-    async def process_event_notification(self, event_type: str, event_data: Dict[str, Any]) -> None:
+    async def process_event_notification(
+        self, event_type: str, event_data: Dict[str, Any]
+    ) -> None:
         """Process event for notifications."""
         # Find matching rules
         matching_rules = [
@@ -486,14 +527,20 @@ class NotificationService(ApplicationService):
         # Send notifications for matching rules
         for rule_name in matching_rules:
             try:
-                results = await self.notifier.send_notification_by_rule(rule_name, event_data)
+                results = await self.notifier.send_notification_by_rule(
+                    rule_name, event_data
+                )
 
                 successful_channels = [ch for ch, success in results.items() if success]
                 if successful_channels:
-                    self.logger.info(f"Event notification sent for {rule_name}: {successful_channels}")
+                    self.logger.info(
+                        f"Event notification sent for {rule_name}: {successful_channels}"
+                    )
 
             except Exception as e:
-                self.logger.error(f"Error sending notification for rule {rule_name}: {e}")
+                self.logger.error(
+                    f"Error sending notification for rule {rule_name}: {e}"
+                )
 
     async def get_notification_status(self) -> Dict[str, Any]:
         """Get notification service status."""

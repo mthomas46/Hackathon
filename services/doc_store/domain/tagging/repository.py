@@ -8,15 +8,15 @@ from typing import Any, Dict, List, Optional
 
 
 from ...core.entities import DocumentTag, TaxonomyNode
-from ...core.repository import BaseRepository
+from services.shared.utilities import SqlRepository
 from ...db.queries import execute_query
 
 
-class TaggingRepository(BaseRepository[DocumentTag]):
+class TaggingRepository(SqlRepository[DocumentTag]):
     """Repository for tagging data access."""
 
-    def __init__(self):
-        super().__init__("document_tags")
+    def __init__(self, connection_string: str):
+        super().__init__(DocumentTag, connection_string)
 
     def _row_to_entity(self, row: Dict[str, Any]) -> DocumentTag:
         """Convert database row to DocumentTag entity."""
@@ -59,7 +59,11 @@ class TaggingRepository(BaseRepository[DocumentTag]):
         return [row["document_id"] for row in rows]
 
     def search_tags(
-        self, query: str, categories: Optional[List[str]] = None, min_confidence: float = 0.0, limit: int = 50
+        self,
+        query: str,
+        categories: Optional[List[str]] = None,
+        min_confidence: float = 0.0,
+        limit: int = 50,
     ) -> List[Dict[str, Any]]:
         """Search tags with filtering."""
         conditions = ["confidence >= ?"]
@@ -141,13 +145,24 @@ class TaggingRepository(BaseRepository[DocumentTag]):
 
         return {
             "top_tags": [
-                {"tag": row["tag"], "count": row["count"], "avg_confidence": row["avg_confidence"]} for row in tag_rows
+                {
+                    "tag": row["tag"],
+                    "count": row["count"],
+                    "avg_confidence": row["avg_confidence"],
+                }
+                for row in tag_rows
             ],
-            "category_distribution": {row["category"]: row["count"] for row in category_rows},
-            "confidence_distribution": {row["confidence_level"]: row["count"] for row in confidence_rows},
+            "category_distribution": {
+                row["category"]: row["count"] for row in category_rows
+            },
+            "confidence_distribution": {
+                row["confidence_level"]: row["count"] for row in confidence_rows
+            },
         }
 
-    def remove_tags_from_document(self, document_id: str, tags: Optional[List[str]] = None) -> int:
+    def remove_tags_from_document(
+        self, document_id: str, tags: Optional[List[str]] = None
+    ) -> int:
         """Remove tags from a document."""
         if tags:
             placeholders = ",".join(["?"] * len(tags))
@@ -158,7 +173,9 @@ class TaggingRepository(BaseRepository[DocumentTag]):
             )
         else:
             result = execute_query(
-                f"DELETE FROM {self.table_name} WHERE document_id = ?", (document_id,), fetch_one=True
+                f"DELETE FROM {self.table_name} WHERE document_id = ?",
+                (document_id,),
+                fetch_one=True,
             )
 
         return result["changes"] if result else 0
@@ -185,7 +202,9 @@ class TaggingRepository(BaseRepository[DocumentTag]):
 
     def get_taxonomy_node(self, tag: str) -> Optional[TaxonomyNode]:
         """Get a taxonomy node by tag."""
-        row = execute_query("SELECT * FROM taxonomy WHERE tag = ?", (tag,), fetch_one=True)
+        row = execute_query(
+            "SELECT * FROM taxonomy WHERE tag = ?", (tag,), fetch_one=True
+        )
 
         if not row:
             return None

@@ -9,9 +9,10 @@ import os
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.models.models import MemoryItem
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 from services.shared.monitoring.logging import fire_and_forget
 
 # Import shared utilities
@@ -39,18 +40,29 @@ def get_redis_url() -> str:
     return _REDIS_URL
 
 
-def handle_memory_agent_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
+def handle_memory_agent_error(
+    operation: str, error: Exception, **context
+) -> Dict[str, Any]:
     """Standardized error handling for memory-agent operations.
 
     Logs the error and returns a standardized error response.
     """
-    fire_and_forget("error", f"Memory-agent {operation} error: {error}", ServiceNames.MEMORY_AGENT, context)
+    fire_and_forget(
+        "error",
+        f"Memory-agent {operation} error: {error}",
+        ServiceNames.MEMORY_AGENT,
+        context,
+    )
     return create_error_response(
-        f"Failed to {operation}", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(error), **context}
+        f"Failed to {operation}",
+        error_code=ErrorCodes.INTERNAL_ERROR,
+        details={"error": str(error), **context},
     )
 
 
-def create_memory_agent_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
+def create_memory_agent_success_response(
+    operation: str, data: Any, **context
+) -> Dict[str, Any]:
     """Standardized success response for memory-agent operations.
 
     Returns a consistent success response format.
@@ -58,7 +70,9 @@ def create_memory_agent_success_response(operation: str, data: Any, **context) -
     return create_success_response(f"Memory {operation} successful", data, **context)
 
 
-def build_memory_agent_context(operation: str, item_count: Optional[int] = None, **additional) -> Dict[str, Any]:
+def build_memory_agent_context(
+    operation: str, item_count: Optional[int] = None, **additional
+) -> Dict[str, Any]:
     """Build context dictionary for memory-agent operations.
 
     Provides consistent context for logging and responses.
@@ -110,7 +124,9 @@ def deserialize_memory_value(value: str) -> Any:
         return value
 
 
-def build_memory_filter_query(memory_type: Optional[str] = None, key_pattern: Optional[str] = None) -> str:
+def build_memory_filter_query(
+    memory_type: Optional[str] = None, key_pattern: Optional[str] = None
+) -> str:
     """Build SQL-like filter query for memory items."""
     conditions = []
     if memory_type:
@@ -120,7 +136,9 @@ def build_memory_filter_query(memory_type: Optional[str] = None, key_pattern: Op
     return " AND ".join(conditions) if conditions else "1=1"
 
 
-def is_memory_item_expired(item: MemoryItem, ttl_seconds: int = _MEMORY_TTL_SECONDS) -> bool:
+def is_memory_item_expired(
+    item: MemoryItem, ttl_seconds: int = _MEMORY_TTL_SECONDS
+) -> bool:
     """Check if a memory item has expired."""
     now = utc_now()
 
@@ -147,7 +165,9 @@ def cleanup_expired_memory_items(
 
 
 def get_memory_stats_summary(
-    memory_list: List[MemoryItem], max_items: int = _MEMORY_MAX_ITEMS, ttl_seconds: int = _MEMORY_TTL_SECONDS
+    memory_list: List[MemoryItem],
+    max_items: int = _MEMORY_MAX_ITEMS,
+    ttl_seconds: int = _MEMORY_TTL_SECONDS,
 ) -> Dict[str, Any]:
     """Get comprehensive memory statistics summary."""
     utc_now()
@@ -159,7 +179,9 @@ def get_memory_stats_summary(
         type_counts[item.type] = type_counts.get(item.type, 0) + 1
 
     # Count expired items
-    expired_count = sum(1 for item in memory_list if is_memory_item_expired(item, ttl_seconds))
+    expired_count = sum(
+        1 for item in memory_list if is_memory_item_expired(item, ttl_seconds)
+    )
 
     return {
         "total_items": len(memory_list),
@@ -177,17 +199,23 @@ def validate_memory_item(item: MemoryItem) -> None:
     """Validate memory item fields."""
     if not item.key:
         raise ServiceException(
-            "Memory item key is required", error_code=ErrorCodes.VALIDATION_ERROR, details={"field": "key"}
+            "Memory item key is required",
+            error_code=ErrorCodes.VALIDATION_ERROR,
+            details={"field": "key"},
         )
 
     if not item.data:
         raise ServiceException(
-            "Memory item data is required", error_code=ErrorCodes.VALIDATION_ERROR, details={"field": "data"}
+            "Memory item data is required",
+            error_code=ErrorCodes.VALIDATION_ERROR,
+            details={"field": "data"},
         )
 
     if not item.type:
         raise ServiceException(
-            "Memory item type is required", error_code=ErrorCodes.VALIDATION_ERROR, details={"field": "type"}
+            "Memory item type is required",
+            error_code=ErrorCodes.VALIDATION_ERROR,
+            details={"field": "type"},
         )
 
 

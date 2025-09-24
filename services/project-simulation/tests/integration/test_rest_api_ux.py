@@ -54,7 +54,9 @@ class TestHATEOASImplementation:
         for link in required_links:
             assert link in links, f"Missing required HATEOAS link: {link}"
             assert "href" in links[link], f"Link {link} missing href"
-            assert links[link]["href"].startswith(("http://", "/")), f"Invalid href format for {link}"
+            assert links[link]["href"].startswith(
+                ("http://", "/")
+            ), f"Invalid href format for {link}"
 
     def test_simulation_collection_provides_navigation_links(self, test_client):
         """Test that simulation collection endpoint provides proper navigation links."""
@@ -141,7 +143,9 @@ class TestHATEOASImplementation:
                             href = link_data["href"]
                             # Should not have inconsistent versioning
                             if "api/v1" in href:
-                                assert href.startswith("/api/v1"), f"Inconsistent versioning in {endpoint}"
+                                assert href.startswith(
+                                    "/api/v1"
+                                ), f"Inconsistent versioning in {endpoint}"
 
     @pytest.mark.asyncio
     async def test_hateoas_links_are_functional(self):
@@ -153,7 +157,9 @@ class TestHATEOASImplementation:
 class TestWebSocketEndpoints:
     """Test cases for WebSocket endpoints and real-time communication."""
 
-    @pytest.mark.skipif(not WEBSOCKETS_AVAILABLE, reason="websockets module not available")
+    @pytest.mark.skipif(
+        not WEBSOCKETS_AVAILABLE, reason="websockets module not available"
+    )
     @pytest.mark.asyncio
     async def test_simulation_websocket_connection(self):
         """Test WebSocket connection for simulation updates."""
@@ -173,7 +179,9 @@ class TestWebSocketEndpoints:
                 # In test environment, connection will fail, but we can test the setup
                 pass
 
-    @pytest.mark.skipif(not WEBSOCKETS_AVAILABLE, reason="websockets module not available")
+    @pytest.mark.skipif(
+        not WEBSOCKETS_AVAILABLE, reason="websockets module not available"
+    )
     @pytest.mark.asyncio
     async def test_system_websocket_connection(self):
         """Test WebSocket connection for system-wide updates."""
@@ -238,7 +246,10 @@ class TestAPIErrorHandling:
     def test_400_validation_error_response(self, test_client):
         """Test validation error responses."""
         # Send invalid data
-        invalid_data = {"name": "", "project_type": "invalid_type"}  # Empty name should cause validation error
+        invalid_data = {
+            "name": "",
+            "project_type": "invalid_type",
+        }  # Empty name should cause validation error
 
         response = test_client.post("/api/v1/simulations", json=invalid_data)
 
@@ -273,7 +284,11 @@ class TestAPIErrorHandling:
         response = test_client.get("/")
 
         # Check security headers
-        security_headers = ["x-content-type-options", "x-frame-options", "x-xss-protection"]
+        security_headers = [
+            "x-content-type-options",
+            "x-frame-options",
+            "x-xss-protection",
+        ]
 
         for header in security_headers:
             assert header in response.headers, f"Missing security header: {header}"
@@ -428,7 +443,10 @@ def test_client():
                 "_links": {
                     "self": {"href": "/", "title": "API Root"},
                     "health": {"href": "/health", "title": "Health Check"},
-                    "simulations": {"href": "/api/v1/simulations", "title": "Simulations"},
+                    "simulations": {
+                        "href": "/api/v1/simulations",
+                        "title": "Simulations",
+                    },
                     "config": {"href": "/api/v1/config", "title": "Configuration"},
                     "documentation": {"href": "/docs", "title": "API Documentation"},
                 },
@@ -439,7 +457,11 @@ def test_client():
         @app.get("/health")
         async def health():
             """Mock health endpoint."""
-            return {"status": "healthy", "message": "Service is operational", "timestamp": "2024-01-15T10:30:45Z"}
+            return {
+                "status": "healthy",
+                "message": "Service is operational",
+                "timestamp": "2024-01-15T10:30:45Z",
+            }
 
         @app.get("/api/v1/simulations")
         async def simulations():
@@ -460,8 +482,14 @@ def test_client():
             if simulation_id == "non-existent-id":
                 return {
                     "_links": {
-                        "collection": {"href": "/api/v1/simulations", "title": "Back to simulations"},
-                        "help": {"href": "/docs/errors", "title": "Error documentation"},
+                        "collection": {
+                            "href": "/api/v1/simulations",
+                            "title": "Back to simulations",
+                        },
+                        "help": {
+                            "href": "/docs/errors",
+                            "title": "Error documentation",
+                        },
                         "support": {"href": "/support", "title": "Get support"},
                     },
                     "error": "Resource not found",

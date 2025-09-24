@@ -9,7 +9,12 @@ quality metrics, and architectural analysis.
 import time
 from typing import Dict, List, Tuple
 
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import (
+    BaseServiceAdapter,
+    CommandResult,
+    ServiceInfo,
+    ServiceStatus,
+)
 
 
 class AnalysisServiceAdapter(BaseServiceAdapter):
@@ -74,7 +79,9 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
             if health_response and status_response:
                 # Determine status from responses
                 health_status = health_response.get("status", "unknown")
-                service_operational = status_response.get("data", {}).get("status") == "operational"
+                service_operational = (
+                    status_response.get("data", {}).get("status") == "operational"
+                )
 
                 if health_status == "healthy" and service_operational:
                     status = ServiceStatus.HEALTHY
@@ -85,13 +92,19 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
 
                 return CommandResult(
                     success=True,
-                    data={"health": health_response, "status": status_response, "overall_status": status.value},
+                    data={
+                        "health": health_response,
+                        "status": status_response,
+                        "overall_status": status.value,
+                    },
                     message=message,
                     execution_time=execution_time,
                 )
             else:
                 return CommandResult(
-                    success=False, error="Analysis Service health check failed", execution_time=execution_time
+                    success=False,
+                    error="Analysis Service health check failed",
+                    execution_time=execution_time,
                 )
 
         except Exception as e:
@@ -100,16 +113,32 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
         """Get available Analysis Service commands"""
         return [
-            ("analyze", "Perform general code analysis", "analyze [target_id] [analysis_type]"),
+            (
+                "analyze",
+                "Perform general code analysis",
+                "analyze [target_id] [analysis_type]",
+            ),
             (
                 "semantic_similarity",
                 "Analyze semantic similarity between documents",
                 "semantic_similarity [targets] [threshold]",
             ),
-            ("sentiment_analysis", "Perform sentiment analysis on content", "sentiment_analysis [target_id]"),
-            ("quality_assessment", "Assess content quality", "quality_assessment [target_id]"),
+            (
+                "sentiment_analysis",
+                "Perform sentiment analysis on content",
+                "sentiment_analysis [target_id]",
+            ),
+            (
+                "quality_assessment",
+                "Assess content quality",
+                "quality_assessment [target_id]",
+            ),
             ("security_scan", "Perform security analysis", "security_scan [target_id]"),
-            ("architecture_analysis", "Analyze system architecture", "architecture_analysis [target_id]"),
+            (
+                "architecture_analysis",
+                "Analyze system architecture",
+                "architecture_analysis [target_id]",
+            ),
             ("status", "Get service status and capabilities", "status"),
             ("metrics", "Get analysis metrics", "metrics"),
             ("health_detailed", "Get detailed health information", "health_detailed"),
@@ -142,7 +171,9 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
                 return CommandResult(success=False, error=f"Unknown command: {command}")
 
         except Exception as e:
-            return CommandResult(success=False, error=f"Command execution failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Command execution failed: {str(e)}"
+            )
 
     # Private command implementations
     async def _get_service_status(self) -> CommandResult:
@@ -160,7 +191,9 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get service status: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get service status: {str(e)}"
+            )
 
     async def _perform_analysis(self, params: Dict) -> CommandResult:
         """Perform general analysis"""
@@ -178,7 +211,10 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message="Analysis completed successfully", execution_time=execution_time
+                success=True,
+                data=response,
+                message="Analysis completed successfully",
+                execution_time=execution_time,
             )
         except Exception as e:
             return CommandResult(success=False, error=f"Analysis failed: {str(e)}")
@@ -189,7 +225,10 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
             start_time = time.time()
             url = f"{self.base_url}/api/analysis/semantic-similarity"
 
-            payload = {"targets": params.get("targets", ["doc1", "doc2"]), "threshold": params.get("threshold", 0.7)}
+            payload = {
+                "targets": params.get("targets", ["doc1", "doc2"]),
+                "threshold": params.get("threshold", 0.7),
+            }
 
             response = await self.clients.post_json(url, payload)
             execution_time = time.time() - start_time
@@ -201,27 +240,35 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Semantic similarity analysis failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Semantic similarity analysis failed: {str(e)}"
+            )
 
     async def _sentiment_analysis(self, params: Dict) -> CommandResult:
         """Perform sentiment analysis"""
         # Implementation would call appropriate endpoint
         return CommandResult(
-            success=True, data={"sentiment": "positive", "confidence": 0.85}, message="Sentiment analysis completed"
+            success=True,
+            data={"sentiment": "positive", "confidence": 0.85},
+            message="Sentiment analysis completed",
         )
 
     async def _quality_assessment(self, params: Dict) -> CommandResult:
         """Perform quality assessment"""
         # Implementation would call appropriate endpoint
         return CommandResult(
-            success=True, data={"quality_score": 85, "issues": []}, message="Quality assessment completed"
+            success=True,
+            data={"quality_score": 85, "issues": []},
+            message="Quality assessment completed",
         )
 
     async def _security_scan(self, params: Dict) -> CommandResult:
         """Perform security scan"""
         # Implementation would call appropriate endpoint
         return CommandResult(
-            success=True, data={"security_score": 92, "vulnerabilities": []}, message="Security scan completed"
+            success=True,
+            data={"security_score": 92, "vulnerabilities": []},
+            message="Security scan completed",
         )
 
     async def _architecture_analysis(self, params: Dict) -> CommandResult:
@@ -238,6 +285,10 @@ class AnalysisServiceAdapter(BaseServiceAdapter):
         # Implementation would call appropriate endpoint
         return CommandResult(
             success=True,
-            data={"total_analyses": 150, "avg_execution_time": 2.3, "success_rate": 0.95},
+            data={
+                "total_analyses": 150,
+                "avg_execution_time": 2.3,
+                "success_rate": 0.95,
+            },
             message="Metrics retrieved successfully",
         )

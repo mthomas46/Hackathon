@@ -18,14 +18,21 @@ from services.clients.simulation_client import SimulationClient
 def render_controls_page():
     """Render the advanced simulation controls page."""
     st.markdown("## 🎮 Advanced Simulation Controls")
-    st.markdown("Comprehensive simulation lifecycle management with real-time control and monitoring.")
+    st.markdown(
+        "Comprehensive simulation lifecycle management with real-time control and monitoring."
+    )
 
     # Initialize session state
     initialize_controls_state()
 
     # Create tabs for different control aspects
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["🎛️ Control Panel", "📊 Bulk Operations", "📈 Status Monitor", "⚙️ Queue Management"]
+        [
+            "🎛️ Control Panel",
+            "📊 Bulk Operations",
+            "📈 Status Monitor",
+            "⚙️ Queue Management",
+        ]
     )
 
     with tab1:
@@ -74,7 +81,9 @@ def render_control_panel():
             ]
 
             selected_sim_option = st.selectbox(
-                "Target Simulation", options=simulation_options, key="control_simulation_selector"
+                "Target Simulation",
+                options=simulation_options,
+                key="control_simulation_selector",
             )
 
             if selected_sim_option and selected_sim_option != "Select a simulation...":
@@ -143,20 +152,30 @@ def render_simulation_controls(simulation_id: str):
             execute_control_action(simulation_id, "start")
 
     with col2:
-        if st.button("⏸️ Pause", key=f"pause_{simulation_id}", disabled=status not in ["running"]):
+        if st.button(
+            "⏸️ Pause", key=f"pause_{simulation_id}", disabled=status not in ["running"]
+        ):
             execute_control_action(simulation_id, "pause")
 
     with col3:
-        if st.button("▶️ Resume", key=f"resume_{simulation_id}", disabled=status not in ["paused"]):
+        if st.button(
+            "▶️ Resume", key=f"resume_{simulation_id}", disabled=status not in ["paused"]
+        ):
             execute_control_action(simulation_id, "resume")
 
     with col4:
-        if st.button("⏹️ Stop", key=f"stop_{simulation_id}", disabled=status not in ["running", "paused"]):
+        if st.button(
+            "⏹️ Stop",
+            key=f"stop_{simulation_id}",
+            disabled=status not in ["running", "paused"],
+        ):
             execute_control_action(simulation_id, "stop")
 
     with col5:
         if st.button(
-            "❌ Cancel", key=f"cancel_{simulation_id}", disabled=status in ["completed", "cancelled", "failed"]
+            "❌ Cancel",
+            key=f"cancel_{simulation_id}",
+            disabled=status in ["completed", "cancelled", "failed"],
         ):
             execute_control_action(simulation_id, "cancel")
 
@@ -169,7 +188,10 @@ def render_simulation_controls(simulation_id: str):
         with col1:
             st.markdown("**Priority Management**")
             priority = st.selectbox(
-                "Set Priority", options=["Low", "Normal", "High", "Critical"], index=1, key=f"priority_{simulation_id}"
+                "Set Priority",
+                options=["Low", "Normal", "High", "Critical"],
+                index=1,
+                key=f"priority_{simulation_id}",
             )
 
             if st.button("Update Priority", key=f"update_priority_{simulation_id}"):
@@ -178,11 +200,19 @@ def render_simulation_controls(simulation_id: str):
         with col2:
             st.markdown("**Resource Allocation**")
             cpu_limit = st.slider(
-                "CPU Limit (%)", min_value=10, max_value=100, value=50, key=f"cpu_limit_{simulation_id}"
+                "CPU Limit (%)",
+                min_value=10,
+                max_value=100,
+                value=50,
+                key=f"cpu_limit_{simulation_id}",
             )
 
             memory_limit = st.slider(
-                "Memory Limit (MB)", min_value=128, max_value=2048, value=512, key=f"memory_limit_{simulation_id}"
+                "Memory Limit (MB)",
+                min_value=128,
+                max_value=2048,
+                value=512,
+                key=f"memory_limit_{simulation_id}",
             )
 
             if st.button("Update Resources", key=f"update_resources_{simulation_id}"):
@@ -206,10 +236,15 @@ def render_bulk_operations():
         st.warning("No simulations available for bulk operations.")
         return
 
-    simulation_options = [f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}" for sim in simulations]
+    simulation_options = [
+        f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}"
+        for sim in simulations
+    ]
 
     selected_simulations = st.multiselect(
-        "Select simulations for bulk operation", options=simulation_options, key="bulk_simulation_selector"
+        "Select simulations for bulk operation",
+        options=simulation_options,
+        key="bulk_simulation_selector",
     )
 
     if not selected_simulations:
@@ -249,18 +284,26 @@ def render_bulk_operations():
 def render_status_monitor():
     """Render comprehensive status monitoring interface."""
     st.markdown("### 📈 Real-Time Status Monitor")
-    st.markdown("Monitor simulation execution status and control operations in real-time.")
+    st.markdown(
+        "Monitor simulation execution status and control operations in real-time."
+    )
 
     # Auto-refresh toggle
     col1, col2 = st.columns([1, 3])
 
     with col1:
-        auto_refresh = st.checkbox("Auto-refresh", value=True, key="status_auto_refresh")
+        auto_refresh = st.checkbox(
+            "Auto-refresh", value=True, key="status_auto_refresh"
+        )
 
     with col2:
         if auto_refresh:
             refresh_interval = st.slider(
-                "Refresh interval (seconds)", min_value=5, max_value=60, value=10, key="status_refresh_interval"
+                "Refresh interval (seconds)",
+                min_value=5,
+                max_value=60,
+                value=10,
+                key="status_refresh_interval",
             )
 
     # Status overview
@@ -335,17 +378,37 @@ def render_queue_management():
 
         with col1:
             max_concurrent = st.slider(
-                "Max Concurrent Simulations", min_value=1, max_value=20, value=5, key="max_concurrent"
+                "Max Concurrent Simulations",
+                min_value=1,
+                max_value=20,
+                value=5,
+                key="max_concurrent",
             )
 
-            priority_weight = st.slider("Priority Weight", min_value=1, max_value=10, value=3, key="priority_weight")
+            priority_weight = st.slider(
+                "Priority Weight",
+                min_value=1,
+                max_value=10,
+                value=3,
+                key="priority_weight",
+            )
 
         with col2:
             timeout_minutes = st.slider(
-                "Default Timeout (minutes)", min_value=5, max_value=480, value=60, key="timeout_minutes"
+                "Default Timeout (minutes)",
+                min_value=5,
+                max_value=480,
+                value=60,
+                key="timeout_minutes",
             )
 
-            retry_attempts = st.slider("Max Retry Attempts", min_value=0, max_value=5, value=2, key="retry_attempts")
+            retry_attempts = st.slider(
+                "Max Retry Attempts",
+                min_value=0,
+                max_value=5,
+                value=2,
+                key="retry_attempts",
+            )
 
         if st.button("💾 Save Queue Configuration", key="save_queue_config"):
             save_queue_configuration(
@@ -475,7 +538,9 @@ def execute_control_action(simulation_id: str, action: str):
         st.info(f"📝 Operation logged: {action_display} simulation {simulation_id}")
 
     except Exception as e:
-        st.error(f"❌ Failed to execute {action} on simulation {simulation_id}: {str(e)}")
+        st.error(
+            f"❌ Failed to execute {action} on simulation {simulation_id}: {str(e)}"
+        )
 
 
 def update_simulation_priority(simulation_id: str, priority: str):
@@ -491,7 +556,9 @@ def update_simulation_resources(simulation_id: str, cpu_limit: int, memory_limit
     """Update simulation resource allocation."""
     try:
         # Mock implementation
-        st.success(f"✅ Resources updated - CPU: {cpu_limit}%, Memory: {memory_limit}MB for simulation {simulation_id}")
+        st.success(
+            f"✅ Resources updated - CPU: {cpu_limit}%, Memory: {memory_limit}MB for simulation {simulation_id}"
+        )
     except Exception as e:
         st.error(f"❌ Failed to update resources: {str(e)}")
 
@@ -592,7 +659,14 @@ def render_bulk_status(simulation_ids: List[str]):
 
 def get_status_color(status: str) -> str:
     """Get color for status display."""
-    colors = {"running": "🟢", "paused": "🟡", "completed": "✅", "failed": "❌", "cancelled": "🚫", "created": "🔵"}
+    colors = {
+        "running": "🟢",
+        "paused": "🟡",
+        "completed": "✅",
+        "failed": "❌",
+        "cancelled": "🚫",
+        "created": "🔵",
+    }
     return colors.get(status.lower(), "⚪")
 
 
@@ -663,7 +737,12 @@ def render_control_timeline():
 def render_system_resources_status():
     """Render system resource status."""
     # Mock system resource data
-    resources = {"cpu_usage": 45.2, "memory_usage": 68.7, "disk_usage": 32.1, "network_io": 12.5}
+    resources = {
+        "cpu_usage": 45.2,
+        "memory_usage": 68.7,
+        "disk_usage": 32.1,
+        "network_io": 12.5,
+    }
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -723,6 +802,11 @@ def render_queue_visualization():
     statuses = list(queue_status.keys())
     counts = list(queue_status.values())
 
-    fig = px.bar(x=statuses, y=counts, title="Simulation Queue Status", labels={"x": "Status", "y": "Count"})
+    fig = px.bar(
+        x=statuses,
+        y=counts,
+        title="Simulation Queue Status",
+        labels={"x": "Status", "y": "Count"},
+    )
 
     st.plotly_chart(fig, use_container_width=True)

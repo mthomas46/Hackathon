@@ -209,7 +209,12 @@ class SampleDocumentRepository:
                 "dateCreated": "2024-01-28T11:15:00Z",
                 "dateUpdated": "2024-02-05T16:20:00Z",
                 "category": "bug_fix",
-                "tags": ["memory_leak", "performance", "database", "transaction_processing"],
+                "tags": [
+                    "memory_leak",
+                    "performance",
+                    "database",
+                    "transaction_processing",
+                ],
                 "author": "David Kim",
                 "status": "merged",
             },
@@ -242,11 +247,19 @@ class SampleDocumentRepository:
 
     def get_documents_by_type(self, doc_type: str) -> List[Dict[str, Any]]:
         """Get documents filtered by type (confluence, jira, pull_request)."""
-        return [doc for doc in self.documents if doc.get("type", "").lower() == doc_type.lower()]
+        return [
+            doc
+            for doc in self.documents
+            if doc.get("type", "").lower() == doc_type.lower()
+        ]
 
     def get_documents_by_category(self, category: str) -> List[Dict[str, Any]]:
         """Get documents filtered by category."""
-        return [doc for doc in self.documents if doc.get("category", "").lower() == category.lower()]
+        return [
+            doc
+            for doc in self.documents
+            if doc.get("category", "").lower() == category.lower()
+        ]
 
     def get_similar_documents(self) -> List[Dict[str, Any]]:
         """Get documents that are highly similar (for testing deduplication)."""
@@ -258,11 +271,19 @@ class SampleDocumentRepository:
 
     def get_gap_documents(self) -> List[Dict[str, Any]]:
         """Get documents that identify gaps in development."""
-        return [doc for doc in self.documents if "gap" in doc.get("tags", []) or "gap" in doc.get("id", "")]
+        return [
+            doc
+            for doc in self.documents
+            if "gap" in doc.get("tags", []) or "gap" in doc.get("id", "")
+        ]
 
     def get_sparse_documents(self) -> List[Dict[str, Any]]:
         """Get documents with sparse/minimal content."""
-        return [doc for doc in self.documents if "sparse" in doc.get("id", "") or len(doc.get("content", "")) < 50]
+        return [
+            doc
+            for doc in self.documents
+            if "sparse" in doc.get("id", "") or len(doc.get("content", "")) < 50
+        ]
 
     def get_blank_documents(self) -> List[Dict[str, Any]]:
         """Get documents with blank/empty content."""
@@ -294,10 +315,18 @@ class SampleDocumentRepository:
         if "jira" in query_lower or "ticket" in query_lower or "bug" in query_lower:
             relevant_docs.extend(self.get_documents_by_type("jira"))
 
-        if "pull request" in query_lower or "pr" in query_lower or "code review" in query_lower:
+        if (
+            "pull request" in query_lower
+            or "pr" in query_lower
+            or "code review" in query_lower
+        ):
             relevant_docs.extend(self.get_documents_by_type("pull_request"))
 
-        if "confluence" in query_lower or "wiki" in query_lower or "page" in query_lower:
+        if (
+            "confluence" in query_lower
+            or "wiki" in query_lower
+            or "page" in query_lower
+        ):
             relevant_docs.extend(self.get_documents_by_type("confluence"))
 
         if "conflict" in query_lower or "contradiction" in query_lower:

@@ -6,7 +6,7 @@ extracted from the main source-agent service to improve maintainability.
 
 from typing import List
 
-from services.shared.core.models.models import Document
+from services.doc_store.core.entities import Document
 
 # Import shared utilities from main service module
 from .shared_utils import (
@@ -26,7 +26,12 @@ def build_readme_doc(owner: str, repo: str, content: str) -> Document:
         id=f"github:{owner}/{repo}:readme",
         title="README.md",
         content=normalize_document_content(content, "github"),
-        metadata={"owner": owner, "repo": repo, "type": "readme", "url": f"https://github.com/{owner}/{repo}"},
+        metadata={
+            "owner": owner,
+            "repo": repo,
+            "type": "readme",
+            "url": f"https://github.com/{owner}/{repo}",
+        },
     )
     return doc
 
@@ -78,8 +83,12 @@ def build_jira_doc(key: str, data: dict) -> Document:
             "issue_key": key,
             "project": key.split("-")[0] if "-" in key else "",
             "status": data.get("fields", {}).get("status", {}).get("name", ""),
-            "assignee": data.get("fields", {}).get("assignee", {}).get("displayName", ""),
-            "reporter": data.get("fields", {}).get("reporter", {}).get("displayName", ""),
+            "assignee": data.get("fields", {})
+            .get("assignee", {})
+            .get("displayName", ""),
+            "reporter": data.get("fields", {})
+            .get("reporter", {})
+            .get("displayName", ""),
             "type": data.get("fields", {}).get("issuetype", {}).get("name", ""),
             "url": f"{get_jira_base_url()}/browse/{key}",
         },

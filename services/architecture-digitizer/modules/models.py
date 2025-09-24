@@ -4,7 +4,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, field_validator
 
-from services.shared.core.responses.responses import BaseResponse
+# Using standardized response system from shared.presentation.responses
+from services.shared.presentation.responses import APIResponse
 
 
 class ArchitectureComponent(BaseModel):
@@ -18,7 +19,16 @@ class ArchitectureComponent(BaseModel):
     @field_validator("type")
     @classmethod
     def validate_component_type(cls, v):
-        valid_types = ["service", "database", "queue", "ui", "gateway", "function", "storage", "other"]
+        valid_types = [
+            "service",
+            "database",
+            "queue",
+            "ui",
+            "gateway",
+            "function",
+            "storage",
+            "other",
+        ]
         if v not in valid_types:
             raise ValueError(f'Component type must be one of: {", ".join(valid_types)}')
         return v
@@ -79,7 +89,7 @@ class FileNormalizeRequest(BaseModel):
         return v.lower()
 
 
-class NormalizeResponse(BaseResponse):
+class NormalizeResponse(APIResponse):
     """Response model for normalized architecture data."""
 
     system: str
@@ -96,7 +106,7 @@ class SupportedSystemInfo(BaseModel):
     supported: bool
 
 
-class FileNormalizeResponse(BaseResponse):
+class FileNormalizeResponse(APIResponse):
     """Response model for file-based normalization."""
 
     system: str
@@ -105,7 +115,7 @@ class FileNormalizeResponse(BaseResponse):
     data: NormalizedArchitectureData
 
 
-class SupportedFileFormatsResponse(BaseResponse):
+class SupportedFileFormatsResponse(APIResponse):
     """Response model for supported file formats by system."""
 
     system: str
@@ -113,7 +123,7 @@ class SupportedFileFormatsResponse(BaseResponse):
     count: int
 
 
-class SupportedSystemsResponse(BaseResponse):
+class SupportedSystemsResponse(APIResponse):
     """Response model for supported systems list."""
 
     systems: List[SupportedSystemInfo]

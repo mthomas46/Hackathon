@@ -64,7 +64,9 @@ class ToolDiscoveryService:
 
             # Extract endpoints and analyze for tool potential
             endpoints = self._extract_endpoints(spec)
-            tools = self._analyze_endpoints_for_tools(service_name, service_url, endpoints, tool_categories)
+            tools = self._analyze_endpoints_for_tools(
+                service_name, service_url, endpoints, tool_categories
+            )
 
             # Store discovered tools
             self.discovered_tools[service_name] = {
@@ -90,7 +92,11 @@ class ToolDiscoveryService:
                 "error",
                 error_msg,
                 ServiceNames.DISCOVERY_AGENT,
-                {"service_name": service_name, "service_url": service_url, "openapi_url": openapi_url},
+                {
+                    "service_name": service_name,
+                    "service_url": service_url,
+                    "openapi_url": openapi_url,
+                },
             )
             raise Exception(error_msg)
 
@@ -144,7 +150,9 @@ class ToolDiscoveryService:
             tool = self._generate_tool_for_endpoint(service_name, service_url, endpoint)
             if tool:
                 # Filter by categories if specified
-                if tool_categories is None or any(cat in tool.get("categories", []) for cat in tool_categories):
+                if tool_categories is None or any(
+                    cat in tool.get("categories", []) for cat in tool_categories
+                ):
                     tools.append(tool)
 
         return tools
@@ -177,7 +185,10 @@ class ToolDiscoveryService:
             "path": endpoint["path"],
             "categories": categories,
             "parameters": parameters,
-            "endpoint_info": {"summary": endpoint.get("summary", ""), "tags": endpoint.get("tags", [])},
+            "endpoint_info": {
+                "summary": endpoint.get("summary", ""),
+                "tags": endpoint.get("tags", []),
+            },
         }
 
     def _categorize_operation(self, endpoint: Dict[str, Any]) -> List[str]:
@@ -191,7 +202,11 @@ class ToolDiscoveryService:
         # CRUD operations
         if operation_id.startswith("create") or method == "post":
             categories.append("create")
-        if operation_id.startswith("get") or operation_id.startswith("list") or method == "get":
+        if (
+            operation_id.startswith("get")
+            or operation_id.startswith("list")
+            or method == "get"
+        ):
             categories.append("read")
         if operation_id.startswith("update") or method in ["put", "patch"]:
             categories.append("update")
@@ -199,7 +214,10 @@ class ToolDiscoveryService:
             categories.append("delete")
 
         # Business operations
-        if any(word in operation_id for word in ["analyze", "analysis", "check", "validate"]):
+        if any(
+            word in operation_id
+            for word in ["analyze", "analysis", "check", "validate"]
+        ):
             categories.append("analysis")
         if any(word in operation_id for word in ["search", "find", "query"]):
             categories.append("search")
@@ -228,7 +246,9 @@ class ToolDiscoveryService:
         name = re.sub(r"(?<!^)(?=[A-Z])", "_", operation_id).lower()
         return f"{service_name}_{name}"
 
-    def _generate_tool_description(self, endpoint: Dict[str, Any], categories: List[str]) -> str:
+    def _generate_tool_description(
+        self, endpoint: Dict[str, Any], categories: List[str]
+    ) -> str:
         """Generate a descriptive tool description."""
         summary = endpoint.get("summary", "")
         operation_id = endpoint.get("operation_id", "")
@@ -279,7 +299,9 @@ class ToolDiscoveryService:
 
         return parameters
 
-    def get_discovered_tools(self, service_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_discovered_tools(
+        self, service_name: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Get discovered tools for a service or all services."""
         if service_name:
             return self.discovered_tools.get(service_name, {})
@@ -296,7 +318,9 @@ class ToolDiscoveryService:
     # PHASE 2: COMPREHENSIVE SERVICE DISCOVERY
     # ============================================================================
 
-    async def discover_ecosystem_tools(self, service_configs: Dict[str, Dict]) -> Dict[str, Any]:
+    async def discover_ecosystem_tools(
+        self, service_configs: Dict[str, Dict]
+    ) -> Dict[str, Any]:
         """PHASE 2: Run comprehensive tool discovery across entire ecosystem
 
         Args:
@@ -316,7 +340,9 @@ class ToolDiscoveryService:
             "validation_results": [],
         }
 
-        print(f"🔍 Starting comprehensive ecosystem discovery for {len(service_configs)} services...")
+        print(
+            f"🔍 Starting comprehensive ecosystem discovery for {len(service_configs)} services..."
+        )
 
         for service_name, config in service_configs.items():
             print(f"\n🔍 Discovering tools for {service_name}...")
@@ -335,18 +361,24 @@ class ToolDiscoveryService:
                 discovery_results["healthy_services"] += 1
 
                 # Discover OpenAPI and tools
-                openapi_result = await self._discover_service_openapi(service_name, config)
+                openapi_result = await self._discover_service_openapi(
+                    service_name, config
+                )
                 service_result["openapi"] = openapi_result
 
                 if openapi_result.get("success"):
                     # Extract tools
-                    tools = await self._extract_tools_from_openapi(service_name, openapi_result["data"])
+                    tools = await self._extract_tools_from_openapi(
+                        service_name, openapi_result["data"]
+                    )
                     service_result["tools"] = tools
                     discovery_results["total_tools_discovered"] += len(tools)
 
                     # Validate tools
                     if self.security_scanner:
-                        validation = await self._validate_tools_security(service_name, tools)
+                        validation = await self._validate_tools_security(
+                            service_name, tools
+                        )
                         service_result["validation"] = validation
 
                     print(
@@ -357,7 +389,9 @@ class ToolDiscoveryService:
                     service_result["performance"] = {
                         "discovery_time": health_result.get("response_time", 0),
                         "tool_count": len(tools),
-                        "endpoint_count": openapi_result["data"].get("endpoints_count", 0),
+                        "endpoint_count": openapi_result["data"].get(
+                            "endpoints_count", 0
+                        ),
                     }
 
                     discovery_results["performance_metrics"].append(
@@ -365,12 +399,16 @@ class ToolDiscoveryService:
                             "service": service_name,
                             "response_time": health_result.get("response_time", 0),
                             "tools_found": len(tools),
-                            "endpoints_found": openapi_result["data"].get("endpoints_count", 0),
+                            "endpoints_found": openapi_result["data"].get(
+                                "endpoints_count", 0
+                            ),
                         }
                     )
 
                 else:
-                    print(f"   ❌ OpenAPI discovery failed: {openapi_result.get('error')}")
+                    print(
+                        f"   ❌ OpenAPI discovery failed: {openapi_result.get('error')}"
+                    )
 
             else:
                 print(f"   ❌ Service unhealthy: {health_result.get('error')}")
@@ -393,7 +431,11 @@ class ToolDiscoveryService:
         discovery_results["summary"] = {
             "services_healthy": discovery_results["healthy_services"],
             "services_total": discovery_results["services_tested"],
-            "health_percentage": (discovery_results["healthy_services"] / discovery_results["services_tested"]) * 100,
+            "health_percentage": (
+                discovery_results["healthy_services"]
+                / discovery_results["services_tested"]
+            )
+            * 100,
             "tools_discovered": discovery_results["total_tools_discovered"],
             "avg_tools_per_service": discovery_results["total_tools_discovered"]
             / max(discovery_results["healthy_services"], 1),
@@ -405,7 +447,9 @@ class ToolDiscoveryService:
 
         return discovery_results
 
-    async def _check_service_health(self, service_name: str, config: Dict) -> Dict[str, Any]:
+    async def _check_service_health(
+        self, service_name: str, config: Dict
+    ) -> Dict[str, Any]:
         """Check service health status"""
         try:
             async with self.service_client.session() as session:
@@ -414,7 +458,11 @@ class ToolDiscoveryService:
 
                 async with session.get(health_url, timeout=5) as response:
                     if response.status == 200:
-                        return {"status": "healthy", "response_time": 0.1, "service_url": config["url"]}  # Placeholder
+                        return {
+                            "status": "healthy",
+                            "response_time": 0.1,
+                            "service_url": config["url"],
+                        }  # Placeholder
                     else:
                         return {
                             "status": "unhealthy",
@@ -424,7 +472,9 @@ class ToolDiscoveryService:
         except Exception as e:
             return {"status": "unreachable", "error": str(e), "response_time": 0.1}
 
-    async def _discover_service_openapi(self, service_name: str, config: Dict) -> Dict[str, Any]:
+    async def _discover_service_openapi(
+        self, service_name: str, config: Dict
+    ) -> Dict[str, Any]:
         """Discover OpenAPI specification for a service"""
         try:
             spec_url = f"{config['url']}{config['openapi_path']}"
@@ -446,11 +496,16 @@ class ToolDiscoveryService:
 
                         return {"success": True, "data": info}
                     else:
-                        return {"success": False, "error": f"OpenAPI returned {response.status}"}
+                        return {
+                            "success": False,
+                            "error": f"OpenAPI returned {response.status}",
+                        }
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    async def _extract_tools_from_openapi(self, service_name: str, openapi_data: Dict) -> List[Dict[str, Any]]:
+    async def _extract_tools_from_openapi(
+        self, service_name: str, openapi_data: Dict
+    ) -> List[Dict[str, Any]]:
         """Extract tool definitions from OpenAPI specification"""
         spec = openapi_data["full_spec"]
         paths = spec.get("paths", {})
@@ -479,7 +534,9 @@ class ToolDiscoveryService:
     # PHASE 4: SECURITY SCANNING INTEGRATION
     # ============================================================================
 
-    async def _validate_tools_security(self, service_name: str, tools: List[Dict]) -> Dict[str, Any]:
+    async def _validate_tools_security(
+        self, service_name: str, tools: List[Dict]
+    ) -> Dict[str, Any]:
         """PHASE 4: Validate tools using security scanner"""
         if not self.security_scanner:
             return {"scanned": False, "error": "Security scanner not configured"}
@@ -509,7 +566,9 @@ class ToolDiscoveryService:
 
             # Log security scan
             if self.monitoring_service:
-                await self.monitoring_service.monitor_security_scan(tool["name"], security_result)
+                await self.monitoring_service.monitor_security_scan(
+                    tool["name"], security_result
+                )
 
         validation_results["overall_risk"] = (
             "high"
@@ -535,13 +594,16 @@ class ToolDiscoveryService:
                 "services_tested": discovery_results["services_tested"],
                 "healthy_services": discovery_results["healthy_services"],
                 "total_tools_discovered": discovery_results["total_tools_discovered"],
-                "discovery_duration": len(discovery_results["performance_metrics"]) * 0.5,  # Estimate
+                "discovery_duration": len(discovery_results["performance_metrics"])
+                * 0.5,  # Estimate
             },
         )
 
         # Log performance metrics for each service
         for metric in discovery_results["performance_metrics"]:
-            await self.monitoring_service.log_discovery_event("service_performance", metric)
+            await self.monitoring_service.log_discovery_event(
+                "service_performance", metric
+            )
 
 
 # Create singleton instance

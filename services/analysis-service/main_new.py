@@ -19,7 +19,10 @@ from services.shared.core.constants_new import ServiceNames
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.utilities.error_handling import install_error_handlers
-from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities.utilities import (
+    attach_self_register,
+    setup_common_middleware,
+)
 
 # ============================================================================
 # CONTROLLERS - Clean separation of endpoint responsibilities
@@ -65,7 +68,11 @@ from .infrastructure.config import InfrastructureConfig
 
 # DEPENDENCY INJECTION - Clean dependency management
 # ============================================================================
-from .infrastructure.repositories import SQLiteAnalysisRepository, SQLiteDocumentRepository, SQLiteFindingRepository
+from .infrastructure.repositories import (
+    SQLiteAnalysisRepository,
+    SQLiteDocumentRepository,
+    SQLiteFindingRepository,
+)
 
 # ============================================================================
 # SERVICE CONSTANTS - Module-level constants for service configuration
@@ -211,7 +218,9 @@ def create_application() -> FastAPI:
         print(f"🚀 {SERVICE_TITLE} v{SERVICE_VERSION} started successfully")
         print("📊 Architecture: Domain-Driven Design with CQRS")
         print(f"🔧 Controllers: {len(controllers)} registered")
-        print("✨ Clean Architecture: Domain ← Application ← Infrastructure ← Presentation")
+        print(
+            "✨ Clean Architecture: Domain ← Application ← Infrastructure ← Presentation"
+        )
 
     # ============================================================================
     # SHUTDOWN EVENT - Cleanup resources
@@ -247,7 +256,11 @@ if __name__ == "__main__":
     print("🔄 Alternative Docs: http://localhost:{port}/redoc")
 
     uvicorn.run(
-        "main_new:app", host=host, port=port, reload=True, log_level="info"  # Enable auto-reload for development
+        "main_new:app",
+        host=host,
+        port=port,
+        reload=True,
+        log_level="info",  # Enable auto-reload for development
     )
 
 
@@ -270,5 +283,11 @@ SERVICE_METADATA = {
         "Automated remediation",
         "Real-time monitoring",
     ],
-    "dependencies": ["Document Store", "Prompt Store", "Interpreter", "Source Agent", "Orchestrator"],
+    "dependencies": [
+        "Document Store",
+        "Prompt Store",
+        "Interpreter",
+        "Source Agent",
+        "Orchestrator",
+    ],
 }

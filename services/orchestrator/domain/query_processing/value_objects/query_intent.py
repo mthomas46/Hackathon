@@ -48,7 +48,11 @@ class QueryIntent(Enum):
     @property
     def is_analytical(self) -> bool:
         """Check if intent involves analysis or processing."""
-        return self in (QueryIntent.ANALYZE_CONTENT, QueryIntent.COMPARE_ITEMS, QueryIntent.SUMMARIZE_CONTENT)
+        return self in (
+            QueryIntent.ANALYZE_CONTENT,
+            QueryIntent.COMPARE_ITEMS,
+            QueryIntent.SUMMARIZE_CONTENT,
+        )
 
     @property
     def is_operational(self) -> bool:
@@ -63,7 +67,11 @@ class QueryIntent(Enum):
     @property
     def is_conversational(self) -> bool:
         """Check if intent is conversational."""
-        return self in (QueryIntent.GREETING, QueryIntent.CLARIFICATION, QueryIntent.ACKNOWLEDGMENT)
+        return self in (
+            QueryIntent.GREETING,
+            QueryIntent.CLARIFICATION,
+            QueryIntent.ACKNOWLEDGMENT,
+        )
 
     @property
     def requires_execution(self) -> bool:

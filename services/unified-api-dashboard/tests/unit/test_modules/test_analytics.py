@@ -107,7 +107,9 @@ class TestPerformanceInsights:
         return PerformanceInsights(mock_discovery_client, mock_health_monitor)
 
     @pytest.mark.asyncio
-    async def test_analyze_response_times(self, performance_insights, sample_usage_data):
+    async def test_analyze_response_times(
+        self, performance_insights, sample_usage_data
+    ):
         """Test response time analysis."""
         analysis = await performance_insights.analyze_response_times(sample_usage_data)
 
@@ -119,9 +121,13 @@ class TestPerformanceInsights:
         assert "max_response_time" in analysis
 
     @pytest.mark.asyncio
-    async def test_analyze_throughput_patterns(self, performance_insights, sample_usage_data):
+    async def test_analyze_throughput_patterns(
+        self, performance_insights, sample_usage_data
+    ):
         """Test throughput pattern analysis."""
-        analysis = await performance_insights.analyze_throughput_patterns(sample_usage_data)
+        analysis = await performance_insights.analyze_throughput_patterns(
+            sample_usage_data
+        )
 
         assert "hourly_throughput" in analysis
         assert "daily_throughput" in analysis
@@ -133,11 +139,17 @@ class TestPerformanceInsights:
         """Test resource utilization analysis."""
         # Mock resource metrics
         resource_data = [
-            {"timestamp": datetime.now() - timedelta(hours=i), "cpu_percent": 50 + i * 5, "memory_percent": 60 + i * 3}
+            {
+                "timestamp": datetime.now() - timedelta(hours=i),
+                "cpu_percent": 50 + i * 5,
+                "memory_percent": 60 + i * 3,
+            }
             for i in range(5)
         ]
 
-        analysis = await performance_insights.analyze_resource_utilization(resource_data)
+        analysis = await performance_insights.analyze_resource_utilization(
+            resource_data
+        )
 
         assert "cpu_utilization" in analysis
         assert "memory_utilization" in analysis
@@ -145,9 +157,13 @@ class TestPerformanceInsights:
         assert "avg_memory_percent" in analysis["memory_utilization"]
 
     @pytest.mark.asyncio
-    async def test_generate_performance_report(self, performance_insights, sample_usage_data):
+    async def test_generate_performance_report(
+        self, performance_insights, sample_usage_data
+    ):
         """Test performance report generation."""
-        report = await performance_insights.generate_performance_report(sample_usage_data)
+        report = await performance_insights.generate_performance_report(
+            sample_usage_data
+        )
 
         assert "summary" in report
         assert "response_time_analysis" in report
@@ -288,7 +304,9 @@ class TestUsagePatterns:
         # Should detect anomalies in usage patterns
 
     @pytest.mark.asyncio
-    async def test_generate_usage_insights_report(self, usage_patterns, sample_usage_data):
+    async def test_generate_usage_insights_report(
+        self, usage_patterns, sample_usage_data
+    ):
         """Test usage insights report generation."""
         # Record sample data
         for record in sample_usage_data:
@@ -311,8 +329,12 @@ class TestAnalyticsIntegration:
     async def analytics_suite(self, mock_discovery_client, mock_health_monitor):
         """Create full analytics suite for integration testing."""
         return {
-            "usage_analytics": UsageAnalytics(mock_discovery_client, mock_health_monitor),
-            "performance_insights": PerformanceInsights(mock_discovery_client, mock_health_monitor),
+            "usage_analytics": UsageAnalytics(
+                mock_discovery_client, mock_health_monitor
+            ),
+            "performance_insights": PerformanceInsights(
+                mock_discovery_client, mock_health_monitor
+            ),
             "error_tracking": ErrorTracking(mock_discovery_client, mock_health_monitor),
             "usage_patterns": UsagePatterns(mock_discovery_client, mock_health_monitor),
         }
@@ -326,8 +348,12 @@ class TestAnalyticsIntegration:
 
         # Generate insights from different modules
         usage_overview = await analytics_suite["usage_analytics"].get_usage_overview()
-        perf_insights = await analytics_suite["performance_insights"].generate_performance_report(sample_usage_data)
-        usage_patterns_report = await analytics_suite["usage_patterns"].generate_usage_insights_report()
+        perf_insights = await analytics_suite[
+            "performance_insights"
+        ].generate_performance_report(sample_usage_data)
+        usage_patterns_report = await analytics_suite[
+            "usage_patterns"
+        ].generate_usage_insights_report()
 
         # Verify cross-consistency
         assert usage_overview["total_requests"] == len(sample_usage_data)

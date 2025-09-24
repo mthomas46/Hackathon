@@ -37,7 +37,9 @@ class CircuitBreakerMetrics:
     rejected_calls: int = 0
     state_changes: int = 0
     last_state_change: float = field(default_factory=time.time)
-    failure_counts: Dict[FailureType, int] = field(default_factory=lambda: defaultdict(int))
+    failure_counts: Dict[FailureType, int] = field(
+        default_factory=lambda: defaultdict(int)
+    )
 
 
 class ResourceLimiter:
@@ -127,7 +129,11 @@ class EnhancedCircuitBreaker:
             elif self._state == "closed":
                 self._failures = max(0, self._failures - 1)  # gradual recovery
 
-    def on_failure(self, failure_type: FailureType = FailureType.SERVER_ERROR, call_duration: float = 0.0) -> None:
+    def on_failure(
+        self,
+        failure_type: FailureType = FailureType.SERVER_ERROR,
+        call_duration: float = 0.0,
+    ) -> None:
         """Record failed call."""
         with self._lock:
             self._metrics.failed_calls += 1
@@ -215,7 +221,9 @@ async def with_circuit(cb: CircuitBreaker, func: Callable[[], Awaitable[T]]) -> 
         raise
 
 
-async def with_retries(operation: Callable[[], Awaitable[T]], attempts: int = 3, base_delay_ms: int = 100) -> T:
+async def with_retries(
+    operation: Callable[[], Awaitable[T]], attempts: int = 3, base_delay_ms: int = 100
+) -> T:
     """Execute operation with exponential backoff retry logic."""
     last_exc: Exception | None = None
     for i in range(attempts):
@@ -256,7 +264,9 @@ class ResilienceManager:
                 resource_limiter=resource_limiter,
             )
         else:
-            self.circuit_breaker = CircuitBreaker(circuit_failure_threshold, circuit_reset_timeout)
+            self.circuit_breaker = CircuitBreaker(
+                circuit_failure_threshold, circuit_reset_timeout
+            )
 
         self.retry_attempts = retry_attempts
         self.retry_base_delay_ms = retry_base_delay_ms
@@ -290,7 +300,9 @@ class ResilienceManager:
                 return await operation()
 
             async def _circuit_operation():
-                return await with_retries(_timed_operation, self.retry_attempts, self.retry_base_delay_ms)
+                return await with_retries(
+                    _timed_operation, self.retry_attempts, self.retry_base_delay_ms
+                )
 
             result = await with_circuit(self.circuit_breaker, _circuit_operation)
 
@@ -305,7 +317,9 @@ class ResilienceManager:
             return result
 
         except asyncio.TimeoutError:
-            self._handle_failure(operation_name, FailureType.TIMEOUT, timeout_seconds or 0)
+            self._handle_failure(
+                operation_name, FailureType.TIMEOUT, timeout_seconds or 0
+            )
             raise
         except Exception as e:
             # Determine failure type
@@ -317,11 +331,15 @@ class ResilienceManager:
             if hasattr(self.circuit_breaker, "release_resources"):
                 self.circuit_breaker.release_resources()
 
-    def _handle_failure(self, operation_name: str, failure_type: FailureType, duration: float) -> None:
+    def _handle_failure(
+        self, operation_name: str, failure_type: FailureType, duration: float
+    ) -> None:
         """Handle operation failure."""
         if hasattr(self.circuit_breaker, "on_failure"):
             self.circuit_breaker.on_failure(failure_type, duration)
-        self._update_operation_metrics(operation_name, "failure", duration, failure_type)
+        self._update_operation_metrics(
+            operation_name, "failure", duration, failure_type
+        )
 
     def _classify_exception(self, exc: Exception) -> FailureType:
         """Classify exception type for circuit breaker."""
@@ -344,7 +362,11 @@ class ResilienceManager:
         return FailureType.SERVER_ERROR
 
     def _update_operation_metrics(
-        self, operation_name: str, result: str, duration: float, failure_type: Optional[FailureType] = None
+        self,
+        operation_name: str,
+        result: str,
+        duration: float,
+        failure_type: Optional[FailureType] = None,
     ) -> None:
         """Update operation-specific metrics."""
         metrics = self._operation_metrics[operation_name]
@@ -363,7 +385,9 @@ class ResilienceManager:
             metrics["avg_duration"] = duration
         else:
             count = metrics["total_calls"]
-            metrics["avg_duration"] = (metrics["avg_duration"] * (count - 1) + duration) / count
+            metrics["avg_duration"] = (
+                metrics["avg_duration"] * (count - 1) + duration
+            ) / count
 
     def check_rate_limit(self, path: str) -> bool:
         """Check if request should be rate limited."""
@@ -378,7 +402,13 @@ class ResilienceManager:
 
     def get_circuit_breaker_status(self) -> Dict[str, Any]:
         """Get circuit breaker status and metrics."""
-        status = {"state": self.circuit_breaker._state if hasattr(self.circuit_breaker, "_state") else "unknown"}
+        status = {
+            "state": (
+                self.circuit_breaker._state
+                if hasattr(self.circuit_breaker, "_state")
+                else "unknown"
+            )
+        }
 
         if hasattr(self.circuit_breaker, "metrics"):
             status["metrics"] = {

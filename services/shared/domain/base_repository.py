@@ -15,22 +15,25 @@ from ..utilities import utc_now
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')  # Entity type
-ID = TypeVar('ID')  # Identifier type
+T = TypeVar("T")  # Entity type
+ID = TypeVar("ID")  # Identifier type
 
 
 class RepositoryError(Exception):
     """Base exception for repository operations."""
+
     pass
 
 
 class EntityNotFoundError(RepositoryError):
     """Raised when an entity is not found."""
+
     pass
 
 
 class DuplicateEntityError(RepositoryError):
     """Raised when attempting to create a duplicate entity."""
+
     pass
 
 
@@ -74,10 +77,12 @@ class BaseRepository(Generic[T], ABC):
 
     def _get_table_name(self) -> str:
         """Get table name from entity class name."""
-        return self.entity_class.__name__.lower() + 's'
+        return self.entity_class.__name__.lower() + "s"
 
     @abstractmethod
-    async def _execute_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
+    async def _execute_query(
+        self, query: str, params: tuple = ()
+    ) -> List[Dict[str, Any]]:
         """Execute a query and return results.
 
         Args:
@@ -124,29 +129,33 @@ class BaseRepository(Generic[T], ABC):
                 entity.update_timestamp()
                 updated_dict = entity.to_dict()
                 await self._update_entity(entity.id, updated_dict)
-                logger.info(f"Updated {self.entity_class.__name__}", extra={
-                    "entity_id": entity.id,
-                    "table": self.table_name
-                })
+                logger.info(
+                    f"Updated {self.entity_class.__name__}",
+                    extra={"entity_id": entity.id, "table": self.table_name},
+                )
             else:
                 # Insert
-                if not hasattr(entity, 'created_at') or not entity.created_at:
+                if not hasattr(entity, "created_at") or not entity.created_at:
                     entity.created_at = utc_now()
                 entity_dict = entity.to_dict()
                 await self._insert_entity(entity_dict)
-                logger.info(f"Created {self.entity_class.__name__}", extra={
-                    "entity_id": entity.id,
-                    "table": self.table_name
-                })
+                logger.info(
+                    f"Created {self.entity_class.__name__}",
+                    extra={"entity_id": entity.id, "table": self.table_name},
+                )
 
             return entity
 
         except Exception as e:
-            logger.error(f"Failed to save {self.entity_class.__name__}", extra={
-                "entity_id": getattr(entity, 'id', None),
-                "error": str(e),
-                "table": self.table_name
-            }, exc_info=True)
+            logger.error(
+                f"Failed to save {self.entity_class.__name__}",
+                extra={
+                    "entity_id": getattr(entity, "id", None),
+                    "error": str(e),
+                    "table": self.table_name,
+                },
+                exc_info=True,
+            )
             raise RepositoryError(f"Failed to save entity: {e}") from e
 
     async def find_by_id(self, entity_id: Any) -> Optional[T]:
@@ -160,8 +169,7 @@ class BaseRepository(Generic[T], ABC):
         """
         try:
             results = await self._execute_query(
-                f"SELECT * FROM {self.table_name} WHERE id = ?",
-                (entity_id,)
+                f"SELECT * FROM {self.table_name} WHERE id = ?", (entity_id,)
             )
 
             if results:
@@ -169,11 +177,15 @@ class BaseRepository(Generic[T], ABC):
             return None
 
         except Exception as e:
-            logger.error(f"Failed to find {self.entity_class.__name__} by ID", extra={
-                "entity_id": entity_id,
-                "error": str(e),
-                "table": self.table_name
-            }, exc_info=True)
+            logger.error(
+                f"Failed to find {self.entity_class.__name__} by ID",
+                extra={
+                    "entity_id": entity_id,
+                    "error": str(e),
+                    "table": self.table_name,
+                },
+                exc_info=True,
+            )
             raise RepositoryError(f"Failed to find entity: {e}") from e
 
     async def find_all(self, limit: int = 100, offset: int = 0) -> List[T]:
@@ -189,18 +201,22 @@ class BaseRepository(Generic[T], ABC):
         try:
             results = await self._execute_query(
                 f"SELECT * FROM {self.table_name} ORDER BY created_at DESC LIMIT ? OFFSET ?",
-                (limit, offset)
+                (limit, offset),
             )
 
             return [self._dict_to_entity(row) for row in results]
 
         except Exception as e:
-            logger.error(f"Failed to find all {self.entity_class.__name__}", extra={
-                "limit": limit,
-                "offset": offset,
-                "error": str(e),
-                "table": self.table_name
-            }, exc_info=True)
+            logger.error(
+                f"Failed to find all {self.entity_class.__name__}",
+                extra={
+                    "limit": limit,
+                    "offset": offset,
+                    "error": str(e),
+                    "table": self.table_name,
+                },
+                exc_info=True,
+            )
             raise RepositoryError(f"Failed to find entities: {e}") from e
 
     async def delete_by_id(self, entity_id: Any) -> bool:
@@ -214,24 +230,27 @@ class BaseRepository(Generic[T], ABC):
         """
         try:
             affected_rows = await self._execute_command(
-                f"DELETE FROM {self.table_name} WHERE id = ?",
-                (entity_id,)
+                f"DELETE FROM {self.table_name} WHERE id = ?", (entity_id,)
             )
 
             if affected_rows > 0:
-                logger.info(f"Deleted {self.entity_class.__name__}", extra={
-                    "entity_id": entity_id,
-                    "table": self.table_name
-                })
+                logger.info(
+                    f"Deleted {self.entity_class.__name__}",
+                    extra={"entity_id": entity_id, "table": self.table_name},
+                )
                 return True
             return False
 
         except Exception as e:
-            logger.error(f"Failed to delete {self.entity_class.__name__}", extra={
-                "entity_id": entity_id,
-                "error": str(e),
-                "table": self.table_name
-            }, exc_info=True)
+            logger.error(
+                f"Failed to delete {self.entity_class.__name__}",
+                extra={
+                    "entity_id": entity_id,
+                    "error": str(e),
+                    "table": self.table_name,
+                },
+                exc_info=True,
+            )
             raise RepositoryError(f"Failed to delete entity: {e}") from e
 
     async def count(self) -> int:
@@ -241,14 +260,17 @@ class BaseRepository(Generic[T], ABC):
             Total number of entities
         """
         try:
-            results = await self._execute_query(f"SELECT COUNT(*) as count FROM {self.table_name}")
-            return results[0]['count'] if results else 0
+            results = await self._execute_query(
+                f"SELECT COUNT(*) as count FROM {self.table_name}"
+            )
+            return results[0]["count"] if results else 0
 
         except Exception as e:
-            logger.error(f"Failed to count {self.entity_class.__name__}", extra={
-                "error": str(e),
-                "table": self.table_name
-            }, exc_info=True)
+            logger.error(
+                f"Failed to count {self.entity_class.__name__}",
+                extra={"error": str(e), "table": self.table_name},
+                exc_info=True,
+            )
             raise RepositoryError(f"Failed to count entities: {e}") from e
 
     async def exists(self, entity_id: Any) -> bool:
@@ -262,17 +284,20 @@ class BaseRepository(Generic[T], ABC):
         """
         try:
             results = await self._execute_query(
-                f"SELECT 1 FROM {self.table_name} WHERE id = ? LIMIT 1",
-                (entity_id,)
+                f"SELECT 1 FROM {self.table_name} WHERE id = ? LIMIT 1", (entity_id,)
             )
             return len(results) > 0
 
         except Exception as e:
-            logger.error(f"Failed to check existence of {self.entity_class.__name__}", extra={
-                "entity_id": entity_id,
-                "error": str(e),
-                "table": self.table_name
-            }, exc_info=True)
+            logger.error(
+                f"Failed to check existence of {self.entity_class.__name__}",
+                extra={
+                    "entity_id": entity_id,
+                    "error": str(e),
+                    "table": self.table_name,
+                },
+                exc_info=True,
+            )
             raise RepositoryError(f"Failed to check entity existence: {e}") from e
 
     def _dict_to_entity(self, data: Dict[str, Any]) -> T:
@@ -293,13 +318,12 @@ class BaseRepository(Generic[T], ABC):
         Args:
             entity_dict: Entity data as dictionary
         """
-        columns = ', '.join(entity_dict.keys())
-        placeholders = ', '.join(['?' for _ in entity_dict])
+        columns = ", ".join(entity_dict.keys())
+        placeholders = ", ".join(["?" for _ in entity_dict])
         values = tuple(entity_dict.values())
 
         await self._execute_command(
-            f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})",
-            values
+            f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})", values
         )
 
     async def _update_entity(self, entity_id: Any, entity_dict: Dict[str, Any]) -> None:
@@ -309,13 +333,12 @@ class BaseRepository(Generic[T], ABC):
             entity_id: Entity identifier
             entity_dict: Updated entity data
         """
-        set_clause = ', '.join([f"{k} = ?" for k in entity_dict.keys() if k != 'id'])
-        values = tuple([v for k, v in entity_dict.items() if k != 'id'])
+        set_clause = ", ".join([f"{k} = ?" for k in entity_dict.keys() if k != "id"])
+        values = tuple([v for k, v in entity_dict.items() if k != "id"])
         values += (entity_id,)  # Add ID for WHERE clause
 
         await self._execute_command(
-            f"UPDATE {self.table_name} SET {set_clause} WHERE id = ?",
-            values
+            f"UPDATE {self.table_name} SET {set_clause} WHERE id = ?", values
         )
 
 
@@ -335,7 +358,9 @@ class SqlRepository(BaseRepository[T]):
         super().__init__(entity_class)
         self.connection_string = connection_string
 
-    async def _execute_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
+    async def _execute_query(
+        self, query: str, params: tuple = ()
+    ) -> List[Dict[str, Any]]:
         """Execute SQL query using aiosqlite."""
         import aiosqlite
 
@@ -363,7 +388,9 @@ class InMemoryRepository(BaseRepository[T]):
         super().__init__(entity_class)
         self._storage: Dict[Any, Dict[str, Any]] = {}
 
-    async def _execute_query(self, query: str, params: tuple = ()) -> List[Dict[str, Any]]:
+    async def _execute_query(
+        self, query: str, params: tuple = ()
+    ) -> List[Dict[str, Any]]:
         """Mock query execution - return all stored entities."""
         return list(self._storage.values())
 
@@ -377,7 +404,7 @@ class InMemoryRepository(BaseRepository[T]):
 
     async def _insert_entity(self, entity_dict: Dict[str, Any]) -> None:
         """Store entity in memory."""
-        entity_id = entity_dict.get('id')
+        entity_id = entity_dict.get("id")
         if entity_id in self._storage:
             raise DuplicateEntityError(f"Entity with ID {entity_id} already exists")
         self._storage[entity_id] = entity_dict.copy()

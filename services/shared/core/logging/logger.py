@@ -67,7 +67,11 @@ class LoggerService(ILoggerService):
 
                 console_handler.setFormatter(StructuredFormatter())
             else:
-                console_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+                console_handler.setFormatter(
+                    logging.Formatter(
+                        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                    )
+                )
             self._logger.addHandler(console_handler)
 
         # Add file handler if specified
@@ -83,7 +87,9 @@ class LoggerService(ILoggerService):
                 file_handler.setFormatter(StructuredFormatter())
             else:
                 file_handler.setFormatter(
-                    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - %(message)s")
+                    logging.Formatter(
+                        "%(asctime)s - %(name)s - %(levelname)s - %(correlation_id)s - %(message)s"
+                    )
                 )
             self._logger.addHandler(file_handler)
 
@@ -199,7 +205,9 @@ class LoggerService(ILoggerService):
             **kwargs,
         )
 
-    def log_request(self, method: str, endpoint: str, status_code: int, duration: float, **kwargs) -> None:
+    def log_request(
+        self, method: str, endpoint: str, status_code: int, duration: float, **kwargs
+    ) -> None:
         """Log HTTP request information.
 
         Args:
@@ -209,7 +217,11 @@ class LoggerService(ILoggerService):
             duration: Request duration in seconds
             **kwargs: Additional request context
         """
-        log_level = logging.INFO if status_code < 400 else logging.WARNING if status_code < 500 else logging.ERROR
+        log_level = (
+            logging.INFO
+            if status_code < 400
+            else logging.WARNING if status_code < 500 else logging.ERROR
+        )
 
         self._logger.log(
             log_level,
@@ -234,7 +246,12 @@ class LoggerService(ILoggerService):
             event_type: Type of business event
             **kwargs: Event-specific data
         """
-        self.info(f"Business Event: {event_type}", event_type=event_type, event_category="business", **kwargs)
+        self.info(
+            f"Business Event: {event_type}",
+            event_type=event_type,
+            event_category="business",
+            **kwargs,
+        )
 
     def create_child_logger(self, child_name: str) -> "LoggerService":
         """Create a child logger with the same configuration.

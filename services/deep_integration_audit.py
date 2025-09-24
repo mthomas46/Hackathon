@@ -13,7 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 
 
 class IntegrationDepth(Enum):
@@ -72,7 +72,12 @@ class ServiceAuditResult:
 
     def calculate_overall_score(self) -> float:
         """Calculate overall service score."""
-        weights = {"architecture": 0.25, "integration": 0.25, "performance": 0.25, "security": 0.25}
+        weights = {
+            "architecture": 0.25,
+            "integration": 0.25,
+            "performance": 0.25,
+            "security": 0.25,
+        }
 
         overall_score = (
             self.architecture_score * weights["architecture"]
@@ -126,8 +131,12 @@ class ServiceIntegrationAuditor:
         audit_result = ServiceAuditResult(
             service_name=service_name,
             maturity_level=self._assess_maturity_level(service_name),
-            current_integration_depth=self._assess_current_integration_depth(service_name),
-            recommended_integration_depth=self._recommend_integration_depth(service_name),
+            current_integration_depth=self._assess_current_integration_depth(
+                service_name
+            ),
+            recommended_integration_depth=self._recommend_integration_depth(
+                service_name
+            ),
         )
 
         # Perform detailed assessments
@@ -137,13 +146,19 @@ class ServiceIntegrationAuditor:
         await self._assess_security(audit_result)
 
         # Generate deep integration patterns
-        audit_result.deep_integration_patterns = await self._generate_integration_patterns(service_name)
+        audit_result.deep_integration_patterns = (
+            await self._generate_integration_patterns(service_name)
+        )
 
         # Generate recommendations
-        audit_result.recommended_enhancements = await self._generate_enhancement_recommendations(audit_result)
+        audit_result.recommended_enhancements = (
+            await self._generate_enhancement_recommendations(audit_result)
+        )
 
         # Calculate scores and priorities
-        audit_result.architecture_score = self._calculate_architecture_score(audit_result)
+        audit_result.architecture_score = self._calculate_architecture_score(
+            audit_result
+        )
         audit_result.integration_score = self._calculate_integration_score(audit_result)
         audit_result.performance_score = self._calculate_performance_score(audit_result)
         audit_result.security_score = self._calculate_security_score(audit_result)
@@ -156,24 +171,24 @@ class ServiceIntegrationAuditor:
     def _assess_maturity_level(self, service_name: str) -> ServiceMaturity:
         """Assess the maturity level of a service."""
         maturity_indicators = {
-            ServiceNames.ANALYSIS_SERVICE: ServiceMaturity.PRODUCTION,
-            ServiceNames.DOC_STORE: ServiceMaturity.PRODUCTION,
-            ServiceNames.PROMPT_STORE: ServiceMaturity.PRODUCTION,
-            ServiceNames.ORCHESTRATOR: ServiceMaturity.ENTERPRISE,
-            ServiceNames.INTERPRETER: ServiceMaturity.STABLE,
-            ServiceNames.SOURCE_AGENT: ServiceMaturity.STABLE,
-            ServiceNames.DISCOVERY_AGENT: ServiceMaturity.DEVELOPMENT,
-            ServiceNames.SUMMARIZER_HUB: ServiceMaturity.STABLE,
-            ServiceNames.SECURE_ANALYZER: ServiceMaturity.DEVELOPMENT,
-            ServiceNames.CODE_ANALYZER: ServiceMaturity.DEVELOPMENT,
-            ServiceNames.ARCHITECTURE_DIGITIZER: ServiceMaturity.PROTOTYPE,
-            ServiceNames.MEMORY_AGENT: ServiceMaturity.DEVELOPMENT,
-            ServiceNames.NOTIFICATION_SERVICE: ServiceMaturity.STABLE,
-            ServiceNames.LOG_COLLECTOR: ServiceMaturity.DEVELOPMENT,
-            ServiceNames.BEDROCK_PROXY: ServiceMaturity.DEVELOPMENT,
-            ServiceNames.GITHUB_MCP: ServiceMaturity.PROTOTYPE,
-            ServiceNames.FRONTEND: ServiceMaturity.STABLE,
-            ServiceNames.CLI: ServiceMaturity.STABLE,
+            "analysis-service": ServiceMaturity.PRODUCTION,
+            "doc-store": ServiceMaturity.PRODUCTION,
+            "prompt-store": ServiceMaturity.PRODUCTION,
+            "orchestrator": ServiceMaturity.ENTERPRISE,
+            "interpreter": ServiceMaturity.STABLE,
+            "source-agent": ServiceMaturity.STABLE,
+            "discovery-agent": ServiceMaturity.DEVELOPMENT,
+            "summarizer-hub": ServiceMaturity.STABLE,
+            "secure-analyzer": ServiceMaturity.DEVELOPMENT,
+            "code-analyzer": ServiceMaturity.DEVELOPMENT,
+            "architecture-digitizer": ServiceMaturity.PROTOTYPE,
+            "memory-agent": ServiceMaturity.DEVELOPMENT,
+            "notification-service": ServiceMaturity.STABLE,
+            "log-collector": ServiceMaturity.DEVELOPMENT,
+            "bedrock-proxy": ServiceMaturity.DEVELOPMENT,
+            "github-mcp": ServiceMaturity.PROTOTYPE,
+            "frontend": ServiceMaturity.STABLE,
+            "cli": ServiceMaturity.STABLE,
         }
 
         return maturity_indicators.get(service_name, ServiceMaturity.PROTOTYPE)
@@ -181,24 +196,24 @@ class ServiceIntegrationAuditor:
     def _assess_current_integration_depth(self, service_name: str) -> IntegrationDepth:
         """Assess current integration depth."""
         depth_indicators = {
-            ServiceNames.ANALYSIS_SERVICE: IntegrationDepth.ENTERPRISE,
-            ServiceNames.DOC_STORE: IntegrationDepth.ENTERPRISE,
-            ServiceNames.PROMPT_STORE: IntegrationDepth.ENTERPRISE,
-            ServiceNames.ORCHESTRATOR: IntegrationDepth.ENTERPRISE,
-            ServiceNames.INTERPRETER: IntegrationDepth.ADVANCED,
-            ServiceNames.SOURCE_AGENT: IntegrationDepth.ADVANCED,
-            ServiceNames.DISCOVERY_AGENT: IntegrationDepth.INTERMEDIATE,
-            ServiceNames.SUMMARIZER_HUB: IntegrationDepth.ADVANCED,
-            ServiceNames.SECURE_ANALYZER: IntegrationDepth.INTERMEDIATE,
-            ServiceNames.CODE_ANALYZER: IntegrationDepth.INTERMEDIATE,
-            ServiceNames.ARCHITECTURE_DIGITIZER: IntegrationDepth.BASIC,
-            ServiceNames.MEMORY_AGENT: IntegrationDepth.INTERMEDIATE,
-            ServiceNames.NOTIFICATION_SERVICE: IntegrationDepth.ADVANCED,
-            ServiceNames.LOG_COLLECTOR: IntegrationDepth.INTERMEDIATE,
-            ServiceNames.BEDROCK_PROXY: IntegrationDepth.INTERMEDIATE,
-            ServiceNames.GITHUB_MCP: IntegrationDepth.BASIC,
-            ServiceNames.FRONTEND: IntegrationDepth.ADVANCED,
-            ServiceNames.CLI: IntegrationDepth.ADVANCED,
+            "analysis-service": IntegrationDepth.ENTERPRISE,
+            "doc-store": IntegrationDepth.ENTERPRISE,
+            "prompt-store": IntegrationDepth.ENTERPRISE,
+            "orchestrator": IntegrationDepth.ENTERPRISE,
+            "interpreter": IntegrationDepth.ADVANCED,
+            "source-agent": IntegrationDepth.ADVANCED,
+            "discovery-agent": IntegrationDepth.INTERMEDIATE,
+            "summarizer-hub": IntegrationDepth.ADVANCED,
+            "secure-analyzer": IntegrationDepth.INTERMEDIATE,
+            "code-analyzer": IntegrationDepth.INTERMEDIATE,
+            "architecture-digitizer": IntegrationDepth.BASIC,
+            "memory-agent": IntegrationDepth.INTERMEDIATE,
+            "notification-service": IntegrationDepth.ADVANCED,
+            "log-collector": IntegrationDepth.INTERMEDIATE,
+            "bedrock-proxy": IntegrationDepth.INTERMEDIATE,
+            "github-mcp": IntegrationDepth.BASIC,
+            "frontend": IntegrationDepth.ADVANCED,
+            "cli": IntegrationDepth.ADVANCED,
         }
 
         return depth_indicators.get(service_name, IntegrationDepth.BASIC)
@@ -207,12 +222,12 @@ class ServiceIntegrationAuditor:
         """Recommend integration depth based on service characteristics."""
         # All core services should target enterprise-level integration
         core_services = [
-            ServiceNames.ANALYSIS_SERVICE,
-            ServiceNames.DOC_STORE,
-            ServiceNames.PROMPT_STORE,
-            ServiceNames.ORCHESTRATOR,
-            ServiceNames.INTERPRETER,
-            ServiceNames.SOURCE_AGENT,
+            "analysis-service",
+            "doc-store",
+            "prompt-store",
+            "orchestrator",
+            "interpreter",
+            "source-agent",
         ]
 
         if service_name in core_services:
@@ -220,13 +235,13 @@ class ServiceIntegrationAuditor:
 
         # Supporting services should target advanced integration
         supporting_services = [
-            ServiceNames.DISCOVERY_AGENT,
-            ServiceNames.SUMMARIZER_HUB,
-            ServiceNames.SECURE_ANALYZER,
-            ServiceNames.CODE_ANALYZER,
-            ServiceNames.MEMORY_AGENT,
-            ServiceNames.NOTIFICATION_SERVICE,
-            ServiceNames.LOG_COLLECTOR,
+            "discovery-agent",
+            "summarizer-hub",
+            "secure-analyzer",
+            "code-analyzer",
+            "memory-agent",
+            "notification-service",
+            "log-collector",
         ]
 
         if service_name in supporting_services:
@@ -242,10 +257,10 @@ class ServiceIntegrationAuditor:
         findings = []
 
         # Check for domain-driven architecture
-        if service_name in [ServiceNames.DOC_STORE, ServiceNames.PROMPT_STORE]:
+        if service_name in ["doc-store", "prompt-store"]:
             findings.append("✅ Domain-driven architecture implemented")
             audit_result.architecture_score += 0.9
-        elif service_name == ServiceNames.ANALYSIS_SERVICE:
+        elif service_name == "analysis-service":
             findings.append("✅ Modular architecture with clear separation")
             audit_result.architecture_score += 0.8
         else:
@@ -279,7 +294,9 @@ class ServiceIntegrationAuditor:
         recommended_depth = audit_result.recommended_integration_depth
 
         if current_depth == recommended_depth:
-            findings.append(f"✅ Integration depth matches recommendation: {current_depth.value}")
+            findings.append(
+                f"✅ Integration depth matches recommendation: {current_depth.value}"
+            )
             score += 0.9
         elif current_depth.value < recommended_depth.value:
             findings.append(
@@ -301,7 +318,7 @@ class ServiceIntegrationAuditor:
         score += 0.8
 
         # Check for event-driven capabilities
-        if service_name in [ServiceNames.ANALYSIS_SERVICE, ServiceNames.ORCHESTRATOR]:
+        if service_name in ["analysis-service", "orchestrator"]:
             findings.append("✅ Event-driven architecture integration")
             score += 0.9
         else:
@@ -363,11 +380,13 @@ class ServiceIntegrationAuditor:
         audit_result.security_findings = findings
         audit_result.security_score = min(score / 4, 1.0)
 
-    async def _generate_integration_patterns(self, service_name: str) -> List[Dict[str, Any]]:
+    async def _generate_integration_patterns(
+        self, service_name: str
+    ) -> List[Dict[str, Any]]:
         """Generate deep integration patterns for the service."""
         patterns = []
 
-        if service_name == ServiceNames.ANALYSIS_SERVICE:
+        if service_name == "analysis-service":
             patterns.extend(
                 [
                     {
@@ -376,9 +395,20 @@ class ServiceIntegrationAuditor:
                         "integration_type": "event_driven",
                         "complexity_level": "high",
                         "estimated_effort_days": 10,
-                        "required_components": ["event_store", "analysis_engine", "real_time_processor"],
-                        "data_flow_patterns": ["streaming_analysis", "incremental_processing"],
-                        "event_patterns": ["document_created", "analysis_completed", "quality_alert"],
+                        "required_components": [
+                            "event_store",
+                            "analysis_engine",
+                            "real_time_processor",
+                        ],
+                        "data_flow_patterns": [
+                            "streaming_analysis",
+                            "incremental_processing",
+                        ],
+                        "event_patterns": [
+                            "document_created",
+                            "analysis_completed",
+                            "quality_alert",
+                        ],
                         "implementation_steps": [
                             "Implement event listeners for document creation",
                             "Add real-time analysis capabilities",
@@ -392,8 +422,14 @@ class ServiceIntegrationAuditor:
                         "integration_type": "data_correlation",
                         "complexity_level": "medium",
                         "estimated_effort_days": 7,
-                        "required_components": ["correlation_engine", "analysis_aggregator"],
-                        "data_flow_patterns": ["correlation_analysis", "result_aggregation"],
+                        "required_components": [
+                            "correlation_engine",
+                            "analysis_aggregator",
+                        ],
+                        "data_flow_patterns": [
+                            "correlation_analysis",
+                            "result_aggregation",
+                        ],
                         "implementation_steps": [
                             "Implement analysis result correlation logic",
                             "Add cross-service analysis aggregation",
@@ -403,7 +439,7 @@ class ServiceIntegrationAuditor:
                 ]
             )
 
-        elif service_name == ServiceNames.DOC_STORE:
+        elif service_name == "doc-store":
             patterns.extend(
                 [
                     {
@@ -412,9 +448,20 @@ class ServiceIntegrationAuditor:
                         "integration_type": "distributed_sync",
                         "complexity_level": "high",
                         "estimated_effort_days": 12,
-                        "required_components": ["sync_engine", "conflict_resolver", "version_manager"],
-                        "data_flow_patterns": ["bidirectional_sync", "conflict_resolution"],
-                        "event_patterns": ["document_updated", "sync_conflict", "sync_completed"],
+                        "required_components": [
+                            "sync_engine",
+                            "conflict_resolver",
+                            "version_manager",
+                        ],
+                        "data_flow_patterns": [
+                            "bidirectional_sync",
+                            "conflict_resolution",
+                        ],
+                        "event_patterns": [
+                            "document_updated",
+                            "sync_conflict",
+                            "sync_completed",
+                        ],
                         "implementation_steps": [
                             "Implement real-time document synchronization",
                             "Add conflict resolution strategies",
@@ -425,7 +472,7 @@ class ServiceIntegrationAuditor:
                 ]
             )
 
-        elif service_name == ServiceNames.PROMPT_STORE:
+        elif service_name == "prompt-store":
             patterns.extend(
                 [
                     {
@@ -434,9 +481,20 @@ class ServiceIntegrationAuditor:
                         "integration_type": "ai_driven",
                         "complexity_level": "high",
                         "estimated_effort_days": 15,
-                        "required_components": ["optimization_engine", "usage_analyzer", "ml_trainer"],
-                        "data_flow_patterns": ["usage_analysis", "optimization_feedback"],
-                        "event_patterns": ["prompt_used", "optimization_completed", "performance_improved"],
+                        "required_components": [
+                            "optimization_engine",
+                            "usage_analyzer",
+                            "ml_trainer",
+                        ],
+                        "data_flow_patterns": [
+                            "usage_analysis",
+                            "optimization_feedback",
+                        ],
+                        "event_patterns": [
+                            "prompt_used",
+                            "optimization_completed",
+                            "performance_improved",
+                        ],
                         "implementation_steps": [
                             "Implement usage pattern analysis",
                             "Add ML-based optimization algorithms",
@@ -447,7 +505,7 @@ class ServiceIntegrationAuditor:
                 ]
             )
 
-        elif service_name == ServiceNames.ORCHESTRATOR:
+        elif service_name == "orchestrator":
             patterns.extend(
                 [
                     {
@@ -456,8 +514,15 @@ class ServiceIntegrationAuditor:
                         "integration_type": "predictive_orchestration",
                         "complexity_level": "high",
                         "estimated_effort_days": 20,
-                        "required_components": ["prediction_engine", "pattern_analyzer", "optimization_planner"],
-                        "data_flow_patterns": ["pattern_analysis", "predictive_optimization"],
+                        "required_components": [
+                            "prediction_engine",
+                            "pattern_analyzer",
+                            "optimization_planner",
+                        ],
+                        "data_flow_patterns": [
+                            "pattern_analysis",
+                            "predictive_optimization",
+                        ],
                         "event_patterns": [
                             "workflow_predicted",
                             "optimization_applied",
@@ -475,7 +540,9 @@ class ServiceIntegrationAuditor:
 
         return patterns
 
-    async def _generate_enhancement_recommendations(self, audit_result: ServiceAuditResult) -> List[Dict[str, Any]]:
+    async def _generate_enhancement_recommendations(
+        self, audit_result: ServiceAuditResult
+    ) -> List[Dict[str, Any]]:
         """Generate enhancement recommendations based on audit results."""
         recommendations = []
 
@@ -564,31 +631,33 @@ class ServiceIntegrationAuditor:
             audit_result.implementation_priority = "low"
             audit_result.estimated_effort_days = 3
 
-        audit_result.business_value_score = overall_score * 0.8 + 0.2  # Slight boost for implementation
+        audit_result.business_value_score = (
+            overall_score * 0.8 + 0.2
+        )  # Slight boost for implementation
 
     async def audit_all_services(self) -> Dict[str, ServiceAuditResult]:
         """Audit all services in the ecosystem."""
         print("🚀 Starting comprehensive service audit...")
 
         services_to_audit = [
-            ServiceNames.ANALYSIS_SERVICE,
-            ServiceNames.DOC_STORE,
-            ServiceNames.PROMPT_STORE,
-            ServiceNames.ORCHESTRATOR,
-            ServiceNames.INTERPRETER,
-            ServiceNames.SOURCE_AGENT,
-            ServiceNames.DISCOVERY_AGENT,
-            ServiceNames.SUMMARIZER_HUB,
-            ServiceNames.SECURE_ANALYZER,
-            ServiceNames.CODE_ANALYZER,
-            ServiceNames.ARCHITECTURE_DIGITIZER,
-            ServiceNames.MEMORY_AGENT,
-            ServiceNames.NOTIFICATION_SERVICE,
-            ServiceNames.LOG_COLLECTOR,
-            ServiceNames.BEDROCK_PROXY,
-            ServiceNames.GITHUB_MCP,
-            ServiceNames.FRONTEND,
-            ServiceNames.CLI,
+            "analysis-service",
+            "doc-store",
+            "prompt-store",
+            "orchestrator",
+            "interpreter",
+            "source-agent",
+            "discovery-agent",
+            "summarizer-hub",
+            "secure-analyzer",
+            "code-analyzer",
+            "architecture-digitizer",
+            "memory-agent",
+            "notification-service",
+            "log-collector",
+            "bedrock-proxy",
+            "github-mcp",
+            "frontend",
+            "cli",
         ]
 
         audit_tasks = []
@@ -602,7 +671,9 @@ class ServiceIntegrationAuditor:
         print(f"✅ Completed audit of {len(audit_results)} services")
         return audit_dict
 
-    def generate_audit_report(self, audit_results: Dict[str, ServiceAuditResult]) -> Dict[str, Any]:
+    def generate_audit_report(
+        self, audit_results: Dict[str, ServiceAuditResult]
+    ) -> Dict[str, Any]:
         """Generate comprehensive audit report."""
         report = {
             "audit_timestamp": datetime.now().isoformat(),
@@ -627,7 +698,10 @@ class ServiceIntegrationAuditor:
             current_depth = audit_result.current_integration_depth.value
             recommended_depth = audit_result.recommended_integration_depth.value
             integration_depth_distribution[f"{current_depth}->{recommended_depth}"] = (
-                integration_depth_distribution.get(f"{current_depth}->{recommended_depth}", 0) + 1
+                integration_depth_distribution.get(
+                    f"{current_depth}->{recommended_depth}", 0
+                )
+                + 1
             )
 
             # Overall scores
@@ -646,7 +720,9 @@ class ServiceIntegrationAuditor:
                 "implementation_priority": audit_result.implementation_priority,
                 "estimated_effort_days": audit_result.estimated_effort_days,
                 "business_value_score": audit_result.business_value_score,
-                "deep_integration_patterns": len(audit_result.deep_integration_patterns),
+                "deep_integration_patterns": len(
+                    audit_result.deep_integration_patterns
+                ),
                 "recommended_enhancements": len(audit_result.recommended_enhancements),
             }
 
@@ -654,7 +730,9 @@ class ServiceIntegrationAuditor:
         report["summary"] = {
             "maturity_distribution": maturity_distribution,
             "integration_depth_distribution": integration_depth_distribution,
-            "average_overall_score": sum(overall_scores) / len(overall_scores) if overall_scores else 0,
+            "average_overall_score": (
+                sum(overall_scores) / len(overall_scores) if overall_scores else 0
+            ),
             "highest_score": max(overall_scores) if overall_scores else 0,
             "lowest_score": min(overall_scores) if overall_scores else 0,
             "services_above_threshold": len([s for s in overall_scores if s >= 0.8]),
@@ -665,11 +743,15 @@ class ServiceIntegrationAuditor:
         report["recommendations"] = self._generate_global_recommendations(audit_results)
 
         # Implementation roadmap
-        report["implementation_roadmap"] = self._generate_implementation_roadmap(audit_results)
+        report["implementation_roadmap"] = self._generate_implementation_roadmap(
+            audit_results
+        )
 
         return report
 
-    def _generate_global_recommendations(self, audit_results: Dict[str, ServiceAuditResult]) -> List[Dict[str, Any]]:
+    def _generate_global_recommendations(
+        self, audit_results: Dict[str, ServiceAuditResult]
+    ) -> List[Dict[str, Any]]:
         """Generate global recommendations based on audit results."""
         recommendations = []
 
@@ -677,7 +759,8 @@ class ServiceIntegrationAuditor:
         low_maturity_services = [
             name
             for name, result in audit_results.items()
-            if result.maturity_level in [ServiceMaturity.PROTOTYPE, ServiceMaturity.DEVELOPMENT]
+            if result.maturity_level
+            in [ServiceMaturity.PROTOTYPE, ServiceMaturity.DEVELOPMENT]
         ]
 
         if low_maturity_services:
@@ -710,7 +793,11 @@ class ServiceIntegrationAuditor:
             )
 
         # Check for security improvements
-        security_improvements = [name for name, result in audit_results.items() if result.security_score < 0.8]
+        security_improvements = [
+            name
+            for name, result in audit_results.items()
+            if result.security_score < 0.8
+        ]
 
         if security_improvements:
             recommendations.append(
@@ -725,7 +812,9 @@ class ServiceIntegrationAuditor:
 
         return recommendations
 
-    def _generate_implementation_roadmap(self, audit_results: Dict[str, ServiceAuditResult]) -> Dict[str, Any]:
+    def _generate_implementation_roadmap(
+        self, audit_results: Dict[str, ServiceAuditResult]
+    ) -> Dict[str, Any]:
         """Generate implementation roadmap based on audit results."""
         roadmap = {
             "phase_1_critical": [],
@@ -759,7 +848,9 @@ class ServiceIntegrationAuditor:
             roadmap["total_effort_days"] += effort_days
 
         # Estimate timeline based on effort and parallelization
-        roadmap["timeline_months"] = roadmap["total_effort_days"] / 20 / 4  # 20 days/month, 4x parallelization
+        roadmap["timeline_months"] = (
+            roadmap["total_effort_days"] / 20 / 4
+        )  # 20 days/month, 4x parallelization
 
         return roadmap
 

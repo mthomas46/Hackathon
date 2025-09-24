@@ -6,7 +6,9 @@ Following DDD application layer patterns with clean separation of concerns.
 import asyncio
 from typing import Any, Dict, List
 
-from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
+from simulation.infrastructure.recommendations.summarizer_hub_client import (
+    SummarizerHubClient,
+)
 
 
 class DocumentRecommendationService:
@@ -41,12 +43,16 @@ class DocumentRecommendationService:
 
             return max(0.0, min(1.0, quality_score))
 
-    async def detect_similar_documents(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def detect_similar_documents(
+        self, documents: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Detect similar documents in a collection."""
         similar_pairs = []
 
         # Use summarizer client for duplicate detection
-        duplicate_recommendations = await self.summarizer_client.get_duplicate_recommendations(documents)
+        duplicate_recommendations = (
+            await self.summarizer_client.get_duplicate_recommendations(documents)
+        )
 
         for rec in duplicate_recommendations:
             if rec.affected_documents and len(rec.affected_documents) >= 2:
@@ -61,7 +67,9 @@ class DocumentRecommendationService:
 
         return similar_pairs
 
-    async def identify_content_gaps(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def identify_content_gaps(
+        self, documents: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Identify gaps in documentation content."""
         gaps = []
 
@@ -94,7 +102,10 @@ class DocumentRecommendationService:
         # Check for content depth issues
         total_docs = len(documents)
         if total_docs > 0:
-            avg_word_count = sum(len(doc.get("content", "").split()) for doc in documents) / total_docs
+            avg_word_count = (
+                sum(len(doc.get("content", "").split()) for doc in documents)
+                / total_docs
+            )
 
             if avg_word_count < 200:
                 gaps.append(
@@ -108,13 +119,17 @@ class DocumentRecommendationService:
 
         return gaps
 
-    async def generate_actionable_recommendations(self, analysis_results: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_actionable_recommendations(
+        self, analysis_results: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate actionable recommendations based on comprehensive analysis."""
         recommendations = []
 
         # Process quality scores
         quality_scores = analysis_results.get("quality_scores", {})
-        low_quality_docs = [doc_id for doc_id, score in quality_scores.items() if score < 0.6]
+        low_quality_docs = [
+            doc_id for doc_id, score in quality_scores.items() if score < 0.6
+        ]
 
         if low_quality_docs:
             recommendations.append(
@@ -165,7 +180,9 @@ class DocumentRecommendationService:
                         "expected_impact": "Complete documentation coverage for better user experience",
                         "effort_level": "medium",
                         "priority": gap.get("importance", "medium"),
-                        "content_type": gap.get("missing_content_type", "documentation"),
+                        "content_type": gap.get(
+                            "missing_content_type", "documentation"
+                        ),
                     }
                 )
             else:
@@ -183,7 +200,9 @@ class DocumentRecommendationService:
 
         return recommendations
 
-    async def perform_comprehensive_analysis(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def perform_comprehensive_analysis(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Perform comprehensive analysis of a document collection."""
         # Run multiple analysis tasks concurrently
         tasks = [
@@ -207,7 +226,11 @@ class DocumentRecommendationService:
             "recommendations": [rec.to_dict() for rec in recommendations],
             "summary": {
                 "total_documents": len(documents),
-                "average_quality": sum(quality_scores.values()) / len(quality_scores) if quality_scores else 0,
+                "average_quality": (
+                    sum(quality_scores.values()) / len(quality_scores)
+                    if quality_scores
+                    else 0
+                ),
                 "duplicate_pairs": len(similar_documents),
                 "content_gaps": len(content_gaps),
                 "total_recommendations": len(recommendations),
@@ -215,7 +238,9 @@ class DocumentRecommendationService:
             "analyzed_at": asyncio.get_event_loop().time(),
         }
 
-    async def _analyze_quality_scores(self, documents: List[Dict[str, Any]]) -> Dict[str, float]:
+    async def _analyze_quality_scores(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, float]:
         """Analyze quality scores for all documents."""
         quality_scores = {}
 

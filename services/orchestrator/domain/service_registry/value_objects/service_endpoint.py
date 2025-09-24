@@ -54,7 +54,11 @@ class ServiceEndpoint:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ServiceEndpoint):
             return NotImplemented
-        return self._method == other._method and self._path == other._path and self._description == other._description
+        return (
+            self._method == other._method
+            and self._path == other._path
+            and self._description == other._description
+        )
 
     def __hash__(self) -> int:
         return hash((self._method, self._path, self._description))

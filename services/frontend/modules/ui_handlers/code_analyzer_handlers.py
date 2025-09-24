@@ -3,11 +3,14 @@
 Handles code analyzer service visualization.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 
-from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    handle_frontend_error,
+)
 
 
 class CodeAnalyzerUIHandlers:
@@ -425,7 +428,7 @@ class CodeAnalyzerUIHandlers:
 
             let html = '<div class="metric-grid">';
 
-            html += \`
+            html += r"""
                 <div class="metric-item">
                     <div class="metric-label">Total Analyses</div>
                     <div class="metric-value">{{stats.total_analyses || 0}</div>
@@ -442,7 +445,7 @@ class CodeAnalyzerUIHandlers:
                     <div class="metric-label">Available Styles</div>
                     <div class="metric-value">{{data.available_styles?.length || 0}</div>
                 </div>
-            \`;
+            """;
 
             html += '</div>';
 
@@ -451,12 +454,12 @@ class CodeAnalyzerUIHandlers:
                 html += '<h4>Analysis Types</h4><div class="metric-grid">';
 
                 Object.entries(stats.analysis_types).forEach(([type, count]) => {
-                    html += \`
+                    html += `
                         <div class="metric-item">
                             <div class="metric-label">{{type}</div>
                             <div class="metric-value">{{count}</div>
                         </div>
-                    \`;
+                    `;
                 });
 
                 html += '</div>';
@@ -628,13 +631,13 @@ class CodeAnalyzerUIHandlers:
 
             let html = '<div class="analysis-result">';
             html += '<h4>Analysis Results</h4>';
-            html += \`<div><strong>Analysis ID:</strong> {{data.analysis_id || 'N/A'}</div>\`;
+            html += `<div><strong>Analysis ID:</strong> {{data.analysis_id || 'N/A'}</div>`;
 
             if (result.issues && result.issues.length > 0) {
                 html += '<h5>Issues Found:</h5>';
                 result.issues.forEach(issue => {
                     const severityClass = issue.severity || 'info';
-                    html += \`
+                    html += `
                         <div class="analysis-item">
                             <div class="analysis-title">{{issue.title || 'Issue'}</div>
                             <div class="analysis-meta">
@@ -643,9 +646,9 @@ class CodeAnalyzerUIHandlers:
                                 <span>Type: {{issue.type || 'unknown'}</span>
                             </div>
                             <div>{{issue.description || 'No description'}</div>
-                            {{issue.suggestion ? \`<div><strong>Suggestion:</strong> {{issue.suggestion}</div>\` : ''}
+                            {{issue.suggestion ? `<div><strong>Suggestion:</strong> {{issue.suggestion}</div>` : ''}
                         </div>
-                    \`;
+                    `;
                 });
             } else {
                 html += '<div>No issues found in the analysis.</div>';
@@ -660,13 +663,13 @@ class CodeAnalyzerUIHandlers:
 
             let html = '<div class="analysis-result">';
             html += '<h4>Security Scan Results</h4>';
-            html += \`<div><strong>Scan ID:</strong> {{data.scan_id || 'N/A'}</div>\`;
+            html += `<div><strong>Scan ID:</strong> {{data.scan_id || 'N/A'}</div>`;
 
             if (result.vulnerabilities && result.vulnerabilities.length > 0) {
                 html += '<h5>Security Vulnerabilities Found:</h5>';
                 result.vulnerabilities.forEach(vuln => {
                     const severityClass = vuln.severity || 'high';
-                    html += \`
+                    html += `
                         <div class="security-result">
                             <div class="analysis-title">{{vuln.title || 'Vulnerability'}</div>
                             <div class="analysis-meta">
@@ -675,10 +678,10 @@ class CodeAnalyzerUIHandlers:
                                 <span>Confidence: {{vuln.confidence || 'N/A'}</span>
                             </div>
                             <div>{{vuln.description || 'No description'}</div>
-                            {{vuln.impact ? \`<div><strong>Impact:</strong> {{vuln.impact}</div>\` : ''}
-                            {{vuln.recommendation ? \`<div><strong>Recommendation:</strong> {{vuln.recommendation}</div>\` : ''}
+                            {{vuln.impact ? `<div><strong>Impact:</strong> {{vuln.impact}</div>` : ''}
+                            {{vuln.recommendation ? `<div><strong>Recommendation:</strong> {{vuln.recommendation}</div>` : ''}
                         </div>
-                    \`;
+                    `;
                 });
             } else {
                 html += '<div>No security vulnerabilities found.</div>';
@@ -693,13 +696,13 @@ class CodeAnalyzerUIHandlers:
 
             let html = '<div class="analysis-result">';
             html += '<h4>Style Check Results</h4>';
-            html += \`<div><strong>Check ID:</strong> {{data.check_id || 'N/A'}</div>\`;
-            html += \`<div><strong>Style:</strong> {{data.style || 'Unknown'}</div>\`;
+            html += `<div><strong>Check ID:</strong> {{data.check_id || 'N/A'}</div>`;
+            html += `<div><strong>Style:</strong> {{data.style || 'Unknown'}</div>`;
 
             if (result.violations && result.violations.length > 0) {
                 html += '<h5>Style Violations:</h5>';
                 result.violations.forEach(violation => {
-                    html += \`
+                    html += `
                         <div class="analysis-item">
                             <div class="analysis-title">{{violation.rule || 'Rule Violation'}</div>
                             <div class="analysis-meta">
@@ -707,9 +710,9 @@ class CodeAnalyzerUIHandlers:
                                 <span>Column: {{violation.column || 'N/A'}</span>
                             </div>
                             <div>{{violation.message || 'No message'}</div>
-                            {{violation.fix ? \`<div><strong>Suggested Fix:</strong> {{violation.fix}</div>\` : ''}
+                            {{violation.fix ? `<div><strong>Suggested Fix:</strong> {{violation.fix}</div>` : ''}
                         </div>
-                    \`;
+                    `;
                 });
             } else {
                 html += '<div>Code follows style guidelines.</div>';
@@ -745,15 +748,15 @@ class CodeAnalyzerUIHandlers:
             let html = '';
 
             Object.entries(examples).forEach(([language, styles]) => {
-                html += \`<h4>{{language.charAt(0).toUpperCase() + language.slice(1)} Style Examples</h4>\`;
+                html += `<h4>{{language.charAt(0).toUpperCase() + language.slice(1)} Style Examples</h4>`;
 
                 Object.entries(styles).forEach(([styleName, example]) => {
-                    html += \`
+                    html += `
                         <div class="code-example">
                             <div class="code-language">{{styleName} Style</div>
                             <div class="code-content">{{example}</div>
                         </div>
-                    \`;
+                    `;
                 });
             });
 
@@ -795,9 +798,9 @@ class CodeAnalyzerUIHandlers:
             history.forEach(analysis => {
                 const timestamp = analysis.timestamp ? new Date(analysis.timestamp).toLocaleString() : 'Unknown';
                 const hasIssues = analysis.result?.issues?.length > 0;
-                const resultText = hasIssues ? \`{{analysis.result.issues.length} issues\` : 'Clean';
+                const resultText = hasIssues ? `{{analysis.result.issues.length} issues` : 'Clean';
 
-                html += \`
+                html += `
                     <tr>
                         <td>{{analysis.id}</td>
                         <td><span class="badge analysis">{{analysis.type || 'unknown'}</span></td>
@@ -805,7 +808,7 @@ class CodeAnalyzerUIHandlers:
                         <td>{{resultText}</td>
                         <td><button class="btn" onclick="viewAnalysis('{{analysis.id}')">View</button></td>
                     </tr>
-                \`;
+                `;
             });
 
             html += '</tbody></table>';
@@ -814,7 +817,7 @@ class CodeAnalyzerUIHandlers:
 
         function viewAnalysis(analysisId) {
             // Could implement modal to show full analysis details
-            alert(\`Analysis details for ID: {{analysisId}\\n\\nFeature not yet implemented.\`);
+            alert(`Analysis details for ID: {{analysisId}\\n\\nFeature not yet implemented.`);
         }
 
         // Tab switching
@@ -841,5 +844,7 @@ class CodeAnalyzerUIHandlers:
             return create_html_response(html, "Code Analyzer Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render code analyzer dashboard", e, **build_frontend_context("render_code_analyzer_dashboard")
+                "render code analyzer dashboard",
+                e,
+                **build_frontend_context("render_code_analyzer_dashboard")
             )

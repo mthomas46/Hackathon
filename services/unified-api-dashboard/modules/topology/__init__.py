@@ -1,5 +1,7 @@
 class TopologyAnalyzer:
-    def __init__(self, discovery_client=None, catalog_manager=None, health_monitor=None):
+    def __init__(
+        self, discovery_client=None, catalog_manager=None, health_monitor=None
+    ):
         self.discovery_client = discovery_client
         self.catalog_manager = catalog_manager
         self.health_monitor = health_monitor
@@ -21,4 +23,9 @@ class TopologyMetrics:
     pass
 
 
-__all__ = ["TopologyAnalyzer", "TopologyVisualizer", "DependencyGraphBuilder", "TopologyMetrics"]
+__all__ = [
+    "TopologyAnalyzer",
+    "TopologyVisualizer",
+    "DependencyGraphBuilder",
+    "TopologyMetrics",
+]

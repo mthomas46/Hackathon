@@ -4,7 +4,6 @@ Handles bedrock proxy service visualization, including AI invocation
 monitoring, template usage tracking, and response analytics.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..bedrock_proxy_monitor import bedrock_proxy_monitor
@@ -535,5 +534,7 @@ class BedrockProxyUIHandlers:
             return create_html_response(html, "Bedrock Proxy Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render bedrock proxy dashboard", e, **build_frontend_context("render_bedrock_proxy_dashboard")
+                "render bedrock proxy dashboard",
+                e,
+                **build_frontend_context("render_bedrock_proxy_dashboard")
             )

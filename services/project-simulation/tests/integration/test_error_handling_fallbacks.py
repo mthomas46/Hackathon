@@ -11,7 +11,11 @@ import httpx
 import pytest
 from simulation.domain.value_objects import ServiceEndpoint
 from simulation.infrastructure.clients.ecosystem_clients import EcosystemServiceClient
-from simulation.infrastructure.config.discovery import FallbackServiceClient, LocalServiceDiscovery, ServiceHealth
+from simulation.infrastructure.config.discovery import (
+    FallbackServiceClient,
+    LocalServiceDiscovery,
+    ServiceHealth,
+)
 from simulation.infrastructure.resilience.circuit_breaker import (
     ResilientServiceClient,
     ServiceCircuitBreaker,
@@ -40,7 +44,9 @@ class TestErrorHandlingPatterns:
     @pytest.mark.asyncio
     async def test_http_connection_error_handling(self):
         """Test connection error handling."""
-        endpoint = ServiceEndpoint("http://non-existent-service-12345.com", timeout_seconds=5)
+        endpoint = ServiceEndpoint(
+            "http://non-existent-service-12345.com", timeout_seconds=5
+        )
         client = EcosystemServiceClient("connection_test", endpoint)
 
         try:
@@ -296,7 +302,9 @@ class TestServiceMeshResilience:
     async def test_resilient_client_with_circuit_breaker(self):
         """Test resilient client with circuit breaker protection."""
         # Mock the ecosystem client
-        with patch("simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client") as mock_get_client:
+        with patch(
+            "simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client"
+        ) as mock_get_client:
             mock_client = Mock()
             mock_get_client.return_value = mock_client
 
@@ -307,7 +315,9 @@ class TestServiceMeshResilience:
             mock_client.test_method = AsyncMock(return_value="success")
 
             # Execute with resilience
-            result = await resilient_client.execute_request("test_method", "arg1", "arg2")
+            result = await resilient_client.execute_request(
+                "test_method", "arg1", "arg2"
+            )
 
             assert result == "success"
             mock_client.test_method.assert_called_once_with("arg1", "arg2")
@@ -315,7 +325,9 @@ class TestServiceMeshResilience:
     @pytest.mark.asyncio
     async def test_resilient_client_failure_handling(self):
         """Test resilient client failure handling."""
-        with patch("simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client") as mock_get_client:
+        with patch(
+            "simulation.infrastructure.resilience.circuit_breaker.get_ecosystem_client"
+        ) as mock_get_client:
             mock_client = Mock()
             mock_get_client.return_value = mock_client
 
@@ -389,7 +401,9 @@ class TestMultiServiceOrchestration:
         try:
             timeouts = [1, 2, 5]  # seconds
             for i, timeout in enumerate(timeouts):
-                endpoint = ServiceEndpoint("http://httpbin.org", timeout_seconds=timeout)
+                endpoint = ServiceEndpoint(
+                    "http://httpbin.org", timeout_seconds=timeout
+                )
                 client = EcosystemServiceClient(f"timeout_{i}", endpoint)
                 clients.append(client)
 
@@ -447,7 +461,11 @@ class TestDataConsistencyValidation:
             project_id = "consistency-test-123"
 
             # Create project data
-            create_data = {"id": project_id, "name": "Consistency Test Project", "type": "api_service"}
+            create_data = {
+                "id": project_id,
+                "name": "Consistency Test Project",
+                "type": "api_service",
+            }
 
             # Simulate multiple operations on same data
             responses = []
@@ -587,7 +605,9 @@ class TestErrorHandlingFallbacksIntegrationSuite:
         """Test configuration validation for resilience features."""
         # Test valid configurations
         valid_configs = [
-            ServiceEndpoint("https://secure-service.com", timeout_seconds=30, retries=3),
+            ServiceEndpoint(
+                "https://secure-service.com", timeout_seconds=30, retries=3
+            ),
             ServiceEndpoint("http://service.com", timeout_seconds=60, retries=5),
             ServiceEndpoint("http://service.com/api", timeout_seconds=10, retries=1),
         ]

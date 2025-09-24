@@ -16,7 +16,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.logging import get_simulation_logger
 
@@ -126,10 +128,14 @@ class TerminalProgressVisualizer:
     def start_simulation(self, estimated_duration_minutes: int = 60) -> None:
         """Start the simulation progress visualization."""
         self.state.start_time = datetime.now()
-        self.state.estimated_completion = self.state.start_time + timedelta(minutes=estimated_duration_minutes)
+        self.state.estimated_completion = self.state.start_time + timedelta(
+            minutes=estimated_duration_minutes
+        )
         self._running = True
 
-        self.logger.info(f"Starting terminal progress visualization for simulation {self.simulation_id}")
+        self.logger.info(
+            f"Starting terminal progress visualization for simulation {self.simulation_id}"
+        )
 
         # Initialize display
         self._clear_screen()
@@ -138,7 +144,9 @@ class TerminalProgressVisualizer:
 
         # Start update thread if interactive
         if self.interactive:
-            self._update_thread = threading.Thread(target=self._update_loop, daemon=True)
+            self._update_thread = threading.Thread(
+                target=self._update_loop, daemon=True
+            )
             self._update_thread.start()
 
     def stop_simulation(self, success: bool = True) -> None:
@@ -152,7 +160,9 @@ class TerminalProgressVisualizer:
         self._clear_screen()
         self._display_final_summary(success)
 
-        self.logger.info(f"Stopped terminal progress visualization for simulation {self.simulation_id}")
+        self.logger.info(
+            f"Stopped terminal progress visualization for simulation {self.simulation_id}"
+        )
 
     def update_progress(self, progress_data: Dict[str, Any]) -> None:
         """Update the progress visualization with new data."""
@@ -203,14 +213,22 @@ class TerminalProgressVisualizer:
             self.state.documents_generated += 1
             doc_title = update.get("document_title", "Document")
             update.get("document_type", "Unknown")
-            self._add_progress_item(f"doc_{self.state.documents_generated}", f"Generate {doc_title}", "completed")
+            self._add_progress_item(
+                f"doc_{self.state.documents_generated}",
+                f"Generate {doc_title}",
+                "completed",
+            )
 
         elif update_type == "workflow_executed":
             self.state.workflows_executed += 1
             workflow_name = update.get("workflow_name", "Workflow")
             success = update.get("success", True)
             status = "completed" if success else "failed"
-            self._add_progress_item(f"workflow_{self.state.workflows_executed}", f"Execute {workflow_name}", status)
+            self._add_progress_item(
+                f"workflow_{self.state.workflows_executed}",
+                f"Execute {workflow_name}",
+                status,
+            )
 
         elif update_type == "simulation_completed":
             self.state.overall_progress = 100.0
@@ -218,13 +236,19 @@ class TerminalProgressVisualizer:
 
         elif update_type == "progress":
             self.state.overall_progress = update.get("progress_percentage", 0.0)
-            self.state.current_phase = update.get("current_phase", self.state.current_phase)
+            self.state.current_phase = update.get(
+                "current_phase", self.state.current_phase
+            )
 
         self.state.last_update = datetime.now()
 
-    def _add_progress_item(self, item_id: str, name: str, status: str = "running") -> None:
+    def _add_progress_item(
+        self, item_id: str, name: str, status: str = "running"
+    ) -> None:
         """Add a new progress item."""
-        item = ProgressItem(id=item_id, name=name, status=status, start_time=datetime.now())
+        item = ProgressItem(
+            id=item_id, name=name, status=status, start_time=datetime.now()
+        )
         self.state.progress_items[item_id] = item
 
         if status == "running":
@@ -284,7 +308,9 @@ class TerminalProgressVisualizer:
             if self.state.estimated_completion:
                 remaining = self.state.estimated_completion - datetime.now()
                 if remaining.total_seconds() > 0:
-                    remaining_str = f"{remaining.seconds // 60:02d}:{remaining.seconds % 60:02d}"
+                    remaining_str = (
+                        f"{remaining.seconds // 60:02d}:{remaining.seconds % 60:02d}"
+                    )
                     eta_str = f" (ETA: {remaining_str})"
                 else:
                     eta_str = " (Overdue)"
@@ -300,7 +326,9 @@ class TerminalProgressVisualizer:
         if self.state.current_phase:
             spinner = self._get_spinner()
             phase = self.state.current_phase
-            print(f"{spinner} Current Phase: {self._color('yellow', 'bold')}{phase}{self._reset()}")
+            print(
+                f"{spinner} Current Phase: {self._color('yellow', 'bold')}{phase}{self._reset()}"
+            )
         print()
 
     def _display_active_tasks(self) -> None:
@@ -359,7 +387,9 @@ class TerminalProgressVisualizer:
         """Display footer with controls."""
         if self.interactive:
             print(f"{'─' * self.width}")
-            print("Press Ctrl+C to stop monitoring | Use WebSocket for detailed updates")
+            print(
+                "Press Ctrl+C to stop monitoring | Use WebSocket for detailed updates"
+            )
             print(f"Last update: {datetime.now().strftime('%H:%M:%S')}")
 
     def _display_initial_status(self) -> None:
@@ -378,7 +408,9 @@ class TerminalProgressVisualizer:
         status_text = "SUCCESS" if success else "COMPLETED WITH ISSUES"
         status_color = "green" if success else "yellow"
 
-        print(f"\n{status_icon} Simulation {self._color(status_color, 'bold')}{status_text}{self._reset()}\n")
+        print(
+            f"\n{status_icon} Simulation {self._color(status_color, 'bold')}{status_text}{self._reset()}\n"
+        )
 
         if self.state.start_time:
             duration = datetime.now() - self.state.start_time
@@ -395,9 +427,13 @@ class TerminalProgressVisualizer:
         print(f"\n📊 Final Progress: {self.state.overall_progress:.1f}%")
 
         if success:
-            print("\n🎯 Simulation completed successfully! Check the reports for detailed analysis.")
+            print(
+                "\n🎯 Simulation completed successfully! Check the reports for detailed analysis."
+            )
         else:
-            print("\n⚠️  Simulation completed with some issues. Review the logs for details.")
+            print(
+                "\n⚠️  Simulation completed with some issues. Review the logs for details."
+            )
 
     def _create_progress_bar(self, progress: float, width: int) -> str:
         """Create a visual progress bar."""
@@ -523,7 +559,9 @@ class SimulationTerminalUI:
         """Start monitoring the simulation execution."""
         try:
             self.visualizer.start_simulation(estimated_duration_minutes)
-            self.logger.info(f"Started terminal monitoring for simulation {self.simulation_id}")
+            self.logger.info(
+                f"Started terminal monitoring for simulation {self.simulation_id}"
+            )
         except Exception as e:
             self.logger.error(f"Failed to start terminal monitoring: {e}")
 
@@ -531,7 +569,9 @@ class SimulationTerminalUI:
         """Stop monitoring the simulation execution."""
         try:
             self.visualizer.stop_simulation(success)
-            self.logger.info(f"Stopped terminal monitoring for simulation {self.simulation_id}")
+            self.logger.info(
+                f"Stopped terminal monitoring for simulation {self.simulation_id}"
+            )
         except Exception as e:
             self.logger.error(f"Failed to stop terminal monitoring: {e}")
 
@@ -541,7 +581,8 @@ class SimulationTerminalUI:
             # Convert event data to UI update format
             update_data = {
                 "type": event_data.get("event_type", "progress"),
-                "immediate": event_data.get("event_type") in ["simulation_completed", "simulation_failed"],
+                "immediate": event_data.get("event_type")
+                in ["simulation_completed", "simulation_failed"],
                 **event_data,
             }
 
@@ -568,7 +609,9 @@ def get_simulation_terminal_ui(simulation_id: str) -> SimulationTerminalUI:
     return _terminal_ui_manager[simulation_id]
 
 
-def start_simulation_monitoring(simulation_id: str, estimated_duration_minutes: int = 60) -> None:
+def start_simulation_monitoring(
+    simulation_id: str, estimated_duration_minutes: int = 60
+) -> None:
     """Start terminal monitoring for a simulation."""
     ui = get_simulation_terminal_ui(simulation_id)
     ui.start_monitoring(estimated_duration_minutes)

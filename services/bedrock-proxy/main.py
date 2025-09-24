@@ -29,29 +29,65 @@ except ImportError:
     sys.path.insert(0, os.path.dirname(__file__))
     from modules.processor import process_invoke_request
 
-# Service configuration constants
-SERVICE_NAME = "bedrock-proxy"
-SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 7090
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="bedrock-proxy",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Bedrock Proxy Stub"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 app = FastAPI(
-    title="Bedrock Proxy Stub",
+    title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Local AI proxy service for structured response generation",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
-app.add_middleware(RequestIdMiddleware)
-app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
+
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=SERVICE_NAME)
+
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 
 @app.get("/health")
 async def health():
-    """Health check endpoint returning service status and basic information."""
-    return {
-        "status": "healthy",
-        "service": SERVICE_NAME,
-        "version": SERVICE_VERSION,
-        "description": "Bedrock proxy stub service is operational",
-    }
+    """Enhanced health check endpoint with standardized response."""
+    try:
+        return create_success_response(
+            data={
+                "status": "healthy",
+                "service": SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "features": {
+                    "ai_proxy": True,
+                    "structured_responses": True,
+                    "template_processing": True,
+                    "stub_mode": True,
+                }
+            },
+            message="Bedrock proxy service is operational"
+        )
+    except Exception as e:
+        return create_error_response(
+            message=f"Health check failed: {str(e)}",
+            error_code="HEALTH_CHECK_FAILED",
+            details={"error": str(e)}
+        )
 
 
 class InvokeRequest(BaseModel):
@@ -98,9 +134,17 @@ class InvokeRequest(BaseModel):
     def validate_template(cls, v):
         """Validate template is one of the supported types."""
         if v is not None:
-            valid_templates = ["summary", "risks", "decisions", "pr_confidence", "life_of_ticket"]
+            valid_templates = [
+                "summary",
+                "risks",
+                "decisions",
+                "pr_confidence",
+                "life_of_ticket",
+            ]
             if v.lower() not in valid_templates and v.strip():
-                raise ValueError(f'Invalid template "{v}". Supported templates: {", ".join(valid_templates)}')
+                raise ValueError(
+                    f'Invalid template "{v}". Supported templates: {", ".join(valid_templates)}'
+                )
         return v
 
     @field_validator("format")
@@ -110,7 +154,9 @@ class InvokeRequest(BaseModel):
         if v is not None:
             valid_formats = ["md", "txt", "json"]
             if v.lower() not in valid_formats:
-                raise ValueError(f'Invalid format "{v}". Supported formats: {", ".join(valid_formats)}')
+                raise ValueError(
+                    f'Invalid format "{v}". Supported formats: {", ".join(valid_formats)}'
+                )
         return v
 
     @field_validator("model")

@@ -42,7 +42,9 @@ class TestEnvironmentDetection:
         with patch("os.path.exists") as mock_exists, patch("os.getenv") as mock_getenv:
 
             mock_exists.return_value = False
-            mock_getenv.side_effect = lambda key, default=None: "true" if key == "DOCKER_CONTAINER" else None
+            mock_getenv.side_effect = lambda key, default=None: (
+                "true" if key == "DOCKER_CONTAINER" else None
+            )
 
             analyzer = SimulationAnalyzer()
             assert analyzer._is_docker_environment == True
@@ -52,7 +54,9 @@ class TestEnvironmentDetection:
         with patch("os.path.exists") as mock_exists, patch("os.getenv") as mock_getenv:
 
             mock_exists.return_value = False
-            mock_getenv.side_effect = lambda key, default=None: "tcp://localhost:2376" if key == "DOCKER_HOST" else None
+            mock_getenv.side_effect = lambda key, default=None: (
+                "tcp://localhost:2376" if key == "DOCKER_HOST" else None
+            )
 
             analyzer = SimulationAnalyzer()
             assert analyzer._is_docker_environment == True
@@ -62,7 +66,9 @@ class TestEnvironmentDetection:
         with patch("os.path.exists") as mock_exists, patch("os.getenv") as mock_getenv:
 
             mock_exists.return_value = False
-            mock_getenv.side_effect = lambda key, default=None: "docker-container-123" if key == "HOSTNAME" else None
+            mock_getenv.side_effect = lambda key, default=None: (
+                "docker-container-123" if key == "HOSTNAME" else None
+            )
 
             analyzer = SimulationAnalyzer()
             assert analyzer._is_docker_environment == True
@@ -75,7 +81,9 @@ class TestServiceUrlConfiguration:
     def test_docker_service_url_configuration(self, mock_getenv):
         """Test service URL configuration in Docker environment."""
         # Mock Docker environment
-        with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=True):
+        with patch.object(
+            SimulationAnalyzer, "_detect_docker_environment", return_value=True
+        ):
             mock_getenv.return_value = None  # No overrides
 
             analyzer = SimulationAnalyzer()
@@ -93,7 +101,9 @@ class TestServiceUrlConfiguration:
     def test_local_service_url_configuration(self, mock_getenv):
         """Test service URL configuration in local environment."""
         # Mock local environment
-        with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=False):
+        with patch.object(
+            SimulationAnalyzer, "_detect_docker_environment", return_value=False
+        ):
             mock_getenv.return_value = None  # No overrides
 
             analyzer = SimulationAnalyzer()
@@ -111,7 +121,9 @@ class TestServiceUrlConfiguration:
     def test_environment_variable_overrides(self, mock_getenv):
         """Test that environment variables override default URLs."""
         # Mock local environment
-        with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=False):
+        with patch.object(
+            SimulationAnalyzer, "_detect_docker_environment", return_value=False
+        ):
             # Mock environment variable overrides
             def mock_getenv_side_effect(key):
                 overrides = {
@@ -136,7 +148,9 @@ class TestServiceUrlConfiguration:
 
     def test_environment_info_structure(self):
         """Test that environment info returns correct structure."""
-        with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=True):
+        with patch.object(
+            SimulationAnalyzer, "_detect_docker_environment", return_value=True
+        ):
             analyzer = SimulationAnalyzer()
             env_info = analyzer.get_environment_info()
 
@@ -175,29 +189,44 @@ class TestIntegrationWithEcosystem:
     def test_service_url_consistency(self):
         """Test that service URLs are consistent across different environment configurations."""
         # Test that both Docker and local configurations have the same service keys
-        with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=True):
+        with patch.object(
+            SimulationAnalyzer, "_detect_docker_environment", return_value=True
+        ):
             docker_analyzer = SimulationAnalyzer()
 
-        with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=False):
+        with patch.object(
+            SimulationAnalyzer, "_detect_docker_environment", return_value=False
+        ):
             local_analyzer = SimulationAnalyzer()
 
         # Both should have the same service keys
-        assert set(docker_analyzer.service_urls.keys()) == set(local_analyzer.service_urls.keys())
+        assert set(docker_analyzer.service_urls.keys()) == set(
+            local_analyzer.service_urls.keys()
+        )
 
         # Verify all expected services are configured
-        expected_services = {"summarizer_hub", "doc_store", "analysis_service", "code_analyzer"}
+        expected_services = {
+            "summarizer_hub",
+            "doc_store",
+            "analysis_service",
+            "code_analyzer",
+        }
         assert set(docker_analyzer.service_urls.keys()) == expected_services
 
     def test_environment_detection_is_deterministic(self):
         """Test that environment detection is deterministic for the same conditions."""
         # Test that multiple calls to environment detection return the same result
-        with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=True):
+        with patch.object(
+            SimulationAnalyzer, "_detect_docker_environment", return_value=True
+        ):
             analyzer1 = SimulationAnalyzer()
             analyzer2 = SimulationAnalyzer()
 
             assert analyzer1._is_docker_environment == analyzer2._is_docker_environment
 
-        with patch.object(SimulationAnalyzer, "_detect_docker_environment", return_value=False):
+        with patch.object(
+            SimulationAnalyzer, "_detect_docker_environment", return_value=False
+        ):
             analyzer3 = SimulationAnalyzer()
             analyzer4 = SimulationAnalyzer()
 

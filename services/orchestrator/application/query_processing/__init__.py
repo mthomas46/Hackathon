@@ -1,2 +1,1 @@
 """Query Processing Application Layer"""
-

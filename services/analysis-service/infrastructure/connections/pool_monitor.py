@@ -61,7 +61,10 @@ class PoolHealthCheck:
             metrics.connection_utilization >= self.critical_threshold
             or metrics.error_rate >= self.max_error_rate * 2
             or metrics.idle_connections < 1
-            or (metrics.acquire_time_p95 and metrics.acquire_time_p95 > self.max_acquire_time * 2)
+            or (
+                metrics.acquire_time_p95
+                and metrics.acquire_time_p95 > self.max_acquire_time * 2
+            )
         ):
             return HealthStatus.CRITICAL
 
@@ -69,7 +72,10 @@ class PoolHealthCheck:
         if (
             metrics.connection_utilization >= self.warning_threshold
             or metrics.error_rate >= self.max_error_rate
-            or (metrics.acquire_time_p95 and metrics.acquire_time_p95 > self.max_acquire_time)
+            or (
+                metrics.acquire_time_p95
+                and metrics.acquire_time_p95 > self.max_acquire_time
+            )
         ):
             return HealthStatus.WARNING
 
@@ -94,7 +100,9 @@ class ConnectionPoolMonitor:
         self.warning_pools = 0
         self.critical_pools = 0
 
-    def register_pool(self, pool_name: str, check_config: Optional[PoolHealthCheck] = None) -> None:
+    def register_pool(
+        self, pool_name: str, check_config: Optional[PoolHealthCheck] = None
+    ) -> None:
         """Register a connection pool for monitoring."""
         if check_config is None:
             check_config = PoolHealthCheck(pool_name=pool_name)
@@ -141,7 +149,12 @@ class ConnectionPoolMonitor:
             try:
                 # Use the minimum check interval
                 min_interval = min(
-                    (check.check_interval for check in self.health_checks.values() if check.enabled), default=30
+                    (
+                        check.check_interval
+                        for check in self.health_checks.values()
+                        if check.enabled
+                    ),
+                    default=30,
                 )
 
                 await asyncio.sleep(min_interval)
@@ -158,7 +171,9 @@ class ConnectionPoolMonitor:
             except Exception as e:
                 print(f"Error in monitoring loop: {e}")
 
-    async def _check_pool_health(self, pool_name: str, check_config: PoolHealthCheck) -> None:
+    async def _check_pool_health(
+        self, pool_name: str, check_config: PoolHealthCheck
+    ) -> None:
         """Check health of a specific pool."""
         try:
             # Get pool metrics (this would need to be implemented per pool type)
@@ -180,7 +195,9 @@ class ConnectionPoolMonitor:
         except Exception as e:
             print(f"Error checking pool {pool_name}: {e}")
 
-    async def _collect_pool_metrics(self, pool_name: str) -> Optional[PoolHealthMetrics]:
+    async def _collect_pool_metrics(
+        self, pool_name: str
+    ) -> Optional[PoolHealthMetrics]:
         """Collect metrics for a pool."""
         # This is a placeholder - actual implementation would depend on pool type
         # In a real implementation, this would query the actual pool for metrics
@@ -215,7 +232,9 @@ class ConnectionPoolMonitor:
             elif metrics.status == HealthStatus.CRITICAL:
                 self.critical_pools += 1
 
-    async def _check_for_alerts(self, pool_name: str, metrics: PoolHealthMetrics, new_status: HealthStatus) -> None:
+    async def _check_for_alerts(
+        self, pool_name: str, metrics: PoolHealthMetrics, new_status: HealthStatus
+    ) -> None:
         """Check for status changes and send alerts."""
         previous_metrics = self.last_metrics.get(pool_name)
 
@@ -261,7 +280,9 @@ class ConnectionPoolMonitor:
             "warning_pools": self.warning_pools,
             "critical_pools": self.critical_pools,
             "total_monitored_pools": len(self.health_checks),
-            "enabled_checks": sum(1 for check in self.health_checks.values() if check.enabled),
+            "enabled_checks": sum(
+                1 for check in self.health_checks.values() if check.enabled
+            ),
         }
 
     def reset_stats(self) -> None:
@@ -301,7 +322,13 @@ class AlertManager:
         alert_type = alert_data.get("alert_type", "pool_health")
 
         # Store in history
-        self.alert_history.append({"timestamp": datetime.utcnow().isoformat(), "type": alert_type, "data": alert_data})
+        self.alert_history.append(
+            {
+                "timestamp": datetime.utcnow().isoformat(),
+                "type": alert_type,
+                "data": alert_data,
+            }
+        )
 
         # Maintain history size
         if len(self.alert_history) > self.max_history_size:
@@ -315,7 +342,9 @@ class AlertManager:
                 except Exception as e:
                     print(f"Error in alert handler: {e}")
 
-    def get_alert_history(self, alert_type: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_alert_history(
+        self, alert_type: Optional[str] = None, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """Get alert history."""
         history = self.alert_history
 
@@ -337,7 +366,9 @@ alert_manager = AlertManager()
 class PoolMonitorService:
     """Service for monitoring connection pools with alert integration."""
 
-    def __init__(self, pool_monitor: ConnectionPoolMonitor, alert_manager: AlertManager):
+    def __init__(
+        self, pool_monitor: ConnectionPoolMonitor, alert_manager: AlertManager
+    ):
         """Initialize pool monitor service."""
         self.pool_monitor = pool_monitor
         self.alert_manager = alert_manager
@@ -347,7 +378,9 @@ class PoolMonitorService:
         """Start the pool monitor service."""
         if not self._started:
             # Register alert handler
-            await self.alert_manager.register_handler("pool_health", self._handle_pool_alert)
+            await self.alert_manager.register_handler(
+                "pool_health", self._handle_pool_alert
+            )
 
             await self.pool_monitor.start_monitoring()
             self._started = True
@@ -368,11 +401,16 @@ class PoolMonitorService:
         # For example, send email, Slack message, etc.
 
     def register_pool_for_monitoring(
-        self, pool_name: str, warning_threshold: float = 0.8, critical_threshold: float = 0.95
+        self,
+        pool_name: str,
+        warning_threshold: float = 0.8,
+        critical_threshold: float = 0.95,
     ) -> None:
         """Register a pool for monitoring."""
         health_check = PoolHealthCheck(
-            pool_name=pool_name, warning_threshold=warning_threshold, critical_threshold=critical_threshold
+            pool_name=pool_name,
+            warning_threshold=warning_threshold,
+            critical_threshold=critical_threshold,
         )
 
         self.pool_monitor.register_pool(pool_name, health_check)

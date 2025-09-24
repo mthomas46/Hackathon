@@ -18,14 +18,21 @@ from services.clients.websocket_client import get_websocket_manager
 def render_monitor_page():
     """Render the real-time monitoring page."""
     st.markdown("## 📊 Real-Time Monitoring")
-    st.markdown("Monitor active simulations with live progress updates and event streams.")
+    st.markdown(
+        "Monitor active simulations with live progress updates and event streams."
+    )
 
     # Initialize WebSocket connection for real-time updates
     initialize_realtime_monitoring()
 
     # Create main layout with tabs
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["📈 Live Progress", "🎯 Active Simulations", "📋 Event Stream", "📊 Performance Metrics"]
+        [
+            "📈 Live Progress",
+            "🎯 Active Simulations",
+            "📋 Event Stream",
+            "📊 Performance Metrics",
+        ]
     )
 
     with tab1:
@@ -191,7 +198,10 @@ def render_simulation_progress_card(simulation: Dict[str, Any]):
             try:
                 start_dt = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
                 elapsed = datetime.now() - start_dt
-                st.metric("Elapsed Time", f"{elapsed.seconds // 3600}h {(elapsed.seconds % 3600) // 60}m")
+                st.metric(
+                    "Elapsed Time",
+                    f"{elapsed.seconds // 3600}h {(elapsed.seconds % 3600) // 60}m",
+                )
             except ValueError:
                 st.caption("Time: Unknown")
 
@@ -202,7 +212,11 @@ def render_simulation_progress_card(simulation: Dict[str, Any]):
 
     with col4:
         # Quick actions
-        if st.button("👁️ View Details", key=f"view_{sim_id}", help=f"View detailed progress for {sim_id}"):
+        if st.button(
+            "👁️ View Details",
+            key=f"view_{sim_id}",
+            help=f"View detailed progress for {sim_id}",
+        ):
             st.session_state.selected_simulation = sim_id
             st.rerun()
 
@@ -218,7 +232,9 @@ def render_active_simulations_monitor():
 
     if not active_sims:
         st.info("No active simulations at the moment.")
-        st.markdown("**💡 Tip:** Start a simulation from the Create page to see live monitoring in action!")
+        st.markdown(
+            "**💡 Tip:** Start a simulation from the Create page to see live monitoring in action!"
+        )
         return
 
     # Summary metrics
@@ -232,7 +248,11 @@ def render_active_simulations_monitor():
         st.metric("Running", running_count)
 
     with col3:
-        sum(sim.get("progress", 0) for sim in active_sims) / len(active_sims) if active_sims else 0
+        (
+            sum(sim.get("progress", 0) for sim in active_sims) / len(active_sims)
+            if active_sims
+            else 0
+        )
         st.metric("Avg Progress", ".1%")
 
     with col4:
@@ -241,7 +261,10 @@ def render_active_simulations_monitor():
 
     # Detailed simulation cards
     for sim in active_sims:
-        with st.expander(f"📊 {sim.get('name', 'Unnamed')} - {sim.get('progress', 0):.1%}", expanded=False):
+        with st.expander(
+            f"📊 {sim.get('name', 'Unnamed')} - {sim.get('progress', 0):.1%}",
+            expanded=False,
+        ):
             render_detailed_simulation_monitor(sim)
 
 
@@ -285,7 +308,9 @@ def render_detailed_simulation_monitor(simulation: Dict[str, Any]):
 
     # Timeline visualization (placeholder for now)
     st.markdown("**Timeline**")
-    st.info("Interactive timeline visualization would be implemented here with phase progression and milestones.")
+    st.info(
+        "Interactive timeline visualization would be implemented here with phase progression and milestones."
+    )
 
 
 def render_event_stream():
@@ -330,7 +355,9 @@ def render_event_stream():
         filtered_events = [e for e in events if e.get("event_type") in event_types]
 
     # Display recent events
-    st.markdown(f"**Showing {min(len(filtered_events), max_events)} most recent events**")
+    st.markdown(
+        f"**Showing {min(len(filtered_events), max_events)} most recent events**"
+    )
 
     for event in filtered_events[:max_events]:
         render_event_item(event)
@@ -368,14 +395,18 @@ def render_event_item(event: Dict[str, Any]):
 
             # Event-specific details
             if event_type == "SimulationStarted":
-                st.caption(f"Started simulation: {event.get('simulation_id', 'Unknown')}")
+                st.caption(
+                    f"Started simulation: {event.get('simulation_id', 'Unknown')}"
+                )
             elif event_type == "DocumentGenerated":
                 st.caption(f"Generated: {event.get('title', 'Document')}")
             elif event_type == "WorkflowExecuted":
                 event.get("execution_time_seconds", 0)
                 st.caption(".2f")
             else:
-                simulation_id = event.get("simulation_id", event.get("project_id", "Unknown"))
+                simulation_id = event.get(
+                    "simulation_id", event.get("project_id", "Unknown")
+                )
                 st.caption(f"Simulation: {simulation_id}")
 
         with col3:
@@ -429,7 +460,9 @@ def render_performance_metrics():
 
     # Performance charts (placeholder)
     st.markdown("**Performance Trends**")
-    st.info("Interactive performance charts and trend analysis would be implemented here.")
+    st.info(
+        "Interactive performance charts and trend analysis would be implemented here."
+    )
 
     # Sample chart placeholder
     st.line_chart(

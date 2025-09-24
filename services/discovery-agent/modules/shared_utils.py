@@ -11,14 +11,19 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
-from services.shared.core.constants_new import EnvVars, ErrorCodes, ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 # Import shared utilities
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import utc_now
-from services.shared.utilities.error_handling import ServiceException, ValidationException
+from services.shared.utilities.error_handling import (
+    ServiceException,
+    ValidationException,
+)
 
 # Global configuration for discovery agent
 _DEFAULT_TIMEOUT = 30
@@ -41,7 +46,9 @@ def get_discovery_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:
     return ServiceClients(timeout=timeout)
 
 
-def handle_discovery_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
+def handle_discovery_error(
+    operation: str, error: Exception, **context
+) -> Dict[str, Any]:
     """Standardized error handling for discovery operations.
 
     Logs the error and returns a standardized error response.
@@ -50,7 +57,12 @@ def handle_discovery_error(operation: str, error: Exception, **context) -> Dict[
 
     # Remove 'operation' from context to avoid conflict
     safe_context = {k: v for k, v in context.items() if k != "operation"}
-    fire_and_forget("error", f"Discovery-agent {operation} error: {error}", ServiceNames.DISCOVERY_AGENT, safe_context)
+    fire_and_forget(
+        "error",
+        f"Discovery-agent {operation} error: {error}",
+        ServiceNames.DISCOVERY_AGENT,
+        safe_context,
+    )
 
     # Return appropriate error code based on exception type
     if isinstance(error, ValidationException):
@@ -59,11 +71,15 @@ def handle_discovery_error(operation: str, error: Exception, **context) -> Dict[
         error_code = ErrorCodes.INTERNAL_ERROR
 
     return create_error_response(
-        f"Failed to {operation}", error_code=error_code, details={"error": str(error), **safe_context}
+        f"Failed to {operation}",
+        error_code=error_code,
+        details={"error": str(error), **safe_context},
     )
 
 
-def create_discovery_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
+def create_discovery_success_response(
+    operation: str, data: Any, **context
+) -> Dict[str, Any]:
     """Standardized success response for discovery operations.
 
     Returns a consistent success response format.
@@ -73,7 +89,9 @@ def create_discovery_success_response(operation: str, data: Any, **context) -> D
     if "request_id" in context:
         accepted_params["request_id"] = context["request_id"]
 
-    return create_success_response(f"Discovery {operation} successful", data, **accepted_params)
+    return create_success_response(
+        f"Discovery {operation} successful", data, **accepted_params
+    )
 
 
 def build_discovery_context(operation: str, **additional) -> Dict[str, Any]:
@@ -91,14 +109,21 @@ def validate_discovery_request(req) -> None:
     if not req.openapi_url and not req.spec:
         raise ValidationException(
             "Either openapi_url or spec must be provided",
-            {"openapi_url": ["Required if spec is not provided"], "spec": ["Required if openapi_url is not provided"]},
+            {
+                "openapi_url": ["Required if spec is not provided"],
+                "spec": ["Required if openapi_url is not provided"],
+            },
         )
 
     if not req.name:
-        raise ValidationException("Service name is required", {"name": ["Required field"]})
+        raise ValidationException(
+            "Service name is required", {"name": ["Required field"]}
+        )
 
     if not req.base_url:
-        raise ValidationException("Base URL is required", {"base_url": ["Required field"]})
+        raise ValidationException(
+            "Base URL is required", {"base_url": ["Required field"]}
+        )
 
 
 def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -134,7 +159,9 @@ def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
     return endpoints
 
 
-def fetch_openapi_spec(openapi_url: str, timeout: int = _DEFAULT_TIMEOUT) -> Dict[str, Any]:
+def fetch_openapi_spec(
+    openapi_url: str, timeout: int = _DEFAULT_TIMEOUT
+) -> Dict[str, Any]:
     """Fetch OpenAPI specification from URL."""
     if not openapi_url:
         raise ServiceException(
@@ -164,7 +191,9 @@ def fetch_openapi_spec(openapi_url: str, timeout: int = _DEFAULT_TIMEOUT) -> Dic
         )
 
 
-async def _async_fetch_openapi_spec(openapi_url: str, timeout: int = _DEFAULT_TIMEOUT) -> Dict[str, Any]:
+async def _async_fetch_openapi_spec(
+    openapi_url: str, timeout: int = _DEFAULT_TIMEOUT
+) -> Dict[str, Any]:
     """Async version of fetch_openapi_spec."""
     async with httpx.AsyncClient(timeout=timeout) as client:
         response = await client.get(openapi_url)
@@ -202,7 +231,9 @@ def create_discovery_response(
 
 
 def register_with_orchestrator(
-    payload: Dict[str, Any], orchestrator_url: Optional[str] = None, timeout: int = _DEFAULT_TIMEOUT
+    payload: Dict[str, Any],
+    orchestrator_url: Optional[str] = None,
+    timeout: int = _DEFAULT_TIMEOUT,
 ):
     """Register service with orchestrator."""
     if not orchestrator_url:
@@ -219,7 +250,9 @@ def register_with_orchestrator(
             asyncio.set_event_loop(loop)
 
         # Run async registration in sync context
-        return loop.run_until_complete(_async_register_with_orchestrator(payload, orchestrator_url, timeout))
+        return loop.run_until_complete(
+            _async_register_with_orchestrator(payload, orchestrator_url, timeout)
+        )
 
     except Exception as e:
         raise ServiceException(
@@ -242,13 +275,17 @@ async def _async_register_with_orchestrator(
         from services.orchestrator.main import app as orchestrator_app
 
         transport = httpx.ASGITransport(app=orchestrator_app)
-        async with httpx.AsyncClient(transport=transport, base_url="http://testserver", timeout=timeout) as client:
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://testserver", timeout=timeout
+        ) as client:
             response = await client.post("/registry/register", json=payload)
             response.raise_for_status()
             return response.json()
     else:
         async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.post(f"{orchestrator_url}/registry/register", json=payload)
+            response = await client.post(
+                f"{orchestrator_url}/registry/register", json=payload
+            )
             response.raise_for_status()
             return response.json()
 

@@ -17,7 +17,9 @@ from ...base.base_manager import BaseManager
 class SecureAnalyzerManager(BaseManager):
     """Manager for secure analyzer power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def secure_analyzer_menu(self):
@@ -56,7 +58,9 @@ class SecureAnalyzerManager(BaseManager):
     async def content_security_analysis_menu(self):
         """Content security analysis submenu."""
         while True:
-            menu = create_menu_table("Content Security Analysis", ["Option", "Description"])
+            menu = create_menu_table(
+                "Content Security Analysis", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -90,7 +94,9 @@ class SecureAnalyzerManager(BaseManager):
     async def analyze_single_content(self):
         """Analyze a single piece of content for sensitive information."""
         try:
-            self.console.print("[yellow]Enter content to analyze (press Ctrl+D on new line when done):[/yellow]")
+            self.console.print(
+                "[yellow]Enter content to analyze (press Ctrl+D on new line when done):[/yellow]"
+            )
             content_lines = []
             try:
                 while True:
@@ -105,20 +111,30 @@ class SecureAnalyzerManager(BaseManager):
                 return
 
             # Get custom keywords
-            add_keywords = Confirm.ask("[bold cyan]Add custom keywords?[/bold cyan]", default=False)
+            add_keywords = Confirm.ask(
+                "[bold cyan]Add custom keywords?[/bold cyan]", default=False
+            )
             keywords = None
             if add_keywords:
-                keywords_input = Prompt.ask("[bold cyan]Keywords (comma-separated)[/bold cyan]")
+                keywords_input = Prompt.ask(
+                    "[bold cyan]Keywords (comma-separated)[/bold cyan]"
+                )
                 keywords = [k.strip() for k in keywords_input.split(",") if k.strip()]
 
             # Perform detection
             detect_request = {"content": content, "keywords": keywords}
 
-            with self.console.status("[bold green]Analyzing content for security risks...[/bold green]") as status:
-                response = await self.clients.post_json("secure-analyzer/detect", detect_request)
+            with self.console.status(
+                "[bold green]Analyzing content for security risks...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "secure-analyzer/detect", detect_request
+                )
 
             if response:
-                await self.display_detection_results(response, content[:200] + "..." if len(content) > 200 else content)
+                await self.display_detection_results(
+                    response, content[:200] + "..." if len(content) > 200 else content
+                )
             else:
                 self.console.print("[red]❌ Failed to analyze content[/red]")
 
@@ -127,7 +143,9 @@ class SecureAnalyzerManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error analyzing content: {e}[/red]")
 
-    async def display_detection_results(self, results: Dict[str, Any], content_preview: str):
+    async def display_detection_results(
+        self, results: Dict[str, Any], content_preview: str
+    ):
         """Display content detection results in a formatted way."""
         sensitive = results.get("sensitive", False)
         matches = results.get("matches", [])
@@ -159,10 +177,18 @@ class SecureAnalyzerManager(BaseManager):
                 content += f"    ... and {len(matches) - 10} more matches\n"
 
         # Risk assessment
-        risk_level = "HIGH" if sensitive and len(matches) > 3 else "MEDIUM" if sensitive else "LOW"
-        risk_color = {"HIGH": "red", "MEDIUM": "yellow", "LOW": "green"}.get(risk_level, "white")
+        risk_level = (
+            "HIGH"
+            if sensitive and len(matches) > 3
+            else "MEDIUM" if sensitive else "LOW"
+        )
+        risk_color = {"HIGH": "red", "MEDIUM": "yellow", "LOW": "green"}.get(
+            risk_level, "white"
+        )
 
-        content += f"\n[bold {risk_color}]Risk Assessment: {risk_level}[/bold {risk_color}]"
+        content += (
+            f"\n[bold {risk_color}]Risk Assessment: {risk_level}[/bold {risk_color}]"
+        )
 
         if sensitive:
             content += "\n\n[bold red]⚠️  SECURITY RECOMMENDATIONS:[/bold red]"
@@ -179,8 +205,12 @@ class SecureAnalyzerManager(BaseManager):
     async def batch_content_scanning(self):
         """Perform batch content scanning."""
         try:
-            self.console.print("[yellow]Batch content scanning allows processing multiple content items[/yellow]")
-            self.console.print("[yellow]This would process files or datasets for security analysis[/yellow]")
+            self.console.print(
+                "[yellow]Batch content scanning allows processing multiple content items[/yellow]"
+            )
+            self.console.print(
+                "[yellow]This would process files or datasets for security analysis[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -215,11 +245,17 @@ class SecureAnalyzerManager(BaseManager):
 
             detect_request = {"content": content, "keywords": keywords}
 
-            with self.console.status(f"[bold green]Analyzing {os.path.basename(file_path)}...[/bold green]") as status:
-                response = await self.clients.post_json("secure-analyzer/detect", detect_request)
+            with self.console.status(
+                f"[bold green]Analyzing {os.path.basename(file_path)}...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "secure-analyzer/detect", detect_request
+                )
 
             if response:
-                content_preview = f"File: {os.path.basename(file_path)} ({len(content)} chars)"
+                content_preview = (
+                    f"File: {os.path.basename(file_path)} ({len(content)} chars)"
+                )
                 await self.display_detection_results(response, content_preview)
             else:
                 self.console.print("[red]❌ Failed to analyze file[/red]")
@@ -231,7 +267,9 @@ class SecureAnalyzerManager(BaseManager):
         """Interactive content scanner for real-time analysis."""
         try:
             self.console.print("[yellow]Interactive Content Scanner[/yellow]")
-            self.console.print("[yellow]Type content to scan (press Enter on empty line to finish):[/yellow]")
+            self.console.print(
+                "[yellow]Type content to scan (press Enter on empty line to finish):[/yellow]"
+            )
 
             while True:
                 content = Prompt.ask("[bold cyan]Content[/bold cyan]")
@@ -240,7 +278,9 @@ class SecureAnalyzerManager(BaseManager):
 
                 detect_request = {"content": content}
 
-                response = await self.clients.post_json("secure-analyzer/detect", detect_request)
+                response = await self.clients.post_json(
+                    "secure-analyzer/detect", detect_request
+                )
 
                 if response and response.get("sensitive"):
                     self.console.print("[red]🚨 SENSITIVE CONTENT DETECTED![/red]")
@@ -252,7 +292,9 @@ class SecureAnalyzerManager(BaseManager):
                 else:
                     self.console.print("[green]✅ Content appears safe[/green]")
 
-                continue_scan = Confirm.ask("[bold cyan]Continue scanning?[/bold cyan]", default=True)
+                continue_scan = Confirm.ask(
+                    "[bold cyan]Continue scanning?[/bold cyan]", default=True
+                )
                 if not continue_scan:
                     break
 
@@ -263,7 +305,9 @@ class SecureAnalyzerManager(BaseManager):
         """Test security patterns and detection rules."""
         try:
             self.console.print("[yellow]Security Pattern Testing[/yellow]")
-            self.console.print("[yellow]Test various patterns to validate detection rules[/yellow]")
+            self.console.print(
+                "[yellow]Test various patterns to validate detection rules[/yellow]"
+            )
 
             test_patterns = {
                 "API Key": "sk-1234567890abcdef1234567890abcdef",
@@ -281,21 +325,33 @@ class SecureAnalyzerManager(BaseManager):
                 detect_request = {"content": test_content}
 
                 try:
-                    response = await self.clients.post_json("secure-analyzer/detect", detect_request)
+                    response = await self.clients.post_json(
+                        "secure-analyzer/detect", detect_request
+                    )
                     detected = response.get("sensitive", False) if response else False
                     results.append(
                         {
                             "pattern": pattern_name,
-                            "content": test_content[:50] + "..." if len(test_content) > 50 else test_content,
+                            "content": (
+                                test_content[:50] + "..."
+                                if len(test_content) > 50
+                                else test_content
+                            ),
                             "detected": detected,
-                            "matches": len(response.get("matches", [])) if response else 0,
+                            "matches": (
+                                len(response.get("matches", [])) if response else 0
+                            ),
                         }
                     )
                 except Exception as e:
                     results.append(
                         {
                             "pattern": pattern_name,
-                            "content": test_content[:50] + "..." if len(test_content) > 50 else test_content,
+                            "content": (
+                                test_content[:50] + "..."
+                                if len(test_content) > 50
+                                else test_content
+                            ),
                             "detected": False,
                             "matches": 0,
                             "error": str(e),
@@ -328,7 +384,9 @@ class SecureAnalyzerManager(BaseManager):
     async def model_policy_management_menu(self):
         """Model policy management submenu."""
         while True:
-            menu = create_menu_table("Model Policy Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Model Policy Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -362,7 +420,9 @@ class SecureAnalyzerManager(BaseManager):
     async def get_model_suggestions(self):
         """Get AI model suggestions based on content sensitivity."""
         try:
-            self.console.print("[yellow]Enter content to get model suggestions for:[/yellow]")
+            self.console.print(
+                "[yellow]Enter content to get model suggestions for:[/yellow]"
+            )
             content = Prompt.ask("[bold cyan]Content[/bold cyan]")
 
             if not content.strip():
@@ -371,8 +431,12 @@ class SecureAnalyzerManager(BaseManager):
 
             suggest_request = {"content": content}
 
-            with self.console.status("[bold green]Getting model suggestions...[/bold green]") as status:
-                response = await self.clients.post_json("secure-analyzer/suggest", suggest_request)
+            with self.console.status(
+                "[bold green]Getting model suggestions...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "secure-analyzer/suggest", suggest_request
+                )
 
             if response:
                 await self.display_model_suggestions(response, content)
@@ -410,16 +474,26 @@ class SecureAnalyzerManager(BaseManager):
             content += "\n• Only approved models can be used"
             content += "\n• Additional security measures recommended"
 
-        print_panel(self.console, content, border_style="yellow" if sensitive else "green")
+        print_panel(
+            self.console, content, border_style="yellow" if sensitive else "green"
+        )
 
     async def view_security_policies(self):
         """View current security policies."""
         try:
             self.console.print("[yellow]Security Policy Information[/yellow]")
-            self.console.print("[yellow]• Sensitive content requires approved AI models only[/yellow]")
-            self.console.print("[yellow]• PII, secrets, and credentials trigger restrictions[/yellow]")
-            self.console.print("[yellow]• Policy overrides require explicit approval[/yellow]")
-            self.console.print("[yellow]• Circuit breaker protects against cascade failures[/yellow]")
+            self.console.print(
+                "[yellow]• Sensitive content requires approved AI models only[/yellow]"
+            )
+            self.console.print(
+                "[yellow]• PII, secrets, and credentials trigger restrictions[/yellow]"
+            )
+            self.console.print(
+                "[yellow]• Policy overrides require explicit approval[/yellow]"
+            )
+            self.console.print(
+                "[yellow]• Circuit breaker protects against cascade failures[/yellow]"
+            )
 
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
@@ -430,10 +504,22 @@ class SecureAnalyzerManager(BaseManager):
         """Test policy enforcement with various content types."""
         try:
             test_cases = [
-                ("Safe content", "This is a normal document about software development."),
-                ("Sensitive content", "User password: secret123, API key: sk-1234567890abcdef"),
-                ("PII content", "Social Security: 123-45-6789, Credit card: 4111-1111-1111-1111"),
-                ("Mixed content", "Normal text with password: mypass123 and email: user@domain.com"),
+                (
+                    "Safe content",
+                    "This is a normal document about software development.",
+                ),
+                (
+                    "Sensitive content",
+                    "User password: secret123, API key: sk-1234567890abcdef",
+                ),
+                (
+                    "PII content",
+                    "Social Security: 123-45-6789, Credit card: 4111-1111-1111-1111",
+                ),
+                (
+                    "Mixed content",
+                    "Normal text with password: mypass123 and email: user@domain.com",
+                ),
             ]
 
             results = []
@@ -441,19 +527,29 @@ class SecureAnalyzerManager(BaseManager):
                 suggest_request = {"content": test_content}
 
                 try:
-                    response = await self.clients.post_json("secure-analyzer/suggest", suggest_request)
+                    response = await self.clients.post_json(
+                        "secure-analyzer/suggest", suggest_request
+                    )
                     if response:
                         results.append(
                             {
                                 "case": case_name,
                                 "sensitive": response.get("sensitive", False),
-                                "models_allowed": len(response.get("allowed_models", [])),
-                                "suggestion": response.get("suggestion", "")[:50] + "...",
+                                "models_allowed": len(
+                                    response.get("allowed_models", [])
+                                ),
+                                "suggestion": response.get("suggestion", "")[:50]
+                                + "...",
                             }
                         )
                     else:
                         results.append(
-                            {"case": case_name, "sensitive": False, "models_allowed": 0, "suggestion": "Request failed"}
+                            {
+                                "case": case_name,
+                                "sensitive": False,
+                                "models_allowed": 0,
+                                "suggestion": "Request failed",
+                            }
                         )
                 except Exception as e:
                     results.append(
@@ -492,7 +588,9 @@ class SecureAnalyzerManager(BaseManager):
         """Override policy restrictions for special cases."""
         try:
             self.console.print("[yellow]Policy Override Functionality[/yellow]")
-            self.console.print("[yellow]This would allow bypassing security restrictions for approved cases[/yellow]")
+            self.console.print(
+                "[yellow]This would allow bypassing security restrictions for approved cases[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -502,7 +600,9 @@ class SecureAnalyzerManager(BaseManager):
         """Check policy compliance across operations."""
         try:
             self.console.print("[yellow]Policy Compliance Checking[/yellow]")
-            self.console.print("[yellow]This would audit past operations for policy compliance[/yellow]")
+            self.console.print(
+                "[yellow]This would audit past operations for policy compliance[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -552,12 +652,18 @@ class SecureAnalyzerManager(BaseManager):
                 self.console.print("[red]No content provided[/red]")
                 return
 
-            override_policy = Confirm.ask("[bold cyan]Override security policy?[/bold cyan]", default=False)
+            override_policy = Confirm.ask(
+                "[bold cyan]Override security policy?[/bold cyan]", default=False
+            )
 
             summarize_request = {"content": content, "override_policy": override_policy}
 
-            with self.console.status("[bold green]Generating secure summary...[/bold green]") as status:
-                response = await self.clients.post_json("secure-analyzer/summarize", summarize_request)
+            with self.console.status(
+                "[bold green]Generating secure summary...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "secure-analyzer/summarize", summarize_request
+                )
 
             if response:
                 await self.display_secure_summary(response, content)
@@ -567,7 +673,9 @@ class SecureAnalyzerManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error generating summary: {e}[/red]")
 
-    async def display_secure_summary(self, results: Dict[str, Any], original_content: str):
+    async def display_secure_summary(
+        self, results: Dict[str, Any], original_content: str
+    ):
         """Display secure summary results."""
         summary = results.get("summary", "No summary generated")
         provider_used = results.get("provider_used", "unknown")
@@ -588,7 +696,9 @@ class SecureAnalyzerManager(BaseManager):
 """
 
         if topics_detected:
-            content += "\n[bold yellow]Topics:[/bold yellow] " + ", ".join(topics_detected[:5])
+            content += "\n[bold yellow]Topics:[/bold yellow] " + ", ".join(
+                topics_detected[:5]
+            )
             if len(topics_detected) > 5:
                 content += f" ... and {len(topics_detected) - 5} more"
 
@@ -600,7 +710,11 @@ class SecureAnalyzerManager(BaseManager):
             content += "\n• Only approved AI models used"
             content += "\n• Sensitive information protected"
 
-        print_panel(self.console, content, border_style="green" if confidence > 0.7 else "yellow")
+        print_panel(
+            self.console,
+            content,
+            border_style="green" if confidence > 0.7 else "yellow",
+        )
 
     async def summarize_file_content(self):
         """Summarize content from a file."""
@@ -618,17 +732,23 @@ class SecureAnalyzerManager(BaseManager):
                 self.console.print("[red]File is empty[/red]")
                 return
 
-            override_policy = Confirm.ask("[bold cyan]Override security policy?[/bold cyan]", default=False)
+            override_policy = Confirm.ask(
+                "[bold cyan]Override security policy?[/bold cyan]", default=False
+            )
 
             summarize_request = {"content": content, "override_policy": override_policy}
 
             with self.console.status(
                 f"[bold green]Summarizing {os.path.basename(file_path)}...[/bold green]"
             ) as status:
-                response = await self.clients.post_json("secure-analyzer/summarize", summarize_request)
+                response = await self.clients.post_json(
+                    "secure-analyzer/summarize", summarize_request
+                )
 
             if response:
-                content_preview = f"File: {os.path.basename(file_path)} ({len(content)} chars)"
+                content_preview = (
+                    f"File: {os.path.basename(file_path)} ({len(content)} chars)"
+                )
                 await self.display_secure_summary(response, content_preview)
             else:
                 self.console.print("[red]❌ Failed to summarize file[/red]")
@@ -639,7 +759,9 @@ class SecureAnalyzerManager(BaseManager):
     async def batch_summarization(self):
         """Perform batch summarization."""
         try:
-            self.console.print("[yellow]Batch summarization would process multiple documents[/yellow]")
+            self.console.print(
+                "[yellow]Batch summarization would process multiple documents[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -657,8 +779,12 @@ class SecureAnalyzerManager(BaseManager):
 
             summarize_request = {"content": content, "prompt": custom_prompt}
 
-            with self.console.status("[bold green]Generating custom summary...[/bold green]") as status:
-                response = await self.clients.post_json("secure-analyzer/summarize", summarize_request)
+            with self.console.status(
+                "[bold green]Generating custom summary...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "secure-analyzer/summarize", summarize_request
+                )
 
             if response:
                 await self.display_secure_summary(response, content)
@@ -671,16 +797,22 @@ class SecureAnalyzerManager(BaseManager):
     async def provider_specific_summarization(self):
         """Summarize with specific provider configuration."""
         try:
-            self.console.print("[yellow]Provider-specific summarization allows targeting specific AI models[/yellow]")
+            self.console.print(
+                "[yellow]Provider-specific summarization allows targeting specific AI models[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
-            self.console.print(f"[red]Error with provider-specific summarization: {e}[/red]")
+            self.console.print(
+                f"[red]Error with provider-specific summarization: {e}[/red]"
+            )
 
     async def security_policy_config_menu(self):
         """Security policy configuration submenu."""
         while True:
-            menu = create_menu_table("Security Policy Configuration", ["Option", "Description"])
+            menu = create_menu_table(
+                "Security Policy Configuration", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -715,10 +847,18 @@ class SecureAnalyzerManager(BaseManager):
         """View current security policies."""
         try:
             self.console.print("[yellow]Current Security Policies:[/yellow]")
-            self.console.print("[yellow]• Content Detection: PII, secrets, credentials, sensitive keywords[/yellow]")
-            self.console.print("[yellow]• Model Restrictions: Sensitive content limited to approved models[/yellow]")
-            self.console.print("[yellow]• Circuit Breaker: Automatic failure protection[/yellow]")
-            self.console.print("[yellow]• Override Controls: Administrative policy bypass capabilities[/yellow]")
+            self.console.print(
+                "[yellow]• Content Detection: PII, secrets, credentials, sensitive keywords[/yellow]"
+            )
+            self.console.print(
+                "[yellow]• Model Restrictions: Sensitive content limited to approved models[/yellow]"
+            )
+            self.console.print(
+                "[yellow]• Circuit Breaker: Automatic failure protection[/yellow]"
+            )
+            self.console.print(
+                "[yellow]• Override Controls: Administrative policy bypass capabilities[/yellow]"
+            )
 
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
@@ -761,7 +901,9 @@ class SecureAnalyzerManager(BaseManager):
     async def policy_override_rules(self):
         """Configure policy override rules."""
         try:
-            self.console.print("[yellow]Policy override rules define when security policies can be bypassed[/yellow]")
+            self.console.print(
+                "[yellow]Policy override rules define when security policies can be bypassed[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -770,7 +912,9 @@ class SecureAnalyzerManager(BaseManager):
     async def compliance_reporting_menu(self):
         """Compliance reporting and analytics submenu."""
         while True:
-            menu = create_menu_table("Compliance Reporting & Analytics", ["Option", "Description"])
+            menu = create_menu_table(
+                "Compliance Reporting & Analytics", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -804,7 +948,9 @@ class SecureAnalyzerManager(BaseManager):
     async def security_audit_report(self):
         """Generate security audit report."""
         try:
-            self.console.print("[yellow]Security audit reports would show historical security analysis[/yellow]")
+            self.console.print(
+                "[yellow]Security audit reports would show historical security analysis[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -813,7 +959,9 @@ class SecureAnalyzerManager(BaseManager):
     async def content_sensitivity_analytics(self):
         """Analyze content sensitivity trends."""
         try:
-            self.console.print("[yellow]Content sensitivity analytics would show trends in detected content[/yellow]")
+            self.console.print(
+                "[yellow]Content sensitivity analytics would show trends in detected content[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -822,7 +970,9 @@ class SecureAnalyzerManager(BaseManager):
     async def policy_violation_tracking(self):
         """Track policy violations."""
         try:
-            self.console.print("[yellow]Policy violation tracking would monitor security policy compliance[/yellow]")
+            self.console.print(
+                "[yellow]Policy violation tracking would monitor security policy compliance[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -831,7 +981,9 @@ class SecureAnalyzerManager(BaseManager):
     async def compliance_dashboard(self):
         """Show compliance dashboard."""
         try:
-            self.console.print("[yellow]Compliance dashboard would provide real-time security metrics[/yellow]")
+            self.console.print(
+                "[yellow]Compliance dashboard would provide real-time security metrics[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -840,7 +992,9 @@ class SecureAnalyzerManager(BaseManager):
     async def security_incident_log(self):
         """View security incident log."""
         try:
-            self.console.print("[yellow]Security incident log would track security-related events[/yellow]")
+            self.console.print(
+                "[yellow]Security incident log would track security-related events[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -849,7 +1003,9 @@ class SecureAnalyzerManager(BaseManager):
     async def secure_analyzer_monitoring_menu(self):
         """Secure analyzer health and monitoring submenu."""
         while True:
-            menu = create_menu_table("Secure Analyzer Health & Monitoring", ["Option", "Description"])
+            menu = create_menu_table(
+                "Secure Analyzer Health & Monitoring", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -901,7 +1057,11 @@ class SecureAnalyzerManager(BaseManager):
                 if circuit_open:
                     content += "\n[bold red]⚠️  Circuit breaker is open - service is temporarily unavailable[/bold red]"
 
-                print_panel(self.console, content, border_style="red" if circuit_open else "green")
+                print_panel(
+                    self.console,
+                    content,
+                    border_style="red" if circuit_open else "green",
+                )
             else:
                 self.console.print("[red]Failed to retrieve service health[/red]")
 
@@ -916,14 +1076,24 @@ class SecureAnalyzerManager(BaseManager):
             if response:
                 circuit_open = response.get("circuit_breaker_open", False)
 
-                status = "OPEN (blocking requests)" if circuit_open else "CLOSED (normal operation)"
+                status = (
+                    "OPEN (blocking requests)"
+                    if circuit_open
+                    else "CLOSED (normal operation)"
+                )
                 icon = "🔴" if circuit_open else "🟢"
 
-                self.console.print(f"[bold]Circuit Breaker Status: {icon} {status}[/bold]")
+                self.console.print(
+                    f"[bold]Circuit Breaker Status: {icon} {status}[/bold]"
+                )
 
                 if circuit_open:
-                    self.console.print("[yellow]The circuit breaker opens when too many failures occur[/yellow]")
-                    self.console.print("[yellow]This protects the system from cascade failures[/yellow]")
+                    self.console.print(
+                        "[yellow]The circuit breaker opens when too many failures occur[/yellow]"
+                    )
+                    self.console.print(
+                        "[yellow]This protects the system from cascade failures[/yellow]"
+                    )
                 else:
                     self.console.print("[green]Service is operating normally[/green]")
 
@@ -935,7 +1105,9 @@ class SecureAnalyzerManager(BaseManager):
     async def performance_metrics(self):
         """View performance metrics."""
         try:
-            self.console.print("[yellow]Performance metrics would show response times, throughput, etc.[/yellow]")
+            self.console.print(
+                "[yellow]Performance metrics would show response times, throughput, etc.[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -944,7 +1116,9 @@ class SecureAnalyzerManager(BaseManager):
     async def error_rate_monitoring(self):
         """Monitor error rates."""
         try:
-            self.console.print("[yellow]Error rate monitoring would track failure rates and patterns[/yellow]")
+            self.console.print(
+                "[yellow]Error rate monitoring would track failure rates and patterns[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -953,7 +1127,9 @@ class SecureAnalyzerManager(BaseManager):
     async def service_logs(self):
         """View service logs."""
         try:
-            self.console.print("[yellow]Service logs would show recent secure analyzer operations[/yellow]")
+            self.console.print(
+                "[yellow]Service logs would show recent secure analyzer operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -962,11 +1138,17 @@ class SecureAnalyzerManager(BaseManager):
     async def detect_content_from_cli(self, detect_request: Dict[str, Any]):
         """Detect sensitive content for CLI usage (no interactive prompts)."""
         try:
-            with self.console.status(f"[bold green]Detecting sensitive content...[/bold green]") as status:
-                response = await self.clients.post_json("secure-analyzer/detect", detect_request)
+            with self.console.status(
+                f"[bold green]Detecting sensitive content...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "secure-analyzer/detect", detect_request
+                )
 
             if response:
-                await self.display_detection_results(response, detect_request.get("content", "")[:200] + "...")
+                await self.display_detection_results(
+                    response, detect_request.get("content", "")[:200] + "..."
+                )
             else:
                 self.console.print("[red]❌ Content detection failed[/red]")
 
@@ -976,11 +1158,17 @@ class SecureAnalyzerManager(BaseManager):
     async def suggest_models_from_cli(self, suggest_request: Dict[str, Any]):
         """Get model suggestions for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Getting model suggestions...[/bold green]") as status:
-                response = await self.clients.post_json("secure-analyzer/suggest", suggest_request)
+            with self.console.status(
+                f"[bold green]Getting model suggestions...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "secure-analyzer/suggest", suggest_request
+                )
 
             if response:
-                await self.display_model_suggestions(response, suggest_request.get("content", ""))
+                await self.display_model_suggestions(
+                    response, suggest_request.get("content", "")
+                )
             else:
                 self.console.print("[red]❌ Failed to get suggestions[/red]")
 
@@ -990,11 +1178,17 @@ class SecureAnalyzerManager(BaseManager):
     async def summarize_content_from_cli(self, summarize_request: Dict[str, Any]):
         """Generate secure summary for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Generating secure summary...[/bold green]") as status:
-                response = await self.clients.post_json("secure-analyzer/summarize", summarize_request)
+            with self.console.status(
+                f"[bold green]Generating secure summary...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "secure-analyzer/summarize", summarize_request
+                )
 
             if response:
-                await self.display_secure_summary(response, summarize_request.get("content", ""))
+                await self.display_secure_summary(
+                    response, summarize_request.get("content", "")
+                )
             else:
                 self.console.print("[red]❌ Failed to generate summary[/red]")
 

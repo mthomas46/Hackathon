@@ -53,7 +53,9 @@ class PRConfidenceAnalysisService:
     def __init__(self):
         self.service_client = get_analysis_service_client()
 
-    async def analyze_pr_confidence(self, request: PRConfidenceAnalysisRequest) -> PRConfidenceAnalysisResponse:
+    async def analyze_pr_confidence(
+        self, request: PRConfidenceAnalysisRequest
+    ) -> PRConfidenceAnalysisResponse:
         """
         Perform comprehensive PR confidence analysis.
 
@@ -74,12 +76,18 @@ class PRConfidenceAnalysisService:
 
             # Step 2: Confidence scoring
             confidence_score = await self._calculate_confidence_score(
-                request.pr_data, request.jira_data, request.confluence_docs, cross_ref_results
+                request.pr_data,
+                request.jira_data,
+                request.confluence_docs,
+                cross_ref_results,
             )
 
             # Step 3: Gap detection
             detected_gaps = await self._detect_gaps(
-                request.pr_data, request.jira_data, request.confluence_docs, cross_ref_results
+                request.pr_data,
+                request.jira_data,
+                request.confluence_docs,
+                cross_ref_results,
             )
 
             analysis_duration = (datetime.now() - start_time).total_seconds()
@@ -194,7 +202,9 @@ class PRConfidenceAnalysisService:
             {
                 "overall_alignment_score": cross_ref_results.overall_alignment_score,
                 "requirements_alignment": {"gaps": cross_ref_results.identified_gaps},
-                "documentation_consistency": {"issues": cross_ref_results.consistency_issues},
+                "documentation_consistency": {
+                    "issues": cross_ref_results.consistency_issues
+                },
             },
         )
 

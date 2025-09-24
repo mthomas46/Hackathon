@@ -56,7 +56,9 @@ class TrendAnalyzer:
         self.initialized = True
         return True
 
-    def _extract_historical_data(self, analysis_results: List[Dict[str, Any]]) -> pd.DataFrame:
+    def _extract_historical_data(
+        self, analysis_results: List[Dict[str, Any]]
+    ) -> pd.DataFrame:
         """Extract and structure historical analysis data for trend analysis."""
         if not analysis_results:
             return pd.DataFrame()
@@ -68,7 +70,11 @@ class TrendAnalyzer:
             if "timestamp" not in result:
                 continue
 
-            timestamp = pd.to_datetime(result.get("timestamp", result.get("analysis_timestamp", datetime.now())))
+            timestamp = pd.to_datetime(
+                result.get(
+                    "timestamp", result.get("analysis_timestamp", datetime.now())
+                )
+            )
             if pd.isna(timestamp):
                 continue
 
@@ -105,10 +111,17 @@ class TrendAnalyzer:
 
         return df
 
-    def _analyze_trend_patterns(self, df: pd.DataFrame, window_days: int = 30) -> Dict[str, Any]:
+    def _analyze_trend_patterns(
+        self, df: pd.DataFrame, window_days: int = 30
+    ) -> Dict[str, Any]:
         """Analyze trend patterns in the historical data."""
         if df.empty:
-            return {"trend_direction": "insufficient_data", "confidence": 0.0, "patterns": [], "volatility": 0.0}
+            return {
+                "trend_direction": "insufficient_data",
+                "confidence": 0.0,
+                "patterns": [],
+                "volatility": 0.0,
+            }
 
         patterns = {}
 
@@ -189,12 +202,18 @@ class TrendAnalyzer:
             "data_points": len(df),
         }
 
-    def _predict_future_issues(self, df: pd.DataFrame, prediction_days: int = 30) -> Dict[str, Any]:
+    def _predict_future_issues(
+        self, df: pd.DataFrame, prediction_days: int = 30
+    ) -> Dict[str, Any]:
         """Predict future documentation issues using time series analysis."""
         predictions = {}
 
         if df.empty or len(df) < 3:
-            return {"predictions": {}, "confidence": 0.0, "message": "Insufficient historical data for predictions"}
+            return {
+                "predictions": {},
+                "confidence": 0.0,
+                "message": "Insufficient historical data for predictions",
+            }
 
         # Predict quality score trend
         if "quality_score" in df.columns:
@@ -209,7 +228,9 @@ class TrendAnalyzer:
                     model.fit(X, y)
 
                     # Predict future values
-                    future_X = np.arange(len(quality_scores), len(quality_scores) + prediction_days).reshape(-1, 1)
+                    future_X = np.arange(
+                        len(quality_scores), len(quality_scores) + prediction_days
+                    ).reshape(-1, 1)
                     future_predictions = model.predict(future_X)
 
                     # Calculate prediction confidence
@@ -217,8 +238,12 @@ class TrendAnalyzer:
                     confidence = min(float(r_squared), 1.0)
 
                     predictions["quality_score"] = {
-                        "current_trend": "improving" if model.coef_[0] > 0 else "declining",
-                        "predicted_values": [float(pred) for pred in future_predictions],
+                        "current_trend": (
+                            "improving" if model.coef_[0] > 0 else "declining"
+                        ),
+                        "predicted_values": [
+                            float(pred) for pred in future_predictions
+                        ],
                         "confidence": confidence,
                         "prediction_days": prediction_days,
                     }
@@ -238,12 +263,16 @@ class TrendAnalyzer:
                     model = LinearRegression()
                     model.fit(X, y)
 
-                    future_X = np.arange(len(finding_data), len(finding_data) + prediction_days).reshape(-1, 1)
+                    future_X = np.arange(
+                        len(finding_data), len(finding_data) + prediction_days
+                    ).reshape(-1, 1)
                     future_predictions = model.predict(future_X)
 
                     finding_type = finding_col.replace("finding_type_", "")
                     predictions[f"{finding_type}_findings"] = {
-                        "predicted_count": float(future_predictions[-1]),  # Final prediction
+                        "predicted_count": float(
+                            future_predictions[-1]
+                        ),  # Final prediction
                         "trend": "increasing" if model.coef_[0] > 0 else "decreasing",
                         "confidence": 0.7,  # Simplified confidence for findings
                     }
@@ -253,11 +282,15 @@ class TrendAnalyzer:
 
         return {
             "predictions": predictions,
-            "confidence": max([pred.get("confidence", 0.0) for pred in predictions.values()] + [0.0]),
+            "confidence": max(
+                [pred.get("confidence", 0.0) for pred in predictions.values()] + [0.0]
+            ),
             "prediction_horizon_days": prediction_days,
         }
 
-    def _identify_risk_areas(self, df: pd.DataFrame, predictions: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _identify_risk_areas(
+        self, df: pd.DataFrame, predictions: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Identify high-risk areas based on trends and predictions."""
         risk_areas = []
 
@@ -276,7 +309,10 @@ class TrendAnalyzer:
 
         # Check for increasing finding trends
         for pred_key, pred_data in predictions.get("predictions", {}).items():
-            if pred_key.endswith("_findings") and pred_data.get("trend") == "increasing":
+            if (
+                pred_key.endswith("_findings")
+                and pred_data.get("trend") == "increasing"
+            ):
                 finding_type = pred_key.replace("_findings", "")
                 predicted_count = pred_data.get("predicted_count", 0)
                 risk_areas.append(
@@ -322,11 +358,17 @@ class TrendAnalyzer:
             confidence = quality_trend.get("confidence", 0.0)
 
             if direction == "improving" and confidence > 0.7:
-                insights.append("Documentation quality is improving steadily - continue current practices")
+                insights.append(
+                    "Documentation quality is improving steadily - continue current practices"
+                )
             elif direction == "declining" and confidence > 0.7:
-                insights.append("Documentation quality is declining - implement immediate improvement measures")
+                insights.append(
+                    "Documentation quality is declining - implement immediate improvement measures"
+                )
             elif direction == "stable":
-                insights.append("Documentation quality is stable - maintain current standards")
+                insights.append(
+                    "Documentation quality is stable - maintain current standards"
+                )
 
         # Finding trend insights
         for pattern_key, pattern_data in patterns.items():
@@ -335,9 +377,13 @@ class TrendAnalyzer:
                 direction = pattern_data.get("direction", "stable")
 
                 if direction == "increasing":
-                    insights.append(f"{finding_type.title()} issues are increasing - prioritize resolution")
+                    insights.append(
+                        f"{finding_type.title()} issues are increasing - prioritize resolution"
+                    )
                 elif direction == "decreasing":
-                    insights.append(f"{finding_type.title()} issues are decreasing - good progress")
+                    insights.append(
+                        f"{finding_type.title()} issues are decreasing - good progress"
+                    )
 
         # Prediction insights
         quality_pred = predictions.get("predictions", {}).get("quality_score", {})
@@ -346,13 +392,19 @@ class TrendAnalyzer:
             if predicted_values:
                 final_prediction = predicted_values[-1]
                 if final_prediction < 0.6:
-                    insights.append("Projected quality decline - implement preventive measures")
+                    insights.append(
+                        "Projected quality decline - implement preventive measures"
+                    )
                 elif final_prediction > 0.8:
-                    insights.append("Quality trajectory is positive - maintain momentum")
+                    insights.append(
+                        "Quality trajectory is positive - maintain momentum"
+                    )
 
         # Default insights if none generated
         if not insights:
-            insights.append("Trend analysis complete - monitor quality metrics regularly")
+            insights.append(
+                "Trend analysis complete - monitor quality metrics regularly"
+            )
 
         return insights
 
@@ -444,7 +496,10 @@ class TrendAnalyzer:
             }
 
     async def analyze_portfolio_trends(
-        self, analysis_results: List[Dict[str, Any]], group_by: str = "document_id", prediction_days: int = 30
+        self,
+        analysis_results: List[Dict[str, Any]],
+        group_by: str = "document_id",
+        prediction_days: int = 30,
     ) -> Dict[str, Any]:
         """Analyze trends across a portfolio of documents."""
 
@@ -488,15 +543,21 @@ class TrendAnalyzer:
                 trend_directions = [doc["trend_direction"] for doc in document_trends]
                 direction_counts = Counter(trend_directions)
 
-                if direction_counts.get("improving", 0) > direction_counts.get("declining", 0):
+                if direction_counts.get("improving", 0) > direction_counts.get(
+                    "declining", 0
+                ):
                     overall_trend = "improving"
-                elif direction_counts.get("declining", 0) > direction_counts.get("improving", 0):
+                elif direction_counts.get("declining", 0) > direction_counts.get(
+                    "improving", 0
+                ):
                     overall_trend = "declining"
                 else:
                     overall_trend = "stable"
 
                 # Average confidence
-                avg_confidence = sum(doc["confidence"] for doc in document_trends) / len(document_trends)
+                avg_confidence = sum(
+                    doc["confidence"] for doc in document_trends
+                ) / len(document_trends)
 
                 # High-risk documents
                 high_risk_documents = [
@@ -578,7 +639,9 @@ async def analyze_document_trends(
 
 
 async def analyze_portfolio_trends(
-    analysis_results: List[Dict[str, Any]], group_by: str = "document_id", prediction_days: int = 30
+    analysis_results: List[Dict[str, Any]],
+    group_by: str = "document_id",
+    prediction_days: int = 30,
 ) -> Dict[str, Any]:
     """Convenience function for portfolio trend analysis.
 
@@ -591,5 +654,7 @@ async def analyze_portfolio_trends(
         Portfolio trend analysis results
     """
     return await trend_analyzer.analyze_portfolio_trends(
-        analysis_results=analysis_results, group_by=group_by, prediction_days=prediction_days
+        analysis_results=analysis_results,
+        group_by=group_by,
+        prediction_days=prediction_days,
     )

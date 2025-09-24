@@ -117,7 +117,9 @@ class TestTestSuitePerformance:
         execution_time = time.time() - start_time
 
         # Should complete reasonably fast
-        assert execution_time < 10.0, f"Large test suite took too long: {execution_time}s"
+        assert (
+            execution_time < 10.0
+        ), f"Large test suite took too long: {execution_time}s"
         assert len(test_results) == 1000
 
 
@@ -127,7 +129,6 @@ class TestTestFrameworkOverhead:
     def test_pytest_import_overhead(self):
         """Test overhead of importing pytest."""
         start_time = time.time()
-
 
         import_time = time.time() - start_time
 
@@ -158,7 +159,10 @@ class TestTestFrameworkOverhead:
         # Simulate fixture setup
         fixtures = {}
         for i in range(20):
-            fixtures[f"fixture_{i}"] = {"data": [j for j in range(100)], "config": {"setting": f"value_{i}"}}
+            fixtures[f"fixture_{i}"] = {
+                "data": [j for j in range(100)],
+                "config": {"setting": f"value_{i}"},
+            }
 
         setup_time = time.time() - start_time
 
@@ -227,14 +231,19 @@ class TestTestDataGenerationPerformance:
                 "id": i,
                 "name": f"item_{i}",
                 "data": [j * i for j in range(10)],
-                "metadata": {"created": time.time(), "tags": [f"tag_{k}" for k in range(5)]},
+                "metadata": {
+                    "created": time.time(),
+                    "tags": [f"tag_{k}" for k in range(5)],
+                },
             }
             test_data.append(item)
 
         generation_time = time.time() - start_time
 
         # Should be reasonably fast
-        assert generation_time < 10.0, f"Data generation took too long: {generation_time}s"
+        assert (
+            generation_time < 10.0
+        ), f"Data generation took too long: {generation_time}s"
         assert len(test_data) == 10000
 
     def test_large_dataset_handling(self):
@@ -249,7 +258,9 @@ class TestTestDataGenerationPerformance:
         processing_time = time.time() - start_time
 
         # Should handle reasonably
-        assert processing_time < 30.0, f"Large dataset processing took too long: {processing_time}s"
+        assert (
+            processing_time < 30.0
+        ), f"Large dataset processing took too long: {processing_time}s"
         assert len(large_data) == dataset_size
         assert large_data[0] == 0
         assert large_data[-1] == (dataset_size - 1) ** 2
@@ -276,7 +287,9 @@ class TestTestSuiteScalability:
 
             # Time should scale roughly linearly
             expected_time = count * 0.001  # 1ms per test
-            assert execution_time < expected_time * 2, f"Test count {count} took {execution_time}s"
+            assert (
+                execution_time < expected_time * 2
+            ), f"Test count {count} took {execution_time}s"
             assert len(results) == count
 
     def test_memory_scalability(self):
@@ -297,7 +310,9 @@ class TestTestSuiteScalability:
 
             # Memory usage should scale reasonably
             expected_memory = size * 0.0001  # Rough estimate
-            assert memory_usage < expected_memory * 10, f"Size {size} used {memory_usage}MB"
+            assert (
+                memory_usage < expected_memory * 10
+            ), f"Size {size} used {memory_usage}MB"
             assert len(data) == size
 
 
@@ -322,12 +337,17 @@ class TestParallelExecutionPerformance:
             with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
                 # Submit multiple tests
                 futures = [executor.submit(run_parallel_test, i) for i in range(20)]
-                results = [future.result() for future in concurrent.futures.as_completed(futures)]
+                results = [
+                    future.result()
+                    for future in concurrent.futures.as_completed(futures)
+                ]
 
             execution_time = time.time() - start_time
 
             # Should see speedup with more workers (though limited by GIL)
-            assert execution_time < 5.0, f"Parallel execution with {workers} workers took {execution_time}s"
+            assert (
+                execution_time < 5.0
+            ), f"Parallel execution with {workers} workers took {execution_time}s"
             assert len(results) == 20
 
     def test_resource_contention_in_parallel_tests(self):
@@ -405,7 +425,9 @@ class TestTestInfrastructurePerformance:
         network_test_time = time.time() - start_time
 
         # Should be reasonably fast
-        assert network_test_time < 5.0, f"Network test simulation took {network_test_time}s"
+        assert (
+            network_test_time < 5.0
+        ), f"Network test simulation took {network_test_time}s"
         assert len(network_responses) == 50
 
     def test_file_io_test_performance(self):

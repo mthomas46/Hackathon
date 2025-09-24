@@ -31,7 +31,9 @@ class OllamaLLMClient:
         self.model = model
         self.client = httpx.AsyncClient(timeout=60.0)
 
-    async def generate(self, prompt: str, context: str = "", max_tokens: int = 500) -> str:
+    async def generate(
+        self, prompt: str, context: str = "", max_tokens: int = 500
+    ) -> str:
         """Generate response from Ollama."""
         try:
             full_prompt = f"{context}\n\n{prompt}" if context else prompt
@@ -60,7 +62,9 @@ class OllamaLLMClient:
             print(f"Ollama connection error: {e}")
             return f"Error: {str(e)}"
 
-    async def analyze_requirements_alignment(self, pr_content: str, jira_content: str) -> Dict[str, Any]:
+    async def analyze_requirements_alignment(
+        self, pr_content: str, jira_content: str
+    ) -> Dict[str, Any]:
         """Use Ollama to analyze PR vs Jira requirements alignment."""
         prompt = f"""
 You are an expert software engineer analyzing a GitHub Pull Request against its requirements.
@@ -92,7 +96,9 @@ Be specific and technical in your analysis.
             print("Warning: LLM response not valid JSON, using fallback analysis")
             return self._fallback_requirements_analysis(pr_content, jira_content)
 
-    async def analyze_documentation_consistency(self, pr_content: str, doc_content: str) -> Dict[str, Any]:
+    async def analyze_documentation_consistency(
+        self, pr_content: str, doc_content: str
+    ) -> Dict[str, Any]:
         """Use Ollama to analyze documentation consistency."""
         prompt = f"""
 You are analyzing the consistency between code changes and documentation.
@@ -112,17 +118,23 @@ Please evaluate how well the PR aligns with the documentation. Return a JSON res
 Be thorough and identify any API changes, security implications, or usage changes that need documentation updates.
 """
 
-        context = "You are evaluating documentation consistency in software development."
+        context = (
+            "You are evaluating documentation consistency in software development."
+        )
         response = await self.generate(prompt, context, max_tokens=800)
 
         try:
             result = json.loads(response)
             return result
         except json.JSONDecodeError:
-            print("Warning: Documentation analysis response not valid JSON, using fallback")
+            print(
+                "Warning: Documentation analysis response not valid JSON, using fallback"
+            )
             return self._fallback_documentation_analysis(pr_content, doc_content)
 
-    async def generate_confidence_assessment(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_confidence_assessment(
+        self, analysis_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Use Ollama to generate overall confidence assessment."""
         prompt = f"""
 You are assessing the overall confidence level for approving a pull request based on the following analysis:
@@ -150,10 +162,14 @@ Consider enterprise software standards and best practices in your assessment.
             result = json.loads(response)
             return result
         except json.JSONDecodeError:
-            print("Warning: Confidence assessment response not valid JSON, using fallback")
+            print(
+                "Warning: Confidence assessment response not valid JSON, using fallback"
+            )
             return self._fallback_confidence_assessment(analysis_data)
 
-    def _fallback_requirements_analysis(self, pr_content: str, jira_content: str) -> Dict[str, Any]:
+    def _fallback_requirements_analysis(
+        self, pr_content: str, jira_content: str
+    ) -> Dict[str, Any]:
         """Fallback analysis when LLM fails."""
         return {
             "overall_score": 0.7,
@@ -165,7 +181,9 @@ Consider enterprise software standards and best practices in your assessment.
             "recommendations": ["Manual review recommended"],
         }
 
-    def _fallback_documentation_analysis(self, pr_content: str, doc_content: str) -> Dict[str, Any]:
+    def _fallback_documentation_analysis(
+        self, pr_content: str, doc_content: str
+    ) -> Dict[str, Any]:
         """Fallback documentation analysis."""
         return {
             "consistency_score": 0.75,
@@ -174,9 +192,14 @@ Consider enterprise software standards and best practices in your assessment.
             "overall_assessment": "Manual review required",
         }
 
-    def _fallback_confidence_assessment(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _fallback_confidence_assessment(
+        self, analysis_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Fallback confidence assessment."""
-        avg_score = (analysis_data.get("requirements_score", 0) + analysis_data.get("documentation_score", 0)) / 2
+        avg_score = (
+            analysis_data.get("requirements_score", 0)
+            + analysis_data.get("documentation_score", 0)
+        ) / 2
         return {
             "overall_confidence": avg_score,
             "confidence_level": "medium" if avg_score >= 0.6 else "low",
@@ -202,12 +225,24 @@ class PRConfidenceAnalysisWorkflowOllama:
         workflow.add_node("extract_pr_context", self.extract_pr_context_node)
         workflow.add_node("fetch_jira_requirements", self.fetch_jira_requirements_node)
         workflow.add_node("fetch_confluence_docs", self.fetch_confluence_docs_node)
-        workflow.add_node("analyze_requirements_alignment", self.analyze_requirements_alignment_node)
-        workflow.add_node("analyze_documentation_consistency", self.analyze_documentation_consistency_node)
-        workflow.add_node("perform_cross_reference_analysis", self.perform_cross_reference_analysis_node)
-        workflow.add_node("calculate_confidence_score", self.calculate_confidence_score_node)
+        workflow.add_node(
+            "analyze_requirements_alignment", self.analyze_requirements_alignment_node
+        )
+        workflow.add_node(
+            "analyze_documentation_consistency",
+            self.analyze_documentation_consistency_node,
+        )
+        workflow.add_node(
+            "perform_cross_reference_analysis",
+            self.perform_cross_reference_analysis_node,
+        )
+        workflow.add_node(
+            "calculate_confidence_score", self.calculate_confidence_score_node
+        )
         workflow.add_node("identify_gaps_and_risks", self.identify_gaps_and_risks_node)
-        workflow.add_node("generate_recommendations", self.generate_recommendations_node)
+        workflow.add_node(
+            "generate_recommendations", self.generate_recommendations_node
+        )
         workflow.add_node("create_final_report", self.create_final_report_node)
         workflow.add_node("send_notifications", self.send_notifications_node)
 
@@ -218,9 +253,15 @@ class PRConfidenceAnalysisWorkflowOllama:
         workflow.add_edge("extract_pr_context", "fetch_jira_requirements")
         workflow.add_edge("fetch_jira_requirements", "fetch_confluence_docs")
         workflow.add_edge("fetch_confluence_docs", "analyze_requirements_alignment")
-        workflow.add_edge("analyze_requirements_alignment", "analyze_documentation_consistency")
-        workflow.add_edge("analyze_documentation_consistency", "perform_cross_reference_analysis")
-        workflow.add_edge("perform_cross_reference_analysis", "calculate_confidence_score")
+        workflow.add_edge(
+            "analyze_requirements_alignment", "analyze_documentation_consistency"
+        )
+        workflow.add_edge(
+            "analyze_documentation_consistency", "perform_cross_reference_analysis"
+        )
+        workflow.add_edge(
+            "perform_cross_reference_analysis", "calculate_confidence_score"
+        )
         workflow.add_edge("calculate_confidence_score", "identify_gaps_and_risks")
         workflow.add_edge("identify_gaps_and_risks", "generate_recommendations")
         workflow.add_edge("generate_recommendations", "create_final_report")
@@ -229,7 +270,9 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         return workflow
 
-    async def analyze_requirements_alignment_node(self, state: WorkflowState) -> WorkflowState:
+    async def analyze_requirements_alignment_node(
+        self, state: WorkflowState
+    ) -> WorkflowState:
         """Analyze requirements alignment using cross-reference analyzer."""
         print("=== ANALYZING REQUIREMENTS ALIGNMENT ===")
 
@@ -239,8 +282,10 @@ class PRConfidenceAnalysisWorkflowOllama:
         # Use the cross-reference analyzer for alignment analysis
         from .analysis.pr_cross_reference_analyzer import pr_cross_reference_analyzer
 
-        alignment_analysis = pr_cross_reference_analyzer.analyze_pr_requirements_alignment(
-            pr_details, jira_requirements
+        alignment_analysis = (
+            pr_cross_reference_analyzer.analyze_pr_requirements_alignment(
+                pr_details, jira_requirements
+            )
         )
 
         state["context"]["requirements_alignment"] = alignment_analysis
@@ -253,7 +298,9 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         return state
 
-    async def analyze_documentation_consistency_node(self, state: WorkflowState) -> WorkflowState:
+    async def analyze_documentation_consistency_node(
+        self, state: WorkflowState
+    ) -> WorkflowState:
         """Analyze documentation consistency using cross-reference analyzer."""
         print("=== ANALYZING DOCUMENTATION CONSISTENCY ===")
 
@@ -263,8 +310,10 @@ class PRConfidenceAnalysisWorkflowOllama:
         # Use the cross-reference analyzer for consistency analysis
         from .analysis.pr_cross_reference_analyzer import pr_cross_reference_analyzer
 
-        consistency_analysis = pr_cross_reference_analyzer.analyze_documentation_consistency(
-            pr_details, confluence_docs
+        consistency_analysis = (
+            pr_cross_reference_analyzer.analyze_documentation_consistency(
+                pr_details, confluence_docs
+            )
         )
 
         state["context"]["documentation_consistency"] = consistency_analysis
@@ -278,7 +327,9 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         return state
 
-    async def perform_cross_reference_analysis_node(self, state: WorkflowState) -> WorkflowState:
+    async def perform_cross_reference_analysis_node(
+        self, state: WorkflowState
+    ) -> WorkflowState:
         """Perform comprehensive cross-reference analysis."""
         print("=== PERFORMING COMPREHENSIVE CROSS-REFERENCE ANALYSIS ===")
 
@@ -289,8 +340,10 @@ class PRConfidenceAnalysisWorkflowOllama:
         # Use the cross-reference analyzer for comprehensive analysis
         from .analysis.pr_cross_reference_analyzer import pr_cross_reference_analyzer
 
-        cross_reference_results = pr_cross_reference_analyzer.perform_comprehensive_cross_reference(
-            pr_details, jira_data, confluence_docs
+        cross_reference_results = (
+            pr_cross_reference_analyzer.perform_comprehensive_cross_reference(
+                pr_details, jira_data, confluence_docs
+            )
         )
 
         state["context"]["cross_reference_results"] = cross_reference_results
@@ -304,7 +357,9 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         return state
 
-    async def calculate_confidence_score_node(self, state: WorkflowState) -> WorkflowState:
+    async def calculate_confidence_score_node(
+        self, state: WorkflowState
+    ) -> WorkflowState:
         """Calculate confidence score using advanced confidence scorer."""
         print("=== CALCULATING CONFIDENCE SCORE ===")
 
@@ -384,7 +439,9 @@ class PRConfidenceAnalysisWorkflowOllama:
         from .analysis.pr_gap_detector import pr_gap_detector
 
         # Detect gaps using advanced analysis
-        detected_gaps = pr_gap_detector.detect_gaps(pr_data, jira_data, confluence_docs, cross_reference_results)
+        detected_gaps = pr_gap_detector.detect_gaps(
+            pr_data, jira_data, confluence_docs, cross_reference_results
+        )
 
         # Get gap summary
         gap_summary = pr_gap_detector.get_gap_summary(detected_gaps)
@@ -405,7 +462,9 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         return state
 
-    async def generate_recommendations_node(self, state: WorkflowState) -> WorkflowState:
+    async def generate_recommendations_node(
+        self, state: WorkflowState
+    ) -> WorkflowState:
         """Generate comprehensive recommendations using Ollama."""
         print("=== GENERATING COMPREHENSIVE RECOMMENDATIONS ===")
 
@@ -423,7 +482,9 @@ class PRConfidenceAnalysisWorkflowOllama:
         # Confidence-based recommendations
         confidence_level = confidence_score.get("confidence_level", "medium")
         if confidence_level == "low":
-            recommendations.append("Schedule additional code review with senior developers")
+            recommendations.append(
+                "Schedule additional code review with senior developers"
+            )
             recommendations.append("Consider breaking PR into smaller, focused changes")
         elif confidence_level == "medium":
             recommendations.append("Additional testing recommended before approval")
@@ -439,7 +500,10 @@ class PRConfidenceAnalysisWorkflowOllama:
         state["context"]["recommendations"] = recommendations
 
         state["messages"].append(
-            {"role": "assistant", "content": f"Generated {len(recommendations)} comprehensive recommendations"}
+            {
+                "role": "assistant",
+                "content": f"Generated {len(recommendations)} comprehensive recommendations",
+            }
         )
 
         return state
@@ -486,7 +550,9 @@ class PRConfidenceAnalysisWorkflowOllama:
                 "workflow_id": state["run_id"],
                 "confidence_score": confidence_score.get("overall_score", 0),
                 "confidence_level": confidence_score.get("confidence_level", "medium"),
-                "approval_recommendation": confidence_score.get("approval_recommendation", "review_required"),
+                "approval_recommendation": confidence_score.get(
+                    "approval_recommendation", "review_required"
+                ),
             },
             source="orchestrator",
         )
@@ -513,7 +579,9 @@ class PRConfidenceAnalysisWorkflowOllama:
 
         # Prepare notification content
         confidence_level = confidence_score.get("confidence_level", "medium")
-        approval_rec = confidence_score.get("approval_recommendation", "review_required")
+        approval_rec = confidence_score.get(
+            "approval_recommendation", "review_required"
+        )
 
         html_report_url = report_files.get("html_report", "N/A")
         json_report_url = report_files.get("json_report", "N/A")
@@ -528,12 +596,18 @@ class PRConfidenceAnalysisWorkflowOllama:
         ]
 
         if blocking_gaps:
-            message_parts.append(f"⚠️ BLOCKING ISSUES: {len(blocking_gaps)} critical gaps require attention")
+            message_parts.append(
+                f"⚠️ BLOCKING ISSUES: {len(blocking_gaps)} critical gaps require attention"
+            )
 
         message = "\\n".join(message_parts)
 
         # Determine notification urgency
-        urgency = "high" if confidence_level in ["low", "critical"] or blocking_gaps else "normal"
+        urgency = (
+            "high"
+            if confidence_level in ["low", "critical"] or blocking_gaps
+            else "normal"
+        )
 
         # Send notification to PR author
         await send_notification_tool(
@@ -562,7 +636,10 @@ class PRConfidenceAnalysisWorkflowOllama:
             )
 
         state["messages"].append(
-            {"role": "assistant", "content": f"Comprehensive notifications sent with report links (urgency: {urgency})"}
+            {
+                "role": "assistant",
+                "content": f"Comprehensive notifications sent with report links (urgency: {urgency})",
+            }
         )
 
         return state

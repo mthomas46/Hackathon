@@ -82,7 +82,8 @@ class RealTimeWorkflowVisualizer:
         # Get or create workflow state
         if workflow_id not in self.workflows:
             self.workflows[workflow_id] = WorkflowState(
-                workflow_id=workflow_id, name=workflow_data.get("name", f"Workflow {workflow_id[:8]}")
+                workflow_id=workflow_id,
+                name=workflow_data.get("name", f"Workflow {workflow_id[:8]}"),
             )
 
         workflow = self.workflows[workflow_id]
@@ -93,16 +94,24 @@ class RealTimeWorkflowVisualizer:
         workflow.current_step = workflow_data.get("current_step", workflow.current_step)
 
         # Handle timing
-        if workflow_data.get("event_type") == "workflow_started" and not workflow.start_time:
+        if (
+            workflow_data.get("event_type") == "workflow_started"
+            and not workflow.start_time
+        ):
             workflow.start_time = datetime.now()
             if workflow_id not in self.active_workflows:
                 self.active_workflows.append(workflow_id)
 
-        elif workflow_data.get("event_type") in ["workflow_completed", "workflow_failed"]:
+        elif workflow_data.get("event_type") in [
+            "workflow_completed",
+            "workflow_failed",
+        ]:
             if not workflow.end_time:
                 workflow.end_time = datetime.now()
                 workflow.actual_duration = (
-                    (workflow.end_time - workflow.start_time).total_seconds() if workflow.start_time else 0
+                    (workflow.end_time - workflow.start_time).total_seconds()
+                    if workflow.start_time
+                    else 0
                 )
 
                 # Move from active to completed/failed
@@ -135,7 +144,13 @@ class RealTimeWorkflowVisualizer:
         height = height or self.config.height_pixels
 
         # Create tabs for different views
-        tab1, tab2, tab3 = st.tabs(["📊 Active Workflows", "✅ Completed Workflows", "📈 Performance Analytics"])
+        tab1, tab2, tab3 = st.tabs(
+            [
+                "📊 Active Workflows",
+                "✅ Completed Workflows",
+                "📈 Performance Analytics",
+            ]
+        )
 
         with tab1:
             self._render_active_workflows_tab()
@@ -179,7 +194,9 @@ class RealTimeWorkflowVisualizer:
             self._render_single_workflow_card(workflow)
 
         if len(self.active_workflows) > self.config.max_concurrent_workflows:
-            st.info(f"... and {len(self.active_workflows) - self.config.max_concurrent_workflows} more workflows")
+            st.info(
+                f"... and {len(self.active_workflows) - self.config.max_concurrent_workflows} more workflows"
+            )
 
     def _render_single_workflow_card(self, workflow: WorkflowState) -> None:
         """Render a single workflow card with progress visualization."""
@@ -195,7 +212,8 @@ class RealTimeWorkflowVisualizer:
             with col2:
                 status_color = self._get_status_color(workflow.status)
                 st.markdown(
-                    f"<span style='color:{status_color}'>●</span> {workflow.status.title()}", unsafe_allow_html=True
+                    f"<span style='color:{status_color}'>●</span> {workflow.status.title()}",
+                    unsafe_allow_html=True,
                 )
 
             with col3:
@@ -215,7 +233,9 @@ class RealTimeWorkflowVisualizer:
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
-                    elapsed_time = (datetime.now() - workflow.start_time).total_seconds()
+                    elapsed_time = (
+                        datetime.now() - workflow.start_time
+                    ).total_seconds()
                     st.metric("Elapsed", ".0f", "seconds")
 
                 with col2:
@@ -227,7 +247,9 @@ class RealTimeWorkflowVisualizer:
 
                 with col3:
                     if workflow.estimated_duration:
-                        eta = workflow.start_time + timedelta(seconds=workflow.estimated_duration)
+                        eta = workflow.start_time + timedelta(
+                            seconds=workflow.estimated_duration
+                        )
                         st.metric("ETA", eta.strftime("%H:%M:%S"))
                     else:
                         st.metric("ETA", "Unknown")
@@ -351,7 +373,11 @@ class RealTimeWorkflowVisualizer:
 
         fig.add_trace(
             go.Scatter(
-                x=df["time"], y=df["duration"], mode="lines+markers", name="Avg Duration (s)", line=dict(color="blue")
+                x=df["time"],
+                y=df["duration"],
+                mode="lines+markers",
+                name="Avg Duration (s)",
+                line=dict(color="blue"),
             )
         )
 
@@ -414,7 +440,9 @@ class RealTimeWorkflowVisualizer:
         if not workflow.steps:
             return 100.0 if workflow.status == "completed" else 0.0
 
-        completed_steps = sum(1 for step in workflow.steps if step.get("status") == "completed")
+        completed_steps = sum(
+            1 for step in workflow.steps if step.get("status") == "completed"
+        )
         return (completed_steps / len(workflow.steps)) * 100
 
     def _calculate_average_duration(self) -> float:
@@ -428,7 +456,9 @@ class RealTimeWorkflowVisualizer:
         if not completed_workflows:
             return 0.0
 
-        return sum(w.actual_duration for w in completed_workflows) / len(completed_workflows)
+        return sum(w.actual_duration for w in completed_workflows) / len(
+            completed_workflows
+        )
 
     def _calculate_overall_success_rate(self) -> float:
         """Calculate overall success rate across all workflows."""
@@ -498,12 +528,18 @@ class RealTimeWorkflowVisualizer:
             "failed_workflows": len(self.failed_workflows),
             "average_duration": self._calculate_average_duration(),
             "overall_success_rate": self._calculate_overall_success_rate(),
-            "completion_rate": len(self.completed_workflows) / len(self.workflows) if self.workflows else 0,
+            "completion_rate": (
+                len(self.completed_workflows) / len(self.workflows)
+                if self.workflows
+                else 0
+            ),
         }
 
 
 # Convenience function for easy integration
-def create_workflow_visualizer(config: Optional[WorkflowVisualizerConfig] = None) -> RealTimeWorkflowVisualizer:
+def create_workflow_visualizer(
+    config: Optional[WorkflowVisualizerConfig] = None,
+) -> RealTimeWorkflowVisualizer:
     """Create a new workflow visualizer instance."""
     return RealTimeWorkflowVisualizer(config)
 

@@ -43,18 +43,26 @@ class SimulationApplicationService:
         self._monitoring_service = monitoring_service
         self._logger = logger
 
-    async def create_simulation(self, request: Dict[str, Any], correlation_id: Optional[str] = None) -> Dict[str, Any]:
+    async def create_simulation(
+        self, request: Dict[str, Any], correlation_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Create a new project simulation."""
         try:
             self._logger.info(
-                "Creating new simulation", operation="create_simulation", project_name=request.get("name", "unknown")
+                "Creating new simulation",
+                operation="create_simulation",
+                project_name=request.get("name", "unknown"),
             )
 
             start_time = datetime.now()
 
             # Create project first
             from ...domain.entities.project import Project, ProjectId
-            from ...domain.entities.simulation import Simulation, SimulationConfiguration, SimulationId
+            from ...domain.entities.simulation import (
+                Simulation,
+                SimulationConfiguration,
+                SimulationId,
+            )
             from ...domain.value_objects import ComplexityLevel, ProjectType
 
             project = Project(
@@ -74,7 +82,9 @@ class SimulationApplicationService:
 
             # Create simulation
             simulation_config = SimulationConfiguration(
-                simulation_type=SimulationType(request.get("simulation_type", "full_project")),
+                simulation_type=SimulationType(
+                    request.get("simulation_type", "full_project")
+                ),
                 include_document_generation=request.get("include_documents", True),
                 include_workflow_execution=request.get("include_workflows", True),
                 include_team_dynamics=request.get("include_team", True),
@@ -86,7 +96,9 @@ class SimulationApplicationService:
             )
 
             simulation = Simulation(
-                id=SimulationId(), project_id=str(project.id.value), configuration=simulation_config
+                id=SimulationId(),
+                project_id=str(project.id.value),
+                configuration=simulation_config,
             )
 
             # Create default timeline
@@ -97,7 +109,9 @@ class SimulationApplicationService:
 
             phases = []
             start_date = datetime.now()
-            for i, phase_name in enumerate(["Planning", "Design", "Development", "Testing", "Deployment"]):
+            for i, phase_name in enumerate(
+                ["Planning", "Design", "Development", "Testing", "Deployment"]
+            ):
                 phase_start = start_date + timedelta(weeks=i * 2)
                 phase_end = phase_start + timedelta(weeks=2)
                 phases.append(
@@ -113,7 +127,9 @@ class SimulationApplicationService:
                     )
                 )
 
-            timeline = Timeline(id=TimelineId(), project_id=str(project.id.value), phases=phases)
+            timeline = Timeline(
+                id=TimelineId(), project_id=str(project.id.value), phases=phases
+            )
 
             # Save timeline
             await self._timeline_repository.save(timeline)
@@ -168,7 +184,8 @@ class SimulationApplicationService:
                     morale_level=MoraleLevel.HIGH,
                     burnout_risk=BurnoutRisk.LOW,
                     joined_at=datetime.now() - timedelta(days=30),
-                    specialization=["Python", "FastAPI", "Testing"][: i + 1] + ["Communication"],
+                    specialization=["Python", "FastAPI", "Testing"][: i + 1]
+                    + ["Communication"],
                 )
                 team_members.append(member)
 
@@ -223,11 +240,23 @@ class SimulationApplicationService:
             }
 
         except Exception as e:
-            self._logger.error("Failed to create simulation", error=str(e), correlation_id=correlation_id)
-            return {"success": False, "error": str(e), "message": "Failed to create simulation"}
+            self._logger.error(
+                "Failed to create simulation",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
+            return {
+                "success": False,
+                "error": str(e),
+                "message": "Failed to create simulation",
+            }
 
     async def link_document_to_simulation(
-        self, simulation_id: str, document_id: str, document_type: str, doc_store_reference: str
+        self,
+        simulation_id: str,
+        document_id: str,
+        document_type: str,
+        doc_store_reference: str,
     ) -> None:
         """Link a document to a simulation in the repository."""
         await self._simulation_repository.link_document_to_simulation(
@@ -235,14 +264,20 @@ class SimulationApplicationService:
         )
 
     async def link_prompt_to_simulation(
-        self, simulation_id: str, prompt_id: str, prompt_type: str, prompt_store_reference: str
+        self,
+        simulation_id: str,
+        prompt_id: str,
+        prompt_type: str,
+        prompt_store_reference: str,
     ) -> None:
         """Link a prompt to a simulation in the repository."""
         await self._simulation_repository.link_prompt_to_simulation(
             simulation_id, prompt_id, prompt_type, prompt_store_reference
         )
 
-    async def get_simulation_documents(self, simulation_id: str) -> List[Dict[str, Any]]:
+    async def get_simulation_documents(
+        self, simulation_id: str
+    ) -> List[Dict[str, Any]]:
         """Get all documents linked to a simulation."""
         return await self._simulation_repository.get_simulation_documents(simulation_id)
 
@@ -250,13 +285,21 @@ class SimulationApplicationService:
         """Get all prompts linked to a simulation."""
         return await self._simulation_repository.get_simulation_prompts(simulation_id)
 
-    async def save_simulation_run_data(self, simulation_id: str, run_id: str, execution_data: Dict[str, Any]) -> None:
+    async def save_simulation_run_data(
+        self, simulation_id: str, run_id: str, execution_data: Dict[str, Any]
+    ) -> None:
         """Save simulation run data to the repository."""
-        await self._simulation_repository.save_simulation_run_data(simulation_id, run_id, execution_data)
+        await self._simulation_repository.save_simulation_run_data(
+            simulation_id, run_id, execution_data
+        )
 
-    async def get_simulation_run_data(self, simulation_id: str, run_id: str) -> Optional[Dict[str, Any]]:
+    async def get_simulation_run_data(
+        self, simulation_id: str, run_id: str
+    ) -> Optional[Dict[str, Any]]:
         """Get simulation run data from the repository."""
-        return await self._simulation_repository.get_simulation_run_data(simulation_id, run_id)
+        return await self._simulation_repository.get_simulation_run_data(
+            simulation_id, run_id
+        )
 
     async def execute_simulation(self, simulation_id: str) -> Dict[str, Any]:
         """Execute a simulation."""
@@ -271,10 +314,18 @@ class SimulationApplicationService:
             )
 
             # Execute simulation using execution engine
-            from ...infrastructure.clients.ecosystem_clients import get_ecosystem_service_registry
-            from ...infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
-            from ...infrastructure.execution.simulation_execution_engine import SimulationExecutionEngine
-            from ...infrastructure.workflows.workflow_orchestrator import SimulationWorkflowOrchestrator
+            from ...infrastructure.clients.ecosystem_clients import (
+                get_ecosystem_service_registry,
+            )
+            from ...infrastructure.content.content_generation_pipeline import (
+                ContentGenerationPipeline,
+            )
+            from ...infrastructure.execution.simulation_execution_engine import (
+                SimulationExecutionEngine,
+            )
+            from ...infrastructure.workflows.workflow_orchestrator import (
+                SimulationWorkflowOrchestrator,
+            )
 
             # Create execution engine
             execution_engine = SimulationExecutionEngine(
@@ -310,7 +361,9 @@ class SimulationApplicationService:
                         "current_phase": "Execution",
                         "status": "running",
                         "message": "Simulation execution started",
-                        "execution_time_seconds": result.get("execution_time_seconds", 0),
+                        "execution_time_seconds": result.get(
+                            "execution_time_seconds", 0
+                        ),
                     },
                 )
             except Exception as ws_error:
@@ -324,7 +377,10 @@ class SimulationApplicationService:
 
         except Exception as e:
             self._logger.error(
-                "Failed to execute simulation", error=str(e), simulation_id=simulation_id, correlation_id=correlation_id
+                "Failed to execute simulation",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id,
             )
             return {
                 "success": False,
@@ -349,7 +405,11 @@ class SimulationApplicationService:
             simulation = await self._simulation_repository.find_by_id(simulation_id)
 
             if not simulation:
-                return {"success": False, "error": "Simulation not found", "simulation_id": simulation_id}
+                return {
+                    "success": False,
+                    "error": "Simulation not found",
+                    "simulation_id": simulation_id,
+                }
 
             return {
                 "success": True,
@@ -357,9 +417,17 @@ class SimulationApplicationService:
                 "status": simulation.status.value,
                 "progress": simulation.get_progress_percentage(),
                 "created_at": simulation.created_at.isoformat(),
-                "started_at": simulation.started_at.isoformat() if simulation.started_at else None,
-                "completed_at": simulation.completed_at.isoformat() if simulation.completed_at else None,
-                "result": simulation.result.get_summary() if simulation.result else None,
+                "started_at": (
+                    simulation.started_at.isoformat() if simulation.started_at else None
+                ),
+                "completed_at": (
+                    simulation.completed_at.isoformat()
+                    if simulation.completed_at
+                    else None
+                ),
+                "result": (
+                    simulation.result.get_summary() if simulation.result else None
+                ),
             }
 
         except Exception as e:
@@ -406,8 +474,12 @@ class SimulationApplicationService:
                         "status": sim.status.value,
                         "progress": sim.get_progress_percentage(),
                         "created_at": sim.created_at.isoformat(),
-                        "started_at": sim.started_at.isoformat() if sim.started_at else None,
-                        "completed_at": sim.completed_at.isoformat() if sim.completed_at else None,
+                        "started_at": (
+                            sim.started_at.isoformat() if sim.started_at else None
+                        ),
+                        "completed_at": (
+                            sim.completed_at.isoformat() if sim.completed_at else None
+                        ),
                     }
                 )
 
@@ -420,7 +492,10 @@ class SimulationApplicationService:
 
         except Exception as e:
             self._logger.error(
-                "Failed to list simulations", error=str(e), status_filter=status_filter, correlation_id=correlation_id
+                "Failed to list simulations",
+                error=str(e),
+                status_filter=status_filter,
+                correlation_id=correlation_id,
             )
             return {"success": False, "error": str(e), "simulations": [], "total": 0}
 
@@ -443,7 +518,11 @@ class SimulationApplicationService:
             simulation = simulation_repo.find_by_id(simulation_id)
 
             if not simulation:
-                return {"success": False, "error": "Simulation not found", "simulation_id": simulation_id}
+                return {
+                    "success": False,
+                    "error": "Simulation not found",
+                    "simulation_id": simulation_id,
+                }
 
             if simulation.is_completed():
                 return {
@@ -473,7 +552,10 @@ class SimulationApplicationService:
 
         except Exception as e:
             self._logger.error(
-                "Failed to cancel simulation", error=str(e), simulation_id=simulation_id, correlation_id=correlation_id
+                "Failed to cancel simulation",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id,
             )
             return {"success": False, "simulation_id": simulation_id, "error": str(e)}
 
@@ -496,7 +578,11 @@ class SimulationApplicationService:
             simulation = simulation_repo.find_by_id(simulation_id)
 
             if not simulation:
-                return {"success": False, "error": "Simulation not found", "simulation_id": simulation_id}
+                return {
+                    "success": False,
+                    "error": "Simulation not found",
+                    "simulation_id": simulation_id,
+                }
 
             if not simulation.result:
                 return {
@@ -540,13 +626,22 @@ class SimulationApplicationService:
             return {"success": True, "health": health_status}
 
         except Exception as e:
-            self._logger.error("Failed to get health status", error=str(e), correlation_id=correlation_id)
+            self._logger.error(
+                "Failed to get health status",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
             return {"success": False, "error": str(e)}
 
-    async def create_simulation_from_config_file(self, config_file_path: str) -> Dict[str, Any]:
+    async def create_simulation_from_config_file(
+        self, config_file_path: str
+    ) -> Dict[str, Any]:
         """Create a simulation from a configuration file."""
         try:
-            self._logger.info("Creating simulation from configuration file", config_file_path=config_file_path)
+            self._logger.info(
+                "Creating simulation from configuration file",
+                config_file_path=config_file_path,
+            )
 
             # Load configuration from file
             config = load_simulation_config(config_file_path)
@@ -569,16 +664,26 @@ class SimulationApplicationService:
 
         except Exception as e:
             self._logger.error(
-                "Failed to create simulation from config file", error=str(e), config_file_path=config_file_path
+                "Failed to create simulation from config file",
+                error=str(e),
+                config_file_path=config_file_path,
             )
-            return {"success": False, "error": str(e), "config_file_path": config_file_path}
+            return {
+                "success": False,
+                "error": str(e),
+                "config_file_path": config_file_path,
+            }
 
     async def create_sample_config_file(
         self, file_path: str, project_name: str = "Sample E-commerce Platform"
     ) -> Dict[str, Any]:
         """Create a sample configuration file."""
         try:
-            self._logger.info("Creating sample configuration file", file_path=file_path, project_name=project_name)
+            self._logger.info(
+                "Creating sample configuration file",
+                file_path=file_path,
+                project_name=project_name,
+            )
 
             # Create sample configuration
             config = create_sample_simulation_config(file_path, project_name)
@@ -595,13 +700,19 @@ class SimulationApplicationService:
             }
 
         except Exception as e:
-            self._logger.error("Failed to create sample configuration file", error=str(e), file_path=file_path)
+            self._logger.error(
+                "Failed to create sample configuration file",
+                error=str(e),
+                file_path=file_path,
+            )
             return {"success": False, "error": str(e), "file_path": file_path}
 
     async def validate_config_file(self, config_file_path: str) -> Dict[str, Any]:
         """Validate a configuration file without creating a simulation."""
         try:
-            self._logger.info("Validating configuration file", config_file_path=config_file_path)
+            self._logger.info(
+                "Validating configuration file", config_file_path=config_file_path
+            )
 
             # Load configuration from file
             config = load_simulation_config(config_file_path)
@@ -621,10 +732,20 @@ class SimulationApplicationService:
             }
 
         except Exception as e:
-            self._logger.error("Failed to validate configuration file", error=str(e), config_file_path=config_file_path)
-            return {"success": False, "error": str(e), "config_file_path": config_file_path}
+            self._logger.error(
+                "Failed to validate configuration file",
+                error=str(e),
+                config_file_path=config_file_path,
+            )
+            return {
+                "success": False,
+                "error": str(e),
+                "config_file_path": config_file_path,
+            }
 
-    def _convert_config_to_simulation_request(self, config: SimulationConfigFile) -> Dict[str, Any]:
+    def _convert_config_to_simulation_request(
+        self, config: SimulationConfigFile
+    ) -> Dict[str, Any]:
         """Convert a configuration file object to a simulation creation request."""
         return {
             "name": config.project_name,
@@ -643,7 +764,12 @@ class SimulationApplicationService:
             "realistic_delays": config.generate_realistic_delays,
             "capture_metrics": config.capture_metrics,
             "ecosystem_integration": config.enable_ecosystem_integration,
-            "technologies": ["Python", "FastAPI", "React", "PostgreSQL"],  # Default technologies
+            "technologies": [
+                "Python",
+                "FastAPI",
+                "React",
+                "PostgreSQL",
+            ],  # Default technologies
         }
 
     async def get_config_template(self) -> Dict[str, Any]:
@@ -656,7 +782,10 @@ class SimulationApplicationService:
                 "template": template,
                 "description": "Configuration template for creating custom simulation scenarios",
                 "supported_formats": ["yaml", "yml", "json"],
-                "example_usage": {"yaml": "config/simulation_config.yaml", "json": "config/simulation_config.json"},
+                "example_usage": {
+                    "yaml": "config/simulation_config.yaml",
+                    "json": "config/simulation_config.json",
+                },
             }
 
         except Exception as e:

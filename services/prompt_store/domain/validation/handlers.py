@@ -2,7 +2,10 @@
 
 from typing import Any, Dict, List
 
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 from ...core.handler import BaseHandler
 from .service import ValidationService
@@ -14,13 +17,19 @@ class ValidationHandlers(BaseHandler):
     def __init__(self):
         super().__init__(ValidationService())
 
-    async def handle_run_test_suite(self, prompt_id: str, version: int, test_suite: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_run_test_suite(
+        self, prompt_id: str, version: int, test_suite: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Run a test suite against a prompt."""
         try:
             results = await self.service.run_test_suite(prompt_id, version, test_suite)
-            return create_success_response(message="Test suite completed successfully", data=results).model_dump()
+            return create_success_response(
+                message="Test suite completed successfully", data=results
+            ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to run test suite: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to run test suite: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
     async def handle_lint_prompt(self, prompt_content: str) -> Dict[str, Any]:
         """Lint a prompt for issues."""
@@ -30,14 +39,18 @@ class ValidationHandlers(BaseHandler):
                 message="Prompt linting completed successfully", data=linting_results
             ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to lint prompt: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to lint prompt: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
     async def handle_detect_bias(
         self, prompt_content: str, prompt_id: str = None, version: int = None
     ) -> Dict[str, Any]:
         """Detect bias in prompt content."""
         try:
-            bias_results = await self.service.detect_bias(prompt_content, prompt_id, version)
+            bias_results = await self.service.detect_bias(
+                prompt_content, prompt_id, version
+            )
             return create_success_response(
                 message="Bias detection completed successfully",
                 data={
@@ -46,17 +59,26 @@ class ValidationHandlers(BaseHandler):
                 },
             ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to detect bias: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to detect bias: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
-    async def handle_validate_output(self, prompt_output: str, expected_criteria: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_validate_output(
+        self, prompt_output: str, expected_criteria: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Validate prompt output against criteria."""
         try:
-            validation_results = await self.service.validate_output(prompt_output, expected_criteria)
+            validation_results = await self.service.validate_output(
+                prompt_output, expected_criteria
+            )
             return create_success_response(
-                message="Output validation completed successfully", data=validation_results
+                message="Output validation completed successfully",
+                data=validation_results,
             ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to validate output: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to validate output: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
     async def handle_create_test_suite(
         self, name: str, description: str, test_cases: List[Dict[str, Any]]
@@ -64,9 +86,13 @@ class ValidationHandlers(BaseHandler):
         """Create a new test suite."""
         try:
             test_suite = self.service.create_test_suite(name, description, test_cases)
-            return create_success_response(message="Test suite created successfully", data=test_suite).model_dump()
+            return create_success_response(
+                message="Test suite created successfully", data=test_suite
+            ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to create test suite: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to create test suite: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
     async def handle_get_standard_test_suites(self) -> Dict[str, Any]:
         """Get standard test suites."""
@@ -77,4 +103,6 @@ class ValidationHandlers(BaseHandler):
                 data={"test_suites": test_suites, "count": len(test_suites)},
             ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to get test suites: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to get test suites: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()

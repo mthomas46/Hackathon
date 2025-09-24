@@ -18,14 +18,21 @@ class PolicyEnforcer:
         return self._all_providers.copy()
 
     def filter_providers(
-        self, providers: Optional[List[Dict[str, Any]]], sensitive: bool, override_policy: bool = False
+        self,
+        providers: Optional[List[Dict[str, Any]]],
+        sensitive: bool,
+        override_policy: bool = False,
     ) -> List[Dict[str, Any]]:
         """Filter providers based on security policy."""
 
         if sensitive and not override_policy:
             # Filter to secure providers only
             secure_names = set(self._secure_only_models)
-            filtered = [p for p in (providers or []) if str(p.get("name", "")).lower() in secure_names]
+            filtered = [
+                p
+                for p in (providers or [])
+                if str(p.get("name", "")).lower() in secure_names
+            ]
 
             # If no secure providers specified, default to bedrock then ollama
             if not filtered:
@@ -40,7 +47,9 @@ class PolicyEnforcer:
         """Get policy suggestion message."""
         if sensitive:
             secure_models = ", ".join(self._secure_only_models)
-            return f"Sensitive content detected. Recommend secure models: {secure_models}"
+            return (
+                f"Sensitive content detected. Recommend secure models: {secure_models}"
+            )
         return "No sensitive content detected. All models allowed."
 
     def _load_secure_models(self) -> List[str]:
@@ -50,7 +59,9 @@ class PolicyEnforcer:
 
     def _load_all_providers(self) -> List[str]:
         """Load all available providers from environment."""
-        providers = os.environ.get("ALL_PROVIDERS", "bedrock,ollama,openai,anthropic,grok").split(",")
+        providers = os.environ.get(
+            "ALL_PROVIDERS", "bedrock,ollama,openai,anthropic,grok"
+        ).split(",")
         return [p.strip() for p in providers if p.strip()]
 
 

@@ -43,7 +43,9 @@ class LogContext:
     service_name: str
     service_version: str = "1.0.0"
     environment: str = "development"
-    instance_id: str = field(default_factory=lambda: os.environ.get("HOSTNAME", "unknown"))
+    instance_id: str = field(
+        default_factory=lambda: os.environ.get("HOSTNAME", "unknown")
+    )
     request_id: Optional[str] = None
     user_id: Optional[str] = None
     correlation_id: Optional[str] = None
@@ -117,9 +119,12 @@ class StandardizedLogger:
             "log_level": os.environ.get("LOG_LEVEL", "INFO"),
             "log_format": os.environ.get("LOG_FORMAT", "json"),
             "log_file": os.environ.get("LOG_FILE", f"/var/log/{self.service_name}.log"),
-            "console_logging": os.environ.get("CONSOLE_LOGGING", "true").lower() == "true",
-            "structured_logging": os.environ.get("STRUCTURED_LOGGING", "true").lower() == "true",
-            "monitoring_enabled": os.environ.get("MONITORING_ENABLED", "true").lower() == "true",
+            "console_logging": os.environ.get("CONSOLE_LOGGING", "true").lower()
+            == "true",
+            "structured_logging": os.environ.get("STRUCTURED_LOGGING", "true").lower()
+            == "true",
+            "monitoring_enabled": os.environ.get("MONITORING_ENABLED", "true").lower()
+            == "true",
             "metrics_interval": int(os.environ.get("METRICS_INTERVAL", "30")),
             "max_log_size": int(os.environ.get("MAX_LOG_SIZE", "10485760")),  # 10MB
             "backup_count": int(os.environ.get("LOG_BACKUP_COUNT", "5")),
@@ -138,7 +143,9 @@ class StandardizedLogger:
         if self.config["structured_logging"]:
             formatter = StructuredFormatter()
         else:
-            formatter = logging.Formatter("%(asctime)s [%(levelname)8s] %(name)s: %(message)s")
+            formatter = logging.Formatter(
+                "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
+            )
 
         # Console handler
         if self.config["console_logging"]:
@@ -149,7 +156,9 @@ class StandardizedLogger:
         # File handler with rotation
         try:
             file_handler = logging.handlers.RotatingFileHandler(
-                self.config["log_file"], maxBytes=self.config["max_log_size"], backupCount=self.config["backup_count"]
+                self.config["log_file"],
+                maxBytes=self.config["max_log_size"],
+                backupCount=self.config["backup_count"],
             )
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
@@ -195,9 +204,16 @@ class StandardizedLogger:
         if extra:
             log_data.update(extra)
 
-        self.logger.log(log_level, f"HTTP {method} {path} -> {status_code}", extra=log_data)
+        self.logger.log(
+            log_level, f"HTTP {method} {path} -> {status_code}", extra=log_data
+        )
 
-    def log_error(self, error: Exception, context: Optional[Dict[str, Any]] = None, error_code: Optional[str] = None):
+    def log_error(
+        self,
+        error: Exception,
+        context: Optional[Dict[str, Any]] = None,
+        error_code: Optional[str] = None,
+    ):
         """Log error with context"""
         error_data = {
             "error_type": type(error).__name__,
@@ -212,9 +228,15 @@ class StandardizedLogger:
 
         self.logger.error(f"Error: {error}", extra=error_data, exc_info=True)
 
-    def log_performance(self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None):
+    def log_performance(
+        self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None
+    ):
         """Log performance metrics"""
-        perf_data = {"operation": operation, "duration_ms": round(duration * 1000, 2), "service": self.service_name}
+        perf_data = {
+            "operation": operation,
+            "duration_ms": round(duration * 1000, 2),
+            "service": self.service_name,
+        }
 
         if metadata:
             perf_data.update(metadata)
@@ -224,7 +246,11 @@ class StandardizedLogger:
     def log_business_event(self, event_type: str, event_data: Dict[str, Any]):
         """Log business events for analytics"""
         event_data.update(
-            {"event_type": event_type, "service": self.service_name, "timestamp": datetime.now().isoformat()}
+            {
+                "event_type": event_type,
+                "service": self.service_name,
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         self.logger.info(f"Business Event: {event_type}", extra=event_data)
@@ -233,7 +259,9 @@ class StandardizedLogger:
         """Get formatted traceback"""
         import traceback
 
-        return "".join(traceback.format_exception(type(error), error, error.__traceback__))
+        return "".join(
+            traceback.format_exception(type(error), error, error.__traceback__)
+        )
 
     def start_monitoring(self):
         """Start performance monitoring"""
@@ -245,7 +273,9 @@ class StandardizedLogger:
 
         self._monitoring_active = True
         self._monitoring_thread = threading.Thread(
-            target=self._monitoring_loop, daemon=True, name=f"{self.service_name}-monitoring"
+            target=self._monitoring_loop,
+            daemon=True,
+            name=f"{self.service_name}-monitoring",
         )
         self._monitoring_thread.start()
         self.logger.info("📊 Performance monitoring started")
@@ -366,7 +396,9 @@ class StandardizedLogger:
                 "error_count": total_errors,
                 "error_rate": round(error_rate * 100, 2),
             },
-            "uptime_seconds": (datetime.now() - datetime.fromtimestamp(psutil.boot_time())).total_seconds(),
+            "uptime_seconds": (
+                datetime.now() - datetime.fromtimestamp(psutil.boot_time())
+            ).total_seconds(),
         }
 
     def _cleanup(self):
@@ -493,7 +525,13 @@ def performance_monitor(operation_name: str = None):
 
                 if logger:
                     logger.log_performance(
-                        operation, duration, {"success": True, "args_count": len(args), "kwargs_count": len(kwargs)}
+                        operation,
+                        duration,
+                        {
+                            "success": True,
+                            "args_count": len(args),
+                            "kwargs_count": len(kwargs),
+                        },
                     )
 
                 return result
@@ -503,7 +541,13 @@ def performance_monitor(operation_name: str = None):
 
                 if logger:
                     logger.log_performance(
-                        operation, duration, {"success": False, "error": str(e), "error_type": type(e).__name__}
+                        operation,
+                        duration,
+                        {
+                            "success": False,
+                            "error": str(e),
+                            "error_type": type(e).__name__,
+                        },
                     )
 
                 raise
@@ -517,7 +561,9 @@ def performance_monitor(operation_name: str = None):
 _logger_registry = {}
 
 
-def get_logger(service_name: str, config: Optional[Dict[str, Any]] = None) -> StandardizedLogger:
+def get_logger(
+    service_name: str, config: Optional[Dict[str, Any]] = None
+) -> StandardizedLogger:
     """
     Get or create a standardized logger for a service
 
@@ -556,7 +602,8 @@ def configure_service_logging(service_name: str, config: Dict[str, Any]):
 if __name__ == "__main__":
     # Example usage
     logger = get_logger(
-        "example-service", {"log_level": "INFO", "structured_logging": True, "monitoring_enabled": True}
+        "example-service",
+        {"log_level": "INFO", "structured_logging": True, "monitoring_enabled": True},
     )
 
     logger.start_monitoring()

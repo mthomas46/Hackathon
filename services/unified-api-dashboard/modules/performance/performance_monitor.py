@@ -215,7 +215,10 @@ class PerformanceMonitor:
             )
 
         # Memory usage alert
-        if self.current_metrics.memory_percent > self.alert_thresholds["memory_percent"]:
+        if (
+            self.current_metrics.memory_percent
+            > self.alert_thresholds["memory_percent"]
+        ):
             alerts.append(
                 {
                     "type": "high_memory_usage",
@@ -237,7 +240,10 @@ class PerformanceMonitor:
             )
 
         # Response time alert
-        if self.current_metrics.average_response_time > self.alert_thresholds["response_time"]:
+        if (
+            self.current_metrics.average_response_time
+            > self.alert_thresholds["response_time"]
+        ):
             alerts.append(
                 {
                     "type": "high_response_time",
@@ -248,7 +254,10 @@ class PerformanceMonitor:
             )
 
         # Cache hit ratio alert
-        if self.current_metrics.cache_hit_ratio < self.alert_thresholds["cache_hit_ratio"]:
+        if (
+            self.current_metrics.cache_hit_ratio
+            < self.alert_thresholds["cache_hit_ratio"]
+        ):
             alerts.append(
                 {
                     "type": "low_cache_hit_ratio",
@@ -290,7 +299,9 @@ class PerformanceMonitor:
         """Set alert threshold for a metric."""
         self.alert_thresholds[metric] = threshold
 
-    async def get_performance_report(self, time_range_minutes: int = 60) -> Dict[str, Any]:
+    async def get_performance_report(
+        self, time_range_minutes: int = 60
+    ) -> Dict[str, Any]:
         """Generate comprehensive performance report."""
 
         # Get metrics for time range
@@ -303,9 +314,13 @@ class PerformanceMonitor:
         # Calculate averages and trends
         avg_cpu = sum(m.cpu_percent for m in recent_metrics) / len(recent_metrics)
         avg_memory = sum(m.memory_percent for m in recent_metrics) / len(recent_metrics)
-        avg_response_time = sum(m.average_response_time for m in recent_metrics) / len(recent_metrics)
+        avg_response_time = sum(m.average_response_time for m in recent_metrics) / len(
+            recent_metrics
+        )
         avg_error_rate = sum(m.error_rate for m in recent_metrics) / len(recent_metrics)
-        avg_throughput = sum(m.throughput_rps for m in recent_metrics) / len(recent_metrics)
+        avg_throughput = sum(m.throughput_rps for m in recent_metrics) / len(
+            recent_metrics
+        )
 
         # Calculate trends (comparing first half vs second half)
         midpoint = len(recent_metrics) // 2
@@ -316,12 +331,12 @@ class PerformanceMonitor:
             cpu_trend = (sum(m.cpu_percent for m in second_half) / len(second_half)) - (
                 sum(m.cpu_percent for m in first_half) / len(first_half)
             )
-            memory_trend = (sum(m.memory_percent for m in second_half) / len(second_half)) - (
-                sum(m.memory_percent for m in first_half) / len(first_half)
-            )
-            response_time_trend = (sum(m.average_response_time for m in second_half) / len(second_half)) - (
-                sum(m.average_response_time for m in first_half) / len(first_half)
-            )
+            memory_trend = (
+                sum(m.memory_percent for m in second_half) / len(second_half)
+            ) - (sum(m.memory_percent for m in first_half) / len(first_half))
+            response_time_trend = (
+                sum(m.average_response_time for m in second_half) / len(second_half)
+            ) - (sum(m.average_response_time for m in first_half) / len(first_half))
         else:
             cpu_trend = memory_trend = response_time_trend = 0
 
@@ -479,8 +494,12 @@ class BottleneckDetector:
                     "severity": bottleneck.severity,
                     "impact_score": bottleneck.impact_score,
                     "recommendations": bottleneck.recommendations,
-                    "estimated_effort": self._estimate_effort(bottleneck.bottleneck_type),
-                    "expected_improvement": self._estimate_improvement(bottleneck.bottleneck_type),
+                    "estimated_effort": self._estimate_effort(
+                        bottleneck.bottleneck_type
+                    ),
+                    "expected_improvement": self._estimate_improvement(
+                        bottleneck.bottleneck_type
+                    ),
                 }
             )
 
@@ -489,7 +508,9 @@ class BottleneckDetector:
 
         return recommendations
 
-    async def predict_future_bottlenecks(self, hours_ahead: int = 24) -> List[Dict[str, Any]]:
+    async def predict_future_bottlenecks(
+        self, hours_ahead: int = 24
+    ) -> List[Dict[str, Any]]:
         """Predict potential future bottlenecks based on trends."""
 
         predictions = []
@@ -502,27 +523,37 @@ class BottleneckDetector:
 
             # Predict CPU bottleneck
             if trends.get("cpu_trend", 0) > 5:  # CPU usage increasing by 5% per hour
-                hours_to_bottleneck = (100 - report["averages"]["cpu_percent"]) / trends["cpu_trend"]
+                hours_to_bottleneck = (
+                    100 - report["averages"]["cpu_percent"]
+                ) / trends["cpu_trend"]
                 if hours_to_bottleneck < hours_ahead:
                     predictions.append(
                         {
                             "bottleneck_type": "cpu_saturation",
                             "predicted_in_hours": hours_to_bottleneck,
                             "confidence": 0.8,
-                            "preventive_actions": ["Scale instances preemptively", "Optimize CPU usage"],
+                            "preventive_actions": [
+                                "Scale instances preemptively",
+                                "Optimize CPU usage",
+                            ],
                         }
                     )
 
             # Predict memory bottleneck
             if trends.get("memory_trend", 0) > 3:
-                hours_to_bottleneck = (100 - report["averages"]["memory_percent"]) / trends["memory_trend"]
+                hours_to_bottleneck = (
+                    100 - report["averages"]["memory_percent"]
+                ) / trends["memory_trend"]
                 if hours_to_bottleneck < hours_ahead:
                     predictions.append(
                         {
                             "bottleneck_type": "memory_exhaustion",
                             "predicted_in_hours": hours_to_bottleneck,
                             "confidence": 0.9,
-                            "preventive_actions": ["Increase memory allocation", "Implement memory optimization"],
+                            "preventive_actions": [
+                                "Increase memory allocation",
+                                "Implement memory optimization",
+                            ],
                         }
                     )
 
@@ -600,6 +631,12 @@ class BottleneckDetector:
 
         bottleneck_counts = {}
         for bottleneck in self.analysis_history:
-            bottleneck_counts[bottleneck.bottleneck_type] = bottleneck_counts.get(bottleneck.bottleneck_type, 0) + 1
+            bottleneck_counts[bottleneck.bottleneck_type] = (
+                bottleneck_counts.get(bottleneck.bottleneck_type, 0) + 1
+            )
 
-        return max(bottleneck_counts, key=bottleneck_counts.get) if bottleneck_counts else None
+        return (
+            max(bottleneck_counts, key=bottleneck_counts.get)
+            if bottleneck_counts
+            else None
+        )

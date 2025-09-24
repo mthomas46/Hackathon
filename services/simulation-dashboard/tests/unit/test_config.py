@@ -32,7 +32,9 @@ class TestSimulationServiceConfig:
 
     def test_custom_base_url(self):
         """Test custom base URL override."""
-        config = SimulationServiceConfig(host="test-host", port=8080, base_url="https://custom-url.com")
+        config = SimulationServiceConfig(
+            host="test-host", port=8080, base_url="https://custom-url.com"
+        )
         assert config.base_url == "https://custom-url.com"
 
 
@@ -121,7 +123,10 @@ class TestDashboardSettings:
         assert config.get_simulation_service_url() == "http://test-host:9090"
 
         # Test URL with path
-        assert config.get_simulation_service_url("api/v1/health") == "http://test-host:9090/api/v1/health"
+        assert (
+            config.get_simulation_service_url("api/v1/health")
+            == "http://test-host:9090/api/v1/health"
+        )
 
     def test_optional_service_urls(self):
         """Test optional ecosystem service URLs."""

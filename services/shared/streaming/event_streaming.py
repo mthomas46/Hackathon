@@ -80,7 +80,9 @@ class StreamEvent:
             "correlation_id": self.correlation_id,
             "causation_id": self.causation_id,
             "partition_key": self.partition_key,
-            "processed_at": self.processed_at.isoformat() if self.processed_at else None,
+            "processed_at": (
+                self.processed_at.isoformat() if self.processed_at else None
+            ),
             "processing_time_ms": self.processing_time_ms,
             "retry_count": self.retry_count,
             "max_retries": self.max_retries,
@@ -101,7 +103,11 @@ class StreamEvent:
             correlation_id=data.get("correlation_id"),
             causation_id=data.get("causation_id"),
             partition_key=data.get("partition_key"),
-            processed_at=datetime.fromisoformat(data["processed_at"]) if data.get("processed_at") else None,
+            processed_at=(
+                datetime.fromisoformat(data["processed_at"])
+                if data.get("processed_at")
+                else None
+            ),
             processing_time_ms=data.get("processing_time_ms", 0.0),
             retry_count=data.get("retry_count", 0),
             max_retries=data.get("max_retries", 3),
@@ -114,7 +120,9 @@ class StreamEvent:
     def mark_processed(self):
         """Mark event as processed."""
         self.processed_at = datetime.now()
-        self.processing_time_ms = (self.processed_at - self.timestamp).total_seconds() * 1000
+        self.processing_time_ms = (
+            self.processed_at - self.timestamp
+        ).total_seconds() * 1000
 
 
 @dataclass
@@ -140,7 +148,9 @@ class EventSubscription:
     def matches_event(self, event: StreamEvent) -> bool:
         """Check if subscription matches the event."""
         # Check event pattern
-        if self.event_pattern != "*" and not self._matches_pattern(event.event_name, self.event_pattern):
+        if self.event_pattern != "*" and not self._matches_pattern(
+            event.event_name, self.event_pattern
+        ):
             return False
 
         # Check priority filter
@@ -226,13 +236,17 @@ class ProcessingMetrics:
 
         # Calculate averages
         if self.total_events_processed > 0:
-            self.average_processing_time = self.total_processing_time / self.total_events_processed
+            self.average_processing_time = (
+                self.total_processing_time / self.total_events_processed
+            )
 
         # Calculate throughput (events per second in last minute)
         if self.last_updated:
             time_diff = (datetime.now() - self.last_updated).total_seconds()
             if time_diff > 0:
-                self.throughput_events_per_second = self.total_events_processed / time_diff
+                self.throughput_events_per_second = (
+                    self.total_events_processed / time_diff
+                )
 
         self.last_updated = datetime.now()
 
@@ -246,7 +260,9 @@ class EventCorrelationEngine:
         self.correlation_windows: Dict[str, timedelta] = {}
         self.correlated_events: List[Dict[str, Any]] = []
 
-    def add_correlation_rule(self, rule_name: str, conditions: Dict[str, Any], window_seconds: int = 300):
+    def add_correlation_rule(
+        self, rule_name: str, conditions: Dict[str, Any], window_seconds: int = 300
+    ):
         """Add event correlation rule."""
         self.correlation_rules[rule_name] = {
             "conditions": conditions,
@@ -263,12 +279,15 @@ class EventCorrelationEngine:
         for rule_name, rule in self.correlation_rules.items():
             if self._matches_correlation_rule(event, rule):
                 # Add event to active correlations
-                correlation_key = f"{rule_name}_{event.correlation_id or event.event_id}"
+                correlation_key = (
+                    f"{rule_name}_{event.correlation_id or event.event_id}"
+                )
                 self.active_correlations[correlation_key].append(event)
 
                 # Check if correlation window is complete
                 window_events = self._get_events_in_window(
-                    self.active_correlations[correlation_key], self.correlation_windows[rule_name]
+                    self.active_correlations[correlation_key],
+                    self.correlation_windows[rule_name],
                 )
 
                 if self._correlation_complete(window_events, rule):
@@ -277,7 +296,9 @@ class EventCorrelationEngine:
                         "rule_name": rule_name,
                         "events": [e.to_dict() for e in window_events],
                         "detected_at": datetime.now().isoformat(),
-                        "confidence": self._calculate_correlation_confidence(window_events, rule),
+                        "confidence": self._calculate_correlation_confidence(
+                            window_events, rule
+                        ),
                     }
                     correlations.append(correlation)
                     self.correlated_events.append(correlation)
@@ -291,16 +312,23 @@ class EventCorrelationEngine:
 
         return correlations
 
-    def _matches_correlation_rule(self, event: StreamEvent, rule: Dict[str, Any]) -> bool:
+    def _matches_correlation_rule(
+        self, event: StreamEvent, rule: Dict[str, Any]
+    ) -> bool:
         """Check if event matches correlation rule."""
         conditions = rule["conditions"]
 
         # Check event type
-        if "event_type" in conditions and event.event_type.value != conditions["event_type"]:
+        if (
+            "event_type" in conditions
+            and event.event_type.value != conditions["event_type"]
+        ):
             return False
 
         # Check event name pattern
-        if "event_pattern" in conditions and not self._matches_pattern(event.event_name, conditions["event_pattern"]):
+        if "event_pattern" in conditions and not self._matches_pattern(
+            event.event_name, conditions["event_pattern"]
+        ):
             return False
 
         # Check payload conditions
@@ -318,7 +346,9 @@ class EventCorrelationEngine:
             return text.startswith(prefix)
         return text == pattern
 
-    def _get_events_in_window(self, events: List[StreamEvent], window: timedelta) -> List[StreamEvent]:
+    def _get_events_in_window(
+        self, events: List[StreamEvent], window: timedelta
+    ) -> List[StreamEvent]:
         """Get events within correlation window."""
         if not events:
             return []
@@ -332,7 +362,9 @@ class EventCorrelationEngine:
 
         return [e for e in sorted_events if window_start <= e.timestamp <= window_end]
 
-    def _correlation_complete(self, events: List[StreamEvent], rule: Dict[str, Any]) -> bool:
+    def _correlation_complete(
+        self, events: List[StreamEvent], rule: Dict[str, Any]
+    ) -> bool:
         """Check if correlation is complete."""
         conditions = rule["conditions"]
 
@@ -365,7 +397,9 @@ class EventCorrelationEngine:
 
         return True
 
-    def _calculate_correlation_confidence(self, events: List[StreamEvent], rule: Dict[str, Any]) -> float:
+    def _calculate_correlation_confidence(
+        self, events: List[StreamEvent], rule: Dict[str, Any]
+    ) -> float:
         """Calculate correlation confidence score."""
         base_confidence = 0.8
 
@@ -403,7 +437,10 @@ class EventCorrelationEngine:
             "active_correlations": len(self.active_correlations),
             "total_correlations_detected": len(self.correlated_events),
             "rule_performance": {
-                rule_name: {"matches": rule["matches"], "created_at": rule["created_at"].isoformat()}
+                rule_name: {
+                    "matches": rule["matches"],
+                    "created_at": rule["created_at"].isoformat(),
+                }
                 for rule_name, rule in self.correlation_rules.items()
             },
         }
@@ -450,16 +487,24 @@ class EventStreamProcessor:
         print(f"   • Streams: {len(self.streams)}")
         print("   • Correlation Rules: Configured")
 
-    async def create_stream(self, stream_name: str, partitions: int = 1, retention_hours: int = 24) -> EventStream:
+    async def create_stream(
+        self, stream_name: str, partitions: int = 1, retention_hours: int = 24
+    ) -> EventStream:
         """Create a new event stream."""
-        stream = EventStream(stream_name=stream_name, partitions=partitions, retention_hours=retention_hours)
+        stream = EventStream(
+            stream_name=stream_name,
+            partitions=partitions,
+            retention_hours=retention_hours,
+        )
 
         self.streams[stream_name] = stream
         self.event_queues[stream_name] = asyncio.Queue(maxsize=10000)
         self.metrics[stream_name] = ProcessingMetrics(stream_name=stream_name)
 
         # Start processing task for this stream
-        self.processing_tasks[stream_name] = asyncio.create_task(self._process_stream_events(stream_name))
+        self.processing_tasks[stream_name] = asyncio.create_task(
+            self._process_stream_events(stream_name)
+        )
 
         return stream
 
@@ -468,7 +513,9 @@ class EventStreamProcessor:
 
         # Error correlation
         self.correlation_engine.add_correlation_rule(
-            "error_burst", {"event_type": "error", "min_events": 5, "max_time_span_seconds": 300}, window_seconds=300
+            "error_burst",
+            {"event_type": "error", "min_events": 5, "max_time_span_seconds": 300},
+            window_seconds=300,
         )
 
         # Security correlation
@@ -527,7 +574,9 @@ class EventStreamProcessor:
         except Exception as e:
             print(f"⚠️  Redis storage failed: {e}")
 
-    async def subscribe_to_stream(self, stream_name: str, subscription: EventSubscription):
+    async def subscribe_to_stream(
+        self, stream_name: str, subscription: EventSubscription
+    ):
         """Subscribe to event stream."""
         if stream_name not in self.streams:
             return False
@@ -556,7 +605,9 @@ class EventStreamProcessor:
             except Exception as e:
                 print(f"❌ Error processing event from {stream_name}: {e}")
 
-    async def _process_single_event(self, stream_name: str, event: StreamEvent, metrics: ProcessingMetrics):
+    async def _process_single_event(
+        self, stream_name: str, event: StreamEvent, metrics: ProcessingMetrics
+    ):
         """Process a single event."""
         start_time = time.time()
 
@@ -586,7 +637,9 @@ class EventStreamProcessor:
             metrics.update_metrics(processing_time, False)
             print(f"❌ Event processing failed: {e}")
 
-    async def _process_correlation_event(self, stream_name: str, correlation: Dict[str, Any]):
+    async def _process_correlation_event(
+        self, stream_name: str, correlation: Dict[str, Any]
+    ):
         """Process correlated events."""
         # Create correlation event
         correlation_event = StreamEvent(
@@ -611,16 +664,22 @@ class EventStreamProcessor:
             if subscription.matches_event(event):
                 # Deliver event based on batch size
                 if subscription.batch_size == 1:
-                    task = asyncio.create_task(self._deliver_single_event(subscription, event))
+                    task = asyncio.create_task(
+                        self._deliver_single_event(subscription, event)
+                    )
                 else:
-                    task = asyncio.create_task(self._deliver_batch_events(subscription, [event]))
+                    task = asyncio.create_task(
+                        self._deliver_batch_events(subscription, [event])
+                    )
 
                 delivery_tasks.append(task)
 
         if delivery_tasks:
             await asyncio.gather(*delivery_tasks, return_exceptions=True)
 
-    async def _deliver_single_event(self, subscription: EventSubscription, event: StreamEvent):
+    async def _deliver_single_event(
+        self, subscription: EventSubscription, event: StreamEvent
+    ):
         """Deliver single event to subscriber."""
         if subscription.handler_function:
             start_time = time.time()
@@ -633,9 +692,13 @@ class EventStreamProcessor:
             except Exception as e:
                 processing_time = (time.time() - start_time) * 1000
                 subscription.record_processing(processing_time, False)
-                print(f"❌ Event handler failed for {subscription.subscriber_service}: {e}")
+                print(
+                    f"❌ Event handler failed for {subscription.subscriber_service}: {e}"
+                )
 
-    async def _deliver_batch_events(self, subscription: EventSubscription, events: List[StreamEvent]):
+    async def _deliver_batch_events(
+        self, subscription: EventSubscription, events: List[StreamEvent]
+    ):
         """Deliver batch of events to subscriber."""
         if subscription.handler_function:
             start_time = time.time()
@@ -648,14 +711,18 @@ class EventStreamProcessor:
             except Exception as e:
                 processing_time = (time.time() - start_time) * 1000
                 subscription.record_processing(processing_time, False)
-                print(f"❌ Batch event handler failed for {subscription.subscriber_service}: {e}")
+                print(
+                    f"❌ Batch event handler failed for {subscription.subscriber_service}: {e}"
+                )
 
     def get_stream_statistics(self) -> Dict[str, Any]:
         """Get comprehensive stream statistics."""
         statistics = {
             "total_streams": len(self.streams),
             "total_subscribers": sum(len(subs) for subs in self.subscriptions.values()),
-            "total_events_processed": sum(m.total_events_processed for m in self.metrics.values()),
+            "total_events_processed": sum(
+                m.total_events_processed for m in self.metrics.values()
+            ),
             "stream_details": {},
             "correlation_statistics": self.correlation_engine.get_correlation_statistics(),
         }
@@ -666,12 +733,20 @@ class EventStreamProcessor:
                 "total_events": stream.total_events,
                 "subscribers": stream.total_subscribers,
                 "created_at": stream.created_at.isoformat(),
-                "last_event_at": stream.last_event_at.isoformat() if stream.last_event_at else None,
+                "last_event_at": (
+                    stream.last_event_at.isoformat() if stream.last_event_at else None
+                ),
                 "processing_metrics": (
                     {
-                        "events_processed": metrics.total_events_processed if metrics else 0,
-                        "average_processing_time": metrics.average_processing_time if metrics else 0,
-                        "throughput_eps": metrics.throughput_events_per_second if metrics else 0,
+                        "events_processed": (
+                            metrics.total_events_processed if metrics else 0
+                        ),
+                        "average_processing_time": (
+                            metrics.average_processing_time if metrics else 0
+                        ),
+                        "throughput_eps": (
+                            metrics.throughput_events_per_second if metrics else 0
+                        ),
                         "error_count": metrics.error_count if metrics else 0,
                     }
                     if metrics
@@ -721,7 +796,9 @@ async def test_event_streaming():
 
     # Subscribe to stream
     subscription = EventSubscription(
-        subscriber_service="test_service", event_pattern="test_*", handler_function=test_event_handler
+        subscriber_service="test_service",
+        event_pattern="test_*",
+        handler_function=test_event_handler,
     )
 
     await event_stream_processor.subscribe_to_stream("system_events", subscription)

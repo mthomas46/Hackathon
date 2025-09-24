@@ -70,7 +70,11 @@ def render_anomaly_chart(
             # Add the main data line
             fig.add_trace(
                 go.Scatter(
-                    x=df["timestamp"], y=df["value"], mode="lines", name="Normal Data", line=dict(color="blue", width=2)
+                    x=df["timestamp"],
+                    y=df["value"],
+                    mode="lines",
+                    name="Normal Data",
+                    line=dict(color="blue", width=2),
                 )
             )
 
@@ -152,7 +156,9 @@ def render_anomaly_summary(df: pd.DataFrame, anomaly_col: Optional[str]) -> None
                         st.metric("Peak Score", ".3f", max_score)
 
                     with col3:
-                        threshold = scores.quantile(0.95)  # 95th percentile as threshold
+                        threshold = scores.quantile(
+                            0.95
+                        )  # 95th percentile as threshold
                         st.metric("Threshold (95%)", ".3f", threshold)
 
                     # Show score distribution
@@ -168,7 +174,9 @@ def render_anomaly_summary(df: pd.DataFrame, anomaly_col: Optional[str]) -> None
             else:
                 # For boolean indicators, show counts
                 total_points = len(df)
-                anomaly_points = df[anomaly_col].sum() if df[anomaly_col].dtype == bool else 0
+                anomaly_points = (
+                    df[anomaly_col].sum() if df[anomaly_col].dtype == bool else 0
+                )
                 normal_points = total_points - anomaly_points
 
                 col1, col2, col3 = st.columns(3)
@@ -180,7 +188,9 @@ def render_anomaly_summary(df: pd.DataFrame, anomaly_col: Optional[str]) -> None
                     st.metric("Anomalies Detected", anomaly_points)
 
                 with col3:
-                    anomaly_rate = (anomaly_points / total_points) * 100 if total_points > 0 else 0
+                    anomaly_rate = (
+                        (anomaly_points / total_points) * 100 if total_points > 0 else 0
+                    )
                     st.metric("Anomaly Rate", ".2f", anomaly_rate)
 
                 # Create pie chart for anomaly distribution
@@ -244,7 +254,9 @@ def render_pattern_recognition_chart(
                     break
 
             # Create pattern visualization
-            if cluster_col and len(df[cluster_col].unique()) <= 10:  # Reasonable number of clusters
+            if (
+                cluster_col and len(df[cluster_col].unique()) <= 10
+            ):  # Reasonable number of clusters
                 # Create scatter plot with clusters
                 fig = px.scatter(
                     df,
@@ -294,7 +306,13 @@ def render_pattern_recognition_chart(
                                 )
                             )
 
-            fig.update_layout(title=title, width=width, height=height, xaxis_title="Time", yaxis_title="Value")
+            fig.update_layout(
+                title=title,
+                width=width,
+                height=height,
+                xaxis_title="Time",
+                yaxis_title="Value",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -328,7 +346,11 @@ def render_pattern_summary(df: pd.DataFrame, cluster_col: Optional[str]) -> None
                 st.metric("Patterns Identified", total_patterns)
 
             with col2:
-                most_common = cluster_counts.iloc[0]["Pattern"] if not cluster_counts.empty else "None"
+                most_common = (
+                    cluster_counts.iloc[0]["Pattern"]
+                    if not cluster_counts.empty
+                    else "None"
+                )
                 st.metric("Most Common", str(most_common))
 
             with col3:
@@ -445,7 +467,9 @@ def render_outlier_analysis_chart(
                 lower_bound = Q1 - 1.5 * IQR
                 upper_bound = Q3 + 1.5 * IQR
 
-                outliers = df[(df[value_col] < lower_bound) | (df[value_col] > upper_bound)]
+                outliers = df[
+                    (df[value_col] < lower_bound) | (df[value_col] > upper_bound)
+                ]
 
                 if not outliers.empty:
                     fig.add_trace(
@@ -459,10 +483,26 @@ def render_outlier_analysis_chart(
                     )
 
                 # Add IQR bounds
-                fig.add_hline(y=lower_bound, line_dash="dash", line_color="orange", annotation_text="Lower Bound")
-                fig.add_hline(y=upper_bound, line_dash="dash", line_color="orange", annotation_text="Upper Bound")
+                fig.add_hline(
+                    y=lower_bound,
+                    line_dash="dash",
+                    line_color="orange",
+                    annotation_text="Lower Bound",
+                )
+                fig.add_hline(
+                    y=upper_bound,
+                    line_dash="dash",
+                    line_color="orange",
+                    annotation_text="Upper Bound",
+                )
 
-            fig.update_layout(title=title, width=width, height=height, xaxis_title="Time", yaxis_title="Value")
+            fig.update_layout(
+                title=title,
+                width=width,
+                height=height,
+                xaxis_title="Time",
+                yaxis_title="Value",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -482,7 +522,10 @@ def render_outlier_analysis_chart(
 
 
 def render_outlier_summary(
-    df: pd.DataFrame, value_col: str, lower_bound: Optional[float], upper_bound: Optional[float]
+    df: pd.DataFrame,
+    value_col: str,
+    lower_bound: Optional[float],
+    upper_bound: Optional[float],
 ) -> None:
     """Render outlier analysis summary."""
     try:
@@ -501,7 +544,9 @@ def render_outlier_summary(
             outliers = df[(df[value_col] < lower_bound) | (df[value_col] > upper_bound)]
             outlier_count = len(outliers)
             total_count = len(df)
-            outlier_percentage = (outlier_count / total_count) * 100 if total_count > 0 else 0
+            outlier_percentage = (
+                (outlier_count / total_count) * 100 if total_count > 0 else 0
+            )
         else:
             outlier_count = 0
             outlier_percentage = 0
@@ -537,9 +582,19 @@ def render_outlier_summary(
 
             # Add outlier bounds
             if lower_bound is not None:
-                fig.add_vline(x=lower_bound, line_dash="dash", line_color="red", annotation_text="Lower Bound")
+                fig.add_vline(
+                    x=lower_bound,
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text="Lower Bound",
+                )
             if upper_bound is not None:
-                fig.add_vline(x=upper_bound, line_dash="dash", line_color="red", annotation_text="Upper Bound")
+                fig.add_vline(
+                    x=upper_bound,
+                    line_dash="dash",
+                    line_color="red",
+                    annotation_text="Upper Bound",
+                )
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -585,7 +640,9 @@ def render_anomaly_timeline_chart(
 
             # Aggregate anomalies by time period
             df["date"] = df["timestamp"].dt.date
-            daily_anomalies = df.groupby("date").size().reset_index(name="anomaly_count")
+            daily_anomalies = (
+                df.groupby("date").size().reset_index(name="anomaly_count")
+            )
 
             # Create timeline chart
             fig = px.bar(
@@ -598,7 +655,9 @@ def render_anomaly_timeline_chart(
 
             # Add trend line
             if len(daily_anomalies) > 1:
-                daily_anomalies["rolling_avg"] = daily_anomalies["anomaly_count"].rolling(window=7).mean()
+                daily_anomalies["rolling_avg"] = (
+                    daily_anomalies["anomaly_count"].rolling(window=7).mean()
+                )
                 fig.add_trace(
                     go.Scatter(
                         x=daily_anomalies["date"],
@@ -609,7 +668,12 @@ def render_anomaly_timeline_chart(
                     )
                 )
 
-            fig.update_layout(width=width, height=height, xaxis_title="Date", yaxis_title="Anomaly Count")
+            fig.update_layout(
+                width=width,
+                height=height,
+                xaxis_title="Date",
+                yaxis_title="Anomaly Count",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 

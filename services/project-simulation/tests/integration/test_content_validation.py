@@ -37,7 +37,9 @@ class TestContentQualityValidation:
                 "summary": "High-quality content with excellent structure",
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -77,7 +79,11 @@ This document provides a comprehensive overview of the system architecture for t
 - Support for 10,000 concurrent users
 - 99.9% uptime SLA
 """,
-                "metadata": {"author": "architect@example.com", "word_count": 450, "complexity": "high"},
+                "metadata": {
+                    "author": "architect@example.com",
+                    "word_count": 450,
+                    "complexity": "high",
+                },
             }
 
             result = await analysis_client.analyze_documents([high_quality_content])
@@ -103,7 +109,12 @@ This document provides a comprehensive overview of the system architecture for t
                     {
                         "id": "doc_2",
                         "quality_score": 0.35,
-                        "issues": ["Missing title", "Incomplete content", "Poor formatting", "Missing metadata"],
+                        "issues": [
+                            "Missing title",
+                            "Incomplete content",
+                            "Poor formatting",
+                            "Missing metadata",
+                        ],
                         "recommendations": [
                             "Add a descriptive title",
                             "Expand content with more details",
@@ -116,7 +127,9 @@ This document provides a comprehensive overview of the system architecture for t
                 "summary": "Low-quality content requiring significant improvements",
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -164,14 +177,20 @@ This document provides a comprehensive overview of the system architecture for t
                         "completeness_score": 0.30,
                         "issues": ["Missing sections", "Incomplete information"],
                         "missing_elements": ["overview", "requirements", "conclusion"],
-                        "recommendations": ["Add overview section", "Include requirements", "Add conclusion"],
+                        "recommendations": [
+                            "Add overview section",
+                            "Include requirements",
+                            "Add conclusion",
+                        ],
                     },
                 ],
                 "overall_quality": 0.67,
                 "overall_completeness": 0.63,
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -216,8 +235,12 @@ All requirements have been documented and approved.
             assert len(result["documents"]) == 2
 
             # Check individual document completeness
-            complete_doc = next(d for d in result["documents"] if d["id"] == "complete_doc")
-            incomplete_doc = next(d for d in result["documents"] if d["id"] == "incomplete_doc")
+            complete_doc = next(
+                d for d in result["documents"] if d["id"] == "complete_doc"
+            )
+            incomplete_doc = next(
+                d for d in result["documents"] if d["id"] == "incomplete_doc"
+            )
 
             assert complete_doc["completeness_score"] > 0.9
             assert len(complete_doc["missing_elements"]) == 0
@@ -271,7 +294,9 @@ class TestContentConsistencyValidation:
                 "structural_consistency": 0.88,
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -347,12 +372,18 @@ Validate credential processing and error handling.
                         "terminology_score": 0.95,
                         "terminology_issues": [],
                         "key_terms": ["user", "authentication", "authorization"],
-                        "term_frequency": {"user": 15, "authentication": 8, "authorization": 6},
+                        "term_frequency": {
+                            "user": 15,
+                            "authentication": 8,
+                            "authorization": 6,
+                        },
                     },
                     {
                         "id": "doc2",
                         "terminology_score": 0.60,
-                        "terminology_issues": ["Inconsistent term usage: 'login' vs 'authentication'"],
+                        "terminology_issues": [
+                            "Inconsistent term usage: 'login' vs 'authentication'"
+                        ],
                         "key_terms": ["user", "login", "authorize"],
                         "term_frequency": {"user": 12, "login": 10, "authorize": 4},
                     },
@@ -360,7 +391,12 @@ Validate credential processing and error handling.
                 "overall_terminology_consistency": 0.78,
                 "terminology_vocabulary": {
                     "consistent_terms": ["user"],
-                    "inconsistent_terms": ["authentication", "login", "authorization", "authorize"],
+                    "inconsistent_terms": [
+                        "authentication",
+                        "login",
+                        "authorization",
+                        "authorize",
+                    ],
                 },
                 "recommended_standardization": {
                     "authentication": "authentication",
@@ -370,7 +406,9 @@ Validate credential processing and error handling.
                 },
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -424,7 +462,10 @@ Validate credential processing and error handling.
                     {
                         "id": "poorly_structured",
                         "structure_score": 0.45,
-                        "structure_issues": ["Inconsistent heading levels", "Missing sections"],
+                        "structure_issues": [
+                            "Inconsistent heading levels",
+                            "Missing sections",
+                        ],
                         "heading_hierarchy": ["#", "###", "#", "##"],
                         "section_count": 3,
                         "avg_section_length": 50,
@@ -438,7 +479,9 @@ Validate credential processing and error handling.
                 },
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -519,11 +562,20 @@ How to deploy.
             assert "overall_structural_consistency" in result
             assert "structural_patterns" in result
 
-            well_structured = next(d for d in result["documents"] if d["id"] == "well_structured")
-            poorly_structured = next(d for d in result["documents"] if d["id"] == "poorly_structured")
+            well_structured = next(
+                d for d in result["documents"] if d["id"] == "well_structured"
+            )
+            poorly_structured = next(
+                d for d in result["documents"] if d["id"] == "poorly_structured"
+            )
 
-            assert well_structured["structure_score"] > poorly_structured["structure_score"]
-            assert len(well_structured["structure_issues"]) < len(poorly_structured["structure_issues"])
+            assert (
+                well_structured["structure_score"]
+                > poorly_structured["structure_score"]
+            )
+            assert len(well_structured["structure_issues"]) < len(
+                poorly_structured["structure_issues"]
+            )
 
 
 class TestContentValidationPipeline:
@@ -573,13 +625,20 @@ class TestContentValidationPipeline:
                 "overall_quality": 0.82,
                 "overall_completeness": 0.85,
                 "overall_consistency": 0.90,
-                "validation_summary": {"passed": 1, "failed": 0, "warnings": 1, "quality_threshold_met": True},
+                "validation_summary": {
+                    "passed": 1,
+                    "failed": 0,
+                    "warnings": 1,
+                    "quality_threshold_met": True,
+                },
             }
 
             # Mock storage
             doc_store_client.store_document.return_value = "validated_doc_123"
 
-            from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
+            from simulation.infrastructure.content.content_generation_pipeline import (
+                ContentGenerationPipeline,
+            )
 
             pipeline = ContentGenerationPipeline()
 
@@ -629,15 +688,26 @@ class TestContentValidationPipeline:
                         "quality_score": 0.3,
                         "completeness_score": 0.2,
                         "issues": ["Missing title", "Empty content", "No metadata"],
-                        "recommendations": ["Add title", "Include content", "Add metadata"],
+                        "recommendations": [
+                            "Add title",
+                            "Include content",
+                            "Add metadata",
+                        ],
                         "validation_status": "failed",
                     }
                 ],
                 "overall_quality": 0.3,
-                "validation_summary": {"passed": 0, "failed": 1, "warnings": 3, "quality_threshold_met": False},
+                "validation_summary": {
+                    "passed": 0,
+                    "failed": 1,
+                    "warnings": 3,
+                    "quality_threshold_met": False,
+                },
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -714,13 +784,19 @@ class TestContentValidationMetrics:
                 },
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
             documents = [
                 {"id": "doc1", "content": "Longer document content...", "metadata": {}},
-                {"id": "doc2", "content": "Shorter document content...", "metadata": {}},
+                {
+                    "id": "doc2",
+                    "content": "Shorter document content...",
+                    "metadata": {},
+                },
             ]
 
             result = await analysis_client.analyze_documents(documents)
@@ -752,7 +828,13 @@ class TestContentValidationMetrics:
 
             # Mock performance metrics
             mock_analysis_client.analyze_documents.return_value = {
-                "documents": [{"id": "perf_doc", "quality_score": 0.85, "processing_time_seconds": 0.8}],
+                "documents": [
+                    {
+                        "id": "perf_doc",
+                        "quality_score": 0.85,
+                        "processing_time_seconds": 0.8,
+                    }
+                ],
                 "performance": {
                     "total_processing_time": 0.8,
                     "average_processing_time": 0.8,
@@ -768,7 +850,9 @@ class TestContentValidationMetrics:
                 },
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -809,7 +893,11 @@ class TestContentValidationEdgeCases:
                         "id": "empty_doc",
                         "quality_score": 0.1,
                         "issues": ["Empty content", "Missing title", "No metadata"],
-                        "recommendations": ["Add meaningful content", "Include title", "Add metadata"],
+                        "recommendations": [
+                            "Add meaningful content",
+                            "Include title",
+                            "Add metadata",
+                        ],
                         "word_count": 0,
                         "validation_status": "failed",
                     }
@@ -817,7 +905,9 @@ class TestContentValidationEdgeCases:
                 "overall_quality": 0.1,
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -850,7 +940,8 @@ class TestContentValidationEdgeCases:
             # Create large content
             large_content = "# Large Document\n\n" + "\n\n".join(
                 [
-                    f"## Section {i}\n\n" + "This is a paragraph with some content. " * 20
+                    f"## Section {i}\n\n"
+                    + "This is a paragraph with some content. " * 20
                     for i in range(1, 51)  # 50 sections
                 ]
             )
@@ -862,7 +953,9 @@ class TestContentValidationEdgeCases:
                         "quality_score": 0.75,
                         "word_count": 5000,
                         "issues": ["Very long document may need splitting"],
-                        "recommendations": ["Consider splitting into multiple documents"],
+                        "recommendations": [
+                            "Consider splitting into multiple documents"
+                        ],
                         "processing_time_seconds": 2.5,
                         "validation_status": "passed_with_warnings",
                     }
@@ -870,7 +963,9 @@ class TestContentValidationEdgeCases:
                 "overall_quality": 0.75,
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 
@@ -912,14 +1007,18 @@ class TestContentValidationEdgeCases:
                             "special_characters": True,
                         },
                         "issues": ["Mixed language content detected"],
-                        "recommendations": ["Use consistent language throughout document"],
+                        "recommendations": [
+                            "Use consistent language throughout document"
+                        ],
                         "validation_status": "passed_with_warnings",
                     }
                 ],
                 "overall_quality": 0.7,
             }
 
-            from simulation.infrastructure.clients.ecosystem_clients import get_analysis_service_client
+            from simulation.infrastructure.clients.ecosystem_clients import (
+                get_analysis_service_client,
+            )
 
             analysis_client = get_analysis_service_client()
 

@@ -22,7 +22,12 @@ def render_overview_page():
 
     # Create tabs for different overview sections
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["📈 Key Metrics", "🎯 Active Simulations", "📋 Recent Activity", "⚡ Quick Actions"]
+        [
+            "📈 Key Metrics",
+            "🎯 Active Simulations",
+            "📋 Recent Activity",
+            "⚡ Quick Actions",
+        ]
     )
 
     with tab1:
@@ -98,7 +103,12 @@ def render_additional_metrics():
     with col1:
         st.markdown("**📊 Simulation Types**")
         # Mock data
-        simulation_types = {"Web Application": 45, "Mobile App": 23, "API Service": 18, "Data Pipeline": 14}
+        simulation_types = {
+            "Web Application": 45,
+            "Mobile App": 23,
+            "API Service": 18,
+            "Data Pipeline": 14,
+        }
 
         for sim_type, count in simulation_types.items():
             st.progress(count / 100, text=f"{sim_type}: {count}")
@@ -163,7 +173,11 @@ def render_active_simulations():
                     st.caption(f"Est. completion: {sim['estimated_completion']}")
 
             with col5:
-                if st.button("👁️ View", key=f"view_{sim['id']}", help=f"Monitor simulation {sim['id']}"):
+                if st.button(
+                    "👁️ View",
+                    key=f"view_{sim['id']}",
+                    help=f"Monitor simulation {sim['id']}",
+                ):
                     st.session_state.selected_simulation = sim["id"]
                     st.session_state.current_page = "monitor"
                     st.rerun()
@@ -225,7 +239,9 @@ def render_quick_actions():
 
     with col2:
         st.markdown("**📊 Monitor**")
-        if st.button("Active Simulations", key="quick_monitor", use_container_width=True):
+        if st.button(
+            "Active Simulations", key="quick_monitor", use_container_width=True
+        ):
             st.session_state.current_page = "monitor"
             st.rerun()
 
@@ -245,7 +261,9 @@ def render_quick_actions():
 
     with col4:
         st.markdown("**⚙️ Manage**")
-        if st.button("Configuration", key="quick_config_manage", use_container_width=True):
+        if st.button(
+            "Configuration", key="quick_config_manage", use_container_width=True
+        ):
             st.session_state.current_page = "config"
             st.rerun()
 

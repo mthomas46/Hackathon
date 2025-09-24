@@ -20,4 +20,10 @@ class SecurityMonitor:
         return []
 
 
-__all__ = ["AuthenticationManager", "AuthorizationManager", "AuditLogger", "AccessControlManager", "SecurityMonitor"]
+__all__ = [
+    "AuthenticationManager",
+    "AuthorizationManager",
+    "AuditLogger",
+    "AccessControlManager",
+    "SecurityMonitor",
+]

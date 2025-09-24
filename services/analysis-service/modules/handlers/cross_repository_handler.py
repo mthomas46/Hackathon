@@ -45,7 +45,9 @@ class CrossRepositoryAnalysisHandler(BaseAnalysisHandler):
         except Exception as e:
             error_msg = f"Cross-repository analysis failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
-            return await self._handle_error(e, f"cross-repo-{int(datetime.now(timezone.utc).timestamp())}")
+            return await self._handle_error(
+                e, f"cross-repo-{int(datetime.now(timezone.utc).timestamp())}"
+            )
 
     async def _mock_cross_repository_analysis(self, **kwargs) -> Dict[str, Any]:
         """Mock cross-repository analysis for testing purposes."""

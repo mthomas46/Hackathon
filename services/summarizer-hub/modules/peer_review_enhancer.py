@@ -42,7 +42,9 @@ class PeerReviewEnhancer:
         self.review_categories = self._get_review_categories()
         self._initialize_enhancer()
 
-    def _extract_document_features(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_document_features(
+        self, document_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Extract features from document for peer review analysis."""
         content = document_data.get("content", "")
         metadata = document_data.get("metadata", {})
@@ -57,7 +59,9 @@ class PeerReviewEnhancer:
             "code_blocks": len(re.findall(r"```[\s\S]*?```", content)),
             "links": len(re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content)),
             "headings": len(re.findall(r"^#{1,6}\s+.+", content, re.MULTILINE)),
-            "api_endpoints": len(re.findall(r"`(GET|POST|PUT|DELETE|PATCH)\s+[^`]+`", content)),
+            "api_endpoints": len(
+                re.findall(r"`(GET|POST|PUT|DELETE|PATCH)\s+[^`]+`", content)
+            ),
             "technical_terms": self._extract_technical_terms(content),
             "stakeholder_groups": self._identify_stakeholder_groups(document_data),
             "business_criticality": metadata.get("business_criticality", "medium"),
@@ -93,15 +97,26 @@ class PeerReviewEnhancer:
         stakeholder_groups = []
 
         # Analyze content for stakeholder indicators
-        if any(term in content for term in ["user", "customer", "end-user", "consumer"]):
+        if any(
+            term in content for term in ["user", "customer", "end-user", "consumer"]
+        ):
             stakeholder_groups.append("end_users")
-        if any(term in content for term in ["developer", "engineer", "programmer", "coder"]):
+        if any(
+            term in content for term in ["developer", "engineer", "programmer", "coder"]
+        ):
             stakeholder_groups.append("developers")
-        if any(term in content for term in ["admin", "administrator", "operator", "devops"]):
+        if any(
+            term in content for term in ["admin", "administrator", "operator", "devops"]
+        ):
             stakeholder_groups.append("administrators")
-        if any(term in content for term in ["manager", "lead", "architect", "director"]):
+        if any(
+            term in content for term in ["manager", "lead", "architect", "director"]
+        ):
             stakeholder_groups.append("management")
-        if any(term in content for term in ["security", "compliance", "audit", "governance"]):
+        if any(
+            term in content
+            for term in ["security", "compliance", "audit", "governance"]
+        ):
             stakeholder_groups.append("security_compliance")
         if any(term in content for term in ["support", "helpdesk", "customer service"]):
             stakeholder_groups.append("support_team")
@@ -161,25 +176,60 @@ class PeerReviewEnhancer:
                     "examples_coverage",
                     "troubleshooting_coverage",
                 ],
-                "thresholds": {"excellent": 0.9, "good": 0.75, "fair": 0.6, "poor": 0.4},
+                "thresholds": {
+                    "excellent": 0.9,
+                    "good": 0.75,
+                    "fair": 0.6,
+                    "poor": 0.4,
+                },
             },
             "accuracy": {
                 "weight": 0.20,
                 "description": "Technical accuracy and correctness",
-                "checks": ["factual_accuracy", "technical_correctness", "consistency_check", "version_accuracy"],
-                "thresholds": {"excellent": 0.95, "good": 0.85, "fair": 0.7, "poor": 0.5},
+                "checks": [
+                    "factual_accuracy",
+                    "technical_correctness",
+                    "consistency_check",
+                    "version_accuracy",
+                ],
+                "thresholds": {
+                    "excellent": 0.95,
+                    "good": 0.85,
+                    "fair": 0.7,
+                    "poor": 0.5,
+                },
             },
             "clarity": {
                 "weight": 0.18,
                 "description": "Clarity and readability",
-                "checks": ["sentence_complexity", "vocabulary_appropriateness", "structure_clarity", "logical_flow"],
-                "thresholds": {"excellent": 0.9, "good": 0.75, "fair": 0.6, "poor": 0.4},
+                "checks": [
+                    "sentence_complexity",
+                    "vocabulary_appropriateness",
+                    "structure_clarity",
+                    "logical_flow",
+                ],
+                "thresholds": {
+                    "excellent": 0.9,
+                    "good": 0.75,
+                    "fair": 0.6,
+                    "poor": 0.4,
+                },
             },
             "structure": {
                 "weight": 0.15,
                 "description": "Organization and structure",
-                "checks": ["heading_hierarchy", "section_organization", "navigation_aids", "content_chunking"],
-                "thresholds": {"excellent": 0.9, "good": 0.75, "fair": 0.6, "poor": 0.4},
+                "checks": [
+                    "heading_hierarchy",
+                    "section_organization",
+                    "navigation_aids",
+                    "content_chunking",
+                ],
+                "thresholds": {
+                    "excellent": 0.9,
+                    "good": 0.75,
+                    "fair": 0.6,
+                    "poor": 0.4,
+                },
             },
             "compliance": {
                 "weight": 0.12,
@@ -190,13 +240,28 @@ class PeerReviewEnhancer:
                     "seo_optimization",
                     "brand_consistency",
                 ],
-                "thresholds": {"excellent": 0.9, "good": 0.75, "fair": 0.6, "poor": 0.4},
+                "thresholds": {
+                    "excellent": 0.9,
+                    "good": 0.75,
+                    "fair": 0.6,
+                    "poor": 0.4,
+                },
             },
             "engagement": {
                 "weight": 0.10,
                 "description": "User engagement and effectiveness",
-                "checks": ["tone_appropriateness", "audience_targeting", "actionability", "value_proposition"],
-                "thresholds": {"excellent": 0.85, "good": 0.7, "fair": 0.55, "poor": 0.35},
+                "checks": [
+                    "tone_appropriateness",
+                    "audience_targeting",
+                    "actionability",
+                    "value_proposition",
+                ],
+                "thresholds": {
+                    "excellent": 0.85,
+                    "good": 0.7,
+                    "fair": 0.55,
+                    "poor": 0.35,
+                },
             },
         }
 
@@ -255,35 +320,84 @@ class PeerReviewEnhancer:
             },
             "major": {
                 "priority": "medium",
-                "issues": ["outdated_information", "missing_examples", "poor_structure", "grammar_errors"],
+                "issues": [
+                    "outdated_information",
+                    "missing_examples",
+                    "poor_structure",
+                    "grammar_errors",
+                ],
                 "description": "Issues that significantly impact usability or comprehension",
             },
             "minor": {
                 "priority": "low",
-                "issues": ["style_inconsistencies", "formatting_issues", "wording_improvements", "minor_typos"],
+                "issues": [
+                    "style_inconsistencies",
+                    "formatting_issues",
+                    "wording_improvements",
+                    "minor_typos",
+                ],
                 "description": "Issues that could be improved but don't prevent proper use",
             },
             "enhancement": {
                 "priority": "lowest",
-                "issues": ["additional_examples", "cross_references", "accessibility_improvements", "seo_optimization"],
+                "issues": [
+                    "additional_examples",
+                    "cross_references",
+                    "accessibility_improvements",
+                    "seo_optimization",
+                ],
                 "description": "Suggestions for making documentation even better",
             },
         }
 
-    def _analyze_content_completeness(self, content: str, doc_type: str) -> Dict[str, Any]:
+    def _analyze_content_completeness(
+        self, content: str, doc_type: str
+    ) -> Dict[str, Any]:
         """Analyze content completeness for the given document type."""
         analysis = {"score": 0.5, "issues": [], "suggestions": []}
 
         # Define required sections based on document type
         required_sections = {
-            "api_reference": ["authentication", "endpoints", "parameters", "examples", "errors"],
-            "user_guide": ["introduction", "prerequisites", "steps", "examples", "troubleshooting"],
-            "tutorial": ["overview", "prerequisites", "steps", "examples", "next_steps"],
-            "architecture": ["overview", "components", "data_flow", "deployment", "monitoring"],
-            "troubleshooting": ["symptoms", "causes", "solutions", "prevention", "references"],
+            "api_reference": [
+                "authentication",
+                "endpoints",
+                "parameters",
+                "examples",
+                "errors",
+            ],
+            "user_guide": [
+                "introduction",
+                "prerequisites",
+                "steps",
+                "examples",
+                "troubleshooting",
+            ],
+            "tutorial": [
+                "overview",
+                "prerequisites",
+                "steps",
+                "examples",
+                "next_steps",
+            ],
+            "architecture": [
+                "overview",
+                "components",
+                "data_flow",
+                "deployment",
+                "monitoring",
+            ],
+            "troubleshooting": [
+                "symptoms",
+                "causes",
+                "solutions",
+                "prevention",
+                "references",
+            ],
         }
 
-        expected_sections = required_sections.get(doc_type, ["introduction", "content", "examples"])
+        expected_sections = required_sections.get(
+            doc_type, ["introduction", "content", "examples"]
+        )
         content_lower = content.lower()
 
         found_sections = 0
@@ -299,7 +413,9 @@ class PeerReviewEnhancer:
                 section.replace("_", "-"),
             ]
 
-            section_found = any(pattern.lower() in content_lower for pattern in patterns)
+            section_found = any(
+                pattern.lower() in content_lower for pattern in patterns
+            )
             if section_found:
                 found_sections += 1
             else:
@@ -307,17 +423,27 @@ class PeerReviewEnhancer:
 
         # Calculate completeness score
         completeness_ratio = found_sections / len(expected_sections)
-        analysis["score"] = min(1.0, completeness_ratio + 0.2)  # Boost for partial coverage
+        analysis["score"] = min(
+            1.0, completeness_ratio + 0.2
+        )  # Boost for partial coverage
 
         # Generate issues and suggestions
         if missing_sections:
-            analysis["issues"].append(f"Missing sections: {', '.join(missing_sections[:3])}")
-            analysis["suggestions"].append(f"Consider adding sections for: {', '.join(missing_sections)}")
+            analysis["issues"].append(
+                f"Missing sections: {', '.join(missing_sections[:3])}"
+            )
+            analysis["suggestions"].append(
+                f"Consider adding sections for: {', '.join(missing_sections)}"
+            )
 
         if completeness_ratio < 0.6:
-            analysis["issues"].append("Content appears incomplete - missing key information")
+            analysis["issues"].append(
+                "Content appears incomplete - missing key information"
+            )
         elif completeness_ratio < 0.8:
-            analysis["suggestions"].append("Content coverage could be improved with additional sections")
+            analysis["suggestions"].append(
+                "Content coverage could be improved with additional sections"
+            )
 
         return analysis
 
@@ -326,34 +452,55 @@ class PeerReviewEnhancer:
         analysis = {"score": 0.7, "issues": [], "suggestions": []}
 
         # Check for version information
-        version_patterns = [r"v\d+\.\d+", r"version \d+", r"release \d+", r"updated.*\d{4}"]
+        version_patterns = [
+            r"v\d+\.\d+",
+            r"version \d+",
+            r"release \d+",
+            r"updated.*\d{4}",
+        ]
 
-        has_version_info = any(re.search(pattern, content, re.IGNORECASE) for pattern in version_patterns)
+        has_version_info = any(
+            re.search(pattern, content, re.IGNORECASE) for pattern in version_patterns
+        )
 
         if not has_version_info:
-            analysis["issues"].append("Missing version information for APIs, tools, or software mentioned")
-            analysis["suggestions"].append("Include version numbers and compatibility information")
+            analysis["issues"].append(
+                "Missing version information for APIs, tools, or software mentioned"
+            )
+            analysis["suggestions"].append(
+                "Include version numbers and compatibility information"
+            )
             analysis["score"] -= 0.1
 
         # Check for code examples
         code_blocks = len(re.findall(r"```[\s\S]*?```", content))
         if code_blocks == 0:
-            analysis["issues"].append("No code examples found - consider adding practical examples")
-            analysis["suggestions"].append("Add code snippets, command examples, or configuration samples")
+            analysis["issues"].append(
+                "No code examples found - consider adding practical examples"
+            )
+            analysis["suggestions"].append(
+                "Add code snippets, command examples, or configuration samples"
+            )
             analysis["score"] -= 0.15
 
         # Check for links and references
         links = len(re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content))
         if links == 0:
-            analysis["suggestions"].append("Consider adding links to related documentation or external resources")
+            analysis["suggestions"].append(
+                "Consider adding links to related documentation or external resources"
+            )
 
         # Check for outdated language patterns
         outdated_terms = ["old", "deprecated", "obsolete", "no longer supported"]
         outdated_count = sum(1 for term in outdated_terms if term in content.lower())
 
         if outdated_count > 2:
-            analysis["issues"].append("Multiple references to outdated or deprecated features")
-            analysis["suggestions"].append("Review and update references to deprecated features")
+            analysis["issues"].append(
+                "Multiple references to outdated or deprecated features"
+            )
+            analysis["suggestions"].append(
+                "Review and update references to deprecated features"
+            )
 
         return analysis
 
@@ -367,7 +514,9 @@ class PeerReviewEnhancer:
 
         if not sentences or not words:
             analysis["score"] = 0.3
-            analysis["issues"].append("Content appears to be poorly structured or incomplete")
+            analysis["issues"].append(
+                "Content appears to be poorly structured or incomplete"
+            )
             return analysis
 
         # Calculate readability metrics
@@ -377,8 +526,12 @@ class PeerReviewEnhancer:
         # Check sentence complexity
         complex_sentences = [s for s in sentences if len(word_tokenize(s)) > 30]
         if len(complex_sentences) > len(sentences) * 0.3:
-            analysis["issues"].append("Many sentences are overly complex and hard to read")
-            analysis["suggestions"].append("Break down long sentences into shorter, clearer statements")
+            analysis["issues"].append(
+                "Many sentences are overly complex and hard to read"
+            )
+            analysis["suggestions"].append(
+                "Break down long sentences into shorter, clearer statements"
+            )
             analysis["score"] -= 0.15
 
         # Check for passive voice (simple heuristic)
@@ -392,15 +545,25 @@ class PeerReviewEnhancer:
 
         passive_ratio = passive_sentences / len(sentences)
         if passive_ratio > 0.4:
-            analysis["suggestions"].append("Consider using more active voice to improve clarity")
+            analysis["suggestions"].append(
+                "Consider using more active voice to improve clarity"
+            )
             analysis["score"] -= 0.1
 
         # Check for jargon density
-        technical_terms = ["api", "endpoint", "authentication", "configuration", "deployment"]
+        technical_terms = [
+            "api",
+            "endpoint",
+            "authentication",
+            "configuration",
+            "deployment",
+        ]
         technical_count = sum(1 for word in words if word.lower() in technical_terms)
 
         if technical_count > len(words) * 0.1:  # More than 10% technical terms
-            analysis["suggestions"].append("Consider defining technical terms or providing a glossary")
+            analysis["suggestions"].append(
+                "Consider defining technical terms or providing a glossary"
+            )
             analysis["score"] -= 0.05
 
         return analysis
@@ -422,11 +585,17 @@ class PeerReviewEnhancer:
 
             # Check for logical progression
             sorted_levels = sorted(set(heading_levels))
-            expected_progression = list(range(min(sorted_levels), max(sorted_levels) + 1))
+            expected_progression = list(
+                range(min(sorted_levels), max(sorted_levels) + 1)
+            )
 
             if sorted_levels != expected_progression:
-                analysis["issues"].append("Heading hierarchy is not logical or has gaps")
-                analysis["suggestions"].append("Use consistent heading levels (H1→H2→H3) without skipping levels")
+                analysis["issues"].append(
+                    "Heading hierarchy is not logical or has gaps"
+                )
+                analysis["suggestions"].append(
+                    "Use consistent heading levels (H1→H2→H3) without skipping levels"
+                )
                 analysis["score"] -= 0.1
 
         # Check for table of contents
@@ -434,7 +603,9 @@ class PeerReviewEnhancer:
         has_toc = any(indicator in content.lower() for indicator in toc_indicators)
 
         if len(headings) > 5 and not has_toc:
-            analysis["suggestions"].append("Consider adding a table of contents for better navigation")
+            analysis["suggestions"].append(
+                "Consider adding a table of contents for better navigation"
+            )
             analysis["score"] -= 0.05
 
         # Check for lists and structure
@@ -442,7 +613,9 @@ class PeerReviewEnhancer:
         numbered_lists = len(re.findall(r"^[\s]*\d+\.\s+", content, re.MULTILINE))
 
         if bullet_points == 0 and numbered_lists == 0 and len(sentences) > 10:
-            analysis["suggestions"].append("Consider using bullet points or numbered lists to improve readability")
+            analysis["suggestions"].append(
+                "Consider using bullet points or numbered lists to improve readability"
+            )
             analysis["score"] -= 0.05
 
         return analysis
@@ -458,7 +631,9 @@ class PeerReviewEnhancer:
 
             if matches:
                 error_count = len(matches)
-                analysis["issues"].append(f"Found {error_count} potential grammar/spelling issues")
+                analysis["issues"].append(
+                    f"Found {error_count} potential grammar/spelling issues"
+                )
 
                 # Categorize errors
                 error_types = Counter(match.rule.category for match in matches)
@@ -466,13 +641,21 @@ class PeerReviewEnhancer:
 
                 for error_type, count in common_errors:
                     if error_type == "GRAMMAR":
-                        analysis["suggestions"].append("Review sentence structure and grammar")
+                        analysis["suggestions"].append(
+                            "Review sentence structure and grammar"
+                        )
                     elif error_type == "SPELLING":
-                        analysis["suggestions"].append("Check spelling and consider using spell check")
+                        analysis["suggestions"].append(
+                            "Check spelling and consider using spell check"
+                        )
                     elif error_type == "STYLE":
-                        analysis["suggestions"].append("Review writing style and consistency")
+                        analysis["suggestions"].append(
+                            "Review writing style and consistency"
+                        )
 
-                analysis["score"] -= min(0.2, error_count * 0.02)  # Reduce score for errors
+                analysis["score"] -= min(
+                    0.2, error_count * 0.02
+                )  # Reduce score for errors
 
         except Exception as e:
             logger.warning(f"Grammar check failed: {e}")
@@ -493,18 +676,28 @@ class PeerReviewEnhancer:
         for terms, description in inconsistent_pairs:
             term_counts = {term: words.count(term) for term in terms if term in terms}
             if len([count for count in term_counts.values() if count > 0]) > 1:
-                analysis["suggestions"].append(f"Inconsistent terminology: {description}")
+                analysis["suggestions"].append(
+                    f"Inconsistent terminology: {description}"
+                )
                 analysis["score"] -= 0.05
 
         return analysis
 
-    def _generate_overall_review_score(self, criteria_scores: Dict[str, float]) -> Dict[str, Any]:
+    def _generate_overall_review_score(
+        self, criteria_scores: Dict[str, float]
+    ) -> Dict[str, Any]:
         """Generate overall review score from individual criteria."""
         if not criteria_scores:
-            return {"overall_score": 0.5, "grade": "C", "description": "Insufficient data for comprehensive review"}
+            return {
+                "overall_score": 0.5,
+                "grade": "C",
+                "description": "Insufficient data for comprehensive review",
+            }
 
         # Calculate weighted average
-        total_weight = sum(criterion["weight"] for criterion in self.quality_criteria.values())
+        total_weight = sum(
+            criterion["weight"] for criterion in self.quality_criteria.values()
+        )
         weighted_sum = sum(
             criteria_scores.get(criterion_name, 0.5) * criterion_config["weight"]
             for criterion_name, criterion_config in self.quality_criteria.items()
@@ -529,10 +722,16 @@ class PeerReviewEnhancer:
             grade = "F"
             description = "Poor documentation quality requiring major revisions"
 
-        return {"overall_score": round(overall_score, 3), "grade": grade, "description": description}
+        return {
+            "overall_score": round(overall_score, 3),
+            "grade": grade,
+            "description": description,
+        }
 
     def _generate_review_feedback(
-        self, criteria_analyses: Dict[str, Dict[str, Any]], overall_score: Dict[str, Any]
+        self,
+        criteria_analyses: Dict[str, Dict[str, Any]],
+        overall_score: Dict[str, Any],
     ) -> List[Dict[str, Any]]:
         """Generate comprehensive review feedback."""
         feedback = []
@@ -554,7 +753,9 @@ class PeerReviewEnhancer:
                 feedback.append(
                     {
                         "type": "issue",
-                        "priority": self._determine_feedback_priority(criterion_name, analysis),
+                        "priority": self._determine_feedback_priority(
+                            criterion_name, analysis
+                        ),
                         "category": criterion_name,
                         "title": f'{criterion_name.replace("_", " ").title()} Issues',
                         "message": "; ".join(analysis["issues"]),
@@ -569,7 +770,9 @@ class PeerReviewEnhancer:
                         "priority": "medium",
                         "category": criterion_name,
                         "title": f'{criterion_name.replace("_", " ").title()} Suggestions',
-                        "message": "; ".join(analysis["suggestions"][:2]),  # Limit suggestions
+                        "message": "; ".join(
+                            analysis["suggestions"][:2]
+                        ),  # Limit suggestions
                         "score": analysis["score"],
                     }
                 )
@@ -587,7 +790,9 @@ class PeerReviewEnhancer:
 
         return feedback
 
-    def _determine_feedback_priority(self, criterion_name: str, analysis: Dict[str, Any]) -> str:
+    def _determine_feedback_priority(
+        self, criterion_name: str, analysis: Dict[str, Any]
+    ) -> str:
         """Determine feedback priority based on criterion and issues."""
         if criterion_name in ["accuracy", "completeness"] and analysis["score"] < 0.6:
             return "high"
@@ -599,7 +804,11 @@ class PeerReviewEnhancer:
             return "low"
 
     async def review_documentation(
-        self, content: str, doc_type: str = "general", title: str = "", metadata: Optional[Dict[str, Any]] = None
+        self,
+        content: str,
+        doc_type: str = "general",
+        title: str = "",
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Perform comprehensive peer review of documentation."""
 
@@ -617,27 +826,37 @@ class PeerReviewEnhancer:
             criteria_scores = {}
 
             # Analyze each quality criterion
-            criteria_analyses["completeness"] = self._analyze_content_completeness(content, doc_type)
+            criteria_analyses["completeness"] = self._analyze_content_completeness(
+                content, doc_type
+            )
             criteria_scores["completeness"] = criteria_analyses["completeness"]["score"]
 
             criteria_analyses["accuracy"] = self._analyze_technical_accuracy(content)
             criteria_scores["accuracy"] = criteria_analyses["accuracy"]["score"]
 
-            criteria_analyses["clarity"] = self._analyze_clarity_and_readability(content)
+            criteria_analyses["clarity"] = self._analyze_clarity_and_readability(
+                content
+            )
             criteria_scores["clarity"] = criteria_analyses["clarity"]["score"]
 
-            criteria_analyses["structure"] = self._analyze_structure_and_organization(content)
+            criteria_analyses["structure"] = self._analyze_structure_and_organization(
+                content
+            )
             criteria_scores["structure"] = criteria_analyses["structure"]["score"]
 
             criteria_analyses["compliance"] = self._analyze_grammar_and_style(content)
             criteria_scores["compliance"] = criteria_analyses["compliance"]["score"]
 
             # Calculate engagement score based on other factors
-            engagement_score = (criteria_scores["clarity"] + criteria_scores["structure"]) / 2
+            engagement_score = (
+                criteria_scores["clarity"] + criteria_scores["structure"]
+            ) / 2
             criteria_analyses["engagement"] = {
                 "score": engagement_score,
                 "issues": [],
-                "suggestions": ["Consider user engagement best practices for better adoption"],
+                "suggestions": [
+                    "Consider user engagement best practices for better adoption"
+                ],
             }
             criteria_scores["engagement"] = engagement_score
 
@@ -645,7 +864,9 @@ class PeerReviewEnhancer:
             overall_assessment = self._generate_overall_review_score(criteria_scores)
 
             # Generate feedback
-            feedback = self._generate_review_feedback(criteria_analyses, overall_assessment)
+            feedback = self._generate_review_feedback(
+                criteria_analyses, overall_assessment
+            )
 
             processing_time = time.time() - start_time
 
@@ -656,7 +877,9 @@ class PeerReviewEnhancer:
                 "criteria_analyses": criteria_analyses,
                 "criteria_scores": criteria_scores,
                 "feedback": feedback,
-                "review_summary": self._generate_review_summary(overall_assessment, feedback),
+                "review_summary": self._generate_review_summary(
+                    overall_assessment, feedback
+                ),
                 "processing_time": processing_time,
                 "review_timestamp": time.time(),
             }
@@ -699,7 +922,9 @@ class PeerReviewEnhancer:
 
         # Generate improvement roadmap
         if overall_assessment["grade"] in ["A", "B"]:
-            summary["improvement_roadmap"] = "Maintain current quality standards and consider minor enhancements"
+            summary["improvement_roadmap"] = (
+                "Maintain current quality standards and consider minor enhancements"
+            )
         elif overall_assessment["grade"] == "C":
             summary["improvement_roadmap"] = (
                 "Focus on addressing high-priority issues and implementing suggested improvements"
@@ -726,8 +951,12 @@ class PeerReviewEnhancer:
 
         try:
             # Review both versions
-            old_review = await self.review_documentation(old_content, doc_type, "Previous Version")
-            new_review = await self.review_documentation(new_content, doc_type, "Current Version")
+            old_review = await self.review_documentation(
+                old_content, doc_type, "Previous Version"
+            )
+            new_review = await self.review_documentation(
+                new_content, doc_type, "Current Version"
+            )
 
             if "error" in old_review or "error" in new_review:
                 return {
@@ -762,9 +991,13 @@ class PeerReviewEnhancer:
                 score_diff = new_score - old_score
 
                 if score_diff > 0.1:
-                    improvements.append(f"{criterion.replace('_', ' ').title()}: +{score_diff:.2f}")
+                    improvements.append(
+                        f"{criterion.replace('_', ' ').title()}: +{score_diff:.2f}"
+                    )
                 elif score_diff < -0.1:
-                    regressions.append(f"{criterion.replace('_', ' ').title()}: {score_diff:.2f}")
+                    regressions.append(
+                        f"{criterion.replace('_', ' ').title()}: {score_diff:.2f}"
+                    )
 
             comparison["improvements"] = improvements
             comparison["regressions"] = regressions
@@ -793,7 +1026,10 @@ peer_review_enhancer = PeerReviewEnhancer()
 
 
 async def review_documentation(
-    content: str, doc_type: str = "general", title: str = "", metadata: Optional[Dict[str, Any]] = None
+    content: str,
+    doc_type: str = "general",
+    title: str = "",
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Convenience function for documentation peer review.
 
@@ -806,10 +1042,14 @@ async def review_documentation(
     Returns:
         Comprehensive peer review results
     """
-    return await peer_review_enhancer.review_documentation(content, doc_type, title, metadata)
+    return await peer_review_enhancer.review_documentation(
+        content, doc_type, title, metadata
+    )
 
 
-async def compare_document_versions(old_content: str, new_content: str, doc_type: str = "general") -> Dict[str, Any]:
+async def compare_document_versions(
+    old_content: str, new_content: str, doc_type: str = "general"
+) -> Dict[str, Any]:
     """Convenience function for comparing document versions.
 
     Args:
@@ -820,4 +1060,6 @@ async def compare_document_versions(old_content: str, new_content: str, doc_type
     Returns:
         Comparison results between versions
     """
-    return await peer_review_enhancer.compare_document_versions(old_content, new_content, doc_type)
+    return await peer_review_enhancer.compare_document_versions(
+        old_content, new_content, doc_type
+    )

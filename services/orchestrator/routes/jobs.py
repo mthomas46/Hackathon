@@ -30,4 +30,9 @@ class NotifyConsolidationRequest(BaseModel):
 @router.post("/jobs/notify-consolidation")
 async def notify_consolidation(req: NotifyConsolidationRequest):
     """Notify about consolidation jobs."""
-    return {"status": "notified", "min_confidence": req.min_confidence, "limit": req.limit, "jobs_notified": 5}
+    return {
+        "status": "notified",
+        "min_confidence": req.min_confidence,
+        "limit": req.limit,
+        "jobs_notified": 5,
+    }

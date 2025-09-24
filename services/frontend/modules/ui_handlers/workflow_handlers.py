@@ -3,7 +3,6 @@
 Handles workflow and job status visualization.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..shared_utils import (
@@ -25,7 +24,9 @@ class WorkflowUIHandlers:
             clients = get_frontend_clients()
 
             # Get workflow and job status data
-            workflow_data = fetch_service_data("orchestrator", "/api/workflows/jobs/status", clients=clients)
+            workflow_data = fetch_service_data(
+                "orchestrator", "/api/workflows/jobs/status", clients=clients
+            )
             workflow_data.get("active_jobs", [])
             workflow_data.get("workflow_stats", {})
             workflow_data.get("recent_history", [])
@@ -298,7 +299,7 @@ class WorkflowUIHandlers:
             let html = '<div class="status-grid">';
 
             // Overall statistics
-            html += \`
+            html += r"""
                 <div class="status-card">
                     <div class="status-label">Active Workflows</div>
                     <div class="status-value">{{workflowData.active_jobs?.length || 0}</div>
@@ -319,7 +320,7 @@ class WorkflowUIHandlers:
                     <div class="status-value">{{stats.total_failed || 0}</div>
                     <div>Error Count</div>
                 </div>
-            \`;
+            """;
 
             html += '</div>';
 
@@ -328,30 +329,30 @@ class WorkflowUIHandlers:
                 html += '<h4>Workflow Performance Metrics</h4><div class="metric-grid">';
 
                 if (stats.average_execution_time) {
-                    html += \`
+                    html += `
                         <div class="metric-item">
                             <div class="metric-label">Avg Execution Time</div>
                             <div class="metric-value">{{stats.average_execution_time.toFixed(1)}s</div>
                         </div>
-                    \`;
+                    `;
                 }
 
                 if (stats.longest_running) {
-                    html += \`
+                    html += `
                         <div class="metric-item">
                             <div class="metric-label">Longest Running</div>
                             <div class="metric-value">{{stats.longest_running}s</div>
                         </div>
-                    \`;
+                    `;
                 }
 
                 if (stats.most_active_service) {
-                    html += \`
+                    html += `
                         <div class="metric-item">
                             <div class="metric-label">Most Active Service</div>
                             <div class="metric-value">{{stats.most_active_service}</div>
                         </div>
-                    \`;
+                    `;
                 }
 
                 html += '</div>';
@@ -376,7 +377,7 @@ class WorkflowUIHandlers:
                 const progress = job.progress || 0;
                 const startTime = job.start_time ? new Date(job.start_time).toLocaleString() : 'Unknown';
 
-                html += \`
+                html += `
                     <div class="job-item {{status}">
                         <div class="job-name">{{job.name || 'Unnamed Job'}</div>
                         <div class="job-meta">
@@ -392,7 +393,7 @@ class WorkflowUIHandlers:
                             Progress: {{progress}% | {{job.current_step || 'Processing...'}
                         </div>
                     </div>
-                \`;
+                `;
             });
 
             document.getElementById('jobs-container').innerHTML = html;
@@ -425,9 +426,9 @@ class WorkflowUIHandlers:
                 const startTime = job.start_time ? new Date(job.start_time).toLocaleString() : 'Unknown';
                 const duration = job.duration ? job.duration + 's' : 'N/A';
                 const statusClass = job.status === 'completed' ? 'completed' :
-                                  job.status === 'failed' ? 'failed' : '';
+                                job.status === 'failed' ? 'failed' : '';
 
-                html += \`
+                html += `
                     <tr>
                         <td>{{job.name || 'Unnamed'}</td>
                         <td><span class="badge {{statusClass}">{{job.status || 'unknown'}</span></td>
@@ -435,7 +436,7 @@ class WorkflowUIHandlers:
                         <td>{{duration}</td>
                         <td>{{job.service || 'Unknown'}</td>
                     </tr>
-                \`;
+                `;
             });
 
             html += '</tbody></table>';
@@ -457,5 +458,7 @@ class WorkflowUIHandlers:
             return create_html_response(html, "Workflow & Job Status")
         except Exception as e:
             return handle_frontend_error(
-                "render workflows status", e, **build_frontend_context("render_workflows_status")
+                "render workflows status",
+                e,
+                **build_frontend_context("render_workflows_status")
             )

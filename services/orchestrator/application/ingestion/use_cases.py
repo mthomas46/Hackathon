@@ -27,7 +27,11 @@ class GetIngestionStatusUseCase(UseCase):
     async def execute(self, query: GetIngestionStatusQuery) -> Optional[Dict[str, Any]]:
         """Execute the get ingestion status use case."""
         # Placeholder implementation
-        return {"ingestion_id": query.ingestion_id, "status": "completed", "progress_percentage": 100}
+        return {
+            "ingestion_id": query.ingestion_id,
+            "status": "completed",
+            "progress_percentage": 100,
+        }
 
 
 class ListIngestionsUseCase(UseCase):

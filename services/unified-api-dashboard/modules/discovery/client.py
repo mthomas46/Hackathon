@@ -41,7 +41,9 @@ class DiscoveryClient:
     async def register_service(self, service_info: Dict[str, Any]) -> bool:
         """Register a new service."""
         try:
-            response = await self.client.post(f"{self.base_url}/register", json=service_info)
+            response = await self.client.post(
+                f"{self.base_url}/register", json=service_info
+            )
             response.raise_for_status()
             return True
         except Exception as e:

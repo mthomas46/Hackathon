@@ -20,7 +20,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 import redis.asyncio as redis
 
-from services.shared.core.constants_new import ServiceNames
+# Service name now handled by standardized config system
 from services.shared.monitoring.logging import fire_and_forget
 
 
@@ -130,7 +130,9 @@ class EventStore:
                 await self.redis.rpush(event_key, event.event_id)
 
                 # Add to event type index
-                await self.redis.sadd(f"events:{event.event_type.value}", event.event_id)
+                await self.redis.sadd(
+                    f"events:{event.event_type.value}", event.event_id
+                )
 
             # Store in memory
             if event.aggregate_id not in self.event_streams:
@@ -143,10 +145,14 @@ class EventStore:
             return True
 
         except Exception as e:
-            fire_and_forget("error", f"Failed to store event {event.event_id}: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "error", f"Failed to store event {event.event_id}: {e}", "orchestrator"
+            )
             return False
 
-    async def get_aggregate_events(self, aggregate_id: str, aggregate_type: str = "workflow") -> List[WorkflowEvent]:
+    async def get_aggregate_events(
+        self, aggregate_id: str, aggregate_type: str = "workflow"
+    ) -> List[WorkflowEvent]:
         """Get all events for an aggregate."""
         try:
             events = []
@@ -170,11 +176,15 @@ class EventStore:
 
         except Exception as e:
             fire_and_forget(
-                "error", f"Failed to get aggregate events for {aggregate_id}: {e}", ServiceNames.ORCHESTRATOR
+                "error",
+                f"Failed to get aggregate events for {aggregate_id}: {e}",
+                "orchestrator",
             )
             return []
 
-    async def get_events_by_type(self, event_type: EventType, limit: int = 100) -> List[WorkflowEvent]:
+    async def get_events_by_type(
+        self, event_type: EventType, limit: int = 100
+    ) -> List[WorkflowEvent]:
         """Get events by type."""
         try:
             events = []
@@ -193,10 +203,16 @@ class EventStore:
             return events
 
         except Exception as e:
-            fire_and_forget("error", f"Failed to get events by type {event_type.value}: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "error",
+                f"Failed to get events by type {event_type.value}: {e}",
+                "orchestrator",
+            )
             return []
 
-    async def replay_events(self, aggregate_id: str, aggregate_type: str = "workflow") -> Dict[str, Any]:
+    async def replay_events(
+        self, aggregate_id: str, aggregate_type: str = "workflow"
+    ) -> Dict[str, Any]:
         """Replay events to reconstruct aggregate state."""
         events = await self.get_aggregate_events(aggregate_id, aggregate_type)
 
@@ -218,7 +234,9 @@ class EventStore:
 
         return state
 
-    async def _apply_event_to_state(self, state: Dict[str, Any], event: WorkflowEvent) -> Dict[str, Any]:
+    async def _apply_event_to_state(
+        self, state: Dict[str, Any], event: WorkflowEvent
+    ) -> Dict[str, Any]:
         """Apply event to aggregate state."""
         if event.event_type == EventType.WORKFLOW_STARTED:
             state["current_state"] = "running"
@@ -314,7 +332,7 @@ class EventDrivenWorkflowEngine:
     async def start_event_processing(self):
         """Start event processing loop."""
         asyncio.create_task(self._event_processing_loop())
-        fire_and_forget("info", "Event-driven workflow engine started", ServiceNames.ORCHESTRATOR)
+        fire_and_forget("info", "Event-driven workflow engine started", "orchestrator")
 
     async def _event_processing_loop(self):
         """Main event processing loop."""
@@ -329,7 +347,9 @@ class EventDrivenWorkflowEngine:
                 self.event_queue.task_done()
 
             except Exception as e:
-                fire_and_forget("error", f"Error in event processing loop: {e}", ServiceNames.ORCHESTRATOR)
+                fire_and_forget(
+                    "error", f"Error in event processing loop: {e}", "orchestrator"
+                )
 
     async def _process_event(self, event: WorkflowEvent):
         """Process individual event."""
@@ -373,7 +393,9 @@ class EventDrivenWorkflowEngine:
             if workflow_id in self.active_workflows:
                 self.active_workflows[workflow_id]["status"] = "failed"
                 self.active_workflows[workflow_id]["failed_at"] = event.timestamp
-                self.active_workflows[workflow_id]["failure_reason"] = event.payload.get("error")
+                self.active_workflows[workflow_id]["failure_reason"] = (
+                    event.payload.get("error")
+                )
 
         # Update event count
         if workflow_id in self.active_workflows:
@@ -387,7 +409,9 @@ class EventDrivenWorkflowEngine:
         """Register event processor."""
         self.event_processors[event_type].append(processor)
 
-    async def create_event_driven_workflow(self, workflow_definition: Dict[str, Any]) -> str:
+    async def create_event_driven_workflow(
+        self, workflow_definition: Dict[str, Any]
+    ) -> str:
         """Create event-driven workflow definition."""
         workflow_id = f"edw_{uuid.uuid4().hex[:8]}"
 
@@ -399,7 +423,9 @@ class EventDrivenWorkflowEngine:
 
         return workflow_id
 
-    async def execute_event_driven_workflow(self, workflow_id: str, initial_payload: Dict[str, Any]) -> str:
+    async def execute_event_driven_workflow(
+        self, workflow_id: str, initial_payload: Dict[str, Any]
+    ) -> str:
         """Execute event-driven workflow."""
         if workflow_id not in self.workflow_definitions:
             raise ValueError(f"Workflow definition {workflow_id} not found")
@@ -438,7 +464,9 @@ class ReactiveWorkflowManager:
             self.event_streams[stream_id] = asyncio.Queue()
 
             # Start stream processor
-            self.stream_processors[stream_id] = asyncio.create_task(self._process_event_stream(stream_id))
+            self.stream_processors[stream_id] = asyncio.create_task(
+                self._process_event_stream(stream_id)
+            )
 
         return stream_id
 
@@ -447,7 +475,9 @@ class ReactiveWorkflowManager:
         if stream_id in self.event_streams:
             await self.event_streams[stream_id].put(event)
 
-    def register_workflow_reaction(self, event_pattern: str, reaction_handler: Callable):
+    def register_workflow_reaction(
+        self, event_pattern: str, reaction_handler: Callable
+    ):
         """Register workflow reaction to event pattern."""
         self.workflow_reactions[event_pattern].append(reaction_handler)
 
@@ -467,13 +497,20 @@ class ReactiveWorkflowManager:
 
                 # Execute reactions
                 if matching_reactions:
-                    tasks = [asyncio.create_task(reaction(event)) for reaction in matching_reactions]
+                    tasks = [
+                        asyncio.create_task(reaction(event))
+                        for reaction in matching_reactions
+                    ]
                     await asyncio.gather(*tasks, return_exceptions=True)
 
                 stream_queue.task_done()
 
             except Exception as e:
-                fire_and_forget("error", f"Error processing event stream {stream_id}: {e}", ServiceNames.ORCHESTRATOR)
+                fire_and_forget(
+                    "error",
+                    f"Error processing event stream {stream_id}: {e}",
+                    "orchestrator",
+                )
 
     def _matches_event_pattern(self, event: WorkflowEvent, pattern: str) -> bool:
         """Check if event matches pattern."""
@@ -512,31 +549,47 @@ async def initialize_event_driven_orchestration():
     await event_driven_engine.start_event_processing()
 
     # Register sample event handlers
-    event_store.register_event_handler(EventType.WORKFLOW_STARTED, handle_workflow_started)
-    event_store.register_event_handler(EventType.WORKFLOW_COMPLETED, handle_workflow_completed)
+    event_store.register_event_handler(
+        EventType.WORKFLOW_STARTED, handle_workflow_started
+    )
+    event_store.register_event_handler(
+        EventType.WORKFLOW_COMPLETED, handle_workflow_completed
+    )
     event_store.register_event_handler(EventType.ERROR_OCCURRED, handle_error_event)
 
     # Register CQRS handlers
-    cqrs_handler.register_command_handler("start_workflow", handle_start_workflow_command)
-    cqrs_handler.register_query_handler("get_workflow_status", handle_get_workflow_status_query)
+    cqrs_handler.register_command_handler(
+        "start_workflow", handle_start_workflow_command
+    )
+    cqrs_handler.register_query_handler(
+        "get_workflow_status", handle_get_workflow_status_query
+    )
 
-    fire_and_forget("info", "Event-driven orchestration initialized", ServiceNames.ORCHESTRATOR)
+    fire_and_forget("info", "Event-driven orchestration initialized", "orchestrator")
 
 
 # Sample event handlers
 async def handle_workflow_started(event: WorkflowEvent):
     """Handle workflow started event."""
-    fire_and_forget("info", f"Workflow {event.workflow_id} started via event", ServiceNames.ORCHESTRATOR)
+    fire_and_forget(
+        "info", f"Workflow {event.workflow_id} started via event", "orchestrator"
+    )
 
 
 async def handle_workflow_completed(event: WorkflowEvent):
     """Handle workflow completed event."""
-    fire_and_forget("info", f"Workflow {event.workflow_id} completed via event", ServiceNames.ORCHESTRATOR)
+    fire_and_forget(
+        "info", f"Workflow {event.workflow_id} completed via event", "orchestrator"
+    )
 
 
 async def handle_error_event(event: WorkflowEvent):
     """Handle error event."""
-    fire_and_forget("error", f"Error in workflow {event.workflow_id}: {event.payload}", ServiceNames.ORCHESTRATOR)
+    fire_and_forget(
+        "error",
+        f"Error in workflow {event.workflow_id}: {event.payload}",
+        "orchestrator",
+    )
 
 
 # Sample CQRS handlers
@@ -547,7 +600,12 @@ async def handle_start_workflow_command(command: Dict[str, Any]) -> Dict[str, An
     return {
         "success": True,
         "workflow_id": workflow_id,
-        "events": [{"type": EventType.WORKFLOW_STARTED.value, "payload": {"workflow_id": workflow_id}}],
+        "events": [
+            {
+                "type": EventType.WORKFLOW_STARTED.value,
+                "payload": {"workflow_id": workflow_id},
+            }
+        ],
     }
 
 
@@ -556,4 +614,7 @@ async def handle_get_workflow_status_query(query: Dict[str, Any]) -> Dict[str, A
     workflow_id = query["workflow_id"]
     status = await event_driven_engine.get_workflow_status(workflow_id)
 
-    return {"workflow_id": workflow_id, "status": status or {"error": "Workflow not found"}}
+    return {
+        "workflow_id": workflow_id,
+        "status": status or {"error": "Workflow not found"},
+    }

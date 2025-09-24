@@ -10,7 +10,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 
-
 class TestAuthenticationEndpoints:
     """Test authentication API endpoints."""
 
@@ -53,7 +52,9 @@ class TestAuthenticationEndpoints:
     async def test_logout(self, async_client):
         """Test user logout."""
         # First login to get a token
-        with patch("services.unified-api-dashboard.modules.security.auth.UserManager.authenticate_user") as mock_auth:
+        with patch(
+            "services.unified-api-dashboard.modules.security.auth.UserManager.authenticate_user"
+        ) as mock_auth:
             mock_user = Mock()
             mock_user.user_id = "test_user"
             mock_user.username = "testuser"
@@ -62,7 +63,8 @@ class TestAuthenticationEndpoints:
             mock_auth.return_value = mock_user
 
             login_response = await async_client.post(
-                "/api/auth/login", json={"username": "testuser", "password": "password123"}
+                "/api/auth/login",
+                json={"username": "testuser", "password": "password123"},
             )
             token = login_response.json()["data"]["token"]
 
@@ -121,7 +123,9 @@ class TestAnalyticsEndpoints:
         """Test API request recording."""
         request_data = sample_usage_data[0]
 
-        response = await async_client.post("/api/analytics/record-request", json=request_data)
+        response = await async_client.post(
+            "/api/analytics/record-request", json=request_data
+        )
 
         # Should require authentication
         assert response.status_code in [401, 403]
@@ -131,7 +135,9 @@ class TestAnalyticsEndpoints:
         """Test error recording."""
         error_data = sample_error_data[0]
 
-        response = await async_client.post("/api/analytics/record-error", json=error_data)
+        response = await async_client.post(
+            "/api/analytics/record-error", json=error_data
+        )
 
         # Should require authentication
         assert response.status_code in [401, 403]
@@ -143,9 +149,15 @@ class TestDeveloperToolsEndpoints:
     @pytest.mark.asyncio
     async def test_generate_client(self, async_client, sample_openapi_spec):
         """Test client code generation."""
-        request_data = {"service_name": "test-service", "language": "python", "openapi_spec": sample_openapi_spec}
+        request_data = {
+            "service_name": "test-service",
+            "language": "python",
+            "openapi_spec": sample_openapi_spec,
+        }
 
-        response = await async_client.post("/api/tools/generate-client", json=request_data)
+        response = await async_client.post(
+            "/api/tools/generate-client", json=request_data
+        )
 
         # Should require authentication
         assert response.status_code in [401, 403]
@@ -153,9 +165,14 @@ class TestDeveloperToolsEndpoints:
     @pytest.mark.asyncio
     async def test_validate_spec(self, async_client, sample_openapi_spec):
         """Test OpenAPI specification validation."""
-        request_data = {"service_name": "test-service", "openapi_spec": sample_openapi_spec}
+        request_data = {
+            "service_name": "test-service",
+            "openapi_spec": sample_openapi_spec,
+        }
 
-        response = await async_client.post("/api/tools/validate-spec", json=request_data)
+        response = await async_client.post(
+            "/api/tools/validate-spec", json=request_data
+        )
 
         # Should require authentication
         assert response.status_code in [401, 403]
@@ -169,7 +186,9 @@ class TestDeveloperToolsEndpoints:
             "config": {"concurrent_users": 5, "duration_seconds": 10},
         }
 
-        response = await async_client.post("/api/tools/run-integration-test", json=request_data)
+        response = await async_client.post(
+            "/api/tools/run-integration-test", json=request_data
+        )
 
         # Should require authentication
         assert response.status_code in [401, 403]
@@ -294,7 +313,9 @@ class TestTestingEndpoints:
     @pytest.mark.asyncio
     async def test_execute_api_test(self, async_client, sample_api_request):
         """Test API test execution."""
-        response = await async_client.post("/api/testing/execute", json=sample_api_request)
+        response = await async_client.post(
+            "/api/testing/execute", json=sample_api_request
+        )
 
         # Should require authentication
         assert response.status_code in [401, 403]
@@ -315,7 +336,9 @@ class TestErrorHandling:
     async def test_invalid_json_payload(self, async_client):
         """Test handling of invalid JSON payloads."""
         response = await async_client.post(
-            "/api/auth/login", content="invalid json", headers={"Content-Type": "application/json"}
+            "/api/auth/login",
+            content="invalid json",
+            headers={"Content-Type": "application/json"},
         )
 
         # Should handle gracefully

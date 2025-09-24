@@ -6,11 +6,10 @@ Handles data access operations for prompt relationships and semantic connections
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import PromptRelationship
-from services.prompt_store.db.queries import execute_query
-from services.shared.utilities import validate_sql_identifier
+from services.shared.utilities import SqlRepository, validate_sql_identifier
 
 
-class RelationshipsRepository:
+class RelationshipsRepository(SqlRepository[PromptRelationship]):
     """Repository for prompt relationship operations."""
 
     VALID_RELATIONSHIP_TYPES = {
@@ -24,12 +23,27 @@ class RelationshipsRepository:
         "conflicts",  # Source conflicts with target
     }
 
-    def __init__(self):
-        self.table_name = "prompt_relationships"
+    def __init__(self, connection_string: str):
+        from ...db.connection import get_prompt_store_connection_string
+
+        super().__init__(
+            PromptRelationship,
+            connection_string or get_prompt_store_connection_string(),
+        )
 
         # Validate table name to prevent SQL injection
         if not validate_sql_identifier(self.table_name):
             raise ValueError(f"Invalid table name: {self.table_name}")
+
+    def _dict_to_entity(self, data: Dict[str, Any]) -> PromptRelationship:
+        """Convert database row to PromptRelationship entity."""
+        # Handle JSON deserialization for metadata
+        if "metadata" in data and isinstance(data["metadata"], str):
+            import json
+
+            data["metadata"] = json.loads(data["metadata"])
+
+        return PromptRelationship.from_dict(data)
 
     def create_relationship(
         self,
@@ -51,7 +65,9 @@ class RelationshipsRepository:
         # Check if relationship already exists
         existing = self.get_relationship(source_id, target_id, relationship_type)
         if existing:
-            raise ValueError(f"Relationship {relationship_type} already exists between {source_id} and {target_id}")
+            raise ValueError(
+                f"Relationship {relationship_type} already exists between {source_id} and {target_id}"
+            )
 
         relationship = PromptRelationship(
             source_prompt_id=source_id,
@@ -87,29 +103,35 @@ class RelationshipsRepository:
 
         return relationship
 
-    def get_relationship(self, source_id: str, target_id: str, relationship_type: str) -> Optional[PromptRelationship]:
+    def get_relationship(
+        self, source_id: str, target_id: str, relationship_type: str
+    ) -> Optional[PromptRelationship]:
         """Get a specific relationship."""
         query = f"""
             SELECT id, source_prompt_id, target_prompt_id, relationship_type,
-                   strength, metadata, created_by, created_at, updated_at
+                    strength, metadata, created_by, created_at, updated_at
             FROM {self.table_name}
             WHERE source_prompt_id = ? AND target_prompt_id = ? AND relationship_type = ?
         """  # nosec: Table name validated in __init__
 
-        row = execute_query(query, (source_id, target_id, relationship_type), fetch_one=True)
+        row = execute_query(
+            query, (source_id, target_id, relationship_type), fetch_one=True
+        )
         if not row:
             return None
 
         return PromptRelationship.from_dict(row)
 
-    def get_relationships_for_prompt(self, prompt_id: str, direction: str = "both") -> List[PromptRelationship]:
+    def get_relationships_for_prompt(
+        self, prompt_id: str, direction: str = "both"
+    ) -> List[PromptRelationship]:
         """Get all relationships for a prompt."""
 
         if direction == "outgoing":
             # Relationships where this prompt is the source
             query = f"""
                 SELECT id, source_prompt_id, target_prompt_id, relationship_type,
-                       strength, metadata, created_by, created_at, updated_at
+                        strength, metadata, created_by, created_at, updated_at
                 FROM {self.table_name}
                 WHERE source_prompt_id = ?
                 ORDER BY created_at DESC
@@ -120,7 +142,7 @@ class RelationshipsRepository:
             # Relationships where this prompt is the target
             query = f"""
                 SELECT id, source_prompt_id, target_prompt_id, relationship_type,
-                       strength, metadata, created_by, created_at, updated_at
+                        strength, metadata, created_by, created_at, updated_at
                 FROM {self.table_name}
                 WHERE target_prompt_id = ?
                 ORDER BY created_at DESC
@@ -130,7 +152,7 @@ class RelationshipsRepository:
         else:  # both
             query = f"""
                 SELECT id, source_prompt_id, target_prompt_id, relationship_type,
-                       strength, metadata, created_by, created_at, updated_at
+                        strength, metadata, created_by, created_at, updated_at
                 FROM {self.table_name}
                 WHERE source_prompt_id = ? OR target_prompt_id = ?
                 ORDER BY created_at DESC
@@ -140,7 +162,9 @@ class RelationshipsRepository:
         rows = execute_query(query, params, fetch_all=True)
         return [PromptRelationship.from_dict(row) for row in rows]
 
-    def update_relationship_strength(self, relationship_id: str, new_strength: float) -> bool:
+    def update_relationship_strength(
+        self, relationship_id: str, new_strength: float
+    ) -> bool:
         """Update the strength of a relationship."""
         if not (0.0 <= new_strength <= 1.0):
             raise ValueError("Relationship strength must be between 0.0 and 1.0")

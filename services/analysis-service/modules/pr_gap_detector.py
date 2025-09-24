@@ -76,7 +76,12 @@ class PRGapDetector:
         }
 
         self.quality_patterns = {
-            "error_handling": [r"try.*catch", r"except", r"error.*handling", r"exception"],
+            "error_handling": [
+                r"try.*catch",
+                r"except",
+                r"error.*handling",
+                r"exception",
+            ],
             "logging": [r"log", r"logger", r"logging", r"audit"],
             "input_validation": [r"validate", r"sanitize", r"check", r"verify"],
             "configuration": [r"config", r"environment", r"setting", r"parameter"],
@@ -98,13 +103,19 @@ class PRGapDetector:
         gaps = []
 
         # Detect requirement gaps
-        gaps.extend(self._detect_requirement_gaps(pr_data, jira_data, cross_reference_results))
+        gaps.extend(
+            self._detect_requirement_gaps(pr_data, jira_data, cross_reference_results)
+        )
 
         # Detect testing gaps
         gaps.extend(self._detect_testing_gaps(pr_data, jira_data))
 
         # Detect documentation gaps
-        gaps.extend(self._detect_documentation_gaps(pr_data, confluence_docs, cross_reference_results))
+        gaps.extend(
+            self._detect_documentation_gaps(
+                pr_data, confluence_docs, cross_reference_results
+            )
+        )
 
         # Detect security gaps
         gaps.extend(self._detect_security_gaps(pr_data))
@@ -121,7 +132,10 @@ class PRGapDetector:
         return gaps
 
     def _detect_requirement_gaps(
-        self, pr_data: Dict[str, Any], jira_data: Dict[str, Any], cross_reference_results: Dict[str, Any]
+        self,
+        pr_data: Dict[str, Any],
+        jira_data: Dict[str, Any],
+        cross_reference_results: Dict[str, Any],
     ) -> List[DetectedGap]:
         """Detect gaps in requirements implementation."""
         gaps = []
@@ -129,7 +143,11 @@ class PRGapDetector:
         # Check cross-reference results for alignment issues
         alignment_gaps = cross_reference_results.get("identified_gaps", [])
         for gap in alignment_gaps:
-            severity = GapSeverity.HIGH if "not implemented" in gap.lower() else GapSeverity.MEDIUM
+            severity = (
+                GapSeverity.HIGH
+                if "not implemented" in gap.lower()
+                else GapSeverity.MEDIUM
+            )
             gaps.append(
                 DetectedGap(
                     gap_type=GapType.REQUIREMENT,
@@ -164,7 +182,9 @@ class PRGapDetector:
 
         return gaps
 
-    def _detect_testing_gaps(self, pr_data: Dict[str, Any], jira_data: Dict[str, Any]) -> List[DetectedGap]:
+    def _detect_testing_gaps(
+        self, pr_data: Dict[str, Any], jira_data: Dict[str, Any]
+    ) -> List[DetectedGap]:
         """Detect gaps in testing coverage."""
         gaps = []
 
@@ -172,8 +192,14 @@ class PRGapDetector:
         pr_description = pr_data.get("description", "").lower()
 
         # Check for test files
-        test_files = [f for f in files_changed if "test" in f.lower() or "spec" in f.lower()]
-        code_files = [f for f in files_changed if any(ext in f for ext in [".py", ".js", ".java", ".go"])]
+        test_files = [
+            f for f in files_changed if "test" in f.lower() or "spec" in f.lower()
+        ]
+        code_files = [
+            f
+            for f in files_changed
+            if any(ext in f for ext in [".py", ".js", ".java", ".go"])
+        ]
 
         # No test files for code changes
         if code_files and not test_files:
@@ -239,7 +265,10 @@ class PRGapDetector:
         return gaps
 
     def _detect_documentation_gaps(
-        self, pr_data: Dict[str, Any], confluence_docs: List[Dict[str, Any]], cross_reference_results: Dict[str, Any]
+        self,
+        pr_data: Dict[str, Any],
+        confluence_docs: List[Dict[str, Any]],
+        cross_reference_results: Dict[str, Any],
     ) -> List[DetectedGap]:
         """Detect gaps in documentation."""
         gaps = []
@@ -248,8 +277,16 @@ class PRGapDetector:
         pr_description = pr_data.get("description", "").lower()
 
         # Check for API changes without documentation
-        api_files = [f for f in files_changed if any(term in f.lower() for term in ["api", "endpoint", "route"])]
-        doc_files = [f for f in files_changed if any(term in f.lower() for term in ["doc", "readme", "md"])]
+        api_files = [
+            f
+            for f in files_changed
+            if any(term in f.lower() for term in ["api", "endpoint", "route"])
+        ]
+        doc_files = [
+            f
+            for f in files_changed
+            if any(term in f.lower() for term in ["doc", "readme", "md"])
+        ]
 
         if api_files and not doc_files:
             gaps.append(
@@ -268,7 +305,11 @@ class PRGapDetector:
         consistency_issues = cross_reference_results.get("consistency_issues", [])
         for issue in consistency_issues:
             if "documentation" in issue.lower():
-                severity = GapSeverity.HIGH if "missing" in issue.lower() else GapSeverity.MEDIUM
+                severity = (
+                    GapSeverity.HIGH
+                    if "missing" in issue.lower()
+                    else GapSeverity.MEDIUM
+                )
                 gaps.append(
                     DetectedGap(
                         gap_type=GapType.DOCUMENTATION,
@@ -283,7 +324,11 @@ class PRGapDetector:
 
         # Check for breaking changes without migration docs
         if "breaking" in pr_description or "breaking change" in pr_description:
-            migration_docs = [doc for doc in confluence_docs if "migration" in doc.get("title", "").lower()]
+            migration_docs = [
+                doc
+                for doc in confluence_docs
+                if "migration" in doc.get("title", "").lower()
+            ]
             if not migration_docs:
                 gaps.append(
                     DetectedGap(
@@ -307,7 +352,11 @@ class PRGapDetector:
         pr_description = pr_data.get("description", "").lower()
 
         # Check for authentication/authorization changes without security review
-        security_files = [f for f in files_changed if any(term in f.lower() for term in ["auth", "security", "login"])]
+        security_files = [
+            f
+            for f in files_changed
+            if any(term in f.lower() for term in ["auth", "security", "login"])
+        ]
         if security_files and "security" not in pr_description:
             gaps.append(
                 DetectedGap(
@@ -322,8 +371,15 @@ class PRGapDetector:
             )
 
         # Check for input validation
-        if any(term in f.lower() for f in files_changed for term in ["input", "form", "request"]):
-            if not any(pattern in pr_description for pattern in ["validate", "sanitize", "check"]):
+        if any(
+            term in f.lower()
+            for f in files_changed
+            for term in ["input", "form", "request"]
+        ):
+            if not any(
+                pattern in pr_description
+                for pattern in ["validate", "sanitize", "check"]
+            ):
                 gaps.append(
                     DetectedGap(
                         gap_type=GapType.SECURITY,
@@ -376,8 +432,14 @@ class PRGapDetector:
             )
 
         # Check for configuration changes
-        config_files = [f for f in files_changed if "config" in f.lower() or ".yml" in f or ".yaml" in f]
-        if config_files and not any(term in pr_description for term in ["config", "environment", "setting"]):
+        config_files = [
+            f
+            for f in files_changed
+            if "config" in f.lower() or ".yml" in f or ".yaml" in f
+        ]
+        if config_files and not any(
+            term in pr_description for term in ["config", "environment", "setting"]
+        ):
             gaps.append(
                 DetectedGap(
                     gap_type=GapType.CODE_QUALITY,
@@ -400,8 +462,14 @@ class PRGapDetector:
         pr_description = pr_data.get("description", "").lower()
 
         # Check for database-related changes
-        db_files = [f for f in files_changed if any(term in f.lower() for term in ["database", "db", "sql", "query"])]
-        if db_files and not any(term in pr_description for term in ["performance", "optimization", "query"]):
+        db_files = [
+            f
+            for f in files_changed
+            if any(term in f.lower() for term in ["database", "db", "sql", "query"])
+        ]
+        if db_files and not any(
+            term in pr_description for term in ["performance", "optimization", "query"]
+        ):
             gaps.append(
                 DetectedGap(
                     gap_type=GapType.PERFORMANCE,
@@ -415,8 +483,13 @@ class PRGapDetector:
             )
 
         # Check for large data processing
-        if any(term in pr_description for term in ["bulk", "batch", "large", "million"]):
-            if not any(term in pr_description for term in ["performance", "optimization", "memory"]):
+        if any(
+            term in pr_description for term in ["bulk", "batch", "large", "million"]
+        ):
+            if not any(
+                term in pr_description
+                for term in ["performance", "optimization", "memory"]
+            ):
                 gaps.append(
                     DetectedGap(
                         gap_type=GapType.PERFORMANCE,
@@ -440,9 +513,15 @@ class PRGapDetector:
 
         # Check for infrastructure changes
         infra_files = [
-            f for f in files_changed if any(term in f.lower() for term in ["docker", "k8s", "deploy", "ci", "cd"])
+            f
+            for f in files_changed
+            if any(
+                term in f.lower() for term in ["docker", "k8s", "deploy", "ci", "cd"]
+            )
         ]
-        if infra_files and not any(term in pr_description for term in ["deploy", "infrastructure", "ci", "cd"]):
+        if infra_files and not any(
+            term in pr_description for term in ["deploy", "infrastructure", "ci", "cd"]
+        ):
             gaps.append(
                 DetectedGap(
                     gap_type=GapType.DEPLOYMENT,
@@ -478,7 +557,9 @@ class PRGapDetector:
             gaps,
             key=lambda g: (
                 0 if g.blocking_approval else 1,  # Blocking first
-                {"critical": 0, "high": 1, "medium": 2, "low": 3}[g.severity.value],  # By severity
+                {"critical": 0, "high": 1, "medium": 2, "low": 3}[
+                    g.severity.value
+                ],  # By severity
             ),
         )
 
@@ -504,10 +585,14 @@ class PRGapDetector:
             "blocking_gaps": blocking_gaps,
             "severity_distribution": severity_counts,
             "type_distribution": type_counts,
-            "overall_risk_level": self._calculate_risk_level(total_gaps, blocking_gaps, severity_counts),
+            "overall_risk_level": self._calculate_risk_level(
+                total_gaps, blocking_gaps, severity_counts
+            ),
         }
 
-    def _calculate_risk_level(self, total_gaps: int, blocking_gaps: int, severity_counts: Dict[str, int]) -> str:
+    def _calculate_risk_level(
+        self, total_gaps: int, blocking_gaps: int, severity_counts: Dict[str, int]
+    ) -> str:
         """Calculate overall risk level based on gap analysis."""
         if blocking_gaps > 0 or severity_counts["critical"] > 0:
             return "critical"

@@ -7,7 +7,9 @@ from services.shared.integrations.clients.clients import ServiceClients
 from ...utils.display_helpers import print_kv
 
 
-def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
+def build_actions(
+    console, clients: ServiceClients
+) -> List[Tuple[str, Callable[[], Any]]]:
     # ============================================================================
     # SECURITY DETECTION ENDPOINTS
     # ============================================================================
@@ -21,15 +23,19 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         if not content_input.strip():
             file_path = Prompt.ask("File path")
             try:
-                with open(file_path, 'r') as f:
+                with open(file_path, "r") as f:
                     content_input = f.read()
-                console.print(f"✅ Loaded content from {file_path} ({len(content_input)} characters)")
+                console.print(
+                    f"✅ Loaded content from {file_path} ({len(content_input)} characters)"
+                )
             except Exception as e:
                 console.print(f"[red]❌ Failed to read file: {e}[/red]")
                 return
 
         # Optional keywords
-        keywords_input = Prompt.ask("Additional keywords (comma-separated, optional)", default="")
+        keywords_input = Prompt.ask(
+            "Additional keywords (comma-separated, optional)", default=""
+        )
         keywords = None
         if keywords_input.strip():
             keywords = [kw.strip() for kw in keywords_input.split(",") if kw.strip()]
@@ -47,7 +53,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             # Display security findings
             findings = rx.get("findings", [])
             if findings:
-                console.print(f"\n[bold red]🚨 Security Findings ({len(findings)})[/bold red]")
+                console.print(
+                    f"\n[bold red]🚨 Security Findings ({len(findings)})[/bold red]"
+                )
                 for i, finding in enumerate(findings, 1):
                     console.print(f"\n[red]Finding {i}:[/red]")
                     print_kv(console, "Type", finding.get("type", "unknown"))
@@ -56,15 +64,23 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                     if finding.get("location"):
                         print_kv(console, "Location", finding.get("location"))
                     if finding.get("recommendation"):
-                        print_kv(console, "Recommendation", finding.get("recommendation"))
+                        print_kv(
+                            console, "Recommendation", finding.get("recommendation")
+                        )
             else:
                 console.print("[green]✅ No security issues detected![/green]")
 
             # Display risk score
             risk_score = rx.get("risk_score", 0)
             if risk_score > 0:
-                risk_level = "🔴 HIGH" if risk_score > 7 else "🟡 MEDIUM" if risk_score > 4 else "🟢 LOW"
-                console.print(f"\n[bold]Risk Score: {risk_score}/10 - {risk_level}[/bold]")
+                risk_level = (
+                    "🔴 HIGH"
+                    if risk_score > 7
+                    else "🟡 MEDIUM" if risk_score > 4 else "🟢 LOW"
+                )
+                console.print(
+                    f"\n[bold]Risk Score: {risk_score}/10 - {risk_level}[/bold]"
+                )
             else:
                 console.print("[green]✅ Risk Score: 0/10 - No risks detected[/green]")
 
@@ -72,12 +88,24 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             metadata = rx.get("metadata", {})
             if metadata:
                 console.print("\n[bold blue]📊 Analysis Metadata[/bold blue]")
-                print_kv(console, "Processed at", metadata.get("processed_at", "unknown"))
-                print_kv(console, "Processing time", f"{metadata.get('processing_time_ms', 0)}ms")
-                print_kv(console, "Content size", f"{metadata.get('content_size_bytes', 0)} bytes")
+                print_kv(
+                    console, "Processed at", metadata.get("processed_at", "unknown")
+                )
+                print_kv(
+                    console,
+                    "Processing time",
+                    f"{metadata.get('processing_time_ms', 0)}ms",
+                )
+                print_kv(
+                    console,
+                    "Content size",
+                    f"{metadata.get('content_size_bytes', 0)} bytes",
+                )
 
         else:
-            console.print(f"[red]❌ Security analysis failed: {rx.get('error', 'Unknown error')}[/red]")
+            console.print(
+                f"[red]❌ Security analysis failed: {rx.get('error', 'Unknown error')}[/red]"
+            )
 
     async def suggest_secure_providers():
         """Recommend appropriate AI models based on content sensitivity."""
@@ -90,18 +118,19 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             return
 
         # Provider preferences
-        preferred_providers = Prompt.ask("Preferred providers (comma-separated, optional)", default="")
+        preferred_providers = Prompt.ask(
+            "Preferred providers (comma-separated, optional)", default=""
+        )
         providers = None
         if preferred_providers.strip():
             providers = [p.strip() for p in preferred_providers.split(",") if p.strip()]
 
         # Security requirements
-        security_level = Prompt.ask("Required security level (high|medium|low)", default="medium")
+        security_level = Prompt.ask(
+            "Required security level (high|medium|low)", default="medium"
+        )
 
-        payload = {
-            "content": content,
-            "security_level": security_level
-        }
+        payload = {"content": content, "security_level": security_level}
         if providers:
             payload["preferred_providers"] = providers
 
@@ -113,13 +142,19 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
             recommendations = rx.get("recommendations", [])
             if recommendations:
-                console.print(f"\n[bold blue]🎯 Recommended Providers ({len(recommendations)})[/bold blue]")
+                console.print(
+                    f"\n[bold blue]🎯 Recommended Providers ({len(recommendations)})[/bold blue]"
+                )
                 for i, rec in enumerate(recommendations, 1):
                     console.print(f"\n[blue]Recommendation {i}:[/blue]")
                     print_kv(console, "Provider", rec.get("provider", "unknown"))
                     print_kv(console, "Model", rec.get("model", "unknown"))
-                    print_kv(console, "Security Score", f"{rec.get('security_score', 0)}/10")
-                    print_kv(console, "Confidence", f"{rec.get('confidence', 0)*100:.1f}%")
+                    print_kv(
+                        console, "Security Score", f"{rec.get('security_score', 0)}/10"
+                    )
+                    print_kv(
+                        console, "Confidence", f"{rec.get('confidence', 0)*100:.1f}%"
+                    )
                     print_kv(console, "Reason", rec.get("reason", ""))
 
                     if rec.get("security_features"):
@@ -134,11 +169,21 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             if summary:
                 console.print("\n[bold green]📊 Summary[/bold green]")
                 print_kv(console, "Risk Level", summary.get("risk_level", "unknown"))
-                print_kv(console, "Compliance Status", summary.get("compliance_status", "unknown"))
-                print_kv(console, "Processing Time", f"{summary.get('processing_time_ms', 0)}ms")
+                print_kv(
+                    console,
+                    "Compliance Status",
+                    summary.get("compliance_status", "unknown"),
+                )
+                print_kv(
+                    console,
+                    "Processing Time",
+                    f"{summary.get('processing_time_ms', 0)}ms",
+                )
 
         else:
-            console.print(f"[red]❌ Provider suggestion failed: {rx.get('error', 'Unknown error')}[/red]")
+            console.print(
+                f"[red]❌ Provider suggestion failed: {rx.get('error', 'Unknown error')}[/red]"
+            )
 
     async def secure_summarize():
         """Generate secure summaries with policy-based provider filtering."""
@@ -155,8 +200,12 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         format_type = Prompt.ask("Output format (text|markdown|json)", default="text")
 
         # Security options
-        enforce_policies = Prompt.ask("Enforce security policies?", default="yes").lower() in ["yes", "y", "true"]
-        allowed_providers = Prompt.ask("Allowed providers (comma-separated, optional)", default="")
+        enforce_policies = Prompt.ask(
+            "Enforce security policies?", default="yes"
+        ).lower() in ["yes", "y", "true"]
+        allowed_providers = Prompt.ask(
+            "Allowed providers (comma-separated, optional)", default=""
+        )
         providers = None
         if allowed_providers.strip():
             providers = [p.strip() for p in allowed_providers.split(",") if p.strip()]
@@ -165,7 +214,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             "content": content,
             "max_length": int(max_length),
             "format": format_type,
-            "enforce_policies": enforce_policies
+            "enforce_policies": enforce_policies,
         }
         if providers:
             payload["allowed_providers"] = providers
@@ -184,15 +233,25 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 print_kv(console, "Format", summary.get("format", "unknown"))
 
                 if summary.get("compression_ratio"):
-                    print_kv(console, "Compression Ratio", f"{summary['compression_ratio']:.2f}x")
+                    print_kv(
+                        console,
+                        "Compression Ratio",
+                        f"{summary['compression_ratio']:.2f}x",
+                    )
 
             # Display security metadata
             security = rx.get("security", {})
             if security:
                 console.print("\n[bold red]🔒 Security Information[/bold red]")
                 print_kv(console, "Risk Level", security.get("risk_level", "unknown"))
-                print_kv(console, "Provider Used", security.get("provider_used", "unknown"))
-                print_kv(console, "Policies Applied", str(security.get("policies_applied", [])))
+                print_kv(
+                    console, "Provider Used", security.get("provider_used", "unknown")
+                )
+                print_kv(
+                    console,
+                    "Policies Applied",
+                    str(security.get("policies_applied", [])),
+                )
 
                 if security.get("content_filtered"):
                     console.print("[red]⚠️  Content was filtered for security[/red]")
@@ -201,11 +260,21 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             metadata = rx.get("metadata", {})
             if metadata:
                 console.print("\n[bold blue]⚙️  Processing Info[/bold blue]")
-                print_kv(console, "Processing Time", f"{metadata.get('processing_time_ms', 0)}ms")
-                print_kv(console, "Provider Response Time", f"{metadata.get('provider_response_time_ms', 0)}ms")
+                print_kv(
+                    console,
+                    "Processing Time",
+                    f"{metadata.get('processing_time_ms', 0)}ms",
+                )
+                print_kv(
+                    console,
+                    "Provider Response Time",
+                    f"{metadata.get('provider_response_time_ms', 0)}ms",
+                )
 
         else:
-            console.print(f"[red]❌ Secure summarization failed: {rx.get('error', 'Unknown error')}[/red]")
+            console.print(
+                f"[red]❌ Secure summarization failed: {rx.get('error', 'Unknown error')}[/red]"
+            )
 
     # ============================================================================
     # BATCH OPERATIONS
@@ -216,7 +285,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         count = Prompt.ask("Number of items to analyze", default="3")
         count = int(count)
 
-        analysis_type = Prompt.ask("Analysis type (detect|suggest|summarize)", default="detect")
+        analysis_type = Prompt.ask(
+            "Analysis type (detect|suggest|summarize)", default="detect"
+        )
 
         items = []
         for i in range(count):
@@ -225,7 +296,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             name = f"item_{i+1}"
             items.append({"name": name, "content": content})
 
-        console.print(f"\n[bold blue]🔍 Analyzing {len(items)} items for security...[/bold blue]")
+        console.print(
+            f"\n[bold blue]🔍 Analyzing {len(items)} items for security...[/bold blue]"
+        )
 
         results = []
         for item in items:
@@ -245,32 +318,51 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 url = f"{clients.secure_analyzer_url()}{endpoint}"
                 rx = await clients.post_json(url, payload)
 
-                results.append({
-                    "name": item["name"],
-                    "success": rx.get("success", False),
-                    "risk_score": rx.get("risk_score", 0) if analysis_type == "detect" else None,
-                    "recommendations_count": len(rx.get("recommendations", [])) if analysis_type == "suggest" else None,
-                    "summary_length": len(rx.get("summary", {}).get("content", "")) if analysis_type == "summarize" else None,
-                    "error": rx.get("error") if not rx.get("success") else None
-                })
+                results.append(
+                    {
+                        "name": item["name"],
+                        "success": rx.get("success", False),
+                        "risk_score": (
+                            rx.get("risk_score", 0)
+                            if analysis_type == "detect"
+                            else None
+                        ),
+                        "recommendations_count": (
+                            len(rx.get("recommendations", []))
+                            if analysis_type == "suggest"
+                            else None
+                        ),
+                        "summary_length": (
+                            len(rx.get("summary", {}).get("content", ""))
+                            if analysis_type == "summarize"
+                            else None
+                        ),
+                        "error": rx.get("error") if not rx.get("success") else None,
+                    }
+                )
 
             except Exception as e:
-                results.append({
-                    "name": item["name"],
-                    "success": False,
-                    "risk_score": None,
-                    "recommendations_count": None,
-                    "summary_length": None,
-                    "error": str(e)
-                })
+                results.append(
+                    {
+                        "name": item["name"],
+                        "success": False,
+                        "risk_score": None,
+                        "recommendations_count": None,
+                        "summary_length": None,
+                        "error": str(e),
+                    }
+                )
 
         # Display batch results
-        console.print(f"\n[bold green]📊 Batch Security Analysis Results ({len(results)} items)[/bold green]")
+        console.print(
+            f"\n[bold green]📊 Batch Security Analysis Results ({len(results)} items)[/bold green]"
+        )
 
         successful = sum(1 for r in results if r["success"])
         console.print(f"✅ Successful: {successful}/{len(results)}")
 
         from rich.table import Table
+
         table = Table(title=f"Batch {analysis_type.title()} Results")
         table.add_column("Name", style="cyan")
         table.add_column("Status", style="white")
@@ -282,24 +374,32 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             status = "✅" if result["success"] else "❌"
 
             if analysis_type == "detect":
-                risk_score = str(result["risk_score"]) if result["risk_score"] is not None else "N/A"
+                risk_score = (
+                    str(result["risk_score"])
+                    if result["risk_score"] is not None
+                    else "N/A"
+                )
                 details = "N/A"
             elif analysis_type == "suggest":
                 risk_score = "N/A"
-                details = str(result["recommendations_count"]) if result["recommendations_count"] is not None else "N/A"
+                details = (
+                    str(result["recommendations_count"])
+                    if result["recommendations_count"] is not None
+                    else "N/A"
+                )
             else:  # summarize
                 risk_score = "N/A"
-                details = str(result["summary_length"]) if result["summary_length"] is not None else "N/A"
+                details = (
+                    str(result["summary_length"])
+                    if result["summary_length"] is not None
+                    else "N/A"
+                )
 
-            result_text = "Success" if result["success"] else result.get("error", "Failed")[:30]
-
-            table.add_row(
-                result["name"],
-                status,
-                risk_score,
-                details,
-                result_text
+            result_text = (
+                "Success" if result["success"] else result.get("error", "Failed")[:30]
             )
+
+            table.add_row(result["name"], status, risk_score, details, result_text)
 
         console.print(table)
 
@@ -315,9 +415,13 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
         # Check circuit breaker status
         if rx.get("circuit_breaker_open"):
-            console.print("[red]⚠️  Circuit breaker is OPEN - service may be degraded[/red]")
+            console.print(
+                "[red]⚠️  Circuit breaker is OPEN - service may be degraded[/red]"
+            )
         else:
-            console.print("[green]✅ Circuit breaker is CLOSED - service operating normally[/green]")
+            console.print(
+                "[green]✅ Circuit breaker is CLOSED - service operating normally[/green]"
+            )
 
     async def benchmark_security_analysis():
         """Benchmark security analysis performance."""
@@ -326,19 +430,24 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             "User password is 'admin123' and API key is 'sk-1234567890abcdef'",
             "SELECT * FROM users WHERE id = 1; DROP TABLE users;",
             "Contact: john.doe@email.com, SSN: 123-45-6789, Credit Card: 4111-1111-1111-1111",
-            "Normal text content without any sensitive information or security risks."
+            "Normal text content without any sensitive information or security risks.",
         ]
 
         iterations = Prompt.ask("Number of iterations per content sample", default="3")
         iterations = int(iterations)
 
-        console.print(f"\n[bold blue]🔒 Benchmarking security analysis with {len(test_contents)} samples, {iterations} iterations each...[/bold blue]")
+        console.print(
+            f"\n[bold blue]🔒 Benchmarking security analysis with {len(test_contents)} samples, {iterations} iterations each...[/bold blue]"
+        )
 
         import time
+
         results = []
 
         for i, content in enumerate(test_contents):
-            console.print(f"\nTesting sample {i+1}/{len(test_contents)} ({len(content)} chars)...")
+            console.print(
+                f"\nTesting sample {i+1}/{len(test_contents)} ({len(content)} chars)..."
+            )
             sample_times = []
 
             for j in range(iterations):
@@ -356,19 +465,24 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 min_time = min(sample_times)
                 max_time = max(sample_times)
 
-                results.append({
-                    "sample": f"sample_{i+1}",
-                    "size": len(content),
-                    "avg_time": avg_time,
-                    "min_time": min_time,
-                    "max_time": max_time,
-                    "iterations": len(sample_times)
-                })
+                results.append(
+                    {
+                        "sample": f"sample_{i+1}",
+                        "size": len(content),
+                        "avg_time": avg_time,
+                        "min_time": min_time,
+                        "max_time": max_time,
+                        "iterations": len(sample_times),
+                    }
+                )
 
         # Display results
-        console.print(f"\n[bold green]📊 Security Analysis Benchmark Results ({len(results)} samples)[/bold green]")
+        console.print(
+            f"\n[bold green]📊 Security Analysis Benchmark Results ({len(results)} samples)[/bold green]"
+        )
 
         from rich.table import Table
+
         table = Table(title="Security Analysis Performance Benchmark")
         table.add_column("Sample", style="cyan")
         table.add_column("Size", style="white")
@@ -384,7 +498,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 f"{result['avg_time']:.3f}s",
                 f"{result['min_time']:.3f}s",
                 f"{result['max_time']:.3f}s",
-                str(result["iterations"])
+                str(result["iterations"]),
             )
 
         console.print(table)
@@ -393,7 +507,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         if results:
             avg_times = [r["avg_time"] for r in results]
             overall_avg = sum(avg_times) / len(avg_times)
-            console.print(f"\n[bold cyan]📈 Overall Average: {overall_avg:.3f}s per security analysis[/bold cyan]")
+            console.print(
+                f"\n[bold cyan]📈 Overall Average: {overall_avg:.3f}s per security analysis[/bold cyan]"
+            )
 
     # ============================================================================
     # ORGANIZE ACTIONS BY CATEGORY
@@ -404,10 +520,8 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         ("🔍 Detect security risks", detect_security_risks),
         ("🤖 Suggest secure providers", suggest_secure_providers),
         ("📝 Generate secure summary", secure_summarize),
-
         # Batch Operations
         ("📦 Batch security analysis", batch_security_analysis),
-
         # Testing & Diagnostics
         ("🩺 Service health check", test_secure_analyzer_health),
         ("⚡ Benchmark security analysis", benchmark_security_analysis),

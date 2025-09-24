@@ -4,7 +4,6 @@ Handles github-mcp service visualization, including tool invocation
 monitoring, GitHub operations, and MCP tool testing.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..github_mcp_monitor import github_mcp_monitor
@@ -697,5 +696,7 @@ class GithubMcpUIHandlers:
             return create_html_response(html, "GitHub MCP Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render github-mcp dashboard", e, **build_frontend_context("render_github_mcp_dashboard")
+                "render github-mcp dashboard",
+                e,
+                **build_frontend_context("render_github_mcp_dashboard")
             )

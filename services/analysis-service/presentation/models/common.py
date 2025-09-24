@@ -34,7 +34,9 @@ class PaginationParams(BaseModel):
 
     page: int = Field(1, ge=1, description="Page number (1-based)")
     page_size: int = Field(20, ge=1, le=100, description="Items per page (max 100)")
-    offset: Optional[int] = Field(None, ge=0, description="Offset for pagination (alternative to page)")
+    offset: Optional[int] = Field(
+        None, ge=0, description="Offset for pagination (alternative to page)"
+    )
 
     @validator("offset", always=True)
     def calculate_offset(cls, v, values):
@@ -70,9 +72,15 @@ class FilterCriteria(BaseModel):
         """Validate filter value based on operator."""
         if "operator" in values:
             operator = values["operator"]
-            if operator in [FilterOperator.IN, FilterOperator.NIN] and not isinstance(v, list):
+            if operator in [FilterOperator.IN, FilterOperator.NIN] and not isinstance(
+                v, list
+            ):
                 raise ValueError(f"Operator {operator} requires a list value")
-            elif operator in [FilterOperator.CONTAINS, FilterOperator.STARTS_WITH, FilterOperator.ENDS_WITH]:
+            elif operator in [
+                FilterOperator.CONTAINS,
+                FilterOperator.STARTS_WITH,
+                FilterOperator.ENDS_WITH,
+            ]:
                 if not isinstance(v, str):
                     raise ValueError(f"Operator {operator} requires a string value")
         return v
@@ -81,7 +89,9 @@ class FilterCriteria(BaseModel):
 class FilterParams(BaseModel):
     """Filtering parameters for list endpoints."""
 
-    filters: Optional[List[FilterCriteria]] = Field(None, description="List of filter criteria")
+    filters: Optional[List[FilterCriteria]] = Field(
+        None, description="List of filter criteria"
+    )
     filter_preset: Optional[str] = Field(None, description="Predefined filter preset")
 
 
@@ -106,7 +116,9 @@ class BulkOperationRequest(BaseModel):
 
     operation: str = Field(..., description="Operation to perform")
     items: List[Dict[str, Any]] = Field(..., description="Items to process")
-    options: Optional[Dict[str, Any]] = Field(None, description="Operation-specific options")
+    options: Optional[Dict[str, Any]] = Field(
+        None, description="Operation-specific options"
+    )
 
     @validator("operation")
     def validate_operation(cls, v):
@@ -123,7 +135,9 @@ class BulkOperationRequest(BaseModel):
             "archive",
         ]
         if v not in valid_operations:
-            raise ValueError(f"Invalid operation: {v}. Must be one of {valid_operations}")
+            raise ValueError(
+                f"Invalid operation: {v}. Must be one of {valid_operations}"
+            )
         return v
 
     @validator("items")
@@ -143,8 +157,12 @@ class BulkOperationResponse(BaseModel):
     total_items: int = Field(..., description="Total items processed")
     successful: int = Field(..., description="Number of successful operations")
     failed: int = Field(..., description="Number of failed operations")
-    errors: Optional[List[Dict[str, Any]]] = Field(None, description="Error details for failed operations")
-    results: Optional[List[Dict[str, Any]]] = Field(None, description="Operation results")
+    errors: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Error details for failed operations"
+    )
+    results: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Operation results"
+    )
 
 
 class ExportRequest(BaseModel):
@@ -152,7 +170,9 @@ class ExportRequest(BaseModel):
 
     format: str = Field(..., description="Export format (json, csv, xml, etc.)")
     fields: Optional[List[str]] = Field(None, description="Fields to include in export")
-    filters: Optional[List[FilterCriteria]] = Field(None, description="Filters to apply")
+    filters: Optional[List[FilterCriteria]] = Field(
+        None, description="Filters to apply"
+    )
     include_headers: bool = Field(True, description="Include headers in export")
 
     @validator("format")
@@ -171,7 +191,9 @@ class ExportResponse(BaseModel):
     format: str = Field(..., description="Export format")
     total_records: int = Field(..., description="Total records exported")
     file_size: Optional[int] = Field(None, description="File size in bytes")
-    download_url: Optional[str] = Field(None, description="Download URL for exported file")
+    download_url: Optional[str] = Field(
+        None, description="Download URL for exported file"
+    )
     expires_at: Optional[str] = Field(None, description="Export expiration timestamp")
 
 

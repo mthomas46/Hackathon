@@ -92,7 +92,9 @@ class TimelinePhase:
         """Start the timeline phase."""
         self.status = "in_progress"
         self.start_date = start_date or datetime.now()
-        self.planned_end_date = self.start_date + timedelta(days=self.planned_duration.total_days)
+        self.planned_end_date = self.start_date + timedelta(
+            days=self.planned_duration.total_days
+        )
 
     def update_progress(self, progress: Percentage) -> None:
         """Update phase progress percentage."""
@@ -103,7 +105,8 @@ class TimelinePhase:
         self.status = "completed"
         self.end_date = end_date or datetime.now()
         self.actual_duration = Duration(
-            weeks=int((self.end_date - self.start_date).days // 7), days=(self.end_date - self.start_date).days % 7
+            weeks=int((self.end_date - self.start_date).days // 7),
+            days=(self.end_date - self.start_date).days % 7,
         )
         self.progress_percentage = Percentage(100)
 
@@ -196,7 +199,9 @@ class Timeline:
             )
         )
 
-    def complete_phase(self, phase_id: str, end_date: Optional[datetime] = None) -> None:
+    def complete_phase(
+        self, phase_id: str, end_date: Optional[datetime] = None
+    ) -> None:
         """Complete a timeline phase."""
         phase = self._get_phase(phase_id)
         phase.complete_phase(end_date)
@@ -228,15 +233,21 @@ class Timeline:
         phase.add_milestone(milestone)
         self.updated_at = datetime.now()
 
-    def achieve_milestone(self, phase_id: str, milestone_id: str, achieved_date: Optional[datetime] = None) -> None:
+    def achieve_milestone(
+        self, phase_id: str, milestone_id: str, achieved_date: Optional[datetime] = None
+    ) -> None:
         """Achieve a milestone."""
         phase = self._get_phase(phase_id)
         milestone = self._get_milestone(phase, milestone_id)
 
         # Check milestone dependencies
-        achieved_milestone_ids = [m.id for p in self.phases for m in p.get_achieved_milestones()]
+        achieved_milestone_ids = [
+            m.id for p in self.phases for m in p.get_achieved_milestones()
+        ]
         if not milestone.can_be_achieved(achieved_milestone_ids):
-            raise ValueError(f"Cannot achieve milestone {milestone_id}: dependencies not met")
+            raise ValueError(
+                f"Cannot achieve milestone {milestone_id}: dependencies not met"
+            )
 
         milestone.achieve_milestone(achieved_date)
         self.updated_at = datetime.now()
@@ -263,7 +274,11 @@ class Timeline:
 
     def get_overdue_phases(self) -> List[TimelinePhase]:
         """Get all overdue phases."""
-        return [phase for phase in self.phases if not phase.is_on_track() and phase.status != "completed"]
+        return [
+            phase
+            for phase in self.phases
+            if not phase.is_on_track() and phase.status != "completed"
+        ]
 
     def get_overall_progress(self) -> Percentage:
         """Calculate overall timeline progress."""
@@ -275,7 +290,8 @@ class Timeline:
             return Percentage(0)
 
         weighted_progress = sum(
-            phase.planned_duration.total_days * phase.progress_percentage.value for phase in self.phases
+            phase.planned_duration.total_days * phase.progress_percentage.value
+            for phase in self.phases
         )
 
         return Percentage(weighted_progress / total_weight)
@@ -293,7 +309,9 @@ class Timeline:
         # Estimate based on current phase progress
         if current_phase.progress_percentage.value > 0:
             days_per_percent = current_phase.planned_duration.total_days / 100
-            remaining_current_phase = days_per_percent * (100 - current_phase.progress_percentage.value)
+            remaining_current_phase = days_per_percent * (
+                100 - current_phase.progress_percentage.value
+            )
             remaining_days += remaining_current_phase
 
         return datetime.now() + timedelta(days=remaining_days)

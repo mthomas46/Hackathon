@@ -36,7 +36,10 @@ class DocumentRequest(BaseModel):
         if source == "github" and ":" not in v:
             from pydantic_core import PydanticCustomError
 
-            raise PydanticCustomError("invalid_github_identifier", "GitHub identifier must be in format owner:repo")
+            raise PydanticCustomError(
+                "invalid_github_identifier",
+                "GitHub identifier must be in format owner:repo",
+            )
         return v
 
 

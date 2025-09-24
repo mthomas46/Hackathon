@@ -12,15 +12,20 @@ from collections import Counter, defaultdict
 from typing import Any, Dict, List, Optional, Set
 
 try:
-    from services.shared.core.constants_new import ErrorCodes
-    from services.shared.core.responses import create_error_response, create_success_response
+    from services.shared.presentation.responses import (
+        create_error_response,
+        create_success_response,
+    )
+
+    ErrorCodes = None  # Consolidated error codes
 except ImportError:
     # Fallback for testing or when shared services are not available
+    # Response handlers consolidated - use services.shared.presentation.responses
     def create_success_response(message, data=None, **kwargs):
-        return {"message": message, "data": data, "status": "success"}
+        return {"success": True, "message": message, "data": data}
 
     def create_error_response(message, error_code=None, **kwargs):
-        return {"message": message, "error": error_code, "status": "error"}
+        return {"success": False, "message": message, "error": error_code}
 
     class ErrorCodes:
         ANALYSIS_FAILED = "ANALYSIS_FAILED"
@@ -59,7 +64,11 @@ class CrossRepositoryAnalyzer:
         return {
             "consistency_analysis": {
                 "description": "Analyze consistency across repositories",
-                "metrics": ["terminology_consistency", "style_consistency", "structure_consistency"],
+                "metrics": [
+                    "terminology_consistency",
+                    "style_consistency",
+                    "structure_consistency",
+                ],
                 "weight": 0.25,
                 "thresholds": {"excellent": 0.9, "good": 0.75, "fair": 0.6},
             },
@@ -71,19 +80,35 @@ class CrossRepositoryAnalyzer:
             },
             "quality_analysis": {
                 "description": "Analyze overall documentation quality across repositories",
-                "metrics": ["quality_consistency", "standards_compliance", "best_practices_adoption"],
+                "metrics": [
+                    "quality_consistency",
+                    "standards_compliance",
+                    "best_practices_adoption",
+                ],
                 "weight": 0.25,
                 "thresholds": {"excellent": 0.9, "good": 0.75, "fair": 0.6},
             },
             "redundancy_analysis": {
                 "description": "Identify redundant or overlapping documentation",
-                "metrics": ["duplicate_content", "overlapping_topics", "consolidation_opportunities"],
+                "metrics": [
+                    "duplicate_content",
+                    "overlapping_topics",
+                    "consolidation_opportunities",
+                ],
                 "weight": 0.15,
-                "thresholds": {"excellent": 0.1, "good": 0.2, "fair": 0.3},  # Lower is better
+                "thresholds": {
+                    "excellent": 0.1,
+                    "good": 0.2,
+                    "fair": 0.3,
+                },  # Lower is better
             },
             "dependency_analysis": {
                 "description": "Analyze documentation dependencies across repositories",
-                "metrics": ["cross_references", "dependency_clarity", "integration_documentation"],
+                "metrics": [
+                    "cross_references",
+                    "dependency_clarity",
+                    "integration_documentation",
+                ],
                 "weight": 0.15,
                 "thresholds": {"excellent": 0.9, "good": 0.75, "fair": 0.6},
             },
@@ -94,31 +119,55 @@ class CrossRepositoryAnalyzer:
         return {
             "github": {
                 "description": "GitHub repository connector",
-                "supported_features": ["api_access", "webhook_support", "file_listing", "content_retrieval"],
+                "supported_features": [
+                    "api_access",
+                    "webhook_support",
+                    "file_listing",
+                    "content_retrieval",
+                ],
                 "authentication_methods": ["token", "oauth"],
                 "rate_limits": {"requests_per_hour": 5000},
             },
             "gitlab": {
                 "description": "GitLab repository connector",
-                "supported_features": ["api_access", "webhook_support", "file_listing", "content_retrieval"],
+                "supported_features": [
+                    "api_access",
+                    "webhook_support",
+                    "file_listing",
+                    "content_retrieval",
+                ],
                 "authentication_methods": ["token", "oauth"],
                 "rate_limits": {"requests_per_hour": 2000},
             },
             "bitbucket": {
                 "description": "Bitbucket repository connector",
-                "supported_features": ["api_access", "webhook_support", "file_listing", "content_retrieval"],
+                "supported_features": [
+                    "api_access",
+                    "webhook_support",
+                    "file_listing",
+                    "content_retrieval",
+                ],
                 "authentication_methods": ["token", "oauth"],
                 "rate_limits": {"requests_per_hour": 1000},
             },
             "azure_devops": {
                 "description": "Azure DevOps repository connector",
-                "supported_features": ["api_access", "webhook_support", "file_listing", "content_retrieval"],
+                "supported_features": [
+                    "api_access",
+                    "webhook_support",
+                    "file_listing",
+                    "content_retrieval",
+                ],
                 "authentication_methods": ["token", "oauth"],
                 "rate_limits": {"requests_per_hour": 3000},
             },
             "filesystem": {
                 "description": "Local filesystem repository connector",
-                "supported_features": ["file_listing", "content_retrieval", "local_analysis"],
+                "supported_features": [
+                    "file_listing",
+                    "content_retrieval",
+                    "local_analysis",
+                ],
                 "authentication_methods": ["none"],
                 "rate_limits": {"requests_per_hour": float("inf")},
             },
@@ -170,7 +219,9 @@ class CrossRepositoryAnalyzer:
             },
         }
 
-    def _analyze_repository_structure(self, repository_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_repository_structure(
+        self, repository_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze the structure and content of a repository."""
         repo_analysis = {
             "repository_id": repository_data.get("repository_id", ""),
@@ -208,8 +259,8 @@ class CrossRepositoryAnalyzer:
             )
 
         # Analyze documentation structure
-        repo_analysis["documentation_structure"] = self._analyze_documentation_structure(
-            repo_analysis["documentation_files"]
+        repo_analysis["documentation_structure"] = (
+            self._analyze_documentation_structure(repo_analysis["documentation_files"])
         )
 
         return repo_analysis
@@ -289,7 +340,9 @@ class CrossRepositoryAnalyzer:
 
         return "other"
 
-    def _analyze_documentation_structure(self, documentation_files: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_documentation_structure(
+        self, documentation_files: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze the structure of documentation files."""
         structure_analysis = {
             "total_docs": len(documentation_files),
@@ -342,7 +395,9 @@ class CrossRepositoryAnalyzer:
 
         return structure_analysis
 
-    def _calculate_consistency_metrics(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _calculate_consistency_metrics(
+        self, repositories: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Calculate consistency metrics across repositories."""
         consistency_metrics = {
             "terminology_consistency": 0.0,
@@ -377,10 +432,14 @@ class CrossRepositoryAnalyzer:
             all_structures.update(structure_patterns)
 
         # Calculate consistency scores
-        consistency_metrics["terminology_consistency"] = self._calculate_term_consistency(all_terms, repositories)
-        consistency_metrics["style_consistency"] = self._calculate_style_consistency(all_styles, repositories)
-        consistency_metrics["structure_consistency"] = self._calculate_structure_consistency(
-            all_structures, repositories
+        consistency_metrics["terminology_consistency"] = (
+            self._calculate_term_consistency(all_terms, repositories)
+        )
+        consistency_metrics["style_consistency"] = self._calculate_style_consistency(
+            all_styles, repositories
+        )
+        consistency_metrics["structure_consistency"] = (
+            self._calculate_structure_consistency(all_structures, repositories)
         )
 
         return consistency_metrics
@@ -445,7 +504,9 @@ class CrossRepositoryAnalyzer:
 
         return structure_patterns
 
-    def _calculate_term_consistency(self, all_terms: Set[str], repositories: List[Dict[str, Any]]) -> float:
+    def _calculate_term_consistency(
+        self, all_terms: Set[str], repositories: List[Dict[str, Any]]
+    ) -> float:
         """Calculate terminology consistency across repositories."""
         if not all_terms or len(repositories) < 2:
             return 0.0
@@ -465,11 +526,15 @@ class CrossRepositoryAnalyzer:
 
         # Calculate consistency score
         total_terms = len(all_terms)
-        consistent_terms = sum(1 for count in term_usage.values() if count == len(repositories))
+        consistent_terms = sum(
+            1 for count in term_usage.values() if count == len(repositories)
+        )
 
         return consistent_terms / total_terms if total_terms > 0 else 0.0
 
-    def _calculate_style_consistency(self, all_styles: Set[str], repositories: List[Dict[str, Any]]) -> float:
+    def _calculate_style_consistency(
+        self, all_styles: Set[str], repositories: List[Dict[str, Any]]
+    ) -> float:
         """Calculate style consistency across repositories."""
         if not all_styles or len(repositories) < 2:
             return 0.0
@@ -485,11 +550,15 @@ class CrossRepositoryAnalyzer:
 
         # Calculate consistency score
         total_styles = len(all_styles)
-        consistent_styles = sum(1 for count in style_usage.values() if count == len(repositories))
+        consistent_styles = sum(
+            1 for count in style_usage.values() if count == len(repositories)
+        )
 
         return consistent_styles / total_styles if total_styles > 0 else 0.0
 
-    def _calculate_structure_consistency(self, all_structures: Set[str], repositories: List[Dict[str, Any]]) -> float:
+    def _calculate_structure_consistency(
+        self, all_structures: Set[str], repositories: List[Dict[str, Any]]
+    ) -> float:
         """Calculate structure consistency across repositories."""
         if not all_structures or len(repositories) < 2:
             return 0.0
@@ -505,11 +574,15 @@ class CrossRepositoryAnalyzer:
 
         # Calculate consistency score
         total_structures = len(all_structures)
-        consistent_structures = sum(1 for count in structure_usage.values() if count == len(repositories))
+        consistent_structures = sum(
+            1 for count in structure_usage.values() if count == len(repositories)
+        )
 
         return consistent_structures / total_structures if total_structures > 0 else 0.0
 
-    def _analyze_coverage_gaps(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _analyze_coverage_gaps(
+        self, repositories: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze coverage gaps across repositories."""
         coverage_analysis = {
             "topic_coverage": {},
@@ -548,14 +621,22 @@ class CrossRepositoryAnalyzer:
                         break
 
                 if has_topic:
-                    coverage_analysis["topic_coverage"][topic]["repositories_with_topic"] += 1
+                    coverage_analysis["topic_coverage"][topic][
+                        "repositories_with_topic"
+                    ] += 1
 
         # Identify missing topics
         for topic, coverage in coverage_analysis["topic_coverage"].items():
-            coverage_ratio = coverage["repositories_with_topic"] / coverage["total_repositories"]
+            coverage_ratio = (
+                coverage["repositories_with_topic"] / coverage["total_repositories"]
+            )
             if coverage_ratio < 0.5:  # Less than 50% coverage
                 coverage_analysis["missing_topics"].append(
-                    {"topic": topic, "coverage_ratio": coverage_ratio, "keywords": coverage["keywords"]}
+                    {
+                        "topic": topic,
+                        "coverage_ratio": coverage_ratio,
+                        "keywords": coverage["keywords"],
+                    }
                 )
 
         # Calculate overall coverage score
@@ -563,14 +644,19 @@ class CrossRepositoryAnalyzer:
         well_covered_topics = sum(
             1
             for coverage in coverage_analysis["topic_coverage"].values()
-            if coverage["repositories_with_topic"] / coverage["total_repositories"] >= 0.7
+            if coverage["repositories_with_topic"] / coverage["total_repositories"]
+            >= 0.7
         )
 
-        coverage_analysis["coverage_score"] = well_covered_topics / total_topics if total_topics > 0 else 0.0
+        coverage_analysis["coverage_score"] = (
+            well_covered_topics / total_topics if total_topics > 0 else 0.0
+        )
 
         return coverage_analysis
 
-    def _identify_redundancies(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _identify_redundancies(
+        self, repositories: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Identify redundant or overlapping documentation."""
         redundancy_analysis = {
             "duplicate_files": [],
@@ -592,7 +678,11 @@ class CrossRepositoryAnalyzer:
         for file_name, repo_list in file_names.items():
             if len(repo_list) > 1:
                 redundancy_analysis["duplicate_files"].append(
-                    {"file_name": file_name, "repositories": repo_list, "occurrence_count": len(repo_list)}
+                    {
+                        "file_name": file_name,
+                        "repositories": repo_list,
+                        "occurrence_count": len(repo_list),
+                    }
                 )
 
         # Simple content similarity check (in a real implementation, this would use more sophisticated similarity detection)
@@ -604,25 +694,41 @@ class CrossRepositoryAnalyzer:
                 # Simple hash-based similarity (real implementation would use semantic similarity)
                 content_hash = hash(content[:1000])  # Hash first 1000 chars
                 content_hashes[content_hash].append(
-                    {"repository": repo_name, "file_path": doc_file.get("path", ""), "content_length": len(content)}
+                    {
+                        "repository": repo_name,
+                        "file_path": doc_file.get("path", ""),
+                        "content_length": len(content),
+                    }
                 )
 
         # Identify similar content
         for content_hash, files in content_hashes.items():
             if len(files) > 1:
                 redundancy_analysis["similar_content"].append(
-                    {"content_hash": content_hash, "files": files, "similarity_count": len(files)}
+                    {
+                        "content_hash": content_hash,
+                        "files": files,
+                        "similarity_count": len(files),
+                    }
                 )
 
         # Calculate redundancy score (lower is better)
-        total_docs = sum(len(repo.get("documentation_files", [])) for repo in repositories)
-        duplicate_docs = len(redundancy_analysis["duplicate_files"]) + len(redundancy_analysis["similar_content"])
+        total_docs = sum(
+            len(repo.get("documentation_files", [])) for repo in repositories
+        )
+        duplicate_docs = len(redundancy_analysis["duplicate_files"]) + len(
+            redundancy_analysis["similar_content"]
+        )
 
-        redundancy_analysis["redundancy_score"] = duplicate_docs / total_docs if total_docs > 0 else 0.0
+        redundancy_analysis["redundancy_score"] = (
+            duplicate_docs / total_docs if total_docs > 0 else 0.0
+        )
 
         return redundancy_analysis
 
-    def _generate_recommendations(self, analysis_results: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _generate_recommendations(
+        self, analysis_results: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate recommendations based on analysis results."""
         recommendations = []
 
@@ -691,7 +797,9 @@ class CrossRepositoryAnalyzer:
         return recommendations
 
     async def analyze_repositories(
-        self, repositories: List[Dict[str, Any]], analysis_types: Optional[List[str]] = None
+        self,
+        repositories: List[Dict[str, Any]],
+        analysis_types: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Perform comprehensive cross-repository analysis."""
 
@@ -737,26 +845,38 @@ class CrossRepositoryAnalyzer:
                     {
                         "repository_id": repo_analysis["repository_id"],
                         "repository_name": repo_analysis["repository_name"],
-                        "documentation_files": len(repo_analysis["documentation_files"]),
+                        "documentation_files": len(
+                            repo_analysis["documentation_files"]
+                        ),
                         "documentation_ratio": repo_analysis["documentation_ratio"],
                     }
                 )
 
             # Perform cross-repository analyses
             if "consistency_analysis" in analysis_types:
-                analysis_results["consistency_analysis"] = self._calculate_consistency_metrics(repository_analyses)
+                analysis_results["consistency_analysis"] = (
+                    self._calculate_consistency_metrics(repository_analyses)
+                )
 
             if "coverage_analysis" in analysis_types:
-                analysis_results["coverage_analysis"] = self._analyze_coverage_gaps(repository_analyses)
+                analysis_results["coverage_analysis"] = self._analyze_coverage_gaps(
+                    repository_analyses
+                )
 
             if "redundancy_analysis" in analysis_types:
-                analysis_results["redundancy_analysis"] = self._identify_redundancies(repository_analyses)
+                analysis_results["redundancy_analysis"] = self._identify_redundancies(
+                    repository_analyses
+                )
 
             # Calculate overall score
-            analysis_results["overall_score"] = self._calculate_overall_score(analysis_results)
+            analysis_results["overall_score"] = self._calculate_overall_score(
+                analysis_results
+            )
 
             # Generate recommendations
-            analysis_results["recommendations"] = self._generate_recommendations(analysis_results)
+            analysis_results["recommendations"] = self._generate_recommendations(
+                analysis_results
+            )
 
             processing_time = time.time() - start_time
             analysis_results["processing_time"] = processing_time
@@ -812,7 +932,9 @@ class CrossRepositoryAnalyzer:
         weighted_sum = sum(score * weight for score, weight in scores)
         return weighted_sum / total_weight
 
-    async def analyze_repository_connectivity(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_repository_connectivity(
+        self, repositories: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze connectivity and dependencies between repositories."""
 
         start_time = time.time()
@@ -860,7 +982,9 @@ class CrossRepositoryAnalyzer:
                 "processing_time": time.time() - start_time,
             }
 
-    def _find_cross_references(self, repo1: Dict[str, Any], repo2: Dict[str, Any]) -> List[str]:
+    def _find_cross_references(
+        self, repo1: Dict[str, Any], repo2: Dict[str, Any]
+    ) -> List[str]:
         """Find cross-references between two repositories."""
         references = []
 
@@ -880,7 +1004,9 @@ class CrossRepositoryAnalyzer:
 
         return references
 
-    def configure_repository_connector(self, connector_type: str, config: Dict[str, Any]) -> bool:
+    def configure_repository_connector(
+        self, connector_type: str, config: Dict[str, Any]
+    ) -> bool:
         """Configure a repository connector."""
         try:
             if connector_type not in self.repository_connectors:
@@ -921,4 +1047,6 @@ async def analyze_repositories(
     Returns:
         Comprehensive cross-repository analysis results
     """
-    return await cross_repository_analyzer.analyze_repositories(repositories, analysis_types)
+    return await cross_repository_analyzer.analyze_repositories(
+        repositories, analysis_types
+    )

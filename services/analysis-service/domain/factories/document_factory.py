@@ -107,7 +107,9 @@ class DocumentFactory:
     ) -> Document:
         """Create document from repository commit data."""
         # This would be used when integrating with version control systems
-        title = commit_data.get("title", f"Commit: {commit_data.get('hash', 'unknown')[:8]}")
+        title = commit_data.get(
+            "title", f"Commit: {commit_data.get('hash', 'unknown')[:8]}"
+        )
 
         # Extract content from commit
         content = commit_data.get("content", "")
@@ -143,7 +145,9 @@ class DocumentFactory:
         """Create an empty document for later population."""
         return self.create_from_text(title=title, text="", content_format="markdown")
 
-    def create_document_from_template(self, template_name: str, parameters: Dict[str, Any]) -> Document:
+    def create_document_from_template(
+        self, template_name: str, parameters: Dict[str, Any]
+    ) -> Document:
         """Create document from predefined template."""
         templates = {
             "readme": self._create_readme_template,
@@ -195,7 +199,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 """
 
         return self.create_from_text(
-            title=title, text=content, content_format="markdown", tags=["readme", "documentation", "template"]
+            title=title,
+            text=content,
+            content_format="markdown",
+            tags=["readme", "documentation", "template"],
         )
 
     def _create_api_docs_template(self, params: Dict[str, Any]) -> Document:
@@ -228,11 +235,11 @@ Retrieve a list of resources.
 **Response:**
 ```json
 {{
-  "data": [],
-  "meta": {{
+    "data": [],
+    "meta": {{
     "total": 0,
     "page": 1
-  }}
+    }}
 }}
 ```
 
@@ -243,18 +250,18 @@ Create a new resource.
 **Parameters:**
 ```json
 {{
-  "name": "string",
-  "description": "string"
+    "name": "string",
+    "description": "string"
 }}
 ```
 
 **Response:**
 ```json
 {{
-  "id": "string",
-  "name": "string",
-  "description": "string",
-  "created_at": "2023-01-01T00:00:00Z"
+    "id": "string",
+    "name": "string",
+    "description": "string",
+    "created_at": "2023-01-01T00:00:00Z"
 }}
 ```
 
@@ -264,17 +271,20 @@ The API uses standard HTTP status codes and returns error details in the followi
 
 ```json
 {{
-  "error": {{
+    "error": {{
     "code": "ERROR_CODE",
     "message": "Error description",
     "details": {{}}
-  }}
+    }}
 }}
 ```
 """
 
         return self.create_from_text(
-            title=title, text=content, content_format="markdown", tags=["api", "documentation", "template"]
+            title=title,
+            text=content,
+            content_format="markdown",
+            tags=["api", "documentation", "template"],
         )
 
     def _create_architecture_template(self, params: Dict[str, Any]) -> Document:
@@ -303,14 +313,14 @@ graph TD
 ### Core Components
 
 1. **Component 1**
-   - Responsibility: Description
-   - Technologies: Tech stack
-   - Dependencies: List of dependencies
+    - Responsibility: Description
+    - Technologies: Tech stack
+    - Dependencies: List of dependencies
 
 2. **Component 2**
-   - Responsibility: Description
-   - Technologies: Tech stack
-   - Dependencies: List of dependencies
+    - Responsibility: Description
+    - Technologies: Tech stack
+    - Dependencies: List of dependencies
 
 ### Infrastructure
 
@@ -355,7 +365,10 @@ Describe how data flows through the system.
 """
 
         return self.create_from_text(
-            title=title, text=content, content_format="markdown", tags=["architecture", "documentation", "template"]
+            title=title,
+            text=content,
+            content_format="markdown",
+            tags=["architecture", "documentation", "template"],
         )
 
     def _create_changelog_template(self, params: Dict[str, Any]) -> Document:
@@ -401,5 +414,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 """
 
         return self.create_from_text(
-            title=title, text=content, content_format="markdown", tags=["changelog", "documentation", "template"]
+            title=title,
+            text=content,
+            content_format="markdown",
+            tags=["changelog", "documentation", "template"],
         )

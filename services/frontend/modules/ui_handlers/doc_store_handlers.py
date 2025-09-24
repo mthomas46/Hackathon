@@ -3,11 +3,14 @@
 Handles document store browsing and exploration.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 
-from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    handle_frontend_error,
+)
 
 
 class DocStoreUIHandlers:
@@ -368,7 +371,7 @@ class DocStoreUIHandlers:
             document.getElementById('documents-container').innerHTML = 'Loading documents...';
 
             try {
-                const response = await fetch(\`/api/doc_store/documents?limit={{limit}&offset={{currentDocOffset}\`);
+                const response = await fetch(`/api/doc_store/documents?limit=${limit}&offset=${currentDocOffset}`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -398,7 +401,7 @@ class DocStoreUIHandlers:
                 const qualityClass = getQualityBadgeClass(doc.quality_score || 0);
                 const created = doc.created_at ? new Date(doc.created_at).toLocaleString() : 'Unknown';
 
-                html += \`
+                html += `
                     <div class="document-item" onclick="viewDocument('{{doc.id}')">
                         <div class="document-title">{{doc.title || doc.id}</div>
                         <div class="document-meta">
@@ -409,7 +412,7 @@ class DocStoreUIHandlers:
                         </div>
                         <div class="document-content">{{(doc.content || 'No content preview').substring(0, 200)}...</div>
                     </div>
-                \`;
+                `;
             });
 
             // Pagination
@@ -417,9 +420,9 @@ class DocStoreUIHandlers:
             const hasPrev = currentDocOffset > 0;
 
             html += '<div class="pagination">';
-            html += \`<button class="page-btn {{hasPrev ? '' : 'disabled'}" onclick="prevDocPage()">Previous</button>\`;
-            html += \`<span>Page {{Math.floor(currentDocOffset / parseInt(document.getElementById('doc-limit').value)) + 1}</span>\`;
-            html += \`<button class="page-btn {{hasNext ? '' : 'disabled'}" onclick="nextDocPage()">Next</button>\`;
+            html += `<button class="page-btn {{hasPrev ? '' : 'disabled'}" onclick="prevDocPage()">Previous</button>`;
+            html += `<span>Page {{Math.floor(currentDocOffset / parseInt(document.getElementById('doc-limit').value)) + 1}</span>`;
+            html += `<button class="page-btn {{hasNext ? '' : 'disabled'}" onclick="nextDocPage()">Next</button>`;
             html += '</div>';
 
             document.getElementById('documents-container').innerHTML = html;
@@ -437,7 +440,7 @@ class DocStoreUIHandlers:
             document.getElementById('search-container').innerHTML = 'Searching...';
 
             try {
-                const response = await fetch(\`/api/doc_store/search?q={{encodeURIComponent(query)}&limit={{limit}\`);
+                const response = await fetch(`/api/doc_store/search?q={{encodeURIComponent(query)}&limit={{limit}`);
                 const data = await response.json();
 
                 if (data.success) {
@@ -455,7 +458,7 @@ class DocStoreUIHandlers:
         function renderSearchResults(data, query) {
             const results = data.results || [];
 
-            let html = \`<h4>Search Results for "{{query}"</h4>\`;
+            let html = `<h4>Search Results for "{{query}"</h4>`;
 
             if (results.length === 0) {
                 html += '<div style="text-align: center; color: #666; padding: 40px;">No documents found matching your query</div>';
@@ -464,7 +467,7 @@ class DocStoreUIHandlers:
                 results.forEach(result => {
                     const relevance = result.relevance ? (result.relevance * 100).toFixed(1) + '%' : 'N/A';
 
-                    html += \`
+                    html += `
                         <div class="document-item" onclick="viewDocument('{{result.id}')">
                             <div class="document-title">{{result.title || result.id}</div>
                             <div class="document-meta">
@@ -474,7 +477,7 @@ class DocStoreUIHandlers:
                             </div>
                             <div class="document-content">{{(result.content || '').substring(0, 300)}...</div>
                         </div>
-                    \`;
+                    `;
                 });
                 html += '</div>';
             }
@@ -508,12 +511,12 @@ class DocStoreUIHandlers:
 
             Object.entries(metrics).forEach(([metric, value]) => {
                 const displayValue = typeof value === 'number' ? value.toLocaleString() : value;
-                html += \`
+                html += `
                     <div class="metric-item">
                         <div class="metric-label">{{metric.replace(/_/g, ' ')}</div>
                         <div class="metric-value">{{displayValue}</div>
                     </div>
-                \`;
+                `;
             });
 
             html += '</div>';
@@ -523,13 +526,13 @@ class DocStoreUIHandlers:
                 html += '<h4>Quality Insights</h4><div class="quality-metrics">';
 
                 data.insights.forEach(insight => {
-                    html += \`
+                    html += `
                         <div class="metric-item">
                             <div class="metric-label">{{insight.category}</div>
                             <div class="metric-value">{{insight.count}</div>
                             <div style="font-size: 11px; margin-top: 5px;">{{insight.description}</div>
                         </div>
-                    \`;
+                    `;
                 });
 
                 html += '</div>';
@@ -544,8 +547,8 @@ class DocStoreUIHandlers:
 
             document.getElementById('analyses-container').innerHTML = 'Loading analyses...';
 
-            let url = \`/api/doc_store/analyses?limit={{limit}&offset={{currentAnalysisOffset}\`;
-            if (docId) url += \`&document_id={{docId}\`;
+            let url = `/api/doc_store/analyses?limit={{limit}&offset={{currentAnalysisOffset}`;
+            if (docId) url += `&document_id={{docId}`;
 
             try {
                 const response = await fetch(url);
@@ -577,7 +580,7 @@ class DocStoreUIHandlers:
             analyses.forEach(analysis => {
                 const created = analysis.created_at ? new Date(analysis.created_at).toLocaleString() : 'Unknown';
 
-                html += \`
+                html += `
                     <div class="analysis-item">
                         <div class="document-title">Analysis {{analysis.id}</div>
                         <div class="document-meta">
@@ -588,7 +591,7 @@ class DocStoreUIHandlers:
                         </div>
                         <div class="document-content">{{analysis.summary || 'No summary available'}</div>
                     </div>
-                \`;
+                `;
             });
 
             // Pagination
@@ -596,9 +599,9 @@ class DocStoreUIHandlers:
             const hasPrev = currentAnalysisOffset > 0;
 
             html += '<div class="pagination">';
-            html += \`<button class="page-btn {{hasPrev ? '' : 'disabled'}" onclick="prevAnalysisPage()">Previous</button>\`;
-            html += \`<span>Page {{Math.floor(currentAnalysisOffset / parseInt(document.getElementById('analysis-limit').value)) + 1}</span>\`;
-            html += \`<button class="page-btn {{hasNext ? '' : 'disabled'}" onclick="nextAnalysisPage()">Next</button>\`;
+            html += `<button class="page-btn {{hasPrev ? '' : 'disabled'}" onclick="prevAnalysisPage()">Previous</button>`;
+            html += `<span>Page {{Math.floor(currentAnalysisOffset / parseInt(document.getElementById('analysis-limit').value)) + 1}</span>`;
+            html += `<button class="page-btn {{hasNext ? '' : 'disabled'}" onclick="nextAnalysisPage()">Next</button>`;
             html += '</div>';
 
             document.getElementById('analyses-container').innerHTML = html;
@@ -635,15 +638,15 @@ class DocStoreUIHandlers:
             let html = '';
 
             Object.entries(examples).forEach(([language, styles]) => {
-                html += \`<h4>{{language.charAt(0).toUpperCase() + language.slice(1)} Code Styles</h4>\`;
+                html += `<h4>{{language.charAt(0).toUpperCase() + language.slice(1)} Code Styles</h4>`;
 
                 Object.entries(styles).forEach(([styleName, example]) => {
-                    html += \`
+                    html += `
                         <div class="code-example">
                             <div class="code-language">{{styleName} Style</div>
                             <div class="code-content">{{example}</div>
                         </div>
-                    \`;
+                    `;
                 });
             });
 
@@ -658,7 +661,7 @@ class DocStoreUIHandlers:
 
         function viewDocument(docId) {
             // Navigate to document detail view
-            window.open(\`/api/doc_store/documents/{{docId}\`, '_blank');
+            window.open(`/api/doc_store/documents/{{docId}`, '_blank');
         }
 
         function clearSearch() {
@@ -704,5 +707,7 @@ class DocStoreUIHandlers:
             return create_html_response(html, "Doc Store Browser")
         except Exception as e:
             return handle_frontend_error(
-                "render doc store browser", e, **build_frontend_context("render_doc_store_browser")
+                "render doc store browser",
+                e,
+                **build_frontend_context("render_doc_store_browser")
             )

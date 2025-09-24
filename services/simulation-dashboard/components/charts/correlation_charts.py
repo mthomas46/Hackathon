@@ -72,7 +72,13 @@ def render_correlation_chart(
                 )
             )
 
-            fig.update_layout(title=title, width=width, height=height, xaxis_title="Variables", yaxis_title="Variables")
+            fig.update_layout(
+                title=title,
+                width=width,
+                height=height,
+                xaxis_title="Variables",
+                yaxis_title="Variables",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -175,7 +181,11 @@ def render_scatter_correlation_chart(
 
             # Create scatter plot
             fig = px.scatter(
-                df, x=x_col, y=y_col, title=f"{title} (r = {correlation:.3f})", trendline="ols"  # Add trend line
+                df,
+                x=x_col,
+                y=y_col,
+                title=f"{title} (r = {correlation:.3f})",
+                trendline="ols",  # Add trend line
             )
 
             fig.update_layout(
@@ -218,7 +228,9 @@ def render_correlation_strength(correlation: float) -> None:
             strength = "Very Weak"
             color = "🔴"
 
-        direction = "Positive" if correlation > 0 else "Negative" if correlation < 0 else "No"
+        direction = (
+            "Positive" if correlation > 0 else "Negative" if correlation < 0 else "No"
+        )
 
         st.markdown(f"#### 📊 Correlation Strength: {color} {strength} {direction}")
         st.write(f"**Coefficient:** {correlation:.3f}")
@@ -256,7 +268,11 @@ def render_network_correlation_chart(
     try:
         st.markdown(f"### {title}")
 
-        if not network_data or "nodes" not in network_data or "edges" not in network_data:
+        if (
+            not network_data
+            or "nodes" not in network_data
+            or "edges" not in network_data
+        ):
             st.info("No network data available")
             return
 
@@ -272,8 +288,12 @@ def render_network_correlation_chart(
 
         # Add edges
         for edge in edges:
-            source_node = next((n for n in nodes if n.get("id") == edge.get("source")), None)
-            target_node = next((n for n in nodes if n.get("id") == edge.get("target")), None)
+            source_node = next(
+                (n for n in nodes if n.get("id") == edge.get("source")), None
+            )
+            target_node = next(
+                (n for n in nodes if n.get("id") == edge.get("target")), None
+            )
 
             if source_node and target_node:
                 fig.add_trace(

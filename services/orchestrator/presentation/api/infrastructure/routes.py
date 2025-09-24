@@ -7,7 +7,6 @@ Provides endpoints for:
 - Event streaming
 """
 
-
 from fastapi import APIRouter, HTTPException
 
 from ....main import container
@@ -74,7 +73,9 @@ async def start_trace(service_name: str, operation_name: str):
     try:
         from ....application.infrastructure.commands import StartTraceCommand
 
-        command = StartTraceCommand(service_name=service_name, operation_name=operation_name)
+        command = StartTraceCommand(
+            service_name=service_name, operation_name=operation_name
+        )
         result = await container.start_trace_use_case.execute(command)
         return {"trace_id": result["trace_id"], "status": "started"}
     except Exception as e:
@@ -119,7 +120,9 @@ async def get_dlq_stats():
         result = await container.get_dlq_stats_use_case.execute()
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get DLQ stats: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get DLQ stats: {str(e)}"
+        )
 
 
 @router.get("/dlq/events", response_model=EventHistoryResponse)
@@ -132,7 +135,9 @@ async def list_dlq_events(limit: int = 50, offset: int = 0):
         result = await container.list_dlq_events_use_case.execute(query)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to list DLQ events: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to list DLQ events: {str(e)}"
+        )
 
 
 @router.post("/dlq/retry", response_model=dict)
@@ -141,7 +146,9 @@ async def retry_dlq_events(request: DLQRetryRequest):
     try:
         from ....application.infrastructure.commands import RetryEventCommand
 
-        command = RetryEventCommand(event_ids=request.event_ids, max_retries=request.max_retries)
+        command = RetryEventCommand(
+            event_ids=request.event_ids, max_retries=request.max_retries
+        )
         result = await container.retry_event_use_case.execute(command)
         return result
     except Exception as e:
@@ -156,7 +163,9 @@ async def get_event_stream_stats():
         result = await container.get_event_stream_stats_use_case.execute()
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get event stats: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get event stats: {str(e)}"
+        )
 
 
 @router.post("/events/publish", response_model=dict)
@@ -169,7 +178,9 @@ async def publish_event(event_type: str, payload: dict):
         result = await container.publish_event_use_case.execute(command)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to publish event: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to publish event: {str(e)}"
+        )
 
 
 @router.post("/events/replay", response_model=dict)

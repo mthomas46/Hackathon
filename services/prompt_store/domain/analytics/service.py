@@ -5,7 +5,7 @@ from typing import Any, Dict
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id
 
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from ...infrastructure.cache import prompt_store_cache
 from .entities import PromptPerformanceMetrics, UserSatisfactionScore
 from .repository import AnalyticsRepository
@@ -15,10 +15,41 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
     """Advanced analytics service for prompt ecosystem insights."""
 
     def __init__(self):
-        super().__init__(AnalyticsRepository())
+        from ...db.connection import get_prompt_store_connection_string
+
+        super().__init__(AnalyticsRepository(get_prompt_store_connection_string()))
         self.clients = ServiceClients()
 
-    async def record_usage_metrics(self, prompt_id: str, version: int, usage_data: Dict[str, Any]) -> None:
+    def _validate_entity(self, entity: PromptPerformanceMetrics) -> None:
+        """Validate analytics entity."""
+        if not entity.prompt_id or not entity.prompt_id.strip():
+            raise ValueError("Prompt ID is required")
+        if entity.version < 0:
+            raise ValueError("Version must be non-negative")
+
+    async def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> PromptPerformanceMetrics:
+        """Create analytics entity from data."""
+        return PromptPerformanceMetrics(
+            id=entity_id,
+            prompt_id=data["prompt_id"],
+            version=data["version"],
+            total_requests=data.get("total_requests", 0),
+            successful_requests=data.get("successful_requests", 0),
+            failed_requests=data.get("failed_requests", 0),
+            average_response_time_ms=data.get("average_response_time_ms", 0.0),
+            median_response_time_ms=data.get("median_response_time_ms", 0.0),
+            p95_response_time_ms=data.get("p95_response_time_ms", 0.0),
+            p99_response_time_ms=data.get("p99_response_time_ms", 0.0),
+            total_tokens_used=data.get("total_tokens_used", 0),
+            average_tokens_per_request=data.get("average_tokens_per_request", 0.0),
+            cost_estimate_usd=data.get("cost_estimate_usd", 0.0),
+        )
+
+    async def record_usage_metrics(
+        self, prompt_id: str, version: int, usage_data: Dict[str, Any]
+    ) -> None:
         """Record usage metrics for a prompt execution."""
         metrics = await self._get_or_create_metrics(prompt_id, version)
 
@@ -55,7 +86,9 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
         cache_key = f"analytics:metrics:{prompt_id}:{version}"
         await prompt_store_cache.set(cache_key, metrics.to_dict(), ttl=3600)
 
-    async def _get_or_create_metrics(self, prompt_id: str, version: int) -> PromptPerformanceMetrics:
+    async def _get_or_create_metrics(
+        self, prompt_id: str, version: int
+    ) -> PromptPerformanceMetrics:
         """Get existing metrics or create new ones."""
         cache_key = f"analytics:metrics:{prompt_id}:{version}"
         cached = await prompt_store_cache.get(cache_key)
@@ -66,11 +99,15 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
         if existing:
             return existing
 
-        metrics = PromptPerformanceMetrics(id=generate_id(), prompt_id=prompt_id, version=version)
+        metrics = PromptPerformanceMetrics(
+            id=generate_id(), prompt_id=prompt_id, version=version
+        )
         self.create_entity(metrics.__dict__)
         return metrics
 
-    async def _update_response_time_metrics(self, metrics: PromptPerformanceMetrics, response_time: float) -> None:
+    async def _update_response_time_metrics(
+        self, metrics: PromptPerformanceMetrics, response_time: float
+    ) -> None:
         """Update response time statistics."""
         if metrics.total_requests == 1:
             metrics.average_response_time_ms = response_time
@@ -79,11 +116,15 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
             metrics.p99_response_time_ms = response_time
         else:
             alpha = 0.1
-            metrics.average_response_time_ms = alpha * response_time + (1 - alpha) * metrics.average_response_time_ms
+            metrics.average_response_time_ms = (
+                alpha * response_time + (1 - alpha) * metrics.average_response_time_ms
+            )
             metrics.p95_response_time_ms = metrics.average_response_time_ms * 1.5
             metrics.p99_response_time_ms = metrics.average_response_time_ms * 2.0
 
-    def _calculate_cost_estimate(self, llm_service: str, input_tokens: int, output_tokens: int) -> float:
+    def _calculate_cost_estimate(
+        self, llm_service: str, input_tokens: int, output_tokens: int
+    ) -> float:
         """Calculate cost estimate based on token usage."""
         cost_rates = {
             "gpt-4": {"input": 0.03, "output": 0.06},
@@ -102,9 +143,13 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
     def _recalculate_averages(self, metrics: PromptPerformanceMetrics) -> None:
         """Recalculate average metrics."""
         if metrics.total_requests > 0:
-            metrics.average_tokens_per_request = metrics.total_tokens_used / metrics.total_requests
+            metrics.average_tokens_per_request = (
+                metrics.total_tokens_used / metrics.total_requests
+            )
 
-    async def record_user_satisfaction(self, satisfaction_data: Dict[str, Any]) -> UserSatisfactionScore:
+    async def record_user_satisfaction(
+        self, satisfaction_data: Dict[str, Any]
+    ) -> UserSatisfactionScore:
         """Record user satisfaction feedback."""
         score = UserSatisfactionScore(
             id=generate_id(),
@@ -120,12 +165,16 @@ class AnalyticsService(BaseService[PromptPerformanceMetrics]):
         self.repository.create_satisfaction_score(score.__dict__)
         return score
 
-    async def get_analytics_dashboard(self, time_range_days: int = 30) -> Dict[str, Any]:
+    async def get_analytics_dashboard(
+        self, time_range_days: int = 30
+    ) -> Dict[str, Any]:
         """Get comprehensive analytics dashboard data."""
         return {
             "time_range_days": time_range_days,
             "summary": await self._get_analytics_summary(time_range_days),
-            "performance_metrics": await self._get_performance_overview(time_range_days),
+            "performance_metrics": await self._get_performance_overview(
+                time_range_days
+            ),
             "usage_trends": await self._get_usage_trends(time_range_days),
         }
 

@@ -35,7 +35,9 @@ class StyleExamplesManager:
                     from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
 
                     svc = ServiceClients(timeout=10)
-                    doc_store_examples = svc.get_json(f"{ds}/style/examples", params={"language": language})
+                    doc_store_examples = svc.get_json(
+                        f"{ds}/style/examples", params={"language": language}
+                    )
                     if doc_store_examples and "items" in doc_store_examples:
                         examples.extend(doc_store_examples["items"])
                 except Exception:
@@ -65,7 +67,11 @@ class StyleExamplesManager:
             except Exception:
                 pass  # Fall back to in-memory only
 
-        return {"items": [{"language": lang, "count": count} for lang, count in summary.items()]}
+        return {
+            "items": [
+                {"language": lang, "count": count} for lang, count in summary.items()
+            ]
+        }
 
     def persist_examples(self, items: List[Dict[str, Any]]) -> None:
         """Persist style examples to doc_store if configured."""

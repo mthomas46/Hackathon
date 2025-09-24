@@ -14,7 +14,12 @@ from rich.progress import Progress
 from rich.table import Table
 
 from .analysis_service_adapter import AnalysisServiceAdapter
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import (
+    BaseServiceAdapter,
+    CommandResult,
+    ServiceInfo,
+    ServiceStatus,
+)
 from .bedrock_proxy_adapter import BedrockProxyAdapter
 from .discovery_agent_adapter import DiscoveryAgentAdapter
 from .doc_store_adapter import DocStoreAdapter
@@ -53,7 +58,11 @@ class ServiceRegistry:
                 "adapter_class": OrchestratorAdapter,
                 "priority": 1,
             },
-            "doc_store": {"url": "http://hackathon-doc_store-1:5087", "adapter_class": DocStoreAdapter, "priority": 1},
+            "doc_store": {
+                "url": "http://hackathon-doc_store-1:5087",
+                "adapter_class": DocStoreAdapter,
+                "priority": 1,
+            },
             # Agent services
             "source-agent": {
                 "url": "http://hackathon-source-agent-1:5000",
@@ -82,15 +91,27 @@ class ServiceRegistry:
                 "priority": 3,
             },
             # Utility services
-            "frontend": {"url": "http://hackathon-frontend-1:3000", "adapter_class": FrontendAdapter, "priority": 3},
-            "prompt_store": {"url": "http://hackathon-prompt_store-1:5110", "adapter_class": None, "priority": 2},
+            "frontend": {
+                "url": "http://hackathon-frontend-1:3000",
+                "adapter_class": FrontendAdapter,
+                "priority": 3,
+            },
+            "prompt_store": {
+                "url": "http://hackathon-prompt_store-1:5110",
+                "adapter_class": None,
+                "priority": 2,
+            },
             "interpreter": {
                 "url": "http://hackathon-interpreter-1:5120",
                 "adapter_class": InterpreterAdapter,
                 "priority": 2,
             },
             # Monitoring and logging
-            "log-collector": {"url": "http://hackathon-log-collector-1:5080", "adapter_class": None, "priority": 3},
+            "log-collector": {
+                "url": "http://hackathon-log-collector-1:5080",
+                "adapter_class": None,
+                "priority": 3,
+            },
             "notification-service": {
                 "url": "http://hackathon-notification-service-1:5095",
                 "adapter_class": None,
@@ -102,7 +123,11 @@ class ServiceRegistry:
                 "adapter_class": None,
                 "priority": 2,
             },
-            "secure-analyzer": {"url": "http://hackathon-secure-analyzer-1:5070", "adapter_class": None, "priority": 2},
+            "secure-analyzer": {
+                "url": "http://hackathon-secure-analyzer-1:5070",
+                "adapter_class": None,
+                "priority": 2,
+            },
         }
 
     async def initialize(self) -> None:
@@ -113,9 +138,13 @@ class ServiceRegistry:
             try:
                 adapter_class = config["adapter_class"]
                 if adapter_class:
-                    adapter = adapter_class(service_name, config["url"], self.console, self.clients)
+                    adapter = adapter_class(
+                        service_name, config["url"], self.console, self.clients
+                    )
                 else:
-                    adapter = GenericServiceAdapter(service_name, config["url"], self.console, self.clients)
+                    adapter = GenericServiceAdapter(
+                        service_name, config["url"], self.console, self.clients
+                    )
 
                 self._adapters[service_name] = adapter
                 self.console.print(f"  ✅ Registered {service_name}")
@@ -123,7 +152,9 @@ class ServiceRegistry:
             except Exception as e:
                 self.console.print(f"  ❌ Failed to register {service_name}: {e}")
 
-        self.console.print(f"[green]✅ Registry initialized with {len(self._adapters)} services[/green]")
+        self.console.print(
+            f"[green]✅ Registry initialized with {len(self._adapters)} services[/green]"
+        )
 
     def get_adapter(self, service_name: str) -> Optional[BaseServiceAdapter]:
         """Get adapter for specific service"""
@@ -135,26 +166,36 @@ class ServiceRegistry:
 
     async def health_check_all(self) -> Dict[str, CommandResult]:
         """Perform health check on all services"""
-        self.console.print("[bold blue]🔍 Performing ecosystem health check...[/bold blue]")
+        self.console.print(
+            "[bold blue]🔍 Performing ecosystem health check...[/bold blue]"
+        )
 
         results = {}
         with Progress() as progress:
-            task = progress.add_task("Health checking services...", total=len(self._adapters))
+            task = progress.add_task(
+                "Health checking services...", total=len(self._adapters)
+            )
 
             # Run health checks in parallel for better performance
-            async def check_service(name: str, adapter: BaseServiceAdapter) -> Tuple[str, CommandResult]:
+            async def check_service(
+                name: str, adapter: BaseServiceAdapter
+            ) -> Tuple[str, CommandResult]:
                 result = await adapter.health_check()
                 progress.advance(task)
                 return name, result
 
             # Execute all health checks concurrently
-            health_tasks = [check_service(name, adapter) for name, adapter in self._adapters.items()]
+            health_tasks = [
+                check_service(name, adapter) for name, adapter in self._adapters.items()
+            ]
 
             health_results = await asyncio.gather(*health_tasks, return_exceptions=True)
 
             for result in health_results:
                 if isinstance(result, Exception):
-                    self.console.print(f"❌ Health check failed with exception: {result}")
+                    self.console.print(
+                        f"❌ Health check failed with exception: {result}"
+                    )
                 else:
                     name, health_result = result
                     results[name] = health_result
@@ -183,7 +224,9 @@ class ServiceRegistry:
                 status = "❌ UNHEALTHY"
                 status_style = "red"
 
-            response_time = f"{result.execution_time:.3f}s" if result.execution_time > 0 else "N/A"
+            response_time = (
+                f"{result.execution_time:.3f}s" if result.execution_time > 0 else "N/A"
+            )
             message = result.message or result.error or "No message"
 
             table.add_row(
@@ -196,7 +239,9 @@ class ServiceRegistry:
         self.console.print(table)
 
         # Health percentage
-        health_percentage = (healthy_count / total_count) * 100 if total_count > 0 else 0
+        health_percentage = (
+            (healthy_count / total_count) * 100 if total_count > 0 else 0
+        )
         if health_percentage >= 90:
             health_status = "[green]EXCELLENT[/green]"
         elif health_percentage >= 75:
@@ -214,15 +259,21 @@ class ServiceRegistry:
         )
         self.console.print(summary_panel)
 
-    async def execute_ecosystem_command(self, service_name: str, command: str, **kwargs) -> CommandResult:
+    async def execute_ecosystem_command(
+        self, service_name: str, command: str, **kwargs
+    ) -> CommandResult:
         """Execute command on specific service"""
         adapter = self.get_adapter(service_name)
         if not adapter:
-            return CommandResult(success=False, error=f"Service '{service_name}' not found in registry")
+            return CommandResult(
+                success=False, error=f"Service '{service_name}' not found in registry"
+            )
 
         return await adapter.execute_command(command, **kwargs)
 
-    async def discover_service_capabilities(self) -> Dict[str, List[Tuple[str, str, str]]]:
+    async def discover_service_capabilities(
+        self,
+    ) -> Dict[str, List[Tuple[str, str, str]]]:
         """Discover capabilities of all services"""
         capabilities = {}
 
@@ -231,7 +282,9 @@ class ServiceRegistry:
                 commands = await adapter.get_available_commands()
                 capabilities[service_name] = commands
             except Exception as e:
-                self.console.print(f"❌ Failed to discover capabilities for {service_name}: {e}")
+                self.console.print(
+                    f"❌ Failed to discover capabilities for {service_name}: {e}"
+                )
                 capabilities[service_name] = []
 
         return capabilities
@@ -267,7 +320,10 @@ class GenericServiceAdapter(BaseServiceAdapter):
         return await self.ping()
 
     async def get_available_commands(self) -> List[Tuple[str, str, str]]:
-        return [("ping", "Test basic connectivity", "ping"), ("health", "Check service health", "health")]
+        return [
+            ("ping", "Test basic connectivity", "ping"),
+            ("health", "Check service health", "health"),
+        ]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         if command == "ping":
@@ -275,4 +331,7 @@ class GenericServiceAdapter(BaseServiceAdapter):
         elif command == "health":
             return await self.health_check()
         else:
-            return CommandResult(success=False, error=f"Command '{command}' not supported by generic adapter")
+            return CommandResult(
+                success=False,
+                error=f"Command '{command}' not supported by generic adapter",
+            )

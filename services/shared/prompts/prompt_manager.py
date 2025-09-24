@@ -70,7 +70,9 @@ class PromptManager:
                             name=prompt_name,
                             category=category,
                             content=prompt_data.get("content", ""),
-                            variables=self._extract_variables(prompt_data.get("content", "")),
+                            variables=self._extract_variables(
+                                prompt_data.get("content", "")
+                            ),
                             version=prompt_data.get("version", "1.0.0"),
                             description=prompt_data.get("description", ""),
                         )
@@ -101,14 +103,18 @@ class PromptManager:
             ValueError: If required variables are missing
         """
         if key not in self._prompts:
-            raise KeyError(f"Prompt '{key}' not found. Available prompts: {list(self._prompts.keys())}")
+            raise KeyError(
+                f"Prompt '{key}' not found. Available prompts: {list(self._prompts.keys())}"
+            )
 
         template = self._prompts[key]
 
         # Check if all required variables are provided
         missing_vars = set(template.variables) - set(variables.keys())
         if missing_vars:
-            raise ValueError(f"Missing required variables for prompt '{key}': {missing_vars}")
+            raise ValueError(
+                f"Missing required variables for prompt '{key}': {missing_vars}"
+            )
 
         # Fill in the template
         try:
@@ -187,7 +193,9 @@ if __name__ == "__main__":
 
     # Get a specific prompt
     try:
-        prompt = pm.get_prompt("summarization.default", content="Some content to summarize")
+        prompt = pm.get_prompt(
+            "summarization.default", content="Some content to summarize"
+        )
         print(f"\nGenerated prompt:\n{prompt}")
     except Exception as e:
         print(f"Error: {e}")

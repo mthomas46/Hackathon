@@ -10,7 +10,9 @@ import streamlit as st
 def render_analytics_page():
     """Render the analytics page."""
     st.markdown("## 📈 Advanced Analytics")
-    st.markdown("Deep dive into simulation performance with advanced analytics and insights.")
+    st.markdown(
+        "Deep dive into simulation performance with advanced analytics and insights."
+    )
 
     st.info("🚧 Advanced analytics interface is under development. Check back soon!")
 

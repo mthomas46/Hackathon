@@ -4,7 +4,6 @@ Handles secure analyzer service visualization, including content detection,
 policy enforcement, and secure summarization monitoring.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..secure_analyzer_monitor import secure_analyzer_monitor
@@ -28,7 +27,9 @@ class SecureAnalyzerUIHandlers:
             # Get secure analyzer status and cached data
             status_data = secure_analyzer_monitor.get_secure_status()
             detection_history = secure_analyzer_monitor.get_detection_history(limit=20)
-            suggestion_history = secure_analyzer_monitor.get_suggestion_history(limit=20)
+            suggestion_history = secure_analyzer_monitor.get_suggestion_history(
+                limit=20
+            )
             summary_history = secure_analyzer_monitor.get_summary_history(limit=20)
 
             # Build context for template
@@ -1053,5 +1054,7 @@ class SecureAnalyzerUIHandlers:
             return create_html_response(html, "Secure Analyzer Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render secure analyzer dashboard", e, **build_frontend_context("render_secure_analyzer_dashboard")
+                "render secure analyzer dashboard",
+                e,
+                **build_frontend_context("render_secure_analyzer_dashboard")
             )

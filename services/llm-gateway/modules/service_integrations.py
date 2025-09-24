@@ -35,7 +35,9 @@ class ServiceIntegrations:
     def _initialize_service_endpoints(self) -> Dict[str, str]:
         """Initialize service endpoint mappings."""
         return {
-            ServiceNames.DOC_STORE: get_config_value("DOC_STORE_URL", "http://doc_store:5087", section="services"),
+            ServiceNames.DOC_STORE: get_config_value(
+                "DOC_STORE_URL", "http://doc_store:5087", section="services"
+            ),
             ServiceNames.PROMPT_STORE: get_config_value(
                 "PROMPT_STORE_URL", "http://prompt-store:5110", section="services"
             ),
@@ -58,10 +60,14 @@ class ServiceIntegrations:
                 "CODE_ANALYZER_URL", "http://code-analyzer:5085", section="services"
             ),
             ServiceNames.ARCHITECTURE_DIGITIZER: get_config_value(
-                "ARCHITECTURE_DIGITIZER_URL", "http://architecture-digitizer:5105", section="services"
+                "ARCHITECTURE_DIGITIZER_URL",
+                "http://architecture-digitizer:5105",
+                section="services",
             ),
             ServiceNames.ANALYSIS_SERVICE: get_config_value(
-                "ANALYSIS_SERVICE_URL", "http://analysis-service:5020", section="services"
+                "ANALYSIS_SERVICE_URL",
+                "http://analysis-service:5020",
+                section="services",
             ),
         }
 
@@ -144,9 +150,23 @@ class ServiceIntegrations:
                     "providers": "/providers",
                     "metrics": "/metrics",
                 },
-                "supported_providers": ["ollama", "openai", "anthropic", "bedrock", "grok"],
-                "security_features": ["content_filtering", "provider_routing", "audit_logging"],
-                "performance_features": ["response_caching", "load_balancing", "rate_limiting"],
+                "supported_providers": [
+                    "ollama",
+                    "openai",
+                    "anthropic",
+                    "bedrock",
+                    "grok",
+                ],
+                "security_features": [
+                    "content_filtering",
+                    "provider_routing",
+                    "audit_logging",
+                ],
+                "performance_features": [
+                    "response_caching",
+                    "load_balancing",
+                    "rate_limiting",
+                ],
                 "registered_at": utc_now().isoformat(),
             }
 
@@ -214,7 +234,9 @@ class ServiceIntegrations:
     # INTEGRATION METHODS - Core Services
     # ============================================================================
 
-    async def integrate_with_doc_store(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_doc_store(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Document Store service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.DOC_STORE]
@@ -258,7 +280,9 @@ class ServiceIntegrations:
             )
             return {"error": str(e)}
 
-    async def integrate_with_prompt_store(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_prompt_store(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Prompt Store service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.PROMPT_STORE]
@@ -266,7 +290,10 @@ class ServiceIntegrations:
             if operation == "get_optimized":
                 # Get optimized prompt for task
                 url = f"{endpoint}/prompts/optimized"
-                data = {"task_type": kwargs.get("task_type"), "context": kwargs.get("context", {})}
+                data = {
+                    "task_type": kwargs.get("task_type"),
+                    "context": kwargs.get("context", {}),
+                }
                 response = await self.clients.post_json(url, data)
                 return response
 
@@ -297,7 +324,9 @@ class ServiceIntegrations:
             )
             return {"error": str(e)}
 
-    async def integrate_with_memory_agent(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_memory_agent(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Memory Agent service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.MEMORY_AGENT]
@@ -347,7 +376,9 @@ class ServiceIntegrations:
             )
             return {"error": str(e)}
 
-    async def integrate_with_interpreter(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_interpreter(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Interpreter service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.INTERPRETER]
@@ -377,7 +408,10 @@ class ServiceIntegrations:
             elif operation == "extract_entities":
                 # Extract entities from text
                 url = f"{endpoint}/extract/entities"
-                data = {"text": kwargs.get("text"), "entity_types": kwargs.get("entity_types", [])}
+                data = {
+                    "text": kwargs.get("text"),
+                    "entity_types": kwargs.get("entity_types", []),
+                }
                 response = await self.clients.post_json(url, data)
                 return response
 
@@ -390,7 +424,9 @@ class ServiceIntegrations:
             )
             return {"error": str(e)}
 
-    async def integrate_with_orchestrator(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_orchestrator(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Orchestrator service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.ORCHESTRATOR]
@@ -436,7 +472,9 @@ class ServiceIntegrations:
     # INTEGRATION METHODS - AI/ML Services
     # ============================================================================
 
-    async def integrate_with_summarizer_hub(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_summarizer_hub(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Summarizer Hub service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.SUMMARIZER_HUB]
@@ -467,7 +505,9 @@ class ServiceIntegrations:
             )
             return {"error": str(e)}
 
-    async def integrate_with_secure_analyzer(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_secure_analyzer(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Secure Analyzer service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.SECURE_ANALYZER]
@@ -475,14 +515,20 @@ class ServiceIntegrations:
             if operation == "analyze_security":
                 # Analyze content for security issues
                 url = f"{endpoint}/detect"
-                data = {"content": kwargs.get("content"), "keywords": kwargs.get("keywords", [])}
+                data = {
+                    "content": kwargs.get("content"),
+                    "keywords": kwargs.get("keywords", []),
+                }
                 response = await self.clients.post_json(url, data)
                 return response
 
             elif operation == "get_secure_providers":
                 # Get security recommendations for providers
                 url = f"{endpoint}/suggest"
-                data = {"content": kwargs.get("content"), "providers": kwargs.get("providers", [])}
+                data = {
+                    "content": kwargs.get("content"),
+                    "providers": kwargs.get("providers", []),
+                }
                 response = await self.clients.post_json(url, data)
                 return response
 
@@ -495,7 +541,9 @@ class ServiceIntegrations:
             )
             return {"error": str(e)}
 
-    async def integrate_with_code_analyzer(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_code_analyzer(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Code Analyzer service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.CODE_ANALYZER]
@@ -527,7 +575,9 @@ class ServiceIntegrations:
             )
             return {"error": str(e)}
 
-    async def integrate_with_architecture_digitizer(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_architecture_digitizer(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Architecture Digitizer service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.ARCHITECTURE_DIGITIZER]
@@ -559,7 +609,9 @@ class ServiceIntegrations:
             )
             return {"error": str(e)}
 
-    async def integrate_with_analysis_service(self, operation: str, **kwargs) -> Dict[str, Any]:
+    async def integrate_with_analysis_service(
+        self, operation: str, **kwargs
+    ) -> Dict[str, Any]:
         """Integrate with Analysis Service."""
         try:
             endpoint = self.service_endpoints[ServiceNames.ANALYSIS_SERVICE]
@@ -600,16 +652,23 @@ class ServiceIntegrations:
 
         # Step 1: Interpret query with Interpreter service
         interpretation = await self.integrate_with_interpreter(
-            "interpret_query", query=query.prompt, context=query.context, user_id=query.user_id
+            "interpret_query",
+            query=query.prompt,
+            context=query.context,
+            user_id=query.user_id,
         )
 
         # Step 2: Get optimized prompt from Prompt Store
         optimized_prompt = await self.integrate_with_prompt_store(
-            "get_optimized", task_type=interpretation.get("intent", "general"), context=query.context
+            "get_optimized",
+            task_type=interpretation.get("intent", "general"),
+            context=query.context,
         )
 
         # Step 3: Retrieve relevant context from Memory Agent
-        conversation_context = await self.integrate_with_memory_agent("retrieve_context", user_id=query.user_id)
+        conversation_context = await self.integrate_with_memory_agent(
+            "retrieve_context", user_id=query.user_id
+        )
 
         # Step 4: Analyze security with Secure Analyzer
         security_analysis = await self.integrate_with_secure_analyzer(
@@ -651,7 +710,11 @@ class ServiceIntegrations:
                 health_url = f"{endpoint}/health"
                 response = await self.clients.get_json(health_url)
                 health_status[service_name] = {
-                    "status": "healthy" if response.get("status") == "healthy" else "unhealthy",
+                    "status": (
+                        "healthy"
+                        if response.get("status") == "healthy"
+                        else "unhealthy"
+                    ),
                     "endpoint": endpoint,
                     "response_time": response.get("response_time", 0),
                     "last_checked": utc_now().isoformat(),
@@ -666,10 +729,14 @@ class ServiceIntegrations:
 
         return {
             "overall_status": (
-                "healthy" if all(s["status"] == "healthy" for s in health_status.values()) else "degraded"
+                "healthy"
+                if all(s["status"] == "healthy" for s in health_status.values())
+                else "degraded"
             ),
             "services": health_status,
             "total_services": len(health_status),
-            "healthy_services": sum(1 for s in health_status.values() if s["status"] == "healthy"),
+            "healthy_services": sum(
+                1 for s in health_status.values() if s["status"] == "healthy"
+            ),
             "timestamp": utc_now().isoformat(),
         }

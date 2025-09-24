@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import Prompt
 from services.prompt_store.db.queries import execute_query
-from services.shared.utilities import utc_now
+from services.shared.utilities import utc_now, validate_sql_identifier
 
 
 class LifecycleRepository:
@@ -21,16 +21,24 @@ class LifecycleRepository:
         "archived": ["published"],  # Allow reactivation from archive
     }
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, connection_string: str):
+        from ...db.connection import get_prompt_store_connection_string
+
+        self.connection_string = (
+            connection_string or get_prompt_store_connection_string()
+        )
         self.table_name = "prompts"
+
+        # Validate table name to prevent SQL injection
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
 
     def get_entity(self, entity_id: str) -> Optional[Prompt]:
         """Get a prompt by ID with lifecycle information."""
         query = f"""
             SELECT id, name, category, content, variables, description,
-                   lifecycle_status, version, created_by, created_at,
-                   updated_at, tags, metadata
+                    lifecycle_status, version, created_by, created_at,
+                    updated_at, tags, metadata
             FROM {self.table_name}
             WHERE id = ?
         """
@@ -42,7 +50,11 @@ class LifecycleRepository:
         return Prompt.from_dict(row)
 
     def update_lifecycle_status(
-        self, prompt_id: str, new_status: str, reason: str = "", updated_by: str = "system"
+        self,
+        prompt_id: str,
+        new_status: str,
+        reason: str = "",
+        updated_by: str = "system",
     ) -> bool:
         """Update the lifecycle status of a prompt."""
         if new_status not in self.VALID_STATUSES:
@@ -54,8 +66,12 @@ class LifecycleRepository:
             raise ValueError(f"Prompt {prompt_id} not found")
 
         # Validate transition
-        if new_status not in self.VALID_TRANSITIONS.get(current_prompt.lifecycle_status, []):
-            raise ValueError(f"Invalid transition from '{current_prompt.lifecycle_status}' to '{new_status}'")
+        if new_status not in self.VALID_TRANSITIONS.get(
+            current_prompt.lifecycle_status, []
+        ):
+            raise ValueError(
+                f"Invalid transition from '{current_prompt.lifecycle_status}' to '{new_status}'"
+            )
 
         # Update the status
         update_query = f"""
@@ -92,15 +108,17 @@ class LifecycleRepository:
         except Exception as e:
             raise Exception(f"Failed to update lifecycle status: {str(e)}")
 
-    def get_prompts_by_status(self, status: str, limit: int = 50, offset: int = 0) -> List[Prompt]:
+    def get_prompts_by_status(
+        self, status: str, limit: int = 50, offset: int = 0
+    ) -> List[Prompt]:
         """Get prompts by lifecycle status."""
         if status not in self.VALID_STATUSES:
             raise ValueError(f"Invalid lifecycle status: {status}")
 
         query = f"""
             SELECT id, name, category, content, variables, description,
-                   lifecycle_status, version, created_by, created_at,
-                   updated_at, tags, metadata
+                    lifecycle_status, version, created_by, created_at,
+                    updated_at, tags, metadata
             FROM {self.table_name}
             WHERE lifecycle_status = ?
             ORDER BY updated_at DESC

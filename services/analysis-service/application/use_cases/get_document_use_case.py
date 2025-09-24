@@ -66,17 +66,28 @@ class GetDocumentUseCase:
 
         has_more = end_idx < total_count
 
-        return DocumentQueryResult(documents=paginated_documents, total_count=total_count, has_more=has_more)
+        return DocumentQueryResult(
+            documents=paginated_documents, total_count=total_count, has_more=has_more
+        )
 
-    def _apply_filters(self, documents: list[Document], query: GetDocumentsQuery) -> list[Document]:
+    def _apply_filters(
+        self, documents: list[Document], query: GetDocumentsQuery
+    ) -> list[Document]:
         """Apply filters to document list."""
         filtered = documents
 
         if query.author:
-            filtered = [d for d in filtered if d.metadata.author and query.author.lower() in d.metadata.author.lower()]
+            filtered = [
+                d
+                for d in filtered
+                if d.metadata.author
+                and query.author.lower() in d.metadata.author.lower()
+            ]
 
         if query.tags:
-            filtered = [d for d in filtered if any(tag in d.metadata.tags for tag in query.tags)]
+            filtered = [
+                d for d in filtered if any(tag in d.metadata.tags for tag in query.tags)
+            ]
 
         if query.repository_id:
             filtered = [d for d in filtered if d.repository_id == query.repository_id]
@@ -87,11 +98,19 @@ class GetDocumentUseCase:
         """Convert document to response DTO."""
         return DocumentResponse.from_domain(document)
 
-    def to_list_response(self, result: DocumentQueryResult, query: GetDocumentsQuery) -> DocumentListResponse:
+    def to_list_response(
+        self, result: DocumentQueryResult, query: GetDocumentsQuery
+    ) -> DocumentListResponse:
         """Convert query result to list response DTO."""
-        document_responses = [DocumentResponse.from_domain(doc) for doc in result.documents]
+        document_responses = [
+            DocumentResponse.from_domain(doc) for doc in result.documents
+        ]
 
-        filters = {"author": query.author, "tags": query.tags, "repository_id": query.repository_id}
+        filters = {
+            "author": query.author,
+            "tags": query.tags,
+            "repository_id": query.repository_id,
+        }
 
         return DocumentListResponse.create(
             documents=document_responses,

@@ -6,7 +6,8 @@ Handles the complex logic for report generation endpoints.
 import os
 from typing import Any, Dict
 
-from services.shared.core.models.models import Finding
+# Using standardized analysis-service domain entities
+from ..domain.entities import Finding
 
 from .analysis_logic import generate_summary_report, generate_trends_report
 from .shared_utils import get_analysis_service_client
@@ -23,16 +24,22 @@ class ReportHandlers:
 
             if req.kind == "summary":
                 # Fetch recent findings
-                findings_data = await service_client.get_json(f"{service_client.analysis_service_url()}/findings")
+                findings_data = await service_client.get_json(
+                    f"{service_client.analysis_service_url()}/findings"
+                )
                 findings = [Finding(**f) for f in findings_data.get("findings", [])]
 
                 report = generate_summary_report(findings)
 
             elif req.kind == "trends":
                 # Fetch findings with time window
-                time_window = req.payload.get("time_window", "7d") if req.payload else "7d"
+                time_window = (
+                    req.payload.get("time_window", "7d") if req.payload else "7d"
+                )
                 try:
-                    findings_data = await service_client.get_json(f"{service_client.analysis_service_url()}/findings")
+                    findings_data = await service_client.get_json(
+                        f"{service_client.analysis_service_url()}/findings"
+                    )
                     findings = [Finding(**f) for f in findings_data.get("findings", [])]
                 except Exception:
                     # For testing/development, provide mock findings if service call fails
@@ -67,8 +74,14 @@ class ReportHandlers:
                 report = {
                     "type": "trends",
                     "trend_data": [
-                        {"date": "2024-01-01", "count": report.get("total_findings", 0)},
-                        {"date": "2024-01-02", "count": max(0, report.get("total_findings", 0) - 1)},
+                        {
+                            "date": "2024-01-01",
+                            "count": report.get("total_findings", 0),
+                        },
+                        {
+                            "date": "2024-01-02",
+                            "count": max(0, report.get("total_findings", 0) - 1),
+                        },
                     ],
                     **report,
                 }
@@ -91,7 +104,11 @@ class ReportHandlers:
                 report = {
                     "pr_id": pr_id,
                     "confidence_score": 0.85,
-                    "factors": {"documentation_updated": True, "tests_added": True, "code_review_complete": False},
+                    "factors": {
+                        "documentation_updated": True,
+                        "tests_added": True,
+                        "code_review_complete": False,
+                    },
                     "risks": ["Missing code review"],
                     "recommendations": ["Complete code review before merge"],
                 }
@@ -99,9 +116,15 @@ class ReportHandlers:
             else:
                 from services.shared.utilities.error_handling import ValidationException
 
-                supported_types = ["summary", "trends", "life_of_ticket", "pr_confidence"]
+                supported_types = [
+                    "summary",
+                    "trends",
+                    "life_of_ticket",
+                    "pr_confidence",
+                ]
                 raise ValidationException(
-                    f"Unsupported report type: {req.kind}", {"kind": [f"Must be one of: {', '.join(supported_types)}"]}
+                    f"Unsupported report type: {req.kind}",
+                    {"kind": [f"Must be one of: {', '.join(supported_types)}"]},
                 )
 
             return report

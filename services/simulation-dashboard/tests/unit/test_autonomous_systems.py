@@ -148,7 +148,9 @@ class TestAutoScaling:
 
     def test_perform_auto_scaling_analysis(self):
         """Test auto-scaling analysis."""
-        analysis_result = perform_auto_scaling_analysis(self.current_metrics, self.scaling_config)
+        analysis_result = perform_auto_scaling_analysis(
+            self.current_metrics, self.scaling_config
+        )
 
         assert isinstance(analysis_result, dict)
         assert "recommendation" in analysis_result
@@ -182,15 +184,23 @@ class TestAutoScaling:
 
     def test_auto_scaling_normal_load_scenario(self):
         """Test auto-scaling under normal load."""
-        analysis = perform_auto_scaling_analysis(self.current_metrics, self.scaling_config)
+        analysis = perform_auto_scaling_analysis(
+            self.current_metrics, self.scaling_config
+        )
 
         assert analysis["recommendation"] == "maintain"
-        assert analysis["confidence"] > 0.8  # High confidence for maintaining current state
+        assert (
+            analysis["confidence"] > 0.8
+        )  # High confidence for maintaining current state
 
     @patch("pages.autonomous.execute_scaling_action")
     def test_execute_auto_scaling_action(self, mock_execute):
         """Test execution of auto-scaling actions."""
-        mock_execute.return_value = {"success": True, "new_instance_count": 4, "execution_time": 45.2}
+        mock_execute.return_value = {
+            "success": True,
+            "new_instance_count": 4,
+            "execution_time": 45.2,
+        }
 
         result = execute_auto_scaling_action("scale_up", 4)
 
@@ -207,7 +217,9 @@ class TestAutoScaling:
         )
 
         # Should be in cooldown period
-        analysis = perform_auto_scaling_analysis(self.current_metrics, self.scaling_config)
+        analysis = perform_auto_scaling_analysis(
+            self.current_metrics, self.scaling_config
+        )
 
         assert "cooldown_active" in analysis
         assert analysis["cooldown_active"] is True
@@ -223,7 +235,9 @@ class TestAutoScaling:
         low_metrics["current_instances"] = 1
 
         analysis = perform_auto_scaling_analysis(low_metrics, min_config)
-        assert analysis["recommendation"] != "scale_down"  # Should not scale below minimum
+        assert (
+            analysis["recommendation"] != "scale_down"
+        )  # Should not scale below minimum
 
         # Test maximum boundary
         max_config = self.scaling_config.copy()
@@ -234,7 +248,9 @@ class TestAutoScaling:
         high_metrics["current_instances"] = 10
 
         analysis = perform_auto_scaling_analysis(high_metrics, max_config)
-        assert analysis["recommendation"] != "scale_up"  # Should not scale above maximum
+        assert (
+            analysis["recommendation"] != "scale_up"
+        )  # Should not scale above maximum
 
 
 class TestSelfHealing:
@@ -297,7 +313,9 @@ class TestSelfHealing:
         assert isinstance(healing_actions, list)
 
         # Should include memory optimization actions
-        memory_actions = [a for a in healing_actions if "memory" in a.get("action", "").lower()]
+        memory_actions = [
+            a for a in healing_actions if "memory" in a.get("action", "").lower()
+        ]
         assert len(memory_actions) > 0
 
     @patch("pages.autonomous.execute_healing_action")
@@ -309,7 +327,11 @@ class TestSelfHealing:
             "result": "Service restarted successfully",
         }
 
-        action = {"action": "restart", "service": "cache", "parameters": {"force": True}}
+        action = {
+            "action": "restart",
+            "service": "cache",
+            "parameters": {"force": True},
+        }
 
         result = self._execute_healing_action(action)
 
@@ -333,7 +355,11 @@ class TestSelfHealing:
 
     def _execute_healing_action(self, action):
         """Helper method for executing healing action."""
-        return {"success": True, "execution_time": 30.5, "result": f"{action['action']} executed successfully"}
+        return {
+            "success": True,
+            "execution_time": 30.5,
+            "result": f"{action['action']} executed successfully",
+        }
 
 
 class TestResourceOptimization:
@@ -342,15 +368,29 @@ class TestResourceOptimization:
     def setup_method(self):
         """Set up test data for resource optimization."""
         self.resource_allocation = {
-            "web_servers": {"instances": 3, "cpu_allocation": 2, "memory_allocation": 4},
+            "web_servers": {
+                "instances": 3,
+                "cpu_allocation": 2,
+                "memory_allocation": 4,
+            },
             "databases": {"instances": 2, "cpu_allocation": 4, "memory_allocation": 8},
-            "cache_servers": {"instances": 2, "cpu_allocation": 1, "memory_allocation": 2},
-            "worker_nodes": {"instances": 5, "cpu_allocation": 2, "memory_allocation": 4},
+            "cache_servers": {
+                "instances": 2,
+                "cpu_allocation": 1,
+                "memory_allocation": 2,
+            },
+            "worker_nodes": {
+                "instances": 5,
+                "cpu_allocation": 2,
+                "memory_allocation": 4,
+            },
         }
 
         self.workload_patterns = pd.DataFrame(
             {
-                "timestamp": pd.date_range("2023-01-01", periods=168, freq="H"),  # One week
+                "timestamp": pd.date_range(
+                    "2023-01-01", periods=168, freq="H"
+                ),  # One week
                 "cpu_demand": np.random.normal(70, 15, 168),
                 "memory_demand": np.random.normal(75, 10, 168),
                 "request_load": np.random.normal(1000, 200, 168),
@@ -359,7 +399,9 @@ class TestResourceOptimization:
 
     def test_optimize_resource_allocation(self):
         """Test resource allocation optimization."""
-        optimization_result = optimize_resource_allocation(self.resource_allocation, self.workload_patterns)
+        optimization_result = optimize_resource_allocation(
+            self.resource_allocation, self.workload_patterns
+        )
 
         assert isinstance(optimization_result, dict)
         assert "optimized_allocation" in optimization_result
@@ -369,7 +411,9 @@ class TestResourceOptimization:
 
     def test_resource_optimization_cost_benefit_analysis(self):
         """Test cost-benefit analysis for resource optimization."""
-        result = optimize_resource_allocation(self.resource_allocation, self.workload_patterns)
+        result = optimize_resource_allocation(
+            self.resource_allocation, self.workload_patterns
+        )
 
         # Verify cost savings calculation
         assert "cost_savings" in result
@@ -379,7 +423,9 @@ class TestResourceOptimization:
 
     def test_resource_optimization_performance_impact(self):
         """Test performance impact assessment."""
-        result = optimize_resource_allocation(self.resource_allocation, self.workload_patterns)
+        result = optimize_resource_allocation(
+            self.resource_allocation, self.workload_patterns
+        )
 
         # Verify performance impact assessment
         assert "performance_impact" in result
@@ -391,7 +437,9 @@ class TestResourceOptimization:
         """Test resource optimization under peak load conditions."""
         # Create peak load scenario
         peak_workload = self.workload_patterns.copy()
-        peak_workload.loc[peak_workload.index[:24], "cpu_demand"] = 95  # High CPU demand for first day
+        peak_workload.loc[peak_workload.index[:24], "cpu_demand"] = (
+            95  # High CPU demand for first day
+        )
         peak_workload.loc[peak_workload.index[:24], "request_load"] = 1500
 
         result = optimize_resource_allocation(self.resource_allocation, peak_workload)
@@ -425,7 +473,11 @@ class TestAutonomousOptimizationLoop:
             "optimization_interval": 3600,  # 1 hour
             "max_concurrent_actions": 3,
             "risk_tolerance": "medium",
-            "performance_targets": {"response_time_max": 500, "error_rate_max": 0.05, "throughput_min": 800},
+            "performance_targets": {
+                "response_time_max": 500,
+                "error_rate_max": 0.05,
+                "throughput_min": 800,
+            },
             "cost_optimization_weight": 0.3,
             "performance_optimization_weight": 0.7,
         }
@@ -434,23 +486,37 @@ class TestAutonomousOptimizationLoop:
     async def test_run_autonomous_optimization_loop(self):
         """Test autonomous optimization loop execution."""
         system_state = {
-            "performance_metrics": {"response_time": 450, "error_rate": 0.03, "throughput": 950},
+            "performance_metrics": {
+                "response_time": 450,
+                "error_rate": 0.03,
+                "throughput": 950,
+            },
             "resource_utilization": {"cpu": 65, "memory": 70, "disk": 45},
             "cost_metrics": {"monthly_cost": 5000, "cost_per_request": 0.005},
         }
 
-        with patch("pages.autonomous.generate_optimization_actions") as mock_generate, patch(
+        with patch(
+            "pages.autonomous.generate_optimization_actions"
+        ) as mock_generate, patch(
             "pages.autonomous.evaluate_action_impact"
-        ) as mock_evaluate, patch("asyncio.sleep"):
+        ) as mock_evaluate, patch(
+            "asyncio.sleep"
+        ):
 
             mock_generate.return_value = [
                 {"action": "scale_down", "service": "web_servers", "impact": 0.8},
                 {"action": "optimize_cache", "service": "cache", "impact": 0.6},
             ]
 
-            mock_evaluate.return_value = {"net_benefit": 150, "risk_level": "low", "execution_confidence": 0.85}
+            mock_evaluate.return_value = {
+                "net_benefit": 150,
+                "risk_level": "low",
+                "execution_confidence": 0.85,
+            }
 
-            result = await run_autonomous_optimization_loop(system_state, self.optimization_config)
+            result = await run_autonomous_optimization_loop(
+                system_state, self.optimization_config
+            )
 
             assert isinstance(result, dict)
             assert "actions_executed" in result
@@ -465,7 +531,9 @@ class TestAutonomousOptimizationLoop:
             "cost_metrics": {"monthly_cost": 6000},
         }
 
-        recommendations = generate_autonomous_recommendations(system_state, self.optimization_config)
+        recommendations = generate_autonomous_recommendations(
+            system_state, self.optimization_config
+        )
 
         assert isinstance(recommendations, list)
         assert len(recommendations) > 0
@@ -480,7 +548,12 @@ class TestAutonomousOptimizationLoop:
         """Test execution of autonomous actions."""
         actions = [
             {"action": "restart_service", "service": "cache", "priority": "high"},
-            {"action": "scale_up", "service": "web_servers", "instances": 2, "priority": "medium"},
+            {
+                "action": "scale_up",
+                "service": "web_servers",
+                "instances": 2,
+                "priority": "medium",
+            },
         ]
 
         with patch("pages.autonomous.execute_action") as mock_execute:
@@ -499,8 +572,16 @@ class TestAutonomousOptimizationLoop:
     def test_monitor_autonomous_performance(self):
         """Test monitoring of autonomous system performance."""
         optimization_history = [
-            {"timestamp": datetime.now() - timedelta(hours=2), "action": "scale_up", "benefit": 100},
-            {"timestamp": datetime.now() - timedelta(hours=1), "action": "optimize_cache", "benefit": 50},
+            {
+                "timestamp": datetime.now() - timedelta(hours=2),
+                "action": "scale_up",
+                "benefit": 100,
+            },
+            {
+                "timestamp": datetime.now() - timedelta(hours=1),
+                "action": "optimize_cache",
+                "benefit": 50,
+            },
             {"timestamp": datetime.now(), "action": "restart_service", "benefit": 75},
         ]
 
@@ -514,12 +595,18 @@ class TestAutonomousOptimizationLoop:
 
     def test_autonomous_optimization_risk_assessment(self):
         """Test risk assessment for autonomous actions."""
-        high_risk_action = {"action": "terminate_instances", "service": "database", "instances": 3}
+        high_risk_action = {
+            "action": "terminate_instances",
+            "service": "database",
+            "instances": 3,
+        }
 
         low_risk_action = {"action": "clear_cache", "service": "web_cache"}
 
         # High risk action should have higher risk score
-        assert self._assess_action_risk(high_risk_action) > self._assess_action_risk(low_risk_action)
+        assert self._assess_action_risk(high_risk_action) > self._assess_action_risk(
+            low_risk_action
+        )
 
     def test_autonomous_optimization_cost_benefit_analysis(self):
         """Test cost-benefit analysis for optimization actions."""
@@ -566,7 +653,10 @@ class TestIntegrationScenarios:
         """Test complete autonomous workflow from monitoring to action."""
         # This would test the complete autonomous workflow
         # For now, verify the components work together
-        system_state = {"performance_metrics": {"response_time": 600}, "resource_utilization": {"cpu": 85}}
+        system_state = {
+            "performance_metrics": {"response_time": 600},
+            "resource_utilization": {"cpu": 85},
+        }
 
         # Generate recommendations
         recommendations = generate_autonomous_recommendations(system_state, {})
@@ -615,7 +705,11 @@ class TestIntegrationScenarios:
 def sample_system_state():
     """Fixture for sample system state."""
     return {
-        "performance_metrics": {"response_time": 450, "error_rate": 0.03, "throughput": 950},
+        "performance_metrics": {
+            "response_time": 450,
+            "error_rate": 0.03,
+            "throughput": 950,
+        },
         "resource_utilization": {"cpu": 65, "memory": 70, "disk": 45},
         "services": {
             "web_server": {"status": "healthy"},
@@ -633,7 +727,11 @@ def sample_optimization_config():
         "optimization_interval": 3600,
         "max_concurrent_actions": 3,
         "risk_tolerance": "medium",
-        "performance_targets": {"response_time_max": 500, "error_rate_max": 0.05, "throughput_min": 800},
+        "performance_targets": {
+            "response_time_max": 500,
+            "error_rate_max": 0.05,
+            "throughput_min": 800,
+        },
     }
 
 

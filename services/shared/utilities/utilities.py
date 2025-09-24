@@ -103,7 +103,9 @@ def generate_id(prefix: str = "", length: int = 12) -> str:
     Returns:
         Unique ID string with optional prefix
     """
-    unique_id = hashlib.sha256(f"{datetime.now(timezone.utc).isoformat()}{uuid.uuid4()}".encode()).hexdigest()[:length]
+    unique_id = hashlib.sha256(
+        f"{datetime.now(timezone.utc).isoformat()}{uuid.uuid4()}".encode()
+    ).hexdigest()[:length]
     return f"{prefix}{unique_id}" if prefix else unique_id
 
 
@@ -192,7 +194,9 @@ def validate_string_length(text: str, min_len: int = 0, max_len: int = 1000) -> 
 
 
 def validate_numeric_range(
-    value: Union[int, float], min_val: Optional[float] = None, max_val: Optional[float] = None
+    value: Union[int, float],
+    min_val: Optional[float] = None,
+    max_val: Optional[float] = None,
 ) -> bool:
     """Validate numeric value is within range."""
     if min_val is not None and value < min_val:
@@ -233,7 +237,9 @@ def get_file_size_mb(file_path: Union[str, Path]) -> float:
     return path.stat().st_size / (1024 * 1024)
 
 
-def read_file_safe(file_path: Union[str, Path], encoding: str = "utf-8") -> Optional[str]:
+def read_file_safe(
+    file_path: Union[str, Path], encoding: str = "utf-8"
+) -> Optional[str]:
     """Safely read a file, returning None if it doesn't exist or can't be read."""
     try:
         with open(file_path, "r", encoding=encoding) as f:
@@ -242,7 +248,9 @@ def read_file_safe(file_path: Union[str, Path], encoding: str = "utf-8") -> Opti
         return None
 
 
-def write_file_safe(file_path: Union[str, Path], content: str, encoding: str = "utf-8") -> bool:
+def write_file_safe(
+    file_path: Union[str, Path], content: str, encoding: str = "utf-8"
+) -> bool:
     """Safely write content to a file."""
     try:
         ensure_directory(Path(file_path).parent)
@@ -290,17 +298,23 @@ def group_by(items: List[Dict[str, Any]], key: str) -> Dict[Any, List[Dict[str, 
     return result
 
 
-def sort_by(items: List[Dict[str, Any]], key: str, reverse: bool = False) -> List[Dict[str, Any]]:
+def sort_by(
+    items: List[Dict[str, Any]], key: str, reverse: bool = False
+) -> List[Dict[str, Any]]:
     """Sort list of dictionaries by a key."""
     return sorted(items, key=lambda x: x.get(key), reverse=reverse)
 
 
-def filter_by(items: List[Dict[str, Any]], key: str, value: Any) -> List[Dict[str, Any]]:
+def filter_by(
+    items: List[Dict[str, Any]], key: str, value: Any
+) -> List[Dict[str, Any]]:
     """Filter list of dictionaries by key-value pair."""
     return [item for item in items if item.get(key) == value]
 
 
-def find_by(items: List[Dict[str, Any]], key: str, value: Any) -> Optional[Dict[str, Any]]:
+def find_by(
+    items: List[Dict[str, Any]], key: str, value: Any
+) -> Optional[Dict[str, Any]]:
     """Find first item in list by key-value pair."""
     for item in items:
         if item.get(key) == value:
@@ -321,10 +335,14 @@ def hash_string(text: str, algorithm: str = "sha256") -> str:
     """
     if algorithm == "md5":
         # MD5 is deprecated but kept for compatibility - use SHA256 instead
-        return hashlib.sha256(text.encode()).hexdigest()  # Changed from MD5 for security
+        return hashlib.sha256(
+            text.encode()
+        ).hexdigest()  # Changed from MD5 for security
     elif algorithm == "sha1":
         # SHA1 is deprecated but kept for compatibility - use SHA256 instead
-        return hashlib.sha256(text.encode()).hexdigest()  # Changed from SHA1 for security
+        return hashlib.sha256(
+            text.encode()
+        ).hexdigest()  # Changed from SHA1 for security
     elif algorithm == "sha256":
         return hashlib.sha256(text.encode()).hexdigest()
     else:
@@ -359,7 +377,11 @@ def attach_self_register(app, service_name: str) -> None:
             "info",
             "service_registration",
             service_name,
-            {"service_name": service_name, "status": "registered", "timestamp": utc_now().isoformat()},
+            {
+                "service_name": service_name,
+                "status": "registered",
+                "timestamp": utc_now().isoformat(),
+            },
         )
     except ImportError:
         # Fallback if logging is not available
@@ -388,14 +410,19 @@ def get_service_client(timeout: Optional[int] = None) -> Any:
 
 
 def setup_common_middleware(
-    app, service_name: str, enable_rate_limit: bool = False, rate_limits: Optional[Dict[str, tuple[float, int]]] = None
+    app,
+    service_name: str,
+    enable_rate_limit: bool = False,
+    rate_limits: Optional[Dict[str, tuple[float, int]]] = None,
 ) -> None:
     """Setup common middleware for FastAPI services."""
     try:
         from .middleware import ServiceMiddleware
 
         middleware = ServiceMiddleware(
-            service_name=service_name, rate_limits=rate_limits, enable_rate_limit=enable_rate_limit
+            service_name=service_name,
+            rate_limits=rate_limits,
+            enable_rate_limit=enable_rate_limit,
         )
 
         # Apply middleware to the FastAPI app
@@ -412,7 +439,10 @@ def setup_common_middleware(
 
 
 async def cached_get(
-    url: str, etag: Optional[str] = None, last_modified: Optional[str] = None, timeout: int = 15
+    url: str,
+    etag: Optional[str] = None,
+    last_modified: Optional[str] = None,
+    timeout: int = 15,
 ) -> Tuple[int, str, Dict[str, str]]:
     """Perform cached HTTP GET request with ETag and Last-Modified support.
 

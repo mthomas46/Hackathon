@@ -8,7 +8,12 @@ for document fetching, normalization, code analysis, and source management featu
 import time
 from typing import Dict, List, Tuple
 
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import (
+    BaseServiceAdapter,
+    CommandResult,
+    ServiceInfo,
+    ServiceStatus,
+)
 
 
 class SourceAgentAdapter(BaseServiceAdapter):
@@ -76,7 +81,9 @@ class SourceAgentAdapter(BaseServiceAdapter):
                 )
             else:
                 return CommandResult(
-                    success=False, error="Source Agent health check failed", execution_time=execution_time
+                    success=False,
+                    error="Source Agent health check failed",
+                    execution_time=execution_time,
                 )
 
         except Exception as e:
@@ -86,9 +93,21 @@ class SourceAgentAdapter(BaseServiceAdapter):
         """Get available Source Agent commands"""
         return [
             ("fetch", "Fetch document from URL or repository", "fetch [url] [options]"),
-            ("process", "Process uploaded file or content", "process [file_path] [type]"),
-            ("analyze", "Analyze source code or document", "analyze [target] [analysis_type]"),
-            ("normalize", "Normalize document format", "normalize [document_id] [format]"),
+            (
+                "process",
+                "Process uploaded file or content",
+                "process [file_path] [type]",
+            ),
+            (
+                "analyze",
+                "Analyze source code or document",
+                "analyze [target] [analysis_type]",
+            ),
+            (
+                "normalize",
+                "Normalize document format",
+                "normalize [document_id] [format]",
+            ),
             ("index", "Index content for search", "index [content_id] [metadata]"),
             ("repositories", "List managed repositories", "repositories"),
             ("files", "List processed files", "files [filter]"),
@@ -126,7 +145,9 @@ class SourceAgentAdapter(BaseServiceAdapter):
                 return CommandResult(success=False, error=f"Unknown command: {command}")
 
         except Exception as e:
-            return CommandResult(success=False, error=f"Command execution failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Command execution failed: {str(e)}"
+            )
 
     # Private command implementations
     async def _fetch_document(self, params: Dict) -> CommandResult:
@@ -145,10 +166,15 @@ class SourceAgentAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message="Document fetched successfully", execution_time=execution_time
+                success=True,
+                data=response,
+                message="Document fetched successfully",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Document fetch failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Document fetch failed: {str(e)}"
+            )
 
     async def _process_content(self, params: Dict) -> CommandResult:
         """Process uploaded file or content"""
@@ -157,7 +183,9 @@ class SourceAgentAdapter(BaseServiceAdapter):
             url = f"{self.base_url}/process"
 
             payload = {
-                "content": params.get("content", "# Sample Document\nThis is a test document."),
+                "content": params.get(
+                    "content", "# Sample Document\nThis is a test document."
+                ),
                 "type": params.get("type", "markdown"),
                 "filename": params.get("filename", "document.md"),
             }
@@ -166,10 +194,15 @@ class SourceAgentAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message="Content processed successfully", execution_time=execution_time
+                success=True,
+                data=response,
+                message="Content processed successfully",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Content processing failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Content processing failed: {str(e)}"
+            )
 
     async def _analyze_source(self, params: Dict) -> CommandResult:
         """Analyze source code or document"""
@@ -187,10 +220,15 @@ class SourceAgentAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message="Source analysis completed", execution_time=execution_time
+                success=True,
+                data=response,
+                message="Source analysis completed",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Source analysis failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Source analysis failed: {str(e)}"
+            )
 
     async def _normalize_document(self, params: Dict) -> CommandResult:
         """Normalize document format"""
@@ -208,10 +246,15 @@ class SourceAgentAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message="Document normalized successfully", execution_time=execution_time
+                success=True,
+                data=response,
+                message="Document normalized successfully",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Document normalization failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Document normalization failed: {str(e)}"
+            )
 
     async def _index_content(self, params: Dict) -> CommandResult:
         """Index content for search"""
@@ -229,10 +272,15 @@ class SourceAgentAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message="Content indexed successfully", execution_time=execution_time
+                success=True,
+                data=response,
+                message="Content indexed successfully",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Content indexing failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Content indexing failed: {str(e)}"
+            )
 
     async def _get_repositories(self) -> CommandResult:
         """Get managed repositories"""
@@ -250,7 +298,9 @@ class SourceAgentAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get repositories: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get repositories: {str(e)}"
+            )
 
     async def _get_files(self, params: Dict) -> CommandResult:
         """Get processed files"""
@@ -270,7 +320,10 @@ class SourceAgentAdapter(BaseServiceAdapter):
 
             file_count = len(response) if isinstance(response, list) else 0
             return CommandResult(
-                success=True, data=response, message=f"Retrieved {file_count} files", execution_time=execution_time
+                success=True,
+                data=response,
+                message=f"Retrieved {file_count} files",
+                execution_time=execution_time,
             )
         except Exception as e:
             return CommandResult(success=False, error=f"Failed to get files: {str(e)}")
@@ -291,7 +344,9 @@ class SourceAgentAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get metadata: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get metadata: {str(e)}"
+            )
 
     async def _get_status(self, params: Dict) -> CommandResult:
         """Get processing status"""
@@ -303,7 +358,10 @@ class SourceAgentAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message=f"Retrieved status for job {job_id}", execution_time=execution_time
+                success=True,
+                data=response,
+                message=f"Retrieved status for job {job_id}",
+                execution_time=execution_time,
             )
         except Exception as e:
             return CommandResult(success=False, error=f"Failed to get status: {str(e)}")

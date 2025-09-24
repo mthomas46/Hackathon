@@ -4,7 +4,6 @@ Handles discovery agent service visualization, including endpoint
 registration monitoring, OpenAPI parsing, and service discovery operations.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..discovery_agent_monitor import discovery_agent_monitor
@@ -571,5 +570,7 @@ class DiscoveryAgentUIHandlers:
             return create_html_response(html, "Discovery Agent Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render discovery agent dashboard", e, **build_frontend_context("render_discovery_agent_dashboard")
+                "render discovery agent dashboard",
+                e,
+                **build_frontend_context("render_discovery_agent_dashboard")
             )

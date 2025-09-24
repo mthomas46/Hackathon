@@ -15,7 +15,9 @@ class LifecycleService:
     """Service for managing prompt lifecycle operations."""
 
     def __init__(self):
-        self.lifecycle_repo = LifecycleRepository()
+        from ...db.connection import get_prompt_store_connection_string
+
+        self.lifecycle_repo = LifecycleRepository(get_prompt_store_connection_string())
         self.prompt_service = PromptService()
 
     async def update_lifecycle_status(
@@ -28,11 +30,17 @@ class LifecycleService:
         if not current_prompt:
             raise ValueError(f"Prompt {prompt_id} not found")
 
-        if not self.lifecycle_repo.validate_transition(current_prompt.lifecycle_status, new_status):
-            raise ValueError(f"Invalid lifecycle transition from '{current_prompt.lifecycle_status}' to '{new_status}'")
+        if not self.lifecycle_repo.validate_transition(
+            current_prompt.lifecycle_status, new_status
+        ):
+            raise ValueError(
+                f"Invalid lifecycle transition from '{current_prompt.lifecycle_status}' to '{new_status}'"
+            )
 
         # Perform the transition
-        success = self.lifecycle_repo.update_lifecycle_status(prompt_id, new_status, reason, user_id)
+        success = self.lifecycle_repo.update_lifecycle_status(
+            prompt_id, new_status, reason, user_id
+        )
 
         if success:
             # Invalidate cache for this prompt
@@ -40,7 +48,9 @@ class LifecycleService:
             await prompt_store_cache.delete(f"prompt_versions:{prompt_id}")
 
             # Trigger any side effects based on the transition
-            await self._handle_transition_side_effects(current_prompt, new_status, user_id)
+            await self._handle_transition_side_effects(
+                current_prompt, new_status, user_id
+            )
 
             return {
                 "prompt_id": prompt_id,
@@ -53,7 +63,9 @@ class LifecycleService:
         else:
             raise Exception("Failed to update lifecycle status")
 
-    async def get_prompts_by_status(self, status: str, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+    async def get_prompts_by_status(
+        self, status: str, limit: int = 50, offset: int = 0
+    ) -> Dict[str, Any]:
         """Get prompts by lifecycle status with caching."""
 
         cache_key = f"lifecycle_status:{status}:{limit}:{offset}"
@@ -95,7 +107,11 @@ class LifecycleService:
 
         counts = self.lifecycle_repo.get_status_counts()
 
-        return {"status_counts": counts, "total_prompts": sum(counts.values()), "last_updated": utc_now().isoformat()}
+        return {
+            "status_counts": counts,
+            "total_prompts": sum(counts.values()),
+            "last_updated": utc_now().isoformat(),
+        }
 
     def get_transition_rules(self) -> Dict[str, Any]:
         """Get all valid lifecycle transition rules."""
@@ -115,17 +131,27 @@ class LifecycleService:
         if not prompt:
             return {"valid": False, "reason": f"Prompt {prompt_id} not found"}
 
-        is_valid = self.lifecycle_repo.validate_transition(prompt.lifecycle_status, new_status)
+        is_valid = self.lifecycle_repo.validate_transition(
+            prompt.lifecycle_status, new_status
+        )
 
         return {
             "valid": is_valid,
             "current_status": prompt.lifecycle_status,
             "requested_status": new_status,
-            "reason": None if is_valid else f"Invalid transition from '{prompt.lifecycle_status}' to '{new_status}'",
+            "reason": (
+                None
+                if is_valid
+                else f"Invalid transition from '{prompt.lifecycle_status}' to '{new_status}'"
+            ),
         }
 
     async def bulk_lifecycle_update(
-        self, prompt_ids: List[str], new_status: str, reason: str = "", user_id: str = "system"
+        self,
+        prompt_ids: List[str],
+        new_status: str,
+        reason: str = "",
+        user_id: str = "system",
     ) -> Dict[str, Any]:
         """Perform bulk lifecycle status updates."""
 
@@ -135,11 +161,17 @@ class LifecycleService:
 
         for prompt_id in prompt_ids:
             try:
-                result = await self.update_lifecycle_status(prompt_id, new_status, reason, user_id)
-                results.append({"prompt_id": prompt_id, "success": True, "result": result})
+                result = await self.update_lifecycle_status(
+                    prompt_id, new_status, reason, user_id
+                )
+                results.append(
+                    {"prompt_id": prompt_id, "success": True, "result": result}
+                )
                 successful += 1
             except Exception as e:
-                results.append({"prompt_id": prompt_id, "success": False, "error": str(e)})
+                results.append(
+                    {"prompt_id": prompt_id, "success": False, "error": str(e)}
+                )
                 failed += 1
 
         return {
@@ -152,7 +184,9 @@ class LifecycleService:
             "timestamp": utc_now().isoformat(),
         }
 
-    async def _handle_transition_side_effects(self, prompt: Any, new_status: str, user_id: str) -> None:
+    async def _handle_transition_side_effects(
+        self, prompt: Any, new_status: str, user_id: str
+    ) -> None:
         """Handle side effects of lifecycle transitions."""
 
         # When archiving a prompt, clean up any active sessions or references
@@ -177,7 +211,9 @@ class LifecycleService:
         # For now, just clean cache
         await prompt_store_cache.delete(f"prompt:{prompt_id}")
         await prompt_store_cache.delete(f"prompt_versions:{prompt_id}")
-        await prompt_store_cache.delete_pattern(f"lifecycle_status:*:*")  # Clear status caches
+        await prompt_store_cache.delete_pattern(
+            f"lifecycle_status:*:*"
+        )  # Clear status caches
 
     async def _validate_publish_criteria(self, prompt: Any) -> None:
         """Validate that a prompt meets criteria for publishing."""

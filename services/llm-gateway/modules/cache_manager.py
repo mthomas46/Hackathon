@@ -47,8 +47,12 @@ class CacheManager:
     def __init__(self):
         self.cache: Dict[str, CacheEntry] = {}
         self.max_size = int(get_config_value("CACHE_MAX_SIZE", "1000", section="cache"))
-        self.default_ttl = int(get_config_value("CACHE_DEFAULT_TTL", "3600", section="cache"))
-        self.cleanup_interval = int(get_config_value("CACHE_CLEANUP_INTERVAL", "300", section="cache"))
+        self.default_ttl = int(
+            get_config_value("CACHE_DEFAULT_TTL", "3600", section="cache")
+        )
+        self.cleanup_interval = int(
+            get_config_value("CACHE_CLEANUP_INTERVAL", "300", section="cache")
+        )
 
         # Start background cleanup task if event loop is available
         try:
@@ -129,7 +133,11 @@ class CacheManager:
             "llm_gateway_cache_store",
             f"Cached response for key: {key[:8]}...",
             ServiceNames.LLM_GATEWAY,
-            {"cache_key_prefix": key[:8], "response_length": len(response), "ttl_seconds": ttl},
+            {
+                "cache_key_prefix": key[:8],
+                "response_length": len(response),
+                "ttl_seconds": ttl,
+            },
         )
 
     async def clear_cache(self, pattern: Optional[str] = None) -> int:
@@ -243,7 +251,9 @@ class CacheManager:
                 "hit_rate_estimate": 0.0,
             }
 
-        total_size = sum(len(entry.response.encode("utf-8")) for entry in self.cache.values())
+        total_size = sum(
+            len(entry.response.encode("utf-8")) for entry in self.cache.values()
+        )
         current_time = time.time()
 
         oldest_entry = min(self.cache.values(), key=lambda x: x.created_at)
@@ -280,7 +290,12 @@ class CacheManager:
             }
 
         except Exception as e:
-            return {"status": "error", "error": str(e), "stats": {}, "expired_entries_cleared": 0}
+            return {
+                "status": "error",
+                "error": str(e),
+                "stats": {},
+                "expired_entries_cleared": 0,
+            }
 
     async def preload_cache(self, requests: List[Dict[str, Any]]):
         """Preload cache with common requests."""
@@ -300,8 +315,12 @@ class CacheManager:
                 # Check if already cached
                 if cache_key not in self.cache:
                     # Simulate caching a response
-                    mock_response = f"Cached response for: {request_data.get('prompt', '')[:50]}..."
-                    await self.cache_response(cache_key, mock_response, ttl=7200)  # 2 hours
+                    mock_response = (
+                        f"Cached response for: {request_data.get('prompt', '')[:50]}..."
+                    )
+                    await self.cache_response(
+                        cache_key, mock_response, ttl=7200
+                    )  # 2 hours
                     preloaded_count += 1
 
             except Exception as e:

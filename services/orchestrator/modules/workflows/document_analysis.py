@@ -4,7 +4,6 @@ This module defines a LangGraph workflow for comprehensive document analysis
 leveraging multiple orchestrator services.
 """
 
-
 from langgraph.graph import END, StateGraph
 
 from ..langgraph.state import WorkflowState
@@ -42,7 +41,8 @@ def analyze_document_node(state: WorkflowState) -> WorkflowState:
 
         # Analyze consistency (would need multiple documents)
         consistency_result = analyze_document_consistency_tool(
-            [state.input_data.get("doc_id", "current")], {"check_references": True, "check_formatting": True}
+            [state.input_data.get("doc_id", "current")],
+            {"check_references": True, "check_formatting": True},
         )
         if consistency_result["success"]:
             state.output_data["consistency_analysis"] = consistency_result["data"]
@@ -51,7 +51,9 @@ def analyze_document_node(state: WorkflowState) -> WorkflowState:
         state.current_step = "analysis_complete"
 
     except Exception as e:
-        state.add_error({"step": "analysis", "error": str(e), "error_type": "analysis_error"})
+        state.add_error(
+            {"step": "analysis", "error": str(e), "error_type": "analysis_error"}
+        )
         state.current_step = "analysis_failed"
 
     return state
@@ -87,7 +89,9 @@ def store_results_node(state: WorkflowState) -> WorkflowState:
         state.current_step = "storage_complete"
 
     except Exception as e:
-        state.add_error({"step": "storage", "error": str(e), "error_type": "storage_error"})
+        state.add_error(
+            {"step": "storage", "error": str(e), "error_type": "storage_error"}
+        )
         state.current_step = "storage_failed"
 
     return state
@@ -119,7 +123,13 @@ def notify_stakeholders_node(state: WorkflowState) -> WorkflowState:
         state.current_step = "notification_complete"
 
     except Exception as e:
-        state.add_error({"step": "notification", "error": str(e), "error_type": "notification_error"})
+        state.add_error(
+            {
+                "step": "notification",
+                "error": str(e),
+                "error_type": "notification_error",
+            }
+        )
         state.current_step = "notification_failed"
 
     return state
@@ -155,11 +165,15 @@ def create_document_analysis_workflow():
 
     # Add conditional edges for error handling
     workflow.add_conditional_edges(
-        "analyze_document", should_retry, {"retry_analysis": "retry_analysis", "end": "store_results"}
+        "analyze_document",
+        should_retry,
+        {"retry_analysis": "retry_analysis", "end": "store_results"},
     )
 
     workflow.add_conditional_edges(
-        "retry_analysis", should_retry, {"retry_analysis": "retry_analysis", "end": "store_results"}
+        "retry_analysis",
+        should_retry,
+        {"retry_analysis": "retry_analysis", "end": "store_results"},
     )
 
     # Set the entry point

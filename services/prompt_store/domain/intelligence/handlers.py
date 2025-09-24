@@ -2,7 +2,10 @@
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 from ...core.handler import BaseHandler
 from .service import IntelligenceService
@@ -14,42 +17,68 @@ class IntelligenceHandlers(BaseHandler):
     def __init__(self):
         super().__init__(IntelligenceService())
 
-    async def handle_generate_from_code(self, code_content: str, language: str = "python") -> Dict[str, Any]:
+    async def handle_generate_from_code(
+        self, code_content: str, language: str = "python"
+    ) -> Dict[str, Any]:
         """Generate prompts from code analysis."""
         try:
-            result = await self.service.generate_prompts_from_code(code_content, language)
+            result = await self.service.generate_prompts_from_code(
+                code_content, language
+            )
             if "error" in result:
-                return create_error_response(result["error"], "ANALYSIS_FAILED").model_dump()
+                return create_error_response(
+                    result["error"], "ANALYSIS_FAILED"
+                ).model_dump()
 
-            return create_success_response(message="Prompts generated from code analysis", data=result).model_dump()
+            return create_success_response(
+                message="Prompts generated from code analysis", data=result
+            ).model_dump()
         except Exception as e:
             return create_error_response(
                 f"Failed to generate prompts from code: {str(e)}", "INTERNAL_ERROR"
             ).model_dump()
 
-    async def handle_generate_from_document(self, document_content: str, doc_type: str = "markdown") -> Dict[str, Any]:
+    async def handle_generate_from_document(
+        self, document_content: str, doc_type: str = "markdown"
+    ) -> Dict[str, Any]:
         """Generate prompts from document analysis."""
         try:
-            result = await self.service.generate_prompts_from_document(document_content, doc_type)
+            result = await self.service.generate_prompts_from_document(
+                document_content, doc_type
+            )
             if "error" in result:
-                return create_error_response(result["error"], "ANALYSIS_FAILED").model_dump()
+                return create_error_response(
+                    result["error"], "ANALYSIS_FAILED"
+                ).model_dump()
 
-            return create_success_response(message="Prompts generated from document analysis", data=result).model_dump()
+            return create_success_response(
+                message="Prompts generated from document analysis", data=result
+            ).model_dump()
         except Exception as e:
             return create_error_response(
                 f"Failed to generate prompts from document: {str(e)}", "INTERNAL_ERROR"
             ).model_dump()
 
-    async def handle_generate_service_prompts(self, service_name: str, service_description: str = "") -> Dict[str, Any]:
+    async def handle_generate_service_prompts(
+        self, service_name: str, service_description: str = ""
+    ) -> Dict[str, Any]:
         """Generate prompts for service integration."""
         try:
-            prompts = await self.service.generate_service_integration_prompts(service_name, service_description)
+            prompts = await self.service.generate_service_integration_prompts(
+                service_name, service_description
+            )
             return create_success_response(
                 message="Service integration prompts generated",
-                data={"service": service_name, "prompts": prompts, "count": len(prompts)},
+                data={
+                    "service": service_name,
+                    "prompts": prompts,
+                    "count": len(prompts),
+                },
             ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to generate service prompts: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to generate service prompts: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
     async def handle_analyze_effectiveness(
         self, prompt_id: str, usage_history: Optional[List[Dict[str, Any]]] = None
@@ -61,15 +90,25 @@ class IntelligenceHandlers(BaseHandler):
                 # This would integrate with analytics service
                 usage_history = []
 
-            analysis = await self.service.analyze_prompt_effectiveness(prompt_id, usage_history)
+            analysis = await self.service.analyze_prompt_effectiveness(
+                prompt_id, usage_history
+            )
             if "error" in analysis:
-                return create_error_response(analysis["error"], "ANALYSIS_FAILED").model_dump()
+                return create_error_response(
+                    analysis["error"], "ANALYSIS_FAILED"
+                ).model_dump()
 
-            return create_success_response(message="Prompt effectiveness analyzed", data=analysis).model_dump()
+            return create_success_response(
+                message="Prompt effectiveness analyzed", data=analysis
+            ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to analyze effectiveness: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to analyze effectiveness: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()
 
-    async def handle_generate_api_endpoints(self, service_analysis: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_generate_api_endpoints(
+        self, service_analysis: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate API endpoint documentation prompts."""
         try:
             # This would analyze service structure and generate API docs
@@ -103,4 +142,6 @@ Include:
                 data={"endpoints_analyzed": len(endpoints), "prompts": api_prompts},
             ).model_dump()
         except Exception as e:
-            return create_error_response(f"Failed to generate API prompts: {str(e)}", "INTERNAL_ERROR").model_dump()
+            return create_error_response(
+                f"Failed to generate API prompts: {str(e)}", "INTERNAL_ERROR"
+            ).model_dump()

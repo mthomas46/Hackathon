@@ -32,9 +32,11 @@ from services.prompt_store.domain.refinement.handlers import PromptRefinementHan
 from services.prompt_store.domain.relationships.handlers import RelationshipsHandlers
 from services.prompt_store.domain.validation.handlers import ValidationHandlers
 from services.prompt_store.infrastructure.cache import prompt_store_cache
-from services.shared.core.config.config import get_config_value
-from services.shared.core.constants_new import ServiceNames
-from services.shared.core.responses.responses import SuccessResponse, create_error_response, create_success_response
+from services.shared.infrastructure.config import load_service_config
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation
@@ -46,10 +48,18 @@ from services.shared.utilities.error_handling import install_error_handlers
 # ============================================================================
 # SERVICE CONFIGURATION
 # ============================================================================
-SERVICE_NAME = "prompt-store"
-SERVICE_TITLE = "Prompt Store"
-SERVICE_VERSION = "2.0.0"
-DEFAULT_PORT = 5110
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="prompt-store",
+    config_file="./config.yaml",  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Prompt Store"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # ============================================================================
 # APP INITIALIZATION
@@ -58,13 +68,15 @@ app = FastAPI(
     title=SERVICE_TITLE,
     description="Advanced prompt management system with domain-driven architecture",
     version=SERVICE_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# Use common middleware setup
-setup_common_middleware(app, ServiceNames.PROMPT_STORE)
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=config.service_name)
 install_error_handlers(app)
-register_health_endpoints(app, ServiceNames.PROMPT_STORE, SERVICE_VERSION)
-attach_self_register(app, ServiceNames.PROMPT_STORE)
+register_health_endpoints(app, config.service_name, config.service_version)
+attach_self_register(app, config.service_name)
 
 
 # Initialize cache
@@ -117,9 +129,12 @@ async def get_prompt(prompt_id: str):
     return await prompt_handlers.handle_get_prompt(prompt_id)
 
 
-@app.get("/api/v1/prompts", response_model=SuccessResponse)
+@app.get("/api/v1/prompts")
 async def list_prompts(
-    category: Optional[str] = None, limit: int = 50, offset: int = 0, filters: Optional[Dict[str, Any]] = None
+    category: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+    filters: Optional[Dict[str, Any]] = None,
 ):
     """List prompts with filtering and pagination."""
     if filters is None:
@@ -127,8 +142,10 @@ async def list_prompts(
     return await prompt_handlers.handle_list_prompts(category, limit, offset, **filters)
 
 
-@app.get("/api/v1/prompts/search/{category}/{name}", response_model=SuccessResponse)
-async def get_prompt_by_name(category: str, name: str, variables: Optional[Dict[str, Any]] = None):
+@app.get("/api/v1/prompts/search/{category}/{name}")
+async def get_prompt_by_name(
+    category: str, name: str, variables: Optional[Dict[str, Any]] = None
+):
     """Get prompt by category/name and optionally fill template variables."""
     if variables is None:
         variables = {}
@@ -141,7 +158,7 @@ async def update_prompt(prompt_id: str, updates: PromptUpdate):
     return await prompt_handlers.handle_update_prompt(prompt_id, updates)
 
 
-@app.delete("/api/v1/prompts/{prompt_id}", response_model=SuccessResponse)
+@app.delete("/api/v1/prompts/{prompt_id}")
 async def delete_prompt(prompt_id: str):
     """Soft delete a prompt."""
     return await prompt_handlers.handle_delete_prompt(prompt_id)
@@ -152,14 +169,19 @@ async def delete_prompt(prompt_id: str):
 # ============================================================================
 
 
-@app.post("/api/v1/prompts/{prompt_id}/fork", response_model=SuccessResponse)
+@app.post("/api/v1/prompts/{prompt_id}/fork")
 async def fork_prompt(
-    prompt_id: str, new_name: str, created_by: str = "api_user", changes: Optional[Dict[str, Any]] = None
+    prompt_id: str,
+    new_name: str,
+    created_by: str = "api_user",
+    changes: Optional[Dict[str, Any]] = None,
 ):
     """Fork a prompt to create a new variant."""
     if changes is None:
         changes = {}
-    return await prompt_handlers.handle_fork_prompt(prompt_id, new_name, created_by, **changes)
+    return await prompt_handlers.handle_fork_prompt(
+        prompt_id, new_name, created_by, **changes
+    )
 
 
 @app.put("/api/v1/prompts/{prompt_id}/content", response_model=Dict[str, Any])
@@ -171,7 +193,9 @@ async def update_prompt_content(
     updated_by: str = "api_user",
 ):
     """Update prompt content with versioning."""
-    return await prompt_handlers.handle_update_prompt_content(prompt_id, content, variables, change_summary, updated_by)
+    return await prompt_handlers.handle_update_prompt_content(
+        prompt_id, content, variables, change_summary, updated_by
+    )
 
 
 @app.get("/api/v1/prompts/{prompt_id}/drift", response_model=Dict[str, Any])
@@ -192,7 +216,12 @@ async def get_prompt_suggestions(prompt_id: str):
 
 
 @app.post("/api/v1/prompts/search", response_model=Dict[str, Any])
-async def search_prompts(query: str, category: Optional[str] = None, tags: Optional[List[str]] = None, limit: int = 50):
+async def search_prompts(
+    query: str,
+    category: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+    limit: int = 50,
+):
     """Advanced prompt search with full-text search."""
     return await prompt_handlers.handle_search_prompts(query, category, tags, limit)
 
@@ -216,13 +245,17 @@ async def get_prompts_by_tag(tag: str, limit: int = 50, offset: int = 0):
 
 
 @app.post("/api/v1/bulk/prompts", response_model=Dict[str, Any])
-async def bulk_create_prompts(prompts: List[Dict[str, Any]], created_by: str = "api_user"):
+async def bulk_create_prompts(
+    prompts: List[Dict[str, Any]], created_by: str = "api_user"
+):
     """Bulk create multiple prompts."""
     return await bulk_handlers.handle_bulk_create_prompts(prompts, created_by)
 
 
 @app.put("/api/v1/bulk/prompts", response_model=Dict[str, Any])
-async def bulk_update_prompts(updates: List[Dict[str, Any]], created_by: str = "api_user"):
+async def bulk_update_prompts(
+    updates: List[Dict[str, Any]], created_by: str = "api_user"
+):
     """Bulk update multiple prompts."""
     return await bulk_handlers.handle_bulk_update_prompts(updates, created_by)
 
@@ -241,15 +274,22 @@ async def bulk_update_tags(
     created_by: str = "api_user",
 ):
     """Bulk update tags on multiple prompts."""
-    return await bulk_handlers.handle_bulk_update_tags(prompt_ids, tags_to_add, tags_to_remove, created_by)
+    return await bulk_handlers.handle_bulk_update_tags(
+        prompt_ids, tags_to_add, tags_to_remove, created_by
+    )
 
 
 @app.get("/api/v1/bulk/operations", response_model=Dict[str, Any])
 async def list_bulk_operations(
-    status: Optional[str] = None, operation_type: Optional[str] = None, limit: int = 50, offset: int = 0
+    status: Optional[str] = None,
+    operation_type: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
 ):
     """List bulk operations with status."""
-    return await bulk_handlers.handle_list_bulk_operations(status, operation_type, limit, offset)
+    return await bulk_handlers.handle_list_bulk_operations(
+        status, operation_type, limit, offset
+    )
 
 
 @app.get("/api/v1/bulk/operations/{operation_id}", response_model=Dict[str, Any])
@@ -295,34 +335,58 @@ async def get_refinement_status(session_id: str):
     return await refinement_handlers.handle_get_refinement_status(session_id)
 
 
-@app.get("/api/v1/prompts/{prompt_id}/refinement/compare", response_model=Dict[str, Any])
-async def compare_prompt_versions(prompt_id: str, version_a: Optional[int] = None, version_b: Optional[int] = None):
+@app.get(
+    "/api/v1/prompts/{prompt_id}/refinement/compare", response_model=Dict[str, Any]
+)
+async def compare_prompt_versions(
+    prompt_id: str, version_a: Optional[int] = None, version_b: Optional[int] = None
+):
     """Compare different versions of a prompt."""
-    return await refinement_handlers.handle_compare_prompt_versions(prompt_id, version_a, version_b)
+    return await refinement_handlers.handle_compare_prompt_versions(
+        prompt_id, version_a, version_b
+    )
 
 
-@app.get("/api/v1/refinement/compare/{session_a}/{session_b}", response_model=Dict[str, Any])
+@app.get(
+    "/api/v1/refinement/compare/{session_a}/{session_b}", response_model=Dict[str, Any]
+)
 async def compare_refinement_documents(session_a: str, session_b: str):
     """Compare documents from different refinement sessions."""
-    return await refinement_handlers.handle_compare_refinement_documents(session_a, session_b)
+    return await refinement_handlers.handle_compare_refinement_documents(
+        session_a, session_b
+    )
 
 
-@app.post("/api/v1/prompts/{prompt_id}/refinement/apply/{session_id}", response_model=Dict[str, Any])
-async def apply_refined_prompt(prompt_id: str, session_id: str, user_id: str = "api_user"):
+@app.post(
+    "/api/v1/prompts/{prompt_id}/refinement/apply/{session_id}",
+    response_model=Dict[str, Any],
+)
+async def apply_refined_prompt(
+    prompt_id: str, session_id: str, user_id: str = "api_user"
+):
     """Apply refined prompt from session to replace original."""
-    return await refinement_handlers.handle_replace_prompt_with_refined(prompt_id, session_id, user_id)
+    return await refinement_handlers.handle_replace_prompt_with_refined(
+        prompt_id, session_id, user_id
+    )
 
 
-@app.get("/api/v1/prompts/{prompt_id}/refinement/history", response_model=Dict[str, Any])
+@app.get(
+    "/api/v1/prompts/{prompt_id}/refinement/history", response_model=Dict[str, Any]
+)
 async def get_refinement_history(prompt_id: str):
     """Get refinement history for a prompt."""
     return await refinement_handlers.handle_get_refinement_history(prompt_id)
 
 
-@app.get("/api/v1/prompts/{prompt_id}/versions/{version}/refinement", response_model=Dict[str, Any])
+@app.get(
+    "/api/v1/prompts/{prompt_id}/versions/{version}/refinement",
+    response_model=Dict[str, Any],
+)
 async def get_version_refinement_details(prompt_id: str, version: int):
     """Get detailed refinement information for a specific version."""
-    return await refinement_handlers.handle_get_version_refinement_details(prompt_id, version)
+    return await refinement_handlers.handle_get_version_refinement_details(
+        prompt_id, version
+    )
 
 
 @app.get("/api/v1/refinement/sessions/active", response_model=Dict[str, Any])
@@ -336,7 +400,7 @@ async def list_active_refinements(user_id: Optional[str] = None):
 # ============================================================================
 
 
-@app.get("/api/v1/analytics/summary", response_model=SuccessResponse)
+@app.get("/api/v1/analytics/summary")
 async def get_analytics_summary(days_back: int = 30):
     """Get comprehensive analytics summary."""
     return await analytics_handlers.handle_get_analytics_dashboard(days_back)
@@ -349,7 +413,9 @@ async def get_prompt_analytics(prompt_id: str, days_back: int = 30):
 
 
 @app.get("/api/v1/analytics/usage", response_model=Dict[str, Any])
-async def get_usage_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def get_usage_analytics(
+    start_date: Optional[str] = None, end_date: Optional[str] = None
+):
     """Get usage analytics with date filtering."""
     return await analytics_handlers.handle_get_usage_analytics(start_date, end_date)
 
@@ -365,7 +431,7 @@ async def create_ab_test(test_data: ABTestCreate):
     return await ab_test_handlers.handle_create_ab_test(test_data)
 
 
-@app.get("/api/v1/ab-tests", response_model=SuccessResponse)
+@app.get("/api/v1/ab-tests")
 async def list_ab_tests(limit: int = 50, offset: int = 0):
     """List A/B tests."""
     return await ab_test_handlers.handle_list_ab_tests(limit, offset)
@@ -395,9 +461,13 @@ async def get_ab_test_results(test_id: str):
 
 
 @app.post("/api/v1/prompts/{prompt_id}/relationships", response_model=Dict[str, Any])
-async def add_prompt_relationship(prompt_id: str, relationship: PromptRelationshipCreate, user_id: str = "api_user"):
+async def add_prompt_relationship(
+    prompt_id: str, relationship: PromptRelationshipCreate, user_id: str = "api_user"
+):
     """Add a relationship between prompts."""
-    return await relationships_handlers.handle_create_relationship(prompt_id, relationship, user_id)
+    return await relationships_handlers.handle_create_relationship(
+        prompt_id, relationship, user_id
+    )
 
 
 @app.get("/api/v1/prompts/{prompt_id}/relationships", response_model=Dict[str, Any])
@@ -406,10 +476,16 @@ async def get_prompt_relationships(prompt_id: str, direction: str = "both"):
     return relationships_handlers.handle_get_relationships(prompt_id, direction)
 
 
-@app.put("/api/v1/relationships/{relationship_id}/strength", response_model=Dict[str, Any])
-async def update_relationship_strength(relationship_id: str, strength: float, user_id: str = "api_user"):
+@app.put(
+    "/api/v1/relationships/{relationship_id}/strength", response_model=Dict[str, Any]
+)
+async def update_relationship_strength(
+    relationship_id: str, strength: float, user_id: str = "api_user"
+):
     """Update the strength of a relationship."""
-    return relationships_handlers.handle_update_relationship_strength(relationship_id, strength, user_id)
+    return relationships_handlers.handle_update_relationship_strength(
+        relationship_id, strength, user_id
+    )
 
 
 @app.delete("/api/v1/relationships/{relationship_id}", response_model=Dict[str, Any])
@@ -418,7 +494,9 @@ async def delete_relationship(relationship_id: str, user_id: str = "api_user"):
     return relationships_handlers.handle_delete_relationship(relationship_id, user_id)
 
 
-@app.get("/api/v1/prompts/{prompt_id}/relationships/graph", response_model=Dict[str, Any])
+@app.get(
+    "/api/v1/prompts/{prompt_id}/relationships/graph", response_model=Dict[str, Any]
+)
 async def get_relationship_graph(prompt_id: str, depth: int = 2):
     """Get relationship graph for a prompt."""
     return relationships_handlers.handle_get_relationship_graph(prompt_id, depth)
@@ -432,16 +510,24 @@ async def get_relationship_stats():
 
 @app.get("/api/v1/prompts/{prompt_id}/related", response_model=Dict[str, Any])
 async def find_related_prompts(
-    prompt_id: str, relationship_types: Optional[List[str]] = None, min_strength: float = 0.0
+    prompt_id: str,
+    relationship_types: Optional[List[str]] = None,
+    min_strength: float = 0.0,
 ):
     """Find prompts related to the given prompt."""
-    return relationships_handlers.handle_find_related_prompts(prompt_id, relationship_types, min_strength)
+    return relationships_handlers.handle_find_related_prompts(
+        prompt_id, relationship_types, min_strength
+    )
 
 
 @app.post("/api/v1/relationships/validate", response_model=Dict[str, Any])
-async def validate_relationship(source_prompt_id: str, target_prompt_id: str, relationship_type: str):
+async def validate_relationship(
+    source_prompt_id: str, target_prompt_id: str, relationship_type: str
+):
     """Validate if a relationship can be created."""
-    return relationships_handlers.handle_validate_relationship(source_prompt_id, target_prompt_id, relationship_type)
+    return relationships_handlers.handle_validate_relationship(
+        source_prompt_id, target_prompt_id, relationship_type
+    )
 
 
 @app.get("/api/v1/prompts/{prompt_id}/versions", response_model=Dict[str, Any])
@@ -455,11 +541,15 @@ async def get_prompt_documents(prompt_id: str):
     """Get all documents generated by a prompt through refinement."""
     try:
         summary = prompt_handlers.service.get_prompt_document_summary(prompt_id)
-        return create_success_response(message="Prompt documents retrieved successfully", data=summary).model_dump()
+        return create_success_response(
+            message="Prompt documents retrieved successfully", data=summary
+        ).model_dump()
     except ValueError as e:
         return create_error_response(str(e), "VALIDATION_ERROR").model_dump()
     except Exception as e:
-        return create_error_response(f"Failed to retrieve prompt documents: {str(e)}", "INTERNAL_ERROR").model_dump()
+        return create_error_response(
+            f"Failed to retrieve prompt documents: {str(e)}", "INTERNAL_ERROR"
+        ).model_dump()
 
 
 @app.get("/api/v1/documents/prompts", response_model=Dict[str, Any])
@@ -484,7 +574,9 @@ async def get_prompts_with_documents():
             message="Prompts with documents retrieved successfully", data=result
         ).model_dump()
     except ImportError:
-        return create_error_response("Document store service not available", "SERVICE_UNAVAILABLE").model_dump()
+        return create_error_response(
+            "Document store service not available", "SERVICE_UNAVAILABLE"
+        ).model_dump()
     except Exception as e:
         return create_error_response(
             f"Failed to retrieve prompts with documents: {str(e)}", "INTERNAL_ERROR"
@@ -497,9 +589,13 @@ async def get_prompts_with_documents():
 
 
 @app.post("/api/v1/analytics/usage", response_model=Dict[str, Any])
-async def record_usage_metrics(prompt_id: str, version: int, usage_data: Dict[str, Any]):
+async def record_usage_metrics(
+    prompt_id: str, version: int, usage_data: Dict[str, Any]
+):
     """Record usage metrics for analytics."""
-    return await analytics_handlers.handle_record_usage_metrics(prompt_id, version, usage_data)
+    return await analytics_handlers.handle_record_usage_metrics(
+        prompt_id, version, usage_data
+    )
 
 
 @app.post("/api/v1/analytics/satisfaction", response_model=Dict[str, Any])
@@ -538,24 +634,38 @@ async def get_prompt_metrics(prompt_id: str, version: Optional[int] = None):
 
 
 @app.post("/api/v1/optimization/ab-tests", response_model=Dict[str, Any])
-async def create_ab_test(prompt_a_id: str, prompt_b_id: str, traffic_percentage: float = 50.0):
+async def create_ab_test(
+    prompt_a_id: str, prompt_b_id: str, traffic_percentage: float = 50.0
+):
     """Create a new A/B test between two prompt variants."""
-    return await optimization_handlers.handle_create_ab_test(prompt_a_id, prompt_b_id, traffic_percentage)
+    return await optimization_handlers.handle_create_ab_test(
+        prompt_a_id, prompt_b_id, traffic_percentage
+    )
 
 
-@app.get("/api/v1/optimization/ab-tests/{test_id}/assign", response_model=Dict[str, Any])
+@app.get(
+    "/api/v1/optimization/ab-tests/{test_id}/assign", response_model=Dict[str, Any]
+)
 async def get_prompt_assignment(test_id: str, user_id: str):
     """Get prompt assignment for a user in an A/B test."""
     return await optimization_handlers.handle_get_prompt_assignment(test_id, user_id)
 
 
-@app.post("/api/v1/optimization/ab-tests/{test_id}/results", response_model=Dict[str, Any])
-async def record_test_result(test_id: str, prompt_id: str, success: bool, score: float = 0.0):
+@app.post(
+    "/api/v1/optimization/ab-tests/{test_id}/results", response_model=Dict[str, Any]
+)
+async def record_test_result(
+    test_id: str, prompt_id: str, success: bool, score: float = 0.0
+):
     """Record the result of using a prompt in an A/B test."""
-    return await optimization_handlers.handle_record_test_result(test_id, prompt_id, success, score)
+    return await optimization_handlers.handle_record_test_result(
+        test_id, prompt_id, success, score
+    )
 
 
-@app.get("/api/v1/optimization/ab-tests/{test_id}/results", response_model=Dict[str, Any])
+@app.get(
+    "/api/v1/optimization/ab-tests/{test_id}/results", response_model=Dict[str, Any]
+)
 async def get_test_results(test_id: str):
     """Get results for an A/B test."""
     return await optimization_handlers.handle_get_test_results(test_id)
@@ -567,7 +677,9 @@ async def end_ab_test(test_id: str):
     return await optimization_handlers.handle_end_test(test_id)
 
 
-@app.post("/api/v1/optimization/prompts/{prompt_id}/optimize", response_model=Dict[str, Any])
+@app.post(
+    "/api/v1/optimization/prompts/{prompt_id}/optimize", response_model=Dict[str, Any]
+)
 async def run_prompt_optimization(prompt_id: str, base_version: int):
     """Run automated optimization cycle for a prompt."""
     return await optimization_handlers.handle_run_optimization(prompt_id, base_version)
@@ -585,9 +697,13 @@ async def generate_prompt_variations(prompt_content: str, count: int = 3):
 
 
 @app.post("/api/v1/validation/test-suites", response_model=Dict[str, Any])
-async def create_test_suite(name: str, description: str, test_cases: List[Dict[str, Any]]):
+async def create_test_suite(
+    name: str, description: str, test_cases: List[Dict[str, Any]]
+):
     """Create a new test suite for prompt validation."""
-    return await validation_handlers.handle_create_test_suite(name, description, test_cases)
+    return await validation_handlers.handle_create_test_suite(
+        name, description, test_cases
+    )
 
 
 @app.get("/api/v1/validation/test-suites/standard", response_model=Dict[str, Any])
@@ -599,7 +715,9 @@ async def get_standard_test_suites():
 @app.post("/api/v1/validation/prompts/{prompt_id}/test", response_model=Dict[str, Any])
 async def run_prompt_tests(prompt_id: str, version: int, test_suite: Dict[str, Any]):
     """Run a test suite against a specific prompt version."""
-    return await validation_handlers.handle_run_test_suite(prompt_id, version, test_suite)
+    return await validation_handlers.handle_run_test_suite(
+        prompt_id, version, test_suite
+    )
 
 
 @app.post("/api/v1/validation/lint", response_model=Dict[str, Any])
@@ -611,13 +729,17 @@ async def lint_prompt(prompt_content: str):
 @app.post("/api/v1/validation/bias-detect", response_model=Dict[str, Any])
 async def detect_bias(prompt_content: str, prompt_id: str = None, version: int = None):
     """Detect potential biases in prompt content."""
-    return await validation_handlers.handle_detect_bias(prompt_content, prompt_id, version)
+    return await validation_handlers.handle_detect_bias(
+        prompt_content, prompt_id, version
+    )
 
 
 @app.post("/api/v1/validation/output", response_model=Dict[str, Any])
 async def validate_output(prompt_output: str, expected_criteria: Dict[str, Any]):
     """Validate prompt output against expected criteria."""
-    return await validation_handlers.handle_validate_output(prompt_output, expected_criteria)
+    return await validation_handlers.handle_validate_output(
+        prompt_output, expected_criteria
+    )
 
 
 # ============================================================================
@@ -628,10 +750,14 @@ async def validate_output(prompt_output: str, expected_criteria: Dict[str, Any])
 @app.post("/api/v1/orchestration/chains", response_model=Dict[str, Any])
 async def create_conditional_chain(chain_definition: Dict[str, Any]):
     """Create a conditional prompt chain."""
-    return await orchestration_handlers.handle_create_conditional_chain(chain_definition)
+    return await orchestration_handlers.handle_create_conditional_chain(
+        chain_definition
+    )
 
 
-@app.post("/api/v1/orchestration/chains/{chain_id}/execute", response_model=Dict[str, Any])
+@app.post(
+    "/api/v1/orchestration/chains/{chain_id}/execute", response_model=Dict[str, Any]
+)
 async def execute_conditional_chain(chain_id: str, initial_context: Dict[str, Any]):
     """Execute a conditional prompt chain."""
     return await orchestration_handlers.handle_execute_chain(chain_id, initial_context)
@@ -643,7 +769,10 @@ async def create_pipeline(pipeline_definition: Dict[str, Any]):
     return await orchestration_handlers.handle_create_pipeline(pipeline_definition)
 
 
-@app.post("/api/v1/orchestration/pipelines/{pipeline_id}/execute", response_model=Dict[str, Any])
+@app.post(
+    "/api/v1/orchestration/pipelines/{pipeline_id}/execute",
+    response_model=Dict[str, Any],
+)
 async def execute_pipeline(pipeline_id: str, input_data: Dict[str, Any]):
     """Execute a prompt pipeline."""
     return await orchestration_handlers.handle_execute_pipeline(pipeline_id, input_data)
@@ -652,13 +781,19 @@ async def execute_pipeline(pipeline_id: str, input_data: Dict[str, Any]):
 @app.post("/api/v1/orchestration/prompts/select", response_model=Dict[str, Any])
 async def select_optimal_prompt(task_description: str, context: Dict[str, Any] = None):
     """Select optimal prompt for a task."""
-    return await orchestration_handlers.handle_select_optimal_prompt(task_description, context)
+    return await orchestration_handlers.handle_select_optimal_prompt(
+        task_description, context
+    )
 
 
 @app.post("/api/v1/orchestration/prompts/recommend", response_model=Dict[str, Any])
-async def get_prompt_recommendations(task_description: str, context: Dict[str, Any] = None):
+async def get_prompt_recommendations(
+    task_description: str, context: Dict[str, Any] = None
+):
     """Get prompt recommendations for a task."""
-    return await orchestration_handlers.handle_get_recommendations(task_description, context)
+    return await orchestration_handlers.handle_get_recommendations(
+        task_description, context
+    )
 
 
 # ============================================================================
@@ -673,21 +808,35 @@ async def generate_prompts_from_code(code_content: str, language: str = "python"
 
 
 @app.post("/api/v1/intelligence/document/generate", response_model=Dict[str, Any])
-async def generate_prompts_from_document(document_content: str, doc_type: str = "markdown"):
+async def generate_prompts_from_document(
+    document_content: str, doc_type: str = "markdown"
+):
     """Generate prompts based on document analysis."""
-    return await intelligence_handlers.handle_generate_from_document(document_content, doc_type)
+    return await intelligence_handlers.handle_generate_from_document(
+        document_content, doc_type
+    )
 
 
 @app.post("/api/v1/intelligence/service/generate", response_model=Dict[str, Any])
-async def generate_service_integration_prompts(service_name: str, service_description: str = ""):
+async def generate_service_integration_prompts(
+    service_name: str, service_description: str = ""
+):
     """Generate prompts optimized for service integration."""
-    return await intelligence_handlers.handle_generate_service_prompts(service_name, service_description)
+    return await intelligence_handlers.handle_generate_service_prompts(
+        service_name, service_description
+    )
 
 
-@app.post("/api/v1/intelligence/prompts/{prompt_id}/analyze", response_model=Dict[str, Any])
-async def analyze_prompt_effectiveness(prompt_id: str, usage_history: Optional[List[Dict[str, Any]]] = None):
+@app.post(
+    "/api/v1/intelligence/prompts/{prompt_id}/analyze", response_model=Dict[str, Any]
+)
+async def analyze_prompt_effectiveness(
+    prompt_id: str, usage_history: Optional[List[Dict[str, Any]]] = None
+):
     """Analyze prompt effectiveness based on usage patterns."""
-    return await intelligence_handlers.handle_analyze_effectiveness(prompt_id, usage_history)
+    return await intelligence_handlers.handle_analyze_effectiveness(
+        prompt_id, usage_history
+    )
 
 
 @app.post("/api/v1/intelligence/api/generate", response_model=Dict[str, Any])
@@ -696,8 +845,13 @@ async def generate_api_documentation_prompts(service_analysis: Dict[str, Any]):
     return await intelligence_handlers.handle_generate_api_endpoints(service_analysis)
 
 
-@app.post("/api/v1/prompts/{prompt_id}/versions/{version_number}/rollback", response_model=Dict[str, Any])
-async def rollback_prompt_version(prompt_id: str, version_number: int, reason: str = ""):
+@app.post(
+    "/api/v1/prompts/{prompt_id}/versions/{version_number}/rollback",
+    response_model=Dict[str, Any],
+)
+async def rollback_prompt_version(
+    prompt_id: str, version_number: int, reason: str = ""
+):
     """Rollback prompt to a specific version."""
     return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
 
@@ -708,13 +862,19 @@ async def rollback_prompt_version(prompt_id: str, version_number: int, reason: s
 
 
 @app.put("/api/v1/prompts/{prompt_id}/lifecycle", response_model=Dict[str, Any])
-async def update_prompt_lifecycle(prompt_id: str, lifecycle_update: PromptLifecycleUpdate, user_id: str = "api_user"):
+async def update_prompt_lifecycle(
+    prompt_id: str, lifecycle_update: PromptLifecycleUpdate, user_id: str = "api_user"
+):
     """Update prompt lifecycle status (draft/published/deprecated/archived)."""
-    return await lifecycle_handlers.handle_update_lifecycle_status(prompt_id, lifecycle_update, user_id)
+    return await lifecycle_handlers.handle_update_lifecycle_status(
+        prompt_id, lifecycle_update, user_id
+    )
 
 
 @app.get("/api/v1/prompts/lifecycle/{status}", response_model=Dict[str, Any])
-async def get_prompts_by_lifecycle_status(status: str, limit: int = 50, offset: int = 0):
+async def get_prompts_by_lifecycle_status(
+    status: str, limit: int = 50, offset: int = 0
+):
     """Get prompts by lifecycle status."""
     return await lifecycle_handlers.handle_get_prompts_by_status(status, limit, offset)
 
@@ -737,14 +897,18 @@ def get_lifecycle_transition_rules():
     return lifecycle_handlers.handle_get_transition_rules()
 
 
-@app.post("/api/v1/prompts/{prompt_id}/lifecycle/validate", response_model=Dict[str, Any])
+@app.post(
+    "/api/v1/prompts/{prompt_id}/lifecycle/validate", response_model=Dict[str, Any]
+)
 def validate_lifecycle_transition(prompt_id: str, new_status: str):
     """Validate if a lifecycle transition is allowed for a prompt."""
     return lifecycle_handlers.handle_validate_transition(prompt_id, new_status)
 
 
 @app.post("/api/v1/lifecycle/bulk", response_model=Dict[str, Any])
-async def bulk_lifecycle_update(update_data: BulkLifecycleUpdate, user_id: str = "api_user"):
+async def bulk_lifecycle_update(
+    update_data: BulkLifecycleUpdate, user_id: str = "api_user"
+):
     """Perform bulk lifecycle status updates."""
     return await lifecycle_handlers.handle_bulk_lifecycle_update(update_data, user_id)
 
@@ -761,7 +925,9 @@ async def get_cache_stats():
         stats = prompt_store_cache.get_stats()
         return create_success_response(message="Cache statistics retrieved", data=stats)
     except Exception as e:
-        return create_error_response(f"Failed to get cache stats: {str(e)}", "INTERNAL_ERROR")
+        return create_error_response(
+            f"Failed to get cache stats: {str(e)}", "INTERNAL_ERROR"
+        )
 
 
 @app.post("/api/v1/cache/invalidate", response_model=Dict[str, Any])
@@ -770,10 +936,13 @@ async def invalidate_cache(pattern: str = "*"):
     try:
         invalidated = await prompt_store_cache.invalidate_pattern(pattern)
         return create_success_response(
-            message=f"Invalidated {invalidated} cache entries", data={"invalidated_count": invalidated}
+            message=f"Invalidated {invalidated} cache entries",
+            data={"invalidated_count": invalidated},
         )
     except Exception as e:
-        return create_error_response(f"Failed to invalidate cache: {str(e)}", "INTERNAL_ERROR")
+        return create_error_response(
+            f"Failed to invalidate cache: {str(e)}", "INTERNAL_ERROR"
+        )
 
 
 @app.post("/api/v1/cache/warmup", response_model=Dict[str, Any])
@@ -781,9 +950,13 @@ async def warmup_cache():
     """Warm up cache with frequently accessed data."""
     try:
         # This would implement cache warming logic
-        return create_success_response(message="Cache warmup initiated", data={"status": "warming"})
+        return create_success_response(
+            message="Cache warmup initiated", data={"status": "warming"}
+        )
     except Exception as e:
-        return create_error_response(f"Failed to warmup cache: {str(e)}", "INTERNAL_ERROR")
+        return create_error_response(
+            f"Failed to warmup cache: {str(e)}", "INTERNAL_ERROR"
+        )
 
 
 # ============================================================================
@@ -810,9 +983,13 @@ async def get_webhook(webhook_id: str):
 
 
 @app.put("/api/v1/webhooks/{webhook_id}", response_model=Dict[str, Any])
-async def update_webhook(webhook_id: str, updates: Dict[str, Any], user_id: str = "api_user"):
+async def update_webhook(
+    webhook_id: str, updates: Dict[str, Any], user_id: str = "api_user"
+):
     """Update webhook configuration."""
-    return await notifications_handlers.handle_update_webhook(webhook_id, updates, user_id)
+    return await notifications_handlers.handle_update_webhook(
+        webhook_id, updates, user_id
+    )
 
 
 @app.delete("/api/v1/webhooks/{webhook_id}", response_model=Dict[str, Any])
@@ -822,9 +999,13 @@ async def delete_webhook(webhook_id: str, user_id: str = "api_user"):
 
 
 @app.post("/api/v1/notifications/trigger", response_model=Dict[str, Any])
-async def trigger_notification(event_type: str, event_data: Dict[str, Any], user_id: str = "api_user"):
+async def trigger_notification(
+    event_type: str, event_data: Dict[str, Any], user_id: str = "api_user"
+):
     """Manually trigger event notifications."""
-    return await notifications_handlers.handle_notify_event(event_type, event_data, user_id)
+    return await notifications_handlers.handle_notify_event(
+        event_type, event_data, user_id
+    )
 
 
 @app.post("/api/v1/notifications/process", response_model=Dict[str, Any])
@@ -855,6 +1036,8 @@ if __name__ == "__main__":
     """Run the Prompt Store service directly."""
     import uvicorn
 
-    port = get_config_value("port", DEFAULT_PORT, section="server", env_key="PROMPT_STORE_PORT")
+    port = get_config_value(
+        "port", DEFAULT_PORT, section="server", env_key="PROMPT_STORE_PORT"
+    )
     print(f"🚀 Starting Prompt Store Service v{SERVICE_VERSION} on port {port}...")
     uvicorn.run(app, host="127.0.0.1", port=int(port), log_level="info")

@@ -23,14 +23,20 @@ from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 class DeploymentManager(BaseManager):
     """Manager for comprehensive deployment controls and orchestration."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
         self.deployment_history = []
         self.scaling_history = []
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for deployment operations."""
-        return [("1", "Deployment Management"), ("2", "Scaling Operations"), ("3", "Monitoring & Health")]
+        return [
+            ("1", "Deployment Management"),
+            ("2", "Scaling Operations"),
+            ("3", "Monitoring & Health"),
+        ]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -44,10 +50,16 @@ class DeploymentManager(BaseManager):
             add_menu_rows(
                 menu,
                 [
-                    ("1", "Service Scaling (Scale services up/down, view current replicas)"),
+                    (
+                        "1",
+                        "Service Scaling (Scale services up/down, view current replicas)",
+                    ),
                     ("2", "Rolling Updates (Zero-downtime service updates)"),
                     ("3", "Canary Deployments (Gradual traffic shifting)"),
-                    ("4", "Service Mesh Traffic Management (Traffic routing and policies)"),
+                    (
+                        "4",
+                        "Service Mesh Traffic Management (Traffic routing and policies)",
+                    ),
                     ("5", "Container Orchestration (Docker Compose management)"),
                     ("6", "Deployment Monitoring (Track deployment status and health)"),
                     ("7", "Rollback Management (Revert to previous deployments)"),
@@ -139,12 +151,18 @@ class DeploymentManager(BaseManager):
                         }
 
                 except Exception as e:
-                    self.console.print(f"[yellow]Warning: Could not read {compose_file}: {e}[/yellow]")
+                    self.console.print(
+                        f"[yellow]Warning: Could not read {compose_file}: {e}[/yellow]"
+                    )
 
             # Try to get runtime status using docker-compose ps
             try:
                 result = subprocess.run(
-                    ["docker-compose", "ps", "--format", "json"], capture_output=True, text=True, timeout=30, cwd="."
+                    ["docker-compose", "ps", "--format", "json"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    cwd=".",
                 )
 
                 if result.returncode == 0:
@@ -159,9 +177,13 @@ class DeploymentManager(BaseManager):
 
                                 if service_name in scaling_status:
                                     if "running" in state:
-                                        scaling_status[service_name]["status"] = "running"
+                                        scaling_status[service_name][
+                                            "status"
+                                        ] = "running"
                                     elif "exited" in state or "stopped" in state:
-                                        scaling_status[service_name]["status"] = "stopped"
+                                        scaling_status[service_name][
+                                            "status"
+                                        ] = "stopped"
                                     else:
                                         scaling_status[service_name]["status"] = state
                             except json.JSONDecodeError:
@@ -182,9 +204,12 @@ class DeploymentManager(BaseManager):
                 table.add_column("Source", style="magenta")
 
                 for service_name, status in sorted(scaling_status.items()):
-                    status_color = {"running": "green", "stable": "blue", "stopped": "red", "error": "red"}.get(
-                        status["status"], "yellow"
-                    )
+                    status_color = {
+                        "running": "green",
+                        "stable": "blue",
+                        "stopped": "red",
+                        "error": "red",
+                    }.get(status["status"], "yellow")
 
                     table.add_row(
                         service_name,
@@ -198,8 +223,12 @@ class DeploymentManager(BaseManager):
 
                 # Show summary
                 total_services = len(scaling_status)
-                running_services = sum(1 for s in scaling_status.values() if s["status"] == "running")
-                scaled_services = sum(1 for s in scaling_status.values() if s["current_replicas"] > 1)
+                running_services = sum(
+                    1 for s in scaling_status.values() if s["status"] == "running"
+                )
+                scaled_services = sum(
+                    1 for s in scaling_status.values() if s["current_replicas"] > 1
+                )
 
                 content = f"""
 [bold]Scaling Summary:[/bold]
@@ -211,7 +240,9 @@ class DeploymentManager(BaseManager):
 
                 print_panel(self.console, content, border_style="blue")
             else:
-                self.console.print("[yellow]No scaling status information available[/yellow]")
+                self.console.print(
+                    "[yellow]No scaling status information available[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error viewing scaling status: {e}[/red]")
@@ -233,13 +264,19 @@ class DeploymentManager(BaseManager):
                     pass
 
             if not available_services:
-                self.console.print("[yellow]No services found in Docker Compose files[/yellow]")
+                self.console.print(
+                    "[yellow]No services found in Docker Compose files[/yellow]"
+                )
                 return
 
             service_list = sorted(list(available_services))
-            service_name = Prompt.ask("[bold cyan]Service to scale[/bold cyan]", choices=service_list)
+            service_name = Prompt.ask(
+                "[bold cyan]Service to scale[/bold cyan]", choices=service_list
+            )
 
-            current_replicas = Prompt.ask("[bold cyan]Current replicas[/bold cyan]", default="1")
+            current_replicas = Prompt.ask(
+                "[bold cyan]Current replicas[/bold cyan]", default="1"
+            )
             new_replicas = Prompt.ask("[bold cyan]New number of replicas[/bold cyan]")
 
             if not new_replicas.isdigit() or int(new_replicas) < 0:
@@ -255,7 +292,9 @@ class DeploymentManager(BaseManager):
 
             if confirm:
                 # Update the compose file
-                updated = await self._update_service_replicas(service_name, new_replicas)
+                updated = await self._update_service_replicas(
+                    service_name, new_replicas
+                )
 
                 if updated:
                     # Record scaling operation
@@ -291,7 +330,9 @@ class DeploymentManager(BaseManager):
     async def scale_multiple_services(self):
         """Scale multiple services at once."""
         try:
-            self.console.print("[yellow]Multi-service scaling would allow bulk scaling operations[/yellow]")
+            self.console.print(
+                "[yellow]Multi-service scaling would allow bulk scaling operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -325,7 +366,9 @@ class DeploymentManager(BaseManager):
             for record in self.scaling_history[-20:]:  # Show last 20
                 old_new = f"{record['old_replicas']} → {record['new_replicas']}"
                 status_color = (
-                    "green" if record["status"] == "completed" else "red" if record["status"] == "failed" else "yellow"
+                    "green"
+                    if record["status"] == "completed"
+                    else "red" if record["status"] == "failed" else "yellow"
                 )
                 table.add_row(
                     record["timestamp"],
@@ -394,11 +437,14 @@ class DeploymentManager(BaseManager):
             service_name = Prompt.ask("[bold cyan]Service to update[/bold cyan]")
             image_tag = Prompt.ask("[bold cyan]New image tag/version[/bold cyan]")
             update_strategy = Prompt.ask(
-                "[bold cyan]Update strategy[/bold cyan]", choices=["rolling", "blue-green", "canary"], default="rolling"
+                "[bold cyan]Update strategy[/bold cyan]",
+                choices=["rolling", "blue-green", "canary"],
+                default="rolling",
             )
 
             confirm = Confirm.ask(
-                f"[bold red]Start {update_strategy} update of {service_name} to {image_tag}?[/bold red]", default=False
+                f"[bold red]Start {update_strategy} update of {service_name} to {image_tag}?[/bold red]",
+                default=False,
             )
 
             if confirm:
@@ -414,7 +460,9 @@ class DeploymentManager(BaseManager):
                 self.deployment_history.append(deployment_record)
 
                 # Simulate update process
-                self.console.print(f"[yellow]Starting {update_strategy} update of {service_name}...[/yellow]")
+                self.console.print(
+                    f"[yellow]Starting {update_strategy} update of {service_name}...[/yellow]"
+                )
 
                 # In a real implementation, this would:
                 # 1. Update the Docker Compose file with new image
@@ -422,13 +470,17 @@ class DeploymentManager(BaseManager):
                 # 3. Monitor health checks
                 # 4. Gradually replace old containers
 
-                success = await self._perform_rolling_update(service_name, image_tag, update_strategy)
+                success = await self._perform_rolling_update(
+                    service_name, image_tag, update_strategy
+                )
 
                 deployment_record["status"] = "completed" if success else "failed"
                 deployment_record["completed_at"] = self._get_timestamp()
 
                 self.console.print(
-                    f"[green]✅ Rolling update completed[/green]" if success else "[red]❌ Rolling update failed[/red]"
+                    f"[green]✅ Rolling update completed[/green]"
+                    if success
+                    else "[red]❌ Rolling update failed[/red]"
                 )
             else:
                 self.console.print("[yellow]Update cancelled[/yellow]")
@@ -439,7 +491,9 @@ class DeploymentManager(BaseManager):
     async def monitor_update_progress(self):
         """Monitor rolling update progress."""
         try:
-            self.console.print("[yellow]Update progress monitoring would show real-time deployment status[/yellow]")
+            self.console.print(
+                "[yellow]Update progress monitoring would show real-time deployment status[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -448,7 +502,9 @@ class DeploymentManager(BaseManager):
     async def pause_resume_update(self):
         """Pause or resume a rolling update."""
         try:
-            self.console.print("[yellow]Pause/resume would control ongoing deployment processes[/yellow]")
+            self.console.print(
+                "[yellow]Pause/resume would control ongoing deployment processes[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -457,7 +513,9 @@ class DeploymentManager(BaseManager):
     async def rollback_update(self):
         """Rollback a failed update."""
         try:
-            self.console.print("[yellow]Rollback would revert to previous stable version[/yellow]")
+            self.console.print(
+                "[yellow]Rollback would revert to previous stable version[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -517,7 +575,9 @@ class DeploymentManager(BaseManager):
 
             for record in self.deployment_history[-20:]:
                 status_color = (
-                    "green" if record["status"] == "completed" else "red" if record["status"] == "failed" else "yellow"
+                    "green"
+                    if record["status"] == "completed"
+                    else "red" if record["status"] == "failed" else "yellow"
                 )
                 table.add_row(
                     record["timestamp"],
@@ -573,9 +633,15 @@ class DeploymentManager(BaseManager):
     async def start_canary_deployment(self):
         """Start a canary deployment."""
         try:
-            service_name = Prompt.ask("[bold cyan]Service for canary deployment[/bold cyan]")
+            service_name = Prompt.ask(
+                "[bold cyan]Service for canary deployment[/bold cyan]"
+            )
             new_image = Prompt.ask("[bold cyan]New image tag[/bold cyan]")
-            canary_percentage = int(Prompt.ask("[bold cyan]Initial canary percentage[/bold cyan]", default="10"))
+            canary_percentage = int(
+                Prompt.ask(
+                    "[bold cyan]Initial canary percentage[/bold cyan]", default="10"
+                )
+            )
 
             confirm = Confirm.ask(
                 f"[bold red]Start canary deployment of {service_name} with {canary_percentage}% traffic?[/bold red]",
@@ -593,7 +659,9 @@ class DeploymentManager(BaseManager):
                 }
                 self.deployment_history.append(canary_record)
 
-                success = await self._start_canary_deployment(service_name, new_image, canary_percentage)
+                success = await self._start_canary_deployment(
+                    service_name, new_image, canary_percentage
+                )
 
                 canary_record["status"] = "active" if success else "failed"
 
@@ -611,7 +679,9 @@ class DeploymentManager(BaseManager):
     async def adjust_traffic_distribution(self):
         """Adjust traffic distribution in canary deployment."""
         try:
-            self.console.print("[yellow]Traffic adjustment would modify canary traffic percentages[/yellow]")
+            self.console.print(
+                "[yellow]Traffic adjustment would modify canary traffic percentages[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -620,7 +690,9 @@ class DeploymentManager(BaseManager):
     async def monitor_canary_metrics(self):
         """Monitor canary deployment metrics."""
         try:
-            self.console.print("[yellow]Canary metrics would show performance comparison between versions[/yellow]")
+            self.console.print(
+                "[yellow]Canary metrics would show performance comparison between versions[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -629,7 +701,9 @@ class DeploymentManager(BaseManager):
     async def promote_abort_canary(self):
         """Promote or abort canary deployment."""
         try:
-            self.console.print("[yellow]Promote/abort would complete or cancel canary deployments[/yellow]")
+            self.console.print(
+                "[yellow]Promote/abort would complete or cancel canary deployments[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -638,7 +712,9 @@ class DeploymentManager(BaseManager):
     async def canary_history(self):
         """View canary deployment history."""
         try:
-            self.console.print("[yellow]Canary history would show past canary deployment results[/yellow]")
+            self.console.print(
+                "[yellow]Canary history would show past canary deployment results[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -647,7 +723,9 @@ class DeploymentManager(BaseManager):
     async def canary_templates(self):
         """Manage canary deployment templates."""
         try:
-            self.console.print("[yellow]Canary templates would provide reusable deployment patterns[/yellow]")
+            self.console.print(
+                "[yellow]Canary templates would provide reusable deployment patterns[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -726,7 +804,9 @@ class DeploymentManager(BaseManager):
 
                 self.console.print(table)
             else:
-                self.console.print("[yellow]No traffic route information available[/yellow]")
+                self.console.print(
+                    "[yellow]No traffic route information available[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error viewing traffic routes: {e}[/red]")
@@ -734,7 +814,9 @@ class DeploymentManager(BaseManager):
     async def configure_traffic_policies(self):
         """Configure traffic policies."""
         try:
-            self.console.print("[yellow]Traffic policies would configure routing rules and policies[/yellow]")
+            self.console.print(
+                "[yellow]Traffic policies would configure routing rules and policies[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -743,7 +825,9 @@ class DeploymentManager(BaseManager):
     async def setup_load_balancing(self):
         """Set up load balancing."""
         try:
-            self.console.print("[yellow]Load balancing setup would configure traffic distribution[/yellow]")
+            self.console.print(
+                "[yellow]Load balancing setup would configure traffic distribution[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -752,7 +836,9 @@ class DeploymentManager(BaseManager):
     async def configure_circuit_breakers(self):
         """Configure circuit breakers."""
         try:
-            self.console.print("[yellow]Circuit breaker configuration would set up failure protection[/yellow]")
+            self.console.print(
+                "[yellow]Circuit breaker configuration would set up failure protection[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -761,7 +847,9 @@ class DeploymentManager(BaseManager):
     async def traffic_monitoring(self):
         """Monitor traffic patterns."""
         try:
-            self.console.print("[yellow]Traffic monitoring would show real-time traffic patterns and metrics[/yellow]")
+            self.console.print(
+                "[yellow]Traffic monitoring would show real-time traffic patterns and metrics[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -781,7 +869,9 @@ class DeploymentManager(BaseManager):
     async def container_orchestration_menu(self):
         """Container orchestration submenu."""
         while True:
-            menu = create_menu_table("Container Orchestration", ["Option", "Description"])
+            menu = create_menu_table(
+                "Container Orchestration", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -818,7 +908,13 @@ class DeploymentManager(BaseManager):
     async def docker_compose_status(self):
         """View Docker Compose status."""
         try:
-            result = subprocess.run(["docker-compose", "ps"], capture_output=True, text=True, timeout=30, cwd=".")
+            result = subprocess.run(
+                ["docker-compose", "ps"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                cwd=".",
+            )
 
             if result.returncode == 0:
                 # Parse and display the status output
@@ -832,7 +928,9 @@ class DeploymentManager(BaseManager):
                 self.console.print(f"[dim]{result.stderr}[/dim]")
 
         except (subprocess.TimeoutExpired, FileNotFoundError):
-            self.console.print("[yellow]Docker Compose not available or timed out[/yellow]")
+            self.console.print(
+                "[yellow]Docker Compose not available or timed out[/yellow]"
+            )
 
         except Exception as e:
             self.console.print(f"[red]Error getting Docker Compose status: {e}[/red]")
@@ -840,10 +938,17 @@ class DeploymentManager(BaseManager):
     async def start_stop_services(self):
         """Start or stop services."""
         try:
-            action = Prompt.ask("[bold cyan]Action[/bold cyan]", choices=["start", "stop", "restart"])
-            service_name = Prompt.ask("[bold cyan]Service name (or 'all' for all services)[/bold cyan]", default="all")
+            action = Prompt.ask(
+                "[bold cyan]Action[/bold cyan]", choices=["start", "stop", "restart"]
+            )
+            service_name = Prompt.ask(
+                "[bold cyan]Service name (or 'all' for all services)[/bold cyan]",
+                default="all",
+            )
 
-            confirm = Confirm.ask(f"[bold red]{action.title()} {service_name}?[/bold red]", default=False)
+            confirm = Confirm.ask(
+                f"[bold red]{action.title()} {service_name}?[/bold red]", default=False
+            )
 
             if confirm:
                 if service_name == "all":
@@ -851,12 +956,18 @@ class DeploymentManager(BaseManager):
                 else:
                     cmd = ["docker-compose", action, service_name]
 
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, cwd=".")
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, timeout=60, cwd="."
+                )
 
                 if result.returncode == 0:
-                    self.console.print(f"[green]✅ Successfully {action}ed {service_name}[/green]")
+                    self.console.print(
+                        f"[green]✅ Successfully {action}ed {service_name}[/green]"
+                    )
                 else:
-                    self.console.print(f"[red]❌ Failed to {action} {service_name}[/red]")
+                    self.console.print(
+                        f"[red]❌ Failed to {action} {service_name}[/red]"
+                    )
                     self.console.print(f"[dim]{result.stderr}[/dim]")
             else:
                 self.console.print("[yellow]Action cancelled[/yellow]")
@@ -878,7 +989,9 @@ class DeploymentManager(BaseManager):
             else:
                 cmd = ["docker-compose", "logs", "--tail", lines]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=".")
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=30, cwd="."
+            )
 
             if result.returncode == 0:
                 content = f"[bold]Service Logs ({service_name or 'all'} - last {lines} lines):[/bold]\n\n"
@@ -947,7 +1060,9 @@ class DeploymentManager(BaseManager):
 
                         self.console.print(table)
                     else:
-                        self.console.print(f"[yellow]No networks defined in {compose_file.name}[/yellow]")
+                        self.console.print(
+                            f"[yellow]No networks defined in {compose_file.name}[/yellow]"
+                        )
 
                 except Exception as e:
                     self.console.print(f"[red]Error reading {compose_file}: {e}[/red]")
@@ -958,7 +1073,9 @@ class DeploymentManager(BaseManager):
     async def volume_management(self):
         """Manage Docker volumes."""
         try:
-            result = subprocess.run(["docker", "volume", "ls"], capture_output=True, text=True, timeout=30)
+            result = subprocess.run(
+                ["docker", "volume", "ls"], capture_output=True, text=True, timeout=30
+            )
 
             if result.returncode == 0:
                 content = "[bold]Docker Volumes:[/bold]\n\n"
@@ -1010,7 +1127,9 @@ class DeploymentManager(BaseManager):
     async def deployment_status_overview(self):
         """View overall deployment status."""
         try:
-            self.console.print("[yellow]Deployment status overview would show comprehensive deployment health[/yellow]")
+            self.console.print(
+                "[yellow]Deployment status overview would show comprehensive deployment health[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1019,7 +1138,9 @@ class DeploymentManager(BaseManager):
     async def service_health_monitoring(self):
         """Monitor service health."""
         try:
-            self.console.print("[yellow]Service health monitoring would check all service endpoints[/yellow]")
+            self.console.print(
+                "[yellow]Service health monitoring would check all service endpoints[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1028,7 +1149,9 @@ class DeploymentManager(BaseManager):
     async def deployment_metrics(self):
         """View deployment metrics."""
         try:
-            self.console.print("[yellow]Deployment metrics would show deployment performance data[/yellow]")
+            self.console.print(
+                "[yellow]Deployment metrics would show deployment performance data[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1037,7 +1160,9 @@ class DeploymentManager(BaseManager):
     async def alert_management(self):
         """Manage deployment alerts."""
         try:
-            self.console.print("[yellow]Alert management would handle deployment notifications and alerts[/yellow]")
+            self.console.print(
+                "[yellow]Alert management would handle deployment notifications and alerts[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1046,7 +1171,9 @@ class DeploymentManager(BaseManager):
     async def performance_monitoring(self):
         """Monitor deployment performance."""
         try:
-            self.console.print("[yellow]Performance monitoring would track deployment KPIs and metrics[/yellow]")
+            self.console.print(
+                "[yellow]Performance monitoring would track deployment KPIs and metrics[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1089,7 +1216,9 @@ class DeploymentManager(BaseManager):
     async def view_rollback_history(self):
         """View rollback history."""
         try:
-            rollback_records = [r for r in self.deployment_history if "rollback" in r.get("action", "")]
+            rollback_records = [
+                r for r in self.deployment_history if "rollback" in r.get("action", "")
+            ]
 
             if rollback_records:
                 table = Table(title="Rollback History")
@@ -1121,7 +1250,10 @@ class DeploymentManager(BaseManager):
             service_name = Prompt.ask("[bold cyan]Service to rollback[/bold cyan]")
             reason = Prompt.ask("[bold cyan]Rollback reason[/bold cyan]")
 
-            confirm = Confirm.ask(f"[bold red]Rollback {service_name}? Reason: {reason}[/bold red]", default=False)
+            confirm = Confirm.ask(
+                f"[bold red]Rollback {service_name}? Reason: {reason}[/bold red]",
+                default=False,
+            )
 
             if confirm:
                 rollback_record = {
@@ -1174,7 +1306,9 @@ class DeploymentManager(BaseManager):
     async def rollback_validation(self):
         """Validate rollback success."""
         try:
-            self.console.print("[yellow]Rollback validation would verify rollback success and stability[/yellow]")
+            self.console.print(
+                "[yellow]Rollback validation would verify rollback success and stability[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1183,7 +1317,9 @@ class DeploymentManager(BaseManager):
     async def emergency_rollback(self):
         """Perform emergency rollback."""
         try:
-            service_name = Prompt.ask("[bold cyan]Service for emergency rollback[/bold cyan]")
+            service_name = Prompt.ask(
+                "[bold cyan]Service for emergency rollback[/bold cyan]"
+            )
 
             confirm = Confirm.ask(
                 f"[bold red]🚨 EMERGENCY ROLLBACK for {service_name}? This will immediately stop the service and revert![/bold red]",
@@ -1269,16 +1405,27 @@ class DeploymentManager(BaseManager):
     async def _apply_scaling(self, service_name: str, replicas: int) -> bool:
         """Apply scaling changes using docker-compose."""
         try:
-            cmd = ["docker-compose", "up", "-d", "--scale", f"{service_name}={replicas}", service_name]
+            cmd = [
+                "docker-compose",
+                "up",
+                "-d",
+                "--scale",
+                f"{service_name}={replicas}",
+                service_name,
+            ]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, cwd=".")
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, timeout=120, cwd="."
+            )
 
             return result.returncode == 0
 
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
 
-    async def _perform_rolling_update(self, service_name: str, image_tag: str, strategy: str) -> bool:
+    async def _perform_rolling_update(
+        self, service_name: str, image_tag: str, strategy: str
+    ) -> bool:
         """Perform rolling update (simplified implementation)."""
         try:
             # In a real implementation, this would:
@@ -1287,7 +1434,9 @@ class DeploymentManager(BaseManager):
             # 3. Monitor health checks
             # 4. Handle rollback if needed
 
-            self.console.print(f"[yellow]Performing {strategy} update of {service_name} to {image_tag}...[/yellow]")
+            self.console.print(
+                f"[yellow]Performing {strategy} update of {service_name} to {image_tag}...[/yellow]"
+            )
 
             # Simulate update steps
             await asyncio.sleep(1)
@@ -1306,10 +1455,14 @@ class DeploymentManager(BaseManager):
         except Exception:
             return False
 
-    async def _start_canary_deployment(self, service_name: str, new_image: str, canary_percentage: int) -> bool:
+    async def _start_canary_deployment(
+        self, service_name: str, new_image: str, canary_percentage: int
+    ) -> bool:
         """Start canary deployment (simplified implementation)."""
         try:
-            self.console.print(f"[yellow]Starting canary deployment of {service_name}...[/yellow]")
+            self.console.print(
+                f"[yellow]Starting canary deployment of {service_name}...[/yellow]"
+            )
             self.console.print(f"[blue]New image: {new_image}[/blue]")
             self.console.print(f"[blue]Canary percentage: {canary_percentage}%[/blue]")
 
@@ -1346,12 +1499,16 @@ class DeploymentManager(BaseManager):
     async def _perform_emergency_rollback(self, service_name: str) -> bool:
         """Perform emergency rollback (immediate stop and revert)."""
         try:
-            self.console.print(f"[red]🚨 Performing emergency rollback of {service_name}...[/red]")
+            self.console.print(
+                f"[red]🚨 Performing emergency rollback of {service_name}...[/red]"
+            )
 
             await asyncio.sleep(0.5)
             self.console.print("[red]⚠️  Stopping current containers...[/red]")
             await asyncio.sleep(0.5)
-            self.console.print("[yellow]⏳ Reverting to last known good state...[/yellow]")
+            self.console.print(
+                "[yellow]⏳ Reverting to last known good state...[/yellow]"
+            )
             await asyncio.sleep(0.5)
             self.console.print("[green]✅ Emergency rollback completed[/green]")
 
@@ -1374,11 +1531,17 @@ class DeploymentManager(BaseManager):
                 if updated:
                     success = await self._apply_scaling(service_name, replicas)
                     if success:
-                        self.console.print(f"[green]✅ Service {service_name} scaled to {replicas} replicas[/green]")
+                        self.console.print(
+                            f"[green]✅ Service {service_name} scaled to {replicas} replicas[/green]"
+                        )
                     else:
-                        self.console.print(f"[red]❌ Failed to apply scaling for {service_name}[/red]")
+                        self.console.print(
+                            f"[red]❌ Failed to apply scaling for {service_name}[/red]"
+                        )
                 else:
-                    self.console.print(f"[red]❌ Failed to update compose file for {service_name}[/red]")
+                    self.console.print(
+                        f"[red]❌ Failed to update compose file for {service_name}[/red]"
+                    )
 
         except Exception as e:
             self.console.print(f"[red]Error scaling service: {e}[/red]")
@@ -1390,17 +1553,25 @@ class DeploymentManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error viewing deployment status: {e}[/red]")
 
-    async def start_deployment_from_cli(self, service_name: str, image_tag: str, strategy: str = "rolling"):
+    async def start_deployment_from_cli(
+        self, service_name: str, image_tag: str, strategy: str = "rolling"
+    ):
         """Start deployment for CLI usage."""
         try:
             with self.console.status(
                 f"[bold green]Starting {strategy} deployment of {service_name}...[/bold green]"
             ) as status:
-                success = await self._perform_rolling_update(service_name, image_tag, strategy)
+                success = await self._perform_rolling_update(
+                    service_name, image_tag, strategy
+                )
                 if success:
-                    self.console.print(f"[green]✅ {strategy.title()} deployment completed for {service_name}[/green]")
+                    self.console.print(
+                        f"[green]✅ {strategy.title()} deployment completed for {service_name}[/green]"
+                    )
                 else:
-                    self.console.print(f"[red]❌ {strategy.title()} deployment failed for {service_name}[/red]")
+                    self.console.print(
+                        f"[red]❌ {strategy.title()} deployment failed for {service_name}[/red]"
+                    )
 
         except Exception as e:
             self.console.print(f"[red]Error starting deployment: {e}[/red]")

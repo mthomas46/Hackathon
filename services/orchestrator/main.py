@@ -15,21 +15,37 @@ parent_dir = str(Path(__file__).parent.parent.parent)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from services.shared.core.constants_new import ServiceNames
+from services.shared.infrastructure.config import load_service_config
 
 # Shared utilities
 from services.shared.utilities.utilities import setup_common_middleware
 
-from .domain.health_monitoring.services import HealthCheckService, SystemMonitoringService
-from .domain.infrastructure.services import DLQService, EventStreamingService, SagaService, TracingService
+from .domain.health_monitoring.services import (
+    HealthCheckService,
+    SystemMonitoringService,
+)
+from .domain.infrastructure.services import (
+    DLQService,
+    EventStreamingService,
+    SagaService,
+    TracingService,
+)
 
 # Domain services (with static service definitions)
-from .domain.service_registry.services import ServiceDiscoveryService, ServiceRegistrationService
+from .domain.service_registry.services import (
+    ServiceDiscoveryService,
+    ServiceRegistrationService,
+)
 from .infrastructure.external_services.service_client import OrchestratorServiceClient
 
 # Infrastructure components
-from .infrastructure.persistence.in_memory import InMemoryWorkflowExecutionRepository, InMemoryWorkflowRepository
-from .infrastructure.persistence.service_registry_repository import InMemoryServiceRepository
+from .infrastructure.persistence.in_memory import (
+    InMemoryWorkflowExecutionRepository,
+    InMemoryWorkflowRepository,
+)
+from .infrastructure.persistence.service_registry_repository import (
+    InMemoryServiceRepository,
+)
 from .modules.services import _get_service_definitions
 
 
@@ -37,7 +53,10 @@ from .modules.services import _get_service_definitions
 def check_workflows_loaded():
     """Check if workflows are loaded."""
     try:
-        return hasattr(container, "workflow_repository") and container.workflow_repository is not None
+        return (
+            hasattr(container, "workflow_repository")
+            and container.workflow_repository is not None
+        )
     except Exception:
         return False
 
@@ -52,7 +71,9 @@ from .application.health_monitoring.use_cases import (
     GetSystemInfoUseCase,
     GetSystemMetricsUseCase,
 )
-from .application.health_monitoring.use_cases import ListWorkflowsUseCase as HealthListWorkflowsUseCase
+from .application.health_monitoring.use_cases import (
+    ListWorkflowsUseCase as HealthListWorkflowsUseCase,
+)
 from .application.infrastructure.use_cases import (
     ExecuteSagaStepUseCase,
     GetDLQStatsUseCase,
@@ -67,13 +88,21 @@ from .application.infrastructure.use_cases import (
     StartSagaUseCase,
     StartTraceUseCase,
 )
-from .application.ingestion.use_cases import GetIngestionStatusUseCase, ListIngestionsUseCase, StartIngestionUseCase
+from .application.ingestion.use_cases import (
+    GetIngestionStatusUseCase,
+    ListIngestionsUseCase,
+    StartIngestionUseCase,
+)
 from .application.query_processing.use_cases import (
     GetQueryResultUseCase,
     ListQueriesUseCase,
     ProcessNaturalLanguageQueryUseCase,
 )
-from .application.reporting.use_cases import GenerateReportUseCase, GetReportUseCase, ListReportsUseCase
+from .application.reporting.use_cases import (
+    GenerateReportUseCase,
+    GetReportUseCase,
+    ListReportsUseCase,
+)
 from .application.service_registry.use_cases import (
     GetServiceUseCase,
     ListServicesUseCase,
@@ -92,10 +121,16 @@ from .application.workflow_management.use_cases import (
 
 # Presentation layer routers are registered dynamically below
 
-# Service configuration
-SERVICE_TITLE = "Orchestrator"
-SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 5099
+# Load standardized configuration
+config = load_service_config(
+    service_type="orchestrator",
+    config_file="./config.yaml",  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_TITLE = config.service_description or "Orchestrator"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # ============================================================================
 # APPLICATION COMPOSITION - Dependency Injection Container
@@ -121,12 +156,16 @@ class OrchestratorContainer:
     def _init_domain_services(self):
         """Initialize domain services for all bounded contexts."""
         # Service Registry domain services
-        self.service_discovery_service = ServiceDiscoveryService(_get_service_definitions())
+        self.service_discovery_service = ServiceDiscoveryService(
+            _get_service_definitions()
+        )
         self.service_registration_service = ServiceRegistrationService()
 
         # Health & Monitoring domain services
         self.health_check_service = HealthCheckService()
-        self.system_monitoring_service = SystemMonitoringService(self.health_check_service)
+        self.system_monitoring_service = SystemMonitoringService(
+            self.health_check_service
+        )
 
         # Infrastructure domain services
         self.dlq_service = DLQService()
@@ -137,7 +176,9 @@ class OrchestratorContainer:
     def _init_application_layer(self):
         """Initialize application layer use cases for all bounded contexts."""
         # Workflow Management use cases
-        from .domain.workflow_management.services.workflow_executor import WorkflowExecutor
+        from .domain.workflow_management.services.workflow_executor import (
+            WorkflowExecutor,
+        )
 
         self.workflow_executor = WorkflowExecutor()
 
@@ -149,22 +190,44 @@ class OrchestratorContainer:
         self.list_workflows_use_case = ListWorkflowsUseCase(self.workflow_repository)
 
         # Service Registry use cases
-        self.register_service_use_case = RegisterServiceUseCase(self.service_registration_service)
-        self.unregister_service_use_case = UnregisterServiceUseCase(self.service_registration_service)
-        self.get_service_use_case = GetServiceUseCase(self.service_discovery_service, self.service_registration_service)
+        self.register_service_use_case = RegisterServiceUseCase(
+            self.service_registration_service
+        )
+        self.unregister_service_use_case = UnregisterServiceUseCase(
+            self.service_registration_service
+        )
+        self.get_service_use_case = GetServiceUseCase(
+            self.service_discovery_service, self.service_registration_service
+        )
         self.list_services_use_case = ListServicesUseCase(
             self.service_discovery_service, self.service_registration_service
         )
 
         # Health Monitoring use cases
-        self.check_system_health_use_case = CheckSystemHealthUseCase(self.system_monitoring_service)
-        self.check_service_health_use_case = CheckServiceHealthUseCase(self.health_check_service)
-        self.get_system_health_use_case = GetSystemHealthUseCase(self.system_monitoring_service)
-        self.get_service_health_use_case = GetServiceHealthUseCase(self.system_monitoring_service)
-        self.get_system_info_use_case = GetSystemInfoUseCase(self.system_monitoring_service)
-        self.get_system_metrics_use_case = GetSystemMetricsUseCase(self.system_monitoring_service)
-        self.get_system_config_use_case = GetSystemConfigUseCase(self.system_monitoring_service)
-        self.check_system_readiness_use_case = CheckSystemReadinessUseCase(self.system_monitoring_service)
+        self.check_system_health_use_case = CheckSystemHealthUseCase(
+            self.system_monitoring_service
+        )
+        self.check_service_health_use_case = CheckServiceHealthUseCase(
+            self.health_check_service
+        )
+        self.get_system_health_use_case = GetSystemHealthUseCase(
+            self.system_monitoring_service
+        )
+        self.get_service_health_use_case = GetServiceHealthUseCase(
+            self.system_monitoring_service
+        )
+        self.get_system_info_use_case = GetSystemInfoUseCase(
+            self.system_monitoring_service
+        )
+        self.get_system_metrics_use_case = GetSystemMetricsUseCase(
+            self.system_monitoring_service
+        )
+        self.get_system_config_use_case = GetSystemConfigUseCase(
+            self.system_monitoring_service
+        )
+        self.check_system_readiness_use_case = CheckSystemReadinessUseCase(
+            self.system_monitoring_service
+        )
         self.health_list_workflows_use_case = HealthListWorkflowsUseCase()
 
         # Infrastructure use cases
@@ -178,7 +241,9 @@ class OrchestratorContainer:
         self.get_dlq_stats_use_case = GetDLQStatsUseCase(self.dlq_service)
         self.list_dlq_events_use_case = ListDLQEventsUseCase(self.dlq_service)
         self.retry_event_use_case = RetryEventUseCase(self.dlq_service)
-        self.get_event_stream_stats_use_case = GetEventStreamStatsUseCase(self.event_streaming_service)
+        self.get_event_stream_stats_use_case = GetEventStreamStatsUseCase(
+            self.event_streaming_service
+        )
         self.publish_event_use_case = PublishEventUseCase(self.event_streaming_service)
 
         # Ingestion use cases
@@ -192,7 +257,9 @@ class OrchestratorContainer:
         self.list_reports_use_case = ListReportsUseCase()
 
         # Query Processing use cases
-        self.process_natural_language_query_use_case = ProcessNaturalLanguageQueryUseCase()
+        self.process_natural_language_query_use_case = (
+            ProcessNaturalLanguageQueryUseCase()
+        )
         self.get_query_result_use_case = GetQueryResultUseCase()
         self.list_queries_use_case = ListQueriesUseCase()
 
@@ -208,10 +275,12 @@ app = FastAPI(
     title=SERVICE_TITLE,
     description="Central control plane and coordination service for the LLM Documentation Ecosystem",
     version=SERVICE_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
-# Use common middleware setup to reduce duplication across services
-setup_common_middleware(app, ServiceNames.ORCHESTRATOR)
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=config.service_name)
 
 # Skip shared health system to avoid datetime serialization issues
 # register_exception_handlers(app)
@@ -281,14 +350,24 @@ def register_bounded_context_routers(app):
             ["Infrastructure"],
             "Infrastructure",
         ),
-        ("services.orchestrator.presentation.api.ingestion.routes", "/api/v1/ingestion", ["Ingestion"], "Ingestion"),
+        (
+            "services.orchestrator.presentation.api.ingestion.routes",
+            "/api/v1/ingestion",
+            ["Ingestion"],
+            "Ingestion",
+        ),
         (
             "services.orchestrator.presentation.api.service_registry.routes",
             "/api/v1/service-registry",
             ["Service Registry"],
             "Service Registry",
         ),
-        ("services.orchestrator.presentation.api.reporting.routes", "/api/v1/reporting", ["Reporting"], "Reporting"),
+        (
+            "services.orchestrator.presentation.api.reporting.routes",
+            "/api/v1/reporting",
+            ["Reporting"],
+            "Reporting",
+        ),
         (
             "services.orchestrator.presentation.api.query_processing.routes",
             "/api/v1/queries",

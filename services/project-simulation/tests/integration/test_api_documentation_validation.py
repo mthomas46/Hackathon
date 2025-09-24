@@ -45,7 +45,10 @@ class TestOpenAPISpecification:
                 },
                 "paths": {
                     "/api/v1/simulations": {
-                        "get": {"summary": "List simulations", "responses": {"200": {"description": "Success"}}}
+                        "get": {
+                            "summary": "List simulations",
+                            "responses": {"200": {"description": "Success"}},
+                        }
                     }
                 },
             }
@@ -56,7 +59,9 @@ class TestOpenAPISpecification:
 
             spec_files = [spec_path]
 
-        assert len(spec_files) > 0, f"No OpenAPI specification found. Checked: {[str(p) for p in possible_paths]}"
+        assert (
+            len(spec_files) > 0
+        ), f"No OpenAPI specification found. Checked: {[str(p) for p in possible_paths]}"
 
     def test_openapi_spec_structure(self):
         """Test OpenAPI specification has required structure."""
@@ -78,7 +83,9 @@ class TestOpenAPISpecification:
             assert field in spec, f"OpenAPI spec missing required field: {field}"
 
         # Validate OpenAPI version
-        assert spec["openapi"].startswith("3."), f"Unsupported OpenAPI version: {spec['openapi']}"
+        assert spec["openapi"].startswith(
+            "3."
+        ), f"Unsupported OpenAPI version: {spec['openapi']}"
 
         # Validate info section
         info = spec["info"]
@@ -117,12 +124,19 @@ class TestOpenAPISpecification:
                 if "responses" in operation:
                     responses = operation["responses"]
                     if "200" not in responses and "201" not in responses:
-                        path_issues.append(f"{path} {method}: No success response defined")
+                        path_issues.append(
+                            f"{path} {method}: No success response defined"
+                        )
 
                     # Check response descriptions
                     for status_code, response in responses.items():
-                        if not isinstance(response, dict) or "description" not in response:
-                            path_issues.append(f"{path} {method} {status_code}: Missing response description")
+                        if (
+                            not isinstance(response, dict)
+                            or "description" not in response
+                        ):
+                            path_issues.append(
+                                f"{path} {method} {status_code}: Missing response description"
+                            )
 
         # Allow some flexibility for basic specs
         if len(path_issues) > len(paths) * 2:  # More than 2 issues per path
@@ -165,7 +179,9 @@ class TestOpenAPISpecification:
                         if isinstance(prop_def, dict):
                             has_type_or_ref = "type" in prop_def or "$ref" in prop_def
                             if not has_type_or_ref:
-                                print(f"Warning: Property {prop_name} in schema {schema_name} missing type or $ref")
+                                print(
+                                    f"Warning: Property {prop_name} in schema {schema_name} missing type or $ref"
+                                )
 
         print("✅ OpenAPI schema definitions validated")
 
@@ -179,11 +195,31 @@ class TestEndpointDocumentation:
         # For testing purposes, we'll mock some endpoints
 
         mock_endpoints = [
-            {"path": "/api/v1/simulations", "method": "GET", "summary": "List all simulations"},
-            {"path": "/api/v1/simulations", "method": "POST", "summary": "Create new simulation"},
-            {"path": "/api/v1/simulations/{id}", "method": "GET", "summary": "Get simulation details"},
-            {"path": "/api/v1/simulations/{id}/execute", "method": "POST", "summary": ""},
-            {"path": "/api/v1/health", "method": "GET", "summary": "Health check endpoint"},
+            {
+                "path": "/api/v1/simulations",
+                "method": "GET",
+                "summary": "List all simulations",
+            },
+            {
+                "path": "/api/v1/simulations",
+                "method": "POST",
+                "summary": "Create new simulation",
+            },
+            {
+                "path": "/api/v1/simulations/{id}",
+                "method": "GET",
+                "summary": "Get simulation details",
+            },
+            {
+                "path": "/api/v1/simulations/{id}/execute",
+                "method": "POST",
+                "summary": "",
+            },
+            {
+                "path": "/api/v1/health",
+                "method": "GET",
+                "summary": "Health check endpoint",
+            },
         ]
 
         incomplete_summaries = []
@@ -194,7 +230,9 @@ class TestEndpointDocumentation:
                 incomplete_summaries.append(f"{endpoint['method']} {endpoint['path']}")
 
         # Allow some endpoints to have minimal documentation
-        assert len(incomplete_summaries) <= 1, f"Too many endpoints with incomplete summaries: {incomplete_summaries}"
+        assert (
+            len(incomplete_summaries) <= 1
+        ), f"Too many endpoints with incomplete summaries: {incomplete_summaries}"
 
         print("✅ Endpoint summary completeness validated")
 
@@ -203,12 +241,24 @@ class TestEndpointDocumentation:
         mock_parameters = {
             "/api/v1/simulations": {
                 "query": [
-                    {"name": "status", "type": "string", "description": "Filter by simulation status"},
-                    {"name": "limit", "type": "integer", "description": "Maximum number of results"},
+                    {
+                        "name": "status",
+                        "type": "string",
+                        "description": "Filter by simulation status",
+                    },
+                    {
+                        "name": "limit",
+                        "type": "integer",
+                        "description": "Maximum number of results",
+                    },
                     {"name": "offset", "type": "integer", "description": ""},
                 ]
             },
-            "/api/v1/simulations/{id}": {"path": [{"name": "id", "type": "string", "description": "Simulation ID"}]},
+            "/api/v1/simulations/{id}": {
+                "path": [
+                    {"name": "id", "type": "string", "description": "Simulation ID"}
+                ]
+            },
         }
 
         parameter_issues = []
@@ -217,9 +267,13 @@ class TestEndpointDocumentation:
             for param_type, params in param_types.items():
                 for param in params:
                     if not param.get("description", "").strip():
-                        parameter_issues.append(f"{path} {param_type} parameter '{param['name']}' missing description")
+                        parameter_issues.append(
+                            f"{path} {param_type} parameter '{param['name']}' missing description"
+                        )
 
-        assert len(parameter_issues) <= 1, f"Too many parameters missing documentation: {parameter_issues}"
+        assert (
+            len(parameter_issues) <= 1
+        ), f"Too many parameters missing documentation: {parameter_issues}"
 
         print("✅ Endpoint parameter documentation validated")
 
@@ -246,9 +300,13 @@ class TestEndpointDocumentation:
 
                 # Check for schema references
                 if "schema" not in response:
-                    response_issues.append(f"{path} {status_code} missing schema reference")
+                    response_issues.append(
+                        f"{path} {status_code} missing schema reference"
+                    )
 
-        assert len(response_issues) <= 2, f"Too many response documentation issues: {response_issues}"
+        assert (
+            len(response_issues) <= 2
+        ), f"Too many response documentation issues: {response_issues}"
 
         print("✅ Endpoint response documentation validated")
 
@@ -264,7 +322,10 @@ class TestDocumentationGeneration:
         mock_api_structure = {
             "endpoints": [
                 {"path": "/api/v1/simulations", "methods": ["GET", "POST"]},
-                {"path": "/api/v1/simulations/{id}", "methods": ["GET", "PUT", "DELETE"]},
+                {
+                    "path": "/api/v1/simulations/{id}",
+                    "methods": ["GET", "PUT", "DELETE"],
+                },
                 {"path": "/api/v1/health", "methods": ["GET"]},
             ],
             "models": ["Simulation", "SimulationCreate", "Error"],
@@ -306,12 +367,18 @@ class TestDocumentationGeneration:
                 format_issues.append(f"Inconsistent capitalization: '{doc}'")
 
             # Check for missing articles (simple heuristic)
-            if doc and len(doc.split()) >= 3 and not any(word in doc.lower() for word in ["a ", "an ", "the "]):
+            if (
+                doc
+                and len(doc.split()) >= 3
+                and not any(word in doc.lower() for word in ["a ", "an ", "the "])
+            ):
                 # This is just a warning, not necessarily an error
                 pass
 
         # Only flag major formatting issues
-        assert len(format_issues) <= 1, f"Documentation formatting issues: {format_issues}"
+        assert (
+            len(format_issues) <= 1
+        ), f"Documentation formatting issues: {format_issues}"
 
         print("✅ Documentation format consistency validated")
 
@@ -329,11 +396,21 @@ class TestDocumentationGeneration:
         }
 
         # Calculate completeness scores
-        endpoint_completeness = docs_metrics["documented_endpoints"] / docs_metrics["total_endpoints"]
-        param_completeness = docs_metrics["endpoints_with_params"] / docs_metrics["total_endpoints"]
-        response_completeness = docs_metrics["endpoints_with_responses"] / docs_metrics["total_endpoints"]
-        example_completeness = docs_metrics["endpoints_with_examples"] / docs_metrics["total_endpoints"]
-        model_completeness = docs_metrics["documented_models"] / docs_metrics["total_models"]
+        endpoint_completeness = (
+            docs_metrics["documented_endpoints"] / docs_metrics["total_endpoints"]
+        )
+        param_completeness = (
+            docs_metrics["endpoints_with_params"] / docs_metrics["total_endpoints"]
+        )
+        response_completeness = (
+            docs_metrics["endpoints_with_responses"] / docs_metrics["total_endpoints"]
+        )
+        example_completeness = (
+            docs_metrics["endpoints_with_examples"] / docs_metrics["total_endpoints"]
+        )
+        model_completeness = (
+            docs_metrics["documented_models"] / docs_metrics["total_models"]
+        )
 
         # Overall completeness score
         overall_score = (
@@ -345,11 +422,17 @@ class TestDocumentationGeneration:
         )
 
         # Should have reasonable completeness
-        assert overall_score > 0.5, f"Documentation completeness too low: {overall_score:.2f}"
+        assert (
+            overall_score > 0.5
+        ), f"Documentation completeness too low: {overall_score:.2f}"
 
         # Individual metrics should be reasonable
-        assert endpoint_completeness > 0.7, f"Endpoint documentation too low: {endpoint_completeness:.2f}"
-        assert response_completeness > 0.5, f"Response documentation too low: {response_completeness:.2f}"
+        assert (
+            endpoint_completeness > 0.7
+        ), f"Endpoint documentation too low: {endpoint_completeness:.2f}"
+        assert (
+            response_completeness > 0.5
+        ), f"Response documentation too low: {response_completeness:.2f}"
 
         print("✅ Documentation completeness score validated")
         print(".2f")
@@ -372,7 +455,9 @@ class TestInteractiveDocumentation:
         missing_features = [k for k, v in interactive_features.items() if not v]
 
         # Allow some features to be missing
-        assert len(missing_features) <= 1, f"Too many missing interactive features: {missing_features}"
+        assert (
+            len(missing_features) <= 1
+        ), f"Too many missing interactive features: {missing_features}"
 
         print("✅ API docs interactivity validated")
 
@@ -393,7 +478,9 @@ class TestInteractiveDocumentation:
                 if query.lower() in category.lower():
                     results.extend([f"{category}:{term}" for term in terms])
                 else:
-                    matching_terms = [term for term in terms if query.lower() in term.lower()]
+                    matching_terms = [
+                        term for term in terms if query.lower() in term.lower()
+                    ]
                     results.extend([f"{category}:{term}" for term in matching_terms])
             return results
 
@@ -412,7 +499,9 @@ class TestInteractiveDocumentation:
                     expected_category in result for result in results
                 ), f"Search for '{query}' should return {expected_category} results"
             else:
-                assert len(results) == 0, f"Search for '{query}' should return no results"
+                assert (
+                    len(results) == 0
+                ), f"Search for '{query}' should return no results"
 
         print("✅ Documentation search functionality validated")
 
@@ -436,7 +525,9 @@ class TestInteractiveDocumentation:
             ), f"Version {curr_version['version']} has fewer endpoints than {prev_version['version']}"
 
             # Versions should be chronological
-            assert curr_version["last_updated"] > prev_version["last_updated"], f"Version dates not chronological"
+            assert (
+                curr_version["last_updated"] > prev_version["last_updated"]
+            ), f"Version dates not chronological"
 
         print("✅ Documentation versioning validated")
 
@@ -476,7 +567,9 @@ class TestDocumentationQualityMetrics:
 
         # Overall readability should be reasonable
         avg_readability = sum(readability_scores) / len(readability_scores)
-        assert avg_readability > 0.5, f"Average readability too low: {avg_readability:.2f}"
+        assert (
+            avg_readability > 0.5
+        ), f"Average readability too low: {avg_readability:.2f}"
 
         print("✅ Documentation readability metrics validated")
 
@@ -484,26 +577,47 @@ class TestDocumentationQualityMetrics:
         """Test documentation coverage across the API."""
         # Simulate API coverage analysis
         api_coverage = {
-            "endpoints": {"total": 15, "documented": 12, "partially_documented": 2, "undocumented": 1},
+            "endpoints": {
+                "total": 15,
+                "documented": 12,
+                "partially_documented": 2,
+                "undocumented": 1,
+            },
             "parameters": {"total": 45, "documented": 38, "undocumented": 7},
             "responses": {"total": 60, "documented": 52, "undocumented": 8},
             "models": {"total": 8, "documented": 7, "undocumented": 1},
         }
 
         # Calculate coverage percentages
-        endpoint_coverage = api_coverage["endpoints"]["documented"] / api_coverage["endpoints"]["total"]
-        parameter_coverage = api_coverage["parameters"]["documented"] / api_coverage["parameters"]["total"]
-        response_coverage = api_coverage["responses"]["documented"] / api_coverage["responses"]["total"]
-        model_coverage = api_coverage["models"]["documented"] / api_coverage["models"]["total"]
+        endpoint_coverage = (
+            api_coverage["endpoints"]["documented"] / api_coverage["endpoints"]["total"]
+        )
+        parameter_coverage = (
+            api_coverage["parameters"]["documented"]
+            / api_coverage["parameters"]["total"]
+        )
+        response_coverage = (
+            api_coverage["responses"]["documented"] / api_coverage["responses"]["total"]
+        )
+        model_coverage = (
+            api_coverage["models"]["documented"] / api_coverage["models"]["total"]
+        )
 
         # Overall coverage
         overall_coverage = (
-            endpoint_coverage * 0.4 + parameter_coverage * 0.3 + response_coverage * 0.2 + model_coverage * 0.1
+            endpoint_coverage * 0.4
+            + parameter_coverage * 0.3
+            + response_coverage * 0.2
+            + model_coverage * 0.1
         )
 
         # Should have good coverage
-        assert overall_coverage > 0.8, f"Overall documentation coverage too low: {overall_coverage:.2f}"
-        assert endpoint_coverage > 0.7, f"Endpoint documentation coverage too low: {endpoint_coverage:.2f}"
+        assert (
+            overall_coverage > 0.8
+        ), f"Overall documentation coverage too low: {overall_coverage:.2f}"
+        assert (
+            endpoint_coverage > 0.7
+        ), f"Endpoint documentation coverage too low: {endpoint_coverage:.2f}"
 
         print("✅ Documentation coverage metrics validated")
 
@@ -523,13 +637,24 @@ def mock_openapi_spec():
             "/api/v1/simulations": {
                 "get": {
                     "summary": "List simulations",
-                    "parameters": [{"name": "status", "in": "query", "schema": {"type": "string"}}],
-                    "responses": {"200": {"description": "Success"}, "400": {"description": "Bad request"}},
+                    "parameters": [
+                        {"name": "status", "in": "query", "schema": {"type": "string"}}
+                    ],
+                    "responses": {
+                        "200": {"description": "Success"},
+                        "400": {"description": "Bad request"},
+                    },
                 },
                 "post": {
                     "summary": "Create simulation",
                     "requestBody": {
-                        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/SimulationCreate"}}}
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SimulationCreate"
+                                }
+                            }
+                        }
                     },
                     "responses": {"201": {"description": "Created"}},
                 },
@@ -539,7 +664,10 @@ def mock_openapi_spec():
             "schemas": {
                 "SimulationCreate": {
                     "type": "object",
-                    "properties": {"name": {"type": "string"}, "type": {"type": "string"}},
+                    "properties": {
+                        "name": {"type": "string"},
+                        "type": {"type": "string"},
+                    },
                 }
             }
         },
@@ -563,7 +691,11 @@ def api_endpoint_inventory():
     """Create an inventory of API endpoints for testing."""
     return [
         {"path": "/api/v1/simulations", "methods": ["GET", "POST"], "documented": True},
-        {"path": "/api/v1/simulations/{id}", "methods": ["GET", "PUT", "DELETE"], "documented": True},
+        {
+            "path": "/api/v1/simulations/{id}",
+            "methods": ["GET", "PUT", "DELETE"],
+            "documented": True,
+        },
         {"path": "/api/v1/health", "methods": ["GET"], "documented": True},
         {"path": "/api/v1/docs", "methods": ["GET"], "documented": False},
     ]

@@ -67,8 +67,14 @@ class ServiceException(Exception):
 class ValidationException(ServiceException):
     """Exception for validation errors."""
 
-    def __init__(self, message: str = "Validation failed", field_errors: Optional[Dict[str, List[str]]] = None):
-        super().__init__(message, "validation_error", 422, {"field_errors": field_errors})
+    def __init__(
+        self,
+        message: str = "Validation failed",
+        field_errors: Optional[Dict[str, List[str]]] = None,
+    ):
+        super().__init__(
+            message, "validation_error", 422, {"field_errors": field_errors}
+        )
         self.field_errors = field_errors
 
 
@@ -77,7 +83,12 @@ class NotFoundException(ServiceException):
 
     def __init__(self, resource_type: str, resource_id: str):
         message = f"{resource_type} not found: {resource_id}"
-        super().__init__(message, "not_found", 404, {"resource_type": resource_type, "resource_id": resource_id})
+        super().__init__(
+            message,
+            "not_found",
+            404,
+            {"resource_type": resource_type, "resource_id": resource_id},
+        )
 
 
 class ConflictException(ServiceException):
@@ -107,7 +118,10 @@ class ExternalServiceException(ServiceException):
     def __init__(self, service_name: str, original_error: str):
         message = f"External service error: {service_name}"
         super().__init__(
-            message, "service_unavailable", 503, {"service_name": service_name, "original_error": original_error}
+            message,
+            "service_unavailable",
+            503,
+            {"service_name": service_name, "original_error": original_error},
         )
 
 
@@ -116,7 +130,12 @@ class DatabaseException(ServiceException):
 
     def __init__(self, operation: str, original_error: str):
         message = f"Database operation failed: {operation}"
-        super().__init__(message, "internal_error", 500, {"operation": operation, "original_error": original_error})
+        super().__init__(
+            message,
+            "internal_error",
+            500,
+            {"operation": operation, "original_error": original_error},
+        )
 
 
 # ============================================================================
@@ -124,7 +143,9 @@ class DatabaseException(ServiceException):
 # ============================================================================
 
 
-async def handle_service_exception(exc: ServiceException, request: Optional[Request] = None) -> JSONResponse:
+async def handle_service_exception(
+    exc: ServiceException, request: Optional[Request] = None
+) -> JSONResponse:
     """Handle ServiceException and return appropriate JSON response."""
     # Log the error
     await log_error(str(type(exc).__name__), str(exc), "error_handler")
@@ -141,7 +162,9 @@ async def handle_service_exception(exc: ServiceException, request: Optional[Requ
     return JSONResponse(status_code=exc.status_code, content=error_response.dict())
 
 
-async def handle_validation_exception(exc: ValidationError, request: Optional[Request] = None) -> JSONResponse:
+async def handle_validation_exception(
+    exc: ValidationError, request: Optional[Request] = None
+) -> JSONResponse:
     """Handle Pydantic ValidationError and return appropriate JSON response."""
     # Log the error
     log_error(exc, request)
@@ -151,7 +174,9 @@ async def handle_validation_exception(exc: ValidationError, request: Optional[Re
         field_errors = format_validation_errors({"detail": exc.errors()})
     except Exception:
         # Fallback if formatting fails
-        field_errors = {"detail": [{"msg": "Validation error occurred", "type": "validation_error"}]}
+        field_errors = {
+            "detail": [{"msg": "Validation error occurred", "type": "validation_error"}]
+        }
 
     # Create validation error response
     error_response = ValidationErrorResponse(
@@ -165,7 +190,9 @@ async def handle_validation_exception(exc: ValidationError, request: Optional[Re
     return JSONResponse(status_code=422, content=error_response.dict())
 
 
-async def handle_generic_exception(exc: Exception, request: Optional[Request] = None) -> JSONResponse:
+async def handle_generic_exception(
+    exc: Exception, request: Optional[Request] = None
+) -> JSONResponse:
     """Handle generic exceptions and return appropriate JSON response."""
     # Log the error with full traceback
     log_error(exc, request, include_traceback=True)
@@ -174,7 +201,11 @@ async def handle_generic_exception(exc: Exception, request: Optional[Request] = 
     error_response = ErrorResponse(
         message="An unexpected error occurred",
         error_code="internal_error",
-        details=format_error_details(exc) if os.environ.get("DEBUG", "").lower() == "true" else None,
+        details=(
+            format_error_details(exc)
+            if os.environ.get("DEBUG", "").lower() == "true"
+            else None
+        ),
         request_id=get_request_id(request),
         timestamp=datetime.now(timezone.utc).isoformat(),
     )
@@ -182,7 +213,9 @@ async def handle_generic_exception(exc: Exception, request: Optional[Request] = 
     return JSONResponse(status_code=500, content=error_response.dict())
 
 
-def log_error(exc: Exception, request: Optional[Request] = None, include_traceback: bool = False):
+def log_error(
+    exc: Exception, request: Optional[Request] = None, include_traceback: bool = False
+):
     """Log an error with appropriate context."""
     try:
         log_data = {
@@ -198,7 +231,12 @@ def log_error(exc: Exception, request: Optional[Request] = None, include_traceba
             log_data["traceback"] = traceback.format_exc()
 
         # Use fire_and_forget for async logging
-        fire_and_forget("error", f"Exception occurred: {type(exc).__name__}", "error_handler", log_data)
+        fire_and_forget(
+            "error",
+            f"Exception occurred: {type(exc).__name__}",
+            "error_handler",
+            log_data,
+        )
 
     except Exception:
         # Don't let logging errors break the error handler
@@ -208,7 +246,9 @@ def log_error(exc: Exception, request: Optional[Request] = None, include_traceba
 def get_request_id(request: Optional[Request] = None) -> Optional[str]:
     """Extract request ID from request headers."""
     if request:
-        return request.headers.get("x-request-id") or request.headers.get("x-correlation-id")
+        return request.headers.get("x-request-id") or request.headers.get(
+            "x-correlation-id"
+        )
     return None
 
 
@@ -222,7 +262,10 @@ def raise_not_found(resource_type: str, resource_id: str):
     raise NotFoundException(resource_type, resource_id)
 
 
-def raise_validation_error(message: str = "Validation failed", field_errors: Optional[Dict[str, List[str]]] = None):
+def raise_validation_error(
+    message: str = "Validation failed",
+    field_errors: Optional[Dict[str, List[str]]] = None,
+):
     """Raise a standardized validation exception."""
     raise ValidationException(message, field_errors)
 
@@ -288,7 +331,10 @@ def validate_field_types(data: Dict[str, Any], field_types: Dict[str, type]) -> 
 
 
 def validate_string_length(
-    value: str, field_name: str, min_length: Optional[int] = None, max_length: Optional[int] = None
+    value: str,
+    field_name: str,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
 ) -> None:
     """Validate string length constraints."""
     errors = []
@@ -371,7 +417,9 @@ def safe_execute(func, *args, **kwargs):
     except ServiceException:
         raise  # Re-raise service exceptions as-is
     except ValidationError as e:
-        raise ValidationException("Validation failed", format_validation_errors({"detail": e.errors()}))
+        raise ValidationException(
+            "Validation failed", format_validation_errors({"detail": e.errors()})
+        )
     except Exception as e:
         raise ServiceException(f"Operation failed: {str(e)}", "internal_error", 500)
 
@@ -383,7 +431,9 @@ async def safe_execute_async(func, *args, **kwargs):
     except ServiceException:
         raise  # Re-raise service exceptions as-is
     except ValidationError as e:
-        raise ValidationException("Validation failed", format_validation_errors({"detail": e.errors()}))
+        raise ValidationException(
+            "Validation failed", format_validation_errors({"detail": e.errors()})
+        )
     except Exception as e:
         raise ServiceException(f"Operation failed: {str(e)}", "internal_error", 500)
 
@@ -408,7 +458,9 @@ def create_error_response_dict(
 
 
 def create_success_response_dict(
-    message: str = "Operation successful", data: Any = None, request: Optional[Request] = None
+    message: str = "Operation successful",
+    data: Any = None,
+    request: Optional[Request] = None,
 ) -> Dict[str, Any]:
     """Create a standardized success response dictionary."""
     return {
@@ -438,7 +490,11 @@ def install_error_handlers(app: FastAPI) -> None:
                     "type": error.get("type", "validation_error"),
                     "loc": error.get("loc", []),
                     "msg": error.get("msg", str(error)),
-                    "input": str(error.get("input", "")) if error.get("input") is not None else None,
+                    "input": (
+                        str(error.get("input", ""))
+                        if error.get("input") is not None
+                        else None
+                    ),
                 }
             )
 
@@ -461,7 +517,11 @@ def install_error_handlers(app: FastAPI) -> None:
                     "type": error.get("type", "validation_error"),
                     "loc": error.get("loc", []),
                     "msg": error.get("msg", str(error)),
-                    "input": str(error.get("input", "")) if error.get("input") is not None else None,
+                    "input": (
+                        str(error.get("input", ""))
+                        if error.get("input") is not None
+                        else None
+                    ),
                 }
             )
 

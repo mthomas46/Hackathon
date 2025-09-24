@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 from services.shared.monitoring.logging import fire_and_forget
 
 from .managers.analysis.analysis_service_manager import AnalysisServiceManager
@@ -66,34 +66,70 @@ class CLICommands:
         self._interrupt_requested = False
 
         # Initialize power-user managers
-        self.orchestrator_manager = OrchestratorManager(self.console, self.clients, self._cache)
+        self.orchestrator_manager = OrchestratorManager(
+            self.console, self.clients, self._cache
+        )
         self.analysis_manager = AnalysisManager(self.console, self.clients, self._cache)
         self.docstore_manager = DocStoreManager(self.console, self.clients, self._cache)
-        self.source_agent_manager = SourceAgentManager(self.console, self.clients, self._cache)
-        self.infrastructure_manager = InfrastructureManager(self.console, self.clients, self._cache)
-        self.bulk_operations_manager = BulkOperationsManager(self.console, self.clients, self._cache)
-        self.interpreter_manager = InterpreterManager(self.console, self.clients, self._cache)
-        self.discovery_agent_manager = DiscoveryAgentManager(self.console, self.clients, self._cache)
-        self.memory_agent_manager = MemoryAgentManager(self.console, self.clients, self._cache)
-        self.secure_analyzer_manager = SecureAnalyzerManager(self.console, self.clients, self._cache)
-        self.summarizer_hub_manager = SummarizerHubManager(self.console, self.clients, self._cache)
-        self.code_analyzer_manager = CodeAnalyzerManager(self.console, self.clients, self._cache)
-        self.notification_service_manager = NotificationServiceManager(self.console, self.clients, self._cache)
-        self.log_collector_manager = LogCollectorManager(self.console, self.clients, self._cache)
-        self.bedrock_proxy_manager = BedrockProxyManager(self.console, self.clients, self._cache)
-        self.analysis_service_manager = AnalysisServiceManager(self.console, self.clients, self._cache)
+        self.source_agent_manager = SourceAgentManager(
+            self.console, self.clients, self._cache
+        )
+        self.infrastructure_manager = InfrastructureManager(
+            self.console, self.clients, self._cache
+        )
+        self.bulk_operations_manager = BulkOperationsManager(
+            self.console, self.clients, self._cache
+        )
+        self.interpreter_manager = InterpreterManager(
+            self.console, self.clients, self._cache
+        )
+        self.discovery_agent_manager = DiscoveryAgentManager(
+            self.console, self.clients, self._cache
+        )
+        self.memory_agent_manager = MemoryAgentManager(
+            self.console, self.clients, self._cache
+        )
+        self.secure_analyzer_manager = SecureAnalyzerManager(
+            self.console, self.clients, self._cache
+        )
+        self.summarizer_hub_manager = SummarizerHubManager(
+            self.console, self.clients, self._cache
+        )
+        self.code_analyzer_manager = CodeAnalyzerManager(
+            self.console, self.clients, self._cache
+        )
+        self.notification_service_manager = NotificationServiceManager(
+            self.console, self.clients, self._cache
+        )
+        self.log_collector_manager = LogCollectorManager(
+            self.console, self.clients, self._cache
+        )
+        self.bedrock_proxy_manager = BedrockProxyManager(
+            self.console, self.clients, self._cache
+        )
+        self.analysis_service_manager = AnalysisServiceManager(
+            self.console, self.clients, self._cache
+        )
         self.config_manager = ConfigManager(self.console, self.clients, self._cache)
         self.settings_manager = SettingsManager(self.console, self.clients, self._cache)
-        self.deployment_manager = DeploymentManager(self.console, self.clients, self._cache)
-        self.advanced_monitoring_manager = AdvancedMonitoringManager(self.console, self.clients, self._cache)
-        self.architecture_digitizer_manager = ArchitectureDigitizerManager(self.console, self.clients, self._cache)
+        self.deployment_manager = DeploymentManager(
+            self.console, self.clients, self._cache
+        )
+        self.advanced_monitoring_manager = AdvancedMonitoringManager(
+            self.console, self.clients, self._cache
+        )
+        self.architecture_digitizer_manager = ArchitectureDigitizerManager(
+            self.console, self.clients, self._cache
+        )
 
     def setup_interrupt_handling(self):
         """Setup signal handlers for graceful interrupt handling."""
 
         def signal_handler(signum, frame):
             self._interrupt_requested = True
-            self.console.print("\n[yellow]⚠️  Interrupt received. Cleaning up...[/yellow]")
+            self.console.print(
+                "\n[yellow]⚠️  Interrupt received. Cleaning up...[/yellow]"
+            )
             # Force exit for immediate termination
             os._exit(1)
 
@@ -127,7 +163,9 @@ class CLICommands:
     @asynccontextmanager
     async def progress_context(self, description: str = "Processing"):
         """Context manager for progress indicators."""
-        with self.console.status(f"[bold green]{description}...[/bold green]") as status:
+        with self.console.status(
+            f"[bold green]{description}...[/bold green]"
+        ) as status:
             try:
                 yield status
             except Exception as e:
@@ -176,7 +214,9 @@ class CLICommands:
         )
 
         # Infrastructure & Operations
-        infra_menu = create_menu_table("🏗️ Infrastructure & Operations", ["Option", "Description"])
+        infra_menu = create_menu_table(
+            "🏗️ Infrastructure & Operations", ["Option", "Description"]
+        )
         add_menu_rows(
             infra_menu,
             [
@@ -189,7 +229,9 @@ class CLICommands:
         )
 
         # Advanced Features
-        advanced_menu = create_menu_table("⚡ Advanced Features", ["Option", "Description"])
+        advanced_menu = create_menu_table(
+            "⚡ Advanced Features", ["Option", "Description"]
+        )
         add_menu_rows(
             advanced_menu,
             [
@@ -202,7 +244,9 @@ class CLICommands:
         )
 
         # System Administration
-        admin_menu = create_menu_table("⚙️ System Administration", ["Option", "Description"])
+        admin_menu = create_menu_table(
+            "⚙️ System Administration", ["Option", "Description"]
+        )
         add_menu_rows(
             admin_menu,
             [
@@ -235,11 +279,11 @@ class CLICommands:
         services = {
             service_name: get_service_health_url(self.clients, service_name)
             for service_name in [
-                ServiceNames.ORCHESTRATOR,
-                ServiceNames.PROMPT_STORE,
-                ServiceNames.SOURCE_AGENT,
-                ServiceNames.ANALYSIS_SERVICE,
-                ServiceNames.DOC_STORE,
+                "orchestrator",
+                "prompt-store",
+                "source-agent",
+                "analysis-service",
+                "doc-store",
             ]
         }
 
@@ -248,9 +292,17 @@ class CLICommands:
             for service_name, url in services.items():
                 try:
                     response = await self.clients.get_json(url)
-                    results[service_name] = {"status": "healthy", "response": response, "timestamp": time.time()}
+                    results[service_name] = {
+                        "status": "healthy",
+                        "response": response,
+                        "timestamp": time.time(),
+                    }
                 except Exception as e:
-                    results[service_name] = {"status": "unhealthy", "error": str(e), "timestamp": time.time()}
+                    results[service_name] = {
+                        "status": "unhealthy",
+                        "error": str(e),
+                        "timestamp": time.time(),
+                    }
 
         return results
 
@@ -341,10 +393,14 @@ class CLICommands:
         passed = sum(1 for r in results.values() if r)
         total = len(results)
 
-        self.console.print(f"\n[bold]Integration Test Summary: {passed}/{total} passed[/bold]")
+        self.console.print(
+            f"\n[bold]Integration Test Summary: {passed}/{total} passed[/bold]"
+        )
 
         if passed == total:
-            self.console.print("[green]🎉 All services are properly integrated![/green]")
+            self.console.print(
+                "[green]🎉 All services are properly integrated![/green]"
+            )
         else:
             self.console.print("[yellow]⚠️  Some integration issues detected.[/yellow]")
 
@@ -367,7 +423,9 @@ class CLICommands:
             health = await self.clients.get_json("interpreter/health")
             if health.get("status") != "healthy":
                 return False
-            result = await self.clients.post_json("interpreter/interpret", {"query": "analyze this document"})
+            result = await self.clients.post_json(
+                "interpreter/interpret", {"query": "analyze this document"}
+            )
             return "intent" in result
         except Exception:
             return False
@@ -391,7 +449,9 @@ class CLICommands:
     async def _test_cross_service_workflow(self) -> bool:
         """Test cross-service workflow execution."""
         try:
-            result = await self.clients.post_json("orchestrator/query", {"query": "show me system status"})
+            result = await self.clients.post_json(
+                "orchestrator/query", {"query": "show me system status"}
+            )
             return "interpretation" in result
         except Exception:
             return False
@@ -459,7 +519,9 @@ class CLICommands:
                     prompt_manager = PromptManager(self.console, self.clients)
                     await prompt_manager.prompt_management_menu()
                 elif choice.lower() == "s":
-                    await self.settings_manager.run_menu_loop("Settings & Service Status", use_interactive=True)
+                    await self.settings_manager.run_menu_loop(
+                        "Settings & Service Status", use_interactive=True
+                    )
                 elif choice.lower() == "c":
                     await self.cache_management_menu()
                 elif choice.lower() in ["q", "quit", "exit"]:
@@ -476,7 +538,7 @@ class CLICommands:
             self.console.print("\n[yellow]⚠️  Operation interrupted by user[/yellow]")
         except Exception as e:
             self.console.print(f"\n[red]❌ Fatal error: {e}[/red]")
-            fire_and_forget("error", f"CLI fatal error: {e}", ServiceNames.CLI)
+            fire_and_forget("error", f"CLI fatal error: {e}", "cli")
         finally:
             # Cleanup operations
             self.console.print("[dim]Cleaning up...[/dim]")
@@ -510,13 +572,17 @@ class CLICommands:
             elif choice == "3":
                 pattern = Prompt.ask("Service pattern (e.g., 'docstore', 'analysis')")
                 await self.cache_invalidate(pattern)
-                self.console.print(f"[green]✅ Cache cleared for pattern: {pattern}[/green]")
+                self.console.print(
+                    f"[green]✅ Cache cleared for pattern: {pattern}[/green]"
+                )
                 Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
             elif choice == "4":
                 ttl = Prompt.ask("Cache TTL in seconds", default=str(self._cache_ttl))
                 try:
                     self._cache_ttl = int(ttl)
-                    self.console.print(f"[green]✅ Cache TTL set to {ttl} seconds[/green]")
+                    self.console.print(
+                        f"[green]✅ Cache TTL set to {ttl} seconds[/green]"
+                    )
                 except ValueError:
                     self.console.print("[red]❌ Invalid TTL value[/red]")
                 Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")

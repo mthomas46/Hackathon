@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 
-from .models import ArchitectureComponent, ArchitectureConnection, NormalizedArchitectureData
+from .models import (
+    ArchitectureComponent,
+    ArchitectureConnection,
+    NormalizedArchitectureData,
+)
 
 
 class BaseNormalizer(ABC):
@@ -66,7 +70,8 @@ class MiroNormalizer(BaseNormalizer):
                 component = ArchitectureComponent(
                     id=item.get("id", ""),
                     type="service",  # Default type
-                    name=item.get("data", {}).get("content", "").strip()[:50] or f"Component {item.get('id', '')}",
+                    name=item.get("data", {}).get("content", "").strip()[:50]
+                    or f"Component {item.get('id', '')}",
                     description=item.get("data", {}).get("content", ""),
                 )
                 components.append(component)
@@ -79,7 +84,8 @@ class MiroNormalizer(BaseNormalizer):
                 component = ArchitectureComponent(
                     id=item.get("id", ""),
                     type=component_type,
-                    name=shape_data.get("content", "").strip()[:50] or f"Component {item.get('id', '')}",
+                    name=shape_data.get("content", "").strip()[:50]
+                    or f"Component {item.get('id', '')}",
                     description=shape_data.get("content", ""),
                 )
                 components.append(component)
@@ -93,12 +99,15 @@ class MiroNormalizer(BaseNormalizer):
                     connection = ArchitectureConnection(
                         from_id=start_widget.get("id", ""),
                         to_id=end_widget.get("id", ""),
-                        label=item.get("data", {}).get("content", "").strip() or "connects",
+                        label=item.get("data", {}).get("content", "").strip()
+                        or "connects",
                     )
                     connections.append(connection)
 
         return NormalizedArchitectureData(
-            components=components, connections=connections, metadata={"source": "miro", "board_id": data.get("id", "")}
+            components=components,
+            connections=connections,
+            metadata={"source": "miro", "board_id": data.get("id", "")},
         )
 
     def _map_shape_to_component_type(self, shape_data: Dict[str, Any]) -> str:
@@ -108,13 +117,17 @@ class MiroNormalizer(BaseNormalizer):
         # Simple content-based mapping
         if any(keyword in content for keyword in ["database", "db", "storage"]):
             return "database"
-        elif any(keyword in content for keyword in ["queue", "message", "kafka", "rabbit"]):
+        elif any(
+            keyword in content for keyword in ["queue", "message", "kafka", "rabbit"]
+        ):
             return "queue"
         elif any(keyword in content for keyword in ["ui", "frontend", "web", "app"]):
             return "ui"
         elif any(keyword in content for keyword in ["gateway", "api", "proxy"]):
             return "gateway"
-        elif any(keyword in content for keyword in ["function", "lambda", "serverless"]):
+        elif any(
+            keyword in content for keyword in ["function", "lambda", "serverless"]
+        ):
             return "function"
 
         return "service"  # Default
@@ -146,13 +159,17 @@ class FigJamNormalizer(BaseNormalizer):
 
             except httpx.HTTPStatusError as e:
                 if e.response.status_code == 403:
-                    raise ValueError("Invalid Figma API token or insufficient permissions")
+                    raise ValueError(
+                        "Invalid Figma API token or insufficient permissions"
+                    )
                 elif e.response.status_code == 404:
                     raise ValueError(f"FigJam file {board_id} not found")
                 else:
                     raise ValueError(f"Figma API error: {e.response.status_code}")
 
-    def _normalize_figjam_data(self, data: Dict[str, Any]) -> NormalizedArchitectureData:
+    def _normalize_figjam_data(
+        self, data: Dict[str, Any]
+    ) -> NormalizedArchitectureData:
         """Convert Figma API response to normalized format."""
         components = []
         connections = []
@@ -168,7 +185,8 @@ class FigJamNormalizer(BaseNormalizer):
                 component = ArchitectureComponent(
                     id=node.get("id", ""),
                     type=component_type,
-                    name=node.get("name", "").strip()[:50] or f"Component {node.get('id', '')}",
+                    name=node.get("name", "").strip()[:50]
+                    or f"Component {node.get('id', '')}",
                     description=node.get("name", ""),
                 )
                 components.append(component)
@@ -253,7 +271,8 @@ class LucidNormalizer(BaseNormalizer):
                     component = ArchitectureComponent(
                         id=obj.get("id", ""),
                         type=component_type,
-                        name=obj.get("text", "").strip()[:50] or f"Component {obj.get('id', '')}",
+                        name=obj.get("text", "").strip()[:50]
+                        or f"Component {obj.get('id', '')}",
                         description=obj.get("text", ""),
                     )
                     components.append(component)
@@ -321,7 +340,9 @@ class ConfluenceNormalizer(BaseNormalizer):
                 else:
                     raise ValueError(f"Confluence API error: {e.response.status_code}")
 
-    def _normalize_confluence_data(self, data: Dict[str, Any]) -> NormalizedArchitectureData:
+    def _normalize_confluence_data(
+        self, data: Dict[str, Any]
+    ) -> NormalizedArchitectureData:
         """Convert Confluence API response to normalized format."""
         components = []
         connections = []
@@ -334,7 +355,10 @@ class ConfluenceNormalizer(BaseNormalizer):
         page_title = data.get("title", f"Page {data.get('id', '')}")
 
         component = ArchitectureComponent(
-            id=data.get("id", ""), type="service", name=page_title, description=f"Confluence page: {page_title}"
+            id=data.get("id", ""),
+            type="service",
+            name=page_title,
+            description=f"Confluence page: {page_title}",
         )
         components.append(component)
 
@@ -357,7 +381,9 @@ class BaseFileNormalizer(ABC):
     """Base class for file-based architecture diagram normalizers."""
 
     @abstractmethod
-    async def normalize_file(self, file_content: bytes, filename: str, file_format: str) -> NormalizedArchitectureData:
+    async def normalize_file(
+        self, file_content: bytes, filename: str, file_format: str
+    ) -> NormalizedArchitectureData:
         """Normalize diagram data from uploaded file."""
 
     @classmethod
@@ -368,20 +394,28 @@ class BaseFileNormalizer(ABC):
     @classmethod
     def supports_format(cls, file_format: str) -> bool:
         """Check if this normalizer supports the given file format."""
-        return file_format.lower() in [fmt["format"] for fmt in cls.get_supported_formats()]
+        return file_format.lower() in [
+            fmt["format"] for fmt in cls.get_supported_formats()
+        ]
 
 
 class MiroFileNormalizer(BaseFileNormalizer):
     """File-based normalizer for Miro diagram exports."""
 
-    async def normalize_file(self, file_content: bytes, filename: str, file_format: str) -> NormalizedArchitectureData:
+    async def normalize_file(
+        self, file_content: bytes, filename: str, file_format: str
+    ) -> NormalizedArchitectureData:
         """Normalize Miro exported file."""
         if file_format.lower() == "json":
             return await self._normalize_miro_json(file_content, filename)
         else:
-            raise ValueError(f"Miro file normalizer does not support format: {file_format}")
+            raise ValueError(
+                f"Miro file normalizer does not support format: {file_format}"
+            )
 
-    async def _normalize_miro_json(self, file_content: bytes, filename: str) -> NormalizedArchitectureData:
+    async def _normalize_miro_json(
+        self, file_content: bytes, filename: str
+    ) -> NormalizedArchitectureData:
         """Normalize Miro JSON export."""
         import json
 
@@ -407,7 +441,8 @@ class MiroFileNormalizer(BaseFileNormalizer):
                 component = ArchitectureComponent(
                     id=item.get("id", ""),
                     type=component_type,
-                    name=item.get("text", "").strip()[:50] or f"Component {item.get('id', '')}",
+                    name=item.get("text", "").strip()[:50]
+                    or f"Component {item.get('id', '')}",
                     description=item.get("text", ""),
                 )
                 components.append(component)
@@ -438,7 +473,9 @@ class MiroFileNormalizer(BaseFileNormalizer):
         # Simple content-based mapping
         if any(keyword in text for keyword in ["database", "db", "storage"]):
             return "database"
-        elif any(keyword in text for keyword in ["queue", "message", "kafka", "rabbit"]):
+        elif any(
+            keyword in text for keyword in ["queue", "message", "kafka", "rabbit"]
+        ):
             return "queue"
         elif any(keyword in text for keyword in ["ui", "frontend", "web", "app"]):
             return "ui"
@@ -464,14 +501,20 @@ class MiroFileNormalizer(BaseFileNormalizer):
 class FigJamFileNormalizer(BaseFileNormalizer):
     """File-based normalizer for Figma FigJam exports."""
 
-    async def normalize_file(self, file_content: bytes, filename: str, file_format: str) -> NormalizedArchitectureData:
+    async def normalize_file(
+        self, file_content: bytes, filename: str, file_format: str
+    ) -> NormalizedArchitectureData:
         """Normalize FigJam exported file."""
         if file_format.lower() == "json":
             return await self._normalize_figjam_json(file_content, filename)
         else:
-            raise ValueError(f"FigJam file normalizer does not support format: {file_format}")
+            raise ValueError(
+                f"FigJam file normalizer does not support format: {file_format}"
+            )
 
-    async def _normalize_figjam_json(self, file_content: bytes, filename: str) -> NormalizedArchitectureData:
+    async def _normalize_figjam_json(
+        self, file_content: bytes, filename: str
+    ) -> NormalizedArchitectureData:
         """Normalize FigJam JSON export."""
         import json
 
@@ -494,7 +537,8 @@ class FigJamFileNormalizer(BaseFileNormalizer):
                 component = ArchitectureComponent(
                     id=node.get("id", ""),
                     type=component_type,
-                    name=node.get("name", "").strip()[:50] or f"Component {node.get('id', '')}",
+                    name=node.get("name", "").strip()[:50]
+                    or f"Component {node.get('id', '')}",
                     description=node.get("name", ""),
                 )
                 components.append(component)
@@ -543,14 +587,20 @@ class FigJamFileNormalizer(BaseFileNormalizer):
 class LucidFileNormalizer(BaseFileNormalizer):
     """File-based normalizer for Lucidchart exports."""
 
-    async def normalize_file(self, file_content: bytes, filename: str, file_format: str) -> NormalizedArchitectureData:
+    async def normalize_file(
+        self, file_content: bytes, filename: str, file_format: str
+    ) -> NormalizedArchitectureData:
         """Normalize Lucid exported file."""
         if file_format.lower() == "json":
             return await self._normalize_lucid_json(file_content, filename)
         else:
-            raise ValueError(f"Lucid file normalizer does not support format: {file_format}")
+            raise ValueError(
+                f"Lucid file normalizer does not support format: {file_format}"
+            )
 
-    async def _normalize_lucid_json(self, file_content: bytes, filename: str) -> NormalizedArchitectureData:
+    async def _normalize_lucid_json(
+        self, file_content: bytes, filename: str
+    ) -> NormalizedArchitectureData:
         """Normalize Lucid JSON export."""
         import json
 
@@ -574,7 +624,8 @@ class LucidFileNormalizer(BaseFileNormalizer):
                 component = ArchitectureComponent(
                     id=obj.get("id", ""),
                     type=component_type,
-                    name=obj.get("text", "").strip()[:50] or f"Component {obj.get('id', '')}",
+                    name=obj.get("text", "").strip()[:50]
+                    or f"Component {obj.get('id', '')}",
                     description=obj.get("text", ""),
                 )
                 components.append(component)
@@ -624,12 +675,18 @@ class LucidFileNormalizer(BaseFileNormalizer):
 class ConfluenceFileNormalizer(BaseFileNormalizer):
     """File-based normalizer for Confluence exports."""
 
-    async def normalize_file(self, file_content: bytes, filename: str, file_format: str) -> NormalizedArchitectureData:
+    async def normalize_file(
+        self, file_content: bytes, filename: str, file_format: str
+    ) -> NormalizedArchitectureData:
         """Normalize Confluence exported file."""
         if file_format.lower() in ["xml", "html"]:
-            return await self._normalize_confluence_markup(file_content, filename, file_format)
+            return await self._normalize_confluence_markup(
+                file_content, filename, file_format
+            )
         else:
-            raise ValueError(f"Confluence file normalizer does not support format: {file_format}")
+            raise ValueError(
+                f"Confluence file normalizer does not support format: {file_format}"
+            )
 
     async def _normalize_confluence_markup(
         self, file_content: bytes, filename: str, file_format: str
@@ -653,26 +710,37 @@ class ConfluenceFileNormalizer(BaseFileNormalizer):
             # Basic XML title extraction
             import re
 
-            title_match = re.search(r"<title[^>]*>([^<]+)</title>", content, re.IGNORECASE)
+            title_match = re.search(
+                r"<title[^>]*>([^<]+)</title>", content, re.IGNORECASE
+            )
             if title_match:
                 title = title_match.group(1).strip()
         elif file_format.lower() == "html":
             # Basic HTML title extraction
             import re
 
-            title_match = re.search(r"<title[^>]*>([^<]+)</title>", content, re.IGNORECASE)
+            title_match = re.search(
+                r"<title[^>]*>([^<]+)</title>", content, re.IGNORECASE
+            )
             if title_match:
                 title = title_match.group(1).strip()
 
         component = ArchitectureComponent(
-            id=f"page_{hash(filename)}", type="service", name=title, description=f"Confluence page from {filename}"
+            id=f"page_{hash(filename)}",
+            type="service",
+            name=title,
+            description=f"Confluence page from {filename}",
         )
         components.append(component)
 
         return NormalizedArchitectureData(
             components=components,
             connections=connections,
-            metadata={"source": "confluence", "filename": filename, "format": file_format},
+            metadata={
+                "source": "confluence",
+                "filename": filename,
+                "format": file_format,
+            },
         )
 
     @classmethod

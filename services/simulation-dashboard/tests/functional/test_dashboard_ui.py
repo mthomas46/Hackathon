@@ -15,10 +15,14 @@ class TestOverviewPage:
     @patch("pages.overview.st")
     @patch("pages.overview.get_available_simulations")
     @patch("pages.overview.get_simulation_client")
-    def test_overview_page_renders_without_errors(self, mock_get_client, mock_get_sims, mock_st):
+    def test_overview_page_renders_without_errors(
+        self, mock_get_client, mock_get_sims, mock_st
+    ):
         """Test that overview page renders without critical errors."""
         # Mock dependencies
-        mock_get_sims.return_value = [{"id": "sim_001", "name": "Test Sim", "status": "completed"}]
+        mock_get_sims.return_value = [
+            {"id": "sim_001", "name": "Test Sim", "status": "completed"}
+        ]
 
         mock_client = MagicMock()
         mock_client.get_health.return_value = {"status": "healthy"}
@@ -98,7 +102,11 @@ class TestCreatePage:
         """Test successful simulation creation flow."""
         mock_client = MagicMock()
         mock_client.create_simulation = Mock(
-            return_value={"id": "sim_002", "name": "Test Simulation", "status": "created"}
+            return_value={
+                "id": "sim_002",
+                "name": "Test Simulation",
+                "status": "created",
+            }
         )
         mock_get_client.return_value = mock_client
 

@@ -61,7 +61,9 @@ class UIHandlers:
         limit: int = 50,
         summarize: bool = False,
     ) -> "HTMLResponse":
-        return main_handlers.handle_jira_staleness(min_confidence, min_duplicate_confidence, limit, summarize)
+        return main_handlers.handle_jira_staleness(
+            min_confidence, min_duplicate_confidence, limit, summarize
+        )
 
     def handle_duplicate_clusters(self) -> "HTMLResponse":
         return main_handlers.handle_duplicate_clusters()

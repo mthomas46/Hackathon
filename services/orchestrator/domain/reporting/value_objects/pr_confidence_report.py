@@ -175,7 +175,9 @@ class PRConfidenceReport:
     @property
     def blocking_gaps(self) -> List[Dict[str, Any]]:
         """Get gaps that block approval."""
-        return [gap for gap in self._detected_gaps if gap.get("blocking_approval", False)]
+        return [
+            gap for gap in self._detected_gaps if gap.get("blocking_approval", False)
+        ]
 
     @property
     def has_critical_concerns(self) -> bool:

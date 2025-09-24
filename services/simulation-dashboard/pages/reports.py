@@ -13,10 +13,14 @@ import streamlit as st
 def render_reports_page():
     """Render the comprehensive reports and analytics page."""
     st.markdown("## 📋 Reports & Analytics")
-    st.markdown("Generate comprehensive reports and view interactive analytics for your simulations.")
+    st.markdown(
+        "Generate comprehensive reports and view interactive analytics for your simulations."
+    )
 
     # Create tabs for different report sections
-    tab1, tab2, tab3 = st.tabs(["📊 Report Generation", "📈 Analytics Dashboard", "📋 Report History"])
+    tab1, tab2, tab3 = st.tabs(
+        ["📊 Report Generation", "📈 Analytics Dashboard", "📋 Report History"]
+    )
 
     with tab1:
         render_report_generation()
@@ -37,10 +41,13 @@ def render_report_generation():
 
     if simulations:
         simulation_options = ["Select a simulation..."] + [
-            f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}" for sim in simulations
+            f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}"
+            for sim in simulations
         ]
 
-        selected_sim_option = st.selectbox("Select Simulation", options=simulation_options, key="simulation_selector")
+        selected_sim_option = st.selectbox(
+            "Select Simulation", options=simulation_options, key="simulation_selector"
+        )
 
         if selected_sim_option and selected_sim_option != "Select a simulation...":
             sim_id = selected_sim_option.split(" - ")[0]
@@ -67,7 +74,9 @@ def render_report_generation():
             )
 
             # Generate button
-            if st.button("🚀 Generate Reports", type="primary", use_container_width=True):
+            if st.button(
+                "🚀 Generate Reports", type="primary", use_container_width=True
+            ):
                 if selected_report_types:
                     generate_reports(sim_id, selected_report_types)
                 else:
@@ -84,7 +93,9 @@ def render_analytics_dashboard():
     analytics_data = get_analytics_data()
 
     if not analytics_data:
-        st.info("No analytics data available. Generate some reports first to see analytics.")
+        st.info(
+            "No analytics data available. Generate some reports first to see analytics."
+        )
         return
 
     # Key metrics overview
@@ -101,7 +112,9 @@ def render_analytics_dashboard():
         st.metric("Avg Quality Score", ".1f")
 
     with col3:
-        total_simulations = len(set(r.get("simulation_id", "") for r in analytics_data.get("reports", [])))
+        total_simulations = len(
+            set(r.get("simulation_id", "") for r in analytics_data.get("reports", []))
+        )
         st.metric("Simulations Analyzed", total_simulations)
 
     with col4:
@@ -129,7 +142,9 @@ def render_report_history():
 
     if not report_history:
         st.info("No reports have been generated yet.")
-        st.markdown("**💡 Tip:** Generate your first report using the Report Generation tab!")
+        st.markdown(
+            "**💡 Tip:** Generate your first report using the Report Generation tab!"
+        )
         return
 
     # Display reports
@@ -140,14 +155,19 @@ def render_report_history():
             col1, col2, col3 = st.columns([3, 2, 1])
 
             with col1:
-                st.markdown(f"**{report.get('report_type', 'Unknown').replace('_', ' ').title()}**")
+                st.markdown(
+                    f"**{report.get('report_type', 'Unknown').replace('_', ' ').title()}**"
+                )
                 st.caption(f"Simulation: {report.get('simulation_id', 'Unknown')}")
 
             with col2:
                 st.caption(f"Generated: {report.get('generated_at', 'Unknown')[:19]}")
 
             with col3:
-                if st.button("👁️ View", key=f"view_{report.get('simulation_id')}_{report.get('report_type')}"):
+                if st.button(
+                    "👁️ View",
+                    key=f"view_{report.get('simulation_id')}_{report.get('report_type')}",
+                ):
                     view_report_details(report)
 
             st.markdown("---")
@@ -217,7 +237,9 @@ def generate_reports(simulation_id: str, report_types: List[str]):
         # Display generated reports
         with st.expander("📋 Generated Reports", expanded=True):
             for report_type in report_types:
-                st.write(f"• {report_type.replace('_', ' ').title()} - Generated at {datetime.now().isoformat()[:19]}")
+                st.write(
+                    f"• {report_type.replace('_', ' ').title()} - Generated at {datetime.now().isoformat()[:19]}"
+                )
 
     except Exception as e:
         st.error(f"❌ Failed to generate reports: {str(e)}")
@@ -254,7 +276,9 @@ def get_analytics_data() -> Dict[str, Any]:
 
         # Report types
         report_type = report.get("report_type", "unknown")
-        analytics["report_types_count"][report_type] = analytics["report_types_count"].get(report_type, 0) + 1
+        analytics["report_types_count"][report_type] = (
+            analytics["report_types_count"].get(report_type, 0) + 1
+        )
 
         # Simulations
         analytics["simulations_analyzed"].add(report.get("simulation_id", "unknown"))
@@ -264,7 +288,9 @@ def get_analytics_data() -> Dict[str, Any]:
         analytics["average_quality_score"] = sum(quality_scores) / len(quality_scores)
 
     if execution_times:
-        analytics["average_execution_time"] = sum(execution_times) / len(execution_times)
+        analytics["average_execution_time"] = sum(execution_times) / len(
+            execution_times
+        )
 
     analytics["simulations_analyzed"] = len(analytics["simulations_analyzed"])
 
@@ -277,7 +303,9 @@ def view_report_details(report: Dict[str, Any]):
 
     # Basic information
     st.write(f"**Simulation ID:** {report.get('simulation_id', 'Unknown')}")
-    st.write(f"**Report Type:** {report.get('report_type', 'Unknown').replace('_', ' ').title()}")
+    st.write(
+        f"**Report Type:** {report.get('report_type', 'Unknown').replace('_', ' ').title()}"
+    )
     st.write(f"**Generated:** {report.get('generated_at', 'Unknown')}")
     st.write(f"**Status:** {report.get('status', 'Unknown').title()}")
 

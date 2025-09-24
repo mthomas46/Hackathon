@@ -13,7 +13,9 @@ class IntelligenceService:
     def __init__(self):
         self.clients = ServiceClients()
 
-    async def generate_prompts_from_code(self, code_content: str, language: str = "python") -> Dict[str, Any]:
+    async def generate_prompts_from_code(
+        self, code_content: str, language: str = "python"
+    ) -> Dict[str, Any]:
         """Generate prompts based on code analysis."""
         try:
             # Use code analyzer service (scaffolding exists)
@@ -50,7 +52,9 @@ class IntelligenceService:
                 "analysis_summary": {
                     "functions_analyzed": len(functions),
                     "classes_analyzed": len(classes),
-                    "complexity_score": analysis_data.get("complexity", {}).get("overall", 0),
+                    "complexity_score": analysis_data.get("complexity", {}).get(
+                        "overall", 0
+                    ),
                 },
                 "generated_prompts": generated_prompts,
                 "total_prompts": len(generated_prompts),
@@ -59,7 +63,9 @@ class IntelligenceService:
         except Exception as e:
             return {"error": f"Code analysis failed: {str(e)}"}
 
-    def _create_function_doc_prompt(self, func: Dict[str, Any], language: str) -> Dict[str, Any]:
+    def _create_function_doc_prompt(
+        self, func: Dict[str, Any], language: str
+    ) -> Dict[str, Any]:
         """Create a documentation prompt for a function."""
         func_name = func.get("name", "unknown_function")
         parameters = func.get("parameters", [])
@@ -94,7 +100,9 @@ Format the documentation clearly with sections and code examples."""
             "estimated_complexity": "medium",
         }
 
-    def _create_class_doc_prompt(self, cls: Dict[str, Any], language: str) -> Dict[str, Any]:
+    def _create_class_doc_prompt(
+        self, cls: Dict[str, Any], language: str
+    ) -> Dict[str, Any]:
         """Create a documentation prompt for a class."""
         class_name = cls.get("name", "unknown_class")
         methods = cls.get("methods", [])
@@ -168,7 +176,10 @@ Organize by resource groups and include a summary table."""
     def _looks_like_api_function(self, func: Dict[str, Any]) -> bool:
         """Check if a function looks like an API endpoint."""
         name = func.get("name", "").lower()
-        return any(keyword in name for keyword in ["get", "post", "put", "delete", "api", "endpoint", "route"])
+        return any(
+            keyword in name
+            for keyword in ["get", "post", "put", "delete", "api", "endpoint", "route"]
+        )
 
     def _is_api_code(self, code_content: str) -> bool:
         """Check if code contains API-related patterns."""
@@ -179,13 +190,19 @@ Organize by resource groups and include a summary table."""
             r"def (get|post|put|delete|create|update|delete)",
         ]
 
-        return any(re.search(pattern, code_content, re.IGNORECASE) for pattern in api_patterns)
+        return any(
+            re.search(pattern, code_content, re.IGNORECASE) for pattern in api_patterns
+        )
 
-    async def generate_prompts_from_document(self, document_content: str, doc_type: str = "markdown") -> Dict[str, Any]:
+    async def generate_prompts_from_document(
+        self, document_content: str, doc_type: str = "markdown"
+    ) -> Dict[str, Any]:
         """Generate prompts based on document analysis."""
         try:
             # Use summarizer service (scaffolding exists)
-            summary_response = await self.clients.summarize_document(document_content, format=doc_type)
+            summary_response = await self.clients.summarize_document(
+                document_content, format=doc_type
+            )
 
             if not summary_response.get("success"):
                 return {"error": "Document analysis failed"}
@@ -228,7 +245,9 @@ Organize by resource groups and include a summary table."""
         except Exception as e:
             return {"error": f"Document analysis failed: {str(e)}"}
 
-    def _create_topic_expansion_prompt(self, topic: str, doc_type: str) -> Dict[str, Any]:
+    def _create_topic_expansion_prompt(
+        self, topic: str, doc_type: str
+    ) -> Dict[str, Any]:
         """Create a content expansion prompt for a topic."""
         prompt_content = f"""Expand on the topic "{topic}" with comprehensive, well-structured content.
 
@@ -371,7 +390,9 @@ Make the tutorial progressive, starting with basics and building up to advanced 
             ],
         }
 
-        patterns = integration_patterns.get(service_name.lower(), ["General service integration"])
+        patterns = integration_patterns.get(
+            service_name.lower(), ["General service integration"]
+        )
 
         for pattern in patterns:
             prompt = {
@@ -391,7 +412,12 @@ Focus on:
 
 Provide practical, actionable guidance that developers can immediately apply.""",
                 "variables": [],
-                "tags": ["service_integration", service_name.lower(), "documentation", "auto_generated"],
+                "tags": [
+                    "service_integration",
+                    service_name.lower(),
+                    "documentation",
+                    "auto_generated",
+                ],
                 "source_type": "service_analysis",
                 "source_entity": service_name,
                 "confidence_score": 0.7,
@@ -401,7 +427,9 @@ Provide practical, actionable guidance that developers can immediately apply."""
 
         return service_prompts
 
-    async def analyze_prompt_effectiveness(self, prompt_id: str, usage_history: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_prompt_effectiveness(
+        self, prompt_id: str, usage_history: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze prompt effectiveness based on usage patterns."""
         if not usage_history:
             return {"error": "No usage history available"}
@@ -413,22 +441,38 @@ Provide practical, actionable guidance that developers can immediately apply."""
         success_rate = successful_uses / total_uses if total_uses > 0 else 0
 
         # Analyze response times
-        response_times = [u.get("response_time_ms", 0) for u in usage_history if u.get("response_time_ms")]
-        avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+        response_times = [
+            u.get("response_time_ms", 0)
+            for u in usage_history
+            if u.get("response_time_ms")
+        ]
+        avg_response_time = (
+            sum(response_times) / len(response_times) if response_times else 0
+        )
 
         # Analyze user satisfaction (if available)
-        satisfaction_scores = [u.get("user_rating", 0) for u in usage_history if u.get("user_rating")]
-        avg_satisfaction = sum(satisfaction_scores) / len(satisfaction_scores) if satisfaction_scores else 0
+        satisfaction_scores = [
+            u.get("user_rating", 0) for u in usage_history if u.get("user_rating")
+        ]
+        avg_satisfaction = (
+            sum(satisfaction_scores) / len(satisfaction_scores)
+            if satisfaction_scores
+            else 0
+        )
 
         # Generate recommendations
         recommendations = []
 
         if success_rate < 0.7:
-            recommendations.append("Consider revising prompt for clarity and specificity")
+            recommendations.append(
+                "Consider revising prompt for clarity and specificity"
+            )
         if avg_response_time > 10000:
             recommendations.append("Prompt may be too complex, consider simplifying")
         if avg_satisfaction < 3.5 and avg_satisfaction > 0:
-            recommendations.append("Low user satisfaction suggests prompt needs improvement")
+            recommendations.append(
+                "Low user satisfaction suggests prompt needs improvement"
+            )
 
         return {
             "prompt_id": prompt_id,
@@ -441,6 +485,8 @@ Provide practical, actionable guidance that developers can immediately apply."""
             },
             "recommendations": recommendations,
             "effectiveness_score": (
-                success_rate * 0.4 + (avg_satisfaction / 5) * 0.4 + (1 - min(avg_response_time / 30000, 1)) * 0.2
+                success_rate * 0.4
+                + (avg_satisfaction / 5) * 0.4
+                + (1 - min(avg_response_time / 30000, 1)) * 0.2
             ),
         }

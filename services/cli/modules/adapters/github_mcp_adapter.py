@@ -8,7 +8,12 @@ for GitHub tool invocation, repository operations, and GitHub API interactions.
 import time
 from typing import Dict, List, Tuple
 
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import (
+    BaseServiceAdapter,
+    CommandResult,
+    ServiceInfo,
+    ServiceStatus,
+)
 
 
 class GitHubMCPAdapter(BaseServiceAdapter):
@@ -76,7 +81,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 )
             else:
                 return CommandResult(
-                    success=False, error="GitHub MCP health check failed", execution_time=execution_time
+                    success=False,
+                    error="GitHub MCP health check failed",
+                    execution_time=execution_time,
                 )
 
         except Exception as e:
@@ -87,15 +94,27 @@ class GitHubMCPAdapter(BaseServiceAdapter):
         return [
             ("list_repos", "List GitHub repositories", "list_repos [owner] [limit]"),
             ("get_repo", "Get repository information", "get_repo [owner/repo]"),
-            ("list_issues", "List repository issues", "list_issues [owner/repo] [state]"),
-            ("create_issue", "Create new issue", "create_issue [owner/repo] [title] [body]"),
+            (
+                "list_issues",
+                "List repository issues",
+                "list_issues [owner/repo] [state]",
+            ),
+            (
+                "create_issue",
+                "Create new issue",
+                "create_issue [owner/repo] [title] [body]",
+            ),
             ("list_pulls", "List pull requests", "list_pulls [owner/repo] [state]"),
             ("get_file", "Get file content", "get_file [owner/repo] [path] [ref]"),
             ("search_repos", "Search repositories", "search_repos [query] [limit]"),
             ("search_code", "Search code", "search_code [query] [repo]"),
             ("list_branches", "List repository branches", "list_branches [owner/repo]"),
             ("get_commits", "Get commit history", "get_commits [owner/repo] [branch]"),
-            ("create_webhook", "Create repository webhook", "create_webhook [owner/repo] [url]"),
+            (
+                "create_webhook",
+                "Create repository webhook",
+                "create_webhook [owner/repo] [url]",
+            ),
             ("health_detailed", "Get detailed health information", "health_detailed"),
         ]
 
@@ -132,7 +151,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 return CommandResult(success=False, error=f"Unknown command: {command}")
 
         except Exception as e:
-            return CommandResult(success=False, error=f"Command execution failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Command execution failed: {str(e)}"
+            )
 
     # Private command implementations
     async def _list_repositories(self, params: Dict) -> CommandResult:
@@ -142,7 +163,10 @@ class GitHubMCPAdapter(BaseServiceAdapter):
             url = f"{self.base_url}/repositories"
 
             # Add query parameters
-            query_params = {"owner": params.get("owner", ""), "limit": params.get("limit", 10)}
+            query_params = {
+                "owner": params.get("owner", ""),
+                "limit": params.get("limit", 10),
+            }
 
             response = await self.clients.get_json(url)
             execution_time = time.time() - start_time
@@ -155,7 +179,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list repositories: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list repositories: {str(e)}"
+            )
 
     async def _get_repository(self, params: Dict) -> CommandResult:
         """Get repository information"""
@@ -173,7 +199,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get repository: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get repository: {str(e)}"
+            )
 
     async def _list_issues(self, params: Dict) -> CommandResult:
         """List repository issues"""
@@ -195,7 +223,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list issues: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list issues: {str(e)}"
+            )
 
     async def _create_issue(self, params: Dict) -> CommandResult:
         """Create new issue"""
@@ -221,7 +251,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to create issue: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to create issue: {str(e)}"
+            )
 
     async def _list_pull_requests(self, params: Dict) -> CommandResult:
         """List pull requests"""
@@ -242,7 +274,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list pull requests: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list pull requests: {str(e)}"
+            )
 
     async def _get_file(self, params: Dict) -> CommandResult:
         """Get file content"""
@@ -286,7 +320,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Repository search failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Repository search failed: {str(e)}"
+            )
 
     async def _search_code(self, params: Dict) -> CommandResult:
         """Search code"""
@@ -328,7 +364,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list branches: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list branches: {str(e)}"
+            )
 
     async def _get_commits(self, params: Dict) -> CommandResult:
         """Get commit history"""
@@ -349,7 +387,9 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get commits: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get commits: {str(e)}"
+            )
 
     async def _create_webhook(self, params: Dict) -> CommandResult:
         """Create repository webhook"""
@@ -375,4 +415,6 @@ class GitHubMCPAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to create webhook: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to create webhook: {str(e)}"
+            )

@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import LifecyclePolicy
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from .repository import LifecycleRepository
 
 
@@ -15,7 +15,9 @@ class LifecycleService(BaseService[LifecyclePolicy]):
     """Service for lifecycle management business logic."""
 
     def __init__(self):
-        super().__init__(LifecycleRepository())
+        from ...db.connection import get_document_connection_string
+
+        super().__init__(LifecycleRepository(get_document_connection_string()))
 
     def _validate_entity(self, entity: LifecyclePolicy) -> None:
         """Validate lifecycle policy."""
@@ -30,7 +32,10 @@ class LifecycleService(BaseService[LifecyclePolicy]):
 
         # Validate conditions
         if "max_age_days" in entity.conditions:
-            if not isinstance(entity.conditions["max_age_days"], int) or entity.conditions["max_age_days"] <= 0:
+            if (
+                not isinstance(entity.conditions["max_age_days"], int)
+                or entity.conditions["max_age_days"] <= 0
+            ):
                 raise ValueError("max_age_days must be a positive integer")
 
         # Validate actions
@@ -39,7 +44,9 @@ class LifecycleService(BaseService[LifecyclePolicy]):
             if action not in valid_actions:
                 raise ValueError(f"Invalid action: {action}")
 
-    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> LifecyclePolicy:
+    def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> LifecyclePolicy:
         """Create lifecycle policy from data."""
         return LifecyclePolicy(
             id=entity_id,
@@ -52,7 +59,12 @@ class LifecycleService(BaseService[LifecyclePolicy]):
         )
 
     def create_policy(
-        self, name: str, description: str, conditions: Dict[str, Any], actions: Dict[str, Any], priority: int = 0
+        self,
+        name: str,
+        description: str,
+        conditions: Dict[str, Any],
+        actions: Dict[str, Any],
+        priority: int = 0,
     ) -> LifecyclePolicy:
         """Create a new lifecycle policy."""
         data = {
@@ -64,7 +76,9 @@ class LifecycleService(BaseService[LifecyclePolicy]):
         }
         return self.create_entity(data)
 
-    def evaluate_document_policies(self, document: Dict[str, Any]) -> List[LifecyclePolicy]:
+    def evaluate_document_policies(
+        self, document: Dict[str, Any]
+    ) -> List[LifecyclePolicy]:
         """Evaluate which policies apply to a document."""
         return self.repository.get_policies_for_document(document)
 
@@ -81,13 +95,17 @@ class LifecycleService(BaseService[LifecyclePolicy]):
 
                 # Log the event
                 self.repository.log_lifecycle_event(
-                    document["id"], "policy_applied", {"policy_name": policy.name, "actions": policy.actions}
+                    document["id"],
+                    "policy_applied",
+                    {"policy_name": policy.name, "actions": policy.actions},
                 )
 
         # Update document lifecycle
         if applied_policies:
             self.repository.update_document_lifecycle(
-                document["id"], "active", retention_days=365  # Start as active  # Default retention
+                document["id"],
+                "active",
+                retention_days=365,  # Start as active  # Default retention
             )
 
         return {
@@ -96,7 +114,9 @@ class LifecycleService(BaseService[LifecyclePolicy]):
             "policy_count": len(applied_policies),
         }
 
-    def _should_apply_policy(self, policy: LifecyclePolicy, document: Dict[str, Any]) -> bool:
+    def _should_apply_policy(
+        self, policy: LifecyclePolicy, document: Dict[str, Any]
+    ) -> bool:
         """Determine if a policy should be applied to a document."""
         # Check age-based conditions
         if "max_age_days" in policy.conditions:
@@ -109,29 +129,39 @@ class LifecycleService(BaseService[LifecyclePolicy]):
         # Check other conditions as needed
         return False
 
-    def _apply_policy_action(self, policy: LifecyclePolicy, document: Dict[str, Any]) -> None:
+    def _apply_policy_action(
+        self, policy: LifecyclePolicy, document: Dict[str, Any]
+    ) -> None:
         """Apply a policy's actions to a document."""
         actions = policy.actions
 
         if "archive" in actions.values():
             # Mark for archival
-            self.repository.update_document_lifecycle(document["id"], "archival_pending")
+            self.repository.update_document_lifecycle(
+                document["id"], "archival_pending"
+            )
 
         if "delete" in actions.values():
             # Mark for deletion
-            self.repository.update_document_lifecycle(document["id"], "deletion_pending")
+            self.repository.update_document_lifecycle(
+                document["id"], "deletion_pending"
+            )
 
         if "retain" in actions.values():
             # Set retention period
             retention_days = actions.get("retention_days", 365)
-            self.repository.update_document_lifecycle(document["id"], "retention", retention_days)
+            self.repository.update_document_lifecycle(
+                document["id"], "retention", retention_days
+            )
 
     def process_lifecycle_transitions(self) -> Dict[str, Any]:
         """Process pending lifecycle transitions."""
         processed = {"archived": 0, "deleted": 0, "errors": []}
 
         # Process archival transitions
-        archival_docs = self.repository.get_documents_for_lifecycle_transition("archival")
+        archival_docs = self.repository.get_documents_for_lifecycle_transition(
+            "archival"
+        )
         for doc in archival_docs:
             try:
                 self.repository.update_document_lifecycle(doc["id"], "archived")
@@ -141,7 +171,9 @@ class LifecycleService(BaseService[LifecyclePolicy]):
                 processed["errors"].append(f"Failed to archive {doc['id']}: {str(e)}")
 
         # Process deletion transitions
-        deletion_docs = self.repository.get_documents_for_lifecycle_transition("deletion")
+        deletion_docs = self.repository.get_documents_for_lifecycle_transition(
+            "deletion"
+        )
         for doc in deletion_docs:
             try:
                 # Actually delete the document

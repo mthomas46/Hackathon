@@ -24,10 +24,23 @@ class TestDataSynchronization:
         """Test that simulation data is properly replicated across services."""
         simulation_data = {
             "id": "sim_123",
-            "project": {"name": "E-commerce Platform", "type": "web_application", "complexity": "complex"},
+            "project": {
+                "name": "E-commerce Platform",
+                "type": "web_application",
+                "complexity": "complex",
+            },
             "team": {
                 "size": 8,
-                "members": ["alice", "bob", "carol", "dave", "eve", "frank", "grace", "henry"],
+                "members": [
+                    "alice",
+                    "bob",
+                    "carol",
+                    "dave",
+                    "eve",
+                    "frank",
+                    "grace",
+                    "henry",
+                ],
                 "roles": ["developer", "qa", "designer", "product_manager"],
             },
             "created_at": time.time(),
@@ -107,7 +120,11 @@ class TestDataSynchronization:
             },
             "analysis_service": {
                 **base_document,
-                "analysis_results": {"readability_score": 0.92, "completeness_score": 0.85, "consistency_score": 0.90},
+                "analysis_results": {
+                    "readability_score": 0.92,
+                    "completeness_score": 0.85,
+                    "consistency_score": 0.90,
+                },
                 "analyzed_at": time.time(),
             },
             "search_index": {
@@ -124,16 +141,25 @@ class TestDataSynchronization:
         for service_name, doc_data in service_documents.items():
             for field in core_fields:
                 if field in doc_data:
-                    assert doc_data[field] == base_document[field], f"{service_name} has inconsistent {field}"
+                    assert (
+                        doc_data[field] == base_document[field]
+                    ), f"{service_name} has inconsistent {field}"
 
         # Validate quality scores are reasonable
-        quality_fields = ["quality_score", "readability_score", "completeness_score", "consistency_score"]
+        quality_fields = [
+            "quality_score",
+            "readability_score",
+            "completeness_score",
+            "consistency_score",
+        ]
 
         for service_name, doc_data in service_documents.items():
             for field in quality_fields:
                 if field in doc_data:
                     score = doc_data[field]
-                    assert 0.0 <= score <= 1.0, f"{service_name} has invalid {field}: {score}"
+                    assert (
+                        0.0 <= score <= 1.0
+                    ), f"{service_name} has invalid {field}: {score}"
 
         # Validate content hash integrity
         content_hashes = []
@@ -142,7 +168,9 @@ class TestDataSynchronization:
                 content_hashes.append(doc_data["content_hash"])
 
         # All content hashes should be identical
-        assert len(set(content_hashes)) == 1, "Content hashes inconsistent across services"
+        assert (
+            len(set(content_hashes)) == 1
+        ), "Content hashes inconsistent across services"
 
         print("✅ Document metadata consistency validated")
 
@@ -153,7 +181,11 @@ class TestDataSynchronization:
             "type": "document_generated",
             "simulation_id": "sim_123",
             "timestamp": time.time(),
-            "data": {"document_id": "doc_456", "document_type": "requirements_doc", "quality_score": 0.87},
+            "data": {
+                "document_id": "doc_456",
+                "document_type": "requirements_doc",
+                "quality_score": 0.87,
+            },
             "source_service": "mock_data_generator",
         }
 
@@ -185,12 +217,20 @@ class TestDataSynchronization:
         }
 
         # Validate event integrity
-        immutable_fields = ["id", "type", "simulation_id", "timestamp", "source_service"]
+        immutable_fields = [
+            "id",
+            "type",
+            "simulation_id",
+            "timestamp",
+            "source_service",
+        ]
 
         for service_name, event_data in service_events.items():
             for field in immutable_fields:
                 if field in event_data:
-                    assert event_data[field] == base_event[field], f"{service_name} has inconsistent {field}"
+                    assert (
+                        event_data[field] == base_event[field]
+                    ), f"{service_name} has inconsistent {field}"
 
         # Validate event data consistency
         for service_name, event_data in service_events.items():
@@ -210,7 +250,9 @@ class TestDataSynchronization:
         current_time = time.time()
         for service_name, event_data in service_events.items():
             event_time = event_data.get("timestamp", 0)
-            assert abs(current_time - event_time) < 300, f"{service_name} has unreasonable timestamp"
+            assert (
+                abs(current_time - event_time) < 300
+            ), f"{service_name} has unreasonable timestamp"
 
         print("✅ Event data integrity validated")
 
@@ -287,8 +329,12 @@ class TestServiceCommunicationPatterns:
                     assert "storage_path" in entry["response"]
 
         # Validate performance
-        avg_duration = sum(e["duration"] for e in communication_log) / len(communication_log)
-        assert avg_duration < 1.0, f"Average service call duration too high: {avg_duration:.3f}s"
+        avg_duration = sum(e["duration"] for e in communication_log) / len(
+            communication_log
+        )
+        assert (
+            avg_duration < 1.0
+        ), f"Average service call duration too high: {avg_duration:.3f}s"
 
         print("✅ Request-response consistency validated")
 
@@ -316,7 +362,9 @@ class TestServiceCommunicationPatterns:
 
             # Sort by priority and enqueue time
             priority_order = {"high": 0, "normal": 1, "low": 2}
-            message_queue.sort(key=lambda m: (priority_order[m["priority"]], m["enqueued_at"]))
+            message_queue.sort(
+                key=lambda m: (priority_order[m["priority"]], m["enqueued_at"])
+            )
 
             return message_queue.pop(0)
 
@@ -326,19 +374,39 @@ class TestServiceCommunicationPatterns:
                 # Simulate processing
                 time.sleep(0.001)
 
-                processed_messages.append({**message, "processed_at": time.time(), "status": "success"})
+                processed_messages.append(
+                    {**message, "processed_at": time.time(), "status": "success"}
+                )
 
                 return True
             except Exception as e:
-                failed_messages.append({**message, "failed_at": time.time(), "error": str(e)})
+                failed_messages.append(
+                    {**message, "failed_at": time.time(), "error": str(e)}
+                )
                 return False
 
         # Enqueue various messages
         messages = [
-            {"type": "document_request", "priority": "high", "data": {"doc_type": "requirements"}},
-            {"type": "analysis_request", "priority": "normal", "data": {"target": "doc_123"}},
-            {"type": "cleanup_request", "priority": "low", "data": {"action": "remove_temp"}},
-            {"type": "urgent_notification", "priority": "high", "data": {"message": "system_alert"}},
+            {
+                "type": "document_request",
+                "priority": "high",
+                "data": {"doc_type": "requirements"},
+            },
+            {
+                "type": "analysis_request",
+                "priority": "normal",
+                "data": {"target": "doc_123"},
+            },
+            {
+                "type": "cleanup_request",
+                "priority": "low",
+                "data": {"action": "remove_temp"},
+            },
+            {
+                "type": "urgent_notification",
+                "priority": "high",
+                "data": {"message": "system_alert"},
+            },
         ]
 
         for msg in messages:
@@ -354,20 +422,28 @@ class TestServiceCommunicationPatterns:
         assert len(processed_messages) + len(failed_messages) == len(messages)
 
         # High priority messages should be processed first
-        high_priority_processed = [m for m in processed_messages if m["priority"] == "high"]
+        high_priority_processed = [
+            m for m in processed_messages if m["priority"] == "high"
+        ]
         assert len(high_priority_processed) == 2  # Two high priority messages
 
         # Check processing order (high priority first)
         processed_priorities = [m["priority"] for m in processed_messages]
         high_indices = [i for i, p in enumerate(processed_priorities) if p == "high"]
-        normal_indices = [i for i, p in enumerate(processed_priorities) if p == "normal"]
+        normal_indices = [
+            i for i, p in enumerate(processed_priorities) if p == "normal"
+        ]
         low_indices = [i for i, p in enumerate(processed_priorities) if p == "low"]
 
         # High priority should come before normal and low
         if high_indices and normal_indices:
-            assert max(high_indices) < min(normal_indices), "High priority not processed first"
+            assert max(high_indices) < min(
+                normal_indices
+            ), "High priority not processed first"
         if high_indices and low_indices:
-            assert max(high_indices) < min(low_indices), "High priority not processed first"
+            assert max(high_indices) < min(
+                low_indices
+            ), "High priority not processed first"
 
         print("✅ Message queue integrity validated")
 
@@ -380,7 +456,11 @@ class TestDataIntegrityValidation:
         test_data = {
             "simulation_id": "sim_123",
             "document_content": "This is a sample document content for testing.",
-            "metadata": {"author": "alice_dev", "version": "1.0", "created_at": time.time()},
+            "metadata": {
+                "author": "alice_dev",
+                "version": "1.0",
+                "created_at": time.time(),
+            },
         }
 
         # Generate checksums for data
@@ -390,8 +470,16 @@ class TestDataIntegrityValidation:
 
         # Simulate data storage with checksums
         stored_data = {
-            "service_a": {"data": test_data, "checksum": generate_checksum(test_data), "stored_at": time.time()},
-            "service_b": {"data": test_data, "checksum": generate_checksum(test_data), "stored_at": time.time()},
+            "service_a": {
+                "data": test_data,
+                "checksum": generate_checksum(test_data),
+                "stored_at": time.time(),
+            },
+            "service_b": {
+                "data": test_data,
+                "checksum": generate_checksum(test_data),
+                "stored_at": time.time(),
+            },
             "service_c": {
                 "data": test_data,  # Intentionally corrupted
                 "corrupted_field": "modified",
@@ -427,7 +515,11 @@ class TestDataIntegrityValidation:
 
         # Simulate version tracking across services
         service_versions = {
-            "simulation_engine": {"data_version": base_version, "api_version": "2.1.0", "last_updated": time.time()},
+            "simulation_engine": {
+                "data_version": base_version,
+                "api_version": "2.1.0",
+                "last_updated": time.time(),
+            },
             "mock_data_generator": {
                 "data_version": base_version,
                 "generator_version": "1.5.0",
@@ -469,7 +561,9 @@ class TestDataIntegrityValidation:
         for service_name, version_info in service_versions.items():
             for key, version in version_info.items():
                 if key.endswith("_version"):
-                    assert version_pattern.match(version), f"{service_name} has invalid {key} format: {version}"
+                    assert version_pattern.match(
+                        version
+                    ), f"{service_name} has invalid {key} format: {version}"
 
         print("✅ Data version consistency validated")
 
@@ -492,7 +586,11 @@ class TestDataIntegrityValidation:
 
         # Simulate transaction steps
         transaction_steps = [
-            ("simulation_engine", "begin_transaction", {"operation": "create_simulation"}),
+            (
+                "simulation_engine",
+                "begin_transaction",
+                {"operation": "create_simulation"},
+            ),
             ("project_repository", "prepare", {"simulation_data": {"id": "sim_123"}}),
             ("team_service", "prepare", {"team_data": {"size": 5}}),
             ("timeline_service", "prepare", {"timeline_data": {"duration": 8}}),
@@ -503,22 +601,34 @@ class TestDataIntegrityValidation:
             log_transaction_event(service, event_type, data)
 
         # Validate transaction integrity
-        transaction_events = [e for e in transaction_log if e["transaction_id"] == transaction_id]
+        transaction_events = [
+            e for e in transaction_log if e["transaction_id"] == transaction_id
+        ]
         assert len(transaction_events) == len(transaction_steps)
 
         # Validate sequence
         event_types = [e["event_type"] for e in transaction_events]
-        expected_sequence = ["begin_transaction", "prepare", "prepare", "prepare", "commit"]
+        expected_sequence = [
+            "begin_transaction",
+            "prepare",
+            "prepare",
+            "prepare",
+            "commit",
+        ]
         assert event_types == expected_sequence
 
         # Validate timestamps are sequential
         timestamps = [e["timestamp"] for e in transaction_events]
-        assert timestamps == sorted(timestamps), "Transaction events not in chronological order"
+        assert timestamps == sorted(
+            timestamps
+        ), "Transaction events not in chronological order"
 
         # Validate no duplicate services in prepare phase
         prepare_events = [e for e in transaction_events if e["event_type"] == "prepare"]
         prepare_services = [e["service"] for e in prepare_events]
-        assert len(prepare_services) == len(set(prepare_services)), "Duplicate services in prepare phase"
+        assert len(prepare_services) == len(
+            set(prepare_services)
+        ), "Duplicate services in prepare phase"
 
         print("✅ Transaction integrity validated")
 
@@ -529,7 +639,11 @@ class TestServiceDependencyManagement:
     def test_service_dependency_resolution(self):
         """Test resolution of service dependencies."""
         service_dependencies = {
-            "simulation_engine": ["mock_data_generator", "analysis_service", "doc_store"],
+            "simulation_engine": [
+                "mock_data_generator",
+                "analysis_service",
+                "doc_store",
+            ],
             "mock_data_generator": ["doc_store", "template_service"],
             "analysis_service": ["doc_store", "ml_service"],
             "doc_store": [],
@@ -566,7 +680,9 @@ class TestServiceDependencyManagement:
             try:
                 resolved = resolve_dependencies(service)
                 assert service in resolved, f"Service {service} not in resolved list"
-                assert len(resolved) > 1, f"Service {service} has no dependencies to resolve"
+                assert (
+                    len(resolved) > 1
+                ), f"Service {service} has no dependencies to resolve"
             except ValueError as e:
                 # Handle circular dependency if detected
                 assert "Circular dependency" in str(e)

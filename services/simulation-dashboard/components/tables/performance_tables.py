@@ -36,28 +36,48 @@ def render_performance_table(
     st.markdown(f"### {title}")
 
     if not performance_data:
-        st.info("No performance data available. Metrics will appear here as the system runs.")
+        st.info(
+            "No performance data available. Metrics will appear here as the system runs."
+        )
         return {"performance_metrics": {}, "alerts": []}
 
     # Convert to DataFrame
     df = pd.DataFrame(performance_data)
 
     # Ensure required columns exist
-    required_columns = ["metric_name", "value", "unit", "timestamp", "threshold", "status"]
+    required_columns = [
+        "metric_name",
+        "value",
+        "unit",
+        "timestamp",
+        "threshold",
+        "status",
+    ]
     for col in required_columns:
         if col not in df.columns:
             df[col] = (
                 "N/A"
                 if col in ["metric_name", "unit"]
-                else 0 if col in ["value", "threshold"] else "normal" if col == "status" else datetime.now()
+                else (
+                    0
+                    if col in ["value", "threshold"]
+                    else "normal" if col == "status" else datetime.now()
+                )
             )
 
     # Add derived columns
     df["timestamp_display"] = pd.to_datetime(df["timestamp"]).dt.strftime("%H:%M:%S")
     df["status_icon"] = df["status"].apply(get_performance_status_icon)
-    df["value_display"] = df.apply(lambda row: f"{row['value']:.2f} {row['unit']}", axis=1)
+    df["value_display"] = df.apply(
+        lambda row: f"{row['value']:.2f} {row['unit']}", axis=1
+    )
     df["threshold_display"] = df.apply(
-        lambda row: f"{row['threshold']:.2f} {row['unit']}" if pd.notna(row["threshold"]) else "N/A", axis=1
+        lambda row: (
+            f"{row['threshold']:.2f} {row['unit']}"
+            if pd.notna(row["threshold"])
+            else "N/A"
+        ),
+        axis=1,
     )
 
     # Performance overview
@@ -88,7 +108,9 @@ def render_performance_table(
         # Show critical alerts first
         critical_metrics = df[df["status"] == "critical"]
         if len(critical_metrics) > 0:
-            st.error(f"🚨 {len(critical_metrics)} critical performance issues detected!")
+            st.error(
+                f"🚨 {len(critical_metrics)} critical performance issues detected!"
+            )
 
         # Show warnings
         warning_metrics = df[df["status"] == "warning"]
@@ -104,7 +126,9 @@ def render_performance_table(
         key="performance_metric_filter",
     )
 
-    filtered_df = df[df["metric_name"].isin(selected_metrics)] if selected_metrics else df
+    filtered_df = (
+        df[df["metric_name"].isin(selected_metrics)] if selected_metrics else df
+    )
 
     # Main performance table
     st.markdown("#### 📋 Performance Metrics")
@@ -120,17 +144,30 @@ def render_performance_table(
             col_info1, col_info2, col_info3 = st.columns(3)
 
             with col_info1:
-                st.metric("Current Value", latest_data["value_display"], delta=get_performance_delta(metric_data))
+                st.metric(
+                    "Current Value",
+                    latest_data["value_display"],
+                    delta=get_performance_delta(metric_data),
+                )
 
             with col_info2:
                 if pd.notna(latest_data["threshold"]):
-                    threshold_status = "Above" if latest_data["value"] > latest_data["threshold"] else "Below"
-                    st.metric("Threshold", latest_data["threshold_display"], threshold_status)
+                    threshold_status = (
+                        "Above"
+                        if latest_data["value"] > latest_data["threshold"]
+                        else "Below"
+                    )
+                    st.metric(
+                        "Threshold", latest_data["threshold_display"], threshold_status
+                    )
                 else:
                     st.metric("Threshold", "Not Set")
 
             with col_info3:
-                st.metric("Status", f"{latest_data['status_icon']} {latest_data['status'].title()}")
+                st.metric(
+                    "Status",
+                    f"{latest_data['status_icon']} {latest_data['status'].title()}",
+                )
 
             # Metric trend chart
             if enable_trending and len(metric_data) > 1:
@@ -170,7 +207,10 @@ def render_performance_table(
                         )
 
                     fig.update_layout(
-                        title=f"{metric_name} Trend", xaxis_title="Time", yaxis_title=latest_data["unit"], height=300
+                        title=f"{metric_name} Trend",
+                        xaxis_title="Time",
+                        yaxis_title=latest_data["unit"],
+                        height=300,
                     )
 
                     st.plotly_chart(fig, use_container_width=True)
@@ -180,7 +220,9 @@ def render_performance_table(
                     st.line_chart(recent_data.set_index("timestamp")["value"])
 
             # Metric actions
-            render_performance_metric_actions(metric_name, metric_data, on_threshold_set, on_alert_config)
+            render_performance_metric_actions(
+                metric_name, metric_data, on_threshold_set, on_alert_config
+            )
 
     # Performance benchmarking
     if enable_benchmarking:
@@ -192,7 +234,11 @@ def render_performance_table(
             col_bench1, col_bench2, col_bench3 = st.columns(3)
 
             with col_bench1:
-                st.metric("Avg Response Time", ".2f", benchmark_results.get("avg_response_time", 0))
+                st.metric(
+                    "Avg Response Time",
+                    ".2f",
+                    benchmark_results.get("avg_response_time", 0),
+                )
 
             with col_bench2:
                 st.metric("Throughput", ".2f", benchmark_results.get("throughput", 0))
@@ -321,7 +367,9 @@ def calculate_performance_benchmarks(df: pd.DataFrame) -> Dict[str, Any]:
     benchmarks = {}
 
     # Response time metrics
-    response_metrics = df[df["metric_name"].str.contains("response|latency", case=False)]
+    response_metrics = df[
+        df["metric_name"].str.contains("response|latency", case=False)
+    ]
     if len(response_metrics) > 0:
         avg_response = response_metrics["value"].mean()
         benchmarks["avg_response_time"] = avg_response
@@ -335,7 +383,9 @@ def calculate_performance_benchmarks(df: pd.DataFrame) -> Dict[str, Any]:
             benchmarks["response_status"] = "poor"
 
     # Throughput metrics
-    throughput_metrics = df[df["metric_name"].str.contains("throughput|requests", case=False)]
+    throughput_metrics = df[
+        df["metric_name"].str.contains("throughput|requests", case=False)
+    ]
     if len(throughput_metrics) > 0:
         avg_throughput = throughput_metrics["value"].mean()
         benchmarks["throughput"] = avg_throughput
@@ -355,7 +405,10 @@ def calculate_performance_benchmarks(df: pd.DataFrame) -> Dict[str, Any]:
 
     # Overall benchmark status
     benchmarks["benchmark_status"] = {}
-    for key, status_key in [("response_status", "Response Time"), ("error_status", "Error Rate")]:
+    for key, status_key in [
+        ("response_status", "Response Time"),
+        ("error_status", "Error Rate"),
+    ]:
         if key in benchmarks:
             benchmarks["benchmark_status"][status_key] = benchmarks[key]
 
@@ -408,7 +461,10 @@ def generate_performance_recommendations(df: pd.DataFrame) -> List[Dict[str, str
     recommendations = []
 
     # Check for consistently high utilization
-    high_utilization = df[(df["metric_name"].str.contains("cpu|memory|utilization", case=False)) & (df["value"] > 80)]
+    high_utilization = df[
+        (df["metric_name"].str.contains("cpu|memory|utilization", case=False))
+        & (df["value"] > 80)
+    ]
     if len(high_utilization) > 0:
         recommendations.append(
             {
@@ -433,7 +489,8 @@ def generate_performance_recommendations(df: pd.DataFrame) -> List[Dict[str, str
 
     # Check for slow response times
     slow_responses = df[
-        (df["metric_name"].str.contains("response|latency", case=False)) & (df["value"] > 1000)  # Over 1 second
+        (df["metric_name"].str.contains("response|latency", case=False))
+        & (df["value"] > 1000)  # Over 1 second
     ]
     if len(slow_responses) > 0:
         recommendations.append(

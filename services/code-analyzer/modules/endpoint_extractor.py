@@ -40,7 +40,9 @@ def extract_endpoints_from_text(text: str) -> List[str]:
         # Express: app.get('/path', ...) or router.post("/path", ...)
         elif ("app." in s or "router." in s) and "(" in s:
             m = re.search(
-                r"\b(?:app|router)\.(get|post|put|delete|patch)\(\s*['\"]([^'\"]+)['\"]", s, flags=re.IGNORECASE
+                r"\b(?:app|router)\.(get|post|put|delete|patch)\(\s*['\"]([^'\"]+)['\"]",
+                s,
+                flags=re.IGNORECASE,
             )
             if m:
                 ep = m.group(2)

@@ -44,11 +44,15 @@ class SourceAgentMonitor:
                 "health": health_response,
                 "sources": sources_response,
                 "operation_stats": self._calculate_operation_stats(),
-                "recent_fetches": self._fetches[-10:] if self._fetches else [],  # Last 10 fetches
+                "recent_fetches": (
+                    self._fetches[-10:] if self._fetches else []
+                ),  # Last 10 fetches
                 "recent_normalizations": (
                     self._normalizations[-10:] if self._normalizations else []
                 ),  # Last 10 normalizations
-                "recent_analyses": self._analyses[-10:] if self._analyses else [],  # Last 10 analyses
+                "recent_analyses": (
+                    self._analyses[-10:] if self._analyses else []
+                ),  # Last 10 analyses
                 "last_updated": utc_now().isoformat(),
             }
 
@@ -106,7 +110,13 @@ class SourceAgentMonitor:
             }
 
         except Exception as e:
-            return {"success": False, "error": str(e), "source": source, "identifier": identifier, "response": None}
+            return {
+                "success": False,
+                "error": str(e),
+                "source": source,
+                "identifier": identifier,
+                "response": None,
+            }
 
     async def normalize_data(
         self, source: str, data: Dict[str, Any], correlation_id: Optional[str] = None
@@ -127,7 +137,11 @@ class SourceAgentMonitor:
                 "source": source,
                 "correlation_id": correlation_id,
                 "success": "envelope" in response,
-                "envelope_id": response.get("envelope", {}).get("id") if "envelope" in response else None,
+                "envelope_id": (
+                    response.get("envelope", {}).get("id")
+                    if "envelope" in response
+                    else None
+                ),
                 "response": response,
             }
 
@@ -189,7 +203,12 @@ class SourceAgentMonitor:
             }
 
         except Exception as e:
-            return {"success": False, "error": str(e), "code_length": len(text), "response": None}
+            return {
+                "success": False,
+                "error": str(e),
+                "code_length": len(text),
+                "response": None,
+            }
 
     def _calculate_operation_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached operations."""
@@ -214,7 +233,11 @@ class SourceAgentMonitor:
             + sum(1 for a in self._analyses if a.get("success"))
         )
 
-        success_rate = round((successful_operations / total_operations) * 100, 1) if total_operations > 0 else 0
+        success_rate = (
+            round((successful_operations / total_operations) * 100, 1)
+            if total_operations > 0
+            else 0
+        )
 
         # Source distribution
         source_counts = {}

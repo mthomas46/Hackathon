@@ -26,7 +26,9 @@ class NotificationServiceMonitor:
             return False
         return (utc_now() - cache_time).total_seconds() < self._cache_ttl
 
-    async def get_notification_status(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_notification_status(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get comprehensive notification service status."""
         if not force_refresh and self.is_cache_fresh("status"):
             return getattr(self, "_status_cache", {})
@@ -75,7 +77,9 @@ class NotificationServiceMonitor:
             notification_url = get_notification_service_url()
 
             payload = {"owners": owners}
-            response = await clients.post_json(f"{notification_url}/owners/resolve", payload)
+            response = await clients.post_json(
+                f"{notification_url}/owners/resolve", payload
+            )
 
             if response.get("resolved"):
                 # Cache the resolution
@@ -101,7 +105,11 @@ class NotificationServiceMonitor:
                     "response": response,
                 }
 
-            return {"success": False, "error": "Owner resolution failed", "response": response}
+            return {
+                "success": False,
+                "error": "Owner resolution failed",
+                "response": response,
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e), "response": None}
@@ -150,7 +158,11 @@ class NotificationServiceMonitor:
             if len(self._notifications) > 50:
                 self._notifications = self._notifications[:50]
 
-            return {"success": True, "notification_id": notification_result["id"], "response": response}
+            return {
+                "success": True,
+                "notification_id": notification_result["id"],
+                "response": response,
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e), "response": None}
@@ -161,7 +173,9 @@ class NotificationServiceMonitor:
             clients = get_frontend_clients()
             notification_url = get_notification_service_url()
 
-            dlq_response = await clients.get_json(f"{notification_url}/dlq?limit={limit}")
+            dlq_response = await clients.get_json(
+                f"{notification_url}/dlq?limit={limit}"
+            )
             return dlq_response.get("items", [])
 
         except Exception:
@@ -179,7 +193,9 @@ class NotificationServiceMonitor:
             }
 
         total_notifications = len(self._notifications)
-        successful_notifications = sum(1 for n in self._notifications if n.get("success"))
+        successful_notifications = sum(
+            1 for n in self._notifications if n.get("success")
+        )
         failed_notifications = total_notifications - successful_notifications
 
         # Channel usage
@@ -195,7 +211,9 @@ class NotificationServiceMonitor:
             "successful_notifications": successful_notifications,
             "failed_notifications": failed_notifications,
             "success_rate": (
-                round((successful_notifications / total_notifications) * 100, 1) if total_notifications > 0 else 0
+                round((successful_notifications / total_notifications) * 100, 1)
+                if total_notifications > 0
+                else 0
             ),
             "channels_used": list(channels),
             "total_owner_resolutions": total_resolutions,

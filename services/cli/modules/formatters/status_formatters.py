@@ -12,7 +12,9 @@ class StatusFormatter:
     def __init__(self, console: Console):
         self.console = console
 
-    def format_service_status(self, service_name: str, status_data: Dict[str, Any]) -> str:
+    def format_service_status(
+        self, service_name: str, status_data: Dict[str, Any]
+    ) -> str:
         """Format service status information for display."""
         status = status_data.get("status", "unknown")
         status_data.get("timestamp", 0)
@@ -34,7 +36,9 @@ class StatusFormatter:
             status_color = "dim"
             details = f"Status: {status}"
 
-        return f"[{status_color}]{status_emoji} {service_name}: {details}[/{status_color}]"
+        return (
+            f"[{status_color}]{status_emoji} {service_name}: {details}[/{status_color}]"
+        )
 
     def format_operation_result(self, operation: str, result: Any) -> str:
         """Format operation result for display."""
@@ -57,7 +61,9 @@ class StatusFormatter:
     def format_health_summary(self, health_data: Dict[str, Dict[str, Any]]) -> str:
         """Format a health summary for multiple services."""
         total = len(health_data)
-        healthy = sum(1 for data in health_data.values() if data.get("status") == "healthy")
+        healthy = sum(
+            1 for data in health_data.values() if data.get("status") == "healthy"
+        )
         unhealthy = total - healthy
 
         summary = f"Service Health Summary: {healthy}/{total} healthy"
@@ -89,12 +95,23 @@ class StatusFormatter:
 
         return details
 
-    def create_status_panel(self, title: str, content: str, status: str = "info") -> Panel:
+    def create_status_panel(
+        self, title: str, content: str, status: str = "info"
+    ) -> Panel:
         """Create a status panel with appropriate styling."""
-        colors = {"success": "green", "error": "red", "warning": "yellow", "info": "blue"}
+        colors = {
+            "success": "green",
+            "error": "red",
+            "warning": "yellow",
+            "info": "blue",
+        }
 
         color = colors.get(status, "blue")
-        return Panel(f"[{color}]{content}[/{color}]", title=f"[{color}]{title}[/{color}]", border_style=color)
+        return Panel(
+            f"[{color}]{content}[/{color}]",
+            title=f"[{color}]{title}[/{color}]",
+            border_style=color,
+        )
 
     def format_progress_info(self, current: int, total: int, operation: str) -> str:
         """Format progress information."""

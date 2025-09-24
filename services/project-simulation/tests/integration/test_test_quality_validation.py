@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Any, Dict
 
 
-
 class TestTestStructureValidation:
     """Test cases for validating test structure and organization."""
 
@@ -45,8 +44,12 @@ class TestTestStructureValidation:
         # Should have some consistent naming patterns
         if naming_patterns:
             most_common = max(set(naming_patterns), key=naming_patterns.count)
-            consistency_ratio = naming_patterns.count(most_common) / len(naming_patterns)
-            assert consistency_ratio > 0.3, f"Test naming too inconsistent: {consistency_ratio:.2f}"
+            consistency_ratio = naming_patterns.count(most_common) / len(
+                naming_patterns
+            )
+            assert (
+                consistency_ratio > 0.3
+            ), f"Test naming too inconsistent: {consistency_ratio:.2f}"
 
     def test_test_class_structure(self):
         """Test that test classes follow proper structure."""
@@ -70,7 +73,11 @@ class TestTestStructureValidation:
         assert len(class_patterns) > 0, "No test classes found"
 
         # Check naming convention
-        proper_naming = [name for name in class_patterns if name.startswith("Test") and name != "Test"]
+        proper_naming = [
+            name
+            for name in class_patterns
+            if name.startswith("Test") and name != "Test"
+        ]
         assert len(proper_naming) > 0, "No properly named test classes found"
 
 
@@ -102,7 +109,9 @@ class TestTestCodeQuality:
 
         if total_functions > 0:
             documentation_ratio = documented_functions / total_functions
-            assert documentation_ratio > 0.5, f"Test documentation too low: {documentation_ratio:.2f}"
+            assert (
+                documentation_ratio > 0.5
+            ), f"Test documentation too low: {documentation_ratio:.2f}"
 
     def test_test_assertion_coverage(self):
         """Test that tests have adequate assertion coverage."""
@@ -140,7 +149,10 @@ class TestTestCodeQuality:
                 # Check if test functions use fixtures
                 test_defs = re.findall(r"def\s+test_\w+\s*\([^)]*\)", content)
                 for test_def in test_defs:
-                    if any(param in test_def for param in ["test_client", "mock_", "fixture"]):
+                    if any(
+                        param in test_def
+                        for param in ["test_client", "mock_", "fixture"]
+                    ):
                         fixture_usage.append("uses_fixtures")
 
         # Should have some fixture usage
@@ -195,7 +207,12 @@ class TestTestMaintainability:
                         function_lengths.append(i - function_start)
                     in_function = True
                     function_start = i
-                elif in_function and line.strip() and not line.startswith(" ") and not line.startswith("\t"):
+                elif (
+                    in_function
+                    and line.strip()
+                    and not line.startswith(" ")
+                    and not line.startswith("\t")
+                ):
                     # End of function (next function or class)
                     function_lengths.append(i - function_start)
                     in_function = False
@@ -206,7 +223,9 @@ class TestTestMaintainability:
         if function_lengths:
             avg_length = sum(function_lengths) / len(function_lengths)
             # Average function length should be reasonable
-            assert avg_length < 50, f"Average test function too long: {avg_length:.1f} lines"
+            assert (
+                avg_length < 50
+            ), f"Average test function too long: {avg_length:.1f} lines"
 
     def test_test_file_size(self):
         """Test that test files are appropriately sized."""
@@ -237,7 +256,9 @@ class TestTestMaintainability:
                 content = f.read()
 
             # Simple complexity measure: count control structures
-            control_structures = len(re.findall(r"\b(if|for|while|try|with)\b", content))
+            control_structures = len(
+                re.findall(r"\b(if|for|while|try|with)\b", content)
+            )
             functions = len(re.findall(r"def\s+test_", content))
 
             if functions > 0:
@@ -247,7 +268,9 @@ class TestTestMaintainability:
         if complexity_scores:
             avg_complexity = sum(complexity_scores) / len(complexity_scores)
             # Average complexity should be reasonable
-            assert avg_complexity < 10, f"Average test complexity too high: {avg_complexity:.1f}"
+            assert (
+                avg_complexity < 10
+            ), f"Average test complexity too high: {avg_complexity:.1f}"
 
 
 class TestTestCoverageAnalysis:
@@ -275,7 +298,9 @@ class TestTestCoverageAnalysis:
                     found_categories.add(category_dir.name)
 
         coverage_ratio = len(found_categories) / len(expected_categories)
-        assert coverage_ratio > 0.6, f"Test category coverage too low: {coverage_ratio:.2f}"
+        assert (
+            coverage_ratio > 0.6
+        ), f"Test category coverage too low: {coverage_ratio:.2f}"
 
     def test_test_file_coverage_distribution(self):
         """Test that test files are distributed appropriately."""
@@ -296,7 +321,9 @@ class TestTestCoverageAnalysis:
             if max_count > 0:
                 imbalance_ratio = min_count / max_count
                 # Allow some imbalance but not extreme
-                assert imbalance_ratio > 0.1, f"Test distribution too imbalanced: {imbalance_ratio:.2f}"
+                assert (
+                    imbalance_ratio > 0.1
+                ), f"Test distribution too imbalanced: {imbalance_ratio:.2f}"
 
 
 class TestTestStandardsCompliance:
@@ -330,8 +357,12 @@ class TestTestStandardsCompliance:
                 best_practice_score += 1
 
         if total_checks > 0:
-            compliance_score = best_practice_score / (total_checks * 3)  # 3 checks per file
-            assert compliance_score > 0.2, f"Pytest best practices compliance too low: {compliance_score:.2f}"
+            compliance_score = best_practice_score / (
+                total_checks * 3
+            )  # 3 checks per file
+            assert (
+                compliance_score > 0.2
+            ), f"Pytest best practices compliance too low: {compliance_score:.2f}"
 
     def test_test_independence(self):
         """Test that tests are independent and don't rely on execution order."""
@@ -346,7 +377,9 @@ class TestTestStandardsCompliance:
 
             # Check for global state modifications
             if re.search(r"\bg_test_\w+\s*=", content):
-                independence_issues.append(f"{test_file.name}: Modifies global test state")
+                independence_issues.append(
+                    f"{test_file.name}: Modifies global test state"
+                )
 
             # Check for class-level state that persists
             if "self." in content and "@classmethod" not in content:
@@ -354,7 +387,9 @@ class TestTestStandardsCompliance:
                 pass
 
         # Should have minimal independence issues
-        assert len(independence_issues) < len(test_files) * 0.1, f"Too many independence issues: {independence_issues}"
+        assert (
+            len(independence_issues) < len(test_files) * 0.1
+        ), f"Too many independence issues: {independence_issues}"
 
     def test_test_resource_cleanup(self):
         """Test that tests properly clean up resources."""
@@ -399,7 +434,9 @@ class TestTestDocumentation:
 
         if test_files:
             documentation_ratio = documented_files / len(test_files)
-            assert documentation_ratio > 0.7, f"Test file documentation too low: {documentation_ratio:.2f}"
+            assert (
+                documentation_ratio > 0.7
+            ), f"Test file documentation too low: {documentation_ratio:.2f}"
 
     def test_test_class_documentation(self):
         """Test that test classes have proper docstrings."""
@@ -421,13 +458,17 @@ class TestTestDocumentation:
                     total_classes += 1
 
                     # Check if class has docstring
-                    class_pattern = rf'class\s+{class_match}\s*\([^)]*\)\s*:\s*("""|\'\'\')'
+                    class_pattern = (
+                        rf'class\s+{class_match}\s*\([^)]*\)\s*:\s*("""|\'\'\')'
+                    )
                     if re.search(class_pattern, content):
                         documented_classes += 1
 
         if total_classes > 0:
             documentation_ratio = documented_classes / total_classes
-            assert documentation_ratio > 0.5, f"Test class documentation too low: {documentation_ratio:.2f}"
+            assert (
+                documentation_ratio > 0.5
+            ), f"Test class documentation too low: {documentation_ratio:.2f}"
 
 
 class TestTestReliability:
@@ -461,14 +502,22 @@ class TestTestReliability:
 
             # Check for shared state concerns
             if "global " in content and "test" in content.lower():
-                isolation_concerns.append(f"{test_file.name}: Uses global variables in tests")
+                isolation_concerns.append(
+                    f"{test_file.name}: Uses global variables in tests"
+                )
 
             # Check for file system modifications without cleanup
-            if ("open(" in content or "os." in content) and "cleanup" not in content.lower():
-                isolation_concerns.append(f"{test_file.name}: May modify file system without cleanup")
+            if (
+                "open(" in content or "os." in content
+            ) and "cleanup" not in content.lower():
+                isolation_concerns.append(
+                    f"{test_file.name}: May modify file system without cleanup"
+                )
 
         # Should have minimal isolation concerns
-        assert len(isolation_concerns) < len(test_files) * 0.2, f"Too many isolation concerns: {isolation_concerns}"
+        assert (
+            len(isolation_concerns) < len(test_files) * 0.2
+        ), f"Too many isolation concerns: {isolation_concerns}"
 
 
 # Utility functions

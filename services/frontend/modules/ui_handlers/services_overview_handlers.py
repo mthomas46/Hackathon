@@ -4,7 +4,6 @@ Handles comprehensive system-wide monitoring dashboard
 showing health and status of all services in the ecosystem.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..services_overview_monitor import services_overview_monitor
@@ -635,5 +634,7 @@ class ServicesOverviewUIHandlers:
             return create_html_response(html, "Services Overview Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render services overview dashboard", e, **build_frontend_context("render_services_overview_dashboard")
+                "render services overview dashboard",
+                e,
+                **build_frontend_context("render_services_overview_dashboard")
             )

@@ -17,7 +17,11 @@ from services.shared.core.responses import create_success_response
 from services.shared.monitoring.health import register_health_endpoints
 
 # Create FastAPI app
-app = FastAPI(title="Analysis Service", description="Code analysis and quality assessment service", version="1.0.0")
+app = FastAPI(
+    title="Analysis Service",
+    description="Code analysis and quality assessment service",
+    version="1.0.0",
+)
 
 # Add CORS middleware
 app.add_middleware(
@@ -35,7 +39,9 @@ register_health_endpoints(app, "analysis-service")
 # Basic analysis endpoint
 @app.get("/")
 async def root():
-    return create_success_response(data={"message": "Analysis Service is running"}, message="Service operational")
+    return create_success_response(
+        data={"message": "Analysis Service is running"}, message="Service operational"
+    )
 
 
 @app.get("/api/analysis/status")
@@ -97,10 +103,19 @@ async def get_analysis_status_v1():
             "consistency_detector",
             "completeness_detector",
         ],
-        "supported_formats": ["text/plain", "text/markdown", "application/json", "text/html"],
+        "supported_formats": [
+            "text/plain",
+            "text/markdown",
+            "application/json",
+            "text/html",
+        ],
         "models_loaded": True,
         "distributed_workers": 0,
-        "queue_status": {"pending_tasks": 0, "processing_tasks": 0, "completed_tasks": 0},
+        "queue_status": {
+            "pending_tasks": 0,
+            "processing_tasks": 0,
+            "completed_tasks": 0,
+        },
         "integration_status": {
             "doc_store": "available",
             "orchestrator": "available",
@@ -119,7 +134,11 @@ async def analyze_code():
         data={
             "analysis_id": "analysis_123",
             "status": "completed",
-            "results": {"quality_score": 85, "security_issues": 0, "maintainability": "high"},
+            "results": {
+                "quality_score": 85,
+                "security_issues": 0,
+                "maintainability": "high",
+            },
         },
         message="Analysis completed successfully",
     )

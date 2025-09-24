@@ -4,7 +4,6 @@ Handles notification service visualization, including owner resolution,
 notification delivery monitoring, and dead letter queue management.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..notification_service_monitor import notification_service_monitor
@@ -27,8 +26,12 @@ class NotificationServiceUIHandlers:
 
             # Get notification service status and cached data
             status_data = notification_service_monitor.get_notification_status()
-            notification_history = notification_service_monitor.get_notification_history(limit=20)
-            resolution_history = notification_service_monitor.get_owner_resolution_history(limit=20)
+            notification_history = (
+                notification_service_monitor.get_notification_history(limit=20)
+            )
+            resolution_history = (
+                notification_service_monitor.get_owner_resolution_history(limit=20)
+            )
 
             # Build context for template
             context = {

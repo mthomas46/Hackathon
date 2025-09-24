@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
 
-from services.shared.core.constants_new import ServiceNames
+# Service name now handled by standardized config system
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import get_service_client
 
@@ -21,7 +21,7 @@ class SourceAgentLangGraphIntegration:
     """LangGraph integration for Source Agent Service."""
 
     def __init__(self):
-        self.service_name = ServiceNames.SOURCE_AGENT
+        self.service_name = "source-agent"
         self.service_client = get_service_client()
         self.repository_cache = {}
         self.workflow_repositories = {}
@@ -31,7 +31,9 @@ class SourceAgentLangGraphIntegration:
 
         @tool
         async def fetch_repository_content_langgraph(
-            repo_url: str, file_path: str, workflow_context: Optional[Dict[str, Any]] = None
+            repo_url: str,
+            file_path: str,
+            workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Fetch repository content within LangGraph workflow context."""
             try:
@@ -57,7 +59,11 @@ class SourceAgentLangGraphIntegration:
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/fetch",
-                    {"repo_url": repo_url, "file_path": file_path, "context": fetch_context},
+                    {
+                        "repo_url": repo_url,
+                        "file_path": file_path,
+                        "context": fetch_context,
+                    },
                 )
 
                 # Cache the result
@@ -71,7 +77,11 @@ class SourceAgentLangGraphIntegration:
                             if workflow_id not in self.workflow_repositories:
                                 self.workflow_repositories[workflow_id] = []
                             self.workflow_repositories[workflow_id].append(
-                                {"repo_url": repo_url, "file_path": file_path, "fetched_at": datetime.now().isoformat()}
+                                {
+                                    "repo_url": repo_url,
+                                    "file_path": file_path,
+                                    "fetched_at": datetime.now().isoformat(),
+                                }
                             )
 
                 return {
@@ -83,7 +93,11 @@ class SourceAgentLangGraphIntegration:
                 }
 
             except Exception as e:
-                fire_and_forget("error", f"LangGraph content fetch failed for {repo_url}: {e}", self.service_name)
+                fire_and_forget(
+                    "error",
+                    f"LangGraph content fetch failed for {repo_url}: {e}",
+                    self.service_name,
+                )
                 return {"success": False, "error": str(e)}
 
         @tool
@@ -101,7 +115,8 @@ class SourceAgentLangGraphIntegration:
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/analyze/structure", {"repo_url": repo_url, "context": analysis_context}
+                    f"{self.service_name}/api/v1/analyze/structure",
+                    {"repo_url": repo_url, "context": analysis_context},
                 )
 
                 # Store analysis result in workflow context
@@ -127,7 +142,11 @@ class SourceAgentLangGraphIntegration:
                 }
 
             except Exception as e:
-                fire_and_forget("error", f"LangGraph structure analysis failed for {repo_url}: {e}", self.service_name)
+                fire_and_forget(
+                    "error",
+                    f"LangGraph structure analysis failed for {repo_url}: {e}",
+                    self.service_name,
+                )
                 return {"success": False, "error": str(e)}
 
         @tool
@@ -136,7 +155,9 @@ class SourceAgentLangGraphIntegration:
         ) -> Dict[str, Any]:
             """Get repository metadata within workflow context."""
             try:
-                result = await self.service_client.get_json(f"{self.service_name}/api/v1/repos/{repo_url}/metadata")
+                result = await self.service_client.get_json(
+                    f"{self.service_name}/api/v1/repos/{repo_url}/metadata"
+                )
 
                 # Enhance with workflow context
                 if workflow_context:
@@ -150,17 +171,28 @@ class SourceAgentLangGraphIntegration:
                         if workflow_id not in self.workflow_repositories:
                             self.workflow_repositories[workflow_id] = []
                         self.workflow_repositories[workflow_id].append(
-                            {"repo_url": repo_url, "access_type": "metadata", "accessed_at": datetime.now().isoformat()}
+                            {
+                                "repo_url": repo_url,
+                                "access_type": "metadata",
+                                "accessed_at": datetime.now().isoformat(),
+                            }
                         )
 
-                return {"success": True, "metadata": result, "workflow_integration": "completed"}
+                return {
+                    "success": True,
+                    "metadata": result,
+                    "workflow_integration": "completed",
+                }
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
         async def search_repository_content_langgraph(
-            repo_url: str, search_query: str, file_pattern: str = "*", workflow_context: Optional[Dict[str, Any]] = None
+            repo_url: str,
+            search_query: str,
+            file_pattern: str = "*",
+            workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Search repository content within workflow context."""
             try:
@@ -196,11 +228,17 @@ class SourceAgentLangGraphIntegration:
                 }
 
             except Exception as e:
-                fire_and_forget("error", f"LangGraph content search failed for {repo_url}: {e}", self.service_name)
+                fire_and_forget(
+                    "error",
+                    f"LangGraph content search failed for {repo_url}: {e}",
+                    self.service_name,
+                )
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_workflow_repositories_langgraph(workflow_id: str) -> Dict[str, Any]:
+        async def get_workflow_repositories_langgraph(
+            workflow_id: str,
+        ) -> Dict[str, Any]:
             """Get all repositories accessed in a workflow."""
             try:
                 if workflow_id in self.workflow_repositories:
@@ -233,7 +271,9 @@ class SourceAgentLangGraphIntegration:
             "get_workflow_repositories_langgraph": get_workflow_repositories_langgraph,
         }
 
-    async def handle_langgraph_workflow_message(self, message: BaseMessage) -> Dict[str, Any]:
+    async def handle_langgraph_workflow_message(
+        self, message: BaseMessage
+    ) -> Dict[str, Any]:
         """Handle incoming LangGraph workflow messages."""
         try:
             if isinstance(message, HumanMessage):
@@ -244,10 +284,14 @@ class SourceAgentLangGraphIntegration:
                 return {"status": "ignored", "message_type": type(message).__name__}
 
         except Exception as e:
-            fire_and_forget("error", f"LangGraph message handling failed: {e}", self.service_name)
+            fire_and_forget(
+                "error", f"LangGraph message handling failed: {e}", self.service_name
+            )
             return {"status": "error", "error": str(e)}
 
-    async def _process_source_workflow_instruction(self, instruction: str) -> Dict[str, Any]:
+    async def _process_source_workflow_instruction(
+        self, instruction: str
+    ) -> Dict[str, Any]:
         """Process source-related workflow instructions."""
         instruction_lower = instruction.lower()
 
@@ -256,7 +300,11 @@ class SourceAgentLangGraphIntegration:
                 "action": "fetch_content",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["content_fetching", "repository_access", "file_retrieval"],
+                "capabilities": [
+                    "content_fetching",
+                    "repository_access",
+                    "file_retrieval",
+                ],
             }
 
         elif "analyze" in instruction_lower and "structure" in instruction_lower:
@@ -264,7 +312,11 @@ class SourceAgentLangGraphIntegration:
                 "action": "analyze_structure",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["structure_analysis", "repository_introspection", "codebase_mapping"],
+                "capabilities": [
+                    "structure_analysis",
+                    "repository_introspection",
+                    "codebase_mapping",
+                ],
             }
 
         elif "metadata" in instruction_lower or "info" in instruction_lower:
@@ -272,7 +324,11 @@ class SourceAgentLangGraphIntegration:
                 "action": "get_metadata",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["metadata_extraction", "repository_information", "commit_history"],
+                "capabilities": [
+                    "metadata_extraction",
+                    "repository_information",
+                    "commit_history",
+                ],
             }
 
         elif "search" in instruction_lower or "find" in instruction_lower:
@@ -280,7 +336,11 @@ class SourceAgentLangGraphIntegration:
                 "action": "search_content",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["content_search", "pattern_matching", "repository_wide_search"],
+                "capabilities": [
+                    "content_search",
+                    "pattern_matching",
+                    "repository_wide_search",
+                ],
             }
 
         else:
@@ -288,7 +348,11 @@ class SourceAgentLangGraphIntegration:
                 "action": "general_source_operation",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["repository_operations", "content_access", "source_code_management"],
+                "capabilities": [
+                    "repository_operations",
+                    "content_access",
+                    "source_code_management",
+                ],
             }
 
     async def _process_source_workflow_response(self, response: str) -> Dict[str, Any]:
@@ -320,8 +384,17 @@ class SourceAgentLangGraphIntegration:
                 "content_search",
                 "workflow_repository_tracking",
             ],
-            "tool_categories": ["fetching_tools", "analysis_tools", "metadata_tools", "search_tools"],
-            "message_types": ["source_instructions", "workflow_responses", "repository_commands"],
+            "tool_categories": [
+                "fetching_tools",
+                "analysis_tools",
+                "metadata_tools",
+                "search_tools",
+            ],
+            "message_types": [
+                "source_instructions",
+                "workflow_responses",
+                "repository_commands",
+            ],
             "integration_features": [
                 "workflow_context_awareness",
                 "caching_optimization",
@@ -337,7 +410,9 @@ class SourceAgentLangGraphIntegration:
             "langgraph_integration": "active",
             "cached_repositories": len(self.repository_cache),
             "active_workflows": len(self.workflow_repositories),
-            "total_repository_accesses": sum(len(repos) for repos in self.workflow_repositories.values()),
+            "total_repository_accesses": sum(
+                len(repos) for repos in self.workflow_repositories.values()
+            ),
             "last_activity": datetime.now().isoformat(),
             "capabilities_ready": True,
         }
@@ -347,7 +422,9 @@ class SourceAgentLangGraphIntegration:
         summary = {
             "total_repositories_cached": len(self.repository_cache),
             "total_workflows": len(self.workflow_repositories),
-            "total_accesses": sum(len(repos) for repos in self.workflow_repositories.values()),
+            "total_accesses": sum(
+                len(repos) for repos in self.workflow_repositories.values()
+            ),
             "cache_hit_ratio": 0,  # Would be calculated from actual usage
             "average_fetch_time": 0,  # Would be tracked from actual calls
             "repository_types": {},
@@ -377,18 +454,28 @@ class SourceAgentLangGraphIntegration:
 
         return summary
 
-    async def clear_repository_cache(self, repo_url: Optional[str] = None) -> Dict[str, Any]:
+    async def clear_repository_cache(
+        self, repo_url: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Clear repository cache to free memory."""
         if repo_url:
             # Clear cache for specific repository
             removed_items = 0
-            cache_keys_to_remove = [key for key in self.repository_cache.keys() if key.startswith(f"{repo_url}_")]
+            cache_keys_to_remove = [
+                key
+                for key in self.repository_cache.keys()
+                if key.startswith(f"{repo_url}_")
+            ]
 
             for cache_key in cache_keys_to_remove:
                 del self.repository_cache[cache_key]
                 removed_items += 1
 
-            return {"cache_cleared": True, "repo_url": repo_url, "items_removed": removed_items}
+            return {
+                "cache_cleared": True,
+                "repo_url": repo_url,
+                "items_removed": removed_items,
+            }
         else:
             # Clear all caches
             total_items = len(self.repository_cache)

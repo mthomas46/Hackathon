@@ -5,7 +5,6 @@ ecosystem patterns. Validates request/response handling, error cases,
 and integration with FastAPI framework.
 """
 
-
 import pytest
 from fastapi.testclient import TestClient
 from main import app
@@ -39,7 +38,14 @@ class TestSimulationEndpoints:
                     "skills": ["Python", "FastAPI", "React"],
                 }
             ],
-            "phases": [{"name": "Planning", "start_date": "2024-01-01", "end_date": "2024-01-15", "duration_days": 15}],
+            "phases": [
+                {
+                    "name": "Planning",
+                    "start_date": "2024-01-01",
+                    "end_date": "2024-01-15",
+                    "duration_days": 15,
+                }
+            ],
         }
 
     @pytest.mark.asyncio
@@ -107,7 +113,9 @@ class TestSimulationEndpoints:
     async def test_get_simulation_success(self, client, sample_simulation_request):
         """Test successful simulation retrieval."""
         # Arrange - Create simulation first
-        create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
+        create_response = client.post(
+            "/api/v1/simulations", json=sample_simulation_request
+        )
         assert create_response.status_code == 201
         simulation_id = create_response.json()["data"]["simulation_id"]
 
@@ -161,7 +169,9 @@ class TestSimulationEndpoints:
     async def test_execute_simulation_success(self, client, sample_simulation_request):
         """Test successful simulation execution."""
         # Arrange - Create simulation first
-        create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
+        create_response = client.post(
+            "/api/v1/simulations", json=sample_simulation_request
+        )
         assert create_response.status_code == 201
         simulation_id = create_response.json()["id"]
 
@@ -182,7 +192,9 @@ class TestSimulationEndpoints:
         response = client.post("/api/v1/simulations/non_existent_id/execute")
 
         # Assert
-        assert response.status_code == 500  # Internal server error from application service
+        assert (
+            response.status_code == 500
+        )  # Internal server error from application service
         data = response.json()
 
         assert data["success"] is False
@@ -191,7 +203,9 @@ class TestSimulationEndpoints:
     async def test_cancel_simulation_success(self, client, sample_simulation_request):
         """Test successful simulation cancellation."""
         # Arrange - Create simulation first
-        create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
+        create_response = client.post(
+            "/api/v1/simulations", json=sample_simulation_request
+        )
         assert create_response.status_code == 201
         simulation_id = create_response.json()["id"]
 
@@ -267,7 +281,9 @@ class TestSimulationEndpoints:
     async def test_simulation_results_endpoint(self, client, sample_simulation_request):
         """Test simulation results retrieval."""
         # Arrange - Create and execute simulation
-        create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
+        create_response = client.post(
+            "/api/v1/simulations", json=sample_simulation_request
+        )
         assert create_response.status_code == 201
         simulation_id = create_response.json()["id"]
 
@@ -305,13 +321,19 @@ class TestSimulationEndpoints:
     def test_content_type_validation(self, client):
         """Test content type validation for JSON endpoints."""
         # Act
-        response = client.post("/api/v1/simulations", data="not json", headers={"Content-Type": "text/plain"})
+        response = client.post(
+            "/api/v1/simulations",
+            data="not json",
+            headers={"Content-Type": "text/plain"},
+        )
 
         # Assert - Should handle gracefully or return appropriate error
         assert response.status_code in [400, 422]
 
     @pytest.mark.asyncio
-    async def test_concurrent_simulation_creation(self, client, sample_simulation_request):
+    async def test_concurrent_simulation_creation(
+        self, client, sample_simulation_request
+    ):
         """Test concurrent simulation creation handling."""
         import asyncio
 
@@ -353,13 +375,19 @@ class TestSimulationEndpoints:
         response = client.post("/api/v1/simulations", json=large_request)
 
         # Assert - Should handle large payload appropriately
-        assert response.status_code in [201, 413, 422]  # Created, Payload Too Large, or Validation Error
+        assert response.status_code in [
+            201,
+            413,
+            422,
+        ]  # Created, Payload Too Large, or Validation Error
 
     def test_malformed_json_handling(self, client):
         """Test handling of malformed JSON requests."""
         # Act
         response = client.post(
-            "/api/v1/simulations", data='{"invalid": json}', headers={"Content-Type": "application/json"}
+            "/api/v1/simulations",
+            data='{"invalid": json}',
+            headers={"Content-Type": "application/json"},
         )
 
         # Assert
@@ -377,7 +405,9 @@ class TestSimulationEndpoints:
     async def test_simulation_lifecycle(self, client, sample_simulation_request):
         """Test complete simulation lifecycle through API."""
         # 1. Create simulation
-        create_response = client.post("/api/v1/simulations", json=sample_simulation_request)
+        create_response = client.post(
+            "/api/v1/simulations", json=sample_simulation_request
+        )
         assert create_response.status_code == 201
         simulation_id = create_response.json()["id"]
 

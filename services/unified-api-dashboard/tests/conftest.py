@@ -37,7 +37,12 @@ def mock_discovery_client():
                     "openapi": "3.0.0",
                     "info": {"title": "Test Service", "version": "1.0.0"},
                     "paths": {
-                        "/health": {"get": {"summary": "Health check", "responses": {"200": {"description": "OK"}}}}
+                        "/health": {
+                            "get": {
+                                "summary": "Health check",
+                                "responses": {"200": {"description": "OK"}},
+                            }
+                        }
                     },
                 },
                 "health_endpoint": "/health",
@@ -46,7 +51,10 @@ def mock_discovery_client():
         ]
     )
     client.get_service_spec = AsyncMock(
-        return_value={"openapi": "3.0.0", "info": {"title": "Test Service", "version": "1.0.0"}}
+        return_value={
+            "openapi": "3.0.0",
+            "info": {"title": "Test Service", "version": "1.0.0"},
+        }
     )
     return client
 
@@ -59,12 +67,20 @@ def mock_health_monitor():
         return_value={
             "overall_health": "healthy",
             "services": {
-                "test-service": {"status": "healthy", "response_time": 150, "last_check": datetime.now().isoformat()}
+                "test-service": {
+                    "status": "healthy",
+                    "response_time": 150,
+                    "last_check": datetime.now().isoformat(),
+                }
             },
         }
     )
     monitor.check_service_health = AsyncMock(
-        return_value={"status": "healthy", "response_time": 120, "timestamp": datetime.now().isoformat()}
+        return_value={
+            "status": "healthy",
+            "response_time": 120,
+            "timestamp": datetime.now().isoformat(),
+        }
     )
     return monitor
 
@@ -74,10 +90,21 @@ def mock_api_catalog():
     """Mock APICatalogManager for testing."""
     catalog = Mock(spec=APICatalogManager)
     catalog.get_catalog = AsyncMock(
-        return_value={"services": ["test-service"], "total_endpoints": 5, "last_updated": datetime.now().isoformat()}
+        return_value={
+            "services": ["test-service"],
+            "total_endpoints": 5,
+            "last_updated": datetime.now().isoformat(),
+        }
     )
     catalog.search_apis = AsyncMock(
-        return_value=[{"service": "test-service", "endpoint": "/api/test", "method": "GET", "summary": "Test endpoint"}]
+        return_value=[
+            {
+                "service": "test-service",
+                "endpoint": "/api/test",
+                "method": "GET",
+                "summary": "Test endpoint",
+            }
+        ]
     )
     return catalog
 
@@ -87,10 +114,14 @@ def mock_user_manager():
     """Mock UserManager for testing."""
     manager = Mock(spec=UserManager)
     manager.authenticate_user = AsyncMock(
-        return_value=Mock(user_id="test_user", username="testuser", role=Mock(value="developer"))
+        return_value=Mock(
+            user_id="test_user", username="testuser", role=Mock(value="developer")
+        )
     )
     manager.get_user = AsyncMock(
-        return_value=Mock(user_id="test_user", username="testuser", role=Mock(value="developer"))
+        return_value=Mock(
+            user_id="test_user", username="testuser", role=Mock(value="developer")
+        )
     )
     return manager
 
@@ -109,7 +140,11 @@ def sample_openapi_spec():
     """Sample OpenAPI specification for testing."""
     return {
         "openapi": "3.0.0",
-        "info": {"title": "Test API", "version": "1.0.0", "description": "Test API for unit testing"},
+        "info": {
+            "title": "Test API",
+            "version": "1.0.0",
+            "description": "Test API for unit testing",
+        },
         "servers": [{"url": "http://localhost:8000"}],
         "paths": {
             "/health": {
@@ -118,7 +153,9 @@ def sample_openapi_spec():
                     "responses": {
                         "200": {
                             "description": "Healthy",
-                            "content": {"application/json": {"schema": {"type": "object"}}},
+                            "content": {
+                                "application/json": {"schema": {"type": "object"}}
+                            },
                         }
                     },
                 }
@@ -126,11 +163,24 @@ def sample_openapi_spec():
             "/users": {
                 "get": {
                     "summary": "Get users",
-                    "parameters": [{"name": "limit", "in": "query", "schema": {"type": "integer", "default": 10}}],
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "in": "query",
+                            "schema": {"type": "integer", "default": 10},
+                        }
+                    ],
                     "responses": {
                         "200": {
                             "description": "Users list",
-                            "content": {"application/json": {"schema": {"type": "array", "items": {"type": "object"}}}},
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "array",
+                                        "items": {"type": "object"},
+                                    }
+                                }
+                            },
                         }
                     },
                 },
@@ -141,7 +191,10 @@ def sample_openapi_spec():
                             "application/json": {
                                 "schema": {
                                     "type": "object",
-                                    "properties": {"name": {"type": "string"}, "email": {"type": "string"}},
+                                    "properties": {
+                                        "name": {"type": "string"},
+                                        "email": {"type": "string"},
+                                    },
                                 }
                             }
                         }
@@ -227,7 +280,9 @@ def sample_security_events():
     return [
         {
             "event_id": f"event_{i}",
-            "threat_type": "suspicious_traffic" if i % 2 == 0 else "unauthorized_access",
+            "threat_type": (
+                "suspicious_traffic" if i % 2 == 0 else "unauthorized_access"
+            ),
             "threat_level": "medium",
             "source_ip": f"192.168.1.{i}",
             "user_id": f"user_{i}" if i % 3 == 0 else None,

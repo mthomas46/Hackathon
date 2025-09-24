@@ -112,7 +112,9 @@ class EnvironmentConfig:
         self._apply_runtime_overrides(config)
 
         self.logger.info(
-            "Environment configuration loaded", environment=self.environment, overrides=len(self._config_overrides)
+            "Environment configuration loaded",
+            environment=self.environment,
+            overrides=len(self._config_overrides),
         )
 
         return config
@@ -152,7 +154,10 @@ class EnvironmentConfig:
                 "auto_reload": True,
                 "debug_mode": True,
             },
-            "security": {"rate_limit_enabled": False, "circuit_breaker_failure_threshold": 10},
+            "security": {
+                "rate_limit_enabled": False,
+                "circuit_breaker_failure_threshold": 10,
+            },
             "monitoring": {"enable_profiling": False},
             "features": {
                 "enable_advanced_analytics": True,
@@ -184,7 +189,10 @@ class EnvironmentConfig:
         return {
             "service": {"debug": False, "reload": False, "log_level": "INFO"},
             "monitoring": {"enable_metrics": True, "enable_profiling": True},
-            "security": {"rate_limit_enabled": True, "circuit_breaker_failure_threshold": 5},
+            "security": {
+                "rate_limit_enabled": True,
+                "circuit_breaker_failure_threshold": 5,
+            },
         }
 
     def _get_production_overrides(self) -> Dict[str, Any]:
@@ -192,8 +200,16 @@ class EnvironmentConfig:
         return {
             "service": {"debug": False, "reload": False, "log_level": "WARNING"},
             "monitoring": {"enable_metrics": True, "enable_profiling": False},
-            "security": {"rate_limit_enabled": True, "circuit_breaker_failure_threshold": 3},
-            "development": {"enable_swagger": False, "enable_redoc": False, "auto_reload": False, "debug_mode": False},
+            "security": {
+                "rate_limit_enabled": True,
+                "circuit_breaker_failure_threshold": 3,
+            },
+            "development": {
+                "enable_swagger": False,
+                "enable_redoc": False,
+                "auto_reload": False,
+                "debug_mode": False,
+            },
         }
 
     def _get_runtime_overrides(self) -> Dict[str, Any]:

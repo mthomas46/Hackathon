@@ -115,7 +115,9 @@ except ImportError:
                     content = f.read()
 
                 # Check for absolute imports that might be wrong
-                abs_imports = re.findall(r"from\s+services\.project_simulation\.", content)
+                abs_imports = re.findall(
+                    r"from\s+services\.project_simulation\.", content
+                )
                 if abs_imports and "services/project-simulation" in str(file_path):
                     self.issues["import_paths"].append(
                         f"{file_path}: Found absolute import that should be relative: {abs_imports[0]}"
@@ -124,7 +126,9 @@ except ImportError:
                 # Check for relative imports that go beyond top level
                 rel_imports = re.findall(r"from\s+\.\.\.\.\.\.", content)
                 if rel_imports:
-                    self.issues["import_paths"].append(f"{file_path}: Found overly relative import: {rel_imports[0]}")
+                    self.issues["import_paths"].append(
+                        f"{file_path}: Found overly relative import: {rel_imports[0]}"
+                    )
 
                 # Check for hardcoded paths
                 hardcoded_paths = re.findall(r'/Users/[^\'"\s]+', content)
@@ -134,7 +138,9 @@ except ImportError:
                     )
 
             except Exception as e:
-                self.issues["import_paths"].append(f"{file_path}: Error reading file - {e}")
+                self.issues["import_paths"].append(
+                    f"{file_path}: Error reading file - {e}"
+                )
 
     def check_circular_imports(self):
         """Check for potential circular import issues."""
@@ -151,8 +157,12 @@ except ImportError:
         # Simple circular import detection
         for module, imports in import_graph.items():
             for imported in imports:
-                if imported in import_graph and module in import_graph.get(imported, []):
-                    self.issues["circular_imports"].append(f"Potential circular import: {module} <-> {imported}")
+                if imported in import_graph and module in import_graph.get(
+                    imported, []
+                ):
+                    self.issues["circular_imports"].append(
+                        f"Potential circular import: {module} <-> {imported}"
+                    )
 
     def check_missing_dependencies(self):
         """Check for missing Python dependencies."""
@@ -188,7 +198,11 @@ except ImportError:
                 import sys
 
                 result = subprocess.run(
-                    [sys.executable, "-c", "import sys; sys.path.insert(0, '.'); import main"],
+                    [
+                        sys.executable,
+                        "-c",
+                        "import sys; sys.path.insert(0, '.'); import main",
+                    ],
                     cwd=str(self.root_path),
                     capture_output=True,
                     text=True,
@@ -196,11 +210,17 @@ except ImportError:
                 )
 
                 if result.returncode != 0:
-                    self.issues["import_paths"].append(f"main.py: Import failed - {result.stderr.strip()}")
+                    self.issues["import_paths"].append(
+                        f"main.py: Import failed - {result.stderr.strip()}"
+                    )
             except subprocess.TimeoutExpired:
-                self.issues["import_paths"].append("main.py: Import timed out - possible circular import")
+                self.issues["import_paths"].append(
+                    "main.py: Import timed out - possible circular import"
+                )
             except Exception as e:
-                self.issues["import_paths"].append(f"main.py: Error testing imports - {e}")
+                self.issues["import_paths"].append(
+                    f"main.py: Error testing imports - {e}"
+                )
 
         for file_path in python_files:
             try:
@@ -210,23 +230,33 @@ except ImportError:
                 # Try to import the module to see if it has import errors
                 try:
                     # Only try to import if it's not the main entry point
-                    if "main.py" not in str(file_path) and "__init__.py" not in str(file_path):
+                    if "main.py" not in str(file_path) and "__init__.py" not in str(
+                        file_path
+                    ):
                         # Use importlib to try importing
                         import importlib.util
 
-                        spec = importlib.util.spec_from_file_location(module_name, file_path)
+                        spec = importlib.util.spec_from_file_location(
+                            module_name, file_path
+                        )
                         if spec and spec.loader:
                             module = importlib.util.module_from_spec(spec)
                             spec.loader.exec_module(module)
                 except ImportError as e:
-                    self.issues["import_paths"].append(f"{file_path}: Import error - {e}")
+                    self.issues["import_paths"].append(
+                        f"{file_path}: Import error - {e}"
+                    )
                 except Exception as e:
                     # Other execution errors during import
                     if "ImportError" in str(e) or "ModuleNotFoundError" in str(e):
-                        self.issues["import_paths"].append(f"{file_path}: Module import failed - {e}")
+                        self.issues["import_paths"].append(
+                            f"{file_path}: Module import failed - {e}"
+                        )
 
             except Exception as e:
-                self.issues["import_paths"].append(f"{file_path}: Error checking imports - {e}")
+                self.issues["import_paths"].append(
+                    f"{file_path}: Error checking imports - {e}"
+                )
 
     def check_shared_module_imports(self):
         """Check for imports from shared modules that might not exist."""
@@ -250,13 +280,21 @@ except ImportError:
                     matches = re.findall(pattern, content)
                     for match in matches:
                         # Check if this shared module actually exists
-                        module_path = match.replace("from ", "").replace("import ", "").strip()
+                        module_path = (
+                            match.replace("from ", "").replace("import ", "").strip()
+                        )
                         if "." in module_path:
                             # Try to resolve the module path
                             module_parts = module_path.split(".")
                             potential_paths = [
-                                self.root_path / "services" / "shared" / f"{'/'.join(module_parts[2:])}.py",
-                                self.root_path / "services" / "shared" / f"{'/'.join(module_parts[2:])}/__init__.py",
+                                self.root_path
+                                / "services"
+                                / "shared"
+                                / f"{'/'.join(module_parts[2:])}.py",
+                                self.root_path
+                                / "services"
+                                / "shared"
+                                / f"{'/'.join(module_parts[2:])}/__init__.py",
                             ]
 
                             exists = any(path.exists() for path in potential_paths)
@@ -266,7 +304,9 @@ except ImportError:
                                 )
 
             except Exception as e:
-                self.issues["import_paths"].append(f"{file_path}: Error checking shared imports - {e}")
+                self.issues["import_paths"].append(
+                    f"{file_path}: Error checking shared imports - {e}"
+                )
 
     def check_fallback_patterns(self):
         """Check for missing try-except fallback patterns around shared imports."""
@@ -309,7 +349,9 @@ except ImportError:
                             )
 
             except Exception as e:
-                self.issues["import_paths"].append(f"{file_path}: Error checking fallback patterns - {e}")
+                self.issues["import_paths"].append(
+                    f"{file_path}: Error checking fallback patterns - {e}"
+                )
 
     def check_syntax_errors(self):
         """Check for syntax errors in Python files."""
@@ -331,7 +373,9 @@ except ImportError:
                             and not line.strip().endswith('")')
                             and not line.strip().endswith("')")
                         ):
-                            if '"""' not in line and "'''" not in line:  # Skip docstrings
+                            if (
+                                '"""' not in line and "'''" not in line
+                            ):  # Skip docstrings
                                 self.issues["syntax_errors"].append(
                                     f"{file_path}:{i+1}: Potential unterminated string in print statement"
                                 )
@@ -360,7 +404,9 @@ except ImportError:
                 self._check_block_alignment(file_path, lines)
 
             except Exception as e:
-                self.issues["syntax_errors"].append(f"{file_path}: Error checking indentation - {e}")
+                self.issues["syntax_errors"].append(
+                    f"{file_path}: Error checking indentation - {e}"
+                )
 
     def _check_indentation_consistency(self, file_path, lines):
         """Check for consistent use of tabs vs spaces."""
@@ -389,7 +435,9 @@ except ImportError:
                 f"{file_path}: Mixed tabs and spaces detected on lines: {mixed_lines[:10]}{'...' if len(mixed_lines) > 10 else ''}"
             )
         elif has_tabs:
-            self.issues["indentation_errors"].append(f"{file_path}: Uses tabs for indentation (should use 4 spaces)")
+            self.issues["indentation_errors"].append(
+                f"{file_path}: Uses tabs for indentation (should use 4 spaces)"
+            )
 
     def _check_indentation_levels(self, file_path, lines):
         """Check for proper indentation levels."""
@@ -438,7 +486,19 @@ except ImportError:
 
     def _check_block_alignment(self, file_path, lines):
         """Check for proper alignment of code blocks."""
-        block_keywords = ["def", "class", "if", "elif", "else", "for", "while", "try", "except", "finally", "with"]
+        block_keywords = [
+            "def",
+            "class",
+            "if",
+            "elif",
+            "else",
+            "for",
+            "while",
+            "try",
+            "except",
+            "finally",
+            "with",
+        ]
 
         for i, line in enumerate(lines):
             stripped = line.strip()
@@ -452,10 +512,15 @@ except ImportError:
                 if (
                     stripped.startswith(keyword + " ")
                     or stripped == keyword
-                    or (keyword in ["else", "finally", "except"] and stripped.startswith(keyword))
+                    or (
+                        keyword in ["else", "finally", "except"]
+                        and stripped.startswith(keyword)
+                    )
                 ):
                     # Check if the line ends with :
-                    if not stripped.endswith(":") and not any(char in stripped for char in ["(", "[", "{"]):
+                    if not stripped.endswith(":") and not any(
+                        char in stripped for char in ["(", "[", "{"]
+                    ):
                         if keyword in ["else", "finally"] and ":" in stripped:
                             continue  # These can be on same line
                         if not stripped.endswith(":"):
@@ -523,10 +588,16 @@ except ImportError:
 
         for root, dirs, files in os.walk(self.root_path):
             # Skip certain directories
-            dirs[:] = [d for d in dirs if not d.startswith(".") and d not in ["__pycache__", "test_venv"]]
+            dirs[:] = [
+                d
+                for d in dirs
+                if not d.startswith(".") and d not in ["__pycache__", "test_venv"]
+            ]
 
             if "__init__.py" not in files and any(f.endswith(".py") for f in files):
-                self.issues["missing_init_files"].append(f"Missing __init__.py in directory: {root}")
+                self.issues["missing_init_files"].append(
+                    f"Missing __init__.py in directory: {root}"
+                )
 
     def check_attribute_access_issues(self):
         """Check for potential attribute access issues."""
@@ -557,7 +628,9 @@ except ImportError:
                         )
 
             except Exception as e:
-                self.issues["attribute_access"].append(f"{file_path}: Error reading file - {e}")
+                self.issues["attribute_access"].append(
+                    f"{file_path}: Error reading file - {e}"
+                )
 
     def check_path_configuration(self):
         """Check for path configuration issues."""
@@ -583,10 +656,14 @@ except ImportError:
                 if "Path(" in content and "parent" in content:
                     path_ops = re.findall(r"Path\([^)]+\)\..*parent", content)
                     if path_ops:
-                        self.issues["path_config"].append(f"{file_path}: Complex Path operations: {path_ops}")
+                        self.issues["path_config"].append(
+                            f"{file_path}: Complex Path operations: {path_ops}"
+                        )
 
             except Exception as e:
-                self.issues["path_config"].append(f"{file_path}: Error reading file - {e}")
+                self.issues["path_config"].append(
+                    f"{file_path}: Error reading file - {e}"
+                )
 
     def find_python_files(self) -> List[Path]:
         """Find all Python files in the codebase."""
@@ -594,7 +671,10 @@ except ImportError:
         for root, dirs, files in os.walk(self.root_path):
             # Skip certain directories
             dirs[:] = [
-                d for d in dirs if not d.startswith(".") and d not in ["__pycache__", "test_venv", ".pytest_cache"]
+                d
+                for d in dirs
+                if not d.startswith(".")
+                and d not in ["__pycache__", "test_venv", ".pytest_cache"]
             ]
             for file in files:
                 if file.endswith(".py"):
@@ -614,11 +694,21 @@ except ImportError:
                 content = f.read()
 
             # Simple regex to find import statements
-            import_lines = re.findall(r"^(?:from\s+|\s*import\s+)([^\s\n]+)", content, re.MULTILINE)
+            import_lines = re.findall(
+                r"^(?:from\s+|\s*import\s+)([^\s\n]+)", content, re.MULTILINE
+            )
             for imp in import_lines:
                 # Clean up the import
                 imp = imp.split(".")[0]  # Take only the top-level module
-                if imp not in ["typing", "os", "sys", "pathlib", "datetime", "json", "re"]:
+                if imp not in [
+                    "typing",
+                    "os",
+                    "sys",
+                    "pathlib",
+                    "datetime",
+                    "json",
+                    "re",
+                ]:
                     imports.append(imp)
 
         except Exception:
@@ -643,7 +733,9 @@ except ImportError:
 
         for category, issues in self.issues.items():
             if issues:
-                print(f"🔍 {category.upper().replace('_', ' ')} ({len(issues)} issues):")
+                print(
+                    f"🔍 {category.upper().replace('_', ' ')} ({len(issues)} issues):"
+                )
                 for issue in issues[:10]:  # Show first 10 issues per category
                     print(f"  • {issue}")
                 if len(issues) > 10:
@@ -670,7 +762,9 @@ def main():
         auditor.print_report()
 
         # Generate fixes for various issue types
-        import_issues = issues.get("import_paths", []) + issues.get("missing_dependencies", [])
+        import_issues = issues.get("import_paths", []) + issues.get(
+            "missing_dependencies", []
+        )
         syntax_issues = issues.get("syntax_errors", [])
 
         if import_issues or syntax_issues:

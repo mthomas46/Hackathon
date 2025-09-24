@@ -10,7 +10,9 @@ import streamlit as st
 def render_create_page():
     """Render the simulation creation page."""
     st.markdown("## ➕ Create New Simulation")
-    st.markdown("Create a new project simulation with guided setup and configuration options.")
+    st.markdown(
+        "Create a new project simulation with guided setup and configuration options."
+    )
 
     # Quick creation options
     st.markdown("### Quick Start Options")
@@ -22,7 +24,9 @@ def render_create_page():
             create_quick_simulation("web_application", "Quick Web Application")
 
     with col2:
-        if st.button("📱 Quick Mobile App", key="quick_mobile", use_container_width=True):
+        if st.button(
+            "📱 Quick Mobile App", key="quick_mobile", use_container_width=True
+        ):
             create_quick_simulation("mobile_app", "Quick Mobile Application")
 
     with col3:
@@ -44,7 +48,11 @@ def render_create_page():
             help="Choose a descriptive name for your simulation",
         )
 
-        description = st.text_area("Description", placeholder="Describe the project and its goals...", height=80)
+        description = st.text_area(
+            "Description",
+            placeholder="Describe the project and its goals...",
+            height=80,
+        )
 
         col1, col2 = st.columns(2)
         with col1:
@@ -70,16 +78,28 @@ def render_create_page():
             )
 
         with col2:
-            team_size = st.slider("Team Size", min_value=1, max_value=20, value=5, help="Number of team members")
+            team_size = st.slider(
+                "Team Size",
+                min_value=1,
+                max_value=20,
+                value=5,
+                help="Number of team members",
+            )
 
             duration = st.slider(
-                "Duration (weeks)", min_value=1, max_value=52, value=8, help="Estimated project duration"
+                "Duration (weeks)",
+                min_value=1,
+                max_value=52,
+                value=8,
+                help="Estimated project duration",
             )
 
         # Advanced options
         with st.expander("Advanced Options"):
             enable_ecosystem = st.checkbox(
-                "Enable Ecosystem Integration", value=True, help="Integrate with ecosystem services"
+                "Enable Ecosystem Integration",
+                value=True,
+                help="Integrate with ecosystem services",
             )
 
             output_formats = st.multiselect(
@@ -143,7 +163,9 @@ def create_simulation(simulation_data: Dict[str, Any]):
             st.write(f"**Complexity:** {simulation_data['complexity'].title()}")
             st.write(f"**Team Size:** {simulation_data['team_size']}")
             st.write(f"**Duration:** {simulation_data['duration_weeks']} weeks")
-            st.write(f"**Ecosystem Integration:** {'Enabled' if simulation_data['enable_ecosystem'] else 'Disabled'}")
+            st.write(
+                f"**Ecosystem Integration:** {'Enabled' if simulation_data['enable_ecosystem'] else 'Disabled'}"
+            )
 
         # Action buttons
         col1, col2 = st.columns(2)

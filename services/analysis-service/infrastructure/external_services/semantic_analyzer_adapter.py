@@ -53,7 +53,10 @@ class SemanticAnalyzerAdapter(ABC):
 
     @abstractmethod
     async def analyze_semantic_similarity(
-        self, document_text: str, document_id: str, compare_texts: Optional[List[str]] = None
+        self,
+        document_text: str,
+        document_id: str,
+        compare_texts: Optional[List[str]] = None,
     ) -> SemanticAnalysisResult:
         """Analyze semantic similarity of document."""
 
@@ -62,7 +65,9 @@ class SemanticAnalyzerAdapter(ABC):
         """Extract keywords from document."""
 
     @abstractmethod
-    async def cluster_documents(self, documents: List[Dict[str, Any]], num_clusters: int = 5) -> List[Dict[str, Any]]:
+    async def cluster_documents(
+        self, documents: List[Dict[str, Any]], num_clusters: int = 5
+    ) -> List[Dict[str, Any]]:
         """Cluster documents by semantic similarity."""
 
     @abstractmethod
@@ -76,10 +81,15 @@ class LocalSemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
     def __init__(self, config: ExternalServiceConfig):
         """Initialize local semantic analyzer."""
         super().__init__(config)
-        self.similarity_threshold = config.get_semantic_config().get("similarity_threshold", 0.8)
+        self.similarity_threshold = config.get_semantic_config().get(
+            "similarity_threshold", 0.8
+        )
 
     async def analyze_semantic_similarity(
-        self, document_text: str, document_id: str, compare_texts: Optional[List[str]] = None
+        self,
+        document_text: str,
+        document_id: str,
+        compare_texts: Optional[List[str]] = None,
     ) -> SemanticAnalysisResult:
         """Analyze semantic similarity using basic text processing."""
         start_time = time.time()
@@ -92,13 +102,17 @@ class LocalSemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
             similar_documents = []
             if compare_texts:
                 for i, compare_text in enumerate(compare_texts):
-                    similarity = self._calculate_basic_similarity(document_text, compare_text)
+                    similarity = self._calculate_basic_similarity(
+                        document_text, compare_text
+                    )
                     if similarity >= self.similarity_threshold:
                         similar_documents.append(
                             {
                                 "document_id": f"compare_{i}",
                                 "similarity_score": similarity,
-                                "shared_keywords": self._find_shared_keywords(keywords, compare_text),
+                                "shared_keywords": self._find_shared_keywords(
+                                    keywords, compare_text
+                                ),
                             }
                         )
 
@@ -120,7 +134,9 @@ class LocalSemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
         """Extract keywords using basic text processing."""
         return self._extract_basic_keywords(document_text)
 
-    async def cluster_documents(self, documents: List[Dict[str, Any]], num_clusters: int = 5) -> List[Dict[str, Any]]:
+    async def cluster_documents(
+        self, documents: List[Dict[str, Any]], num_clusters: int = 5
+    ) -> List[Dict[str, Any]]:
         """Cluster documents using basic text processing."""
         # Simple clustering based on keyword overlap
         clusters = []
@@ -129,7 +145,9 @@ class LocalSemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
         for doc in documents:
             doc_text = doc.get("content", "")
             doc_keywords = self._extract_basic_keywords(doc_text)
-            processed_docs.append({"id": doc.get("id"), "keywords": doc_keywords, "text": doc_text})
+            processed_docs.append(
+                {"id": doc.get("id"), "keywords": doc_keywords, "text": doc_text}
+            )
 
         # Group by dominant keywords (simplified)
         keyword_groups = {}
@@ -163,7 +181,22 @@ class LocalSemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
         # Simple keyword extraction (placeholder for real implementation)
         words = text.lower().split()
         # Remove common stop words
-        stop_words = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "by"}
+        stop_words = {
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "in",
+            "on",
+            "at",
+            "to",
+            "for",
+            "of",
+            "with",
+            "by",
+        }
         keywords = [word for word in words if len(word) > 3 and word not in stop_words]
         # Return unique keywords, limited to top 10
         return list(set(keywords))[:10]
@@ -176,7 +209,9 @@ class LocalSemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
         embedding = []
         for i in range(10):  # 10-dimensional embedding
             # Simple hash-based embedding
-            embedding.append(sum(ord(c) for c in words[i % len(words)] if i < len(words)) / 100.0)
+            embedding.append(
+                sum(ord(c) for c in words[i % len(words)] if i < len(words)) / 100.0
+            )
         return embedding
 
     def _calculate_basic_similarity(self, text1: str, text2: str) -> float:
@@ -193,7 +228,9 @@ class LocalSemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
 
         return intersection / union if union > 0 else 0.0
 
-    def _find_shared_keywords(self, keywords: List[str], compare_text: str) -> List[str]:
+    def _find_shared_keywords(
+        self, keywords: List[str], compare_text: str
+    ) -> List[str]:
         """Find shared keywords between document and comparison text."""
         compare_words = set(compare_text.lower().split())
         return [kw for kw in keywords if kw in compare_words]
@@ -210,7 +247,10 @@ class OpenAISemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
         self.max_tokens = config.openai_max_tokens
 
     async def analyze_semantic_similarity(
-        self, document_text: str, document_id: str, compare_texts: Optional[List[str]] = None
+        self,
+        document_text: str,
+        document_id: str,
+        compare_texts: Optional[List[str]] = None,
     ) -> SemanticAnalysisResult:
         """Analyze semantic similarity using OpenAI."""
         if not self.api_key:
@@ -228,7 +268,9 @@ class OpenAISemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
             if compare_texts:
                 # Compare with other texts using embeddings
                 for i, compare_text in enumerate(compare_texts):
-                    similarity = self._calculate_embedding_similarity(embeddings, compare_text)
+                    similarity = self._calculate_embedding_similarity(
+                        embeddings, compare_text
+                    )
                     if similarity >= 0.8:  # High similarity threshold
                         similar_documents.append(
                             {
@@ -260,7 +302,9 @@ class OpenAISemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
         # Placeholder for OpenAI API call
         return self._extract_openai_keywords(document_text)
 
-    async def cluster_documents(self, documents: List[Dict[str, Any]], num_clusters: int = 5) -> List[Dict[str, Any]]:
+    async def cluster_documents(
+        self, documents: List[Dict[str, Any]], num_clusters: int = 5
+    ) -> List[Dict[str, Any]]:
         """Cluster documents using OpenAI embeddings."""
         if not self.api_key:
             raise SemanticAnalysisException("OpenAI", "API key not configured")
@@ -291,7 +335,9 @@ class OpenAISemanticAnalyzerAdapter(SemanticAnalyzerAdapter):
         words = text.lower().split()
         return list(set(words))[:15]  # Return more keywords for OpenAI
 
-    def _calculate_embedding_similarity(self, embeddings: List[float], compare_text: str) -> float:
+    def _calculate_embedding_similarity(
+        self, embeddings: List[float], compare_text: str
+    ) -> float:
         """Calculate embedding similarity (placeholder)."""
         # This would use cosine similarity on actual embeddings
         return 0.85  # Mock high similarity

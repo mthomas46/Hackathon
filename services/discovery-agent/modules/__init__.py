@@ -35,4 +35,8 @@ def initialize_discovery_agent_client():
 
 
 # Export key module functions for easier importing
-__all__ = ["get_discovery_agent_client", "initialize_discovery_agent_client", "discovery_agent_client"]
+__all__ = [
+    "get_discovery_agent_client",
+    "initialize_discovery_agent_client",
+    "discovery_agent_client",
+]

@@ -40,7 +40,9 @@ class MemoryAgentMonitor:
             status_data = {
                 "health": health_response,
                 "memory_stats": self._calculate_memory_stats(),
-                "recent_items": self._memory_items[-10:] if self._memory_items else [],  # Last 10 items
+                "recent_items": (
+                    self._memory_items[-10:] if self._memory_items else []
+                ),  # Last 10 items
                 "last_updated": utc_now().isoformat(),
             }
 
@@ -93,7 +95,11 @@ class MemoryAgentMonitor:
             return []
 
     async def store_memory_item(
-        self, item_type: str, key: str, value: Any, metadata: Optional[Dict[str, Any]] = None
+        self,
+        item_type: str,
+        key: str,
+        value: Any,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Store a memory item and cache the result."""
         try:
@@ -118,7 +124,11 @@ class MemoryAgentMonitor:
                     "id": f"memory_{utc_now().isoformat()}",
                     "type": item_type,
                     "key": key,
-                    "value": str(value)[:200] + "..." if len(str(value)) > 200 else str(value),
+                    "value": (
+                        str(value)[:200] + "..."
+                        if len(str(value)) > 200
+                        else str(value)
+                    ),
                     "metadata": metadata,
                     "timestamp": utc_now().isoformat(),
                     "response": response,
@@ -129,9 +139,17 @@ class MemoryAgentMonitor:
                 if len(self._memory_items) > 100:
                     self._memory_items = self._memory_items[:100]
 
-                return {"success": True, "item_id": stored_item["id"], "response": response}
+                return {
+                    "success": True,
+                    "item_id": stored_item["id"],
+                    "response": response,
+                }
 
-            return {"success": False, "error": "Failed to store memory item", "response": response}
+            return {
+                "success": False,
+                "error": "Failed to store memory item",
+                "response": response,
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e), "response": None}
@@ -139,7 +157,11 @@ class MemoryAgentMonitor:
     def _calculate_memory_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached memory items."""
         if not self._memory_items:
-            return {"total_items_cached": 0, "unique_types": 0, "most_common_type": None}
+            return {
+                "total_items_cached": 0,
+                "unique_types": 0,
+                "most_common_type": None,
+            }
 
         total = len(self._memory_items)
 
@@ -149,7 +171,9 @@ class MemoryAgentMonitor:
             item_type = item.get("type", "unknown")
             type_counts[item_type] = type_counts.get(item_type, 0) + 1
 
-        most_common_type = max(type_counts.items(), key=lambda x: x[1]) if type_counts else None
+        most_common_type = (
+            max(type_counts.items(), key=lambda x: x[1]) if type_counts else None
+        )
 
         return {
             "total_items_cached": total,

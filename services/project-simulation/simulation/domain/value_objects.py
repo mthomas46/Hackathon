@@ -540,10 +540,14 @@ ECOSYSTEM_SERVICES = [
         description="Document analysis and insights",
     ),
     EcosystemService(
-        name="llm_gateway", endpoint=ServiceEndpoint("http://llm_gateway:5055"), description="AI content generation"
+        name="llm_gateway",
+        endpoint=ServiceEndpoint("http://llm_gateway:5055"),
+        description="AI content generation",
     ),
     EcosystemService(
-        name="orchestrator", endpoint=ServiceEndpoint("http://orchestrator:5000"), description="Workflow orchestration"
+        name="orchestrator",
+        endpoint=ServiceEndpoint("http://orchestrator:5000"),
+        description="Workflow orchestration",
     ),
     EcosystemService(
         name="mock_data_generator",
@@ -556,13 +560,19 @@ ECOSYSTEM_SERVICES = [
         description="Code analysis and documentation",
     ),
     EcosystemService(
-        name="code_analyzer", endpoint=ServiceEndpoint("http://code_analyzer:5025"), description="Code quality analysis"
+        name="code_analyzer",
+        endpoint=ServiceEndpoint("http://code_analyzer:5025"),
+        description="Code quality analysis",
     ),
     EcosystemService(
-        name="github_mcp", endpoint=ServiceEndpoint("http://github_mcp:5085"), description="GitHub integration"
+        name="github_mcp",
+        endpoint=ServiceEndpoint("http://github_mcp:5085"),
+        description="GitHub integration",
     ),
     EcosystemService(
-        name="bedrock_proxy", endpoint=ServiceEndpoint("http://bedrock_proxy:5090"), description="AWS AI services"
+        name="bedrock_proxy",
+        endpoint=ServiceEndpoint("http://bedrock_proxy:5090"),
+        description="AWS AI services",
     ),
     EcosystemService(
         name="summarizer_hub",
@@ -574,12 +584,20 @@ ECOSYSTEM_SERVICES = [
         endpoint=ServiceEndpoint("http://notification_service:5130"),
         description="Event notifications",
     ),
-    EcosystemService(name="frontend", endpoint=ServiceEndpoint("http://frontend:3000"), description="Web interface"),
     EcosystemService(
-        name="discovery_agent", endpoint=ServiceEndpoint("http://discovery_agent:5140"), description="Service discovery"
+        name="frontend",
+        endpoint=ServiceEndpoint("http://frontend:3000"),
+        description="Web interface",
     ),
     EcosystemService(
-        name="log_collector", endpoint=ServiceEndpoint("http://log_collector:5150"), description="Centralized logging"
+        name="discovery_agent",
+        endpoint=ServiceEndpoint("http://discovery_agent:5140"),
+        description="Service discovery",
+    ),
+    EcosystemService(
+        name="log_collector",
+        endpoint=ServiceEndpoint("http://log_collector:5150"),
+        description="Centralized logging",
     ),
     EcosystemService(
         name="redis",
@@ -587,19 +605,29 @@ ECOSYSTEM_SERVICES = [
         health_check_endpoint="PING",
         description="Caching and session storage",
     ),
-    EcosystemService(name="ollama", endpoint=ServiceEndpoint("http://ollama:11434"), description="Local AI models"),
+    EcosystemService(
+        name="ollama",
+        endpoint=ServiceEndpoint("http://ollama:11434"),
+        description="Local AI models",
+    ),
     EcosystemService(
         name="architecture_digitizer",
         endpoint=ServiceEndpoint("http://architecture_digitizer:5160"),
         description="Architecture diagrams",
     ),
     EcosystemService(
-        name="interpreter", endpoint=ServiceEndpoint("http://interpreter:5170"), description="Cross-document analysis"
+        name="interpreter",
+        endpoint=ServiceEndpoint("http://interpreter:5170"),
+        description="Cross-document analysis",
     ),
     EcosystemService(
-        name="memory_agent", endpoint=ServiceEndpoint("http://memory_agent:5180"), description="Context management"
+        name="memory_agent",
+        endpoint=ServiceEndpoint("http://memory_agent:5180"),
+        description="Context management",
     ),
     EcosystemService(
-        name="secure_analyzer", endpoint=ServiceEndpoint("http://secure_analyzer:5190"), description="Security analysis"
+        name="secure_analyzer",
+        endpoint=ServiceEndpoint("http://secure_analyzer:5190"),
+        description="Security analysis",
     ),
 ]

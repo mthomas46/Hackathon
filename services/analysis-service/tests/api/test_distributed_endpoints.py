@@ -33,7 +33,11 @@ class TestDistributedEndpoints:
         """Sample distributed task request for testing."""
         return DistributedTaskRequest(
             task_type="semantic_similarity",
-            data={"document_ids": ["doc-1", "doc-2", "doc-3"], "threshold": 0.8, "options": {"batch_size": 32}},
+            data={
+                "document_ids": ["doc-1", "doc-2", "doc-3"],
+                "threshold": 0.8,
+                "options": {"batch_size": 32},
+            },
             priority="high",
             dependencies=[],
             metadata={"user_id": "user-123", "session_id": "session-456"},
@@ -44,10 +48,22 @@ class TestDistributedEndpoints:
         """Sample batch tasks request for testing."""
         return BatchTasksRequest(
             tasks=[
-                {"task_type": "semantic_similarity", "data": {"document_ids": ["doc-1", "doc-2"]}, "priority": "high"},
-                {"task_type": "sentiment_analysis", "data": {"document_id": "doc-3"}, "priority": "normal"},
+                {
+                    "task_type": "semantic_similarity",
+                    "data": {"document_ids": ["doc-1", "doc-2"]},
+                    "priority": "high",
+                },
+                {
+                    "task_type": "sentiment_analysis",
+                    "data": {"document_id": "doc-3"},
+                    "priority": "normal",
+                },
             ],
-            batch_options={"parallel_execution": True, "max_concurrent": 5, "timeout_seconds": 300},
+            batch_options={
+                "parallel_execution": True,
+                "max_concurrent": 5,
+                "timeout_seconds": 300,
+            },
         )
 
     def test_distributed_endpoints_exist(self, client):
@@ -86,7 +102,9 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.post("/distributed/tasks", json=sample_task_request.dict())
+            response = client.post(
+                "/distributed/tasks", json=sample_task_request.dict()
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -110,7 +128,9 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.post("/distributed/tasks/batch", json=sample_batch_tasks_request.dict())
+            response = client.post(
+                "/distributed/tasks/batch", json=sample_batch_tasks_request.dict()
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -247,7 +267,9 @@ class TestDistributedEndpoints:
     @pytest.mark.asyncio
     async def test_scale_workers_success(self, client):
         """Test successful worker scaling."""
-        scale_request = ScaleWorkersRequest(target_worker_count=8, scaling_reason="high_load", immediate=True)
+        scale_request = ScaleWorkersRequest(
+            target_worker_count=8, scaling_reason="high_load", immediate=True
+        )
 
         with patch(
             "services.analysis_service.presentation.controllers.distributed_controller.distributed_handlers.handle_scale_workers"
@@ -261,7 +283,9 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.post("/distributed/workers/scale", json=scale_request.dict())
+            response = client.post(
+                "/distributed/workers/scale", json=scale_request.dict()
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -305,7 +329,9 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.put("/distributed/load-balancing/strategy", json=strategy_request.dict())
+            response = client.put(
+                "/distributed/load-balancing/strategy", json=strategy_request.dict()
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -320,7 +346,12 @@ class TestDistributedEndpoints:
         ) as mock_handler:
             mock_response = QueueStatusResponse(
                 queue_length=23,
-                priority_distribution={"critical": 2, "high": 5, "normal": 12, "low": 4},
+                priority_distribution={
+                    "critical": 2,
+                    "high": 5,
+                    "normal": 12,
+                    "low": 4,
+                },
                 oldest_task_age_seconds=245.8,
                 queue_efficiency=0.85,
                 processing_rate=7.2,
@@ -341,7 +372,10 @@ class TestDistributedEndpoints:
     async def test_configure_load_balancing_success(self, client):
         """Test successful load balancing configuration."""
         config_request = LoadBalancingConfigRequest(
-            strategy="performance_based", worker_count=6, max_queue_size=100, enable_auto_scaling=True
+            strategy="performance_based",
+            worker_count=6,
+            max_queue_size=100,
+            enable_auto_scaling=True,
         )
 
         with patch(
@@ -357,7 +391,9 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.put("/distributed/load-balancing/config", json=config_request.dict())
+            response = client.put(
+                "/distributed/load-balancing/config", json=config_request.dict()
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -376,7 +412,12 @@ class TestDistributedEndpoints:
                 "worker_count": 7,
                 "max_queue_size": 150,
                 "enable_auto_scaling": True,
-                "auto_scaling_thresholds": {"cpu_high": 80.0, "cpu_low": 30.0, "memory_high": 85.0, "memory_low": 40.0},
+                "auto_scaling_thresholds": {
+                    "cpu_high": 80.0,
+                    "cpu_low": 30.0,
+                    "memory_high": 85.0,
+                    "memory_low": 40.0,
+                },
                 "configured_at": datetime.now(timezone.utc).isoformat(),
             }
             mock_handler.return_value = mock_response
@@ -409,7 +450,9 @@ class TestDistributedEndpoints:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_distributed_endpoints_error_handling(self, client, sample_task_request):
+    async def test_distributed_endpoints_error_handling(
+        self, client, sample_task_request
+    ):
         """Test error handling in distributed endpoints."""
         # Test handler error
         with patch(
@@ -417,7 +460,9 @@ class TestDistributedEndpoints:
         ) as mock_handler:
             mock_handler.side_effect = Exception("Handler error")
 
-            response = client.post("/distributed/tasks", json=sample_task_request.dict())
+            response = client.post(
+                "/distributed/tasks", json=sample_task_request.dict()
+            )
 
             # Should handle error gracefully
             assert response.status_code in [400, 500]
@@ -461,7 +506,10 @@ class TestDistributedEndpoints:
         # Test with very large batch
         large_batch = {
             "tasks": [
-                {"task_type": "semantic_similarity", "data": {"document_ids": [f"doc-{i}" for i in range(100)]}}
+                {
+                    "task_type": "semantic_similarity",
+                    "data": {"document_ids": [f"doc-{i}" for i in range(100)]},
+                }
                 for _ in range(100)  # 100 tasks
             ]
         }
@@ -472,7 +520,9 @@ class TestDistributedEndpoints:
         assert response.status_code in [200, 413, 429]
 
     @pytest.mark.asyncio
-    async def test_distributed_endpoints_metrics_collection(self, client, sample_task_request):
+    async def test_distributed_endpoints_metrics_collection(
+        self, client, sample_task_request
+    ):
         """Test metrics collection in distributed endpoints."""
         with patch(
             "services.analysis_service.presentation.controllers.distributed_controller.distributed_handlers.handle_submit_distributed_task"
@@ -484,7 +534,9 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.post("/distributed/tasks", json=sample_task_request.dict())
+            response = client.post(
+                "/distributed/tasks", json=sample_task_request.dict()
+            )
 
             assert response.status_code == 200
 
@@ -501,7 +553,11 @@ class TestDistributedEndpoints:
 
         # Check for CORS headers
         headers = response.headers
-        cors_headers = ["access-control-allow-origin", "access-control-allow-methods", "access-control-allow-headers"]
+        cors_headers = [
+            "access-control-allow-origin",
+            "access-control-allow-methods",
+            "access-control-allow-headers",
+        ]
 
         for header in cors_headers:
             assert header in headers or header.title() in headers
@@ -515,11 +571,17 @@ class TestDistributedEndpoints:
         with patch(
             "services.analysis_service.presentation.controllers.distributed_controller.distributed_handlers.handle_submit_distributed_task"
         ) as mock_handler:
-            mock_response = {"task_id": "idempotent-task-123", "status": "submitted", "message": "Task submitted"}
+            mock_response = {
+                "task_id": "idempotent-task-123",
+                "status": "submitted",
+                "message": "Task submitted",
+            }
             mock_handler.return_value = mock_response
 
             for i in range(3):
-                response = client.post("/distributed/tasks", json=sample_task_request.dict())
+                response = client.post(
+                    "/distributed/tasks", json=sample_task_request.dict()
+                )
                 responses.append(response)
 
         # All responses should be consistent

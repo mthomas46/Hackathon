@@ -25,7 +25,9 @@ class FallbackStrategy(Enum):
 
     CACHE_FIRST = "cache_first"  # Try cache first, fallback to source
     SOURCE_FIRST = "source_first"  # Try source first, fallback to cache
-    STALE_WHILE_REVALIDATE = "stale_while_revalidate"  # Serve stale data while refreshing
+    STALE_WHILE_REVALIDATE = (
+        "stale_while_revalidate"  # Serve stale data while refreshing
+    )
     DEGRADED_MODE = "degraded_mode"  # Limited functionality mode
     STATIC_FALLBACK = "static_fallback"  # Return static/default data
 
@@ -86,7 +88,13 @@ class CacheFallback:
                 del self._cache[key]
         return None
 
-    def set(self, key: str, data: Any, ttl_seconds: Optional[float] = None, etag: Optional[str] = None) -> None:
+    def set(
+        self,
+        key: str,
+        data: Any,
+        ttl_seconds: Optional[float] = None,
+        etag: Optional[str] = None,
+    ) -> None:
         """Store data in cache."""
         with self._lock:
             # Evict if at capacity (simple LRU-like eviction)
@@ -94,7 +102,9 @@ class CacheFallback:
                 self._evict_lru()
 
             ttl = ttl_seconds or self.default_ttl
-            entry = CacheEntry(data=data, timestamp=time.time(), ttl_seconds=ttl, etag=etag)
+            entry = CacheEntry(
+                data=data, timestamp=time.time(), ttl_seconds=ttl, etag=etag
+            )
             self._cache[key] = entry
 
     def invalidate(self, key: str) -> bool:
@@ -114,7 +124,9 @@ class CacheFallback:
         """Get cache statistics."""
         with self._lock:
             total_entries = len(self._cache)
-            expired_entries = sum(1 for entry in self._cache.values() if self._is_expired(entry))
+            expired_entries = sum(
+                1 for entry in self._cache.values() if self._is_expired(entry)
+            )
             total_accesses = sum(entry.access_count for entry in self._cache.values())
 
             return {
@@ -122,7 +134,8 @@ class CacheFallback:
                 "expired_entries": expired_entries,
                 "active_entries": total_entries - expired_entries,
                 "total_accesses": total_accesses,
-                "hit_rate": total_accesses / max(1, sum(entry.access_count + 1 for entry in self._cache.values())),
+                "hit_rate": total_accesses
+                / max(1, sum(entry.access_count + 1 for entry in self._cache.values())),
             }
 
     def _is_expired(self, entry: CacheEntry) -> bool:
@@ -179,7 +192,9 @@ class ServiceFallback:
         if self.cache_fallback:
             cached_data = self.cache_fallback.get(cache_key)
             if cached_data is not None:
-                return FallbackResult(success=True, data=cached_data, source="cache", degraded=False)
+                return FallbackResult(
+                    success=True, data=cached_data, source="cache", degraded=False
+                )
 
         # Cache miss, try primary then fallbacks
         return await self._try_sources(cache_key)
@@ -203,7 +218,9 @@ class ServiceFallback:
 
         # Return stale data if available
         if stale_data is not None:
-            return FallbackResult(success=True, data=stale_data, source="cache_stale", degraded=True)
+            return FallbackResult(
+                success=True, data=stale_data, source="cache_stale", degraded=True
+            )
 
         # No stale data, try sources
         return await self._try_sources(cache_key)
@@ -218,11 +235,16 @@ class ServiceFallback:
                 source_type = "primary" if i == 0 else f"fallback_{i}"
 
                 # Cache successful result if cache is available
-                if cache_key and self.cache_fallback and i == 0:  # Only cache primary results
+                if (
+                    cache_key and self.cache_fallback and i == 0
+                ):  # Only cache primary results
                     self.cache_fallback.set(cache_key, data)
 
                 return FallbackResult(
-                    success=True, data=data, source=source_type, degraded=i > 0  # Any fallback is considered degraded
+                    success=True,
+                    data=data,
+                    source=source_type,
+                    degraded=i > 0,  # Any fallback is considered degraded
                 )
 
             except Exception as e:
@@ -233,7 +255,9 @@ class ServiceFallback:
                 continue
 
         # All sources failed
-        return FallbackResult(success=False, error="All fallback sources failed", degraded=True)
+        return FallbackResult(
+            success=False, error="All fallback sources failed", degraded=True
+        )
 
     async def _background_revalidate(self, cache_key: str) -> None:
         """Background revalidation for stale-while-revalidate."""
@@ -298,7 +322,9 @@ class FallbackService:
     def __init__(self):
         self._fallbacks: Dict[str, ServiceFallback] = {}
         self._degradation_strategies: Dict[str, DegradationStrategy] = {}
-        self._global_cache = CacheFallback(max_size=5000, default_ttl=600)  # 10 minutes default
+        self._global_cache = CacheFallback(
+            max_size=5000, default_ttl=600
+        )  # 10 minutes default
         self._alert_callbacks: List[Callable[[str, str, Dict[str, Any]], None]] = []
 
     def register_fallback(
@@ -330,14 +356,18 @@ class FallbackService:
     def register_degradation_strategy(self, service_name: str) -> DegradationStrategy:
         """Register a degradation strategy for a service."""
         if service_name not in self._degradation_strategies:
-            self._degradation_strategies[service_name] = DegradationStrategy(service_name)
+            self._degradation_strategies[service_name] = DegradationStrategy(
+                service_name
+            )
 
         return self._degradation_strategies[service_name]
 
     async def execute_with_fallback(self, name: str) -> FallbackResult:
         """Execute a registered fallback."""
         if name not in self._fallbacks:
-            return FallbackResult(success=False, error=f"Fallback '{name}' not registered")
+            return FallbackResult(
+                success=False, error=f"Fallback '{name}' not registered"
+            )
 
         try:
             result = await self._fallbacks[name].execute()
@@ -345,7 +375,12 @@ class FallbackService:
             # Alert on fallback usage
             if result.degraded:
                 await self._trigger_alert(
-                    "degraded_fallback", {"fallback_name": name, "source": result.source, "error": result.error}
+                    "degraded_fallback",
+                    {
+                        "fallback_name": name,
+                        "source": result.source,
+                        "error": result.error,
+                    },
                 )
 
             return result
@@ -354,7 +389,9 @@ class FallbackService:
             logger.error(f"Fallback execution failed for {name}: {e}")
             return FallbackResult(success=False, error=str(e))
 
-    def invalidate_cache(self, fallback_name: Optional[str] = None, key: Optional[str] = None) -> None:
+    def invalidate_cache(
+        self, fallback_name: Optional[str] = None, key: Optional[str] = None
+    ) -> None:
         """Invalidate cache entries."""
         if fallback_name and fallback_name in self._fallbacks:
             cache_key = self._fallbacks[fallback_name].cache_key_func()
@@ -383,7 +420,9 @@ class FallbackService:
             return strategy.is_feature_enabled(feature)
         return True  # Default to enabled if no strategy
 
-    def add_alert_callback(self, callback: Callable[[str, str, Dict[str, Any]], None]) -> None:
+    def add_alert_callback(
+        self, callback: Callable[[str, str, Dict[str, Any]], None]
+    ) -> None:
         """Add callback for fallback alerts."""
         self._alert_callbacks.append(callback)
 
@@ -422,7 +461,10 @@ class FallbackService:
 
     def get_degradation_status(self) -> Dict[str, Any]:
         """Get degradation status for all services."""
-        return {service_name: strategy.get_status() for service_name, strategy in self._degradation_strategies.items()}
+        return {
+            service_name: strategy.get_status()
+            for service_name, strategy in self._degradation_strategies.items()
+        }
 
 
 # Global instance

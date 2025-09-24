@@ -130,11 +130,17 @@ class EventBus(ABC):
     """Abstract event bus interface."""
 
     @abstractmethod
-    async def publish(self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None) -> None:
+    async def publish(
+        self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None
+    ) -> None:
         """Publish an event."""
 
     @abstractmethod
-    async def publish_batch(self, events: List[Union[DomainEvent, EventEnvelope]], topic: Optional[str] = None) -> None:
+    async def publish_batch(
+        self,
+        events: List[Union[DomainEvent, EventEnvelope]],
+        topic: Optional[str] = None,
+    ) -> None:
         """Publish multiple events."""
 
     @abstractmethod
@@ -176,18 +182,25 @@ class EventPublisher:
         if topic is None:
             topic = self._get_default_topic(event)
 
-        envelope = EventEnvelope(event=event, topic=topic, partition_key=partition_key, headers=headers or {})
+        envelope = EventEnvelope(
+            event=event, topic=topic, partition_key=partition_key, headers=headers or {}
+        )
 
         await self.event_bus.publish(envelope)
 
     async def publish_events_batch(
-        self, events: List[DomainEvent], topic: Optional[str] = None, partition_key: Optional[str] = None
+        self,
+        events: List[DomainEvent],
+        topic: Optional[str] = None,
+        partition_key: Optional[str] = None,
     ) -> None:
         """Publish multiple events."""
         envelopes = []
         for event in events:
             event_topic = topic or self._get_default_topic(event)
-            envelope = EventEnvelope(event=event, topic=event_topic, partition_key=partition_key)
+            envelope = EventEnvelope(
+                event=event, topic=event_topic, partition_key=partition_key
+            )
             envelopes.append(envelope)
 
         await self.event_bus.publish_batch(envelopes, topic)
@@ -223,7 +236,11 @@ class EventSubscriber:
         self.handlers: Dict[str, List[Callable]] = {}
 
     async def subscribe_to_topic(
-        self, topic: str, handler: Callable, event_types: Optional[List[EventType]] = None, **kwargs
+        self,
+        topic: str,
+        handler: Callable,
+        event_types: Optional[List[EventType]] = None,
+        **kwargs,
     ) -> None:
         """Subscribe to a topic with optional event type filtering."""
 
@@ -239,7 +256,11 @@ class EventSubscriber:
         self.handlers[topic].append(handler)
 
     async def subscribe_to_event_type(
-        self, event_type: EventType, handler: Callable, topic: Optional[str] = None, **kwargs
+        self,
+        event_type: EventType,
+        handler: Callable,
+        topic: Optional[str] = None,
+        **kwargs,
     ) -> None:
         """Subscribe to specific event types."""
         if topic is None:
@@ -294,7 +315,10 @@ class EventPublishingService(ApplicationService):
         self.dead_letter_count = 0
 
     async def publish_event(
-        self, event: DomainEvent, topic: Optional[str] = None, context: Optional[ServiceContext] = None
+        self,
+        event: DomainEvent,
+        topic: Optional[str] = None,
+        context: Optional[ServiceContext] = None,
     ) -> None:
         """Publish an event with retry logic."""
         async with self.operation_context("publish_event", context):
@@ -317,7 +341,11 @@ class EventPublishingService(ApplicationService):
                 self.logger.error(
                     f"Failed to publish event: {event.event_type.value}",
                     exc_info=True,
-                    extra={"event_id": event.event_id, "event_type": event.event_type.value, "error": str(e)},
+                    extra={
+                        "event_id": event.event_id,
+                        "event_type": event.event_type.value,
+                        "error": str(e),
+                    },
                 )
 
                 # Send to dead letter queue if available
@@ -327,7 +355,10 @@ class EventPublishingService(ApplicationService):
                     raise
 
     async def publish_events_batch(
-        self, events: List[DomainEvent], topic: Optional[str] = None, context: Optional[ServiceContext] = None
+        self,
+        events: List[DomainEvent],
+        topic: Optional[str] = None,
+        context: Optional[ServiceContext] = None,
     ) -> None:
         """Publish multiple events with batch processing."""
         async with self.operation_context("publish_events_batch", context):
@@ -340,7 +371,9 @@ class EventPublishingService(ApplicationService):
                     extra={
                         "event_count": len(events),
                         "topic": topic,
-                        "event_types": [e.event_type.value for e in events[:5]],  # First 5 for logging
+                        "event_types": [
+                            e.event_type.value for e in events[:5]
+                        ],  # First 5 for logging
                     },
                 )
 
@@ -366,7 +399,12 @@ class EventPublishingService(ApplicationService):
 
             self.logger.info(
                 f"Subscribed to events on topic: {topic}",
-                extra={"topic": topic, "event_types": [et.value for et in event_types] if event_types else None},
+                extra={
+                    "topic": topic,
+                    "event_types": (
+                        [et.value for et in event_types] if event_types else None
+                    ),
+                },
             )
 
     async def subscribe_to_event_type(
@@ -381,7 +419,8 @@ class EventPublishingService(ApplicationService):
             await self.subscriber.subscribe_to_event_type(event_type, handler, topic)
 
             self.logger.info(
-                f"Subscribed to event type: {event_type.value}", extra={"event_type": event_type.value, "topic": topic}
+                f"Subscribed to event type: {event_type.value}",
+                extra={"event_type": event_type.value, "topic": topic},
             )
 
     async def _send_to_dead_letter_queue(self, event: DomainEvent, error: str) -> None:
@@ -393,10 +432,16 @@ class EventPublishingService(ApplicationService):
 
                 self.logger.warning(
                     f"Event sent to dead letter queue: {event.event_type.value}",
-                    extra={"event_id": event.event_id, "event_type": event.event_type.value, "error": error},
+                    extra={
+                        "event_id": event.event_id,
+                        "event_type": event.event_type.value,
+                        "error": error,
+                    },
                 )
         except Exception as dlq_error:
-            self.logger.error(f"Failed to send event to dead letter queue: {dlq_error}", exc_info=True)
+            self.logger.error(
+                f"Failed to send event to dead letter queue: {dlq_error}", exc_info=True
+            )
 
     async def get_statistics(self) -> Dict[str, Any]:
         """Get event publishing statistics."""
@@ -406,7 +451,10 @@ class EventPublishingService(ApplicationService):
             "events_retried": self.events_retried,
             "dead_letter_count": self.dead_letter_count,
             "subscription_count": self.subscriber.get_subscription_count(),
-            "success_rate": (self.events_published / max(1, self.events_published + self.events_failed)),
+            "success_rate": (
+                self.events_published
+                / max(1, self.events_published + self.events_failed)
+            ),
         }
 
     async def health_check(self) -> Dict[str, Any]:

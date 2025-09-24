@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import BulkDocumentItem, BulkOperation
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from .repository import BulkOperationsRepository
 
 
@@ -16,7 +16,9 @@ class BulkOperationsService(BaseService[BulkOperation]):
     """Service for bulk operations business logic."""
 
     def __init__(self):
-        super().__init__(BulkOperationsRepository())
+        from ...db.connection import get_document_connection_string
+
+        super().__init__(BulkOperationsRepository(get_document_connection_string()))
         self._executor = ThreadPoolExecutor(max_workers=4)
 
     def _validate_entity(self, entity: BulkOperation) -> None:
@@ -27,11 +29,18 @@ class BulkOperationsService(BaseService[BulkOperation]):
         if entity.total_items <= 0:
             raise ValueError("Total items must be positive")
 
-        valid_types = ["create_documents", "search_documents", "tag_documents", "delete_documents"]
+        valid_types = [
+            "create_documents",
+            "search_documents",
+            "tag_documents",
+            "delete_documents",
+        ]
         if entity.operation_type not in valid_types:
             raise ValueError(f"Invalid operation type: {entity.operation_type}")
 
-    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> BulkOperation:
+    def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> BulkOperation:
         """Create bulk operation from data."""
         return BulkOperation(
             operation_id=entity_id,
@@ -41,23 +50,34 @@ class BulkOperationsService(BaseService[BulkOperation]):
         )
 
     def create_bulk_operation(
-        self, operation_type: str, items: List[Any], metadata: Optional[Dict[str, Any]] = None
+        self,
+        operation_type: str,
+        items: List[Any],
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> BulkOperation:
         """Create a new bulk operation."""
-        data = {"operation_type": operation_type, "total_items": len(items), "metadata": metadata or {}}
+        data = {
+            "operation_type": operation_type,
+            "total_items": len(items),
+            "metadata": metadata or {},
+        }
 
         operation = self.create_entity(data)
 
         # Start processing asynchronously (only if event loop is running)
         try:
-            asyncio.create_task(self._process_operation_async(operation.operation_id, items))
+            asyncio.create_task(
+                self._process_operation_async(operation.operation_id, items)
+            )
         except RuntimeError:
             # No event loop running (e.g., in tests), skip async processing
             pass
 
         return operation
 
-    async def _process_operation_async(self, operation_id: str, items: List[Any]) -> None:
+    async def _process_operation_async(
+        self, operation_id: str, items: List[Any]
+    ) -> None:
         """Process operation asynchronously."""
         try:
             # Update status to processing
@@ -82,7 +102,9 @@ class BulkOperationsService(BaseService[BulkOperation]):
             # Mark operation as failed
             self.repository.fail_operation(operation_id, [{"error": str(e)}])
 
-    async def _process_document_creation(self, operation_id: str, items: List[BulkDocumentItem]) -> None:
+    async def _process_document_creation(
+        self, operation_id: str, items: List[BulkDocumentItem]
+    ) -> None:
         """Process bulk document creation."""
         from ...domain.documents.service import DocumentService
 
@@ -106,17 +128,25 @@ class BulkOperationsService(BaseService[BulkOperation]):
 
                 # Update progress periodically
                 if (i + 1) % 10 == 0:
-                    self.repository.update_operation_progress(operation_id, i + 1, successful, failed, errors)
+                    self.repository.update_operation_progress(
+                        operation_id, i + 1, successful, failed, errors
+                    )
 
             except Exception as e:
                 failed += 1
                 errors.append({"item_index": i, "item_id": item.id, "error": str(e)})
 
         # Complete operation
-        results = {"successful": successful, "failed": failed, "total_processed": len(items)}
+        results = {
+            "successful": successful,
+            "failed": failed,
+            "total_processed": len(items),
+        }
         self.repository.complete_operation(operation_id, [results])
 
-    async def _process_document_search(self, operation_id: str, queries: List[str]) -> None:
+    async def _process_document_search(
+        self, operation_id: str, queries: List[str]
+    ) -> None:
         """Process bulk document search."""
         from ...domain.search.handlers import SearchHandlers
 
@@ -130,8 +160,15 @@ class BulkOperationsService(BaseService[BulkOperation]):
         for i, query in enumerate(queries):
             try:
                 # Perform search
-                search_result = await search_handlers.handle_search_documents(query, limit=50)
-                results.append({"query": query, "results": search_result.get("data", {}).get("items", [])})
+                search_result = await search_handlers.handle_search_documents(
+                    query, limit=50
+                )
+                results.append(
+                    {
+                        "query": query,
+                        "results": search_result.get("data", {}).get("items", []),
+                    }
+                )
                 successful += 1
 
             except Exception as e:
@@ -139,18 +176,33 @@ class BulkOperationsService(BaseService[BulkOperation]):
                 errors.append({"query_index": i, "query": query, "error": str(e)})
 
         # Complete operation
-        summary = {"queries_processed": len(queries), "successful": successful, "failed": failed, "results": results}
+        summary = {
+            "queries_processed": len(queries),
+            "successful": successful,
+            "failed": failed,
+            "results": results,
+        }
         self.repository.complete_operation(operation_id, [summary])
 
-    async def _process_document_tagging(self, operation_id: str, document_ids: List[str]) -> None:
+    async def _process_document_tagging(
+        self, operation_id: str, document_ids: List[str]
+    ) -> None:
         """Process bulk document tagging."""
         # This would integrate with the tagging domain when it's implemented
         # For now, just mark as completed
         self.repository.complete_operation(
-            operation_id, [{"message": "Bulk tagging not yet implemented", "document_ids": document_ids}]
+            operation_id,
+            [
+                {
+                    "message": "Bulk tagging not yet implemented",
+                    "document_ids": document_ids,
+                }
+            ],
         )
 
-    async def _process_document_deletion(self, operation_id: str, document_ids: List[str]) -> None:
+    async def _process_document_deletion(
+        self, operation_id: str, document_ids: List[str]
+    ) -> None:
         """Process bulk document deletion."""
         from ...domain.documents.service import DocumentService
 
@@ -170,7 +222,11 @@ class BulkOperationsService(BaseService[BulkOperation]):
                 errors.append({"document_id": doc_id, "error": str(e)})
 
         # Complete operation
-        results = {"successful": successful, "failed": failed, "total_processed": len(document_ids)}
+        results = {
+            "successful": successful,
+            "failed": failed,
+            "total_processed": len(document_ids),
+        }
         self.repository.complete_operation(operation_id, [results])
 
     def get_operation_status(self, operation_id: str) -> Optional[BulkOperation]:
@@ -186,7 +242,9 @@ class BulkOperationsService(BaseService[BulkOperation]):
         self.repository.cancel_operation(operation_id)
         return True
 
-    def list_operations(self, status: Optional[str] = None, limit: int = 50) -> Dict[str, Any]:
+    def list_operations(
+        self, status: Optional[str] = None, limit: int = 50
+    ) -> Dict[str, Any]:
         """List bulk operations."""
         if status:
             operations = self.repository.get_operations_by_status(status, limit)

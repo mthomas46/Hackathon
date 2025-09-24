@@ -6,7 +6,7 @@ Handles document versioning and history management.
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import DocumentVersion
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from .repository import VersioningRepository
 
 
@@ -14,7 +14,9 @@ class VersioningService(BaseService[DocumentVersion]):
     """Service for versioning business logic."""
 
     def __init__(self):
-        super().__init__(VersioningRepository())
+        from ...db.connection import get_document_connection_string
+
+        super().__init__(VersioningRepository(get_document_connection_string()))
 
     def _validate_entity(self, entity: DocumentVersion) -> None:
         """Validate document version."""
@@ -30,7 +32,9 @@ class VersioningService(BaseService[DocumentVersion]):
         if not entity.content_hash:
             raise ValueError("Content hash is required")
 
-    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> DocumentVersion:
+    def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> DocumentVersion:
         """Create document version from data."""
         return DocumentVersion(
             id=entity_id,
@@ -60,9 +64,13 @@ class VersioningService(BaseService[DocumentVersion]):
         if not content_hash:
             raise ValueError("Content hash is required")
 
-        return self.repository.create_version(document_id, content, content_hash, metadata, change_summary, changed_by)
+        return self.repository.create_version(
+            document_id, content, content_hash, metadata, change_summary, changed_by
+        )
 
-    def get_document_versions(self, document_id: str, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+    def get_document_versions(
+        self, document_id: str, limit: int = 50, offset: int = 0
+    ) -> Dict[str, Any]:
         """Get version history for a document."""
         versions = self.repository.get_versions_for_document(document_id, limit, offset)
 
@@ -75,11 +83,15 @@ class VersioningService(BaseService[DocumentVersion]):
             "latest_version": max((v.version_number for v in versions), default=0),
         }
 
-    def get_document_version(self, document_id: str, version_number: int) -> Optional[DocumentVersion]:
+    def get_document_version(
+        self, document_id: str, version_number: int
+    ) -> Optional[DocumentVersion]:
         """Get a specific version of a document."""
         return self.repository.get_version_by_number(document_id, version_number)
 
-    def compare_versions(self, document_id: str, version_a: int, version_b: int) -> Dict[str, Any]:
+    def compare_versions(
+        self, document_id: str, version_a: int, version_b: int
+    ) -> Dict[str, Any]:
         """Compare two versions of a document."""
         if version_a == version_b:
             raise ValueError("Cannot compare a version with itself")
@@ -91,9 +103,13 @@ class VersioningService(BaseService[DocumentVersion]):
     ) -> DocumentVersion:
         """Rollback a document to a previous version."""
         # Get the target version
-        target_version = self.repository.get_version_by_number(document_id, version_number)
+        target_version = self.repository.get_version_by_number(
+            document_id, version_number
+        )
         if not target_version:
-            raise ValueError(f"Version {version_number} not found for document {document_id}")
+            raise ValueError(
+                f"Version {version_number} not found for document {document_id}"
+            )
 
         # Update the current document (this would be handled by document service)
         # For now, just create a new version that represents the rollback
@@ -108,7 +124,9 @@ class VersioningService(BaseService[DocumentVersion]):
 
         return rollback_version
 
-    def cleanup_versions(self, document_id: str, keep_versions: int = 10) -> Dict[str, Any]:
+    def cleanup_versions(
+        self, document_id: str, keep_versions: int = 10
+    ) -> Dict[str, Any]:
         """Clean up old versions for a document."""
         if keep_versions < 1:
             raise ValueError("Must keep at least 1 version")
@@ -139,7 +157,9 @@ class VersioningService(BaseService[DocumentVersion]):
         """Get comprehensive versioning statistics."""
         return self.repository.get_version_stats()
 
-    def get_version_changes(self, document_id: str, since_version: int = 1) -> List[Dict[str, Any]]:
+    def get_version_changes(
+        self, document_id: str, since_version: int = 1
+    ) -> List[Dict[str, Any]]:
         """Get changes between versions."""
         versions = self.repository.get_versions_for_document(document_id, limit=100)
         versions_dict = {v.version_number: v for v in versions}

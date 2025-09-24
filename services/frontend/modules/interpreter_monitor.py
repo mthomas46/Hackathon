@@ -26,7 +26,9 @@ class InterpreterMonitor:
             return False
         return (utc_now() - cache_time).total_seconds() < self._cache_ttl
 
-    async def get_interpreter_status(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_interpreter_status(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get comprehensive interpreter service status."""
         if not force_refresh and self.is_cache_fresh("status"):
             return getattr(self, "_status_cache", {})
@@ -47,7 +49,9 @@ class InterpreterMonitor:
                 "recent_interpretations": (
                     self._interpretations[-10:] if self._interpretations else []
                 ),  # Last 10 interpretations
-                "recent_executions": self._executions[-10:] if self._executions else [],  # Last 10 executions
+                "recent_executions": (
+                    self._executions[-10:] if self._executions else []
+                ),  # Last 10 executions
                 "last_updated": utc_now().isoformat(),
             }
 
@@ -81,7 +85,10 @@ class InterpreterMonitor:
             return []
 
     async def interpret_query(
-        self, query: str, session_id: Optional[str] = None, user_id: Optional[str] = None
+        self,
+        query: str,
+        session_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Interpret a natural language query and cache the result."""
         try:
@@ -126,13 +133,20 @@ class InterpreterMonitor:
                     "response": response,
                 }
 
-            return {"success": False, "error": "Interpretation failed", "response": response}
+            return {
+                "success": False,
+                "error": "Interpretation failed",
+                "response": response,
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e), "response": None}
 
     async def execute_workflow(
-        self, query: str, session_id: Optional[str] = None, user_id: Optional[str] = None
+        self,
+        query: str,
+        session_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Execute a workflow from a natural language query and cache the result."""
         try:
@@ -181,10 +195,17 @@ class InterpreterMonitor:
     def _calculate_interpretation_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached interpretations."""
         if not self._interpretations:
-            return {"total_interpretations": 0, "average_confidence": 0, "unique_intents": 0, "intents_detected": []}
+            return {
+                "total_interpretations": 0,
+                "average_confidence": 0,
+                "unique_intents": 0,
+                "intents_detected": [],
+            }
 
         total = len(self._interpretations)
-        avg_confidence = sum(interp.get("confidence", 0) for interp in self._interpretations) / total
+        avg_confidence = (
+            sum(interp.get("confidence", 0) for interp in self._interpretations) / total
+        )
 
         # Unique intents
         intents = set()
@@ -215,10 +236,18 @@ class InterpreterMonitor:
         failed = total - successful
 
         # Calculate averages
-        execution_times = [exec.get("execution_time", 0) for exec in self._executions if exec.get("execution_time")]
-        avg_execution_time = sum(execution_times) / len(execution_times) if execution_times else 0
+        execution_times = [
+            exec.get("execution_time", 0)
+            for exec in self._executions
+            if exec.get("execution_time")
+        ]
+        avg_execution_time = (
+            sum(execution_times) / len(execution_times) if execution_times else 0
+        )
 
-        avg_steps = sum(exec.get("steps_completed", 0) for exec in self._executions) / total
+        avg_steps = (
+            sum(exec.get("steps_completed", 0) for exec in self._executions) / total
+        )
 
         return {
             "total_executions": total,

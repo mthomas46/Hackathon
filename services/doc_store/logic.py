@@ -6,7 +6,9 @@ from typing import Any, Dict, List, Tuple
 
 
 def compute_quality_flags(
-    rows: List[Tuple[str, str, str, str]], stale_threshold_days: int = 180, min_views: int = 3
+    rows: List[Tuple[str, str, str, str]],
+    stale_threshold_days: int = 180,
+    min_views: int = 3,
 ) -> List[Dict[str, Any]]:
     now = datetime.now(timezone.utc)
     # rows: (id, content_hash, metadata_json, created_at)
@@ -54,7 +56,9 @@ def compute_quality_flags(
         owner = meta.get("owner") if isinstance(meta, dict) else None
         labels = meta.get("labels") if isinstance(meta, dict) else None
         attachments = meta.get("attachments") if isinstance(meta, dict) else None
-        attachments_referenced_by = meta.get("attachments_referenced_by") if isinstance(meta, dict) else None
+        attachments_referenced_by = (
+            meta.get("attachments_referenced_by") if isinstance(meta, dict) else None
+        )
         content_length = meta.get("content_length") if isinstance(meta, dict) else None
         if isinstance(views, int) and views < min_views:
             flags.append("low_views")
@@ -63,7 +67,9 @@ def compute_quality_flags(
         # Confluence label entropy heuristic: penalize very generic labels
         GENERIC = {"documentation", "misc", "general", "notes"}
         try:
-            if isinstance(labels, list) and any(str(l).lower() in GENERIC for l in labels):
+            if isinstance(labels, list) and any(
+                str(l).lower() in GENERIC for l in labels
+            ):
                 flags.append("generic_labels")
         except Exception:
             pass
@@ -71,7 +77,10 @@ def compute_quality_flags(
         try:
             if isinstance(attachments, int) and attachments > 0:
                 flags.append("has_attachments")
-            if isinstance(attachments_referenced_by, int) and attachments_referenced_by > 0:
+            if (
+                isinstance(attachments_referenced_by, int)
+                and attachments_referenced_by > 0
+            ):
                 flags.append("attachments_referenced")
         except Exception:
             pass
@@ -87,14 +96,20 @@ def compute_quality_flags(
             v = int(views or 0)
             uv = int(unique_views or 0)
             w = int(watchers or 0)
-            importance_score = min(1.0, (v / 100.0) * 0.5 + (uv / 50.0) * 0.3 + (w / 10.0) * 0.2)
+            importance_score = min(
+                1.0, (v / 100.0) * 0.5 + (uv / 50.0) * 0.3 + (w / 10.0) * 0.2
+            )
             if importance_score >= 0.5:
                 flags.append("high_importance")
         except Exception:
             pass
         # Backlinks: stronger orphan when zero inbound refs
         backlinks = meta.get("backlinks") if isinstance(meta, dict) else None
-        if isinstance(backlinks, int) and backlinks == 0 and "orphan_candidate" not in flags:
+        if (
+            isinstance(backlinks, int)
+            and backlinks == 0
+            and "orphan_candidate" not in flags
+        ):
             flags.append("orphan_candidate")
         out.append(
             {

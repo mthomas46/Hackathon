@@ -54,7 +54,11 @@ class ProviderRouter:
             "ollama": {
                 "name": "ollama",
                 "type": "local",
-                "endpoint": get_config_value("OLLAMA_ENDPOINT", "http://ollama-consistency:11434", section="ollama"),
+                "endpoint": get_config_value(
+                    "OLLAMA_ENDPOINT",
+                    "http://ollama-consistency:11434",
+                    section="ollama",
+                ),
                 "model": get_config_value("OLLAMA_MODEL", "llama3", section="ollama"),
                 "timeout": 60,
                 "cost_per_token": 0.0,  # Free for local
@@ -75,8 +79,12 @@ class ProviderRouter:
             "anthropic": {
                 "name": "anthropic",
                 "type": "cloud",
-                "api_key": get_config_value("ANTHROPIC_API_KEY", "", section="anthropic"),
-                "model": get_config_value("ANTHROPIC_MODEL", "claude-3.5-sonnet", section="anthropic"),
+                "api_key": get_config_value(
+                    "ANTHROPIC_API_KEY", "", section="anthropic"
+                ),
+                "model": get_config_value(
+                    "ANTHROPIC_MODEL", "claude-3.5-sonnet", section="anthropic"
+                ),
                 "endpoint": "https://api.anthropic.com/v1/messages",
                 "timeout": 30,
                 "cost_per_token": 0.000015,  # Approximate for Claude
@@ -87,7 +95,9 @@ class ProviderRouter:
                 "name": "bedrock",
                 "type": "cloud",
                 "model": get_config_value(
-                    "BEDROCK_MODEL", "anthropic.claude-3-sonnet-20240229-v1:0", section="bedrock"
+                    "BEDROCK_MODEL",
+                    "anthropic.claude-3-sonnet-20240229-v1:0",
+                    section="bedrock",
                 ),
                 "endpoint": get_config_value("BEDROCK_ENDPOINT", "", section="bedrock"),
                 "timeout": 60,
@@ -116,14 +126,19 @@ class ProviderRouter:
 
             if not selected_provider:
                 return ProviderResponse(
-                    response="", provider="none", success=False, error="No suitable provider available"
+                    response="",
+                    provider="none",
+                    success=False,
+                    error="No suitable provider available",
                 )
 
             # Execute request with selected provider
             return await self._execute_with_provider(request, selected_provider)
 
         except Exception as e:
-            return ProviderResponse(response="", provider="error", success=False, error=str(e))
+            return ProviderResponse(
+                response="", provider="error", success=False, error=str(e)
+            )
 
     async def _select_provider(self, request) -> Optional[Dict[str, Any]]:
         """Select the optimal provider for the request."""
@@ -148,21 +163,36 @@ class ProviderRouter:
         # Check for sensitive content (simplified)
         is_sensitive = any(
             keyword in content.lower()
-            for keyword in ["password", "secret", "token", "key", "credential", "confidential"]
+            for keyword in [
+                "password",
+                "secret",
+                "token",
+                "key",
+                "credential",
+                "confidential",
+            ]
         )
 
         if is_sensitive:
             # Prefer secure providers for sensitive content
-            secure_providers = [p for p in available_providers.values() if p.get("security_level") == "high"]
+            secure_providers = [
+                p
+                for p in available_providers.values()
+                if p.get("security_level") == "high"
+            ]
             if secure_providers:
                 return secure_providers[0]
 
         # Cost optimization: prefer cheaper providers for non-critical requests
-        sorted_providers = sorted(available_providers.values(), key=lambda x: x.get("cost_per_token", 0))
+        sorted_providers = sorted(
+            available_providers.values(), key=lambda x: x.get("cost_per_token", 0)
+        )
 
         return sorted_providers[0] if sorted_providers else None
 
-    async def _execute_with_provider(self, request, provider_config: Dict[str, Any]) -> ProviderResponse:
+    async def _execute_with_provider(
+        self, request, provider_config: Dict[str, Any]
+    ) -> ProviderResponse:
         """Execute LLM request with specific provider."""
         provider_name = provider_config["name"]
 
@@ -179,17 +209,28 @@ class ProviderRouter:
                 return await self._execute_grok(request, provider_config)
             else:
                 return ProviderResponse(
-                    response="", provider=provider_name, success=False, error=f"Unsupported provider: {provider_name}"
+                    response="",
+                    provider=provider_name,
+                    success=False,
+                    error=f"Unsupported provider: {provider_name}",
                 )
 
         except Exception as e:
-            return ProviderResponse(response="", provider=provider_name, success=False, error=str(e))
+            return ProviderResponse(
+                response="", provider=provider_name, success=False, error=str(e)
+            )
 
-    async def _execute_ollama(self, request, provider_config: Dict[str, Any]) -> ProviderResponse:
+    async def _execute_ollama(
+        self, request, provider_config: Dict[str, Any]
+    ) -> ProviderResponse:
         """Execute request with Ollama."""
         url = f"{provider_config['endpoint']}/api/generate"
 
-        payload = {"model": provider_config["model"], "prompt": getattr(request, "prompt", ""), "stream": False}
+        payload = {
+            "model": provider_config["model"],
+            "prompt": getattr(request, "prompt", ""),
+            "stream": False,
+        }
 
         # Add context if provided
         if hasattr(request, "context") and request.context:
@@ -212,9 +253,14 @@ class ProviderRouter:
             success=True,
         )
 
-    async def _execute_openai(self, request, provider_config: Dict[str, Any]) -> ProviderResponse:
+    async def _execute_openai(
+        self, request, provider_config: Dict[str, Any]
+    ) -> ProviderResponse:
         """Execute request with OpenAI."""
-        headers = {"Authorization": f"Bearer {provider_config['api_key']}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {provider_config['api_key']}",
+            "Content-Type": "application/json",
+        }
 
         messages = []
         if hasattr(request, "context") and request.context:
@@ -229,7 +275,9 @@ class ProviderRouter:
         }
 
         async with httpx.AsyncClient(timeout=provider_config["timeout"]) as client:
-            response = await client.post(provider_config["endpoint"], json=payload, headers=headers)
+            response = await client.post(
+                provider_config["endpoint"], json=payload, headers=headers
+            )
             response.raise_for_status()
             data = response.json()
 
@@ -241,10 +289,16 @@ class ProviderRouter:
         cost = tokens_used * provider_config["cost_per_token"]
 
         return ProviderResponse(
-            response=response_text, provider="openai", tokens_used=tokens_used, cost=cost, success=True
+            response=response_text,
+            provider="openai",
+            tokens_used=tokens_used,
+            cost=cost,
+            success=True,
         )
 
-    async def _execute_anthropic(self, request, provider_config: Dict[str, Any]) -> ProviderResponse:
+    async def _execute_anthropic(
+        self, request, provider_config: Dict[str, Any]
+    ) -> ProviderResponse:
         """Execute request with Anthropic."""
         headers = {
             "x-api-key": provider_config["api_key"],
@@ -252,7 +306,9 @@ class ProviderRouter:
             "anthropic-version": "2023-06-01",
         }
 
-        system_prompt = getattr(request, "context", "") or "You are a helpful assistant."
+        system_prompt = (
+            getattr(request, "context", "") or "You are a helpful assistant."
+        )
         user_prompt = request.prompt
 
         payload = {
@@ -263,21 +319,31 @@ class ProviderRouter:
         }
 
         async with httpx.AsyncClient(timeout=provider_config["timeout"]) as client:
-            response = await client.post(provider_config["endpoint"], json=payload, headers=headers)
+            response = await client.post(
+                provider_config["endpoint"], json=payload, headers=headers
+            )
             response.raise_for_status()
             data = response.json()
 
         response_text = data["content"][0]["text"] if data.get("content") else ""
 
         # Calculate approximate cost
-        tokens_used = data.get("usage", {}).get("input_tokens", 0) + data.get("usage", {}).get("output_tokens", 0)
+        tokens_used = data.get("usage", {}).get("input_tokens", 0) + data.get(
+            "usage", {}
+        ).get("output_tokens", 0)
         cost = tokens_used * provider_config["cost_per_token"]
 
         return ProviderResponse(
-            response=response_text, provider="anthropic", tokens_used=tokens_used, cost=cost, success=True
+            response=response_text,
+            provider="anthropic",
+            tokens_used=tokens_used,
+            cost=cost,
+            success=True,
         )
 
-    async def _execute_bedrock(self, request, provider_config: Dict[str, Any]) -> ProviderResponse:
+    async def _execute_bedrock(
+        self, request, provider_config: Dict[str, Any]
+    ) -> ProviderResponse:
         """Execute request with AWS Bedrock."""
         # Use existing bedrock proxy service
         bedrock_payload = {
@@ -290,7 +356,9 @@ class ProviderRouter:
             bedrock_payload["system"] = request.context
 
         # Route through bedrock proxy
-        response = await self.client.post_json("http://bedrock-proxy:7090/invoke", bedrock_payload)
+        response = await self.client.post_json(
+            "http://bedrock-proxy:7090/invoke", bedrock_payload
+        )
 
         if response.get("success"):
             return ProviderResponse(
@@ -302,10 +370,15 @@ class ProviderRouter:
             )
         else:
             return ProviderResponse(
-                response="", provider="bedrock", success=False, error=response.get("error", "Bedrock request failed")
+                response="",
+                provider="bedrock",
+                success=False,
+                error=response.get("error", "Bedrock request failed"),
             )
 
-    async def _execute_grok(self, request, provider_config: Dict[str, Any]) -> ProviderResponse:
+    async def _execute_grok(
+        self, request, provider_config: Dict[str, Any]
+    ) -> ProviderResponse:
         """Execute request with Grok (placeholder)."""
         # Placeholder implementation
         return ProviderResponse(
@@ -325,7 +398,9 @@ class ProviderRouter:
 
         return available
 
-    async def _check_provider_availability(self, provider_config: Dict[str, Any]) -> bool:
+    async def _check_provider_availability(
+        self, provider_config: Dict[str, Any]
+    ) -> bool:
         """Check if a provider is available and properly configured."""
         try:
             provider_name = provider_config["name"]
@@ -344,7 +419,9 @@ class ProviderRouter:
             elif provider_name == "bedrock":
                 # Check if bedrock proxy is available
                 try:
-                    response = await self.client.get_json("http://bedrock-proxy:7090/health")
+                    response = await self.client.get_json(
+                        "http://bedrock-proxy:7090/health"
+                    )
                     return response.get("status") == "healthy"
                 except Exception:
                     return False
@@ -394,7 +471,9 @@ class ProviderRouter:
 
         return health_status
 
-    async def generate_embeddings(self, text: str, model: str, provider: str) -> List[float]:
+    async def generate_embeddings(
+        self, text: str, model: str, provider: str
+    ) -> List[float]:
         """Generate embeddings for text (placeholder)."""
         # This would integrate with embedding providers
         # For now, return a mock embedding
@@ -402,7 +481,9 @@ class ProviderRouter:
 
         hash_obj = hashlib.sha256(text.encode())
         # Convert hash to list of floats (mock implementation)
-        embedding = [int(hash_obj.hexdigest()[i : i + 2], 16) / 255.0 for i in range(0, 32, 2)]
+        embedding = [
+            int(hash_obj.hexdigest()[i : i + 2], 16) / 255.0 for i in range(0, 32, 2)
+        ]
         return embedding
 
     async def stream_response(self, request):

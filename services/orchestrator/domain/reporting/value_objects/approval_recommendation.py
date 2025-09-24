@@ -7,7 +7,9 @@ class ApprovalRecommendation(Enum):
     """Enumeration of approval recommendations."""
 
     APPROVE = "approve"  # Ready for approval
-    APPROVE_WITH_CONDITIONS = "approve_with_conditions"  # Approve with specific requirements
+    APPROVE_WITH_CONDITIONS = (
+        "approve_with_conditions"  # Approve with specific requirements
+    )
     REVIEW_REQUIRED = "review_required"  # Requires additional review
     REJECT = "reject"  # Should not be approved
     ESCALATE = "escalate"  # Requires higher-level review

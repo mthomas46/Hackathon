@@ -49,41 +49,59 @@ class EnterpriseEcosystemInitializer:
         }
 
         try:
-            fire_and_forget("info", "🚀 Starting enterprise ecosystem initialization", "enterprise_initializer")
+            fire_and_forget(
+                "info",
+                "🚀 Starting enterprise ecosystem initialization",
+                "enterprise_initializer",
+            )
 
             # 1. Initialize Enterprise Error Handling
             await self._initialize_component(
-                "enterprise_error_handling", self._init_enterprise_error_handling, initialization_results
+                "enterprise_error_handling",
+                self._init_enterprise_error_handling,
+                initialization_results,
             )
 
             # 2. Initialize Intelligent Caching
             await self._initialize_component(
-                "intelligent_caching", self._init_intelligent_caching, initialization_results
+                "intelligent_caching",
+                self._init_intelligent_caching,
+                initialization_results,
             )
 
             # 3. Initialize Enterprise Integration
             await self._initialize_component(
-                "enterprise_integration", self._init_enterprise_integration, initialization_results
+                "enterprise_integration",
+                self._init_enterprise_integration,
+                initialization_results,
             )
 
             # 4. Initialize Operational Excellence
             await self._initialize_component(
-                "operational_excellence", self._init_operational_excellence, initialization_results
+                "operational_excellence",
+                self._init_operational_excellence,
+                initialization_results,
             )
 
             # 5. Initialize Service-Specific Components
             await self._initialize_component(
-                "service_specific_components", self._init_service_specific_components, initialization_results
+                "service_specific_components",
+                self._init_service_specific_components,
+                initialization_results,
             )
 
             # 6. Initialize Cross-Service Integrations
             await self._initialize_component(
-                "cross_service_integrations", self._init_cross_service_integrations, initialization_results
+                "cross_service_integrations",
+                self._init_cross_service_integrations,
+                initialization_results,
             )
 
             # 7. Initialize Monitoring and Dashboards
             await self._initialize_component(
-                "monitoring_dashboards", self._init_monitoring_dashboards, initialization_results
+                "monitoring_dashboards",
+                self._init_monitoring_dashboards,
+                initialization_results,
             )
 
             # Calculate initialization time
@@ -98,13 +116,21 @@ class EnterpriseEcosystemInitializer:
         except Exception as e:
             initialization_results["status"] = "failed"
             initialization_results["errors"].append(str(e))
-            fire_and_forget("critical", f"Enterprise ecosystem initialization failed: {e}", "enterprise_initializer")
+            fire_and_forget(
+                "critical",
+                f"Enterprise ecosystem initialization failed: {e}",
+                "enterprise_initializer",
+            )
             return initialization_results
 
-    async def _initialize_component(self, component_name: str, init_func: callable, results: Dict[str, Any]):
+    async def _initialize_component(
+        self, component_name: str, init_func: callable, results: Dict[str, Any]
+    ):
         """Initialize a specific component with error handling."""
         try:
-            fire_and_forget("info", f"Initializing {component_name}...", "enterprise_initializer")
+            fire_and_forget(
+                "info", f"Initializing {component_name}...", "enterprise_initializer"
+            )
 
             start_time = datetime.now()
             await init_func()
@@ -133,7 +159,11 @@ class EnterpriseEcosystemInitializer:
             }
 
             results["errors"].append(f"{component_name}: {str(e)}")
-            fire_and_forget("error", f"Failed to initialize {component_name}: {e}", "enterprise_initializer")
+            fire_and_forget(
+                "error",
+                f"Failed to initialize {component_name}: {e}",
+                "enterprise_initializer",
+            )
 
     async def _init_enterprise_error_handling(self):
         """Initialize enterprise error handling system."""
@@ -175,7 +205,9 @@ class EnterpriseEcosystemInitializer:
         # Test service registry
         registry_stats = len(service_registry.service_endpoints)
         fire_and_forget(
-            "info", f"Service registry initialized with {registry_stats} services", "enterprise_initializer"
+            "info",
+            f"Service registry initialized with {registry_stats} services",
+            "enterprise_initializer",
         )
 
     async def _init_operational_excellence(self):
@@ -194,7 +226,11 @@ class EnterpriseEcosystemInitializer:
     async def _init_service_specific_components(self):
         """Initialize service-specific enterprise components."""
         # This will be populated when services are updated to use enterprise features
-        fire_and_forget("info", "Service-specific enterprise components initialized", "enterprise_initializer")
+        fire_and_forget(
+            "info",
+            "Service-specific enterprise components initialized",
+            "enterprise_initializer",
+        )
 
     async def _init_cross_service_integrations(self):
         """Initialize cross-service integration patterns."""
@@ -211,7 +247,10 @@ class EnterpriseEcosystemInitializer:
                 ServiceNames.PROMPT_STORE,
                 ServiceNames.ANALYSIS_SERVICE,
             ],
-            "service_discovery_workflow": [ServiceNames.DISCOVERY_AGENT, ServiceNames.INTERPRETER],
+            "service_discovery_workflow": [
+                ServiceNames.DISCOVERY_AGENT,
+                ServiceNames.INTERPRETER,
+            ],
         }
 
         for pattern_name, services in integration_patterns.items():
@@ -236,7 +275,9 @@ class EnterpriseEcosystemInitializer:
         try:
             # Gather all component statuses
             health_status = await health_monitor.get_health_status()
-            cache_metrics = get_service_cache(ServiceNames.ANALYSIS_SERVICE).get_cache_stats()  # Sample cache
+            cache_metrics = get_service_cache(
+                ServiceNames.ANALYSIS_SERVICE
+            ).get_cache_stats()  # Sample cache
             error_stats = enterprise_error_handler.get_error_statistics()
             performance_data = performance_dashboard.get_dashboard_data(health_monitor)
 
@@ -251,19 +292,26 @@ class EnterpriseEcosystemInitializer:
                     },
                     "caching_system": {
                         "status": "active",
-                        "cache_hit_rate": cache_metrics.get("performance", {}).get("hit_ratio", 0),
+                        "cache_hit_rate": cache_metrics.get("performance", {}).get(
+                            "hit_ratio", 0
+                        ),
                         "total_cache_size_mb": cache_metrics.get("total_size_mb", 0),
                     },
                     "error_handling": {
                         "status": "active",
                         "total_errors": error_stats.get("total_errors", 0),
-                        "error_recovery_rate": self._calculate_error_recovery_rate(error_stats),
+                        "error_recovery_rate": self._calculate_error_recovery_rate(
+                            error_stats
+                        ),
                     },
                     "service_registry": {
                         "status": "active",
                         "services_registered": len(service_registry.service_endpoints),
                     },
-                    "performance_monitoring": {"status": "active", "dashboard_data": performance_data},
+                    "performance_monitoring": {
+                        "status": "active",
+                        "dashboard_data": performance_data,
+                    },
                 },
                 "workflows": {
                     "active_workflows": 0,  # Will be populated by orchestrator
@@ -277,7 +325,11 @@ class EnterpriseEcosystemInitializer:
             return ecosystem_status
 
         except Exception as e:
-            return {"overall_status": "error", "error": str(e), "last_updated": datetime.now().isoformat()}
+            return {
+                "overall_status": "error",
+                "error": str(e),
+                "last_updated": datetime.now().isoformat(),
+            }
 
     def _calculate_overall_status(self) -> str:
         """Calculate overall ecosystem status."""
@@ -285,7 +337,9 @@ class EnterpriseEcosystemInitializer:
             return "initializing"
 
         total_components = len(self.initialized_components)
-        initialized_count = sum(1 for status in self.initialized_components.values() if status)
+        initialized_count = sum(
+            1 for status in self.initialized_components.values() if status
+        )
 
         if initialized_count == total_components:
             return "healthy"
@@ -314,7 +368,11 @@ class EnterpriseEcosystemInitializer:
 
     async def graceful_shutdown(self):
         """Perform graceful shutdown of all enterprise components."""
-        fire_and_forget("info", "Initiating graceful shutdown of enterprise ecosystem", "enterprise_initializer")
+        fire_and_forget(
+            "info",
+            "Initiating graceful shutdown of enterprise ecosystem",
+            "enterprise_initializer",
+        )
 
         try:
             # Shutdown operational excellence
@@ -333,7 +391,11 @@ class EnterpriseEcosystemInitializer:
             fire_and_forget("info", ".2f", "enterprise_initializer")
 
         except Exception as e:
-            fire_and_forget("error", f"Error during graceful shutdown: {e}", "enterprise_initializer")
+            fire_and_forget(
+                "error",
+                f"Error during graceful shutdown: {e}",
+                "enterprise_initializer",
+            )
 
     async def health_check(self) -> Dict[str, Any]:
         """Perform comprehensive ecosystem health check."""
@@ -356,13 +418,19 @@ class EnterpriseEcosystemInitializer:
 
             for component_name, check_func in components_to_check:
                 try:
-                    health_check_results["component_health"][component_name] = await check_func()
+                    health_check_results["component_health"][
+                        component_name
+                    ] = await check_func()
                 except Exception as e:
-                    health_check_results["component_health"][component_name] = {"status": "error", "error": str(e)}
+                    health_check_results["component_health"][component_name] = {
+                        "status": "error",
+                        "error": str(e),
+                    }
 
             # Calculate overall health
             component_statuses = [
-                comp.get("status", "unknown") for comp in health_check_results["component_health"].values()
+                comp.get("status", "unknown")
+                for comp in health_check_results["component_health"].values()
             ]
 
             if all(status == "healthy" for status in component_statuses):
@@ -373,8 +441,10 @@ class EnterpriseEcosystemInitializer:
                 health_check_results["overall_health"] = "degraded"
 
             # Generate recommendations
-            health_check_results["recommendations"] = self._generate_health_recommendations(
-                health_check_results["component_health"]
+            health_check_results["recommendations"] = (
+                self._generate_health_recommendations(
+                    health_check_results["component_health"]
+                )
             )
 
         except Exception as e:
@@ -398,7 +468,11 @@ class EnterpriseEcosystemInitializer:
         cache_stats = cache.get_cache_stats()
 
         hit_ratio = cache_stats.get("performance", {}).get("hit_ratio", 0)
-        status = "healthy" if hit_ratio >= 0.5 else "degraded" if hit_ratio >= 0.2 else "unhealthy"
+        status = (
+            "healthy"
+            if hit_ratio >= 0.5
+            else "degraded" if hit_ratio >= 0.2 else "unhealthy"
+        )
 
         return {
             "status": status,
@@ -412,7 +486,11 @@ class EnterpriseEcosystemInitializer:
         error_stats = enterprise_error_handler.get_error_statistics()
 
         recent_errors = error_stats.get("total_errors", 0)
-        status = "healthy" if recent_errors < 10 else "degraded" if recent_errors < 50 else "unhealthy"
+        status = (
+            "healthy"
+            if recent_errors < 10
+            else "degraded" if recent_errors < 50 else "unhealthy"
+        )
 
         return {
             "status": status,
@@ -423,9 +501,17 @@ class EnterpriseEcosystemInitializer:
     async def _check_service_registry(self) -> Dict[str, Any]:
         """Check service registry."""
         services_count = len(service_registry.service_endpoints)
-        status = "healthy" if services_count >= 5 else "degraded" if services_count >= 2 else "unhealthy"
+        status = (
+            "healthy"
+            if services_count >= 5
+            else "degraded" if services_count >= 2 else "unhealthy"
+        )
 
-        return {"status": status, "services_registered": services_count, "last_updated": datetime.now().isoformat()}
+        return {
+            "status": status,
+            "services_registered": services_count,
+            "last_updated": datetime.now().isoformat(),
+        }
 
     async def _check_performance_monitoring(self) -> Dict[str, Any]:
         """Check performance monitoring."""
@@ -439,7 +525,9 @@ class EnterpriseEcosystemInitializer:
         except Exception as e:
             return {"status": "unhealthy", "error": str(e)}
 
-    def _generate_health_recommendations(self, component_health: Dict[str, Any]) -> List[str]:
+    def _generate_health_recommendations(
+        self, component_health: Dict[str, Any]
+    ) -> List[str]:
         """Generate health recommendations based on component status."""
         recommendations = []
 
@@ -448,13 +536,21 @@ class EnterpriseEcosystemInitializer:
 
             if status == "unhealthy":
                 if component_name == "caching_system":
-                    recommendations.append("Cache hit ratio is low - consider increasing cache size or TTL")
+                    recommendations.append(
+                        "Cache hit ratio is low - consider increasing cache size or TTL"
+                    )
                 elif component_name == "error_handling":
-                    recommendations.append("High error rate detected - investigate error sources")
+                    recommendations.append(
+                        "High error rate detected - investigate error sources"
+                    )
                 elif component_name == "health_monitoring":
-                    recommendations.append("Health monitoring is not functioning - restart required")
+                    recommendations.append(
+                        "Health monitoring is not functioning - restart required"
+                    )
                 else:
-                    recommendations.append(f"{component_name} is unhealthy - requires attention")
+                    recommendations.append(
+                        f"{component_name} is unhealthy - requires attention"
+                    )
 
             elif status == "degraded":
                 if component_name == "caching_system":
@@ -491,7 +587,11 @@ def setup_signal_handlers():
     """Setup signal handlers for graceful shutdown."""
 
     def signal_handler(signum, frame):
-        fire_and_forget("info", f"Received signal {signum}, initiating graceful shutdown", "enterprise_initializer")
+        fire_and_forget(
+            "info",
+            f"Received signal {signum}, initiating graceful shutdown",
+            "enterprise_initializer",
+        )
         asyncio.create_task(enterprise_initializer.graceful_shutdown())
 
     signal.signal(signal.SIGTERM, signal_handler)

@@ -28,7 +28,9 @@ class TimeoutManager:
     DEFAULT_DB_OPERATION_TIMEOUT = 10.0
 
     @staticmethod
-    async def with_timeout(coro: Callable[[], Any], timeout: float, operation_name: str = "operation") -> Any:
+    async def with_timeout(
+        coro: Callable[[], Any], timeout: float, operation_name: str = "operation"
+    ) -> Any:
         """Execute a coroutine with timeout protection."""
         try:
             return await asyncio.wait_for(coro(), timeout=timeout)
@@ -80,7 +82,8 @@ class HealthCheckTimeout:
 
     @staticmethod
     async def protected_health_check(
-        health_func: Callable[[], Any], timeout: float = TimeoutManager.DEFAULT_HEALTH_CHECK_TIMEOUT
+        health_func: Callable[[], Any],
+        timeout: float = TimeoutManager.DEFAULT_HEALTH_CHECK_TIMEOUT,
     ) -> dict:
         """Execute health check with timeout protection."""
         try:
@@ -93,9 +96,17 @@ class HealthCheckTimeout:
                     result["timestamp"] = datetime.utcnow().isoformat()
                 return result
         except asyncio.TimeoutError:
-            return {"status": "degraded", "error": "health_check_timeout", "timestamp": datetime.utcnow().isoformat()}
+            return {
+                "status": "degraded",
+                "error": "health_check_timeout",
+                "timestamp": datetime.utcnow().isoformat(),
+            }
         except Exception as e:
-            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
 
 
 class StartupTimeout:

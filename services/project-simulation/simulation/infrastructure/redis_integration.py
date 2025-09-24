@@ -77,22 +77,32 @@ class RedisPubSubManager:
 
         try:
             # Add metadata to message
-            enriched_message = {**message, "timestamp": datetime.now().isoformat(), "publisher": "simulation-service"}
+            enriched_message = {
+                **message,
+                "timestamp": datetime.now().isoformat(),
+                "publisher": "simulation-service",
+            }
 
             # Publish to Redis
             await self.redis_client.publish(channel, json.dumps(enriched_message))
 
             self.logger.debug(
-                "Published message to Redis channel", channel=channel, message_type=message.get("type", "unknown")
+                "Published message to Redis channel",
+                channel=channel,
+                message_type=message.get("type", "unknown"),
             )
 
             return True
 
         except Exception as e:
-            self.logger.error("Failed to publish message to Redis", error=str(e), channel=channel)
+            self.logger.error(
+                "Failed to publish message to Redis", error=str(e), channel=channel
+            )
             return False
 
-    async def subscribe(self, channel: str, callback: Callable[[Dict[str, Any]], None]) -> None:
+    async def subscribe(
+        self, channel: str, callback: Callable[[Dict[str, Any]], None]
+    ) -> None:
         """Subscribe to a Redis channel with a callback function."""
         if not self.is_connected:
             self.logger.warning("Cannot subscribe - Redis not connected")
@@ -113,7 +123,9 @@ class RedisPubSubManager:
             self.logger.info("Subscribed to Redis channel", channel=channel)
 
         except Exception as e:
-            self.logger.error("Failed to subscribe to Redis channel", error=str(e), channel=channel)
+            self.logger.error(
+                "Failed to subscribe to Redis channel", error=str(e), channel=channel
+            )
 
     async def unsubscribe(self, channel: str) -> None:
         """Unsubscribe from a Redis channel."""
@@ -139,7 +151,11 @@ class RedisPubSubManager:
                             try:
                                 await callback(data)
                             except Exception as e:
-                                self.logger.error("Error in Redis message callback", error=str(e), channel=channel)
+                                self.logger.error(
+                                    "Error in Redis message callback",
+                                    error=str(e),
+                                    channel=channel,
+                                )
 
         except Exception as e:
             self.logger.error("Error in Redis message listening", error=str(e))
@@ -152,14 +168,18 @@ class SimulationRedisClient:
         self.redis_manager = redis_manager
         self.logger = logger
 
-    async def publish_simulation_event(self, simulation_id: str, event_type: str, event_data: Dict[str, Any]) -> bool:
+    async def publish_simulation_event(
+        self, simulation_id: str, event_type: str, event_data: Dict[str, Any]
+    ) -> bool:
         """Publish a simulation event to Redis."""
         channel = f"simulation:{simulation_id}"
         message = {"type": event_type, "simulation_id": simulation_id, **event_data}
 
         return await self.redis_manager.publish(channel, message)
 
-    async def publish_document_generated(self, simulation_id: str, document_id: str, document_type: str) -> bool:
+    async def publish_document_generated(
+        self, simulation_id: str, document_id: str, document_type: str
+    ) -> bool:
         """Publish document generation event."""
         channel = "documents:generated"
         message = {
@@ -171,7 +191,9 @@ class SimulationRedisClient:
 
         return await self.redis_manager.publish(channel, message)
 
-    async def publish_prompt_used(self, simulation_id: str, prompt_id: str, prompt_type: str) -> bool:
+    async def publish_prompt_used(
+        self, simulation_id: str, prompt_id: str, prompt_type: str
+    ) -> bool:
         """Publish prompt usage event."""
         channel = "prompts:used"
         message = {
@@ -183,7 +205,9 @@ class SimulationRedisClient:
 
         return await self.redis_manager.publish(channel, message)
 
-    async def subscribe_to_simulation_events(self, simulation_id: str, callback: Callable) -> None:
+    async def subscribe_to_simulation_events(
+        self, simulation_id: str, callback: Callable
+    ) -> None:
         """Subscribe to events for a specific simulation."""
         channel = f"simulation:{simulation_id}"
         await self.redis_manager.subscribe(channel, callback)
@@ -225,7 +249,9 @@ async def initialize_redis_integration(
 
         logger.info("Redis integration initialized successfully")
     except Exception as e:
-        logger.warning("Redis connection failed, continuing without Redis", error=str(e))
+        logger.warning(
+            "Redis connection failed, continuing without Redis", error=str(e)
+        )
 
     return _simulation_redis_client
 
@@ -235,23 +261,33 @@ async def get_simulation_redis_client() -> Optional[SimulationRedisClient]:
     return _simulation_redis_client
 
 
-async def publish_simulation_update(simulation_id: str, update_type: str, update_data: Dict[str, Any]) -> bool:
+async def publish_simulation_update(
+    simulation_id: str, update_type: str, update_data: Dict[str, Any]
+) -> bool:
     """Convenience function to publish simulation updates."""
     client = await get_simulation_redis_client()
     if client:
-        return await client.publish_simulation_event(simulation_id, update_type, update_data)
+        return await client.publish_simulation_event(
+            simulation_id, update_type, update_data
+        )
     return False
 
 
-async def publish_document_event(simulation_id: str, document_id: str, document_type: str) -> bool:
+async def publish_document_event(
+    simulation_id: str, document_id: str, document_type: str
+) -> bool:
     """Convenience function to publish document generation events."""
     client = await get_simulation_redis_client()
     if client:
-        return await client.publish_document_generated(simulation_id, document_id, document_type)
+        return await client.publish_document_generated(
+            simulation_id, document_id, document_type
+        )
     return False
 
 
-async def publish_prompt_event(simulation_id: str, prompt_id: str, prompt_type: str) -> bool:
+async def publish_prompt_event(
+    simulation_id: str, prompt_id: str, prompt_type: str
+) -> bool:
     """Convenience function to publish prompt usage events."""
     client = await get_simulation_redis_client()
     if client:

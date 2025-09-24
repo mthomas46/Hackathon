@@ -76,7 +76,9 @@ class SummarizerCache:
         self.active_prompts[prompt_hash]["models"].add(model)
         self.active_prompts[prompt_hash]["last_used"] = utc_now()
 
-    def update_model_usage(self, provider: str, model: str, execution_time: float) -> None:
+    def update_model_usage(
+        self, provider: str, model: str, execution_time: float
+    ) -> None:
         """Update model usage statistics."""
         key = f"{provider}:{model}"
         if key not in self.model_usage:
@@ -92,7 +94,9 @@ class SummarizerCache:
         stats = self.model_usage[key]
         stats["usage_count"] += 1
         stats["total_execution_time"] += execution_time
-        stats["average_execution_time"] = stats["total_execution_time"] / stats["usage_count"]
+        stats["average_execution_time"] = (
+            stats["total_execution_time"] / stats["usage_count"]
+        )
         stats["last_used"] = utc_now()
 
     def update_provider_config(self, provider: str, config: Dict[str, Any]) -> None:
@@ -144,9 +148,12 @@ class SummarizerCache:
                 "most_used_provider": None,
             }
 
-        total_execution_time = sum(job.execution_time for job in self.job_history if job.execution_time)
+        total_execution_time = sum(
+            job.execution_time for job in self.job_history if job.execution_time
+        )
         avg_execution_time = (
-            total_execution_time / len([j for j in self.job_history if j.execution_time])
+            total_execution_time
+            / len([j for j in self.job_history if j.execution_time])
             if total_execution_time > 0
             else 0
         )
@@ -156,7 +163,11 @@ class SummarizerCache:
             for provider in job.providers:
                 provider_counts[provider] = provider_counts.get(provider, 0) + 1
 
-        most_used_provider = max(provider_counts.items(), key=lambda x: x[1]) if provider_counts else None
+        most_used_provider = (
+            max(provider_counts.items(), key=lambda x: x[1])
+            if provider_counts
+            else None
+        )
 
         return {
             "total_jobs": len(self.job_history),

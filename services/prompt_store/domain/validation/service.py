@@ -6,7 +6,7 @@ from typing import Any, Dict, List
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now
 
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from .entities import BiasDetectionResult, PromptTestingResult
 
 
@@ -15,10 +15,37 @@ class ValidationService(BaseService[PromptTestingResult]):
 
     def __init__(self):
         super().__init__(None)  # We'll implement repository methods as needed
+
+    def _validate_entity(self, entity: PromptTestingResult) -> None:
+        """Validate validation entity."""
+        if not entity.prompt_id or not entity.prompt_id.strip():
+            raise ValueError("Prompt ID is required")
+        if not entity.test_type or not entity.test_type.strip():
+            raise ValueError("Test type is required")
+
+    async def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> PromptTestingResult:
+        """Create validation entity from data."""
+        return PromptTestingResult(
+            id=entity_id,
+            prompt_id=data["prompt_id"],
+            test_type=data["test_type"],
+            status=data.get("status", "pending"),
+            results=data.get("results", {}),
+            score=data.get("score"),
+            issues=data.get("issues", []),
+            recommendations=data.get("recommendations", []),
+        )
+
         self.clients = ServiceClients()
 
     async def run_prompt_test(
-        self, prompt_id: str, version: int, test_suite_id: str, test_case: Dict[str, Any]
+        self,
+        prompt_id: str,
+        version: int,
+        test_suite_id: str,
+        test_case: Dict[str, Any],
     ) -> PromptTestingResult:
         """Run a single test case against a prompt."""
         # This would execute the prompt with test inputs and validate outputs
@@ -45,14 +72,18 @@ class ValidationService(BaseService[PromptTestingResult]):
 
         return result
 
-    async def run_test_suite(self, prompt_id: str, version: int, test_suite: Dict[str, Any]) -> Dict[str, Any]:
+    async def run_test_suite(
+        self, prompt_id: str, version: int, test_suite: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Run a complete test suite against a prompt."""
         test_results = []
         passed_count = 0
         total_time = 0
 
         for test_case in test_suite.get("test_cases", []):
-            result = await self.run_prompt_test(prompt_id, version, test_suite["id"], test_case)
+            result = await self.run_prompt_test(
+                prompt_id, version, test_suite["id"], test_case
+            )
             test_results.append(result.to_dict())
 
             if result.passed:
@@ -68,7 +99,9 @@ class ValidationService(BaseService[PromptTestingResult]):
             "failed_tests": len(test_results) - passed_count,
             "success_rate": passed_count / len(test_results) if test_results else 0,
             "total_execution_time_ms": total_time,
-            "average_execution_time_ms": total_time / len(test_results) if test_results else 0,
+            "average_execution_time_ms": (
+                total_time / len(test_results) if test_results else 0
+            ),
             "test_results": test_results,
         }
 
@@ -104,8 +137,12 @@ class ValidationService(BaseService[PromptTestingResult]):
         contradictions = ["don't", "do not", "avoid", "never"]
         positive_indicators = ["do", "should", "must", "always"]
 
-        contradiction_count = sum(1 for word in contradictions if word in prompt_content.lower())
-        positive_count = sum(1 for word in positive_indicators if word in prompt_content.lower())
+        contradiction_count = sum(
+            1 for word in contradictions if word in prompt_content.lower()
+        )
+        positive_count = sum(
+            1 for word in positive_indicators if word in prompt_content.lower()
+        )
 
         if contradiction_count > positive_count * 2:
             issues.append(
@@ -186,7 +223,10 @@ class ValidationService(BaseService[PromptTestingResult]):
                 {"pattern": r"\b(race|ethnic|minority)\b", "weight": 0.3},
             ],
             "cultural": [
-                {"pattern": r"\b(western|eastern|developed|developing|third.world)\b", "weight": 0.3},
+                {
+                    "pattern": r"\b(western|eastern|developed|developing|third.world)\b",
+                    "weight": 0.3,
+                },
                 {"pattern": r"\b(civilized|primitive|savage)\b", "weight": 0.6},
             ],
             "political": [
@@ -210,15 +250,24 @@ class ValidationService(BaseService[PromptTestingResult]):
         }
         return alternatives.get(bias_type, ["person", "individual", "user"])
 
-    async def validate_output(self, prompt_output: str, expected_criteria: Dict[str, Any]) -> Dict[str, Any]:
+    async def validate_output(
+        self, prompt_output: str, expected_criteria: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Validate prompt output against expected criteria."""
-        validation_results = {"overall_score": 1.0, "criteria_results": {}, "issues": []}
+        validation_results = {
+            "overall_score": 1.0,
+            "criteria_results": {},
+            "issues": [],
+        }
 
         # Check minimum length
         min_length = expected_criteria.get("min_length", 0)
         if len(prompt_output) < min_length:
             validation_results["issues"].append(
-                {"type": "too_short", "message": f"Output is too short (minimum {min_length} characters)"}
+                {
+                    "type": "too_short",
+                    "message": f"Output is too short (minimum {min_length} characters)",
+                }
             )
             validation_results["overall_score"] *= 0.7
 
@@ -226,7 +275,10 @@ class ValidationService(BaseService[PromptTestingResult]):
         max_length = expected_criteria.get("max_length", float("inf"))
         if len(prompt_output) > max_length:
             validation_results["issues"].append(
-                {"type": "too_long", "message": f"Output is too long (maximum {max_length} characters)"}
+                {
+                    "type": "too_long",
+                    "message": f"Output is too long (maximum {max_length} characters)",
+                }
             )
             validation_results["overall_score"] *= 0.8
 
@@ -235,7 +287,10 @@ class ValidationService(BaseService[PromptTestingResult]):
         for keyword in required_keywords:
             if keyword.lower() not in prompt_output.lower():
                 validation_results["issues"].append(
-                    {"type": "missing_keyword", "message": f"Required keyword '{keyword}' not found"}
+                    {
+                        "type": "missing_keyword",
+                        "message": f"Required keyword '{keyword}' not found",
+                    }
                 )
                 validation_results["overall_score"] *= 0.9
 
@@ -244,7 +299,10 @@ class ValidationService(BaseService[PromptTestingResult]):
         for word in prohibited_words:
             if word.lower() in prompt_output.lower():
                 validation_results["issues"].append(
-                    {"type": "prohibited_content", "message": f"Prohibited word '{word}' found in output"}
+                    {
+                        "type": "prohibited_content",
+                        "message": f"Prohibited word '{word}' found in output",
+                    }
                 )
                 validation_results["overall_score"] *= 0.5
 
@@ -252,22 +310,34 @@ class ValidationService(BaseService[PromptTestingResult]):
         if expected_criteria.get("requires_structure", False):
             if prompt_output.count("\n\n") < 2:
                 validation_results["issues"].append(
-                    {"type": "poor_structure", "message": "Output lacks proper structure"}
+                    {
+                        "type": "poor_structure",
+                        "message": "Output lacks proper structure",
+                    }
                 )
                 validation_results["overall_score"] *= 0.8
 
         validation_results["criteria_results"] = {
-            "length_check": len(prompt_output) >= min_length and len(prompt_output) <= max_length,
-            "keyword_check": all(kw.lower() in prompt_output.lower() for kw in required_keywords),
-            "prohibited_check": not any(word.lower() in prompt_output.lower() for word in prohibited_words),
+            "length_check": len(prompt_output) >= min_length
+            and len(prompt_output) <= max_length,
+            "keyword_check": all(
+                kw.lower() in prompt_output.lower() for kw in required_keywords
+            ),
+            "prohibited_check": not any(
+                word.lower() in prompt_output.lower() for word in prohibited_words
+            ),
             "structure_check": (
-                prompt_output.count("\n\n") >= 2 if expected_criteria.get("requires_structure") else True
+                prompt_output.count("\n\n") >= 2
+                if expected_criteria.get("requires_structure")
+                else True
             ),
         }
 
         return validation_results
 
-    def create_test_suite(self, name: str, description: str, test_cases: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def create_test_suite(
+        self, name: str, description: str, test_cases: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Create a test suite for prompt validation."""
         test_suite = {
             "id": generate_id(),
@@ -309,7 +379,11 @@ class ValidationService(BaseService[PromptTestingResult]):
                         "id": "readability_check",
                         "name": "Readability Test",
                         "input": "Write a blog post about AI",
-                        "expected_criteria": {"min_length": 300, "max_length": 2000, "requires_structure": True},
+                        "expected_criteria": {
+                            "min_length": 300,
+                            "max_length": 2000,
+                            "requires_structure": True,
+                        },
                     }
                 ],
             },

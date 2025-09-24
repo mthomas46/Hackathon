@@ -43,7 +43,9 @@ class TestDataFactory:
         return documents
 
     @staticmethod
-    def create_sample_analyses(document_ids: List[str], count_per_doc: int = 2) -> List[Analysis]:
+    def create_sample_analyses(
+        document_ids: List[str], count_per_doc: int = 2
+    ) -> List[Analysis]:
         """Create sample analyses for documents."""
         analyses = []
         analysis_types = list(AnalysisType)
@@ -51,7 +53,9 @@ class TestDataFactory:
         for doc_id in document_ids:
             for i in range(count_per_doc):
                 analysis_type = analysis_types[i % len(analysis_types)]
-                status = AnalysisStatus.COMPLETED if i % 3 != 2 else AnalysisStatus.FAILED
+                status = (
+                    AnalysisStatus.COMPLETED if i % 3 != 2 else AnalysisStatus.FAILED
+                )
 
                 analysis = Analysis(
                     id=f'analysis-{doc_id.split("-")[-1]}-{i}',
@@ -75,11 +79,19 @@ class TestDataFactory:
         return analyses
 
     @staticmethod
-    def create_sample_findings(analysis_ids: List[str], count_per_analysis: int = 3) -> List[Finding]:
+    def create_sample_findings(
+        analysis_ids: List[str], count_per_analysis: int = 3
+    ) -> List[Finding]:
         """Create sample findings for analyses."""
         findings = []
         severities = list(FindingSeverity)
-        categories = ["security", "performance", "code_quality", "documentation", "style"]
+        categories = [
+            "security",
+            "performance",
+            "code_quality",
+            "documentation",
+            "style",
+        ]
 
         for analysis_id in analysis_ids:
             for i in range(count_per_analysis):
@@ -96,7 +108,9 @@ class TestDataFactory:
                         end_column=25,
                     )
                 else:
-                    location = FileLocation(file_path=f"/docs/document_{i % 3}.md", line_number=50 + i * 20)
+                    location = FileLocation(
+                        file_path=f"/docs/document_{i % 3}.md", line_number=50 + i * 20
+                    )
 
                 finding = Finding(
                     id=f'finding-{analysis_id.split("-")[-1]}-{i}',
@@ -113,7 +127,9 @@ class TestDataFactory:
                         "rule_id": f"RULE-{category.upper()}-{i:03d}",
                         "cwe": f"CWE-{100 + i * 10}",
                         "tags": [category, severity.value, f"priority-{i % 3 + 1}"],
-                        "automated_fix_available": (i % 3 == 0),  # Every 3rd finding has automated fix
+                        "automated_fix_available": (
+                            i % 3 == 0
+                        ),  # Every 3rd finding has automated fix
                         "estimated_effort_minutes": 15 + i * 5,
                     },
                 )
@@ -295,7 +311,11 @@ Cache your requests. Use pagination. Handle rate limits.
                 "targets": ["doc-1", "doc-2", "doc-3"],
                 "threshold": 0.8,
                 "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
-                "options": {"include_embeddings": False, "batch_size": 32, "normalize_embeddings": True},
+                "options": {
+                    "include_embeddings": False,
+                    "batch_size": 32,
+                    "normalize_embeddings": True,
+                },
             },
             "sentiment_analysis": {
                 "document_id": "test-doc-123",
@@ -307,15 +327,27 @@ Cache your requests. Use pagination. Handle rate limits.
             },
             "content_quality": {
                 "document_id": "test-doc-123",
-                "quality_checks": ["readability", "grammar", "structure", "completeness"],
-                "options": {"language": "en", "readability_target": 70.0, "grammar_check_level": "standard"},
+                "quality_checks": [
+                    "readability",
+                    "grammar",
+                    "structure",
+                    "completeness",
+                ],
+                "options": {
+                    "language": "en",
+                    "readability_target": 70.0,
+                    "grammar_check_level": "standard",
+                },
             },
             "trend_analysis": {
                 "document_id": "test-doc-123",
                 "time_range_days": 90,
                 "trend_metrics": ["quality_score", "complexity", "sentiment"],
                 "forecast_days": 30,
-                "options": {"include_seasonal_analysis": True, "confidence_interval": 0.95},
+                "options": {
+                    "include_seasonal_analysis": True,
+                    "confidence_interval": 0.95,
+                },
             },
             "distributed_task": {
                 "task_type": "semantic_similarity",
@@ -326,7 +358,11 @@ Cache your requests. Use pagination. Handle rate limits.
                 },
                 "priority": "high",
                 "dependencies": [],
-                "metadata": {"user_id": "user-123", "session_id": "session-456", "source": "api"},
+                "metadata": {
+                    "user_id": "user-123",
+                    "session_id": "session-456",
+                    "source": "api",
+                },
             },
             "batch_tasks": {
                 "tasks": [
@@ -335,7 +371,11 @@ Cache your requests. Use pagination. Handle rate limits.
                         "data": {"document_ids": ["batch-doc-1", "batch-doc-2"]},
                         "priority": "high",
                     },
-                    {"task_type": "sentiment_analysis", "data": {"document_id": "batch-doc-3"}, "priority": "normal"},
+                    {
+                        "task_type": "sentiment_analysis",
+                        "data": {"document_id": "batch-doc-3"},
+                        "priority": "normal",
+                    },
                 ],
                 "batch_options": {
                     "parallel_execution": True,
@@ -449,7 +489,11 @@ def test_repository_context():
         "url": "https://github.com/test/repo",
         "branch": "main",
         "permissions": {"read": True, "write": True, "admin": False},
-        "settings": {"auto_analyze": True, "webhook_enabled": True, "analysis_schedule": "daily"},
+        "settings": {
+            "auto_analyze": True,
+            "webhook_enabled": True,
+            "analysis_schedule": "daily",
+        },
     }
 
 
@@ -475,9 +519,24 @@ def mock_external_services():
             "supported_checks": ["readability", "grammar", "structure"],
             "quality_thresholds": {"good": 80, "excellent": 90},
         },
-        "database": {"status": "healthy", "connection_pool_size": 10, "active_connections": 3, "response_time": 0.05},
-        "cache": {"status": "healthy", "hit_rate": 0.85, "size_mb": 512, "eviction_policy": "LRU"},
-        "queue": {"status": "healthy", "queue_length": 5, "processing_rate": 10, "worker_count": 3},  # tasks per minute
+        "database": {
+            "status": "healthy",
+            "connection_pool_size": 10,
+            "active_connections": 3,
+            "response_time": 0.05,
+        },
+        "cache": {
+            "status": "healthy",
+            "hit_rate": 0.85,
+            "size_mb": 512,
+            "eviction_policy": "LRU",
+        },
+        "queue": {
+            "status": "healthy",
+            "queue_length": 5,
+            "processing_rate": 10,
+            "worker_count": 3,
+        },  # tasks per minute
     }
 
 
@@ -498,14 +557,26 @@ def error_scenarios():
             {"field": "analysis_type", "error": "Invalid analysis type specified"},
         ],
         "business_logic_errors": [
-            {"type": "document_not_found", "message": "Specified document does not exist"},
-            {"type": "analysis_in_progress", "message": "Analysis is already in progress"},
+            {
+                "type": "document_not_found",
+                "message": "Specified document does not exist",
+            },
+            {
+                "type": "analysis_in_progress",
+                "message": "Analysis is already in progress",
+            },
             {"type": "quota_exceeded", "message": "Daily analysis quota exceeded"},
-            {"type": "insufficient_permissions", "message": "User lacks required permissions"},
+            {
+                "type": "insufficient_permissions",
+                "message": "User lacks required permissions",
+            },
         ],
         "system_errors": [
             {"type": "database_unavailable", "message": "Database connection failed"},
-            {"type": "external_service_down", "message": "External analysis service unavailable"},
+            {
+                "type": "external_service_down",
+                "message": "External analysis service unavailable",
+            },
             {"type": "disk_full", "message": "Insufficient disk space"},
             {"type": "memory_exhausted", "message": "System memory exhausted"},
         ],
@@ -578,12 +649,22 @@ def integration_test_scenarios():
     return {
         "happy_path": {
             "description": "Complete successful workflow",
-            "steps": ["create_document", "perform_analysis", "retrieve_findings", "export_results"],
+            "steps": [
+                "create_document",
+                "perform_analysis",
+                "retrieve_findings",
+                "export_results",
+            ],
             "expected_outcome": "success",
         },
         "error_recovery": {
             "description": "Workflow with error and recovery",
-            "steps": ["create_document", "perform_failing_analysis", "retry_analysis", "retrieve_findings"],
+            "steps": [
+                "create_document",
+                "perform_failing_analysis",
+                "retry_analysis",
+                "retrieve_findings",
+            ],
             "expected_outcome": "success_after_retry",
         },
         "concurrent_users": {

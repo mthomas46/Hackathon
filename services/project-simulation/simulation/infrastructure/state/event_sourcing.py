@@ -12,14 +12,18 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 from uuid import uuid4
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.domain.events import DomainEvent
 
 # Import simulation domain
 from simulation.domain.value_objects import SimulationStatus
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.infrastructure.utilities.simulation_utilities import get_simulation_cache
+from simulation.infrastructure.utilities.simulation_utilities import (
+    get_simulation_cache,
+)
 
 T = TypeVar("T")
 
@@ -132,7 +136,9 @@ class EventStore:
             last_sequence=events[-1].sequence_number if events else 0,
         )
 
-    async def get_events(self, aggregate_id: str, from_sequence: int = 0) -> List[EventEnvelope]:
+    async def get_events(
+        self, aggregate_id: str, from_sequence: int = 0
+    ) -> List[EventEnvelope]:
         """Get events for an aggregate."""
         if aggregate_id not in self._events:
             return []
@@ -144,9 +150,15 @@ class EventStore:
         """Get all events for an aggregate."""
         return self._events.get(aggregate_id, [])
 
-    async def save_snapshot(self, aggregate_id: str, snapshot: Dict[str, Any], version: int) -> None:
+    async def save_snapshot(
+        self, aggregate_id: str, snapshot: Dict[str, Any], version: int
+    ) -> None:
         """Save a snapshot of aggregate state."""
-        self._snapshots[aggregate_id] = {"data": snapshot, "version": version, "timestamp": datetime.now()}
+        self._snapshots[aggregate_id] = {
+            "data": snapshot,
+            "version": version,
+            "timestamp": datetime.now(),
+        }
 
         self.logger.info("Snapshot saved", aggregate_id=aggregate_id, version=version)
 
@@ -219,31 +231,45 @@ class SimulationAggregate(AggregateRoot):
         """Start the simulation."""
         from simulation.domain.events import SimulationStarted
 
-        event = SimulationStarted(simulation_id=self.aggregate_id, project_id=project_id, config=config)
+        event = SimulationStarted(
+            simulation_id=self.aggregate_id, project_id=project_id, config=config
+        )
 
         self.apply_event(event)
 
-    def complete_phase(self, phase_name: str, progress: float, results: Dict[str, Any]) -> None:
+    def complete_phase(
+        self, phase_name: str, progress: float, results: Dict[str, Any]
+    ) -> None:
         """Complete a simulation phase."""
         from simulation.domain.events import PhaseCompleted
 
         event = PhaseCompleted(
-            simulation_id=self.aggregate_id, phase_name=phase_name, progress=progress, results=results
+            simulation_id=self.aggregate_id,
+            phase_name=phase_name,
+            progress=progress,
+            results=results,
         )
 
         self.apply_event(event)
 
-    def generate_document(self, document_id: str, document_type: str, metadata: Dict[str, Any]) -> None:
+    def generate_document(
+        self, document_id: str, document_type: str, metadata: Dict[str, Any]
+    ) -> None:
         """Record document generation."""
         from simulation.domain.events import DocumentGenerated
 
         event = DocumentGenerated(
-            simulation_id=self.aggregate_id, document_id=document_id, document_type=document_type, metadata=metadata
+            simulation_id=self.aggregate_id,
+            document_id=document_id,
+            document_type=document_type,
+            metadata=metadata,
         )
 
         self.apply_event(event)
 
-    def execute_workflow(self, workflow_id: str, workflow_name: str, status: str, results: Dict[str, Any]) -> None:
+    def execute_workflow(
+        self, workflow_id: str, workflow_name: str, status: str, results: Dict[str, Any]
+    ) -> None:
         """Record workflow execution."""
         from simulation.domain.events import WorkflowExecuted
 
@@ -261,7 +287,9 @@ class SimulationAggregate(AggregateRoot):
         """Finish the simulation."""
         from simulation.domain.events import SimulationFinished
 
-        event = SimulationFinished(simulation_id=self.aggregate_id, final_status=final_status, summary=summary)
+        event = SimulationFinished(
+            simulation_id=self.aggregate_id, final_status=final_status, summary=summary
+        )
 
         self.apply_event(event)
 
@@ -335,7 +363,11 @@ class EventSourcedRepository(Generic[T]):
         cache_key = f"aggregate:{aggregate.aggregate_id}"
         self.cache.delete(cache_key)
 
-        self.logger.info("Aggregate saved", aggregate_id=aggregate.aggregate_id, event_count=len(envelopes))
+        self.logger.info(
+            "Aggregate saved",
+            aggregate_id=aggregate.aggregate_id,
+            event_count=len(envelopes),
+        )
 
     async def get_by_id(self, aggregate_id: str) -> Optional[T]:
         """Get aggregate by ID."""
@@ -354,7 +386,9 @@ class EventSourcedRepository(Generic[T]):
             aggregate._version = snapshot["version"]
 
             # Apply events after snapshot
-            events = await self.event_store.get_events(aggregate_id, snapshot["version"] + 1)
+            events = await self.event_store.get_events(
+                aggregate_id, snapshot["version"] + 1
+            )
         else:
             # Load from all events
             events = await self.event_store.get_all_events(aggregate_id)
@@ -379,8 +413,12 @@ class EventSourcedRepository(Generic[T]):
         """Create a snapshot for an aggregate."""
         aggregate = await self.get_by_id(aggregate_id)
         if aggregate:
-            snapshot_data = {k: v for k, v in aggregate.__dict__.items() if not k.startswith("_")}
-            await self.event_store.save_snapshot(aggregate_id, snapshot_data, aggregate.version)
+            snapshot_data = {
+                k: v for k, v in aggregate.__dict__.items() if not k.startswith("_")
+            }
+            await self.event_store.save_snapshot(
+                aggregate_id, snapshot_data, aggregate.version
+            )
 
 
 class EventSourcingService:
@@ -397,11 +435,15 @@ class EventSourcingService:
         class_name = aggregate_class.__name__
 
         if class_name not in self.repositories:
-            self.repositories[class_name] = EventSourcedRepository(self.event_store, aggregate_class)
+            self.repositories[class_name] = EventSourcedRepository(
+                self.event_store, aggregate_class
+            )
 
         return self.repositories[class_name]
 
-    async def replay_events(self, aggregate_id: str, to_sequence: Optional[int] = None) -> List[EventEnvelope]:
+    async def replay_events(
+        self, aggregate_id: str, to_sequence: Optional[int] = None
+    ) -> List[EventEnvelope]:
         """Replay events for an aggregate up to a specific sequence."""
         events = await self.event_store.get_all_events(aggregate_id)
 
@@ -411,7 +453,10 @@ class EventSourcingService:
         return events
 
     async def get_event_history(
-        self, aggregate_id: str, from_date: Optional[datetime] = None, to_date: Optional[datetime] = None
+        self,
+        aggregate_id: str,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
     ) -> List[EventEnvelope]:
         """Get event history for an aggregate within date range."""
         events = await self.event_store.get_all_events(aggregate_id)
@@ -423,7 +468,9 @@ class EventSourcingService:
 
         return sorted(events, key=lambda e: e.timestamp)
 
-    async def get_aggregate_at_time(self, aggregate_id: str, timestamp: datetime) -> Optional[SimulationAggregate]:
+    async def get_aggregate_at_time(
+        self, aggregate_id: str, timestamp: datetime
+    ) -> Optional[SimulationAggregate]:
         """Get aggregate state at a specific point in time."""
         events = await self.event_store.get_all_events(aggregate_id)
         events_before_time = [e for e in events if e.timestamp <= timestamp]
@@ -481,7 +528,11 @@ class EventSourcingService:
             "total_aggregates": len(self.event_store.get_aggregate_ids()),
             "oldest_event": oldest_event.isoformat() if oldest_event else None,
             "newest_event": newest_event.isoformat() if newest_event else None,
-            "average_events_per_aggregate": total_events / aggregates_with_events if aggregates_with_events > 0 else 0,
+            "average_events_per_aggregate": (
+                total_events / aggregates_with_events
+                if aggregates_with_events > 0
+                else 0
+            ),
         }
 
 

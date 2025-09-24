@@ -39,7 +39,9 @@ class StructuredFormatter(logging.Formatter):
         """
         # Base log entry structure
         log_entry: Dict[str, Any] = {
-            "timestamp": datetime.fromtimestamp(record.created, timezone.utc).isoformat(),
+            "timestamp": datetime.fromtimestamp(
+                record.created, timezone.utc
+            ).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -177,7 +179,8 @@ class CompactFormatter(logging.Formatter):
     def __init__(self) -> None:
         """Initialize compact formatter."""
         super().__init__(
-            fmt="%(asctime)s %(levelname)-8s %(name)-20s %(correlation_id)s %(message)s", datefmt="%H:%M:%S"
+            fmt="%(asctime)s %(levelname)-8s %(name)-20s %(correlation_id)s %(message)s",
+            datefmt="%H:%M:%S",
         )
 
     def format(self, record: logging.LogRecord) -> str:
@@ -206,7 +209,9 @@ class PerformanceFormatter(logging.Formatter):
 
     def __init__(self) -> None:
         """Initialize performance formatter."""
-        super().__init__(fmt="%(asctime)s PERF %(name)s %(operation)s %(duration_ms).2fms %(message)s")
+        super().__init__(
+            fmt="%(asctime)s PERF %(name)s %(operation)s %(duration_ms).2fms %(message)s"
+        )
 
     def format(self, record: logging.LogRecord) -> str:
         """Format performance log record.

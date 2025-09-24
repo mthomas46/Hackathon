@@ -13,7 +13,13 @@ shared_path = Path(__file__).parent.parent.parent.parent.parent / "services" / "
 sys.path.insert(0, str(shared_path))
 
 try:
-    from monitoring.health import DependencyHealth, HealthManager, HealthStatus, SystemHealth, register_health_endpoints
+    from monitoring.health import (
+        DependencyHealth,
+        HealthManager,
+        HealthStatus,
+        SystemHealth,
+        register_health_endpoints,
+    )
 except ImportError:
     # Create mock classes for testing
     class HealthManager:
@@ -45,15 +51,18 @@ class SimulationHealthManager(HealthManager):
 
         # Add simulation-specific health checks
         self.add_health_check(
-            name="domain_models_loaded", description="Domain models and aggregates are properly loaded"
+            name="domain_models_loaded",
+            description="Domain models and aggregates are properly loaded",
         )
 
         self.add_health_check(
-            name="infrastructure_ready", description="Infrastructure adapters and repositories are ready"
+            name="infrastructure_ready",
+            description="Infrastructure adapters and repositories are ready",
         )
 
         self.add_health_check(
-            name="ecosystem_integration", description="Integration with ecosystem services is functional"
+            name="ecosystem_integration",
+            description="Integration with ecosystem services is functional",
         )
 
     async def basic_health(self) -> HealthStatus:
@@ -76,13 +85,17 @@ class SimulationHealthManager(HealthManager):
             # Check if infrastructure components are available
             pass
 
-            health_status.api_connected = True  # Using as infrastructure readiness indicator
+            health_status.api_connected = (
+                True  # Using as infrastructure readiness indicator
+            )
         except ImportError:
             health_status.api_connected = False
 
         # Check ecosystem service integration
         ecosystem_healthy = await self._check_ecosystem_services()
-        health_status.llm_connected = ecosystem_healthy  # Using as ecosystem integration indicator
+        health_status.llm_connected = (
+            ecosystem_healthy  # Using as ecosystem integration indicator
+        )
 
         return health_status
 
@@ -92,7 +105,9 @@ class SimulationHealthManager(HealthManager):
 
         healthy_count = 0
         for service_name in critical_services:
-            service_info = next((s for s in ECOSYSTEM_SERVICES if s.name == service_name), None)
+            service_info = next(
+                (s for s in ECOSYSTEM_SERVICES if s.name == service_name), None
+            )
             if service_info:
                 try:
                     dep_health = await self.dependency_health(
@@ -131,7 +146,9 @@ class SimulationHealthManager(HealthManager):
         status = {}
 
         for service_name in critical_services:
-            service_info = next((s for s in ECOSYSTEM_SERVICES if s.name == service_name), None)
+            service_info = next(
+                (s for s in ECOSYSTEM_SERVICES if s.name == service_name), None
+            )
             if service_info:
                 try:
                     health = await self.dependency_health(
@@ -140,7 +157,9 @@ class SimulationHealthManager(HealthManager):
                     )
                     status[service_name] = health
                 except Exception as e:
-                    status[service_name] = DependencyHealth(name=service_name, status="unknown", error=str(e))
+                    status[service_name] = DependencyHealth(
+                        name=service_name, status="unknown", error=str(e)
+                    )
 
         return status
 
@@ -167,7 +186,11 @@ def create_simulation_health_endpoints():
             result = await health_manager.basic_health()
             if result is None:
                 # Fallback if health manager returns None
-                return {"status": "healthy", "service": "project-simulation", "timestamp": "2025-01-01T00:00:00Z"}
+                return {
+                    "status": "healthy",
+                    "service": "project-simulation",
+                    "timestamp": "2025-01-01T00:00:00Z",
+                }
             return result
 
         async def health_detailed():
@@ -199,7 +222,11 @@ def create_simulation_health_endpoints():
     except Exception:
         # Complete fallback if health manager fails
         async def health():
-            return {"status": "healthy", "service": "project-simulation", "timestamp": "2025-01-01T00:00:00Z"}
+            return {
+                "status": "healthy",
+                "service": "project-simulation",
+                "timestamp": "2025-01-01T00:00:00Z",
+            }
 
         async def health_detailed():
             return {
@@ -217,8 +244,16 @@ def create_simulation_health_endpoints():
                 "timestamp": "2025-01-01T00:00:00Z",
             }
 
-    return {"health": health, "health_detailed": health_detailed, "health_system": health_system}
+    return {
+        "health": health,
+        "health_detailed": health_detailed,
+        "health_system": health_system,
+    }
 
 
 # Re-export key health utilities
-__all__ = ["SimulationHealthManager", "get_simulation_health_manager", "create_simulation_health_endpoints"]
+__all__ = [
+    "SimulationHealthManager",
+    "get_simulation_health_manager",
+    "create_simulation_health_endpoints",
+]

@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
 
-
 class ContentQualityAnalysisResult:
     """Result of content quality analysis."""
 
@@ -51,7 +50,9 @@ class ContentQualityAnalyzerAdapter(ABC):
     """Abstract adapter for content quality analysis."""
 
     @abstractmethod
-    async def analyze_quality(self, document_text: str, document_id: str) -> ContentQualityAnalysisResult:
+    async def analyze_quality(
+        self, document_text: str, document_id: str
+    ) -> ContentQualityAnalysisResult:
         """Analyze content quality."""
 
     @abstractmethod
@@ -65,7 +66,9 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
     def __init__(self):
         """Initialize local content quality analyzer."""
 
-    async def analyze_quality(self, document_text: str, document_id: str) -> ContentQualityAnalysisResult:
+    async def analyze_quality(
+        self, document_text: str, document_id: str
+    ) -> ContentQualityAnalysisResult:
         """Analyze content quality using local algorithms."""
         start_time = time.time()
 
@@ -79,7 +82,9 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
         completeness_score = self._calculate_completeness(document_text)
 
         # Calculate overall quality
-        overall_quality_score = (readability_score + (1 - complexity_score) + completeness_score) / 3
+        overall_quality_score = (
+            readability_score + (1 - complexity_score) + completeness_score
+        ) / 3
 
         # Identify issues
         issues = []
@@ -102,7 +107,8 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
             "word_count": len(document_text.split()),
             "sentence_count": len(document_text.split(".")),
             "paragraph_count": len(document_text.split("\n\n")),
-            "avg_words_per_sentence": len(document_text.split()) / max(1, len(document_text.split("."))),
+            "avg_words_per_sentence": len(document_text.split())
+            / max(1, len(document_text.split("."))),
         }
 
         processing_time = time.time() - start_time
@@ -148,8 +154,17 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
         complexity_ratio = len(complex_words) / len(words) if words else 0
 
         # Count technical indicators
-        technical_indicators = ["api", "function", "class", "method", "algorithm", "implementation"]
-        technical_count = sum(1 for word in words if word.lower() in technical_indicators)
+        technical_indicators = [
+            "api",
+            "function",
+            "class",
+            "method",
+            "algorithm",
+            "implementation",
+        ]
+        technical_count = sum(
+            1 for word in words if word.lower() in technical_indicators
+        )
 
         technical_ratio = technical_count / len(words) if words else 0
 
@@ -173,7 +188,9 @@ class LocalContentQualityAnalyzerAdapter(ContentQualityAnalyzerAdapter):
             "faq",
         ]
 
-        found_indicators = sum(1 for indicator in completeness_indicators if indicator in text_lower)
+        found_indicators = sum(
+            1 for indicator in completeness_indicators if indicator in text_lower
+        )
         completeness_ratio = found_indicators / len(completeness_indicators)
 
         # Check for structured content (headings, lists)

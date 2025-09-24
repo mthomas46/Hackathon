@@ -22,7 +22,9 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
 # Correlation ID context variable
-correlation_id_var: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
+correlation_id_var: ContextVar[Optional[str]] = ContextVar(
+    "correlation_id", default=None
+)
 
 
 @dataclass
@@ -100,9 +102,13 @@ class StructuredLogger(logging.Logger):
 
         # Add stack trace for errors
         if level >= logging.ERROR and exc_info:
-            structured_extra["stack_trace"] = "".join(traceback.format_exception(*exc_info))
+            structured_extra["stack_trace"] = "".join(
+                traceback.format_exception(*exc_info)
+            )
 
-        super()._log(level, msg, args, exc_info, structured_extra, stack_info, stacklevel)
+        super()._log(
+            level, msg, args, exc_info, structured_extra, stack_info, stacklevel
+        )
 
     def info_with_context(self, msg: str, **kwargs):
         """Log info message with context."""
@@ -180,7 +186,9 @@ class LoggingService:
 
         return self._loggers[name]
 
-    def log_performance(self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None):
+    def log_performance(
+        self, operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None
+    ):
         """Log performance metrics."""
         with self._lock:
             self._performance_monitor[operation].append((time.time(), duration))
@@ -190,7 +198,9 @@ class LoggingService:
                 self._performance_monitor[operation].pop(0)
 
             # Check for performance degradation
-            recent_measurements = [d for _, d in self._performance_monitor[operation][-50:]]
+            recent_measurements = [
+                d for _, d in self._performance_monitor[operation][-50:]
+            ]
             if len(recent_measurements) >= 10:
                 avg_duration = sum(recent_measurements) / len(recent_measurements)
                 if avg_duration > 5.0:  # 5 second threshold
@@ -204,13 +214,21 @@ class LoggingService:
                         },
                     )
 
-    async def log_error(self, error_type: str, message: str, service_name: str, correlation_id: Optional[str] = None):
+    async def log_error(
+        self,
+        error_type: str,
+        message: str,
+        service_name: str,
+        correlation_id: Optional[str] = None,
+    ):
         """Log and aggregate errors."""
         with self._lock:
             key = f"{error_type}:{message[:100]}"  # Truncate long messages
 
             if key not in self._error_aggregator:
-                self._error_aggregator[key] = ErrorAggregation(error_type=error_type, message_pattern=message[:200])
+                self._error_aggregator[key] = ErrorAggregation(
+                    error_type=error_type, message_pattern=message[:200]
+                )
 
             aggregation = self._error_aggregator[key]
             aggregation.count += 1
@@ -228,7 +246,9 @@ class LoggingService:
             # Check for high-frequency errors
             time_window = 60  # 1 minute
             recent_errors = [
-                agg for agg in self._error_aggregator.values() if time.time() - agg.last_seen < time_window
+                agg
+                for agg in self._error_aggregator.values()
+                if time.time() - agg.last_seen < time_window
             ]
 
             if len(recent_errors) > self._error_thresholds["high_frequency"]:
@@ -285,13 +305,39 @@ class LoggingService:
             return {
                 "total_unique_errors": len(self._error_aggregator),
                 "errors_by_severity": {
-                    "critical": len([e for e in self._error_aggregator.values() if e.severity == "critical"]),
-                    "high": len([e for e in self._error_aggregator.values() if e.severity == "high"]),
-                    "medium": len([e for e in self._error_aggregator.values() if e.severity == "medium"]),
-                    "low": len([e for e in self._error_aggregator.values() if e.severity == "low"]),
+                    "critical": len(
+                        [
+                            e
+                            for e in self._error_aggregator.values()
+                            if e.severity == "critical"
+                        ]
+                    ),
+                    "high": len(
+                        [
+                            e
+                            for e in self._error_aggregator.values()
+                            if e.severity == "high"
+                        ]
+                    ),
+                    "medium": len(
+                        [
+                            e
+                            for e in self._error_aggregator.values()
+                            if e.severity == "medium"
+                        ]
+                    ),
+                    "low": len(
+                        [
+                            e
+                            for e in self._error_aggregator.values()
+                            if e.severity == "low"
+                        ]
+                    ),
                 },
                 "most_frequent_errors": sorted(
-                    [(k, v.count) for k, v in self._error_aggregator.items()], key=lambda x: x[1], reverse=True
+                    [(k, v.count) for k, v in self._error_aggregator.items()],
+                    key=lambda x: x[1],
+                    reverse=True,
                 )[:10],
             }
 
@@ -317,7 +363,13 @@ class LoggingService:
             logs = list(self._log_queue)
 
         if format == "json":
-            return json.dumps([log.__dict__ if hasattr(log, "__dict__") else str(log) for log in logs], indent=2)
+            return json.dumps(
+                [
+                    log.__dict__ if hasattr(log, "__dict__") else str(log)
+                    for log in logs
+                ],
+                indent=2,
+            )
         else:
             return "\n".join(str(log) for log in logs)
 
@@ -393,7 +445,12 @@ def log_performance(operation: str, duration: float, **metadata):
     service.log_performance(operation, duration, metadata)
 
 
-async def log_error(error_type: str, message: str, service_name: str, correlation_id: Optional[str] = None):
+async def log_error(
+    error_type: str,
+    message: str,
+    service_name: str,
+    correlation_id: Optional[str] = None,
+):
     """Convenience function to log errors."""
     service = get_logging_service()
     await service.log_error(error_type, message, service_name, correlation_id)

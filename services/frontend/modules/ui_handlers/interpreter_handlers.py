@@ -4,7 +4,6 @@ Handles interpreter service visualization, including natural language
 query interpretation, intent recognition, and workflow execution.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from ..interpreter_monitor import interpreter_monitor
@@ -27,7 +26,9 @@ class InterpreterUIHandlers:
 
             # Get interpreter status and cached data
             status_data = interpreter_monitor.get_interpreter_status()
-            interpretation_history = interpreter_monitor.get_interpretation_history(limit=20)
+            interpretation_history = interpreter_monitor.get_interpretation_history(
+                limit=20
+            )
             execution_history = interpreter_monitor.get_execution_history(limit=20)
 
             # Build context for template
@@ -792,5 +793,7 @@ class InterpreterUIHandlers:
             return create_html_response(html, "Interpreter Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render interpreter dashboard", e, **build_frontend_context("render_interpreter_dashboard")
+                "render interpreter dashboard",
+                e,
+                **build_frontend_context("render_interpreter_dashboard")
             )

@@ -114,10 +114,16 @@ class ReportGeneratorService:
         confidence_level = ConfidenceLevel.from_score(confidence_score)
 
         # Determine approval recommendation based on confidence level and gaps
-        blocking_gaps = [gap for gap in detected_gaps if gap.get("blocking_approval", False)]
+        blocking_gaps = [
+            gap for gap in detected_gaps if gap.get("blocking_approval", False)
+        ]
         has_critical_concerns = len(critical_concerns) > 0
 
-        if confidence_level == ConfidenceLevel.CRITICAL or blocking_gaps or has_critical_concerns:
+        if (
+            confidence_level == ConfidenceLevel.CRITICAL
+            or blocking_gaps
+            or has_critical_concerns
+        ):
             approval_recommendation = ApprovalRecommendation.REJECT
         elif confidence_level == ConfidenceLevel.LOW:
             approval_recommendation = ApprovalRecommendation.ESCALATE
@@ -150,14 +156,22 @@ class ReportGeneratorService:
             ai_provider=ai_provider,
         )
 
-    def _assess_risk(self, cross_reference_results: Dict[str, Any], detected_gaps: List[Dict[str, Any]]) -> str:
+    def _assess_risk(
+        self,
+        cross_reference_results: Dict[str, Any],
+        detected_gaps: List[Dict[str, Any]],
+    ) -> str:
         """Assess overall risk based on analysis results."""
         # Calculate risk factors
         gap_count = len(detected_gaps)
-        blocking_gaps = len([g for g in detected_gaps if g.get("blocking_approval", False)])
+        blocking_gaps = len(
+            [g for g in detected_gaps if g.get("blocking_approval", False)]
+        )
 
         # Get consistency scores
-        doc_consistency = cross_reference_results.get("documentation_consistency_overall", 0.5)
+        doc_consistency = cross_reference_results.get(
+            "documentation_consistency_overall", 0.5
+        )
         req_alignment = cross_reference_results.get("overall_alignment_score", 0.5)
 
         # Determine risk level
@@ -274,7 +288,9 @@ class ReportGeneratorService:
         gap_items = []
         for gap in report.detected_gaps:
             blocking_badge = (
-                '<span style="color: red; font-weight: bold;">[BLOCKING]</span>' if gap.get("blocking_approval") else ""
+                '<span style="color: red; font-weight: bold;">[BLOCKING]</span>'
+                if gap.get("blocking_approval")
+                else ""
             )
             gap_items.append(
                 f"""
@@ -303,7 +319,10 @@ class ReportGeneratorService:
 
         concerns_section = ""
         if report.critical_concerns:
-            concern_items = [f"<li style='color: red;'>{concern}</li>" for concern in report.critical_concerns]
+            concern_items = [
+                f"<li style='color: red;'>{concern}</li>"
+                for concern in report.critical_concerns
+            ]
             concerns_section = f"""
             <h3>Critical Concerns</h3>
             <ul>{''.join(concern_items)}</ul>
@@ -311,7 +330,10 @@ class ReportGeneratorService:
 
         strengths_section = ""
         if report.strengths:
-            strength_items = [f"<li style='color: green;'>{strength}</li>" for strength in report.strengths]
+            strength_items = [
+                f"<li style='color: green;'>{strength}</li>"
+                for strength in report.strengths
+            ]
             strengths_section = f"""
             <h3>Strengths</h3>
             <ul>{''.join(strength_items)}</ul>

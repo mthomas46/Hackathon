@@ -7,10 +7,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from services.shared.core.di.services import ILoggerService
-from services.shared.core.logging.logger import get_logger
-from services.shared.core.performance.cache_manager import get_cache_manager
-from services.shared.core.performance.profiler import profile_async_operation
+# Using standardized shared services
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.intelligent_caching import get_service_cache
 
 
 @dataclass
@@ -41,7 +40,9 @@ class SentimentResult:
 class SentimentDetector:
     """Detects sentiment in text using rule-based analysis."""
 
-    def __init__(self, logger: Optional[ILoggerService] = None, cache: Optional[Any] = None):
+    def __init__(
+        self, logger: Optional[ILoggerService] = None, cache: Optional[Any] = None
+    ):
         """Initialize sentiment detector."""
         self._logger = logger or get_logger()
         self._cache = cache or get_cache_manager()
@@ -53,7 +54,9 @@ class SentimentDetector:
         cached_result = await self._cache.get(cache_key)
 
         if cached_result:
-            await self._logger.debug("Using cached sentiment analysis", text_length=len(text))
+            await self._logger.debug(
+                "Using cached sentiment analysis", text_length=len(text)
+            )
             return SentimentResult(**cached_result)
 
         async with profile_async_operation("detect_sentiment"):
@@ -62,7 +65,9 @@ class SentimentDetector:
             # Cache the result
             await self._cache.set(cache_key, result.to_dict(), ttl=1800)
 
-            await self._logger.debug(f"Detected sentiment: {result.sentiment}", confidence=result.confidence)
+            await self._logger.debug(
+                f"Detected sentiment: {result.sentiment}", confidence=result.confidence
+            )
 
             return result
 
@@ -141,7 +146,11 @@ class SentimentDetector:
             polarity=float(polarity),
             subjectivity=float(total_sentiment_words / len(words)) if words else 0.0,
             analyzer="rule_based",
-            metadata={"positive_words": positive_count, "negative_words": negative_count, "total_words": len(words)},
+            metadata={
+                "positive_words": positive_count,
+                "negative_words": negative_count,
+                "total_words": len(words),
+            },
         )
 
     async def detect_batch_sentiment(self, texts: List[str]) -> List[SentimentResult]:
@@ -153,7 +162,9 @@ class SentimentDetector:
         valid_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                await self._logger.error(f"Failed to analyze sentiment for text {i}", error=str(result))
+                await self._logger.error(
+                    f"Failed to analyze sentiment for text {i}", error=str(result)
+                )
                 valid_results.append(
                     SentimentResult(
                         text=texts[i],
@@ -173,7 +184,11 @@ class SentimentDetector:
 class SentimentAnalyzer:
     """Main sentiment analysis service."""
 
-    def __init__(self, sentiment_detector: Optional[SentimentDetector] = None, logger: Optional[ILoggerService] = None):
+    def __init__(
+        self,
+        sentiment_detector: Optional[SentimentDetector] = None,
+        logger: Optional[ILoggerService] = None,
+    ):
         """Initialize sentiment analyzer."""
         self._sentiment_detector = sentiment_detector or SentimentDetector()
         self._logger = logger or get_logger()
@@ -227,7 +242,9 @@ class SentimentAnalyzer:
             start_time = datetime.now(timezone.utc)
 
             try:
-                sentiment_results = await self._sentiment_detector.detect_batch_sentiment(texts)
+                sentiment_results = (
+                    await self._sentiment_detector.detect_batch_sentiment(texts)
+                )
                 execution_time = datetime.now(timezone.utc) - start_time
 
                 results = []
@@ -251,8 +268,13 @@ class SentimentAnalyzer:
                     "execution_time_seconds": execution_time.total_seconds(),
                     "created_at": start_time.isoformat(),
                     "summary": {
-                        "sentiment_distribution": self._calculate_sentiment_distribution(sentiment_results),
-                        "average_confidence": sum(s.confidence for s in sentiment_results) / len(sentiment_results),
+                        "sentiment_distribution": self._calculate_sentiment_distribution(
+                            sentiment_results
+                        ),
+                        "average_confidence": sum(
+                            s.confidence for s in sentiment_results
+                        )
+                        / len(sentiment_results),
                     },
                 }
 
@@ -277,7 +299,9 @@ class SentimentAnalyzer:
                     "status": "failed",
                 }
 
-    def _calculate_sentiment_distribution(self, results: List[SentimentResult]) -> Dict[str, int]:
+    def _calculate_sentiment_distribution(
+        self, results: List[SentimentResult]
+    ) -> Dict[str, int]:
         """Calculate distribution of sentiment labels."""
         distribution = {"positive": 0, "negative": 0, "neutral": 0}
         for result in results:

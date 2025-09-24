@@ -81,15 +81,29 @@ class TestDocumentEntity:
 
         # Test very large content (should be allowed but flagged)
         large_content = "x" * 1000000  # 1MB content
-        doc = Document(id="large-doc", title="Large Document", content=large_content, repository_id="repo-001")
+        doc = Document(
+            id="large-doc",
+            title="Large Document",
+            content=large_content,
+            repository_id="repo-001",
+        )
         assert len(doc.content) == 1000000
 
     def test_document_metadata_handling(self):
         """Test document metadata handling."""
-        metadata = {"language": "python", "size": 1024, "lines": 50, "tags": ["test", "documentation"]}
+        metadata = {
+            "language": "python",
+            "size": 1024,
+            "lines": 50,
+            "tags": ["test", "documentation"],
+        }
 
         doc = Document(
-            id="meta-doc", title="Metadata Document", content="Content", repository_id="repo-001", metadata=metadata
+            id="meta-doc",
+            title="Metadata Document",
+            content="Content",
+            repository_id="repo-001",
+            metadata=metadata,
         )
 
         assert doc.metadata == metadata
@@ -100,7 +114,11 @@ class TestDocumentEntity:
         """Test document version handling."""
         # Test semantic versioning
         doc = Document(
-            id="version-doc", title="Version Document", content="Content", repository_id="repo-001", version="2.1.3"
+            id="version-doc",
+            title="Version Document",
+            content="Content",
+            repository_id="repo-001",
+            version="2.1.3",
         )
 
         assert doc.version == "2.1.3"
@@ -113,7 +131,12 @@ class TestDocumentEntity:
         """Test document timestamp handling."""
         before_creation = datetime.now(timezone.utc)
 
-        doc = Document(id="time-doc", title="Time Document", content="Content", repository_id="repo-001")
+        doc = Document(
+            id="time-doc",
+            title="Time Document",
+            content="Content",
+            repository_id="repo-001",
+        )
 
         after_creation = datetime.now(timezone.utc)
 
@@ -122,11 +145,26 @@ class TestDocumentEntity:
 
     def test_document_equality(self):
         """Test document equality comparison."""
-        doc1 = Document(id="equal-doc", title="Equal Document", content="Content", repository_id="repo-001")
+        doc1 = Document(
+            id="equal-doc",
+            title="Equal Document",
+            content="Content",
+            repository_id="repo-001",
+        )
 
-        doc2 = Document(id="equal-doc", title="Equal Document", content="Content", repository_id="repo-001")
+        doc2 = Document(
+            id="equal-doc",
+            title="Equal Document",
+            content="Content",
+            repository_id="repo-001",
+        )
 
-        doc3 = Document(id="different-doc", title="Different Document", content="Content", repository_id="repo-001")
+        doc3 = Document(
+            id="different-doc",
+            title="Different Document",
+            content="Content",
+            repository_id="repo-001",
+        )
 
         assert doc1 == doc2
         assert doc1 != doc3
@@ -134,9 +172,19 @@ class TestDocumentEntity:
 
     def test_document_hash(self):
         """Test document hash for use in sets and dictionaries."""
-        doc1 = Document(id="hash-doc", title="Hash Document", content="Content", repository_id="repo-001")
+        doc1 = Document(
+            id="hash-doc",
+            title="Hash Document",
+            content="Content",
+            repository_id="repo-001",
+        )
 
-        doc2 = Document(id="hash-doc", title="Hash Document", content="Content", repository_id="repo-001")
+        doc2 = Document(
+            id="hash-doc",
+            title="Hash Document",
+            content="Content",
+            repository_id="repo-001",
+        )
 
         doc_set = {doc1, doc2}
         assert len(doc_set) == 1  # Should be treated as the same document
@@ -186,7 +234,12 @@ class TestDocumentEntity:
 
     def test_document_repository_relationship(self):
         """Test document repository relationship."""
-        doc = Document(id="repo-doc", title="Repository Document", content="Content", repository_id="test-repo-001")
+        doc = Document(
+            id="repo-doc",
+            title="Repository Document",
+            content="Content",
+            repository_id="test-repo-001",
+        )
 
         assert doc.repository_id == "test-repo-001"
 
@@ -247,7 +300,12 @@ def code_block():
 
 Final paragraph."""
 
-        doc = Document(id="analysis-doc", title="Analysis Document", content=content, repository_id="repo-001")
+        doc = Document(
+            id="analysis-doc",
+            title="Analysis Document",
+            content=content,
+            repository_id="repo-001",
+        )
 
         # Test content length
         assert len(doc.content) > 0
@@ -265,17 +323,32 @@ Final paragraph."""
         """Test document validation edge cases."""
         # Test with very long title
         long_title = "A" * 1000
-        doc = Document(id="long-title-doc", title=long_title, content="Content", repository_id="repo-001")
+        doc = Document(
+            id="long-title-doc",
+            title=long_title,
+            content="Content",
+            repository_id="repo-001",
+        )
         assert doc.title == long_title
 
         # Test with special characters in title
         special_title = "Document with @#$%^&*() symbols!"
-        doc = Document(id="special-title-doc", title=special_title, content="Content", repository_id="repo-001")
+        doc = Document(
+            id="special-title-doc",
+            title=special_title,
+            content="Content",
+            repository_id="repo-001",
+        )
         assert doc.title == special_title
 
         # Test with Unicode content
         unicode_content = "Document with Unicode: 🚀 📚 💻 🌟"
-        doc = Document(id="unicode-doc", title="Unicode Document", content=unicode_content, repository_id="repo-001")
+        doc = Document(
+            id="unicode-doc",
+            title="Unicode Document",
+            content=unicode_content,
+            repository_id="repo-001",
+        )
         assert "🚀" in doc.content
         assert "📚" in doc.content
 

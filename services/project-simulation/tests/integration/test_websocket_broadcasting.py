@@ -129,7 +129,10 @@ class TestWebSocketBroadcastingIntegration:
         """Test WebSocket message formatting."""
         # Test simulation event message format
         event = SimulationStarted(
-            simulation_id="sim_123", project_id="proj_123", scenario_type="full_project", estimated_duration_hours=8
+            simulation_id="sim_123",
+            project_id="proj_123",
+            scenario_type="full_project",
+            estimated_duration_hours=8,
         )
 
         # Verify event has required attributes for message formatting

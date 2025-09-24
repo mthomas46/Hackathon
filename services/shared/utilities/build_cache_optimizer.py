@@ -79,7 +79,9 @@ class BuildCacheOptimizer:
             context_opportunities = self._analyze_build_context(layers)
             optimizations.extend(context_opportunities)
 
-            self.optimizations = sorted(optimizations, key=lambda x: x.priority, reverse=True)
+            self.optimizations = sorted(
+                optimizations, key=lambda x: x.priority, reverse=True
+            )
 
             return {
                 "dockerfile_path": str(self.dockerfile_path),
@@ -94,7 +96,9 @@ class BuildCacheOptimizer:
                     }
                     for opt in self.optimizations[:10]  # Top 10 optimizations
                 ],
-                "cache_efficiency_score": self._calculate_cache_efficiency_score(layers),
+                "cache_efficiency_score": self._calculate_cache_efficiency_score(
+                    layers
+                ),
             }
 
         except Exception as e:
@@ -166,7 +170,10 @@ class BuildCacheOptimizer:
         dependencies = self._analyze_layer_dependencies(instruction, content)
 
         return DockerLayer(
-            instruction=instruction, content_hash=content_hash, size_estimate=size_estimate, dependencies=dependencies
+            instruction=instruction,
+            content_hash=content_hash,
+            size_estimate=size_estimate,
+            dependencies=dependencies,
         )
 
     def _estimate_layer_size(self, instruction: str, content: List[str]) -> int:
@@ -187,12 +194,21 @@ class BuildCacheOptimizer:
                                 if source_path.is_file():
                                     total_size += source_path.stat().st_size
                                 elif source_path.is_dir():
-                                    total_size += sum(f.stat().st_size for f in source_path.rglob("*") if f.is_file())
+                                    total_size += sum(
+                                        f.stat().st_size
+                                        for f in source_path.rglob("*")
+                                        if f.is_file()
+                                    )
                         except (OSError, ValueError):
                             # Fallback: estimate based on common file types
-                            if any(ext in source for ext in [".py", ".js", ".ts", ".java"]):
+                            if any(
+                                ext in source for ext in [".py", ".js", ".ts", ".java"]
+                            ):
                                 total_size += 100 * 1024  # 100KB per source file
-                            elif any(ext in source for ext in ["requirements.txt", "package.json"]):
+                            elif any(
+                                ext in source
+                                for ext in ["requirements.txt", "package.json"]
+                            ):
                                 total_size += 10 * 1024  # 10KB for dep files
                             else:
                                 total_size += 50 * 1024  # 50KB default
@@ -210,7 +226,9 @@ class BuildCacheOptimizer:
 
         return 0  # Other instructions typically don't add size
 
-    def _analyze_layer_dependencies(self, instruction: str, content: List[str]) -> List[str]:
+    def _analyze_layer_dependencies(
+        self, instruction: str, content: List[str]
+    ) -> List[str]:
         """Analyze what this layer depends on."""
         dependencies = []
 
@@ -241,7 +259,9 @@ class BuildCacheOptimizer:
 
         return dependencies
 
-    def _analyze_layer_ordering(self, layers: List[DockerLayer]) -> List[CacheOptimization]:
+    def _analyze_layer_ordering(
+        self, layers: List[DockerLayer]
+    ) -> List[CacheOptimization]:
         """Analyze layer ordering for optimal caching."""
         optimizations = []
 
@@ -266,7 +286,9 @@ class BuildCacheOptimizer:
 
                     # If RUN doesn't depend on files that COPY provides, suggest reordering
                     file_deps = {dep for dep in copy_deps if dep.startswith("file:")}
-                    if file_deps and not any(dep in file_deps for dep in run_layer.dependencies):
+                    if file_deps and not any(
+                        dep in file_deps for dep in run_layer.dependencies
+                    ):
                         optimizations.append(
                             CacheOptimization(
                                 type="layer_order",
@@ -286,7 +308,11 @@ class BuildCacheOptimizer:
         for idx, layer in enumerate(layers):
             if layer.instruction == "RUN":
                 run_content = " ".join(
-                    layer.instruction + " " + "\n".join([layer.instruction] if hasattr(layer, "content") else [])
+                    layer.instruction
+                    + " "
+                    + "\n".join(
+                        [layer.instruction] if hasattr(layer, "content") else []
+                    )
                 ).lower()
                 if "apt-get install" in run_content or "pip install" in run_content:
                     install_runs.append(idx)
@@ -307,7 +333,9 @@ class BuildCacheOptimizer:
 
         return optimizations
 
-    def _analyze_multi_stage_opportunities(self, layers: List[DockerLayer]) -> List[CacheOptimization]:
+    def _analyze_multi_stage_opportunities(
+        self, layers: List[DockerLayer]
+    ) -> List[CacheOptimization]:
         """Analyze opportunities for multi-stage builds."""
         optimizations = []
 
@@ -318,9 +346,14 @@ class BuildCacheOptimizer:
         for layer in layers:
             if layer.instruction == "RUN":
                 run_content = " ".join([layer.instruction]).lower()
-                if "pip install" in run_content and ("dev" in run_content or "test" in run_content):
+                if "pip install" in run_content and (
+                    "dev" in run_content or "test" in run_content
+                ):
                     has_dev_deps = True
-                if any(tool in run_content for tool in ["gcc", "build-essential", "git", "curl"]):
+                if any(
+                    tool in run_content
+                    for tool in ["gcc", "build-essential", "git", "curl"]
+                ):
                     has_build_tools = True
 
         if has_dev_deps or has_build_tools:
@@ -356,7 +389,9 @@ class BuildCacheOptimizer:
 
         return optimizations
 
-    def _analyze_dependency_separation(self, layers: List[DockerLayer]) -> List[CacheOptimization]:
+    def _analyze_dependency_separation(
+        self, layers: List[DockerLayer]
+    ) -> List[CacheOptimization]:
         """Analyze opportunities to separate frequently changing dependencies."""
         optimizations = []
 
@@ -367,7 +402,13 @@ class BuildCacheOptimizer:
                 deps = [dep for dep in layer.dependencies if dep.startswith("file:")]
                 for dep in deps:
                     if any(
-                        dep_file in dep for dep_file in ["requirements.txt", "package.json", "go.mod", "Cargo.toml"]
+                        dep_file in dep
+                        for dep_file in [
+                            "requirements.txt",
+                            "package.json",
+                            "go.mod",
+                            "Cargo.toml",
+                        ]
                     ):
                         dep_file_layers.append((idx, layer, dep))
 
@@ -378,9 +419,16 @@ class BuildCacheOptimizer:
             for check_idx in range(dep_idx + 1, len(layers)):
                 check_layer = layers[check_idx]
                 if check_layer.instruction in ["COPY", "ADD"]:
-                    check_deps = [dep for dep in check_layer.dependencies if dep.startswith("file:")]
+                    check_deps = [
+                        dep
+                        for dep in check_layer.dependencies
+                        if dep.startswith("file:")
+                    ]
                     # Check if it copies source code files
-                    if any(".py" in dep or ".js" in dep or ".java" in dep for dep in check_deps):
+                    if any(
+                        ".py" in dep or ".js" in dep or ".java" in dep
+                        for dep in check_deps
+                    ):
                         app_code_found = True
                         break
 
@@ -402,7 +450,9 @@ class BuildCacheOptimizer:
 
         return optimizations
 
-    def _analyze_build_context(self, layers: List[DockerLayer]) -> List[CacheOptimization]:
+    def _analyze_build_context(
+        self, layers: List[DockerLayer]
+    ) -> List[CacheOptimization]:
         """Analyze build context optimization opportunities."""
         optimizations = []
 
@@ -475,12 +525,16 @@ class BuildCacheOptimizer:
         for i, layer in enumerate(layers):
             if layer.instruction in ["COPY", "ADD"]:
                 deps = [dep for dep in layer.dependencies if dep.startswith("file:")]
-                has_deps = any("requirements.txt" in dep or "package.json" in dep for dep in deps)
+                has_deps = any(
+                    "requirements.txt" in dep or "package.json" in dep for dep in deps
+                )
                 has_source = any(".py" in dep or ".js" in dep for dep in deps)
 
                 if has_deps and has_source and i < len(layers) - 1:
                     # Check if there are more COPY layers after this one
-                    remaining_copy = any(l.instruction in ["COPY", "ADD"] for l in layers[i + 1 :])
+                    remaining_copy = any(
+                        l.instruction in ["COPY", "ADD"] for l in layers[i + 1 :]
+                    )
                     if remaining_copy:
                         has_dep_separation_penalty = True
                         break
@@ -505,9 +559,15 @@ class BuildCacheOptimizer:
             optimized_lines = []
 
             # Add header with optimization suggestions
-            optimized_lines.append("# =========================================================================")
-            optimized_lines.append("# OPTIMIZED DOCKERFILE - Generated by Build Cache Optimizer")
-            optimized_lines.append("# =========================================================================")
+            optimized_lines.append(
+                "# ========================================================================="
+            )
+            optimized_lines.append(
+                "# OPTIMIZED DOCKERFILE - Generated by Build Cache Optimizer"
+            )
+            optimized_lines.append(
+                "# ========================================================================="
+            )
             optimized_lines.append(
                 f"# Cache Efficiency Score: {self._calculate_cache_efficiency_score(self._parse_dockerfile_layers(lines)):.1f}/100"
             )
@@ -515,8 +575,12 @@ class BuildCacheOptimizer:
             optimized_lines.append("# Top Optimization Opportunities:")
             for i, opt in enumerate(self.optimizations[:5], 1):
                 optimized_lines.append(f"# {i}. {opt.description}")
-                optimized_lines.append(f"#    Estimated savings: {opt.estimated_savings}")
-            optimized_lines.append("# =========================================================================")
+                optimized_lines.append(
+                    f"#    Estimated savings: {opt.estimated_savings}"
+                )
+            optimized_lines.append(
+                "# ========================================================================="
+            )
             optimized_lines.append("")
 
             optimized_lines.extend(lines)
@@ -667,10 +731,20 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Docker Build Cache Optimizer")
-    parser.add_argument("--analyze", action="store_true", help="Analyze current Dockerfile for optimizations")
-    parser.add_argument("--optimize", action="store_true", help="Generate optimized Dockerfile")
-    parser.add_argument("--dockerignore", action="store_true", help="Generate .dockerignore template")
-    parser.add_argument("--path", help="Path to service directory (default: current directory)")
+    parser.add_argument(
+        "--analyze",
+        action="store_true",
+        help="Analyze current Dockerfile for optimizations",
+    )
+    parser.add_argument(
+        "--optimize", action="store_true", help="Generate optimized Dockerfile"
+    )
+    parser.add_argument(
+        "--dockerignore", action="store_true", help="Generate .dockerignore template"
+    )
+    parser.add_argument(
+        "--path", help="Path to service directory (default: current directory)"
+    )
 
     args = parser.parse_args()
 

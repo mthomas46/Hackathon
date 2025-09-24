@@ -14,9 +14,15 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
-from simulation.infrastructure.analytics.analytics_integration import AnalysisInsight, InsightCategory, InsightPriority
+from simulation.infrastructure.analytics.analytics_integration import (
+    AnalysisInsight,
+    InsightCategory,
+    InsightPriority,
+)
 from simulation.infrastructure.integration.service_clients import get_ecosystem_client
 from simulation.infrastructure.logging import get_simulation_logger
 
@@ -130,20 +136,28 @@ class InsightGenerator:
             insights = []
 
             # Generate pattern-based insights
-            pattern_insights = await self._generate_pattern_based_insights(analysis_results, context)
+            pattern_insights = await self._generate_pattern_based_insights(
+                analysis_results, context
+            )
             insights.extend(pattern_insights)
 
             # Generate correlation insights
-            correlation_insights = await self._generate_correlation_insights(analysis_results, context)
+            correlation_insights = await self._generate_correlation_insights(
+                analysis_results, context
+            )
             insights.extend(correlation_insights)
 
             # Generate predictive insights
             if historical_data:
-                predictive_insights = await self._generate_predictive_insights(analysis_results, historical_data)
+                predictive_insights = await self._generate_predictive_insights(
+                    analysis_results, historical_data
+                )
                 insights.extend(predictive_insights)
 
             # Generate contextual insights
-            contextual_insights = await self._generate_contextual_insights(analysis_results, context)
+            contextual_insights = await self._generate_contextual_insights(
+                analysis_results, context
+            )
             insights.extend(contextual_insights)
 
             # Filter and prioritize insights
@@ -181,11 +195,17 @@ class InsightGenerator:
                         insights.append(insight)
 
             except Exception as e:
-                self.logger.warning("Pattern insight generation failed", pattern=pattern_name, error=str(e))
+                self.logger.warning(
+                    "Pattern insight generation failed",
+                    pattern=pattern_name,
+                    error=str(e),
+                )
 
         return insights
 
-    def _check_pattern_triggers(self, pattern_config: Dict[str, Any], analysis_results: Dict[str, Any]) -> bool:
+    def _check_pattern_triggers(
+        self, pattern_config: Dict[str, Any], analysis_results: Dict[str, Any]
+    ) -> bool:
         """Check if pattern triggers are met."""
         triggers = pattern_config.get("triggers", [])
 
@@ -214,7 +234,9 @@ class InsightGenerator:
 
         return False
 
-    def _extract_metric_value(self, metric: str, analysis_results: Dict[str, Any]) -> Optional[float]:
+    def _extract_metric_value(
+        self, metric: str, analysis_results: Dict[str, Any]
+    ) -> Optional[float]:
         """Extract metric value from analysis results."""
         # Navigate nested dictionary structure
         keys = metric.split(".")
@@ -233,7 +255,10 @@ class InsightGenerator:
             # Convert to float if possible
             if isinstance(current, (int, float)):
                 return float(current)
-            elif isinstance(current, str) and current.replace(".", "").replace("%", "").isdigit():
+            elif (
+                isinstance(current, str)
+                and current.replace(".", "").replace("%", "").isdigit()
+            ):
                 return float(current.rstrip("%"))
 
         except (KeyError, IndexError, ValueError, TypeError):
@@ -251,7 +276,9 @@ class InsightGenerator:
         """Create an insight from a pattern match."""
         try:
             # Generate insight content using interpreter patterns
-            insight_content = await self._generate_insight_content(pattern_config, analysis_results, context)
+            insight_content = await self._generate_insight_content(
+                pattern_config, analysis_results, context
+            )
 
             if not insight_content:
                 return None
@@ -263,8 +290,12 @@ class InsightGenerator:
                 priority=pattern_config["priority"],
                 title=insight_content["title"],
                 description=insight_content["description"],
-                confidence_score=self._calculate_insight_confidence(pattern_config, analysis_results),
-                impact_score=self._calculate_insight_impact(pattern_config, analysis_results),
+                confidence_score=self._calculate_insight_confidence(
+                    pattern_config, analysis_results
+                ),
+                impact_score=self._calculate_insight_impact(
+                    pattern_config, analysis_results
+                ),
                 recommendations=insight_content["recommendations"],
                 metadata={
                     "pattern": pattern_name,
@@ -276,23 +307,34 @@ class InsightGenerator:
             return insight
 
         except Exception as e:
-            self.logger.error("Pattern insight creation failed", pattern=pattern_name, error=str(e))
+            self.logger.error(
+                "Pattern insight creation failed", pattern=pattern_name, error=str(e)
+            )
             return None
 
     async def _generate_insight_content(
-        self, pattern_config: Dict[str, Any], analysis_results: Dict[str, Any], context: Dict[str, Any]
+        self,
+        pattern_config: Dict[str, Any],
+        analysis_results: Dict[str, Any],
+        context: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
         """Generate insight content using interpreter patterns."""
         try:
             # Use interpreter service for content generation
             template = pattern_config.get("template", "")
-            variables = self._extract_template_variables(template, analysis_results, context)
+            variables = self._extract_template_variables(
+                template, analysis_results, context
+            )
 
             # Generate enhanced content
-            enhanced_content = await self._enhance_content_with_interpreter(template, variables, context)
+            enhanced_content = await self._enhance_content_with_interpreter(
+                template, variables, context
+            )
 
             return {
-                "title": enhanced_content.get("title", f"Insight: {pattern_config['type'].value}"),
+                "title": enhanced_content.get(
+                    "title", f"Insight: {pattern_config['type'].value}"
+                ),
                 "description": enhanced_content.get("description", template),
                 "recommendations": enhanced_content.get("recommendations", []),
             }
@@ -303,7 +345,10 @@ class InsightGenerator:
             return {
                 "title": f"Pattern Insight: {pattern_config['type'].value}",
                 "description": pattern_config.get("template", "Pattern detected"),
-                "recommendations": ["Review analysis results", "Consider mitigation strategies"],
+                "recommendations": [
+                    "Review analysis results",
+                    "Consider mitigation strategies",
+                ],
             }
 
     async def _enhance_content_with_interpreter(
@@ -323,14 +368,23 @@ class InsightGenerator:
             }
 
             # Call interpreter service
-            response = await self.interpreter_client.generate_insight_content(interpreter_request)
+            response = await self.interpreter_client.generate_insight_content(
+                interpreter_request
+            )
 
             return response.get(
-                "enhanced_content", {"title": f"Enhanced Insight", "description": template, "recommendations": []}
+                "enhanced_content",
+                {
+                    "title": f"Enhanced Insight",
+                    "description": template,
+                    "recommendations": [],
+                },
             )
 
         except Exception as e:
-            self.logger.warning("Interpreter enhancement failed, using template", error=str(e))
+            self.logger.warning(
+                "Interpreter enhancement failed, using template", error=str(e)
+            )
             return {
                 "title": f"Analysis Insight",
                 "description": self._fill_template(template, variables),
@@ -380,7 +434,9 @@ class InsightGenerator:
             # Generate insights from strong correlations
             for correlation in correlations:
                 if abs(correlation["coefficient"]) > 0.7:
-                    insight = await self._create_correlation_insight(correlation, context)
+                    insight = await self._create_correlation_insight(
+                        correlation, context
+                    )
                     if insight:
                         insights.append(insight)
 
@@ -389,7 +445,9 @@ class InsightGenerator:
 
         return insights
 
-    def _extract_key_metrics(self, analysis_results: Dict[str, Any]) -> Dict[str, float]:
+    def _extract_key_metrics(
+        self, analysis_results: Dict[str, Any]
+    ) -> Dict[str, float]:
         """Extract key metrics from analysis results."""
         metrics = {}
 
@@ -403,13 +461,17 @@ class InsightGenerator:
 
         for metric_name, possible_keys in metric_patterns.items():
             for key in possible_keys:
-                if key in analysis_results and isinstance(analysis_results[key], (int, float)):
+                if key in analysis_results and isinstance(
+                    analysis_results[key], (int, float)
+                ):
                     metrics[metric_name] = analysis_results[key]
                     break
 
         return metrics
 
-    def _calculate_metric_correlations(self, metrics: Dict[str, float]) -> List[Dict[str, Any]]:
+    def _calculate_metric_correlations(
+        self, metrics: Dict[str, float]
+    ) -> List[Dict[str, Any]]:
         """Calculate correlations between metrics."""
         correlations = []
         metric_names = list(metrics.keys())
@@ -419,7 +481,9 @@ class InsightGenerator:
                 metric1 = metric_names[i]
                 metric2 = metric_names[j]
 
-                coefficient = self._calculate_correlation_coefficient(metrics[metric1], metrics[metric2])
+                coefficient = self._calculate_correlation_coefficient(
+                    metrics[metric1], metrics[metric2]
+                )
 
                 correlations.append(
                     {
@@ -427,7 +491,9 @@ class InsightGenerator:
                         "metric2": metric2,
                         "coefficient": coefficient,
                         "strength": (
-                            "strong" if abs(coefficient) > 0.7 else "moderate" if abs(coefficient) > 0.5 else "weak"
+                            "strong"
+                            if abs(coefficient) > 0.7
+                            else "moderate" if abs(coefficient) > 0.5 else "weak"
                         ),
                     }
                 )
@@ -516,13 +582,21 @@ class InsightGenerator:
 
                 # Calculate trend from historical data
                 historical_values = [
-                    data.get(metric) for data in historical_data if isinstance(data.get(metric), (int, float))
+                    data.get(metric)
+                    for data in historical_data
+                    if isinstance(data.get(metric), (int, float))
                 ]
 
                 if len(historical_values) >= 2:
                     avg_historical = sum(historical_values) / len(historical_values)
-                    trend_direction = "improving" if current_value > avg_historical else "deteriorating"
-                    change_percentage = ((current_value - avg_historical) / avg_historical) * 100
+                    trend_direction = (
+                        "improving"
+                        if current_value > avg_historical
+                        else "deteriorating"
+                    )
+                    change_percentage = (
+                        (current_value - avg_historical) / avg_historical
+                    ) * 100
 
                     trends.append(
                         {
@@ -537,15 +611,21 @@ class InsightGenerator:
 
         return trends
 
-    async def _create_predictive_insight(self, trend: Dict[str, Any]) -> Optional[AnalysisInsight]:
+    async def _create_predictive_insight(
+        self, trend: Dict[str, Any]
+    ) -> Optional[AnalysisInsight]:
         """Create a predictive insight from trend analysis."""
         try:
-            title = f"Predictive Insight: {trend['metric'].replace('_', ' ').title()} Trend"
+            title = (
+                f"Predictive Insight: {trend['metric'].replace('_', ' ').title()} Trend"
+            )
             description = f"{trend['metric'].replace('_', ' ').title()} shows {trend['trend_direction']} trend with {abs(trend['change_percentage']):.1f}% change from historical average"
 
             recommendations = []
             if trend["trend_direction"] == "deteriorating":
-                recommendations.append(f"Address declining {trend['metric']} to prevent further degradation")
+                recommendations.append(
+                    f"Address declining {trend['metric']} to prevent further degradation"
+                )
                 recommendations.append("Implement monitoring and early warning systems")
 
             insight = AnalysisInsight(
@@ -579,15 +659,21 @@ class InsightGenerator:
 
         try:
             # Project phase context
-            phase_insights = self._generate_phase_context_insights(analysis_results, context)
+            phase_insights = self._generate_phase_context_insights(
+                analysis_results, context
+            )
             insights.extend(phase_insights)
 
             # Team composition context
-            team_insights = self._generate_team_context_insights(analysis_results, context)
+            team_insights = self._generate_team_context_insights(
+                analysis_results, context
+            )
             insights.extend(team_insights)
 
             # Timeline context
-            timeline_insights = self._generate_timeline_context_insights(analysis_results, context)
+            timeline_insights = self._generate_timeline_context_insights(
+                analysis_results, context
+            )
             insights.extend(timeline_insights)
 
         except Exception as e:
@@ -616,8 +702,14 @@ class InsightGenerator:
                         description="Test coverage is below recommended threshold for development phase",
                         confidence_score=0.8,
                         impact_score=0.7,
-                        recommendations=["Increase automated test coverage", "Implement code review requirements"],
-                        metadata={"phase": current_phase, "test_coverage": analysis_results.get("test_coverage")},
+                        recommendations=[
+                            "Increase automated test coverage",
+                            "Implement code review requirements",
+                        ],
+                        metadata={
+                            "phase": current_phase,
+                            "test_coverage": analysis_results.get("test_coverage"),
+                        },
                     )
                 )
 
@@ -642,7 +734,10 @@ class InsightGenerator:
                     description="Team size suggests potential communication and coordination challenges",
                     confidence_score=0.7,
                     impact_score=0.6,
-                    recommendations=["Implement structured communication protocols", "Consider team restructuring"],
+                    recommendations=[
+                        "Implement structured communication protocols",
+                        "Consider team restructuring",
+                    ],
                     metadata={"team_size": team_size},
                 )
             )
@@ -674,13 +769,18 @@ class InsightGenerator:
                         "Consider timeline extension",
                         "Increase resource allocation",
                     ],
-                    metadata={"progress": progress_percentage, "time_pressure": time_pressure},
+                    metadata={
+                        "progress": progress_percentage,
+                        "time_pressure": time_pressure,
+                    },
                 )
             )
 
         return insights
 
-    def _calculate_insight_confidence(self, pattern_config: Dict[str, Any], analysis_results: Dict[str, Any]) -> float:
+    def _calculate_insight_confidence(
+        self, pattern_config: Dict[str, Any], analysis_results: Dict[str, Any]
+    ) -> float:
         """Calculate confidence score for an insight."""
         base_confidence = 0.7
 
@@ -702,7 +802,9 @@ class InsightGenerator:
 
         return min(1.0, max(0.0, base_confidence))
 
-    def _calculate_insight_impact(self, pattern_config: Dict[str, Any], analysis_results: Dict[str, Any]) -> float:
+    def _calculate_insight_impact(
+        self, pattern_config: Dict[str, Any], analysis_results: Dict[str, Any]
+    ) -> float:
         """Calculate impact score for an insight."""
         base_impact = 0.6
 
@@ -721,7 +823,9 @@ class InsightGenerator:
 
         return min(1.0, max(0.0, base_impact))
 
-    def _filter_and_prioritize_insights(self, insights: List[AnalysisInsight]) -> List[AnalysisInsight]:
+    def _filter_and_prioritize_insights(
+        self, insights: List[AnalysisInsight]
+    ) -> List[AnalysisInsight]:
         """Filter and prioritize insights based on confidence and impact."""
         # Filter by confidence threshold
         filtered_insights = []

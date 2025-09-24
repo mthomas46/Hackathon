@@ -17,7 +17,12 @@ from typing import Any, Dict, List
 from langgraph.graph import END, StateGraph
 
 from ..langgraph.state import WorkflowState
-from ..langgraph.tools import analyze_document_tool, get_prompt_tool, store_document_tool, summarize_document_tool
+from ..langgraph.tools import (
+    analyze_document_tool,
+    get_prompt_tool,
+    store_document_tool,
+    summarize_document_tool,
+)
 
 
 class EndToEndTestWorkflow:
@@ -67,12 +72,16 @@ class EndToEndTestWorkflow:
             print(f"Generating mock data for {source}...")
 
             # Call mock data generator service
-            mock_data = await self._generate_mock_data_for_source(source, state.input_data)
+            mock_data = await self._generate_mock_data_for_source(
+                source, state.input_data
+            )
 
             # Store in workflow state
             state.output_data[f"{source}_documents"] = mock_data
 
-        state.add_log_entry("INFO", f"Generated mock data for {len(mock_sources)} sources")
+        state.add_log_entry(
+            "INFO", f"Generated mock data for {len(mock_sources)} sources"
+        )
         return state
 
     async def store_documents_node(self, state: WorkflowState) -> WorkflowState:
@@ -100,7 +109,9 @@ class EndToEndTestWorkflow:
                     stored_documents.append(doc)
 
         state.output_data["stored_documents"] = stored_documents
-        state.add_log_entry("INFO", f"Stored {len(stored_documents)} documents in doc_store")
+        state.add_log_entry(
+            "INFO", f"Stored {len(stored_documents)} documents in doc_store"
+        )
         return state
 
     async def prepare_analysis_node(self, state: WorkflowState) -> WorkflowState:
@@ -109,7 +120,8 @@ class EndToEndTestWorkflow:
 
         # Get analysis prompt from prompt_store
         analysis_prompt = await get_prompt_tool(
-            task_type="document_analysis", context={"analysis_type": "consistency", "quality_check": True}
+            task_type="document_analysis",
+            context={"analysis_type": "consistency", "quality_check": True},
         )
 
         if analysis_prompt["success"]:
@@ -195,7 +207,9 @@ class EndToEndTestWorkflow:
             print(f"Generating summary for: {doc.get('title', 'Unknown')}")
 
             # Generate summary using summarizer hub
-            summary = await summarize_document_tool(content=doc.get("content", ""), max_length=300, format="structured")
+            summary = await summarize_document_tool(
+                content=doc.get("content", ""), max_length=300, format="structured"
+            )
 
             if summary["success"]:
                 summary_data = {
@@ -218,7 +232,9 @@ class EndToEndTestWorkflow:
         analysis_results = state.output_data.get("analysis_results", [])
 
         # Combine all summaries and analyses
-        unified_content = self._create_unified_content(individual_summaries, analysis_results)
+        unified_content = self._create_unified_content(
+            individual_summaries, analysis_results
+        )
 
         # Generate unified summary
         unified_summary = await summarize_document_tool(
@@ -285,7 +301,9 @@ class EndToEndTestWorkflow:
             "documents_generated": len(state.output_data.get("stored_documents", [])),
             "analyses_performed": len(state.output_data.get("analysis_results", [])),
             "summaries_created": len(state.output_data.get("individual_summaries", [])),
-            "final_report_id": state.output_data.get("final_report", {}).get("report_id"),
+            "final_report_id": state.output_data.get("final_report", {}).get(
+                "report_id"
+            ),
             "execution_time": datetime.now().isoformat(),
         }
 
@@ -295,7 +313,9 @@ class EndToEndTestWorkflow:
 
     # Helper methods
 
-    async def _generate_mock_data_for_source(self, source: str, input_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _generate_mock_data_for_source(
+        self, source: str, input_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate mock data for a specific source."""
         # This would call the mock data generator service
         # For now, return sample data
@@ -314,7 +334,9 @@ class EndToEndTestWorkflow:
             },
         ]
 
-    def _create_unified_content(self, summaries: List[Dict], analyses: List[Dict]) -> str:
+    def _create_unified_content(
+        self, summaries: List[Dict], analyses: List[Dict]
+    ) -> str:
         """Create unified content from summaries and analyses."""
         content_parts = ["# Unified Document Analysis Report\n"]
 
@@ -345,9 +367,15 @@ class EndToEndTestWorkflow:
         # Execution Summary
         summary = state.output_data.get("execution_summary", {})
         report_parts.append("## Execution Summary")
-        report_parts.append(f"- Documents Generated: {summary.get('documents_generated', 0)}")
-        report_parts.append(f"- Analyses Performed: {summary.get('analyses_performed', 0)}")
-        report_parts.append(f"- Summaries Created: {summary.get('summaries_created', 0)}")
+        report_parts.append(
+            f"- Documents Generated: {summary.get('documents_generated', 0)}"
+        )
+        report_parts.append(
+            f"- Analyses Performed: {summary.get('analyses_performed', 0)}"
+        )
+        report_parts.append(
+            f"- Summaries Created: {summary.get('summaries_created', 0)}"
+        )
         report_parts.append("")
 
         # Services Tested

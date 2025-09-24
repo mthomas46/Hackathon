@@ -13,12 +13,18 @@ from typing import Any, Dict, List, Optional, Type, TypeVar
 import httpx
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.integration.service_discovery import get_service_url
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
-from simulation.infrastructure.utilities.simulation_utilities import get_simulation_retry_manager
+from simulation.infrastructure.monitoring.simulation_monitoring import (
+    get_simulation_monitoring_service,
+)
+from simulation.infrastructure.utilities.simulation_utilities import (
+    get_simulation_retry_manager,
+)
 
 T = TypeVar("T")
 
@@ -26,7 +32,13 @@ T = TypeVar("T")
 class ServiceClientError(Exception):
     """Base exception for service client errors."""
 
-    def __init__(self, service_name: str, operation: str, message: str, status_code: Optional[int] = None):
+    def __init__(
+        self,
+        service_name: str,
+        operation: str,
+        message: str,
+        status_code: Optional[int] = None,
+    ):
         self.service_name = service_name
         self.operation = operation
         self.message = message
@@ -38,15 +50,12 @@ class ServiceUnavailableError(ServiceClientError):
     """Exception raised when a service is unavailable."""
 
 
-
 class ServiceTimeoutError(ServiceClientError):
     """Exception raised when a service request times out."""
 
 
-
 class ServiceResponseError(ServiceClientError):
     """Exception raised when a service returns an error response."""
-
 
 
 class BaseServiceClient:
@@ -55,7 +64,9 @@ class BaseServiceClient:
     def __init__(self, service_name: str, base_url: Optional[str] = None):
         """Initialize the service client."""
         self.service_name = service_name
-        self.base_url = base_url or get_service_url(service_name) or f"http://localhost:5000"
+        self.base_url = (
+            base_url or get_service_url(service_name) or f"http://localhost:5000"
+        )
         self.logger = get_simulation_logger()
         self.monitoring = get_simulation_monitoring_service()
         self.retry_manager = get_simulation_retry_manager()
@@ -80,7 +91,9 @@ class BaseServiceClient:
             )
         return self._client
 
-    async def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
+    async def _make_request(
+        self, method: str, endpoint: str, **kwargs
+    ) -> Dict[str, Any]:
         """Make HTTP request with error handling and monitoring."""
         start_time = datetime.now()
         operation = f"{method}_{endpoint.replace('/', '_')}"
@@ -92,24 +105,37 @@ class BaseServiceClient:
             self.monitoring.record_simulation_event("service_call_started", operation)
 
             # Make the request with retry logic
-            response = await self._execute_with_retry(method, endpoint, client, **kwargs)
+            response = await self._execute_with_retry(
+                method, endpoint, client, **kwargs
+            )
 
             # Record successful service call
             response_time = (datetime.now() - start_time).total_seconds()
-            self.monitoring.record_ecosystem_service_call(self.service_name, operation, response_time)
+            self.monitoring.record_ecosystem_service_call(
+                self.service_name, operation, response_time
+            )
 
             return response.json() if response.content else {}
 
         except httpx.TimeoutException as e:
-            self._handle_error(operation, ServiceTimeoutError(self.service_name, operation, str(e)))
+            self._handle_error(
+                operation, ServiceTimeoutError(self.service_name, operation, str(e))
+            )
         except httpx.ConnectError as e:
-            self._handle_error(operation, ServiceUnavailableError(self.service_name, operation, str(e)))
+            self._handle_error(
+                operation, ServiceUnavailableError(self.service_name, operation, str(e))
+            )
         except httpx.HTTPStatusError as e:
             self._handle_error(
-                operation, ServiceResponseError(self.service_name, operation, str(e), e.response.status_code)
+                operation,
+                ServiceResponseError(
+                    self.service_name, operation, str(e), e.response.status_code
+                ),
             )
         except Exception as e:
-            self._handle_error(operation, ServiceClientError(self.service_name, operation, str(e)))
+            self._handle_error(
+                operation, ServiceClientError(self.service_name, operation, str(e))
+            )
 
     def _handle_error(self, operation: str, error: ServiceClientError):
         """Handle and log service errors."""
@@ -126,7 +152,9 @@ class BaseServiceClient:
 
         raise error
 
-    async def _execute_with_retry(self, method: str, endpoint: str, client: httpx.AsyncClient, **kwargs):
+    async def _execute_with_retry(
+        self, method: str, endpoint: str, client: httpx.AsyncClient, **kwargs
+    ):
         """Execute request with retry logic."""
 
         async def attempt():
@@ -154,29 +182,49 @@ class MockDataGeneratorClient(BaseServiceClient):
     def __init__(self):
         super().__init__("mock_data_generator")
 
-    async def generate_project_documents(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_project_documents(
+        self, config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate project documents."""
-        response = await self._make_request("POST", "/simulation/project-docs", json=config)
+        response = await self._make_request(
+            "POST", "/simulation/project-docs", json=config
+        )
         return response.get("documents", [])
 
-    async def generate_timeline_events(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_timeline_events(
+        self, config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate timeline events."""
-        response = await self._make_request("POST", "/simulation/timeline-events", json=config)
+        response = await self._make_request(
+            "POST", "/simulation/timeline-events", json=config
+        )
         return response.get("events", [])
 
-    async def generate_team_activities(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_team_activities(
+        self, config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate team activities."""
-        response = await self._make_request("POST", "/simulation/team-activities", json=config)
+        response = await self._make_request(
+            "POST", "/simulation/team-activities", json=config
+        )
         return response.get("activities", [])
 
-    async def generate_phase_documents(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_phase_documents(
+        self, config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate phase-specific documents."""
-        response = await self._make_request("POST", "/simulation/phase-documents", json=config)
+        response = await self._make_request(
+            "POST", "/simulation/phase-documents", json=config
+        )
         return response.get("documents", [])
 
-    async def generate_ecosystem_scenario(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_ecosystem_scenario(
+        self, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate complete ecosystem scenario."""
-        return await self._make_request("POST", "/simulation/ecosystem-scenario", json=config)
+        return await self._make_request(
+            "POST", "/simulation/ecosystem-scenario", json=config
+        )
 
 
 class DocStoreClient(BaseServiceClient):
@@ -185,7 +233,9 @@ class DocStoreClient(BaseServiceClient):
     def __init__(self):
         super().__init__("doc_store")
 
-    async def store_document(self, title: str, content: str, metadata: Dict[str, Any]) -> str:
+    async def store_document(
+        self, title: str, content: str, metadata: Dict[str, Any]
+    ) -> str:
         """Store a document."""
         payload = {"title": title, "content": content, "metadata": metadata}
         response = await self._make_request("POST", "/documents", json=payload)
@@ -195,16 +245,22 @@ class DocStoreClient(BaseServiceClient):
         """Retrieve a document."""
         return await self._make_request("GET", f"/documents/{document_id}")
 
-    async def update_document(self, document_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_document(
+        self, document_id: str, updates: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Update a document."""
-        return await self._make_request("PUT", f"/documents/{document_id}", json=updates)
+        return await self._make_request(
+            "PUT", f"/documents/{document_id}", json=updates
+        )
 
     async def delete_document(self, document_id: str) -> bool:
         """Delete a document."""
         await self._make_request("DELETE", f"/documents/{document_id}")
         return True
 
-    async def search_documents(self, query: str, filters: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    async def search_documents(
+        self, query: str, filters: Dict[str, Any] = None
+    ) -> List[Dict[str, Any]]:
         """Search documents."""
         payload = {"query": query}
         if filters:
@@ -224,9 +280,13 @@ class AnalysisServiceClient(BaseServiceClient):
         payload = {"document_id": document_id, "content": content}
         return await self._make_request("POST", "/analyze", json=payload)
 
-    async def analyze_documents(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_documents(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze multiple documents."""
-        return await self._make_request("POST", "/analyze/batch", json={"documents": documents})
+        return await self._make_request(
+            "POST", "/analyze/batch", json={"documents": documents}
+        )
 
     async def get_quality_metrics(self, document_id: str) -> Dict[str, Any]:
         """Get quality metrics for a document."""
@@ -234,7 +294,9 @@ class AnalysisServiceClient(BaseServiceClient):
 
     async def detect_duplicates(self, documents: List[str]) -> Dict[str, Any]:
         """Detect duplicate content."""
-        return await self._make_request("POST", "/duplicates", json={"documents": documents})
+        return await self._make_request(
+            "POST", "/duplicates", json={"documents": documents}
+        )
 
 
 class LLMGatewayClient(BaseServiceClient):
@@ -243,7 +305,9 @@ class LLMGatewayClient(BaseServiceClient):
     def __init__(self):
         super().__init__("llm_gateway")
 
-    async def generate_content(self, prompt: str, model: str = "gpt-4", **kwargs) -> Dict[str, Any]:
+    async def generate_content(
+        self, prompt: str, model: str = "gpt-4", **kwargs
+    ) -> Dict[str, Any]:
         """Generate content using LLM."""
         payload = {"prompt": prompt, "model": model, **kwargs}
         return await self._make_request("POST", "/generate", json=payload)
@@ -269,9 +333,13 @@ class OrchestratorClient(BaseServiceClient):
         response = await self._make_request("POST", "/workflows", json=definition)
         return response.get("workflow_id")
 
-    async def execute_workflow(self, workflow_id: str, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_workflow(
+        self, workflow_id: str, inputs: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a workflow."""
-        return await self._make_request("POST", f"/workflows/{workflow_id}/execute", json=inputs)
+        return await self._make_request(
+            "POST", f"/workflows/{workflow_id}/execute", json=inputs
+        )
 
     async def get_workflow_status(self, workflow_id: str) -> Dict[str, Any]:
         """Get workflow execution status."""
@@ -319,14 +387,20 @@ class NotificationServiceClient(BaseServiceClient):
         await self._make_request("POST", "/notifications", json=notification)
         return True
 
-    async def send_bulk_notifications(self, notifications: List[Dict[str, Any]]) -> bool:
+    async def send_bulk_notifications(
+        self, notifications: List[Dict[str, Any]]
+    ) -> bool:
         """Send multiple notifications."""
-        await self._make_request("POST", "/notifications/bulk", json={"notifications": notifications})
+        await self._make_request(
+            "POST", "/notifications/bulk", json={"notifications": notifications}
+        )
         return True
 
     async def get_notification_status(self, notification_id: str) -> Dict[str, Any]:
         """Get notification delivery status."""
-        return await self._make_request("GET", f"/notifications/{notification_id}/status")
+        return await self._make_request(
+            "GET", f"/notifications/{notification_id}/status"
+        )
 
 
 class SummarizerHubClient(BaseServiceClient):
@@ -342,7 +416,9 @@ class SummarizerHubClient(BaseServiceClient):
 
     async def summarize_documents(self, documents: List[str]) -> Dict[str, Any]:
         """Summarize multiple documents."""
-        return await self._make_request("POST", "/summarize/batch", json={"documents": documents})
+        return await self._make_request(
+            "POST", "/summarize/batch", json={"documents": documents}
+        )
 
     async def extract_key_points(self, text: str, max_points: int = 10) -> List[str]:
         """Extract key points from text."""
@@ -357,11 +433,17 @@ class InterpreterClient(BaseServiceClient):
     def __init__(self):
         super().__init__("interpreter")
 
-    async def analyze_relationships(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_relationships(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze relationships between documents."""
-        return await self._make_request("POST", "/analyze/relationships", json={"documents": documents})
+        return await self._make_request(
+            "POST", "/analyze/relationships", json={"documents": documents}
+        )
 
-    async def generate_insights(self, documents: List[Dict[str, Any]], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_insights(
+        self, documents: List[Dict[str, Any]], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Generate insights from document analysis."""
         payload = {"documents": documents, "context": context}
         return await self._make_request("POST", "/insights", json=payload)
@@ -377,12 +459,16 @@ class SourceAgentClient(BaseServiceClient):
     def __init__(self):
         super().__init__("source_agent")
 
-    async def analyze_codebase(self, repository_url: str, config: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def analyze_codebase(
+        self, repository_url: str, config: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Analyze a codebase."""
         payload = {"repository_url": repository_url, **(config or {})}
         return await self._make_request("POST", "/analyze", json=payload)
 
-    async def generate_documentation(self, code_path: str, doc_type: str = "api") -> Dict[str, Any]:
+    async def generate_documentation(
+        self, code_path: str, doc_type: str = "api"
+    ) -> Dict[str, Any]:
         """Generate documentation from code."""
         payload = {"code_path": code_path, "doc_type": doc_type}
         return await self._make_request("POST", "/documentation", json=payload)
@@ -399,7 +485,9 @@ class CodeAnalyzerClient(BaseServiceClient):
         payload = {"code": code, "language": language}
         return await self._make_request("POST", "/quality", json=payload)
 
-    async def detect_security_issues(self, code: str, language: str) -> List[Dict[str, Any]]:
+    async def detect_security_issues(
+        self, code: str, language: str
+    ) -> List[Dict[str, Any]]:
         """Detect security vulnerabilities."""
         payload = {"code": code, "language": language}
         response = await self._make_request("POST", "/security", json=payload)
@@ -417,12 +505,16 @@ class SecureAnalyzerClient(BaseServiceClient):
     def __init__(self):
         super().__init__("secure_analyzer")
 
-    async def analyze_security(self, target: str, scan_type: str = "full") -> Dict[str, Any]:
+    async def analyze_security(
+        self, target: str, scan_type: str = "full"
+    ) -> Dict[str, Any]:
         """Perform security analysis."""
         payload = {"target": target, "scan_type": scan_type}
         return await self._make_request("POST", "/analyze", json=payload)
 
-    async def check_compliance(self, target: str, standards: List[str]) -> Dict[str, Any]:
+    async def check_compliance(
+        self, target: str, standards: List[str]
+    ) -> Dict[str, Any]:
         """Check compliance against security standards."""
         payload = {"target": target, "standards": standards}
         return await self._make_request("POST", "/compliance", json=payload)
@@ -461,7 +553,9 @@ class EcosystemServiceClientRegistry:
             # Additional services can be added here
         }
 
-        self.logger.info("Registered ecosystem service clients", count=len(self._clients))
+        self.logger.info(
+            "Registered ecosystem service clients", count=len(self._clients)
+        )
 
     def get_client(self, service_name: str) -> BaseServiceClient:
         """Get a service client instance."""
@@ -497,7 +591,9 @@ class EcosystemServiceClientRegistry:
             try:
                 await client.close()
             except Exception as e:
-                self.logger.warning("Error closing client", service=client.service_name, error=str(e))
+                self.logger.warning(
+                    "Error closing client", service=client.service_name, error=str(e)
+                )
         self._instances.clear()
 
 

@@ -15,10 +15,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.infrastructure.utilities.simulation_utilities import get_simulation_formatter
+from simulation.infrastructure.utilities.simulation_utilities import (
+    get_simulation_formatter,
+)
 
 
 class ReportType(str, Enum):
@@ -129,24 +133,36 @@ class ComprehensiveReportingSystem:
             ]
 
         try:
-            self.logger.info(f"Generating comprehensive report suite", simulation_id=simulation_id)
+            self.logger.info(
+                f"Generating comprehensive report suite", simulation_id=simulation_id
+            )
 
             # Collect and analyze data
-            metrics = await self._collect_simulation_metrics(simulation_id, analysis_results)
+            metrics = await self._collect_simulation_metrics(
+                simulation_id, analysis_results
+            )
             workflow_analysis = await self._analyze_workflows(workflow_data)
             document_analysis = await self._analyze_documents(document_data)
-            business_value = await self._quantify_business_value(metrics, analysis_results)
+            business_value = await self._quantify_business_value(
+                metrics, analysis_results
+            )
 
             # Generate all requested reports
             reports = {}
             for report_type in report_types:
                 report_data = await self._generate_specific_report(
-                    report_type, metrics, workflow_analysis, document_analysis, business_value
+                    report_type,
+                    metrics,
+                    workflow_analysis,
+                    document_analysis,
+                    business_value,
                 )
                 reports[report_type.value] = report_data
 
             # Generate comprehensive analysis
-            comprehensive_report = await self._generate_comprehensive_analysis(reports, metrics, analysis_results)
+            comprehensive_report = await self._generate_comprehensive_analysis(
+                reports, metrics, analysis_results
+            )
 
             # Cache the reports
             cache_key = f"{simulation_id}_{datetime.now().isoformat()}"
@@ -157,7 +173,9 @@ class ComprehensiveReportingSystem:
                 "comprehensive_analysis": comprehensive_report,
             }
 
-            self.logger.info(f"Comprehensive report suite generated", simulation_id=simulation_id)
+            self.logger.info(
+                f"Comprehensive report suite generated", simulation_id=simulation_id
+            )
 
             return {
                 "success": True,
@@ -168,10 +186,16 @@ class ComprehensiveReportingSystem:
             }
 
         except Exception as e:
-            self.logger.error(f"Failed to generate comprehensive report", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                f"Failed to generate comprehensive report",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             return {"success": False, "error": str(e), "simulation_id": simulation_id}
 
-    async def generate_executive_summary(self, metrics: ReportMetrics) -> Dict[str, Any]:
+    async def generate_executive_summary(
+        self, metrics: ReportMetrics
+    ) -> Dict[str, Any]:
         """Generate an executive summary report."""
         return {
             "title": "Executive Summary - Project Simulation Results",
@@ -252,7 +276,9 @@ class ComprehensiveReportingSystem:
             },
             "issues_and_findings": {
                 "critical_issues": [
-                    issue for issue in document_analysis.consistency_issues if issue.get("severity") == "critical"
+                    issue
+                    for issue in document_analysis.consistency_issues
+                    if issue.get("severity") == "critical"
                 ],
                 "recommendations": document_analysis.improvement_suggestions,
                 "quality_improvements": [
@@ -295,7 +321,10 @@ class ComprehensiveReportingSystem:
         }
 
     async def export_report(
-        self, report_data: Dict[str, Any], format: ReportFormat = ReportFormat.JSON, output_path: Optional[str] = None
+        self,
+        report_data: Dict[str, Any],
+        format: ReportFormat = ReportFormat.JSON,
+        output_path: Optional[str] = None,
     ) -> str:
         """Export a report in the specified format."""
         try:
@@ -316,7 +345,9 @@ class ComprehensiveReportingSystem:
             else:
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 simulation_id = report_data.get("simulation_id", "unknown")
-                output_file = Path(f"reports/{simulation_id}_report_{timestamp}.{extension}")
+                output_file = Path(
+                    f"reports/{simulation_id}_report_{timestamp}.{extension}"
+                )
 
             # Ensure directory exists
             output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -325,7 +356,9 @@ class ComprehensiveReportingSystem:
             with open(output_file, "w", encoding="utf-8") as f:
                 f.write(content)
 
-            self.logger.info(f"Report exported successfully", output_path=str(output_file))
+            self.logger.info(
+                f"Report exported successfully", output_path=str(output_file)
+            )
 
             return str(output_file)
 
@@ -333,7 +366,9 @@ class ComprehensiveReportingSystem:
             self.logger.error(f"Failed to export report", error=str(e))
             raise
 
-    async def _collect_simulation_metrics(self, simulation_id: str, analysis_results: Dict[str, Any]) -> ReportMetrics:
+    async def _collect_simulation_metrics(
+        self, simulation_id: str, analysis_results: Dict[str, Any]
+    ) -> ReportMetrics:
         """Collect comprehensive simulation metrics."""
         # This would gather metrics from various sources
         # For now, create mock metrics based on analysis results
@@ -353,14 +388,20 @@ class ComprehensiveReportingSystem:
             benefits_quantified=analysis_results.get("benefits", {}),
         )
 
-    async def _analyze_workflows(self, workflow_data: List[Dict[str, Any]]) -> WorkflowAnalysis:
+    async def _analyze_workflows(
+        self, workflow_data: List[Dict[str, Any]]
+    ) -> WorkflowAnalysis:
         """Analyze workflow execution data."""
         total_workflows = len(workflow_data)
         successful_workflows = sum(1 for w in workflow_data if w.get("success", False))
         failed_workflows = total_workflows - successful_workflows
 
-        execution_times = [w.get("execution_time", 0) for w in workflow_data if w.get("execution_time")]
-        average_execution_time = statistics.mean(execution_times) if execution_times else 0
+        execution_times = [
+            w.get("execution_time", 0) for w in workflow_data if w.get("execution_time")
+        ]
+        average_execution_time = (
+            statistics.mean(execution_times) if execution_times else 0
+        )
 
         workflow_types = {}
         for workflow in workflow_data:
@@ -374,7 +415,10 @@ class ComprehensiveReportingSystem:
             average_execution_time=average_execution_time,
             workflow_types=workflow_types,
             performance_trends=[],  # Would analyze trends over time
-            bottlenecks_identified=["Document generation workflow", "Analysis pipeline"],
+            bottlenecks_identified=[
+                "Document generation workflow",
+                "Analysis pipeline",
+            ],
             optimization_opportunities=[
                 "Parallel processing for independent workflows",
                 "Caching for repeated operations",
@@ -382,7 +426,9 @@ class ComprehensiveReportingSystem:
             ],
         )
 
-    async def _analyze_documents(self, document_data: List[Dict[str, Any]]) -> DocumentAnalysis:
+    async def _analyze_documents(
+        self, document_data: List[Dict[str, Any]]
+    ) -> DocumentAnalysis:
         """Analyze generated documents."""
         total_documents = len(document_data)
 
@@ -407,7 +453,10 @@ class ComprehensiveReportingSystem:
             # Check for duplications
             if doc.get("similar_documents"):
                 duplication_findings.append(
-                    {"document": doc.get("title", "Unknown"), "similar_documents": doc["similar_documents"]}
+                    {
+                        "document": doc.get("title", "Unknown"),
+                        "similar_documents": doc["similar_documents"],
+                    }
                 )
 
         return DocumentAnalysis(
@@ -416,7 +465,11 @@ class ComprehensiveReportingSystem:
             quality_scores=quality_scores,
             consistency_issues=consistency_issues,
             duplication_findings=duplication_findings,
-            content_coverage={"requirements": 0.85, "architecture": 0.92, "testing": 0.78},
+            content_coverage={
+                "requirements": 0.85,
+                "architecture": 0.92,
+                "testing": 0.78,
+            },
             improvement_suggestions=[
                 "Standardize document templates",
                 "Implement automated quality checks",
@@ -430,7 +483,9 @@ class ComprehensiveReportingSystem:
     ) -> BusinessValueQuantification:
         """Quantify the business value created by the simulation."""
         # Calculate time savings (estimated)
-        time_saved_hours = metrics.execution_time_seconds / 3600 * 5  # Assume 5x productivity gain
+        time_saved_hours = (
+            metrics.execution_time_seconds / 3600 * 5
+        )  # Assume 5x productivity gain
 
         # Calculate cost savings
         cost_savings_usd = time_saved_hours * 75  # Average developer hourly rate
@@ -457,7 +512,9 @@ class ComprehensiveReportingSystem:
         }
 
         # ROI calculation
-        investment_cost = cost_savings_usd * 0.05  # 5% of potential savings as investment
+        investment_cost = (
+            cost_savings_usd * 0.05
+        )  # 5% of potential savings as investment
         roi = (cost_savings_usd - investment_cost) / max(investment_cost, 1)
 
         return BusinessValueQuantification(
@@ -488,9 +545,13 @@ class ComprehensiveReportingSystem:
         if report_type == ReportType.EXECUTIVE_SUMMARY:
             return await self.generate_executive_summary(metrics)
         elif report_type == ReportType.WORKFLOW_ANALYSIS:
-            return await self.generate_workflow_analysis_report(workflow_analysis, metrics)
+            return await self.generate_workflow_analysis_report(
+                workflow_analysis, metrics
+            )
         elif report_type == ReportType.QUALITY_REPORT:
-            return await self.generate_quality_assessment_report(document_analysis, metrics)
+            return await self.generate_quality_assessment_report(
+                document_analysis, metrics
+            )
         elif report_type == ReportType.FINANCIAL_REPORT:
             return await self.generate_business_value_report(business_value, metrics)
         else:
@@ -501,7 +562,10 @@ class ComprehensiveReportingSystem:
             }
 
     async def _generate_comprehensive_analysis(
-        self, reports: Dict[str, Any], metrics: ReportMetrics, analysis_results: Dict[str, Any]
+        self,
+        reports: Dict[str, Any],
+        metrics: ReportMetrics,
+        analysis_results: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Generate comprehensive analysis across all reports."""
         return {

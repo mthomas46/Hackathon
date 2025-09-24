@@ -21,7 +21,7 @@ import os
 
 from fastapi import FastAPI
 
-from services.shared.core.constants_new import ServiceNames
+from services.shared.infrastructure.config import load_service_config
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
@@ -35,10 +35,16 @@ except Exception:
 
 from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
 
-# Service configuration constants
-SERVICE_NAME = "source-agent"
-SERVICE_TITLE = "Source Agent"
-SERVICE_VERSION = "1.0.0"
+# Load standardized configuration
+config = load_service_config(
+    service_type="source-agent",
+    config_file="./config.yaml",  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Source Agent"
+SERVICE_VERSION = config.service_version
 DEFAULT_PORT = int(os.environ.get("SERVICE_PORT", 5070))
 
 # Supported sources and their capabilities
@@ -54,7 +60,12 @@ from .modules.fetch_handler import fetch_handler
 # ============================================================================
 # HANDLER MODULES - Extracted business logic
 # ============================================================================
-from .modules.models import ArchitectureProcessRequest, CodeAnalysisRequest, DocumentRequest, NormalizationRequest
+from .modules.models import (
+    ArchitectureProcessRequest,
+    CodeAnalysisRequest,
+    DocumentRequest,
+    NormalizationRequest,
+)
 from .modules.normalize_handler import normalize_handler
 
 # ============================================================================
@@ -71,19 +82,20 @@ app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Unified source agent for fetching and normalizing documents from GitHub, Jira, and Confluence",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
-
-from services.shared.core.constants_new import ServiceNames
 
 # Use common middleware setup to reduce duplication across services
 from services.shared.utilities import attach_self_register, setup_common_middleware
 from services.shared.utilities.error_handling import install_error_handlers
 
-setup_common_middleware(app, ServiceNames.SOURCE_AGENT)
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=config.service_name)
 install_error_handlers(app)
 
 # Auto-register with orchestrator
-attach_self_register(app, ServiceNames.SOURCE_AGENT)
+attach_self_register(app, config.service_name)
 
 
 # API Endpoints
@@ -133,7 +145,8 @@ async def process_architecture(req: ArchitectureProcessRequest):
 
         # Forward request to architecture-digitizer
         result = await client.post_json(
-            "architecture-digitizer/normalize", {"system": req.system, "board_id": req.board_id, "token": req.token}
+            "architecture-digitizer/normalize",
+            {"system": req.system, "board_id": req.board_id, "token": req.token},
         )
 
         context = build_source_agent_context("architecture_process", system=req.system)
@@ -159,7 +172,7 @@ async def analyze_code(req: CodeAnalysisRequest):
 # ============================================================================
 
 # Register standardized health endpoints
-register_health_endpoints(app, ServiceNames.SOURCE_AGENT, "1.0.0")
+register_health_endpoints(app, config.service_name, config.service_version)
 
 
 @app.get("/sources")
@@ -170,11 +183,16 @@ async def list_sources():
     and their specific capabilities for fetching, normalization, and analysis.
     """
     try:
-        sources_data = {"sources": SUPPORTED_SOURCES, "capabilities": SOURCE_CAPABILITIES}
+        sources_data = {
+            "sources": SUPPORTED_SOURCES,
+            "capabilities": SOURCE_CAPABILITIES,
+        }
 
         context = build_source_agent_context("list_sources")
         context = {k: v for k, v in context.items() if k != "operation"}
-        return create_source_agent_success_response("sources retrieved", sources_data, **context)
+        return create_source_agent_success_response(
+            "sources retrieved", sources_data, **context
+        )
 
     except Exception as e:
         context = build_source_agent_context("list_sources")

@@ -3,13 +3,16 @@ from typing import Any, Callable, List, Tuple
 
 from rich.prompt import Prompt
 
-from services.shared.core.config.config import get_config_value
+# Config now handled by standardized config system in main.py
+import os
 from services.shared.integrations.clients.clients import ServiceClients
 
 from ...utils.display_helpers import print_kv, print_list
 
 
-def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
+def build_actions(
+    console, clients: ServiceClients
+) -> List[Tuple[str, Callable[[], Any]]]:
     async def peers():
         url = f"{clients.orchestrator_url()}/peers"
         rx = await clients.get_json(url)
@@ -37,7 +40,7 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         print_kv(console, "Config", rx)
 
     async def redis_connectivity():
-        host = str(get_config_value("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")).strip()
+        host = str(os.getenv("REDIS_HOST", "redis")).strip()
         port = 6379
         ok = False
         try:
@@ -45,7 +48,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 ok = True
         except Exception:
             ok = False
-        print_kv(console, "Redis Probe", {"redis_host": host, "port": port, "connect_ok": ok})
+        print_kv(
+            console, "Redis Probe", {"redis_host": host, "port": port, "connect_ok": ok}
+        )
 
     return [
         ("List peers", peers),

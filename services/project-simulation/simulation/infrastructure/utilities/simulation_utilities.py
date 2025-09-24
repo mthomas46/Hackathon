@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.logging import get_simulation_logger
 
@@ -30,7 +32,9 @@ except ImportError:
     from dataclasses import dataclass
 
     class ValidationResult:
-        def __init__(self, is_valid: bool, errors: List[str] = None, warnings: List[str] = None):
+        def __init__(
+            self, is_valid: bool, errors: List[str] = None, warnings: List[str] = None
+        ):
             self.is_valid = is_valid
             self.errors = errors or []
             self.warnings = warnings or []
@@ -39,7 +43,9 @@ except ImportError:
         def __init__(self):
             self.rules = []
 
-        def validate(self, data: Dict[str, Any], rules: List[str] = None) -> ValidationResult:
+        def validate(
+            self, data: Dict[str, Any], rules: List[str] = None
+        ) -> ValidationResult:
             errors = []
             warnings = []
             # Simplified validation
@@ -130,7 +136,9 @@ class SimulationDataValidator(DataValidator):
             "simulation_parameters": self._validate_simulation_parameters,
         }
 
-    def validate_simulation_data(self, data_type: str, data: Dict[str, Any]) -> ValidationResult:
+    def validate_simulation_data(
+        self, data_type: str, data: Dict[str, Any]
+    ) -> ValidationResult:
         """Validate simulation-specific data."""
         if data_type not in self.simulation_rules:
             return ValidationResult(False, [f"Unknown data type: {data_type}"])
@@ -160,7 +168,11 @@ class SimulationDataValidator(DataValidator):
         ]:
             errors.append("Invalid project type")
 
-        if "complexity" in config and config["complexity"] not in ["simple", "medium", "complex"]:
+        if "complexity" in config and config["complexity"] not in [
+            "simple",
+            "medium",
+            "complex",
+        ]:
             errors.append("Invalid complexity level")
 
         if "duration_weeks" in config and not (1 <= config["duration_weeks"] <= 52):
@@ -233,12 +245,17 @@ class SimulationDataValidator(DataValidator):
 
         return ValidationResult(len(errors) == 0, errors, warnings)
 
-    def _validate_simulation_parameters(self, params: Dict[str, Any]) -> ValidationResult:
+    def _validate_simulation_parameters(
+        self, params: Dict[str, Any]
+    ) -> ValidationResult:
         """Validate simulation parameters."""
         errors = []
         warnings = []
 
-        if "max_concurrent_simulations" in params and params["max_concurrent_simulations"] > 100:
+        if (
+            "max_concurrent_simulations" in params
+            and params["max_concurrent_simulations"] > 100
+        ):
             warnings.append("High concurrent simulation count may impact performance")
 
         if "timeout_seconds" in params and params["timeout_seconds"] > 3600:
@@ -315,7 +332,9 @@ class SimulationDataFormatter(DataFormatter):
 
         documents = data.get("documents", [])
         for doc in documents[:10]:  # Limit to first 10
-            lines.append(f"  • {doc.get('title', 'Untitled')} ({doc.get('type', 'unknown')})")
+            lines.append(
+                f"  • {doc.get('title', 'Untitled')} ({doc.get('type', 'unknown')})"
+            )
 
         if len(documents) > 10:
             lines.append(f"  ... and {len(documents) - 10} more documents")
@@ -384,7 +403,9 @@ class SimulationCacheManager(CacheManager):
         """Generate cache key for simulation data."""
         return f"sim:{simulation_id}:{data_type}"
 
-    def cache_simulation_result(self, simulation_id: str, result: Dict[str, Any], ttl: int = None):
+    def cache_simulation_result(
+        self, simulation_id: str, result: Dict[str, Any], ttl: int = None
+    ):
         """Cache simulation result."""
         key = self.get_simulation_cache_key(simulation_id, "result")
         self.set(key, result, ttl or self.config.ttl_seconds)
@@ -426,10 +447,16 @@ class SimulationAsyncTaskManager(AsyncTaskManager):
         """Run a simulation task with tracking."""
         task_id = f"{task_name}_{datetime.now().strftime('%H%M%S')}_{hash(coro) % 1000}"
 
-        self.active_tasks[task_id] = {"name": task_name, "start_time": datetime.now(), "status": "running"}
+        self.active_tasks[task_id] = {
+            "name": task_name,
+            "start_time": datetime.now(),
+            "status": "running",
+        }
 
         try:
-            self.logger.info("Starting simulation task", task_id=task_id, task_name=task_name)
+            self.logger.info(
+                "Starting simulation task", task_id=task_id, task_name=task_name
+            )
             result = await self.run_task(coro)
 
             self.active_tasks[task_id]["status"] = "completed"
@@ -438,7 +465,9 @@ class SimulationAsyncTaskManager(AsyncTaskManager):
 
             self.completed_tasks.append(self.active_tasks.pop(task_id))
 
-            self.logger.info("Simulation task completed", task_id=task_id, task_name=task_name)
+            self.logger.info(
+                "Simulation task completed", task_id=task_id, task_name=task_name
+            )
             return result
 
         except Exception as e:
@@ -448,16 +477,27 @@ class SimulationAsyncTaskManager(AsyncTaskManager):
 
             self.completed_tasks.append(self.active_tasks.pop(task_id))
 
-            self.logger.error("Simulation task failed", task_id=task_id, task_name=task_name, error=str(e))
+            self.logger.error(
+                "Simulation task failed",
+                task_id=task_id,
+                task_name=task_name,
+                error=str(e),
+            )
             raise
 
-    async def run_parallel_simulations(self, simulations: List[Dict[str, Any]]) -> List[Any]:
+    async def run_parallel_simulations(
+        self, simulations: List[Dict[str, Any]]
+    ) -> List[Any]:
         """Run multiple simulations in parallel."""
         tasks = []
         for i, sim_config in enumerate(simulations):
             task_name = f"simulation_{i+1}"
             # In a real implementation, this would create actual simulation coroutines
-            tasks.append(self.run_simulation_task(task_name, self._mock_simulation_task(sim_config)))
+            tasks.append(
+                self.run_simulation_task(
+                    task_name, self._mock_simulation_task(sim_config)
+                )
+            )
 
         return await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -516,7 +556,11 @@ class SimulationErrorHandler(ErrorHandler):
             return "timeout_error"
         elif "service" in error_message and "unavailable" in error_message:
             return "service_unavailable"
-        elif "resource" in error_message or "memory" in error_message or "cpu" in error_message:
+        elif (
+            "resource" in error_message
+            or "memory" in error_message
+            or "cpu" in error_message
+        ):
             return "resource_exhausted"
         elif "config" in error_message:
             return "configuration_error"
@@ -573,11 +617,15 @@ class SimulationRetryManager(RetryManager):
     """Extended retry manager for simulation operations."""
 
     def __init__(self, config: RetryConfig = None):
-        config = config or RetryConfig(max_attempts=5, backoff_factor=1.5, max_delay=120.0)
+        config = config or RetryConfig(
+            max_attempts=5, backoff_factor=1.5, max_delay=120.0
+        )
         super().__init__(config)
         self.logger = get_simulation_logger()
 
-    async def execute_with_simulation_retry(self, operation_name: str, func, *args, **kwargs):
+    async def execute_with_simulation_retry(
+        self, operation_name: str, func, *args, **kwargs
+    ):
         """Execute with simulation-specific retry logic."""
         attempt = 0
         last_error = None
@@ -599,7 +647,9 @@ class SimulationRetryManager(RetryManager):
                 last_error = e
 
                 if attempt < self.config.max_attempts:
-                    delay = min(self.config.backoff_factor**attempt, self.config.max_delay)
+                    delay = min(
+                        self.config.backoff_factor**attempt, self.config.max_delay
+                    )
 
                     # Add jitter to prevent thundering herd
                     import random
@@ -637,7 +687,9 @@ class SimulationPerformanceTracker(PerformanceTracker):
         self.logger = get_simulation_logger()
         self.performance_history = []
 
-    def track_simulation_performance(self, operation: str, duration: float, metadata: Dict[str, Any] = None):
+    def track_simulation_performance(
+        self, operation: str, duration: float, metadata: Dict[str, Any] = None
+    ):
         """Track simulation-specific performance metrics."""
         self.track_performance(operation, duration)
 
@@ -657,7 +709,10 @@ class SimulationPerformanceTracker(PerformanceTracker):
         # Log performance insights
         if duration > 10.0:  # Log slow operations
             self.logger.warning(
-                "Slow simulation operation detected", operation=operation, duration=duration, metadata=metadata
+                "Slow simulation operation detected",
+                operation=operation,
+                duration=duration,
+                metadata=metadata,
             )
 
     def get_performance_summary(self, operation_filter: str = None) -> Dict[str, Any]:

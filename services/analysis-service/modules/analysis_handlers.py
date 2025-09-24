@@ -272,7 +272,10 @@ class AnalysisHandlers:
             return await handler.handle({"type": "connectors_request"})
         else:
             logger.error("No cross-repository analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"connectors-{id({})}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"connectors-{id({})}",
+            }
 
     @staticmethod
     async def handle_analysis_frameworks():
@@ -283,7 +286,10 @@ class AnalysisHandlers:
             return await handler.handle({"type": "frameworks_request"})
         else:
             logger.error("No cross-repository analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"frameworks-{id({})}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"frameworks-{id({})}",
+            }
 
     @staticmethod
     async def handle_submit_distributed_task(req):
@@ -293,7 +299,10 @@ class AnalysisHandlers:
             return await handler.handle(req)
         else:
             logger.error("No distributed analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"distributed-{id(req)}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"distributed-{id(req)}",
+            }
 
     @staticmethod
     async def handle_submit_batch_tasks(req):
@@ -313,7 +322,10 @@ class AnalysisHandlers:
             return await handler.handle(req)
         else:
             logger.error("No distributed analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"status-{id(req)}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"status-{id(req)}",
+            }
 
     @staticmethod
     async def handle_cancel_task(req):
@@ -323,7 +335,10 @@ class AnalysisHandlers:
             return await handler.handle(req)
         else:
             logger.error("No distributed analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"cancel-{id(req)}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"cancel-{id(req)}",
+            }
 
     @staticmethod
     async def handle_get_workers_status():
@@ -333,7 +348,10 @@ class AnalysisHandlers:
             return await handler.handle({"type": "workers_status"})
         else:
             logger.error("No distributed analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"workers-{id({})}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"workers-{id({})}",
+            }
 
     @staticmethod
     async def handle_get_processing_stats():
@@ -373,7 +391,10 @@ class AnalysisHandlers:
             return await handler.handle(req)
         else:
             logger.error("No distributed analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"strategy-{id(req)}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"strategy-{id(req)}",
+            }
 
     @staticmethod
     async def handle_get_queue_status():
@@ -393,7 +414,10 @@ class AnalysisHandlers:
             return await handler.handle(req)
         else:
             logger.error("No distributed analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"config-{id(req)}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"config-{id(req)}",
+            }
 
     @staticmethod
     async def handle_get_load_balancing_config():
@@ -403,4 +427,7 @@ class AnalysisHandlers:
             return await handler.handle({"type": "get_load_balancing_config"})
         else:
             logger.error("No distributed analysis handler available")
-            return {"error": "Handler not available", "analysis_id": f"get-config-{id({})}"}
+            return {
+                "error": "Handler not available",
+                "analysis_id": f"get-config-{id({})}",
+            }

@@ -89,7 +89,10 @@ class TestDomainEventBase:
         from simulation.domain.events import ProjectCreated
 
         event = ProjectCreated(
-            project_id="test-123", project_name="Test Project", project_type="web_application", complexity="medium"
+            project_id="test-123",
+            project_name="Test Project",
+            project_type="web_application",
+            complexity="medium",
         )
 
         # Should not be able to modify attributes due to frozen=True
@@ -118,7 +121,10 @@ class TestProjectEvents:
     def test_project_created_event(self):
         """Test ProjectCreated event."""
         event = ProjectCreated(
-            project_id="proj-123", project_name="Test Project", project_type="web_application", complexity="medium"
+            project_id="proj-123",
+            project_name="Test Project",
+            project_type="web_application",
+            complexity="medium",
         )
 
         assert event.get_aggregate_id() == "proj-123"
@@ -129,7 +135,10 @@ class TestProjectEvents:
     def test_project_status_changed_event(self):
         """Test ProjectStatusChanged event."""
         event = ProjectStatusChanged(
-            project_id="proj-123", old_status="created", new_status="in_progress", changed_by="user@example.com"
+            project_id="proj-123",
+            old_status="created",
+            new_status="in_progress",
+            changed_by="user@example.com",
         )
 
         assert event.get_aggregate_id() == "proj-123"
@@ -139,7 +148,11 @@ class TestProjectEvents:
     def test_project_phase_completed_event(self):
         """Test ProjectPhaseCompleted event."""
         event = ProjectPhaseCompleted(
-            project_id="proj-123", phase_name="planning", phase_number=1, completion_percentage=100.0, duration_days=5
+            project_id="proj-123",
+            phase_name="planning",
+            phase_number=1,
+            completion_percentage=100.0,
+            duration_days=5,
         )
 
         assert event.get_aggregate_id() == "proj-123"
@@ -190,7 +203,10 @@ class TestSimulationEvents:
     def test_simulation_started_event(self):
         """Test SimulationStarted event."""
         event = SimulationStarted(
-            simulation_id="sim-123", project_id="proj-456", scenario_type="full_project", estimated_duration_hours=8
+            simulation_id="sim-123",
+            project_id="proj-456",
+            scenario_type="full_project",
+            estimated_duration_hours=8,
         )
 
         assert event.get_aggregate_id() == "sim-123"
@@ -272,7 +288,10 @@ class TestTimelineEvents:
         """Test PhaseStarted event."""
         start_date = datetime(2024, 1, 1, 9, 0, 0)
         event = PhaseStarted(
-            timeline_id="tl-123", project_id="proj-456", phase_name="development", start_date=start_date
+            timeline_id="tl-123",
+            project_id="proj-456",
+            phase_name="development",
+            start_date=start_date,
         )
 
         assert event.get_aggregate_id() == "tl-123"
@@ -301,7 +320,10 @@ class TestTimelineEvents:
         """Test MilestoneAchieved event."""
         achieved_date = datetime(2024, 1, 15, 14, 30, 0)
         event = MilestoneAchieved(
-            timeline_id="tl-123", project_id="proj-456", milestone_name="MVP Release", achieved_date=achieved_date
+            timeline_id="tl-123",
+            project_id="proj-456",
+            milestone_name="MVP Release",
+            achieved_date=achieved_date,
         )
 
         assert event.get_aggregate_id() == "tl-123"
@@ -414,7 +436,10 @@ class TestEventSerialization:
     def test_event_serialization_roundtrip(self):
         """Test that events can be serialized and deserialized correctly."""
         original_event = ProjectCreated(
-            project_id="proj-123", project_name="Test Project", project_type="web_application", complexity="medium"
+            project_id="proj-123",
+            project_name="Test Project",
+            project_type="web_application",
+            complexity="medium",
         )
 
         # Serialize
@@ -474,7 +499,10 @@ class TestEventSerialization:
     def test_event_serialization_with_datetime(self):
         """Test event serialization with datetime objects."""
         event = SimulationStarted(
-            simulation_id="sim-123", project_id="proj-456", scenario_type="full_project", estimated_duration_hours=8
+            simulation_id="sim-123",
+            project_id="proj-456",
+            scenario_type="full_project",
+            estimated_duration_hours=8,
         )
 
         data = event.to_dict()
@@ -491,7 +519,11 @@ class TestEventSerialization:
     def test_event_serialization_with_optional_fields(self):
         """Test event serialization with optional fields."""
         event = ProjectPhaseCompleted(
-            project_id="proj-123", phase_name="planning", phase_number=1, completion_percentage=100.0, duration_days=5
+            project_id="proj-123",
+            phase_name="planning",
+            phase_number=1,
+            completion_percentage=100.0,
+            duration_days=5,
         )
 
         data = event.to_dict()
@@ -519,13 +551,19 @@ class TestEventRegistry:
 
         for attr_name in dir(events_module):
             attr = getattr(events_module, attr_name)
-            if isinstance(attr, type) and issubclass(attr, DomainEvent) and attr != DomainEvent:
+            if (
+                isinstance(attr, type)
+                and issubclass(attr, DomainEvent)
+                and attr != DomainEvent
+            ):
                 event_classes.append(attr_name)
 
         # Verify all event classes are registered
         for event_class_name in event_classes:
             if event_class_name != "DomainEvent":  # Skip base class
-                assert event_class_name in EVENT_TYPES, f"{event_class_name} not registered"
+                assert (
+                    event_class_name in EVENT_TYPES
+                ), f"{event_class_name} not registered"
 
     def test_event_registry_functionality(self):
         """Test that registered events can be instantiated."""
@@ -534,11 +572,17 @@ class TestEventRegistry:
             try:
                 if event_name == "ProjectCreated":
                     event = event_class(
-                        project_id="test-123", project_name="Test", project_type="test", complexity="medium"
+                        project_id="test-123",
+                        project_name="Test",
+                        project_type="test",
+                        complexity="medium",
                     )
                 elif event_name == "ProjectStatusChanged":
                     event = event_class(
-                        project_id="test-123", old_status="created", new_status="in_progress", changed_by="test-user"
+                        project_id="test-123",
+                        old_status="created",
+                        new_status="in_progress",
+                        changed_by="test-user",
                     )
                 elif event_name == "ProjectPhaseCompleted":
                     event = event_class(

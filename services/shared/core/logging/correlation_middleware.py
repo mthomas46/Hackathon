@@ -37,7 +37,9 @@ class CorrelationMiddleware(BaseHTTPMiddleware):
         Returns:
             Correlation ID from headers or None
         """
-        header_value = headers.get(self.header_name.lower()) or headers.get(self.header_name)
+        header_value = headers.get(self.header_name.lower()) or headers.get(
+            self.header_name
+        )
         return header_value if header_value else None
 
     def set_response_header(self, response_headers: dict, correlation_id: str) -> None:

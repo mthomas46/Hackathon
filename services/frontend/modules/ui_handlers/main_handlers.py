@@ -3,7 +3,6 @@
 Handles general dashboard functionality and main page rendering.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from services.frontend.utils import (
@@ -40,52 +39,75 @@ class MainUIHandlers:
             html = render_index()
             return create_html_response(html, "LLM Documentation Ecosystem")
         except Exception as e:
-            return handle_frontend_error("render index page", e, **build_frontend_context("render_index"))
+            return handle_frontend_error(
+                "render index page", e, **build_frontend_context("render_index")
+            )
 
     @staticmethod
     def handle_owner_coverage() -> HTMLResponse:
         """Render owner coverage report page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("orchestrator", "/reports/owner_coverage", clients=clients)
+            data = fetch_service_data(
+                "orchestrator", "/reports/owner_coverage", clients=clients
+            )
             cov = data.get("coverage", {})
             html = render_owner_coverage_table(cov)
             return create_html_response(html, "Owner Coverage Report")
         except Exception as e:
-            return handle_frontend_error("render owner coverage", e, **build_frontend_context("render_owner_coverage"))
+            return handle_frontend_error(
+                "render owner coverage",
+                e,
+                **build_frontend_context("render_owner_coverage"),
+            )
 
     @staticmethod
     def handle_topics() -> HTMLResponse:
         """Render topics collections page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("orchestrator", "/reports/topics", clients=clients)
+            data = fetch_service_data(
+                "orchestrator", "/reports/topics", clients=clients
+            )
             html = render_topics_html(data)
             return create_html_response(html, "Topics Collections")
         except Exception as e:
-            return handle_frontend_error("render topics", e, **build_frontend_context("render_topics"))
+            return handle_frontend_error(
+                "render topics", e, **build_frontend_context("render_topics")
+            )
 
     @staticmethod
     def handle_confluence_consolidation() -> HTMLResponse:
         """Render confluence consolidation report page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("analysis-service", "/reports/confluence/consolidation", clients=clients)
+            data = fetch_service_data(
+                "analysis-service", "/reports/confluence/consolidation", clients=clients
+            )
             html = render_consolidation_list(data)
             return create_html_response(html, "Confluence Consolidation Report")
         except Exception as e:
             return handle_frontend_error(
-                "render confluence consolidation", e, **build_frontend_context("render_confluence_consolidation")
+                "render confluence consolidation",
+                e,
+                **build_frontend_context("render_confluence_consolidation"),
             )
 
     @staticmethod
     def handle_jira_staleness(
-        min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False
+        min_confidence: float = 0.0,
+        min_duplicate_confidence: float = 0.0,
+        limit: int = 50,
+        summarize: bool = False,
     ) -> HTMLResponse:
         """Render Jira staleness report page."""
         try:
             validate_frontend_request(
-                {"min_confidence": min_confidence, "min_duplicate_confidence": min_duplicate_confidence, "limit": limit}
+                {
+                    "min_confidence": min_confidence,
+                    "min_duplicate_confidence": min_duplicate_confidence,
+                    "limit": limit,
+                }
             )
 
             clients = get_frontend_clients()
@@ -96,7 +118,12 @@ class MainUIHandlers:
                 "summarize": summarize,
             }
 
-            data = fetch_service_data("analysis-service", "/reports/jira/staleness", clients=clients, params=params)
+            data = fetch_service_data(
+                "analysis-service",
+                "/reports/jira/staleness",
+                clients=clients,
+                params=params,
+            )
             html = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -253,8 +280,12 @@ class MainUIHandlers:
                 # Summary view
                 tickets = data.get("tickets", [])
                 total = len(tickets)
-                stale_count = len([t for t in tickets if t.get("days_since_update", 0) > 90])
-                very_stale_count = len([t for t in tickets if t.get("days_since_update", 0) > 180])
+                stale_count = len(
+                    [t for t in tickets if t.get("days_since_update", 0) > 90]
+                )
+                very_stale_count = len(
+                    [t for t in tickets if t.get("days_since_update", 0) > 180]
+                )
 
                 html += f"""
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
@@ -352,19 +383,27 @@ class MainUIHandlers:
 """
             return create_html_response(html, "Jira Staleness Report")
         except Exception as e:
-            return handle_frontend_error("render jira staleness", e, **build_frontend_context("render_jira_staleness"))
+            return handle_frontend_error(
+                "render jira staleness",
+                e,
+                **build_frontend_context("render_jira_staleness"),
+            )
 
     @staticmethod
     def handle_duplicate_clusters() -> HTMLResponse:
         """Render duplicate clusters report page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("orchestrator", "/reports/duplicate_clusters", clients=clients)
+            data = fetch_service_data(
+                "orchestrator", "/reports/duplicate_clusters", clients=clients
+            )
             html = render_clusters(data)
             return create_html_response(html, "Duplicate Clusters Report")
         except Exception as e:
             return handle_frontend_error(
-                "render duplicate clusters", e, **build_frontend_context("render_duplicate_clusters")
+                "render duplicate clusters",
+                e,
+                **build_frontend_context("render_duplicate_clusters"),
             )
 
     @staticmethod
@@ -373,11 +412,15 @@ class MainUIHandlers:
         try:
             q = sanitize_input(q)
             clients = get_frontend_clients()
-            data = fetch_service_data("doc_store", "/search", clients=clients, params={"q": q})
+            data = fetch_service_data(
+                "doc_store", "/search", clients=clients, params={"q": q}
+            )
             html = render_search_results(data, q)
             return create_html_response(html, f"Search Results: {q}")
         except Exception as e:
-            return handle_frontend_error("render search", e, **build_frontend_context("render_search"))
+            return handle_frontend_error(
+                "render search", e, **build_frontend_context("render_search")
+            )
 
     @staticmethod
     def handle_docs_quality() -> HTMLResponse:
@@ -388,30 +431,42 @@ class MainUIHandlers:
             html = render_docs_quality(data)
             return create_html_response(html, "Document Quality Analysis")
         except Exception as e:
-            return handle_frontend_error("render docs quality", e, **build_frontend_context("render_docs_quality"))
+            return handle_frontend_error(
+                "render docs quality",
+                e,
+                **build_frontend_context("render_docs_quality"),
+            )
 
     @staticmethod
     def handle_findings() -> HTMLResponse:
         """Render findings page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("consistency-engine", "/findings", clients=clients)
+            data = fetch_service_data(
+                "consistency-engine", "/findings", clients=clients
+            )
             html = render_findings(data)
             return create_html_response(html, "Findings")
         except Exception as e:
-            return handle_frontend_error("render findings", e, **build_frontend_context("render_findings"))
+            return handle_frontend_error(
+                "render findings", e, **build_frontend_context("render_findings")
+            )
 
     @staticmethod
     def handle_findings_by_severity() -> HTMLResponse:
         """Render findings grouped by severity."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("consistency-engine", "/findings", clients=clients)
+            data = fetch_service_data(
+                "consistency-engine", "/findings", clients=clients
+            )
             html = render_counts(data, "severity")
             return create_html_response(html, "Findings by Severity")
         except Exception as e:
             return handle_frontend_error(
-                "render findings by severity", e, **build_frontend_context("render_findings_by_severity")
+                "render findings by severity",
+                e,
+                **build_frontend_context("render_findings_by_severity"),
             )
 
     @staticmethod
@@ -419,12 +474,16 @@ class MainUIHandlers:
         """Render findings grouped by type."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("consistency-engine", "/findings", clients=clients)
+            data = fetch_service_data(
+                "consistency-engine", "/findings", clients=clients
+            )
             html = render_counts(data, "type")
             return create_html_response(html, "Findings by Type")
         except Exception as e:
             return handle_frontend_error(
-                "render findings by type", e, **build_frontend_context("render_findings_by_type")
+                "render findings by type",
+                e,
+                **build_frontend_context("render_findings_by_type"),
             )
 
     @staticmethod
@@ -432,11 +491,17 @@ class MainUIHandlers:
         """Render comprehensive report page."""
         try:
             clients = get_frontend_clients()
-            findings_data = fetch_service_data("consistency-engine", "/findings", clients=clients)
+            findings_data = fetch_service_data(
+                "consistency-engine", "/findings", clients=clients
+            )
             quality_data = fetch_service_data("doc_store", "/quality", clients=clients)
-            topics_data = fetch_service_data("orchestrator", "/reports/topics", clients=clients)
+            topics_data = fetch_service_data(
+                "orchestrator", "/reports/topics", clients=clients
+            )
 
             html = render_report_page(findings_data, quality_data, topics_data)
             return create_html_response(html, "Comprehensive Report")
         except Exception as e:
-            return handle_frontend_error("render report", e, **build_frontend_context("render_report"))
+            return handle_frontend_error(
+                "render report", e, **build_frontend_context("render_report")
+            )

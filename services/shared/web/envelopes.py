@@ -44,7 +44,9 @@ def validate_envelope(model: BaseModel):
             if args and isinstance(args[-1], model.__class__):  # pragma: no cover
                 return await func(*args, **kwargs)
             # Otherwise, validate kwargs or first arg
-            body = kwargs.get("env") or kwargs.get("payload") or (args[-1] if args else {})
+            body = (
+                kwargs.get("env") or kwargs.get("payload") or (args[-1] if args else {})
+            )
             try:
                 _ = model.model_validate(body)
             except Exception as e:

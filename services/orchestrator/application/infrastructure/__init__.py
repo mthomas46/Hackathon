@@ -1,2 +1,1 @@
 """Infrastructure Application Layer"""
-

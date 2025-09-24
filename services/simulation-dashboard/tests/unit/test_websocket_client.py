@@ -53,7 +53,10 @@ class TestWebSocketClient:
             assert websocket_client.is_connected is True
             assert websocket_client.websocket == mock_websocket
             mock_connect.assert_called_once_with(
-                "ws://test-server:8080", extra_headers=None, ping_interval=30.0, close_timeout=10.0
+                "ws://test-server:8080",
+                extra_headers=None,
+                ping_interval=30.0,
+                close_timeout=10.0,
             )
 
     @pytest.mark.asyncio
@@ -66,13 +69,18 @@ class TestWebSocketClient:
             await websocket_client.connect("ws://test-server:8080", headers=headers)
 
             mock_connect.assert_called_once_with(
-                "ws://test-server:8080", extra_headers=headers, ping_interval=30.0, close_timeout=10.0
+                "ws://test-server:8080",
+                extra_headers=headers,
+                ping_interval=30.0,
+                close_timeout=10.0,
             )
 
     @pytest.mark.asyncio
     async def test_connection_failure(self, websocket_client):
         """Test WebSocket connection failure."""
-        with patch("websockets.connect", side_effect=WebSocketException("Connection failed")):
+        with patch(
+            "websockets.connect", side_effect=WebSocketException("Connection failed")
+        ):
             with pytest.raises(WebSocketConnectionError) as exc_info:
                 await websocket_client.connect("ws://test-server:8080")
 
@@ -189,7 +197,9 @@ class TestWebSocketClient:
     async def test_receive_message_connection_closed(self, websocket_client):
         """Test receiving message when connection is closed."""
         mock_websocket = AsyncMock()
-        mock_websocket.recv.side_effect = ConnectionClosedError(1000, "Connection closed")
+        mock_websocket.recv.side_effect = ConnectionClosedError(
+            1000, "Connection closed"
+        )
 
         # Set up connected state
         websocket_client.websocket = mock_websocket
@@ -410,15 +420,23 @@ class TestSimulationWebSocketManager:
         manager.clients["sim_001"] = mock_client
 
         # Mock the handler imports (would normally be from pages.monitor)
-        with patch("services.clients.websocket_client.handle_simulation_progress") as mock_progress, patch(
+        with patch(
+            "services.clients.websocket_client.handle_simulation_progress"
+        ) as mock_progress, patch(
             "services.clients.websocket_client.handle_simulation_event"
-        ) as mock_event, patch("services.clients.websocket_client.handle_websocket_connected") as mock_connected:
+        ) as mock_event, patch(
+            "services.clients.websocket_client.handle_websocket_connected"
+        ) as mock_connected:
 
             result = manager.setup_event_handlers("sim_001")
 
             assert result == mock_client
-            mock_client.add_message_handler.assert_any_call("simulation_progress", mock_progress)
-            mock_client.add_message_handler.assert_any_call("simulation_event", mock_event)
+            mock_client.add_message_handler.assert_any_call(
+                "simulation_progress", mock_progress
+            )
+            mock_client.add_message_handler.assert_any_call(
+                "simulation_event", mock_event
+            )
             mock_client.add_connection_handler.assert_any_call(mock_connected)
 
     @pytest.mark.asyncio
@@ -429,7 +447,9 @@ class TestSimulationWebSocketManager:
         mock_client.subscribe_to_simulation = AsyncMock()
         mock_client.start_auto_reconnect = MagicMock()
 
-        with patch.object(manager, "setup_event_handlers", return_value=mock_client) as mock_setup:
+        with patch.object(
+            manager, "setup_event_handlers", return_value=mock_client
+        ) as mock_setup:
             result = await manager.start_realtime_updates("sim_001")
 
             assert result is True
@@ -445,7 +465,9 @@ class TestSimulationWebSocketManager:
         mock_client.connect = AsyncMock()
         mock_client.start_auto_reconnect = MagicMock()
 
-        with patch.object(manager, "setup_event_handlers", return_value=mock_client) as mock_setup:
+        with patch.object(
+            manager, "setup_event_handlers", return_value=mock_client
+        ) as mock_setup:
             result = await manager.start_realtime_updates()
 
             assert result is True

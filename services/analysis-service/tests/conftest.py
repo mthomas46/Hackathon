@@ -27,9 +27,15 @@ from ..domain.value_objects.analysis_type import AnalysisType
 from ..domain.value_objects.confidence import Confidence
 from ..domain.value_objects.location import CodeLocation, FileLocation
 from ..domain.value_objects.metrics import AnalysisMetrics, QualityMetrics
-from ..infrastructure.repositories.in_memory.analysis_repository import InMemoryAnalysisRepository
-from ..infrastructure.repositories.in_memory.document_repository import InMemoryDocumentRepository
-from ..infrastructure.repositories.in_memory.finding_repository import InMemoryFindingRepository
+from ..infrastructure.repositories.in_memory.analysis_repository import (
+    InMemoryAnalysisRepository,
+)
+from ..infrastructure.repositories.in_memory.document_repository import (
+    InMemoryDocumentRepository,
+)
+from ..infrastructure.repositories.in_memory.finding_repository import (
+    InMemoryFindingRepository,
+)
 
 
 @pytest.fixture(scope="session")
@@ -72,9 +78,17 @@ def sample_analysis_data() -> Dict[str, Any]:
         "analysis_type": AnalysisType.SEMANTIC_SIMILARITY,
         "status": AnalysisStatus.COMPLETED,
         "confidence": Confidence(0.85),
-        "metrics": AnalysisMetrics(processing_time_seconds=2.5, memory_usage_mb=50.0, confidence_score=0.85),
-        "results": {"similarity_score": 0.85, "matched_documents": ["doc-002", "doc-003"]},
-        "metadata": {"algorithm_version": "1.0.0", "model_used": "sentence-transformers"},
+        "metrics": AnalysisMetrics(
+            processing_time_seconds=2.5, memory_usage_mb=50.0, confidence_score=0.85
+        ),
+        "results": {
+            "similarity_score": 0.85,
+            "matched_documents": ["doc-002", "doc-003"],
+        },
+        "metadata": {
+            "algorithm_version": "1.0.0",
+            "model_used": "sentence-transformers",
+        },
     }
 
 
@@ -90,7 +104,11 @@ def sample_finding_data() -> Dict[str, Any]:
         "severity": FindingSeverity.MEDIUM,
         "confidence": Confidence(0.75),
         "location": CodeLocation(
-            file_path="/path/to/file.py", start_line=10, end_line=15, start_column=5, end_column=20
+            file_path="/path/to/file.py",
+            start_line=10,
+            end_line=15,
+            start_column=5,
+            end_column=20,
         ),
         "category": "code_quality",
         "recommendation": "Consider refactoring this code for better readability.",
@@ -169,19 +187,25 @@ def finding_service(finding_repository: FindingRepository) -> FindingService:
 
 
 @pytest.fixture
-def sample_document(document_factory: DocumentFactory, sample_document_data: Dict[str, Any]) -> Document:
+def sample_document(
+    document_factory: DocumentFactory, sample_document_data: Dict[str, Any]
+) -> Document:
     """Sample document fixture."""
     return document_factory.create_document(**sample_document_data)
 
 
 @pytest.fixture
-def sample_analysis(analysis_factory: AnalysisFactory, sample_analysis_data: Dict[str, Any]) -> Analysis:
+def sample_analysis(
+    analysis_factory: AnalysisFactory, sample_analysis_data: Dict[str, Any]
+) -> Analysis:
     """Sample analysis fixture."""
     return analysis_factory.create_analysis(**sample_analysis_data)
 
 
 @pytest.fixture
-def sample_finding(finding_factory: FindingFactory, sample_finding_data: Dict[str, Any]) -> Finding:
+def sample_finding(
+    finding_factory: FindingFactory, sample_finding_data: Dict[str, Any]
+) -> Finding:
     """Sample finding fixture."""
     return finding_factory.create_finding(**sample_finding_data)
 
@@ -219,20 +243,31 @@ def file_location() -> FileLocation:
 @pytest.fixture
 def code_location() -> CodeLocation:
     """Code location fixture."""
-    return CodeLocation(file_path="/src/utils.py", start_line=10, end_line=15, start_column=5, end_column=25)
+    return CodeLocation(
+        file_path="/src/utils.py",
+        start_line=10,
+        end_line=15,
+        start_column=5,
+        end_column=25,
+    )
 
 
 @pytest.fixture
 def analysis_metrics() -> AnalysisMetrics:
     """Analysis metrics fixture."""
-    return AnalysisMetrics(processing_time_seconds=3.5, memory_usage_mb=75.0, confidence_score=0.82)
+    return AnalysisMetrics(
+        processing_time_seconds=3.5, memory_usage_mb=75.0, confidence_score=0.82
+    )
 
 
 @pytest.fixture
 def quality_metrics() -> QualityMetrics:
     """Quality metrics fixture."""
     return QualityMetrics(
-        readability_score=85.0, complexity_score=25.0, maintainability_index=78.0, duplication_percentage=5.2
+        readability_score=85.0,
+        complexity_score=25.0,
+        maintainability_index=78.0,
+        duplication_percentage=5.2,
     )
 
 
@@ -272,7 +307,9 @@ def test_data_populator(
                 self.documents.append(doc)
             return documents
 
-        def create_test_analyses(self, document_ids: List[str], count_per_doc: int = 2) -> List[Analysis]:
+        def create_test_analyses(
+            self, document_ids: List[str], count_per_doc: int = 2
+        ) -> List[Analysis]:
             """Create test analyses for documents."""
             analyses = []
             for doc_id in document_ids:
@@ -280,7 +317,11 @@ def test_data_populator(
                     analysis_data = {
                         "id": f"analysis-{doc_id}-{i}",
                         "document_id": doc_id,
-                        "analysis_type": AnalysisType.SEMANTIC_SIMILARITY if i % 2 == 0 else AnalysisType.CODE_QUALITY,
+                        "analysis_type": (
+                            AnalysisType.SEMANTIC_SIMILARITY
+                            if i % 2 == 0
+                            else AnalysisType.CODE_QUALITY
+                        ),
                         "status": AnalysisStatus.COMPLETED,
                         "confidence": Confidence(0.8 + i * 0.05),
                         "results": {"test_result": f"result_{i}"},
@@ -291,7 +332,9 @@ def test_data_populator(
                     self.analyses.append(analysis)
             return analyses
 
-        def create_test_findings(self, analysis_ids: List[str], count_per_analysis: int = 3) -> List[Finding]:
+        def create_test_findings(
+            self, analysis_ids: List[str], count_per_analysis: int = 3
+        ) -> List[Finding]:
             """Create test findings for analyses."""
             findings = []
             for analysis_id in analysis_ids:
@@ -305,7 +348,11 @@ def test_data_populator(
                         "severity": (
                             FindingSeverity.LOW
                             if i % 3 == 0
-                            else FindingSeverity.MEDIUM if i % 3 == 1 else FindingSeverity.HIGH
+                            else (
+                                FindingSeverity.MEDIUM
+                                if i % 3 == 1
+                                else FindingSeverity.HIGH
+                            )
                         ),
                         "confidence": Confidence(0.7 + i * 0.1),
                         "location": FileLocation(f"/src/file{i}.py", i * 10),
@@ -371,9 +418,13 @@ def expect_exception():
 
         def __exit__(self, exc_type, exc_val, exc_tb):
             if exc_type is None:
-                pytest.fail(f"Expected {self.exception_type.__name__} but no exception was raised")
+                pytest.fail(
+                    f"Expected {self.exception_type.__name__} but no exception was raised"
+                )
             if not isinstance(exc_val, self.exception_type):
-                pytest.fail(f"Expected {self.exception_type.__name__} but got {exc_type.__name__}")
+                pytest.fail(
+                    f"Expected {self.exception_type.__name__} but got {exc_type.__name__}"
+                )
             self.exception = exc_val
             return True
 
@@ -407,6 +458,8 @@ def performance_timer():
             return self.end_time - self.start_time
 
         def assert_less_than(self, max_duration, message="Operation took too long"):
-            assert self.duration < max_duration, f"{message}: {self.duration:.3f}s >= {max_duration:.3f}s"
+            assert (
+                self.duration < max_duration
+            ), f"{message}: {self.duration:.3f}s >= {max_duration:.3f}s"
 
     return PerformanceTimer()

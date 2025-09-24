@@ -31,7 +31,11 @@ class TestAnalysisEntity:
 
     def test_analysis_creation_with_defaults(self):
         """Test creating an analysis with minimal required data."""
-        minimal_data = {"id": "minimal-analysis", "document_id": "doc-001", "analysis_type": AnalysisType.CODE_QUALITY}
+        minimal_data = {
+            "id": "minimal-analysis",
+            "document_id": "doc-001",
+            "analysis_type": AnalysisType.CODE_QUALITY,
+        }
 
         analysis = Analysis(**minimal_data)
 
@@ -46,7 +50,9 @@ class TestAnalysisEntity:
     def test_analysis_creation_validation(self):
         """Test analysis creation validation."""
         with pytest.raises(ValueError):
-            Analysis(id="", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY)
+            Analysis(
+                id="", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY
+            )
 
         with pytest.raises(ValueError):
             Analysis(id="test", document_id="", analysis_type=AnalysisType.CODE_QUALITY)
@@ -64,12 +70,20 @@ class TestAnalysisEntity:
     def test_analysis_type_validation(self):
         """Test analysis type validation."""
         for analysis_type in AnalysisType:
-            analysis = Analysis(id=f"test-{analysis_type.value}", document_id="doc-001", analysis_type=analysis_type)
+            analysis = Analysis(
+                id=f"test-{analysis_type.value}",
+                document_id="doc-001",
+                analysis_type=analysis_type,
+            )
             assert analysis.analysis_type == analysis_type
 
     def test_analysis_confidence_handling(self):
         """Test analysis confidence handling."""
-        analysis = Analysis(id="confidence-test", document_id="doc-001", analysis_type=AnalysisType.SEMANTIC_SIMILARITY)
+        analysis = Analysis(
+            id="confidence-test",
+            document_id="doc-001",
+            analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
+        )
 
         assert analysis.confidence is None
 
@@ -82,7 +96,10 @@ class TestAnalysisEntity:
     def test_analysis_metrics_integration(self, analysis_metrics: AnalysisMetrics):
         """Test analysis metrics integration."""
         analysis = Analysis(
-            id="metrics-test", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY, metrics=analysis_metrics
+            id="metrics-test",
+            document_id="doc-001",
+            analysis_type=AnalysisType.CODE_QUALITY,
+            metrics=analysis_metrics,
         )
 
         assert analysis.metrics == analysis_metrics
@@ -90,12 +107,22 @@ class TestAnalysisEntity:
 
     def test_analysis_equality(self):
         """Test analysis equality comparison."""
-        analysis1 = Analysis(id="equal-analysis", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY)
+        analysis1 = Analysis(
+            id="equal-analysis",
+            document_id="doc-001",
+            analysis_type=AnalysisType.CODE_QUALITY,
+        )
 
-        analysis2 = Analysis(id="equal-analysis", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY)
+        analysis2 = Analysis(
+            id="equal-analysis",
+            document_id="doc-001",
+            analysis_type=AnalysisType.CODE_QUALITY,
+        )
 
         analysis3 = Analysis(
-            id="different-analysis", document_id="doc-001", analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+            id="different-analysis",
+            document_id="doc-001",
+            analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
         )
 
         assert analysis1 == analysis2

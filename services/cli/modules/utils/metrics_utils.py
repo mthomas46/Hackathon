@@ -6,7 +6,9 @@ from typing import Any, Dict
 from services.shared.monitoring.logging import fire_and_forget
 
 
-def log_cli_operation(operation: str, success: bool = True, duration: float = 0.0, **context):
+def log_cli_operation(
+    operation: str, success: bool = True, duration: float = 0.0, **context
+):
     """Log CLI operation metrics."""
     log_data = {
         "operation": operation,
@@ -22,7 +24,12 @@ def log_cli_operation(operation: str, success: bool = True, duration: float = 0.
 
 def log_cli_command(command: str, args: Dict[str, Any] = None, **context):
     """Log CLI command execution."""
-    log_data = {"command": command, "args": args or {}, "service": "cli", "timestamp": time.time()}
+    log_data = {
+        "command": command,
+        "args": args or {},
+        "service": "cli",
+        "timestamp": time.time(),
+    }
     log_data.update(context)
 
     fire_and_forget("info", f"CLI command: {command}", "cli", log_data)
@@ -51,7 +58,13 @@ def create_operation_timer():
     return OperationTimer()
 
 
-def track_api_call(endpoint: str, method: str = "GET", success: bool = True, duration: float = 0.0, **context):
+def track_api_call(
+    endpoint: str,
+    method: str = "GET",
+    success: bool = True,
+    duration: float = 0.0,
+    **context,
+):
     """Track API call metrics."""
     log_data = {
         "api_endpoint": endpoint,

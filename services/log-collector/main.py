@@ -38,10 +38,25 @@ except ImportError:
     from modules.log_stats import calculate_log_statistics
     from modules.log_storage import log_storage
 
-# Service configuration constants
-SERVICE_NAME = "log-collector"
-SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 5080
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="log-collector",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Log Collector"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Default limits and constraints
 DEFAULT_MAX_LOGS = 5000
@@ -64,12 +79,18 @@ logger = StandardizedLogger(
 logger.start_monitoring()
 
 app = FastAPI(
-    title="Log Collector",
+    title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Centralized log collection service for distributed systems with standardized logging",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
-app.add_middleware(RequestIdMiddleware)
-app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
+
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=SERVICE_NAME)
+
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 # Store logger instance for access in endpoints
 app.state.logger = logger
@@ -127,9 +148,30 @@ async def health(request: Request):
 
         # Log successful health check
         response_time = time.time() - start_time
-        logger_instance.log_request("GET", "/health", 200, response_time, extra={"log_count": health_data["count"]})
+        logger_instance.log_request(
+            "GET",
+            "/health",
+            200,
+            response_time,
+            extra={"log_count": health_data["count"]},
+        )
 
-        return health_data
+        return create_success_response(
+            data={
+                "status": "healthy",
+                "service": SERVICE_NAME,
+                "version": SERVICE_VERSION,
+                "log_count": health_data["count"],
+                "monitoring": health_data.get("monitoring"),
+                "features": {
+                    "log_collection": True,
+                    "batch_processing": True,
+                    "statistics": True,
+                    "standardized_logging": True,
+                }
+            },
+            message="Service is healthy"
+        )
 
     except Exception as e:
         # Log error
@@ -137,12 +179,11 @@ async def health(request: Request):
         logger_instance.log_error(e, {"endpoint": "/health"})
 
         # Return error health status
-        return {
-            "status": "unhealthy",
-            "service": SERVICE_NAME,
-            "error": str(e),
-            "description": "Log collection service encountered an error",
-        }
+        return create_error_response(
+            message=f"Health check failed: {str(e)}",
+            error_code="HEALTH_CHECK_FAILED",
+            details={"error": str(e)}
+        )
 
 
 @app.post("/logs")
@@ -166,7 +207,11 @@ async def put_log(item: LogItem, request: Request, response: Response):
             "/logs",
             200,
             response_time,
-            extra={"log_service": item.service, "log_level": item.level, "total_logs": count},
+            extra={
+                "log_service": item.service,
+                "log_level": item.level,
+                "total_logs": count,
+            },
         )
 
         # Log business event for log collection
@@ -227,7 +272,11 @@ async def put_logs(batch: LogBatch, request: Request, response: Response):
         # Log successful batch storage
         response_time = time.time() - start_time
         logger_instance.log_request(
-            "POST", "/logs/batch", 200, response_time, extra={"batch_size": len(batch.items), "total_logs": count}
+            "POST",
+            "/logs/batch",
+            200,
+            response_time,
+            extra={"batch_size": len(batch.items), "total_logs": count},
         )
 
         # Log business event for batch collection
@@ -246,14 +295,22 @@ async def put_logs(batch: LogBatch, request: Request, response: Response):
     except Exception as e:
         # Log error
         response_time = time.time() - start_time
-        logger_instance.log_error(e, {"endpoint": "/logs/batch", "batch_size": len(batch.items) if batch else 0})
+        logger_instance.log_error(
+            e,
+            {"endpoint": "/logs/batch", "batch_size": len(batch.items) if batch else 0},
+        )
 
         response.status_code = 500
         return {"status": "error", "message": "Failed to store log batch"}
 
 
 @app.get("/logs")
-async def list_logs(request: Request, service: Optional[str] = None, level: Optional[str] = None, limit: int = 100):
+async def list_logs(
+    request: Request,
+    service: Optional[str] = None,
+    level: Optional[str] = None,
+    limit: int = 100,
+):
     """Retrieve logs with optional filtering by service and/or log level.
 
     Supports filtering logs by service name, log level, and limiting the number
@@ -273,7 +330,12 @@ async def list_logs(request: Request, service: Optional[str] = None, level: Opti
             "/logs",
             200,
             response_time,
-            extra={"service_filter": service, "level_filter": level, "limit": limit, "results_count": len(logs)},
+            extra={
+                "service_filter": service,
+                "level_filter": level,
+                "limit": limit,
+                "results_count": len(logs),
+            },
         )
 
         return {"items": logs}
@@ -281,7 +343,9 @@ async def list_logs(request: Request, service: Optional[str] = None, level: Opti
     except Exception as e:
         # Log error
         response_time = time.time() - start_time
-        logger_instance.log_error(e, {"endpoint": "/logs", "service_filter": service, "level_filter": level})
+        logger_instance.log_error(
+            e, {"endpoint": "/logs", "service_filter": service, "level_filter": level}
+        )
 
         return {"error": "Failed to retrieve logs", "message": str(e)}
 
@@ -342,7 +406,9 @@ if __name__ == "__main__":
     import uvicorn
 
     # Log service startup
-    logger.info("Starting Log Collector service", port=DEFAULT_PORT, version=SERVICE_VERSION)
+    logger.info(
+        "Starting Log Collector service", port=DEFAULT_PORT, version=SERVICE_VERSION
+    )
 
     # Register cleanup function
     @atexit.register

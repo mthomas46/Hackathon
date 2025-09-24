@@ -16,9 +16,13 @@ class LLMQuery(BaseModel):
     model: Optional[str] = Field(None, description="Specific model to use")
     context: Optional[str] = Field(None, description="Additional context for the query")
     user_id: Optional[str] = Field(None, description="User identifier for tracking")
-    temperature: Optional[float] = Field(0.7, description="Response creativity (0.0-1.0)")
+    temperature: Optional[float] = Field(
+        0.7, description="Response creativity (0.0-1.0)"
+    )
     max_tokens: Optional[int] = Field(1024, description="Maximum response length")
-    force_refresh: bool = Field(False, description="Skip cache and force fresh response")
+    force_refresh: bool = Field(
+        False, description="Skip cache and force fresh response"
+    )
 
 
 class ChatMessage(BaseModel):
@@ -65,10 +69,14 @@ class MetricsResponse(BaseModel):
     """Response model for metrics endpoint."""
 
     total_requests: int = Field(..., description="Total number of requests")
-    requests_by_provider: Dict[str, int] = Field(..., description="Requests grouped by provider")
+    requests_by_provider: Dict[str, int] = Field(
+        ..., description="Requests grouped by provider"
+    )
     total_tokens_used: int = Field(..., description="Total tokens consumed")
     total_cost: float = Field(..., description="Total cost in USD")
-    average_response_time: float = Field(..., description="Average response time in seconds")
+    average_response_time: float = Field(
+        ..., description="Average response time in seconds"
+    )
     cache_hit_rate: float = Field(..., description="Cache hit rate (0.0-1.0)")
     error_rate: float = Field(..., description="Error rate (0.0-1.0)")
     uptime_percentage: float = Field(..., description="Service uptime percentage")
@@ -77,7 +85,9 @@ class MetricsResponse(BaseModel):
 class CacheRequest(BaseModel):
     """Request model for cache operations."""
 
-    pattern: Optional[str] = Field(None, description="Cache key pattern to clear (optional)")
+    pattern: Optional[str] = Field(
+        None, description="Cache key pattern to clear (optional)"
+    )
     user_id: Optional[str] = Field(None, description="Clear cache for specific user")
 
 
@@ -93,7 +103,9 @@ class HealthStatus(BaseModel):
     """Health status model."""
 
     service: str = Field(..., description="Service health status")
-    providers: Dict[str, Dict[str, Any]] = Field(..., description="Provider health statuses")
+    providers: Dict[str, Dict[str, Any]] = Field(
+        ..., description="Provider health statuses"
+    )
     cache: Dict[str, Any] = Field(..., description="Cache health status")
     rate_limiter: Dict[str, Any] = Field(..., description="Rate limiter status")
     timestamp: float = Field(..., description="Health check timestamp")

@@ -48,7 +48,10 @@ class ToolRegistry:
                 description="Search repositories by keyword",
                 input_schema={
                     "type": "object",
-                    "properties": {"q": {"type": "string"}, "limit": {"type": "integer"}},
+                    "properties": {
+                        "q": {"type": "string"},
+                        "limit": {"type": "integer"},
+                    },
                     "required": ["q"],
                 },
             ),
@@ -57,7 +60,10 @@ class ToolRegistry:
                 description="Get repository metadata",
                 input_schema={
                     "type": "object",
-                    "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}},
+                    "properties": {
+                        "owner": {"type": "string"},
+                        "repo": {"type": "string"},
+                    },
                     "required": ["owner", "repo"],
                 },
             ),
@@ -92,7 +98,10 @@ class ToolRegistry:
                 description="Search issues by query",
                 input_schema={
                     "type": "object",
-                    "properties": {"q": {"type": "string"}, "limit": {"type": "integer"}},
+                    "properties": {
+                        "q": {"type": "string"},
+                        "limit": {"type": "integer"},
+                    },
                     "required": ["q"],
                 },
             ),
@@ -101,7 +110,10 @@ class ToolRegistry:
                 description="List GitHub Actions workflows for a repo (mock)",
                 input_schema={
                     "type": "object",
-                    "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}},
+                    "properties": {
+                        "owner": {"type": "string"},
+                        "repo": {"type": "string"},
+                    },
                     "required": ["owner", "repo"],
                 },
             ),
@@ -110,7 +122,10 @@ class ToolRegistry:
                 description="List global security advisories (mock)",
                 input_schema={
                     "type": "object",
-                    "properties": {"severity": {"type": "string"}, "limit": {"type": "integer"}},
+                    "properties": {
+                        "severity": {"type": "string"},
+                        "limit": {"type": "integer"},
+                    },
                 },
             ),
             ToolDescription(
@@ -164,7 +179,9 @@ class ToolRegistry:
         """Get all available tools."""
         return self._mock_tools
 
-    def filter_tools_by_toolsets(self, toolsets: Optional[Set[str]]) -> List[ToolDescription]:
+    def filter_tools_by_toolsets(
+        self, toolsets: Optional[Set[str]]
+    ) -> List[ToolDescription]:
         """Filter tools by specified toolsets."""
         if toolsets is None or "all" in toolsets:
             return self._mock_tools

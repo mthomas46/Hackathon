@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 
 from ...base.base_manager import BaseManager
 
@@ -18,12 +18,14 @@ from ...base.base_manager import BaseManager
 class SourceAgentManager(BaseManager):
     """Manager for source agent power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     def get_required_services(self) -> List[str]:
         """Return list of services required by this manager."""
-        return [ServiceNames.SOURCE_AGENT]
+        return ["source-agent"]
 
     async def source_agent_menu(self):
         """Main source agent management menu with enhanced interactive experience."""
@@ -95,22 +97,43 @@ class SourceAgentManager(BaseManager):
         try:
             repo_url = Prompt.ask("[bold cyan]GitHub repository URL[/bold cyan]")
             branch = Prompt.ask("[bold cyan]Branch[/bold cyan]", default="main")
-            include_docs = Confirm.ask("[bold cyan]Include documentation files?[/bold cyan]", default=True)
-            include_code = Confirm.ask("[bold cyan]Include code files?[/bold cyan]", default=False)
+            include_docs = Confirm.ask(
+                "[bold cyan]Include documentation files?[/bold cyan]", default=True
+            )
+            include_code = Confirm.ask(
+                "[bold cyan]Include code files?[/bold cyan]", default=False
+            )
 
-            fetch_config = {"url": repo_url, "branch": branch, "include_patterns": [], "exclude_patterns": []}
+            fetch_config = {
+                "url": repo_url,
+                "branch": branch,
+                "include_patterns": [],
+                "exclude_patterns": [],
+            }
 
             if include_docs:
-                fetch_config["include_patterns"].extend(["*.md", "*.rst", "*.txt", "docs/**"])
+                fetch_config["include_patterns"].extend(
+                    ["*.md", "*.rst", "*.txt", "docs/**"]
+                )
             if include_code:
-                fetch_config["include_patterns"].extend(["*.py", "*.js", "*.java", "*.go", "src/**"])
+                fetch_config["include_patterns"].extend(
+                    ["*.py", "*.js", "*.java", "*.go", "src/**"]
+                )
 
-            with self.console.status(f"[bold green]Fetching from GitHub: {repo_url}...") as status:
-                response = await self.clients.post_json("source-agent/docs/fetch", fetch_config)
+            with self.console.status(
+                f"[bold green]Fetching from GitHub: {repo_url}..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "source-agent/docs/fetch", fetch_config
+                )
 
             if response.get("fetch_id"):
-                self.console.print(f"[green]✅ GitHub fetch started: {response['fetch_id']}[/green]")
-                self.console.print(f"[yellow]Files to fetch: {response.get('file_count', 0)}[/yellow]")
+                self.console.print(
+                    f"[green]✅ GitHub fetch started: {response['fetch_id']}[/green]"
+                )
+                self.console.print(
+                    f"[yellow]Files to fetch: {response.get('file_count', 0)}[/yellow]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start GitHub fetch[/red]")
 
@@ -122,9 +145,15 @@ class SourceAgentManager(BaseManager):
         try:
             jira_url = Prompt.ask("[bold cyan]Jira instance URL[/bold cyan]")
             project_key = Prompt.ask("[bold cyan]Project key[/bold cyan]")
-            issue_filter = Prompt.ask("[bold cyan]Issue filter (JQL)[/bold cyan]", default="")
-            include_comments = Confirm.ask("[bold cyan]Include comments?[/bold cyan]", default=True)
-            include_attachments = Confirm.ask("[bold cyan]Include attachments?[/bold cyan]", default=False)
+            issue_filter = Prompt.ask(
+                "[bold cyan]Issue filter (JQL)[/bold cyan]", default=""
+            )
+            include_comments = Confirm.ask(
+                "[bold cyan]Include comments?[/bold cyan]", default=True
+            )
+            include_attachments = Confirm.ask(
+                "[bold cyan]Include attachments?[/bold cyan]", default=False
+            )
 
             fetch_config = {
                 "url": jira_url,
@@ -134,12 +163,20 @@ class SourceAgentManager(BaseManager):
                 "include_attachments": include_attachments,
             }
 
-            with self.console.status(f"[bold green]Fetching from Jira: {project_key}...") as status:
-                response = await self.clients.post_json("source-agent/docs/fetch", fetch_config)
+            with self.console.status(
+                f"[bold green]Fetching from Jira: {project_key}..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "source-agent/docs/fetch", fetch_config
+                )
 
             if response.get("fetch_id"):
-                self.console.print(f"[green]✅ Jira fetch started: {response['fetch_id']}[/green]")
-                self.console.print(f"[yellow]Issues to fetch: {response.get('issue_count', 0)}[/yellow]")
+                self.console.print(
+                    f"[green]✅ Jira fetch started: {response['fetch_id']}[/green]"
+                )
+                self.console.print(
+                    f"[yellow]Issues to fetch: {response.get('issue_count', 0)}[/yellow]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start Jira fetch[/red]")
 
@@ -149,22 +186,40 @@ class SourceAgentManager(BaseManager):
     async def fetch_confluence(self):
         """Fetch documents from Confluence."""
         try:
-            confluence_url = Prompt.ask("[bold cyan]Confluence instance URL[/bold cyan]")
+            confluence_url = Prompt.ask(
+                "[bold cyan]Confluence instance URL[/bold cyan]"
+            )
             space_key = Prompt.ask("[bold cyan]Space key[/bold cyan]")
-            parent_page = Prompt.ask("[bold cyan]Parent page ID (optional)[/bold cyan]", default="")
-            include_children = Confirm.ask("[bold cyan]Include child pages?[/bold cyan]", default=True)
+            parent_page = Prompt.ask(
+                "[bold cyan]Parent page ID (optional)[/bold cyan]", default=""
+            )
+            include_children = Confirm.ask(
+                "[bold cyan]Include child pages?[/bold cyan]", default=True
+            )
 
-            fetch_config = {"url": confluence_url, "space_key": space_key, "include_children": include_children}
+            fetch_config = {
+                "url": confluence_url,
+                "space_key": space_key,
+                "include_children": include_children,
+            }
 
             if parent_page:
                 fetch_config["parent_page_id"] = parent_page
 
-            with self.console.status(f"[bold green]Fetching from Confluence: {space_key}...") as status:
-                response = await self.clients.post_json("source-agent/docs/fetch", fetch_config)
+            with self.console.status(
+                f"[bold green]Fetching from Confluence: {space_key}..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "source-agent/docs/fetch", fetch_config
+                )
 
             if response.get("fetch_id"):
-                self.console.print(f"[green]✅ Confluence fetch started: {response['fetch_id']}[/green]")
-                self.console.print(f"[yellow]Pages to fetch: {response.get('page_count', 0)}[/yellow]")
+                self.console.print(
+                    f"[green]✅ Confluence fetch started: {response['fetch_id']}[/green]"
+                )
+                self.console.print(
+                    f"[yellow]Pages to fetch: {response.get('page_count', 0)}[/yellow]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start Confluence fetch[/red]")
 
@@ -174,20 +229,32 @@ class SourceAgentManager(BaseManager):
     async def bulk_fetch(self):
         """Bulk fetch from multiple sources."""
         try:
-            sources_input = Prompt.ask("[bold cyan]Sources configuration (JSON)[/bold cyan]")
+            sources_input = Prompt.ask(
+                "[bold cyan]Sources configuration (JSON)[/bold cyan]"
+            )
             import json
 
             sources = json.loads(sources_input)
 
-            confirm = Confirm.ask(f"[bold yellow]This will fetch from {len(sources)} sources. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will fetch from {len(sources)} sources. Continue?[/bold yellow]"
+            )
 
             if confirm:
-                with self.console.status("[bold green]Starting bulk fetch...") as status:
-                    response = await self.clients.post_json("source-agent/docs/bulk-fetch", {"sources": sources})
+                with self.console.status(
+                    "[bold green]Starting bulk fetch..."
+                ) as status:
+                    response = await self.clients.post_json(
+                        "source-agent/docs/bulk-fetch", {"sources": sources}
+                    )
 
                 if response.get("bulk_fetch_id"):
-                    self.console.print(f"[green]✅ Bulk fetch started: {response['bulk_fetch_id']}[/green]")
-                    self.console.print(f"[yellow]Total items to fetch: {response.get('total_items', 0)}[/yellow]")
+                    self.console.print(
+                        f"[green]✅ Bulk fetch started: {response['bulk_fetch_id']}[/green]"
+                    )
+                    self.console.print(
+                        f"[yellow]Total items to fetch: {response.get('total_items', 0)}[/yellow]"
+                    )
                 else:
                     self.console.print("[red]❌ Failed to start bulk fetch[/red]")
             else:
@@ -202,7 +269,9 @@ class SourceAgentManager(BaseManager):
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="20")
 
             with self.console.status("[bold green]Fetching fetch history...") as status:
-                response = await self.clients.get_json(f"source-agent/fetches?limit={limit}")
+                response = await self.clients.get_json(
+                    f"source-agent/fetches?limit={limit}"
+                )
 
             if response.get("fetches"):
                 table = Table(title="Fetch History")
@@ -214,9 +283,12 @@ class SourceAgentManager(BaseManager):
                 table.add_column("Started", style="blue")
 
                 for fetch in response["fetches"]:
-                    status_color = {"completed": "green", "running": "yellow", "failed": "red", "pending": "blue"}.get(
-                        fetch.get("status", "unknown"), "white"
-                    )
+                    status_color = {
+                        "completed": "green",
+                        "running": "yellow",
+                        "failed": "red",
+                        "pending": "blue",
+                    }.get(fetch.get("status", "unknown"), "white")
 
                     table.add_row(
                         fetch.get("id", "N/A")[:8],
@@ -281,14 +353,21 @@ class SourceAgentManager(BaseManager):
                 default="standard",
             )
 
-            with self.console.status(f"[bold green]Normalizing data from fetch {fetch_id}...") as status:
+            with self.console.status(
+                f"[bold green]Normalizing data from fetch {fetch_id}..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "source-agent/normalize", {"fetch_id": fetch_id, "normalization_type": normalization_type}
+                    "source-agent/normalize",
+                    {"fetch_id": fetch_id, "normalization_type": normalization_type},
                 )
 
             if response.get("normalization_id"):
-                self.console.print(f"[green]✅ Data normalization started: {response['normalization_id']}[/green]")
-                self.console.print(f"[yellow]Items to normalize: {response.get('item_count', 0)}[/yellow]")
+                self.console.print(
+                    f"[green]✅ Data normalization started: {response['normalization_id']}[/green]"
+                )
+                self.console.print(
+                    f"[yellow]Items to normalize: {response.get('item_count', 0)}[/yellow]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start data normalization[/red]")
 
@@ -298,25 +377,33 @@ class SourceAgentManager(BaseManager):
     async def view_normalization_rules(self):
         """View normalization rules."""
         try:
-            with self.console.status("[bold green]Fetching normalization rules...") as status:
-                response = await self.clients.get_json("source-agent/normalization/rules")
+            with self.console.status(
+                "[bold green]Fetching normalization rules..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "source-agent/normalization/rules"
+                )
 
             if response.get("rules"):
                 content = "[bold]Normalization Rules[/bold]\n\n"
 
                 for rule_set in response["rules"]:
-                    content += f"[bold]{rule_set.get('name', 'Unknown Rule Set')}:[/bold]\n"
+                    content += (
+                        f"[bold]{rule_set.get('name', 'Unknown Rule Set')}:[/bold]\n"
+                    )
                     content += f"  Description: {rule_set.get('description', 'No description')}\n"
-                    content += f"  Applies to: {', '.join(rule_set.get('applies_to', []))}\n\n"
+                    content += (
+                        f"  Applies to: {', '.join(rule_set.get('applies_to', []))}\n\n"
+                    )
 
                     if rule_set.get("rules"):
                         content += "  Rules:\n"
                         for rule in rule_set["rules"][:5]:  # Show first 5 rules
-                            content += (
-                                f"    • {rule.get('name', 'Unknown')}: {rule.get('description', 'No description')}\n"
-                            )
+                            content += f"    • {rule.get('name', 'Unknown')}: {rule.get('description', 'No description')}\n"
                         if len(rule_set["rules"]) > 5:
-                            content += f"    ... and {len(rule_set['rules']) - 5} more rules\n"
+                            content += (
+                                f"    ... and {len(rule_set['rules']) - 5} more rules\n"
+                            )
 
                     content += "\n"
 
@@ -336,13 +423,18 @@ class SourceAgentManager(BaseManager):
 
             custom_rules = json.loads(rules_input)
 
-            with self.console.status(f"[bold green]Applying custom normalization to fetch {fetch_id}...") as status:
+            with self.console.status(
+                f"[bold green]Applying custom normalization to fetch {fetch_id}..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "source-agent/normalize/custom", {"fetch_id": fetch_id, "custom_rules": custom_rules}
+                    "source-agent/normalize/custom",
+                    {"fetch_id": fetch_id, "custom_rules": custom_rules},
                 )
 
             if response.get("normalization_id"):
-                self.console.print(f"[green]✅ Custom normalization started: {response['normalization_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Custom normalization started: {response['normalization_id']}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start custom normalization[/red]")
 
@@ -354,8 +446,12 @@ class SourceAgentManager(BaseManager):
         try:
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="20")
 
-            with self.console.status("[bold green]Fetching normalization history...") as status:
-                response = await self.clients.get_json(f"source-agent/normalizations?limit={limit}")
+            with self.console.status(
+                "[bold green]Fetching normalization history..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"source-agent/normalizations?limit={limit}"
+                )
 
             if response.get("normalizations"):
                 table = Table(title="Normalization History")
@@ -367,9 +463,12 @@ class SourceAgentManager(BaseManager):
                 table.add_column("Completed", style="blue")
 
                 for norm in response["normalizations"]:
-                    status_color = {"completed": "green", "running": "yellow", "failed": "red", "pending": "blue"}.get(
-                        norm.get("status", "unknown"), "white"
-                    )
+                    status_color = {
+                        "completed": "green",
+                        "running": "yellow",
+                        "failed": "red",
+                        "pending": "blue",
+                    }.get(norm.get("status", "unknown"), "white")
 
                     table.add_row(
                         norm.get("id", "N/A")[:8],
@@ -377,7 +476,11 @@ class SourceAgentManager(BaseManager):
                         norm.get("normalization_type", "unknown"),
                         f"[{status_color}]{norm.get('status', 'unknown')}[/{status_color}]",
                         str(norm.get("items_processed", 0)),
-                        norm.get("completed_at", "unknown")[:19] if norm.get("completed_at") else "running",
+                        (
+                            norm.get("completed_at", "unknown")[:19]
+                            if norm.get("completed_at")
+                            else "running"
+                        ),
                     )
 
                 self.console.print(table)
@@ -392,9 +495,12 @@ class SourceAgentManager(BaseManager):
         try:
             normalization_id = Prompt.ask("[bold cyan]Normalization ID[/bold cyan]")
 
-            with self.console.status(f"[bold green]Validating normalized data {normalization_id}...") as status:
+            with self.console.status(
+                f"[bold green]Validating normalized data {normalization_id}..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "source-agent/normalize/validate", {"normalization_id": normalization_id}
+                    "source-agent/normalize/validate",
+                    {"normalization_id": normalization_id},
                 )
 
             if response.get("validation"):
@@ -407,10 +513,10 @@ Normalization ID: {normalization_id}
 Validation Status: {'✅ PASSED' if validation.get('passed') else '❌ FAILED'}
 
 Summary:
-  Total Items: {validation.get('total_items', 0)}
-  Valid Items: {validation.get('valid_items', 0)}
-  Invalid Items: {validation.get('invalid_items', 0)}
-  Success Rate: {validation.get('success_rate', 0):.1f}%
+    Total Items: {validation.get('total_items', 0)}
+    Valid Items: {validation.get('valid_items', 0)}
+    Invalid Items: {validation.get('invalid_items', 0)}
+    Success Rate: {validation.get('success_rate', 0):.1f}%
 
 Issues Found:
 """
@@ -418,11 +524,17 @@ Issues Found:
                     for issue in validation["issues"][:10]:  # Show first 10 issues
                         content += f"  • {issue.get('type', 'Unknown')}: {issue.get('description', 'No description')}\n"
                     if len(validation["issues"]) > 10:
-                        content += f"  ... and {len(validation['issues']) - 10} more issues\n"
+                        content += (
+                            f"  ... and {len(validation['issues']) - 10} more issues\n"
+                        )
                 else:
                     content += "  No issues found ✅\n"
 
-                print_panel(self.console, content, border_style="green" if validation.get("passed") else "red")
+                print_panel(
+                    self.console,
+                    content,
+                    border_style="green" if validation.get("passed") else "red",
+                )
             else:
                 self.console.print("[red]❌ Failed to validate normalized data[/red]")
 
@@ -469,19 +581,27 @@ Issues Found:
         try:
             repo_url = Prompt.ask("[bold cyan]Repository URL[/bold cyan]")
             analysis_types = Prompt.ask(
-                "[bold cyan]Analysis types (comma-separated)[/bold cyan]", default="structure,complexity,patterns"
+                "[bold cyan]Analysis types (comma-separated)[/bold cyan]",
+                default="structure,complexity,patterns",
             )
 
             analysis_list = [t.strip() for t in analysis_types.split(",")]
 
-            with self.console.status(f"[bold green]Analyzing code from {repo_url}...") as status:
+            with self.console.status(
+                f"[bold green]Analyzing code from {repo_url}..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "source-agent/code/analyze", {"repository_url": repo_url, "analysis_types": analysis_list}
+                    "source-agent/code/analyze",
+                    {"repository_url": repo_url, "analysis_types": analysis_list},
                 )
 
             if response.get("analysis_id"):
-                self.console.print(f"[green]✅ Code analysis started: {response['analysis_id']}[/green]")
-                self.console.print(f"[yellow]Files to analyze: {response.get('file_count', 0)}[/yellow]")
+                self.console.print(
+                    f"[green]✅ Code analysis started: {response['analysis_id']}[/green]"
+                )
+                self.console.print(
+                    f"[yellow]Files to analyze: {response.get('file_count', 0)}[/yellow]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start code analysis[/red]")
 
@@ -501,18 +621,25 @@ Issues Found:
                 default="files",
             )
 
-            with self.console.status(f"[bold green]Running {language} {analysis_scope} analysis...") as status:
+            with self.console.status(
+                f"[bold green]Running {language} {analysis_scope} analysis..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "source-agent/code/analyze/language", {"language": language, "scope": analysis_scope}
+                    "source-agent/code/analyze/language",
+                    {"language": language, "scope": analysis_scope},
                 )
 
             if response.get("analysis_id"):
-                self.console.print(f"[green]✅ {language.title()} analysis started: {response['analysis_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ {language.title()} analysis started: {response['analysis_id']}[/green]"
+                )
             else:
                 self.console.print(f"[red]❌ Failed to start {language} analysis[/red]")
 
         except Exception as e:
-            self.console.print(f"[red]Error starting language-specific analysis: {e}[/red]")
+            self.console.print(
+                f"[red]Error starting language-specific analysis: {e}[/red]"
+            )
 
     async def security_analysis(self):
         """Security analysis."""
@@ -523,12 +650,20 @@ Issues Found:
                 default="repository",
             )
 
-            with self.console.status(f"[bold green]Running security analysis on {target}...") as status:
-                response = await self.clients.post_json("source-agent/code/security-scan", {"target": target})
+            with self.console.status(
+                f"[bold green]Running security analysis on {target}..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "source-agent/code/security-scan", {"target": target}
+                )
 
             if response.get("analysis_id"):
-                self.console.print(f"[green]✅ Security analysis started: {response['analysis_id']}[/green]")
-                self.console.print(f"[yellow]Vulnerabilities found: {response.get('vulnerability_count', 0)}[/yellow]")
+                self.console.print(
+                    f"[green]✅ Security analysis started: {response['analysis_id']}[/green]"
+                )
+                self.console.print(
+                    f"[yellow]Vulnerabilities found: {response.get('vulnerability_count', 0)}[/yellow]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start security analysis[/red]")
 
@@ -539,14 +674,22 @@ Issues Found:
         """Performance analysis."""
         try:
             analysis_target = Prompt.ask(
-                "[bold cyan]Analysis target[/bold cyan]", choices=["code", "queries", "operations"], default="code"
+                "[bold cyan]Analysis target[/bold cyan]",
+                choices=["code", "queries", "operations"],
+                default="code",
             )
 
-            with self.console.status(f"[bold green]Running performance analysis on {analysis_target}...") as status:
-                response = await self.clients.post_json("source-agent/code/performance", {"target": analysis_target})
+            with self.console.status(
+                f"[bold green]Running performance analysis on {analysis_target}..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "source-agent/code/performance", {"target": analysis_target}
+                )
 
             if response.get("analysis_id"):
-                self.console.print(f"[green]✅ Performance analysis started: {response['analysis_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Performance analysis started: {response['analysis_id']}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start performance analysis[/red]")
 
@@ -558,8 +701,12 @@ Issues Found:
         try:
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="20")
 
-            with self.console.status("[bold green]Fetching analysis history...") as status:
-                response = await self.clients.get_json(f"source-agent/analyses?limit={limit}")
+            with self.console.status(
+                "[bold green]Fetching analysis history..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"source-agent/analyses?limit={limit}"
+                )
 
             if response.get("analyses"):
                 table = Table(title="Code Analysis History")
@@ -571,9 +718,12 @@ Issues Found:
                 table.add_column("Completed", style="blue")
 
                 for analysis in response["analyses"]:
-                    status_color = {"completed": "green", "running": "yellow", "failed": "red", "pending": "blue"}.get(
-                        analysis.get("status", "unknown"), "white"
-                    )
+                    status_color = {
+                        "completed": "green",
+                        "running": "yellow",
+                        "failed": "red",
+                        "pending": "blue",
+                    }.get(analysis.get("status", "unknown"), "white")
 
                     table.add_row(
                         analysis.get("id", "N/A")[:8],
@@ -581,7 +731,11 @@ Issues Found:
                         analysis.get("target", "unknown")[:30],
                         f"[{status_color}]{analysis.get('status', 'unknown')}[/{status_color}]",
                         str(analysis.get("findings_count", 0)),
-                        analysis.get("completed_at", "unknown")[:19] if analysis.get("completed_at") else "running",
+                        (
+                            analysis.get("completed_at", "unknown")[:19]
+                            if analysis.get("completed_at")
+                            else "running"
+                        ),
                     )
 
                 self.console.print(table)
@@ -629,7 +783,9 @@ Issues Found:
     async def list_sources(self):
         """List configured sources."""
         try:
-            with self.console.status("[bold green]Fetching configured sources...") as status:
+            with self.console.status(
+                "[bold green]Fetching configured sources..."
+            ) as status:
                 response = await self.clients.get_json("source-agent/sources")
 
             if response.get("sources"):
@@ -641,9 +797,12 @@ Issues Found:
                 table.add_column("Last Sync", style="blue")
 
                 for source in response["sources"]:
-                    status_color = {"active": "green", "inactive": "red", "error": "red", "syncing": "yellow"}.get(
-                        source.get("status", "unknown"), "white"
-                    )
+                    status_color = {
+                        "active": "green",
+                        "inactive": "red",
+                        "error": "red",
+                        "syncing": "yellow",
+                    }.get(source.get("status", "unknown"), "white")
 
                     table.add_row(
                         source.get("id", "N/A")[:8],
@@ -664,7 +823,8 @@ Issues Found:
         """Add new source."""
         try:
             source_type = Prompt.ask(
-                "[bold cyan]Source type[/bold cyan]", choices=["github", "jira", "confluence", "filesystem", "database"]
+                "[bold cyan]Source type[/bold cyan]",
+                choices=["github", "jira", "confluence", "filesystem", "database"],
             )
             source_url = Prompt.ask("[bold cyan]Source URL or identifier[/bold cyan]")
 
@@ -673,19 +833,31 @@ Issues Found:
             # Type-specific configuration
             if source_type == "github":
                 config["token"] = Prompt.ask("[bold cyan]GitHub token[/bold cyan]")
-                config["branch"] = Prompt.ask("[bold cyan]Default branch[/bold cyan]", default="main")
+                config["branch"] = Prompt.ask(
+                    "[bold cyan]Default branch[/bold cyan]", default="main"
+                )
             elif source_type == "jira":
                 config["username"] = Prompt.ask("[bold cyan]Jira username[/bold cyan]")
-                config["api_token"] = Prompt.ask("[bold cyan]Jira API token[/bold cyan]")
+                config["api_token"] = Prompt.ask(
+                    "[bold cyan]Jira API token[/bold cyan]"
+                )
             elif source_type == "confluence":
-                config["username"] = Prompt.ask("[bold cyan]Confluence username[/bold cyan]")
-                config["api_token"] = Prompt.ask("[bold cyan]Confluence API token[/bold cyan]")
+                config["username"] = Prompt.ask(
+                    "[bold cyan]Confluence username[/bold cyan]"
+                )
+                config["api_token"] = Prompt.ask(
+                    "[bold cyan]Confluence API token[/bold cyan]"
+                )
 
-            with self.console.status(f"[bold green]Adding {source_type} source...") as status:
+            with self.console.status(
+                f"[bold green]Adding {source_type} source..."
+            ) as status:
                 response = await self.clients.post_json("source-agent/sources", config)
 
             if response.get("source_id"):
-                self.console.print(f"[green]✅ Source added successfully: {response['source_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Source added successfully: {response['source_id']}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to add source[/red]")
 
@@ -699,11 +871,17 @@ Issues Found:
             field = Prompt.ask("[bold cyan]Field to update[/bold cyan]")
             new_value = Prompt.ask(f"[bold cyan]New {field} value[/bold cyan]")
 
-            with self.console.status(f"[bold green]Updating source {source_id}...") as status:
-                response = await self.clients.put_json(f"source-agent/sources/{source_id}", {field: new_value})
+            with self.console.status(
+                f"[bold green]Updating source {source_id}..."
+            ) as status:
+                response = await self.clients.put_json(
+                    f"source-agent/sources/{source_id}", {field: new_value}
+                )
 
             if response.get("updated"):
-                self.console.print(f"[green]✅ Source {source_id} updated successfully[/green]")
+                self.console.print(
+                    f"[green]✅ Source {source_id} updated successfully[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to update source[/red]")
 
@@ -714,14 +892,22 @@ Issues Found:
         """Remove source."""
         try:
             source_id = Prompt.ask("[bold cyan]Source ID[/bold cyan]")
-            confirm = Confirm.ask(f"[bold red]Are you sure you want to remove source {source_id}?[/bold red]")
+            confirm = Confirm.ask(
+                f"[bold red]Are you sure you want to remove source {source_id}?[/bold red]"
+            )
 
             if confirm:
-                with self.console.status(f"[bold green]Removing source {source_id}...") as status:
-                    response = await self.clients.delete_json(f"source-agent/sources/{source_id}")
+                with self.console.status(
+                    f"[bold green]Removing source {source_id}..."
+                ) as status:
+                    response = await self.clients.delete_json(
+                        f"source-agent/sources/{source_id}"
+                    )
 
                 if response.get("removed"):
-                    self.console.print(f"[green]✅ Source {source_id} removed successfully[/green]")
+                    self.console.print(
+                        f"[green]✅ Source {source_id} removed successfully[/green]"
+                    )
                 else:
                     self.console.print("[red]❌ Failed to remove source[/red]")
             else:
@@ -735,8 +921,12 @@ Issues Found:
         try:
             source_id = Prompt.ask("[bold cyan]Source ID[/bold cyan]")
 
-            with self.console.status(f"[bold green]Testing connection to source {source_id}...") as status:
-                response = await self.clients.post_json(f"source-agent/sources/{source_id}/test", {})
+            with self.console.status(
+                f"[bold green]Testing connection to source {source_id}..."
+            ) as status:
+                response = await self.clients.post_json(
+                    f"source-agent/sources/{source_id}/test", {}
+                )
 
             if response.get("connection_test"):
                 test_result = response["connection_test"]
@@ -755,7 +945,11 @@ Details:
                     for key, value in test_result["details"].items():
                         content += f"  {key}: {value}\n"
 
-                print_panel(self.console, content, border_style="green" if test_result.get("connected") else "red")
+                print_panel(
+                    self.console,
+                    content,
+                    border_style="green" if test_result.get("connected") else "red",
+                )
             else:
                 self.console.print("[red]❌ Connection test failed[/red]")
 
@@ -800,7 +994,9 @@ Details:
     async def source_agent_health(self):
         """Source agent health."""
         try:
-            with self.console.status("[bold green]Checking source agent health...") as status:
+            with self.console.status(
+                "[bold green]Checking source agent health..."
+            ) as status:
                 response = await self.clients.get_json("source-agent/health")
 
             if response.get("health"):
@@ -819,13 +1015,17 @@ Services:
 
                 content += f"""
 Metrics:
-  Active Connections: {health.get('active_connections', 0)}
-  Queued Tasks: {health.get('queued_tasks', 0)}
-  Processed Today: {health.get('processed_today', 0)}
+    Active Connections: {health.get('active_connections', 0)}
+    Queued Tasks: {health.get('queued_tasks', 0)}
+    Processed Today: {health.get('processed_today', 0)}
 
 Last Health Check: {health.get('last_check', 'unknown')}
 """
-                print_panel(self.console, content, border_style="green" if health.get("healthy") else "red")
+                print_panel(
+                    self.console,
+                    content,
+                    border_style="green" if health.get("healthy") else "red",
+                )
             else:
                 self.console.print("[red]Unable to retrieve source agent health.[/red]")
 
@@ -835,7 +1035,9 @@ Last Health Check: {health.get('last_check', 'unknown')}
     async def integration_metrics(self):
         """Integration metrics."""
         try:
-            with self.console.status("[bold green]Fetching integration metrics...") as status:
+            with self.console.status(
+                "[bold green]Fetching integration metrics..."
+            ) as status:
                 response = await self.clients.get_json("source-agent/metrics")
 
             if response.get("metrics"):
@@ -844,19 +1046,19 @@ Last Health Check: {health.get('last_check', 'unknown')}
 [bold]Integration Metrics[/bold]
 
 Data Sources:
-  Total Sources: {metrics.get('total_sources', 0)}
-  Active Sources: {metrics.get('active_sources', 0)}
-  Failed Sources: {metrics.get('failed_sources', 0)}
+    Total Sources: {metrics.get('total_sources', 0)}
+    Active Sources: {metrics.get('active_sources', 0)}
+    Failed Sources: {metrics.get('failed_sources', 0)}
 
 Data Processing:
-  Documents Fetched: {metrics.get('documents_fetched', 0)}
-  Documents Normalized: {metrics.get('documents_normalized', 0)}
-  Documents Analyzed: {metrics.get('documents_analyzed', 0)}
+    Documents Fetched: {metrics.get('documents_fetched', 0)}
+    Documents Normalized: {metrics.get('documents_normalized', 0)}
+    Documents Analyzed: {metrics.get('documents_analyzed', 0)}
 
 Performance:
-  Average Fetch Time: {metrics.get('avg_fetch_time_sec', 0):.2f} sec
-  Average Process Time: {metrics.get('avg_process_time_sec', 0):.2f} sec
-  Success Rate: {metrics.get('success_rate_percent', 0):.1f}%
+    Average Fetch Time: {metrics.get('avg_fetch_time_sec', 0):.2f} sec
+    Average Process Time: {metrics.get('avg_process_time_sec', 0):.2f} sec
+    Success Rate: {metrics.get('success_rate_percent', 0):.1f}%
 
 Time Period: Last 24 hours
 """
@@ -870,7 +1072,9 @@ Time Period: Last 24 hours
     async def active_connections(self):
         """Active connections."""
         try:
-            with self.console.status("[bold green]Fetching active connections...") as status:
+            with self.console.status(
+                "[bold green]Fetching active connections..."
+            ) as status:
                 response = await self.clients.get_json("source-agent/connections")
 
             if response.get("connections"):
@@ -910,7 +1114,9 @@ Time Period: Last 24 hours
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="20")
 
             with self.console.status("[bold green]Fetching error logs...") as status:
-                response = await self.clients.get_json(f"source-agent/errors?limit={limit}")
+                response = await self.clients.get_json(
+                    f"source-agent/errors?limit={limit}"
+                )
 
             if response.get("errors"):
                 table = Table(title="Error Logs")

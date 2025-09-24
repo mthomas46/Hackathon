@@ -1,6 +1,5 @@
 """Remediation Controller - Handles automated remediation endpoints."""
 
-
 from fastapi import APIRouter
 
 from ...modules.analysis_handlers import analysis_handlers

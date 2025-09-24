@@ -49,7 +49,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             response_details = self._extract_response_details(response)
 
             # Log successful request
-            await self._log_request(request_details, response_details, processing_time, None)
+            await self._log_request(
+                request_details, response_details, processing_time, None
+            )
 
             # Add request ID to response headers
             response.headers["X-Request-ID"] = request_id
@@ -124,7 +126,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             "path": request_details["path"],
             "client_ip": request_details["client_ip"],
             "user_agent": request_details.get("user_agent"),
-            "processing_time": round(processing_time * 1000, 2),  # Convert to milliseconds
+            "processing_time": round(
+                processing_time * 1000, 2
+            ),  # Convert to milliseconds
             "query_params": request_details.get("query_params"),
         }
 
@@ -181,7 +185,9 @@ class LoggingMiddleware:
         return client.host if client else "unknown"
 
     @staticmethod
-    def log_business_event(event_type: str, event_data: Dict[str, Any], request: Optional[Request] = None) -> None:
+    def log_business_event(
+        event_type: str, event_data: Dict[str, Any], request: Optional[Request] = None
+    ) -> None:
         """Log business events with context."""
         log_data = {"event_type": event_type, "event_data": event_data}
 
@@ -197,13 +203,25 @@ class LoggingMiddleware:
 
     @staticmethod
     def log_performance_metric(
-        operation: str, duration: float, metadata: Optional[Dict[str, Any]] = None, request: Optional[Request] = None
+        operation: str,
+        duration: float,
+        metadata: Optional[Dict[str, Any]] = None,
+        request: Optional[Request] = None,
     ) -> None:
         """Log performance metrics."""
-        log_data = {"operation": operation, "duration_ms": round(duration * 1000, 2), "metadata": metadata or {}}
+        log_data = {
+            "operation": operation,
+            "duration_ms": round(duration * 1000, 2),
+            "metadata": metadata or {},
+        }
 
         if request:
-            log_data.update({"request_id": getattr(request.state, "request_id", None), "path": request.url.path})
+            log_data.update(
+                {
+                    "request_id": getattr(request.state, "request_id", None),
+                    "path": request.url.path,
+                }
+            )
 
         logger.info(f"Performance: {operation}", extra=log_data)
 
@@ -226,10 +244,15 @@ class PerformanceLogger:
         """Exit the context and log performance."""
         if self.start_time:
             duration = time.time() - self.start_time
-            log_data = {"operation": self.operation, "duration_ms": round(duration * 1000, 2)}
+            log_data = {
+                "operation": self.operation,
+                "duration_ms": round(duration * 1000, 2),
+            }
 
             if exc_type:
                 log_data["error"] = str(exc_val)
                 self.logger.error(f"Operation failed: {self.operation}", extra=log_data)
             else:
-                self.logger.info(f"Operation completed: {self.operation}", extra=log_data)
+                self.logger.info(
+                    f"Operation completed: {self.operation}", extra=log_data
+                )

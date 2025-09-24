@@ -39,9 +39,15 @@ class ExternalServiceConfig:
             openai_temperature=float(os.getenv("OPENAI_TEMPERATURE", "0.7")),
             semantic_model_path=os.getenv("SEMANTIC_MODEL_PATH"),
             semantic_batch_size=int(os.getenv("SEMANTIC_BATCH_SIZE", "32")),
-            semantic_similarity_threshold=float(os.getenv("SEMANTIC_SIMILARITY_THRESHOLD", "0.8")),
-            sentiment_model=os.getenv("SENTIMENT_MODEL", "cardiffnlp/twitter-roberta-base-sentiment-latest"),
-            sentiment_confidence_threshold=float(os.getenv("SENTIMENT_CONFIDENCE_THRESHOLD", "0.6")),
+            semantic_similarity_threshold=float(
+                os.getenv("SEMANTIC_SIMILARITY_THRESHOLD", "0.8")
+            ),
+            sentiment_model=os.getenv(
+                "SENTIMENT_MODEL", "cardiffnlp/twitter-roberta-base-sentiment-latest"
+            ),
+            sentiment_confidence_threshold=float(
+                os.getenv("SENTIMENT_CONFIDENCE_THRESHOLD", "0.6")
+            ),
             request_timeout=int(os.getenv("EXTERNAL_REQUEST_TIMEOUT", "30")),
             max_retries=int(os.getenv("EXTERNAL_MAX_RETRIES", "3")),
             retry_delay=float(os.getenv("EXTERNAL_RETRY_DELAY", "1.0")),
@@ -66,11 +72,18 @@ class ExternalServiceConfig:
 
     def get_sentiment_config(self) -> Dict[str, Any]:
         """Get sentiment analysis configuration."""
-        return {"model": self.sentiment_model, "confidence_threshold": self.sentiment_confidence_threshold}
+        return {
+            "model": self.sentiment_model,
+            "confidence_threshold": self.sentiment_confidence_threshold,
+        }
 
     def get_retry_config(self) -> Dict[str, Any]:
         """Get retry configuration."""
-        return {"max_retries": self.max_retries, "retry_delay": self.retry_delay, "timeout": self.request_timeout}
+        return {
+            "max_retries": self.max_retries,
+            "retry_delay": self.retry_delay,
+            "timeout": self.request_timeout,
+        }
 
     def validate(self) -> list[str]:
         """Validate configuration."""

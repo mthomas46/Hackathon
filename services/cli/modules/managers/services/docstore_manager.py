@@ -17,7 +17,9 @@ from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 class DocStoreManager(BaseManager):
     """Manager for document store power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def get_required_services(self) -> List[str]:
@@ -26,7 +28,11 @@ class DocStoreManager(BaseManager):
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for docstore operations."""
-        return [("1", "Document Management"), ("2", "Search Operations"), ("3", "Storage Configuration")]
+        return [
+            ("1", "Document Management"),
+            ("2", "Search Operations"),
+            ("3", "Storage Configuration"),
+        ]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -36,7 +42,9 @@ class DocStoreManager(BaseManager):
     async def docstore_management_menu(self):
         """Main document store management menu."""
         while True:
-            menu = create_menu_table("Document Store Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Document Store Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -117,7 +125,9 @@ class DocStoreManager(BaseManager):
             offset = Prompt.ask("[bold cyan]Offset[/bold cyan]", default="0")
 
             with self.console.status("[bold green]Fetching documents...") as status:
-                response = await self.clients.get_json(f"doc_store/documents/_list?limit={limit}&offset={offset}")
+                response = await self.clients.get_json(
+                    f"doc_store/documents/_list?limit={limit}&offset={offset}"
+                )
 
             if response.get("documents"):
                 table = Table(title="Documents")
@@ -142,7 +152,9 @@ class DocStoreManager(BaseManager):
                     )
 
                 self.console.print(table)
-                self.console.print(f"[dim]Showing {len(response['documents'])} documents (offset: {offset})[/dim]")
+                self.console.print(
+                    f"[dim]Showing {len(response['documents'])} documents (offset: {offset})[/dim]"
+                )
             else:
                 self.console.print("[yellow]No documents found.[/yellow]")
 
@@ -154,7 +166,9 @@ class DocStoreManager(BaseManager):
         try:
             doc_id = Prompt.ask("[bold cyan]Document ID[/bold cyan]")
 
-            with self.console.status(f"[bold green]Fetching document {doc_id}...") as status:
+            with self.console.status(
+                f"[bold green]Fetching document {doc_id}..."
+            ) as status:
                 response = await self.clients.get_json(f"doc_store/documents/{doc_id}")
 
             if response.get("document"):
@@ -198,22 +212,33 @@ Metadata:
         try:
             title = Prompt.ask("[bold cyan]Document title[/bold cyan]")
             doc_type = Prompt.ask(
-                "[bold cyan]Document type[/bold cyan]", choices=["article", "documentation", "code", "other"]
+                "[bold cyan]Document type[/bold cyan]",
+                choices=["article", "documentation", "code", "other"],
             )
             content = Prompt.ask("[bold cyan]Content[/bold cyan]")
 
-            metadata_input = Prompt.ask("[bold cyan]Metadata (JSON)[/bold cyan]", default="{}")
+            metadata_input = Prompt.ask(
+                "[bold cyan]Metadata (JSON)[/bold cyan]", default="{}"
+            )
             import json
 
             metadata = json.loads(metadata_input)
 
             with self.console.status("[bold green]Adding document...") as status:
                 response = await self.clients.post_json(
-                    "doc_store/documents", {"title": title, "type": doc_type, "content": content, "metadata": metadata}
+                    "doc_store/documents",
+                    {
+                        "title": title,
+                        "type": doc_type,
+                        "content": content,
+                        "metadata": metadata,
+                    },
                 )
 
             if response.get("document_id"):
-                self.console.print(f"[green]✅ Document added successfully: {response['document_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Document added successfully: {response['document_id']}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to add document[/red]")
 
@@ -225,7 +250,8 @@ Metadata:
         try:
             doc_id = Prompt.ask("[bold cyan]Document ID[/bold cyan]")
             field = Prompt.ask(
-                "[bold cyan]Field to update[/bold cyan]", choices=["title", "content", "metadata", "type"]
+                "[bold cyan]Field to update[/bold cyan]",
+                choices=["title", "content", "metadata", "type"],
             )
             new_value = Prompt.ask(f"[bold cyan]New {field} value[/bold cyan]")
 
@@ -235,11 +261,17 @@ Metadata:
 
                 update_data[field] = json.loads(new_value)
 
-            with self.console.status(f"[bold green]Updating document {doc_id}...") as status:
-                response = await self.clients.put_json(f"doc_store/documents/{doc_id}", update_data)
+            with self.console.status(
+                f"[bold green]Updating document {doc_id}..."
+            ) as status:
+                response = await self.clients.put_json(
+                    f"doc_store/documents/{doc_id}", update_data
+                )
 
             if response.get("updated"):
-                self.console.print(f"[green]✅ Document {doc_id} updated successfully[/green]")
+                self.console.print(
+                    f"[green]✅ Document {doc_id} updated successfully[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to update document[/red]")
 
@@ -250,14 +282,22 @@ Metadata:
         """Delete document."""
         try:
             doc_id = Prompt.ask("[bold cyan]Document ID[/bold cyan]")
-            confirm = Confirm.ask(f"[bold red]Are you sure you want to delete document {doc_id}?[/bold red]")
+            confirm = Confirm.ask(
+                f"[bold red]Are you sure you want to delete document {doc_id}?[/bold red]"
+            )
 
             if confirm:
-                with self.console.status(f"[bold green]Deleting document {doc_id}...") as status:
-                    response = await self.clients.delete_json(f"doc_store/documents/{doc_id}")
+                with self.console.status(
+                    f"[bold green]Deleting document {doc_id}..."
+                ) as status:
+                    response = await self.clients.delete_json(
+                        f"doc_store/documents/{doc_id}"
+                    )
 
                 if response.get("deleted"):
-                    self.console.print(f"[green]✅ Document {doc_id} deleted successfully[/green]")
+                    self.console.print(
+                        f"[green]✅ Document {doc_id} deleted successfully[/green]"
+                    )
                 else:
                     self.console.print("[red]❌ Failed to delete document[/red]")
             else:
@@ -269,7 +309,9 @@ Metadata:
     async def document_statistics(self):
         """Document statistics."""
         try:
-            with self.console.status("[bold green]Fetching document statistics...") as status:
+            with self.console.status(
+                "[bold green]Fetching document statistics..."
+            ) as status:
                 response = await self.clients.get_json("doc_store/info")
 
             if response.get("stats"):
@@ -288,9 +330,9 @@ Document Types:
 
                 content += f"""
 Quality Distribution:
-  High (8-10): {stats.get('quality_distribution', {}).get('high', 0)}
-  Medium (5-7): {stats.get('quality_distribution', {}).get('medium', 0)}
-  Low (0-4): {stats.get('quality_distribution', {}).get('low', 0)}
+    High (8-10): {stats.get('quality_distribution', {}).get('high', 0)}
+    Medium (5-7): {stats.get('quality_distribution', {}).get('medium', 0)}
+    Low (0-4): {stats.get('quality_distribution', {}).get('low', 0)}
 
 Average Quality: {stats.get('avg_quality', 0):.2f}/10
 Storage Used: {stats.get('storage_mb', 0):.2f} MB
@@ -344,7 +386,9 @@ Storage Used: {stats.get('storage_mb', 0):.2f} MB
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="20")
 
             with self.console.status("[bold green]Fetching analyses...") as status:
-                response = await self.clients.get_json(f"doc_store/analyses?limit={limit}")
+                response = await self.clients.get_json(
+                    f"doc_store/analyses?limit={limit}"
+                )
 
             if response.get("analyses"):
                 table = Table(title="Analyses")
@@ -375,8 +419,12 @@ Storage Used: {stats.get('storage_mb', 0):.2f} MB
         try:
             analysis_id = Prompt.ask("[bold cyan]Analysis ID[/bold cyan]")
 
-            with self.console.status(f"[bold green]Fetching analysis {analysis_id}...") as status:
-                response = await self.clients.get_json(f"doc_store/analyses/{analysis_id}")
+            with self.console.status(
+                f"[bold green]Fetching analysis {analysis_id}..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"doc_store/analyses/{analysis_id}"
+                )
 
             if response.get("analysis"):
                 analysis = response["analysis"]
@@ -396,7 +444,9 @@ Results:
                 if analysis.get("results"):
                     import json
 
-                    content += f"```json\n{json.dumps(analysis['results'], indent=2)}\n```"
+                    content += (
+                        f"```json\n{json.dumps(analysis['results'], indent=2)}\n```"
+                    )
                 else:
                     content += "No detailed results available."
 
@@ -412,16 +462,21 @@ Results:
         try:
             doc_id = Prompt.ask("[bold cyan]Document ID[/bold cyan]")
             analysis_type = Prompt.ask(
-                "[bold cyan]Analysis type[/bold cyan]", choices=["quality", "consistency", "sentiment", "summary"]
+                "[bold cyan]Analysis type[/bold cyan]",
+                choices=["quality", "consistency", "sentiment", "summary"],
             )
 
-            with self.console.status(f"[bold green]Running {analysis_type} analysis on document {doc_id}...") as status:
+            with self.console.status(
+                f"[bold green]Running {analysis_type} analysis on document {doc_id}..."
+            ) as status:
                 response = await self.clients.post_json(
                     "doc_store/analyses", {"document_id": doc_id, "type": analysis_type}
                 )
 
             if response.get("analysis_id"):
-                self.console.print(f"[green]✅ Analysis started: {response['analysis_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Analysis started: {response['analysis_id']}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start analysis[/red]")
 
@@ -434,7 +489,9 @@ Results:
             analysis_id = Prompt.ask("[bold cyan]Analysis ID[/bold cyan]")
             doc_id = Prompt.ask("[bold cyan]Document ID[/bold cyan]")
 
-            with self.console.status(f"[bold green]Linking analysis {analysis_id} to document {doc_id}...") as status:
+            with self.console.status(
+                f"[bold green]Linking analysis {analysis_id} to document {doc_id}..."
+            ) as status:
                 response = await self.clients.post_json(
                     f"doc_store/analyses/{analysis_id}/link", {"document_id": doc_id}
                 )
@@ -451,14 +508,22 @@ Results:
         """Delete analysis."""
         try:
             analysis_id = Prompt.ask("[bold cyan]Analysis ID[/bold cyan]")
-            confirm = Confirm.ask(f"[bold red]Are you sure you want to delete analysis {analysis_id}?[/bold red]")
+            confirm = Confirm.ask(
+                f"[bold red]Are you sure you want to delete analysis {analysis_id}?[/bold red]"
+            )
 
             if confirm:
-                with self.console.status(f"[bold green]Deleting analysis {analysis_id}...") as status:
-                    response = await self.clients.delete_json(f"doc_store/analyses/{analysis_id}")
+                with self.console.status(
+                    f"[bold green]Deleting analysis {analysis_id}..."
+                ) as status:
+                    response = await self.clients.delete_json(
+                        f"doc_store/analyses/{analysis_id}"
+                    )
 
                 if response.get("deleted"):
-                    self.console.print(f"[green]✅ Analysis {analysis_id} deleted successfully[/green]")
+                    self.console.print(
+                        f"[green]✅ Analysis {analysis_id} deleted successfully[/green]"
+                    )
                 else:
                     self.console.print("[red]❌ Failed to delete analysis[/red]")
             else:
@@ -511,13 +576,19 @@ Results:
         try:
             query = Prompt.ask("[bold cyan]Search query[/bold cyan]")
 
-            with self.console.status(f"[bold green]Searching for '{query}'...") as status:
+            with self.console.status(
+                f"[bold green]Searching for '{query}'..."
+            ) as status:
                 response = await self.clients.get_json(f"doc_store/search?q={query}")
 
             if response.get("results"):
-                self.display_search_results(response["results"], f"Search Results for '{query}'")
+                self.display_search_results(
+                    response["results"], f"Search Results for '{query}'"
+                )
             else:
-                self.console.print(f"[yellow]No documents found for '{query}'.[/yellow]")
+                self.console.print(
+                    f"[yellow]No documents found for '{query}'.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error searching documents: {e}[/red]")
@@ -526,7 +597,9 @@ Results:
         """Advanced search."""
         try:
             filters = {}
-            filters_input = Prompt.ask("[bold cyan]Search filters (JSON)[/bold cyan]", default="{}")
+            filters_input = Prompt.ask(
+                "[bold cyan]Search filters (JSON)[/bold cyan]", default="{}"
+            )
             import json
 
             filters = json.loads(filters_input)
@@ -539,13 +612,21 @@ Results:
 
             param_string = "&".join([f"{k}={v}" for k, v in search_params.items()])
 
-            with self.console.status("[bold green]Performing advanced search...") as status:
-                response = await self.clients.get_json(f"doc_store/search?{param_string}")
+            with self.console.status(
+                "[bold green]Performing advanced search..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"doc_store/search?{param_string}"
+                )
 
             if response.get("results"):
-                self.display_search_results(response["results"], "Advanced Search Results")
+                self.display_search_results(
+                    response["results"], "Advanced Search Results"
+                )
             else:
-                self.console.print("[yellow]No documents found with specified filters.[/yellow]")
+                self.console.print(
+                    "[yellow]No documents found with specified filters.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error performing advanced search: {e}[/red]")
@@ -553,8 +634,12 @@ Results:
     async def search_by_quality(self):
         """Search by quality score."""
         try:
-            min_score = float(Prompt.ask("[bold cyan]Minimum quality score[/bold cyan]", default="0"))
-            max_score = float(Prompt.ask("[bold cyan]Maximum quality score[/bold cyan]", default="10"))
+            min_score = float(
+                Prompt.ask("[bold cyan]Minimum quality score[/bold cyan]", default="0")
+            )
+            max_score = float(
+                Prompt.ask("[bold cyan]Maximum quality score[/bold cyan]", default="10")
+            )
 
             with self.console.status(
                 f"[bold green]Searching documents with quality {min_score}-{max_score}..."
@@ -564,7 +649,10 @@ Results:
                 )
 
             if response.get("results"):
-                self.display_search_results(response["results"], f"Documents with Quality {min_score}-{max_score}")
+                self.display_search_results(
+                    response["results"],
+                    f"Documents with Quality {min_score}-{max_score}",
+                )
             else:
                 self.console.print(
                     f"[yellow]No documents found with quality score between {min_score} and {max_score}.[/yellow]"
@@ -579,8 +667,12 @@ Results:
             doc_id = Prompt.ask("[bold cyan]Document ID to find similar to[/bold cyan]")
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="10")
 
-            with self.console.status(f"[bold green]Finding documents similar to {doc_id}...") as status:
-                response = await self.clients.get_json(f"doc_store/search/similar/{doc_id}?limit={limit}")
+            with self.console.status(
+                f"[bold green]Finding documents similar to {doc_id}..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"doc_store/search/similar/{doc_id}?limit={limit}"
+                )
 
             if response.get("similar_documents"):
                 table = Table(title=f"Documents Similar to {doc_id}")
@@ -614,7 +706,9 @@ Results:
         try:
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="20")
 
-            with self.console.status("[bold green]Fetching recent documents...") as status:
+            with self.console.status(
+                "[bold green]Fetching recent documents..."
+            ) as status:
                 response = await self.clients.get_json(
                     f"doc_store/documents/_list?limit={limit}&sort=created_at&order=desc"
                 )
@@ -644,7 +738,9 @@ Results:
                 else "yellow" if result.get("quality_score", 0) > 4 else "red"
             )
             relevance = result.get("relevance_score", result.get("similarity", 0))
-            relevance_color = "green" if relevance > 0.8 else "yellow" if relevance > 0.5 else "red"
+            relevance_color = (
+                "green" if relevance > 0.8 else "yellow" if relevance > 0.5 else "red"
+            )
 
             table.add_row(
                 result.get("id", "N/A")[:8],
@@ -652,7 +748,11 @@ Results:
                 result.get("type", "unknown"),
                 f"[{quality_color}]{result.get('quality_score', 0):.1f}[/{quality_color}]",
                 result.get("created_at", "unknown")[:19],
-                f"[{relevance_color}]{relevance:.2f}[/{relevance_color}]" if relevance > 0 else "N/A",
+                (
+                    f"[{relevance_color}]{relevance:.2f}[/{relevance_color}]"
+                    if relevance > 0
+                    else "N/A"
+                ),
             )
 
         self.console.print(table)
@@ -694,7 +794,9 @@ Results:
     async def view_quality_metrics(self):
         """View quality metrics."""
         try:
-            with self.console.status("[bold green]Fetching quality metrics...") as status:
+            with self.console.status(
+                "[bold green]Fetching quality metrics..."
+            ) as status:
                 response = await self.clients.get_json("doc_store/documents/quality")
 
             if response.get("metrics"):
@@ -706,14 +808,14 @@ Overall Average Quality: {metrics.get('overall_avg', 0):.2f}/10
 Total Documents: {metrics.get('total_documents', 0)}
 
 Quality Distribution:
-  Excellent (9-10): {metrics.get('distribution', {}).get('excellent', 0)} documents
-  Good (7-8): {metrics.get('distribution', {}).get('good', 0)} documents
-  Average (5-6): {metrics.get('distribution', {}).get('average', 0)} documents
-  Poor (0-4): {metrics.get('distribution', {}).get('poor', 0)} documents
+    Excellent (9-10): {metrics.get('distribution', {}).get('excellent', 0)} documents
+    Good (7-8): {metrics.get('distribution', {}).get('good', 0)} documents
+    Average (5-6): {metrics.get('distribution', {}).get('average', 0)} documents
+    Poor (0-4): {metrics.get('distribution', {}).get('poor', 0)} documents
 
 Recent Trends:
-  Last 7 days: {metrics.get('trends', {}).get('last_7_days', {}).get('avg_quality', 0):.2f} avg
-  Last 30 days: {metrics.get('trends', {}).get('last_30_days', {}).get('avg_quality', 0):.2f} avg
+    Last 7 days: {metrics.get('trends', {}).get('last_7_days', {}).get('avg_quality', 0):.2f} avg
+    Last 30 days: {metrics.get('trends', {}).get('last_30_days', {}).get('avg_quality', 0):.2f} avg
 
 Top Issues:
 """
@@ -732,15 +834,23 @@ Top Issues:
         """View style examples."""
         try:
             style_type = Prompt.ask(
-                "[bold cyan]Style type[/bold cyan]", choices=["good", "bad", "improved"], default="good"
+                "[bold cyan]Style type[/bold cyan]",
+                choices=["good", "bad", "improved"],
+                default="good",
             )
 
-            with self.console.status(f"[bold green]Fetching {style_type} style examples...") as status:
-                response = await self.clients.get_json(f"doc_store/style/examples?type={style_type}")
+            with self.console.status(
+                f"[bold green]Fetching {style_type} style examples..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"doc_store/style/examples?type={style_type}"
+                )
 
             if response.get("examples"):
                 content = f"[bold]{style_type.title()} Style Examples[/bold]\n\n"
-                for i, example in enumerate(response["examples"][:5], 1):  # Show first 5
+                for i, example in enumerate(
+                    response["examples"][:5], 1
+                ):  # Show first 5
                     content += f"[bold]{i}. {example.get('title', 'Example')}[/bold]\n"
                     content += f"{example.get('content', 'No content')[:200]}...\n\n"
                     if example.get("explanation"):
@@ -748,7 +858,9 @@ Top Issues:
 
                 print_panel(self.console, content, border_style="blue")
             else:
-                self.console.print(f"[yellow]No {style_type} style examples available.[/yellow]")
+                self.console.print(
+                    f"[yellow]No {style_type} style examples available.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error fetching style examples: {e}[/red]")
@@ -756,7 +868,9 @@ Top Issues:
     async def quality_improvement_tips(self):
         """Quality improvement tips."""
         try:
-            with self.console.status("[bold green]Fetching quality improvement tips...") as status:
+            with self.console.status(
+                "[bold green]Fetching quality improvement tips..."
+            ) as status:
                 response = await self.clients.get_json("doc_store/quality/tips")
 
             if response.get("tips"):
@@ -770,10 +884,14 @@ Top Issues:
 
                 print_panel(self.console, content, border_style="yellow")
             else:
-                self.console.print("[yellow]No quality improvement tips available.[/yellow]")
+                self.console.print(
+                    "[yellow]No quality improvement tips available.[/yellow]"
+                )
 
         except Exception as e:
-            self.console.print(f"[red]Error fetching quality improvement tips: {e}[/red]")
+            self.console.print(
+                f"[red]Error fetching quality improvement tips: {e}[/red]"
+            )
 
     async def bulk_quality_recalc(self):
         """Bulk quality recalculation."""
@@ -784,22 +902,36 @@ Top Issues:
 
             if confirm:
                 scope = Prompt.ask(
-                    "[bold cyan]Scope[/bold cyan]", choices=["all", "low_quality", "recent"], default="all"
+                    "[bold cyan]Scope[/bold cyan]",
+                    choices=["all", "low_quality", "recent"],
+                    default="all",
                 )
 
-                with self.console.status(f"[bold green]Recalculating quality for {scope} documents...") as status:
-                    response = await self.clients.post_json("doc_store/quality/recalculate", {"scope": scope})
+                with self.console.status(
+                    f"[bold green]Recalculating quality for {scope} documents..."
+                ) as status:
+                    response = await self.clients.post_json(
+                        "doc_store/quality/recalculate", {"scope": scope}
+                    )
 
                 if response.get("job_id"):
-                    self.console.print(f"[green]✅ Quality recalculation job started: {response['job_id']}[/green]")
-                    self.console.print(f"[yellow]Documents affected: {response.get('affected_documents', 0)}[/yellow]")
+                    self.console.print(
+                        f"[green]✅ Quality recalculation job started: {response['job_id']}[/green]"
+                    )
+                    self.console.print(
+                        f"[yellow]Documents affected: {response.get('affected_documents', 0)}[/yellow]"
+                    )
                 else:
-                    self.console.print("[red]❌ Failed to start quality recalculation[/red]")
+                    self.console.print(
+                        "[red]❌ Failed to start quality recalculation[/red]"
+                    )
             else:
                 self.console.print("[yellow]Quality recalculation cancelled.[/yellow]")
 
         except Exception as e:
-            self.console.print(f"[red]Error starting bulk quality recalculation: {e}[/red]")
+            self.console.print(
+                f"[red]Error starting bulk quality recalculation: {e}[/red]"
+            )
 
     async def bulk_operations_menu(self):
         """Bulk operations submenu."""
@@ -839,7 +971,8 @@ Top Issues:
         """Bulk delete documents."""
         try:
             criteria_input = Prompt.ask(
-                "[bold cyan]Deletion criteria (JSON)[/bold cyan]", default='{"quality_score": {"$lt": 3}}'
+                "[bold cyan]Deletion criteria (JSON)[/bold cyan]",
+                default='{"quality_score": {"$lt": 3}}',
             )
             import json
 
@@ -851,12 +984,18 @@ Top Issues:
 
             if confirm:
                 with self.console.status("[bold green]Deleting documents...") as status:
-                    response = await self.clients.post_json("doc_store/bulk/delete", {"criteria": criteria})
+                    response = await self.clients.post_json(
+                        "doc_store/bulk/delete", {"criteria": criteria}
+                    )
 
                 if response.get("deleted_count"):
-                    self.console.print(f"[green]✅ Deleted {response['deleted_count']} documents[/green]")
+                    self.console.print(
+                        f"[green]✅ Deleted {response['deleted_count']} documents[/green]"
+                    )
                 else:
-                    self.console.print("[yellow]No documents matched the deletion criteria.[/yellow]")
+                    self.console.print(
+                        "[yellow]No documents matched the deletion criteria.[/yellow]"
+                    )
             else:
                 self.console.print("[yellow]Bulk deletion cancelled.[/yellow]")
 
@@ -866,7 +1005,9 @@ Top Issues:
     async def bulk_update_metadata(self):
         """Bulk update metadata."""
         try:
-            criteria_input = Prompt.ask("[bold cyan]Selection criteria (JSON)[/bold cyan]")
+            criteria_input = Prompt.ask(
+                "[bold cyan]Selection criteria (JSON)[/bold cyan]"
+            )
             updates_input = Prompt.ask("[bold cyan]Updates (JSON)[/bold cyan]")
 
             import json
@@ -881,13 +1022,18 @@ Top Issues:
             if confirm:
                 with self.console.status("[bold green]Updating metadata...") as status:
                     response = await self.clients.post_json(
-                        "doc_store/bulk/update", {"criteria": criteria, "updates": updates}
+                        "doc_store/bulk/update",
+                        {"criteria": criteria, "updates": updates},
                     )
 
                 if response.get("updated_count"):
-                    self.console.print(f"[green]✅ Updated {response['updated_count']} documents[/green]")
+                    self.console.print(
+                        f"[green]✅ Updated {response['updated_count']} documents[/green]"
+                    )
                 else:
-                    self.console.print("[yellow]No documents matched the update criteria.[/yellow]")
+                    self.console.print(
+                        "[yellow]No documents matched the update criteria.[/yellow]"
+                    )
             else:
                 self.console.print("[yellow]Bulk update cancelled.[/yellow]")
 
@@ -898,10 +1044,12 @@ Top Issues:
         """Bulk reanalyze documents."""
         try:
             criteria_input = Prompt.ask(
-                "[bold cyan]Selection criteria (JSON)[/bold cyan]", default='{"quality_score": {"$lt": 5}}'
+                "[bold cyan]Selection criteria (JSON)[/bold cyan]",
+                default='{"quality_score": {"$lt": 5}}',
             )
             analysis_type = Prompt.ask(
-                "[bold cyan]Analysis type[/bold cyan]", choices=["quality", "consistency", "all"]
+                "[bold cyan]Analysis type[/bold cyan]",
+                choices=["quality", "consistency", "all"],
             )
 
             import json
@@ -913,14 +1061,21 @@ Top Issues:
             )
 
             if confirm:
-                with self.console.status(f"[bold green]Reanalyzing documents ({analysis_type})...") as status:
+                with self.console.status(
+                    f"[bold green]Reanalyzing documents ({analysis_type})..."
+                ) as status:
                     response = await self.clients.post_json(
-                        "doc_store/bulk/reanalyze", {"criteria": criteria, "analysis_type": analysis_type}
+                        "doc_store/bulk/reanalyze",
+                        {"criteria": criteria, "analysis_type": analysis_type},
                     )
 
                 if response.get("job_id"):
-                    self.console.print(f"[green]✅ Bulk reanalysis job started: {response['job_id']}[/green]")
-                    self.console.print(f"[yellow]Documents to analyze: {response.get('document_count', 0)}[/yellow]")
+                    self.console.print(
+                        f"[green]✅ Bulk reanalysis job started: {response['job_id']}[/green]"
+                    )
+                    self.console.print(
+                        f"[yellow]Documents to analyze: {response.get('document_count', 0)}[/yellow]"
+                    )
                 else:
                     self.console.print("[red]❌ Failed to start bulk reanalysis[/red]")
             else:
@@ -932,9 +1087,13 @@ Top Issues:
     async def bulk_export(self):
         """Bulk export documents."""
         try:
-            criteria_input = Prompt.ask("[bold cyan]Export criteria (JSON)[/bold cyan]", default="{}")
+            criteria_input = Prompt.ask(
+                "[bold cyan]Export criteria (JSON)[/bold cyan]", default="{}"
+            )
             format_type = Prompt.ask(
-                "[bold cyan]Export format[/bold cyan]", choices=["json", "csv", "xml"], default="json"
+                "[bold cyan]Export format[/bold cyan]",
+                choices=["json", "csv", "xml"],
+                default="json",
             )
             filename = Prompt.ask("[bold cyan]Output filename[/bold cyan]")
 
@@ -942,14 +1101,21 @@ Top Issues:
 
             criteria = json.loads(criteria_input)
 
-            with self.console.status(f"[bold green]Exporting documents to {filename}...") as status:
+            with self.console.status(
+                f"[bold green]Exporting documents to {filename}..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "doc_store/bulk/export", {"criteria": criteria, "format": format_type, "filename": filename}
+                    "doc_store/bulk/export",
+                    {"criteria": criteria, "format": format_type, "filename": filename},
                 )
 
             if response.get("export_id"):
-                self.console.print(f"[green]✅ Export started: {response['export_id']}[/green]")
-                self.console.print(f"[yellow]Documents to export: {response.get('document_count', 0)}[/yellow]")
+                self.console.print(
+                    f"[green]✅ Export started: {response['export_id']}[/green]"
+                )
+                self.console.print(
+                    f"[yellow]Documents to export: {response.get('document_count', 0)}[/yellow]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start export[/red]")
 
@@ -961,20 +1127,31 @@ Top Issues:
         try:
             filename = Prompt.ask("[bold cyan]Import file path[/bold cyan]")
             format_type = Prompt.ask(
-                "[bold cyan]Import format[/bold cyan]", choices=["json", "csv", "xml"], default="json"
+                "[bold cyan]Import format[/bold cyan]",
+                choices=["json", "csv", "xml"],
+                default="json",
             )
 
-            confirm = Confirm.ask(f"[bold yellow]This will import documents from {filename}. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will import documents from {filename}. Continue?[/bold yellow]"
+            )
 
             if confirm:
-                with self.console.status(f"[bold green]Importing documents from {filename}...") as status:
+                with self.console.status(
+                    f"[bold green]Importing documents from {filename}..."
+                ) as status:
                     response = await self.clients.post_json(
-                        "doc_store/bulk/import", {"filename": filename, "format": format_type}
+                        "doc_store/bulk/import",
+                        {"filename": filename, "format": format_type},
                     )
 
                 if response.get("import_id"):
-                    self.console.print(f"[green]✅ Import started: {response['import_id']}[/green]")
-                    self.console.print(f"[yellow]Documents to import: {response.get('document_count', 0)}[/yellow]")
+                    self.console.print(
+                        f"[green]✅ Import started: {response['import_id']}[/green]"
+                    )
+                    self.console.print(
+                        f"[yellow]Documents to import: {response.get('document_count', 0)}[/yellow]"
+                    )
                 else:
                     self.console.print("[red]❌ Failed to start import[/red]")
             else:
@@ -1021,7 +1198,9 @@ Top Issues:
     async def docstore_info(self):
         """Document store info."""
         try:
-            with self.console.status("[bold green]Fetching document store info...") as status:
+            with self.console.status(
+                "[bold green]Fetching document store info..."
+            ) as status:
                 response = await self.clients.get_json("doc_store/info")
 
             if response.get("info"):
@@ -1042,8 +1221,8 @@ Features:
 
                 content += f"""
 Limits:
-  Max Document Size: {info.get('limits', {}).get('max_document_size', 'unknown')}
-  Max Total Storage: {info.get('limits', {}).get('max_total_storage', 'unknown')}
+    Max Document Size: {info.get('limits', {}).get('max_document_size', 'unknown')}
+    Max Total Storage: {info.get('limits', {}).get('max_total_storage', 'unknown')}
 """
                 print_panel(self.console, content, border_style="blue")
             else:
@@ -1063,7 +1242,9 @@ Limits:
 
                 config_str = json.dumps(response["config"], indent=2)
                 print_panel(
-                    self.console, f"[bold]Document Store Configuration[/bold]\n\n{config_str}", border_style="cyan"
+                    self.console,
+                    f"[bold]Document Store Configuration[/bold]\n\n{config_str}",
+                    border_style="cyan",
                 )
             else:
                 self.console.print("[yellow]No configuration available.[/yellow]")
@@ -1074,7 +1255,9 @@ Limits:
     async def storage_statistics(self):
         """Storage statistics."""
         try:
-            with self.console.status("[bold green]Fetching storage statistics...") as status:
+            with self.console.status(
+                "[bold green]Fetching storage statistics..."
+            ) as status:
                 response = await self.clients.get_json("doc_store/storage/stats")
 
             if response.get("stats"):
@@ -1094,13 +1277,13 @@ Storage Breakdown:
 
                 content += f"""
 Growth Rate:
-  Daily: {stats.get('growth_rate', {}).get('daily_mb', 0):.2f} MB
-  Weekly: {stats.get('growth_rate', {}).get('weekly_mb', 0):.2f} MB
-  Monthly: {stats.get('growth_rate', {}).get('monthly_mb', 0):.2f} MB
+    Daily: {stats.get('growth_rate', {}).get('daily_mb', 0):.2f} MB
+    Weekly: {stats.get('growth_rate', {}).get('weekly_mb', 0):.2f} MB
+    Monthly: {stats.get('growth_rate', {}).get('monthly_mb', 0):.2f} MB
 
 Capacity:
-  Used: {stats.get('capacity', {}).get('used_percent', 0):.1f}%
-  Available: {stats.get('capacity', {}).get('available_mb', 0):.2f} MB
+    Used: {stats.get('capacity', {}).get('used_percent', 0):.1f}%
+    Available: {stats.get('capacity', {}).get('available_mb', 0):.2f} MB
 """
                 print_panel(self.console, content, border_style="green")
             else:
@@ -1112,7 +1295,9 @@ Capacity:
     async def performance_metrics(self):
         """Performance metrics."""
         try:
-            with self.console.status("[bold green]Fetching performance metrics...") as status:
+            with self.console.status(
+                "[bold green]Fetching performance metrics..."
+            ) as status:
                 response = await self.clients.get_json("doc_store/performance/metrics")
 
             if response.get("metrics"):
@@ -1121,21 +1306,21 @@ Capacity:
 [bold]Performance Metrics[/bold]
 
 Response Times (ms):
-  Average: {metrics.get('response_times', {}).get('avg_ms', 0):.2f}
-  95th Percentile: {metrics.get('response_times', {}).get('p95_ms', 0):.2f}
-  99th Percentile: {metrics.get('response_times', {}).get('p99_ms', 0):.2f}
+    Average: {metrics.get('response_times', {}).get('avg_ms', 0):.2f}
+    95th Percentile: {metrics.get('response_times', {}).get('p95_ms', 0):.2f}
+    99th Percentile: {metrics.get('response_times', {}).get('p99_ms', 0):.2f}
 
 Throughput:
-  Requests/sec: {metrics.get('throughput', {}).get('requests_per_second', 0):.2f}
-  Documents/sec: {metrics.get('throughput', {}).get('documents_per_second', 0):.2f}
+    Requests/sec: {metrics.get('throughput', {}).get('requests_per_second', 0):.2f}
+    Documents/sec: {metrics.get('throughput', {}).get('documents_per_second', 0):.2f}
 
 Cache Performance:
-  Hit Rate: {metrics.get('cache', {}).get('hit_rate_percent', 0):.1f}%
-  Hit Ratio: {metrics.get('cache', {}).get('hit_ratio', 0):.2f}
+    Hit Rate: {metrics.get('cache', {}).get('hit_rate_percent', 0):.1f}%
+    Hit Ratio: {metrics.get('cache', {}).get('hit_ratio', 0):.2f}
 
 Database Performance:
-  Query Time: {metrics.get('database', {}).get('avg_query_time_ms', 0):.2f} ms
-  Connection Pool: {metrics.get('database', {}).get('active_connections', 0)}/{metrics.get('database', {}).get('max_connections', 0)}
+    Query Time: {metrics.get('database', {}).get('avg_query_time_ms', 0):.2f} ms
+    Connection Pool: {metrics.get('database', {}).get('active_connections', 0)}/{metrics.get('database', {}).get('max_connections', 0)}
 """
                 print_panel(self.console, content, border_style="magenta")
             else:

@@ -17,7 +17,9 @@ from ...base.base_manager import BaseManager
 class SummarizerHubManager(BaseManager):
     """Manager for summarizer hub power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def summarizer_hub_menu(self):
@@ -56,7 +58,9 @@ class SummarizerHubManager(BaseManager):
     async def ensemble_summarization_menu(self):
         """Ensemble summarization submenu."""
         while True:
-            menu = create_menu_table("Ensemble Summarization", ["Option", "Description"])
+            menu = create_menu_table(
+                "Ensemble Summarization", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -93,7 +97,9 @@ class SummarizerHubManager(BaseManager):
     async def summarize_text(self):
         """Summarize text using multiple providers."""
         try:
-            self.console.print("[yellow]Enter text to summarize (press Ctrl+D on new line when done):[/yellow]")
+            self.console.print(
+                "[yellow]Enter text to summarize (press Ctrl+D on new line when done):[/yellow]"
+            )
             content_lines = []
             try:
                 while True:
@@ -109,7 +115,8 @@ class SummarizerHubManager(BaseManager):
 
             # Get providers
             providers_input = Prompt.ask(
-                "[bold cyan]Providers (comma-separated, default: ollama)[/bold cyan]", default="ollama"
+                "[bold cyan]Providers (comma-separated, default: ollama)[/bold cyan]",
+                default="ollama",
             )
             providers = [p.strip() for p in providers_input.split(",") if p.strip()]
 
@@ -138,10 +145,14 @@ class SummarizerHubManager(BaseManager):
                 provider_configs.append(config)
 
             # Get custom prompt
-            custom_prompt = Prompt.ask("[bold cyan]Custom prompt (optional)[/bold cyan]", default="")
+            custom_prompt = Prompt.ask(
+                "[bold cyan]Custom prompt (optional)[/bold cyan]", default=""
+            )
 
             # Use hub config?
-            use_hub_config = Confirm.ask("[bold cyan]Use hub configuration defaults?[/bold cyan]", default=True)
+            use_hub_config = Confirm.ask(
+                "[bold cyan]Use hub configuration defaults?[/bold cyan]", default=True
+            )
 
             request_data = {
                 "text": text,
@@ -153,10 +164,14 @@ class SummarizerHubManager(BaseManager):
             with self.console.status(
                 f"[bold green]Summarizing with {len(providers)} providers...[/bold green]"
             ) as status:
-                response = await self.clients.post_json("summarizer-hub/summarize/ensemble", request_data)
+                response = await self.clients.post_json(
+                    "summarizer-hub/summarize/ensemble", request_data
+                )
 
             if response:
-                await self.display_summarization_results(response, text[:200] + "..." if len(text) > 200 else text)
+                await self.display_summarization_results(
+                    response, text[:200] + "..." if len(text) > 200 else text
+                )
             else:
                 self.console.print("[red]❌ Failed to generate summaries[/red]")
 
@@ -165,7 +180,9 @@ class SummarizerHubManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error during summarization: {e}[/red]")
 
-    async def display_summarization_results(self, results: Dict[str, Any], text_preview: str):
+    async def display_summarization_results(
+        self, results: Dict[str, Any], text_preview: str
+    ):
         """Display ensemble summarization results."""
         summaries = results.get("summaries", {})
         analysis = results.get("analysis", {})
@@ -181,9 +198,13 @@ class SummarizerHubManager(BaseManager):
 """
 
         for provider, summary in summaries.items():
-            provider_icon = {"ollama": "🦙", "openai": "🤖", "anthropic": "🧠", "grok": "🚀", "bedrock": "☁️"}.get(
-                provider, "🤖"
-            )
+            provider_icon = {
+                "ollama": "🦙",
+                "openai": "🤖",
+                "anthropic": "🧠",
+                "grok": "🚀",
+                "bedrock": "☁️",
+            }.get(provider, "🤖")
 
             content += f"\n[bold cyan]{provider_icon} {provider.upper()}:[/bold cyan]\n{summary[:300]}{'...' if len(summary) > 300 else ''}\n"
 
@@ -231,7 +252,9 @@ class SummarizerHubManager(BaseManager):
             # Check file size (reasonable limit for summarization)
             file_size = os.path.getsize(file_path)
             if file_size > 100000:  # ~100KB limit
-                self.console.print("[red]File too large for summarization (max 100KB)[/red]")
+                self.console.print(
+                    "[red]File too large for summarization (max 100KB)[/red]"
+                )
                 return
 
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -242,7 +265,9 @@ class SummarizerHubManager(BaseManager):
                 return
 
             # Get providers (simplified for file mode)
-            providers_input = Prompt.ask("[bold cyan]Providers (default: ollama)[/bold cyan]", default="ollama")
+            providers_input = Prompt.ask(
+                "[bold cyan]Providers (default: ollama)[/bold cyan]", default="ollama"
+            )
             providers = [p.strip() for p in providers_input.split(",") if p.strip()]
 
             provider_configs = []
@@ -253,15 +278,23 @@ class SummarizerHubManager(BaseManager):
                     config["endpoint"] = "http://localhost:11434"
                 provider_configs.append(config)
 
-            request_data = {"text": content, "providers": provider_configs, "use_hub_config": True}
+            request_data = {
+                "text": content,
+                "providers": provider_configs,
+                "use_hub_config": True,
+            }
 
             with self.console.status(
                 f"[bold green]Summarizing {os.path.basename(file_path)}...[/bold green]"
             ) as status:
-                response = await self.clients.post_json("summarizer-hub/summarize/ensemble", request_data)
+                response = await self.clients.post_json(
+                    "summarizer-hub/summarize/ensemble", request_data
+                )
 
             if response:
-                content_preview = f"File: {os.path.basename(file_path)} ({len(content)} chars)"
+                content_preview = (
+                    f"File: {os.path.basename(file_path)} ({len(content)} chars)"
+                )
                 await self.display_summarization_results(response, content_preview)
             else:
                 self.console.print("[red]❌ Failed to summarize file[/red]")
@@ -272,7 +305,9 @@ class SummarizerHubManager(BaseManager):
     async def batch_summarization(self):
         """Perform batch summarization on multiple files."""
         try:
-            directory = Prompt.ask("[bold cyan]Directory containing files to summarize[/bold cyan]")
+            directory = Prompt.ask(
+                "[bold cyan]Directory containing files to summarize[/bold cyan]"
+            )
 
             if not os.path.exists(directory):
                 self.console.print(f"[red]Directory not found: {directory}[/red]")
@@ -281,7 +316,9 @@ class SummarizerHubManager(BaseManager):
             import glob
 
             # Support common text file extensions
-            file_pattern = Prompt.ask("[bold cyan]File pattern[/bold cyan]", default="*.txt,*.md")
+            file_pattern = Prompt.ask(
+                "[bold cyan]File pattern[/bold cyan]", default="*.txt,*.md"
+            )
             patterns = [p.strip() for p in file_pattern.split(",")]
 
             files = []
@@ -289,26 +326,40 @@ class SummarizerHubManager(BaseManager):
                 files.extend(glob.glob(os.path.join(directory, pattern)))
 
             if not files:
-                self.console.print(f"[red]No files found matching patterns: {file_pattern}[/red]")
+                self.console.print(
+                    f"[red]No files found matching patterns: {file_pattern}[/red]"
+                )
                 return
 
-            self.console.print(f"[yellow]Found {len(files)} files to summarize:[/yellow]")
+            self.console.print(
+                f"[yellow]Found {len(files)} files to summarize:[/yellow]"
+            )
             for i, file_path in enumerate(files[:5], 1):
                 self.console.print(f"  {i}. {os.path.basename(file_path)}")
 
             if len(files) > 5:
                 self.console.print(f"  ... and {len(files) - 5} more files")
 
-            proceed = Confirm.ask(f"[bold cyan]Summarize {len(files)} files?[/bold cyan]", default=False)
+            proceed = Confirm.ask(
+                f"[bold cyan]Summarize {len(files)} files?[/bold cyan]", default=False
+            )
 
             if proceed:
                 # Simplified provider config for batch mode
-                provider_configs = [{"name": "ollama", "model": "llama3", "endpoint": "http://localhost:11434"}]
+                provider_configs = [
+                    {
+                        "name": "ollama",
+                        "model": "llama3",
+                        "endpoint": "http://localhost:11434",
+                    }
+                ]
 
                 results = []
                 for file_path in files:
                     try:
-                        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                        with open(
+                            file_path, "r", encoding="utf-8", errors="ignore"
+                        ) as f:
                             content = f.read()
 
                         if content.strip():
@@ -318,14 +369,20 @@ class SummarizerHubManager(BaseManager):
                                 "use_hub_config": True,
                             }
 
-                            response = await self.clients.post_json("summarizer-hub/summarize/ensemble", request_data)
+                            response = await self.clients.post_json(
+                                "summarizer-hub/summarize/ensemble", request_data
+                            )
 
                             if response and response.get("summaries"):
                                 summary = list(response["summaries"].values())[0]
                                 results.append(
                                     {
                                         "file": os.path.basename(file_path),
-                                        "summary": summary[:200] + "..." if len(summary) > 200 else summary,
+                                        "summary": (
+                                            summary[:200] + "..."
+                                            if len(summary) > 200
+                                            else summary
+                                        ),
                                         "status": "success",
                                     }
                                 )
@@ -339,12 +396,20 @@ class SummarizerHubManager(BaseManager):
                                 )
                         else:
                             results.append(
-                                {"file": os.path.basename(file_path), "summary": "Empty file", "status": "skipped"}
+                                {
+                                    "file": os.path.basename(file_path),
+                                    "summary": "Empty file",
+                                    "status": "skipped",
+                                }
                             )
 
                     except Exception as e:
                         results.append(
-                            {"file": os.path.basename(file_path), "summary": f"Error: {str(e)[:50]}", "status": "error"}
+                            {
+                                "file": os.path.basename(file_path),
+                                "summary": f"Error: {str(e)[:50]}",
+                                "status": "error",
+                            }
                         )
 
                 # Display batch results
@@ -354,14 +419,25 @@ class SummarizerHubManager(BaseManager):
                 table.add_column("Summary Preview", style="white")
 
                 for result in results:
-                    status_icon = {"success": "✅", "failed": "❌", "skipped": "⏭️", "error": "⚠️"}.get(
-                        result["status"], "❓"
-                    )
+                    status_icon = {
+                        "success": "✅",
+                        "failed": "❌",
+                        "skipped": "⏭️",
+                        "error": "⚠️",
+                    }.get(result["status"], "❓")
 
                     table.add_row(
-                        result["file"][:30] + "..." if len(result["file"]) > 30 else result["file"],
+                        (
+                            result["file"][:30] + "..."
+                            if len(result["file"]) > 30
+                            else result["file"]
+                        ),
                         f"{status_icon} {result['status']}",
-                        result["summary"][:50] + "..." if len(result["summary"]) > 50 else result["summary"],
+                        (
+                            result["summary"][:50] + "..."
+                            if len(result["summary"]) > 50
+                            else result["summary"]
+                        ),
                     )
 
                 self.console.print(table)
@@ -373,18 +449,32 @@ class SummarizerHubManager(BaseManager):
         """Interactive summarization console."""
         try:
             self.console.print("[yellow]Interactive Summarization Console[/yellow]")
-            self.console.print("[yellow]Enter text to summarize (press Enter on empty line to finish):[/yellow]")
+            self.console.print(
+                "[yellow]Enter text to summarize (press Enter on empty line to finish):[/yellow]"
+            )
 
-            provider_configs = [{"name": "ollama", "model": "llama3", "endpoint": "http://localhost:11434"}]
+            provider_configs = [
+                {
+                    "name": "ollama",
+                    "model": "llama3",
+                    "endpoint": "http://localhost:11434",
+                }
+            ]
 
             while True:
                 content = Prompt.ask("[bold cyan]Text[/bold cyan]")
                 if not content.strip():
                     break
 
-                request_data = {"text": content, "providers": provider_configs, "use_hub_config": True}
+                request_data = {
+                    "text": content,
+                    "providers": provider_configs,
+                    "use_hub_config": True,
+                }
 
-                response = await self.clients.post_json("summarizer-hub/summarize/ensemble", request_data)
+                response = await self.clients.post_json(
+                    "summarizer-hub/summarize/ensemble", request_data
+                )
 
                 if response and response.get("summaries"):
                     summary = list(response["summaries"].values())[0]
@@ -392,7 +482,9 @@ class SummarizerHubManager(BaseManager):
                 else:
                     self.console.print("[red]Failed to generate summary[/red]")
 
-                continue_session = Confirm.ask("[bold cyan]Continue?[/bold cyan]", default=True)
+                continue_session = Confirm.ask(
+                    "[bold cyan]Continue?[/bold cyan]", default=True
+                )
                 if not continue_session:
                     break
 
@@ -403,13 +495,21 @@ class SummarizerHubManager(BaseManager):
         """Summarize with custom prompts."""
         try:
             text = Prompt.ask("[bold cyan]Text to summarize[/bold cyan]")
-            custom_prompt = Prompt.ask("[bold cyan]Custom summarization prompt[/bold cyan]")
+            custom_prompt = Prompt.ask(
+                "[bold cyan]Custom summarization prompt[/bold cyan]"
+            )
 
             if not text.strip():
                 self.console.print("[red]No text provided[/red]")
                 return
 
-            provider_configs = [{"name": "ollama", "model": "llama3", "endpoint": "http://localhost:11434"}]
+            provider_configs = [
+                {
+                    "name": "ollama",
+                    "model": "llama3",
+                    "endpoint": "http://localhost:11434",
+                }
+            ]
 
             request_data = {
                 "text": text,
@@ -418,8 +518,12 @@ class SummarizerHubManager(BaseManager):
                 "use_hub_config": True,
             }
 
-            with self.console.status("[bold green]Generating custom summary...[/bold green]") as status:
-                response = await self.clients.post_json("summarizer-hub/summarize/ensemble", request_data)
+            with self.console.status(
+                "[bold green]Generating custom summary...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "summarizer-hub/summarize/ensemble", request_data
+                )
 
             if response:
                 await self.display_summarization_results(response, text)
@@ -440,14 +544,26 @@ class SummarizerHubManager(BaseManager):
 
             # Use multiple providers for comparison
             provider_configs = [
-                {"name": "ollama", "model": "llama3", "endpoint": "http://localhost:11434"}
+                {
+                    "name": "ollama",
+                    "model": "llama3",
+                    "endpoint": "http://localhost:11434",
+                }
                 # Add more providers as needed for comparison
             ]
 
-            request_data = {"text": text, "providers": provider_configs, "use_hub_config": True}
+            request_data = {
+                "text": text,
+                "providers": provider_configs,
+                "use_hub_config": True,
+            }
 
-            with self.console.status("[bold green]Comparing provider performance...[/bold green]") as status:
-                response = await self.clients.post_json("summarizer-hub/summarize/ensemble", request_data)
+            with self.console.status(
+                "[bold green]Comparing provider performance...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "summarizer-hub/summarize/ensemble", request_data
+                )
 
             if response:
                 await self.display_provider_comparison(response, text)
@@ -462,7 +578,9 @@ class SummarizerHubManager(BaseManager):
         summaries = results.get("summaries", {})
 
         if len(summaries) <= 1:
-            self.console.print("[yellow]Need multiple providers for meaningful comparison[/yellow]")
+            self.console.print(
+                "[yellow]Need multiple providers for meaningful comparison[/yellow]"
+            )
             return
 
         content = f"""
@@ -480,9 +598,13 @@ class SummarizerHubManager(BaseManager):
         table.add_column("Summary", style="white")
 
         for provider, summary in summaries.items():
-            provider_icon = {"ollama": "🦙", "openai": "🤖", "anthropic": "🧠", "grok": "🚀", "bedrock": "☁️"}.get(
-                provider, "🤖"
-            )
+            provider_icon = {
+                "ollama": "🦙",
+                "openai": "🤖",
+                "anthropic": "🧠",
+                "grok": "🚀",
+                "bedrock": "☁️",
+            }.get(provider, "🤖")
 
             table.add_row(
                 f"{provider_icon} {provider.upper()}",
@@ -541,11 +663,23 @@ class SummarizerHubManager(BaseManager):
         """List all available providers."""
         try:
             providers = [
-                {"name": "ollama", "type": "Local", "description": "Open-source LLM server"},
+                {
+                    "name": "ollama",
+                    "type": "Local",
+                    "description": "Open-source LLM server",
+                },
                 {"name": "openai", "type": "Cloud", "description": "OpenAI GPT models"},
-                {"name": "anthropic", "type": "Cloud", "description": "Anthropic Claude models"},
+                {
+                    "name": "anthropic",
+                    "type": "Cloud",
+                    "description": "Anthropic Claude models",
+                },
                 {"name": "grok", "type": "Cloud", "description": "xAI Grok models"},
-                {"name": "bedrock", "type": "Cloud", "description": "AWS Bedrock models"},
+                {
+                    "name": "bedrock",
+                    "type": "Cloud",
+                    "description": "AWS Bedrock models",
+                },
             ]
 
             table = Table(title="Available LLM Providers")
@@ -554,7 +688,9 @@ class SummarizerHubManager(BaseManager):
             table.add_column("Description", style="white")
 
             for provider in providers:
-                table.add_row(provider["name"].upper(), provider["type"], provider["description"])
+                table.add_row(
+                    provider["name"].upper(), provider["type"], provider["description"]
+                )
 
             self.console.print(table)
 
@@ -566,25 +702,43 @@ class SummarizerHubManager(BaseManager):
     async def test_provider_connectivity(self):
         """Test connectivity to providers."""
         try:
-            provider = Prompt.ask("[bold cyan]Provider to test[/bold cyan]", default="ollama")
+            provider = Prompt.ask(
+                "[bold cyan]Provider to test[/bold cyan]", default="ollama"
+            )
 
             # Create a simple test request
             test_config = {"name": provider}
             if provider == "ollama":
-                test_config.update({"model": "llama3", "endpoint": "http://localhost:11434"})
+                test_config.update(
+                    {"model": "llama3", "endpoint": "http://localhost:11434"}
+                )
 
-            test_request = {"text": "Hello world", "providers": [test_config], "use_hub_config": False}
+            test_request = {
+                "text": "Hello world",
+                "providers": [test_config],
+                "use_hub_config": False,
+            }
 
-            with self.console.status(f"[bold green]Testing {provider} connectivity...[/bold green]") as status:
-                response = await self.clients.post_json("summarizer-hub/summarize/ensemble", test_request)
+            with self.console.status(
+                f"[bold green]Testing {provider} connectivity...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "summarizer-hub/summarize/ensemble", test_request
+                )
 
             if response and response.get("summaries"):
-                self.console.print(f"[green]✅ {provider.upper()} connection successful[/green]")
+                self.console.print(
+                    f"[green]✅ {provider.upper()} connection successful[/green]"
+                )
                 if response.get("summaries", {}).get(provider):
                     summary = response["summaries"][provider]
-                    self.console.print(f"[green]Test response: {summary[:100]}...[/green]")
+                    self.console.print(
+                        f"[green]Test response: {summary[:100]}...[/green]"
+                    )
             else:
-                self.console.print(f"[red]❌ {provider.upper()} connection failed[/red]")
+                self.console.print(
+                    f"[red]❌ {provider.upper()} connection failed[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error testing provider connectivity: {e}[/red]")
@@ -614,7 +768,9 @@ class SummarizerHubManager(BaseManager):
     async def manage_provider_credentials(self):
         """Manage provider credentials."""
         try:
-            self.console.print("[yellow]Credential management would securely store and rotate API keys[/yellow]")
+            self.console.print(
+                "[yellow]Credential management would securely store and rotate API keys[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -623,7 +779,9 @@ class SummarizerHubManager(BaseManager):
     async def model_performance_menu(self):
         """Model performance analysis submenu."""
         while True:
-            menu = create_menu_table("Model Performance Analysis", ["Option", "Description"])
+            menu = create_menu_table(
+                "Model Performance Analysis", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -679,7 +837,9 @@ class SummarizerHubManager(BaseManager):
     async def performance_benchmarking(self):
         """Run performance benchmarks."""
         try:
-            self.console.print("[yellow]Benchmarking would test speed, reliability, and resource usage[/yellow]")
+            self.console.print(
+                "[yellow]Benchmarking would test speed, reliability, and resource usage[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -688,7 +848,9 @@ class SummarizerHubManager(BaseManager):
     async def model_selection_recommendations(self):
         """Get model selection recommendations."""
         try:
-            self.console.print("[yellow]Model recommendations would suggest optimal models based on use case[/yellow]")
+            self.console.print(
+                "[yellow]Model recommendations would suggest optimal models based on use case[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -697,7 +859,9 @@ class SummarizerHubManager(BaseManager):
     async def cost_performance_analysis(self):
         """Analyze cost vs performance."""
         try:
-            self.console.print("[yellow]Cost analysis would compare pricing with performance metrics[/yellow]")
+            self.console.print(
+                "[yellow]Cost analysis would compare pricing with performance metrics[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -706,7 +870,9 @@ class SummarizerHubManager(BaseManager):
     async def summarization_job_monitoring_menu(self):
         """Summarization job monitoring submenu."""
         while True:
-            menu = create_menu_table("Summarization Job Monitoring", ["Option", "Description"])
+            menu = create_menu_table(
+                "Summarization Job Monitoring", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -740,7 +906,9 @@ class SummarizerHubManager(BaseManager):
     async def view_recent_jobs(self):
         """View recent summarization jobs."""
         try:
-            self.console.print("[yellow]Recent jobs would show last N summarization operations[/yellow]")
+            self.console.print(
+                "[yellow]Recent jobs would show last N summarization operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -749,7 +917,9 @@ class SummarizerHubManager(BaseManager):
     async def monitor_active_jobs(self):
         """Monitor currently active jobs."""
         try:
-            self.console.print("[yellow]Active job monitoring would show running summarization tasks[/yellow]")
+            self.console.print(
+                "[yellow]Active job monitoring would show running summarization tasks[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -769,7 +939,9 @@ class SummarizerHubManager(BaseManager):
     async def failed_job_analysis(self):
         """Analyze failed jobs."""
         try:
-            self.console.print("[yellow]Failed job analysis would identify common failure patterns[/yellow]")
+            self.console.print(
+                "[yellow]Failed job analysis would identify common failure patterns[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -778,7 +950,9 @@ class SummarizerHubManager(BaseManager):
     async def job_history_trends(self):
         """Show job history and trends."""
         try:
-            self.console.print("[yellow]Job history trends would show usage patterns over time[/yellow]")
+            self.console.print(
+                "[yellow]Job history trends would show usage patterns over time[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -787,7 +961,9 @@ class SummarizerHubManager(BaseManager):
     async def ai_operations_analytics_menu(self):
         """AI operations analytics submenu."""
         while True:
-            menu = create_menu_table("AI Operations Analytics", ["Option", "Description"])
+            menu = create_menu_table(
+                "AI Operations Analytics", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -821,7 +997,9 @@ class SummarizerHubManager(BaseManager):
     async def provider_usage_analytics(self):
         """Analyze provider usage patterns."""
         try:
-            self.console.print("[yellow]Provider usage analytics would show which models are used most[/yellow]")
+            self.console.print(
+                "[yellow]Provider usage analytics would show which models are used most[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -830,7 +1008,9 @@ class SummarizerHubManager(BaseManager):
     async def content_type_analysis(self):
         """Analyze content types being processed."""
         try:
-            self.console.print("[yellow]Content type analysis would categorize processed documents[/yellow]")
+            self.console.print(
+                "[yellow]Content type analysis would categorize processed documents[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -850,7 +1030,9 @@ class SummarizerHubManager(BaseManager):
     async def cost_usage_tracking(self):
         """Track costs and usage."""
         try:
-            self.console.print("[yellow]Cost tracking would monitor API usage costs across providers[/yellow]")
+            self.console.print(
+                "[yellow]Cost tracking would monitor API usage costs across providers[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -859,7 +1041,9 @@ class SummarizerHubManager(BaseManager):
     async def ai_operations_reports(self):
         """Generate AI operations reports."""
         try:
-            self.console.print("[yellow]AI operations reports would provide comprehensive analytics[/yellow]")
+            self.console.print(
+                "[yellow]AI operations reports would provide comprehensive analytics[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -868,7 +1052,9 @@ class SummarizerHubManager(BaseManager):
     async def summarizer_hub_health_menu(self):
         """Summarizer hub health and configuration submenu."""
         while True:
-            menu = create_menu_table("Summarizer Hub Health & Configuration", ["Option", "Description"])
+            menu = create_menu_table(
+                "Summarizer Hub Health & Configuration", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -925,7 +1111,9 @@ class SummarizerHubManager(BaseManager):
     async def rate_limiting_status(self):
         """Check rate limiting status."""
         try:
-            self.console.print("[yellow]Rate limiting status would show current request rates and limits[/yellow]")
+            self.console.print(
+                "[yellow]Rate limiting status would show current request rates and limits[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -945,7 +1133,9 @@ class SummarizerHubManager(BaseManager):
     async def configuration_management(self):
         """Manage summarizer hub configuration."""
         try:
-            self.console.print("[yellow]Configuration management would allow editing hub settings[/yellow]")
+            self.console.print(
+                "[yellow]Configuration management would allow editing hub settings[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -965,12 +1155,18 @@ class SummarizerHubManager(BaseManager):
     async def summarize_from_cli(self, summarize_request: Dict[str, Any]):
         """Generate ensemble summary for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Generating ensemble summary...[/bold green]") as status:
-                response = await self.clients.post_json("summarizer-hub/summarize/ensemble", summarize_request)
+            with self.console.status(
+                f"[bold green]Generating ensemble summary...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "summarizer-hub/summarize/ensemble", summarize_request
+                )
 
             if response:
                 text = summarize_request.get("text", "")
-                await self.display_summarization_results(response, text[:200] + "..." if len(text) > 200 else text)
+                await self.display_summarization_results(
+                    response, text[:200] + "..." if len(text) > 200 else text
+                )
             else:
                 self.console.print("[red]❌ Failed to generate summary[/red]")
 

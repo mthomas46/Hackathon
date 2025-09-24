@@ -8,7 +8,9 @@ from services.shared.integrations.clients.clients import ServiceClients
 from ...utils.display_helpers import print_kv, print_list
 
 
-def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
+def build_actions(
+    console, clients: ServiceClients
+) -> List[Tuple[str, Callable[[], Any]]]:
     # ============================================================================
     # BASIC ANALYSIS ENDPOINTS
     # ============================================================================
@@ -26,7 +28,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         threshold = Prompt.ask("Similarity threshold (0.0-1.0)", default="0.7")
         url = f"{clients.analysis_service_url()}/analyze/semantic-similarity"
         targets_list = [t.strip() for t in targets.split(",") if t.strip()]
-        rx = await clients.post_json(url, {"targets": targets_list, "threshold": float(threshold)})
+        rx = await clients.post_json(
+            url, {"targets": targets_list, "threshold": float(threshold)}
+        )
         print_kv(console, "Semantic Similarity Analysis", rx)
 
     async def sentiment_analysis():
@@ -63,7 +67,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         timeframe = Prompt.ask("Timeframe (days)", default="30")
         url = f"{clients.analysis_service_url()}/analyze/trends"
         targets_list = [t.strip() for t in targets.split(",") if t.strip()]
-        rx = await clients.post_json(url, {"targets": targets_list, "timeframe_days": int(timeframe)})
+        rx = await clients.post_json(
+            url, {"targets": targets_list, "timeframe_days": int(timeframe)}
+        )
         print_kv(console, "Trend Analysis", rx)
 
     async def portfolio_trend_analysis():
@@ -98,19 +104,27 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
     async def remediate():
         """Generate remediation suggestions."""
         targets = Prompt.ask("Target IDs (comma-separated)")
-        issue_type = Prompt.ask("Issue type (quality|consistency|completeness)", default="quality")
+        issue_type = Prompt.ask(
+            "Issue type (quality|consistency|completeness)", default="quality"
+        )
         url = f"{clients.analysis_service_url()}/remediate"
         targets_list = [t.strip() for t in targets.split(",") if t.strip()]
-        rx = await clients.post_json(url, {"targets": targets_list, "issue_type": issue_type})
+        rx = await clients.post_json(
+            url, {"targets": targets_list, "issue_type": issue_type}
+        )
         print_kv(console, "Remediation Suggestions", rx)
 
     async def remediate_preview():
         """Preview remediation changes."""
         targets = Prompt.ask("Target IDs (comma-separated)")
-        issue_type = Prompt.ask("Issue type (quality|consistency|completeness)", default="quality")
+        issue_type = Prompt.ask(
+            "Issue type (quality|consistency|completeness)", default="quality"
+        )
         url = f"{clients.analysis_service_url()}/remediate/preview"
         targets_list = [t.strip() for t in targets.split(",") if t.strip()]
-        rx = await clients.post_json(url, {"targets": targets_list, "issue_type": issue_type})
+        rx = await clients.post_json(
+            url, {"targets": targets_list, "issue_type": issue_type}
+        )
         print_kv(console, "Remediation Preview", rx)
 
     # ============================================================================
@@ -129,7 +143,13 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             metadata = {}
         url = f"{clients.analysis_service_url()}/workflows/events"
         rx = await clients.post_json(
-            url, {"event_type": event_type, "entity_type": entity_type, "entity_id": entity_id, "metadata": metadata}
+            url,
+            {
+                "event_type": event_type,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+                "metadata": metadata,
+            },
         )
         print_kv(console, "Workflow Event", rx)
 
@@ -157,7 +177,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         targets = [t.strip() for t in targets_input.split(",") if t.strip()]
         priority = Prompt.ask("Priority (low|normal|high)", default="normal")
         url = f"{clients.analysis_service_url()}/distributed/tasks"
-        rx = await clients.post_json(url, {"task_type": task_type, "targets": targets, "priority": priority})
+        rx = await clients.post_json(
+            url, {"task_type": task_type, "targets": targets, "priority": priority}
+        )
         print_kv(console, "Distributed Task", rx)
 
     async def distributed_workers():
@@ -186,7 +208,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         except Exception:
             filters = {}
         url = f"{clients.analysis_service_url()}/reports/generate"
-        rx = await clients.post_json(url, {"kind": kind, "format": format_type, "filters": filters})
+        rx = await clients.post_json(
+            url, {"kind": kind, "format": format_type, "filters": filters}
+        )
         print_kv(console, "Report Generation", rx)
 
     async def list_findings():
@@ -247,9 +271,13 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
     async def pr_confidence_analysis():
         """Analyze PR confidence."""
         pr_id = Prompt.ask("Pull Request ID")
-        analysis_type = Prompt.ask("Analysis type (comprehensive|quick)", default="comprehensive")
+        analysis_type = Prompt.ask(
+            "Analysis type (comprehensive|quick)", default="comprehensive"
+        )
         url = f"{clients.analysis_service_url()}/pr-confidence/analyze"
-        rx = await clients.post_json(url, {"pr_id": pr_id, "analysis_type": analysis_type})
+        rx = await clients.post_json(
+            url, {"pr_id": pr_id, "analysis_type": analysis_type}
+        )
         print_kv(console, "PR Confidence Analysis", rx)
 
     async def pr_confidence_history():

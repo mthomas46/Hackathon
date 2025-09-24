@@ -26,7 +26,12 @@ class QueryRequest(BaseModel):
 @router.post("/query")
 async def process_query(req: QueryRequest):
     """Process natural language query."""
-    return {"query": req.query, "interpreted_intent": "search_documents", "confidence": 0.85, "results": []}
+    return {
+        "query": req.query,
+        "interpreted_intent": "search_documents",
+        "confidence": 0.85,
+        "results": [],
+    }
 
 
 @router.post("/query/execute")
@@ -87,14 +92,21 @@ async def create_simulation_via_orchestrator(req: SimulationRequest):
         simulation_service_url = await get_simulation_service_url()
 
         if not simulation_service_url:
-            raise HTTPException(status_code=503, detail="Project simulation service not available")
+            raise HTTPException(
+                status_code=503, detail="Project simulation service not available"
+            )
 
         # Prepare request for simulation service
         simulation_request = {
             "query": req.query,
             "context": req.context,
             "simulation_config": req.simulation_config
-            or {"type": "web_application", "complexity": "medium", "duration_weeks": 8, "team_size": 5},
+            or {
+                "type": "web_application",
+                "complexity": "medium",
+                "duration_weeks": 8,
+                "team_size": 5,
+            },
         }
 
         # Call simulation service
@@ -107,7 +119,8 @@ async def create_simulation_via_orchestrator(req: SimulationRequest):
 
             if response.status_code != 200:
                 raise HTTPException(
-                    status_code=response.status_code, detail=f"Simulation service error: {response.text}"
+                    status_code=response.status_code,
+                    detail=f"Simulation service error: {response.text}",
                 )
 
             result = response.json()
@@ -123,7 +136,9 @@ async def create_simulation_via_orchestrator(req: SimulationRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create simulation: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create simulation: {str(e)}"
+        )
 
 
 @router.post("/simulation/mock-data")
@@ -134,10 +149,16 @@ async def generate_mock_data_via_orchestrator(req: MockDataRequest):
         simulation_service_url = await get_simulation_service_url()
 
         if not simulation_service_url:
-            raise HTTPException(status_code=503, detail="Project simulation service not available")
+            raise HTTPException(
+                status_code=503, detail="Project simulation service not available"
+            )
 
         # Prepare request for simulation service
-        mock_data_request = {"query": req.query, "context": req.context, "data_types": req.data_types}
+        mock_data_request = {
+            "query": req.query,
+            "context": req.context,
+            "data_types": req.data_types,
+        }
 
         # Call simulation service
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -149,7 +170,8 @@ async def generate_mock_data_via_orchestrator(req: MockDataRequest):
 
             if response.status_code != 200:
                 raise HTTPException(
-                    status_code=response.status_code, detail=f"Simulation service error: {response.text}"
+                    status_code=response.status_code,
+                    detail=f"Simulation service error: {response.text}",
                 )
 
             result = response.json()
@@ -164,7 +186,9 @@ async def generate_mock_data_via_orchestrator(req: MockDataRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate mock data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate mock data: {str(e)}"
+        )
 
 
 @router.post("/simulation/analyze")
@@ -175,10 +199,16 @@ async def analyze_via_simulation_service(req: AnalysisRequest):
         simulation_service_url = await get_simulation_service_url()
 
         if not simulation_service_url:
-            raise HTTPException(status_code=503, detail="Project simulation service not available")
+            raise HTTPException(
+                status_code=503, detail="Project simulation service not available"
+            )
 
         # Prepare request for simulation service
-        analysis_request = {"content": req.content, "analysis_type": req.analysis_type, "context": req.context}
+        analysis_request = {
+            "content": req.content,
+            "analysis_type": req.analysis_type,
+            "context": req.context,
+        }
 
         # Call simulation service
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -190,7 +220,8 @@ async def analyze_via_simulation_service(req: AnalysisRequest):
 
             if response.status_code != 200:
                 raise HTTPException(
-                    status_code=response.status_code, detail=f"Simulation service error: {response.text}"
+                    status_code=response.status_code,
+                    detail=f"Simulation service error: {response.text}",
                 )
 
             result = response.json()
@@ -205,7 +236,9 @@ async def analyze_via_simulation_service(req: AnalysisRequest):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to perform analysis: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to perform analysis: {str(e)}"
+        )
 
 
 @router.get("/simulation/capabilities")
@@ -216,19 +249,31 @@ async def get_simulation_capabilities_via_orchestrator():
         simulation_service_url = await get_simulation_service_url()
 
         if not simulation_service_url:
-            raise HTTPException(status_code=503, detail="Project simulation service not available")
+            raise HTTPException(
+                status_code=503, detail="Project simulation service not available"
+            )
 
         # Call simulation service capabilities endpoint
         async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(f"{simulation_service_url}/api/v1/interpreter/capabilities")
+            response = await client.get(
+                f"{simulation_service_url}/api/v1/interpreter/capabilities"
+            )
 
             if response.status_code != 200:
                 # Return basic capabilities if service call fails
                 return {
                     "orchestrator_capabilities": {
-                        "simulation_types": ["web_application", "api_service", "data_pipeline"],
+                        "simulation_types": [
+                            "web_application",
+                            "api_service",
+                            "data_pipeline",
+                        ],
                         "complexity_levels": ["low", "medium", "high"],
-                        "analysis_types": ["document_analysis", "timeline_analysis", "team_dynamics"],
+                        "analysis_types": [
+                            "document_analysis",
+                            "timeline_analysis",
+                            "team_dynamics",
+                        ],
                         "mock_data_generation": True,
                         "service_status": "orchestrator_fallback",
                     }
@@ -266,7 +311,8 @@ def _detect_docker_environment() -> bool:
     docker_indicators = [
         os.path.exists("/.dockerenv"),
         (
-            os.path.exists("/proc/1/cgroup") and "docker" in open("/proc/1/cgroup").read()
+            os.path.exists("/proc/1/cgroup")
+            and "docker" in open("/proc/1/cgroup").read()
             if os.path.exists("/proc/1/cgroup")
             else False
         ),

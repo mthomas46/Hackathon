@@ -10,7 +10,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 
-
 class MockProjectRepository:
     """Mock project repository with configurable behavior."""
 
@@ -32,7 +31,11 @@ class MockProjectRepository:
 
         self.projects[project.project_id] = project
         self.save_calls.append(
-            {"project_id": project.project_id, "project_name": project.name, "timestamp": datetime.now()}
+            {
+                "project_id": project.project_id,
+                "project_name": project.name,
+                "timestamp": datetime.now(),
+            }
         )
 
     async def get(self, project_id: str) -> Optional[Any]:
@@ -157,7 +160,9 @@ class MockSimulationRepository:
         if self.should_fail:
             raise Exception("Mock simulation repository get failure")
 
-        self.get_calls.append({"simulation_id": simulation_id, "timestamp": datetime.now()})
+        self.get_calls.append(
+            {"simulation_id": simulation_id, "timestamp": datetime.now()}
+        )
 
         return self.simulations.get(simulation_id)
 
@@ -175,7 +180,13 @@ class MockSimulationRepository:
                 if hasattr(simulation, key):
                     setattr(simulation, key, value)
 
-            self.update_calls.append({"simulation_id": simulation_id, "updates": updates, "timestamp": datetime.now()})
+            self.update_calls.append(
+                {
+                    "simulation_id": simulation_id,
+                    "updates": updates,
+                    "timestamp": datetime.now(),
+                }
+            )
             return True
         return False
 
@@ -243,7 +254,9 @@ class MockTimelineRepository:
         if self.should_fail:
             raise Exception("Mock timeline repository save failure")
 
-        timeline_id = getattr(timeline, "id", getattr(timeline, "timeline_id", "default"))
+        timeline_id = getattr(
+            timeline, "id", getattr(timeline, "timeline_id", "default")
+        )
         self.timelines[timeline_id] = timeline
         self.save_calls.append(
             {
@@ -275,7 +288,9 @@ class MockTimelineRepository:
                 return timeline
         return None
 
-    async def update_phase(self, timeline_id: str, phase_index: int, updates: Dict[str, Any]) -> bool:
+    async def update_phase(
+        self, timeline_id: str, phase_index: int, updates: Dict[str, Any]
+    ) -> bool:
         """Mock update phase operation."""
         if self.delay_seconds > 0:
             await asyncio.sleep(self.delay_seconds)
@@ -300,7 +315,9 @@ class MockTimelineRepository:
 
     def add_timeline(self, timeline: Any):
         """Helper to add timeline to mock repository."""
-        timeline_id = getattr(timeline, "id", getattr(timeline, "timeline_id", "default"))
+        timeline_id = getattr(
+            timeline, "id", getattr(timeline, "timeline_id", "default")
+        )
         self.timelines[timeline_id] = timeline
 
 
@@ -325,7 +342,11 @@ class MockTeamRepository:
         team_id = getattr(team, "id", getattr(team, "team_id", "default"))
         self.teams[team_id] = team
         self.save_calls.append(
-            {"team_id": team_id, "members_count": len(getattr(team, "members", [])), "timestamp": datetime.now()}
+            {
+                "team_id": team_id,
+                "members_count": len(getattr(team, "members", [])),
+                "timestamp": datetime.now(),
+            }
         )
 
     async def get(self, team_id: str) -> Optional[Any]:
@@ -371,7 +392,11 @@ class MockTeamRepository:
         if team_id in self.teams:
             team = self.teams[team_id]
             if hasattr(team, "members"):
-                team.members = [m for m in team.members if getattr(m, "member_id", None) != member_id]
+                team.members = [
+                    m
+                    for m in team.members
+                    if getattr(m, "member_id", None) != member_id
+                ]
                 return True
         return False
 

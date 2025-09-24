@@ -44,7 +44,9 @@ class TestDockerContainerBasics:
             content = dockerignore_path.read_text()
             assert "__pycache__" in content, ".dockerignore should exclude cache files"
             assert ".git" in content, ".dockerignore should exclude git files"
-            assert "test_results" in content, ".dockerignore should exclude test artifacts"
+            assert (
+                "test_results" in content
+            ), ".dockerignore should exclude test artifacts"
 
     @pytest.mark.docker
     def test_container_health_check(self):
@@ -53,7 +55,9 @@ class TestDockerContainerBasics:
             # Quick Docker connectivity check with short timeout
             import subprocess
 
-            result = subprocess.run(["docker", "ps"], capture_output=True, text=True, timeout=2)  # 2 second timeout
+            result = subprocess.run(
+                ["docker", "ps"], capture_output=True, text=True, timeout=2
+            )  # 2 second timeout
 
             if result.returncode != 0:
                 pytest.skip("Docker daemon not accessible")
@@ -65,7 +69,11 @@ class TestDockerContainerBasics:
             else:
                 pytest.skip("Container not found - run docker-compose up first")
 
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
+        except (
+            subprocess.TimeoutExpired,
+            subprocess.SubprocessError,
+            FileNotFoundError,
+        ):
             pytest.skip("Docker not available in test environment")
 
     @pytest.mark.docker
@@ -82,13 +90,20 @@ class TestDockerContainerBasics:
                 timeout=2,
             )
 
-            if result.returncode == 0 and "hackathon-project-simulation" in result.stdout:
+            if (
+                result.returncode == 0
+                and "hackathon-project-simulation" in result.stdout
+            ):
                 # Container exists, logs capability check passed
                 assert True
             else:
                 pytest.skip("Container not found")
 
-        except (subprocess.TimeoutExpired, subprocess.SubprocessError, FileNotFoundError):
+        except (
+            subprocess.TimeoutExpired,
+            subprocess.SubprocessError,
+            FileNotFoundError,
+        ):
             pytest.skip("Docker not available")
 
     @pytest.mark.docker
@@ -101,12 +116,16 @@ class TestDockerContainerBasics:
                 content = compose_path.read_text()
 
                 # Check that environment section exists
-                assert "environment:" in content, "docker-compose should have environment configuration"
+                assert (
+                    "environment:" in content
+                ), "docker-compose should have environment configuration"
 
                 # Check for key environment variables
                 expected_env_vars = ["ENVIRONMENT", "SERVICE_NAME", "PYTHONUNBUFFERED"]
                 for env_var in expected_env_vars:
-                    assert env_var in content, f"Environment variable {env_var} should be configured"
+                    assert (
+                        env_var in content
+                    ), f"Environment variable {env_var} should be configured"
             else:
                 pytest.skip("docker-compose.yml not found")
 
@@ -125,7 +144,9 @@ class TestDockerComposeServices:
         required_services = ["project-simulation", "postgres", "redis"]
 
         for service in required_services:
-            assert service in content, f"Service {service} should be defined in docker-compose.yml"
+            assert (
+                service in content
+            ), f"Service {service} should be defined in docker-compose.yml"
 
     def test_docker_compose_networks_defined(self):
         """Test that networks are properly defined."""
@@ -153,13 +174,19 @@ class TestDockerComposeServices:
             assert client.ping(), "Docker daemon should be responding"
 
             # Check if postgres container exists (dependency of project-simulation)
-            postgres_containers = client.containers.list(filters={"name": "hackathon-postgres"}, all=True)
+            postgres_containers = client.containers.list(
+                filters={"name": "hackathon-postgres"}, all=True
+            )
             if postgres_containers:
                 postgres = postgres_containers[0]
-                assert postgres.name == "hackathon-postgres", "PostgreSQL container should exist"
+                assert (
+                    postgres.name == "hackathon-postgres"
+                ), "PostgreSQL container should exist"
 
             # Check if redis container exists (dependency of project-simulation)
-            redis_containers = client.containers.list(filters={"name": "hackathon-redis"}, all=True)
+            redis_containers = client.containers.list(
+                filters={"name": "hackathon-redis"}, all=True
+            )
             if redis_containers:
                 redis = redis_containers[0]
                 assert redis.name == "hackathon-redis", "Redis container should exist"
@@ -181,7 +208,9 @@ class TestDockerMultiStageBuild:
         stages = ["builder", "security-scan", "runtime", "development", "testing"]
 
         for stage in stages:
-            assert f"FROM" in content and stage in content, f"Stage {stage} should be defined"
+            assert (
+                f"FROM" in content and stage in content
+            ), f"Stage {stage} should be defined"
 
     def test_dockerfile_targets(self):
         """Test that Dockerfile has proper target stages."""
@@ -190,9 +219,15 @@ class TestDockerMultiStageBuild:
         compose_content = compose_path.read_text()
 
         # Check that docker-compose uses proper targets
-        assert "target: runtime" in compose_content, "docker-compose should use runtime target"
-        assert "target: development" in compose_content, "docker-compose should have development target"
-        assert "target: testing" in compose_content, "docker-compose should have testing target"
+        assert (
+            "target: runtime" in compose_content
+        ), "docker-compose should use runtime target"
+        assert (
+            "target: development" in compose_content
+        ), "docker-compose should have development target"
+        assert (
+            "target: testing" in compose_content
+        ), "docker-compose should have testing target"
 
     def test_dockerfile_security_features(self):
         """Test that Dockerfile includes security features."""
@@ -223,7 +258,10 @@ class TestContainerIntegration:
 
             health_data = response.json()
             assert "status" in health_data, "Health response should include status"
-            assert health_data["status"] in ["healthy", "degraded"], "Status should be valid"
+            assert health_data["status"] in [
+                "healthy",
+                "degraded",
+            ], "Status should be valid"
 
         except requests.exceptions.RequestException:
             pytest.skip("Service not available - ensure container is running")
@@ -248,7 +286,10 @@ class TestContainerIntegration:
         try:
             response = requests.get("http://localhost:5075/docs", timeout=3)
             # FastAPI docs endpoint
-            assert response.status_code in [200, 404], "Docs endpoint should be accessible"
+            assert response.status_code in [
+                200,
+                404,
+            ], "Docs endpoint should be accessible"
 
         except requests.exceptions.RequestException:
             pytest.skip("Service not available")
@@ -276,7 +317,9 @@ class TestDockerBuildProcess:
 
         assert req_copy_line is not None, "requirements.txt should be copied"
         assert source_copy_line is not None, "Source code should be copied"
-        assert req_copy_line < source_copy_line, "requirements.txt should be copied before source code"
+        assert (
+            req_copy_line < source_copy_line
+        ), "requirements.txt should be copied before source code"
 
     def test_dockerfile_no_secrets(self):
         """Test that Dockerfile doesn't contain hardcoded secrets."""
@@ -286,7 +329,9 @@ class TestDockerBuildProcess:
         sensitive_patterns = ["password", "secret", "key", "token"]
 
         for pattern in sensitive_patterns:
-            assert pattern.lower() not in content.lower(), f"Dockerfile should not contain {pattern}"
+            assert (
+                pattern.lower() not in content.lower()
+            ), f"Dockerfile should not contain {pattern}"
 
     @pytest.mark.docker
     def test_container_startup_time(self):
@@ -295,15 +340,21 @@ class TestDockerBuildProcess:
             client = docker.from_env()
             assert client.ping(), "Docker daemon should be responding"
 
-            containers = client.containers.list(filters={"name": "hackathon-project-simulation"}, all=True)
+            containers = client.containers.list(
+                filters={"name": "hackathon-project-simulation"}, all=True
+            )
 
             if containers:
                 container = containers[0]
                 # Just verify container exists and has state information
                 state = container.attrs.get("State", {})
-                assert isinstance(state, dict), "Container should have state information"
+                assert isinstance(
+                    state, dict
+                ), "Container should have state information"
                 # Don't check startup time as it depends on external factors
-                assert container.name == "hackathon-project-simulation", "Container should have correct name"
+                assert (
+                    container.name == "hackathon-project-simulation"
+                ), "Container should have correct name"
             else:
                 pytest.skip("Container not found")
 
@@ -323,7 +374,8 @@ class TestDockerComposeProfiles:
 
         for profile in profiles:
             assert (
-                f'profiles: ["{profile}"]' in content or f"profiles: ['{profile}']" in content
+                f'profiles: ["{profile}"]' in content
+                or f"profiles: ['{profile}']" in content
             ), f"Profile {profile} should be defined"
 
     def test_profile_service_configuration(self):

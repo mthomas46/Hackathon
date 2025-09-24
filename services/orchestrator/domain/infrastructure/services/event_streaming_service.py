@@ -47,7 +47,10 @@ class EventStreamingService:
             event_id = str(uuid.uuid4())
 
         event = EventEntry(
-            event_id=event_id, event_type=event_type, event_data=event_data, correlation_id=correlation_id
+            event_id=event_id,
+            event_type=event_type,
+            event_data=event_data,
+            correlation_id=correlation_id,
         )
 
         self._events.append(event)
@@ -56,14 +59,20 @@ class EventStreamingService:
         return event_id
 
     def get_event_history(
-        self, correlation_id: Optional[str] = None, event_type: Optional[str] = None, limit: int = 100, offset: int = 0
+        self,
+        correlation_id: Optional[str] = None,
+        event_type: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
     ) -> Dict[str, Any]:
         """Get event history with optional filtering."""
         filtered_events = self._events.copy()
 
         # Apply filters
         if correlation_id:
-            filtered_events = [e for e in filtered_events if e.correlation_id == correlation_id]
+            filtered_events = [
+                e for e in filtered_events if e.correlation_id == correlation_id
+            ]
 
         if event_type:
             filtered_events = [e for e in filtered_events if e.event_type == event_type]
@@ -96,17 +105,24 @@ class EventStreamingService:
         }
 
     def replay_events(
-        self, event_types: Optional[List[str]] = None, correlation_id: Optional[str] = None, limit: int = 100
+        self,
+        event_types: Optional[List[str]] = None,
+        correlation_id: Optional[str] = None,
+        limit: int = 100,
     ) -> Dict[str, Any]:
         """Replay events based on filters."""
         filtered_events = self._events.copy()
 
         # Apply filters
         if correlation_id:
-            filtered_events = [e for e in filtered_events if e.correlation_id == correlation_id]
+            filtered_events = [
+                e for e in filtered_events if e.correlation_id == correlation_id
+            ]
 
         if event_types:
-            filtered_events = [e for e in filtered_events if e.event_type in event_types]
+            filtered_events = [
+                e for e in filtered_events if e.event_type in event_types
+            ]
 
         # Limit the results
         replay_events = filtered_events[:limit]
@@ -190,7 +206,9 @@ class EventStreamingService:
         timestamps = []
 
         for event in self._events:
-            events_by_type[event.event_type] = events_by_type.get(event.event_type, 0) + 1
+            events_by_type[event.event_type] = (
+                events_by_type.get(event.event_type, 0) + 1
+            )
             timestamps.append(event.timestamp)
 
         sorted_timestamps = sorted(timestamps)
@@ -200,7 +218,9 @@ class EventStreamingService:
         # Calculate average events per minute (rough estimate)
         if len(timestamps) > 1:
             time_span_minutes = (newest_event - oldest_event).total_seconds() / 60
-            avg_events_per_minute = len(timestamps) / time_span_minutes if time_span_minutes > 0 else 0
+            avg_events_per_minute = (
+                len(timestamps) / time_span_minutes if time_span_minutes > 0 else 0
+            )
         else:
             avg_events_per_minute = 0
 

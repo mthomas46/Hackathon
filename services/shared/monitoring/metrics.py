@@ -10,7 +10,14 @@ from typing import Optional
 import psutil
 from fastapi import Request
 from fastapi.responses import PlainTextResponse
-from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, Gauge, Histogram, generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 
 
 class ServiceMetrics:
@@ -53,24 +60,44 @@ class ServiceMetrics:
 
         # Error metrics
         self.errors_total = Counter(
-            "errors_total", "Total number of errors", ["error_type", "endpoint"], registry=self.registry
+            "errors_total",
+            "Total number of errors",
+            ["error_type", "endpoint"],
+            registry=self.registry,
         )
 
         # Resource metrics
-        self.memory_usage_bytes = Gauge("memory_usage_bytes", "Current memory usage in bytes", registry=self.registry)
+        self.memory_usage_bytes = Gauge(
+            "memory_usage_bytes",
+            "Current memory usage in bytes",
+            registry=self.registry,
+        )
 
-        self.cpu_usage_percent = Gauge("cpu_usage_percent", "Current CPU usage percentage", registry=self.registry)
+        self.cpu_usage_percent = Gauge(
+            "cpu_usage_percent", "Current CPU usage percentage", registry=self.registry
+        )
 
         # Queue metrics
-        self.queue_length = Gauge("queue_length", "Current queue length", ["queue_name"], registry=self.registry)
+        self.queue_length = Gauge(
+            "queue_length",
+            "Current queue length",
+            ["queue_name"],
+            registry=self.registry,
+        )
 
         # Cache metrics
         self.cache_hits_total = Counter(
-            "cache_hits_total", "Total number of cache hits", ["cache_name"], registry=self.registry
+            "cache_hits_total",
+            "Total number of cache hits",
+            ["cache_name"],
+            registry=self.registry,
         )
 
         self.cache_misses_total = Counter(
-            "cache_misses_total", "Total number of cache misses", ["cache_name"], registry=self.registry
+            "cache_misses_total",
+            "Total number of cache misses",
+            ["cache_name"],
+            registry=self.registry,
         )
 
         # External service metrics
@@ -144,7 +171,13 @@ class ServiceMetrics:
             "architecture_digitizer_file_size_bytes",
             "Size of uploaded files in bytes",
             ["system", "file_format"],
-            buckets=(1024, 10240, 102400, 1048576, 10485760),  # 1KB, 10KB, 100KB, 1MB, 10MB
+            buckets=(
+                1024,
+                10240,
+                102400,
+                1048576,
+                10485760,
+            ),  # 1KB, 10KB, 100KB, 1MB, 10MB
             registry=self.registry,
         )
 
@@ -182,7 +215,9 @@ def metrics_endpoint(service_name: str):
 
     async def metrics_handler():
         """Return Prometheus metrics."""
-        return PlainTextResponse(content=metrics.get_metrics(), media_type=CONTENT_TYPE_LATEST)
+        return PlainTextResponse(
+            content=metrics.get_metrics(), media_type=CONTENT_TYPE_LATEST
+        )
 
     return metrics_handler
 
@@ -198,18 +233,22 @@ def instrument_http_request(metrics: ServiceMetrics):
             status = str(response.status_code)
         except Exception as e:
             # Record error
-            metrics.errors_total.labels(error_type=type(e).__name__, endpoint=request.url.path).inc()
+            metrics.errors_total.labels(
+                error_type=type(e).__name__, endpoint=request.url.path
+            ).inc()
             raise
         finally:
             # Record request metrics
             duration = time.time() - start_time
             metrics.http_requests_total.labels(
-                method=request.method, endpoint=request.url.path, status=status if "status" in locals() else "500"
+                method=request.method,
+                endpoint=request.url.path,
+                status=status if "status" in locals() else "500",
             ).inc()
 
-            metrics.http_request_duration_seconds.labels(method=request.method, endpoint=request.url.path).observe(
-                duration
-            )
+            metrics.http_request_duration_seconds.labels(
+                method=request.method, endpoint=request.url.path
+            ).observe(duration)
 
         return response
 
@@ -217,21 +256,39 @@ def instrument_http_request(metrics: ServiceMetrics):
 
 
 # Convenience functions for business logic metrics
-def record_document_processing(metrics: ServiceMetrics, source_type: str, status: str = "success"):
+def record_document_processing(
+    metrics: ServiceMetrics, source_type: str, status: str = "success"
+):
     """Record document processing metrics."""
-    metrics.document_processing_total.labels(source_type=source_type, status=status).inc()
+    metrics.document_processing_total.labels(
+        source_type=source_type, status=status
+    ).inc()
 
 
-def record_analysis_operation(metrics: ServiceMetrics, operation_type: str, status: str = "success"):
+def record_analysis_operation(
+    metrics: ServiceMetrics, operation_type: str, status: str = "success"
+):
     """Record analysis operation metrics."""
-    metrics.analysis_operations_total.labels(operation_type=operation_type, status=status).inc()
+    metrics.analysis_operations_total.labels(
+        operation_type=operation_type, status=status
+    ).inc()
 
 
-def record_external_request(metrics: ServiceMetrics, service_name: str, method: str, status: str, duration: float):
+def record_external_request(
+    metrics: ServiceMetrics,
+    service_name: str,
+    method: str,
+    status: str,
+    duration: float,
+):
     """Record external service request metrics."""
-    metrics.external_requests_total.labels(service_name=service_name, method=method, status=status).inc()
+    metrics.external_requests_total.labels(
+        service_name=service_name, method=method, status=status
+    ).inc()
 
-    metrics.external_request_duration_seconds.labels(service_name=service_name, method=method).observe(duration)
+    metrics.external_request_duration_seconds.labels(
+        service_name=service_name, method=method
+    ).observe(duration)
 
 
 def record_cache_operation(metrics: ServiceMetrics, cache_name: str, hit: bool):
@@ -249,18 +306,29 @@ def update_queue_length(metrics: ServiceMetrics, queue_name: str, length: int):
 
 # Architecture Digitizer specific metric functions
 def record_architecture_digitizer_request(
-    metrics: ServiceMetrics, system: str, status: str = "success", duration: float = None
+    metrics: ServiceMetrics,
+    system: str,
+    status: str = "success",
+    duration: float = None,
 ):
     """Record architecture digitizer request metrics."""
-    metrics.architecture_digitizer_requests_total.labels(system=system, status=status).inc()
+    metrics.architecture_digitizer_requests_total.labels(
+        system=system, status=status
+    ).inc()
 
     if duration is not None:
-        metrics.architecture_digitizer_request_duration_seconds.labels(system=system).observe(duration)
+        metrics.architecture_digitizer_request_duration_seconds.labels(
+            system=system
+        ).observe(duration)
 
 
-def record_architecture_digitizer_api_failure(metrics: ServiceMetrics, system: str, error_type: str):
+def record_architecture_digitizer_api_failure(
+    metrics: ServiceMetrics, system: str, error_type: str
+):
     """Record architecture digitizer API failure metrics."""
-    metrics.architecture_digitizer_api_failures_total.labels(system=system, error_type=error_type).inc()
+    metrics.architecture_digitizer_api_failures_total.labels(
+        system=system, error_type=error_type
+    ).inc()
 
 
 def record_architecture_digitizer_cache(metrics: ServiceMetrics, hit: bool):
@@ -290,4 +358,6 @@ def record_architecture_digitizer_file_upload(
         ).observe(duration)
 
     # Record file size regardless of status
-    metrics.architecture_digitizer_file_size_bytes.labels(system=system, file_format=file_format).observe(file_size)
+    metrics.architecture_digitizer_file_size_bytes.labels(
+        system=system, file_format=file_format
+    ).observe(file_size)

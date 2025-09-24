@@ -11,13 +11,15 @@ from typing import Any, Dict, List, Optional, Tuple
 from rich.prompt import Prompt
 from rich.table import Table
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 
 
 class MenuMixin(ABC):
     """Mixin providing common menu handling functionality."""
 
-    async def run_submenu_loop(self, title: str, menu_items: List[Tuple[str, str]], back_option: str = "b") -> None:
+    async def run_submenu_loop(
+        self, title: str, menu_items: List[Tuple[str, str]], back_option: str = "b"
+    ) -> None:
         """Standard submenu loop implementation - ELIMINATES CODE DUPLICATION.
 
         Args:
@@ -44,7 +46,9 @@ class MenuMixin(ABC):
                 elif await self.handle_submenu_choice(choice):
                     # Choice handled successfully, show pause message for results
                     if choice not in ["h", "help"]:
-                        Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
+                        Prompt.ask(
+                            "\n[bold cyan]Press Enter to continue...[/bold cyan]"
+                        )
                 else:
                     self.display.show_error("Invalid option. Please try again.")
 
@@ -71,7 +75,12 @@ class OperationMixin(ABC):
     """Mixin providing common operation handling functionality."""
 
     async def monitor_operation(
-        self, operation_id: str, operation_type: str, status_func, completion_func, timeout: int = 300
+        self,
+        operation_id: str,
+        operation_type: str,
+        status_func,
+        completion_func,
+        timeout: int = 300,
     ) -> Optional[Dict[str, Any]]:
         """Monitor an async operation with progress indication.
 
@@ -90,20 +99,26 @@ class OperationMixin(ABC):
         start_time = time.time()
         last_status = None
 
-        with self.console.status(f"[bold green]Monitoring {operation_type}...[/bold green]") as status:
+        with self.console.status(
+            f"[bold green]Monitoring {operation_type}...[/bold green]"
+        ) as status:
             while time.time() - start_time < timeout:
                 try:
                     current_status = await status_func()
 
                     # Update status display if changed
                     if current_status != last_status:
-                        status.update(f"[bold green]{operation_type}: {current_status}[/bold green]")
+                        status.update(
+                            f"[bold green]{operation_type}: {current_status}[/bold green]"
+                        )
                         last_status = current_status
 
                     # Check if operation is complete
                     if completion_func(current_status):
                         result = await status_func()  # Get final result
-                        self.display.show_success(f"{operation_type} completed successfully")
+                        self.display.show_success(
+                            f"{operation_type} completed successfully"
+                        )
                         return result
 
                     await asyncio.sleep(2)  # Poll every 2 seconds
@@ -112,11 +127,18 @@ class OperationMixin(ABC):
                     self.display.show_warning(f"Status check failed: {e}")
                     await asyncio.sleep(5)  # Wait longer on errors
 
-        self.display.show_warning(f"{operation_type} monitoring timed out after {timeout} seconds")
+        self.display.show_warning(
+            f"{operation_type} monitoring timed out after {timeout} seconds"
+        )
         return None
 
     async def api_operation_with_confirm(
-        self, endpoint: str, data: Dict[str, Any], description: str, confirm_msg: str, success_msg: str
+        self,
+        endpoint: str,
+        data: Dict[str, Any],
+        description: str,
+        confirm_msg: str,
+        success_msg: str,
     ) -> bool:
         """Perform API operation with user confirmation.
 
@@ -143,7 +165,9 @@ class OperationMixin(ABC):
 class TableMixin(ABC):
     """Mixin providing common table creation and population functionality."""
 
-    def create_and_populate_table(self, title: str, headers: List[str], data_rows: List[List[str]]) -> Table:
+    def create_and_populate_table(
+        self, title: str, headers: List[str], data_rows: List[List[str]]
+    ) -> Table:
         """Create a table and populate it with data.
 
         Args:
@@ -160,7 +184,9 @@ class TableMixin(ABC):
         add_table_rows(table, data_rows)
         return table
 
-    def create_status_table_with_data(self, title: str, status_data: Dict[str, Dict[str, Any]]) -> Table:
+    def create_status_table_with_data(
+        self, title: str, status_data: Dict[str, Dict[str, Any]]
+    ) -> Table:
         """Create a status table populated with service status data.
 
         Args:
@@ -188,7 +214,9 @@ class TableMixin(ABC):
 
         return table
 
-    def create_workflow_table_with_data(self, title: str, workflows: List[Dict[str, Any]]) -> Table:
+    def create_workflow_table_with_data(
+        self, title: str, workflows: List[Dict[str, Any]]
+    ) -> Table:
         """Create a workflow table populated with workflow data.
 
         Args:
@@ -219,7 +247,9 @@ class TableMixin(ABC):
 
         return table
 
-    def create_findings_table_with_data(self, title: str, findings: List[Dict[str, Any]]) -> Table:
+    def create_findings_table_with_data(
+        self, title: str, findings: List[Dict[str, Any]]
+    ) -> Table:
         """Create a findings table populated with analysis findings.
 
         Args:
@@ -254,7 +284,9 @@ class TableMixin(ABC):
 class ValidationMixin(ABC):
     """Mixin providing common validation and error handling functionality."""
 
-    def validate_required_params(self, params: Dict[str, Any], required: List[str]) -> bool:
+    def validate_required_params(
+        self, params: Dict[str, Any], required: List[str]
+    ) -> bool:
         """Validate that required parameters are present.
 
         Args:
@@ -267,12 +299,16 @@ class ValidationMixin(ABC):
         missing = [key for key in required if key not in params or params[key] is None]
 
         if missing:
-            self.display.show_error(f"Missing required parameters: {', '.join(missing)}")
+            self.display.show_error(
+                f"Missing required parameters: {', '.join(missing)}"
+            )
             return False
 
         return True
 
-    def validate_enum_value(self, value: str, allowed_values: List[str], param_name: str) -> bool:
+    def validate_enum_value(
+        self, value: str, allowed_values: List[str], param_name: str
+    ) -> bool:
         """Validate that a value is in allowed enum values.
 
         Args:
@@ -284,7 +320,9 @@ class ValidationMixin(ABC):
             True if value is valid, False otherwise
         """
         if value not in allowed_values:
-            self.display.show_error(f"Invalid {param_name}: '{value}'. Must be one of: {', '.join(allowed_values)}")
+            self.display.show_error(
+                f"Invalid {param_name}: '{value}'. Must be one of: {', '.join(allowed_values)}"
+            )
             return False
 
         return True
@@ -334,9 +372,15 @@ class HealthCheckMixin(ABC):
             health_url = self._get_service_health_url(service_name)
 
             # Attempt to connect with timeout
-            response = await asyncio.wait_for(self.clients.get_json(health_url), timeout=5.0)  # 5 second timeout
+            response = await asyncio.wait_for(
+                self.clients.get_json(health_url), timeout=5.0
+            )  # 5 second timeout
 
-            return {"status": "healthy", "response": response, "timestamp": asyncio.get_event_loop().time()}
+            return {
+                "status": "healthy",
+                "response": response,
+                "timestamp": asyncio.get_event_loop().time(),
+            }
 
         except asyncio.TimeoutError:
             return {
@@ -345,9 +389,15 @@ class HealthCheckMixin(ABC):
                 "timestamp": asyncio.get_event_loop().time(),
             }
         except Exception as e:
-            return {"status": "unreachable", "error": str(e), "timestamp": asyncio.get_event_loop().time()}
+            return {
+                "status": "unreachable",
+                "error": str(e),
+                "timestamp": asyncio.get_event_loop().time(),
+            }
 
-    async def check_services_health(self, service_names: List[str]) -> Dict[str, Dict[str, Any]]:
+    async def check_services_health(
+        self, service_names: List[str]
+    ) -> Dict[str, Dict[str, Any]]:
         """Check health of multiple services.
 
         Args:
@@ -358,7 +408,9 @@ class HealthCheckMixin(ABC):
         """
         results = {}
 
-        with self.console.status(f"[bold green]Checking {len(service_names)} services...[/bold green]") as status:
+        with self.console.status(
+            f"[bold green]Checking {len(service_names)} services...[/bold green]"
+        ) as status:
             tasks = []
             for service_name in service_names:
                 task = asyncio.create_task(self.check_service_health(service_name))
@@ -380,20 +432,20 @@ class HealthCheckMixin(ABC):
         """
         # Map service names to their health URLs
         url_map = {
-            ServiceNames.ORCHESTRATOR: f"{self.clients.orchestrator_url()}/health",
-            ServiceNames.ANALYSIS_SERVICE: f"{self.clients.analysis_service_url()}/health",
-            ServiceNames.DOC_STORE: f"{self.clients.doc_store_url()}/health",
-            ServiceNames.SOURCE_AGENT: f"{self.clients.source_agent_url()}/health",
-            ServiceNames.PROMPT_STORE: f"{self.clients.prompt_store_url()}/health",
-            ServiceNames.DISCOVERY_AGENT: f"{self.clients.discovery_agent_url()}/health",
-            ServiceNames.INTERPRETER: f"{self.clients.interpreter_url()}/health",
-            ServiceNames.FRONTEND: f"{self.clients.frontend_url()}/health",
-            ServiceNames.SUMMARIZER_HUB: f"{self.clients.summarizer_hub_url()}/health",
-            ServiceNames.SECURE_ANALYZER: f"{self.clients.secure_analyzer_url()}/health",
-            ServiceNames.MEMORY_AGENT: f"{self.clients.memory_agent_url()}/health",
-            ServiceNames.CODE_ANALYZER: f"{self.clients.code_analyzer_url()}/health",
-            ServiceNames.LOG_COLLECTOR: f"{self.clients.log_collector_url()}/health",
-            ServiceNames.NOTIFICATION_SERVICE: f"{self.clients.notification_service_url()}/health",
+            "orchestrator": f"{self.clients.orchestrator_url()}/health",
+            "analysis-service": f"{self.clients.analysis_service_url()}/health",
+            "doc-store": f"{self.clients.doc_store_url()}/health",
+            "source-agent": f"{self.clients.source_agent_url()}/health",
+            "prompt-store": f"{self.clients.prompt_store_url()}/health",
+            "discovery-agent": f"{self.clients.discovery_agent_url()}/health",
+            "interpreter": f"{self.clients.interpreter_url()}/health",
+            "frontend": f"{self.clients.frontend_url()}/health",
+            "summarizer-hub": f"{self.clients.summarizer_hub_url()}/health",
+            "secure-analyzer": f"{self.clients.secure_analyzer_url()}/health",
+            "memory-agent": f"{self.clients.memory_agent_url()}/health",
+            "code-analyzer": f"{self.clients.code_analyzer_url()}/health",
+            "log-collector": f"{self.clients.log_collector_url()}/health",
+            "notification-service": f"{self.clients.notification_service_url()}/health",
         }
 
         return url_map.get(service_name, f"http://localhost:5000/health")
@@ -409,7 +461,9 @@ class HealthCheckMixin(ABC):
         """
         return health_data.get("status") == "healthy"
 
-    def format_health_status(self, service_name: str, health_data: Dict[str, Any]) -> Tuple[str, str]:
+    def format_health_status(
+        self, service_name: str, health_data: Dict[str, Any]
+    ) -> Tuple[str, str]:
         """Format health status for display.
 
         Args:
@@ -435,7 +489,9 @@ class HealthCheckMixin(ABC):
         return status_display, details
 
     async def display_service_health_table(
-        self, health_results: Dict[str, Dict[str, Any]], title: str = "Service Health Status"
+        self,
+        health_results: Dict[str, Dict[str, Any]],
+        title: str = "Service Health Status",
     ) -> None:
         """Display service health results in a formatted table.
 
@@ -449,7 +505,9 @@ class HealthCheckMixin(ABC):
         table.add_column("Details", style="white")
 
         for service_name, health_data in health_results.items():
-            status_display, details = self.format_health_status(service_name, health_data)
+            status_display, details = self.format_health_status(
+                service_name, health_data
+            )
             table.add_row(service_name, status_display, details)
 
         self.console.print(table)

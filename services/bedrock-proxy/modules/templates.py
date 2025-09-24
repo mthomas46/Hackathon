@@ -59,9 +59,17 @@ TEMPLATES = {
     },
     "pr_confidence": {
         "sections": {
-            "Inputs": ["Jira: TICKET-123", "GitHub PR: org/repo#42", "Confluence: Design v1"],
+            "Inputs": [
+                "Jira: TICKET-123",
+                "GitHub PR: org/repo#42",
+                "Confluence: Design v1",
+            ],
             "Extracted Endpoints": ["/hello", "/health"],
-            "Confidence": ["Score: 82", "Implements 2/2 endpoints", "No extra endpoints detected"],
+            "Confidence": [
+                "Score: 82",
+                "Implements 2/2 endpoints",
+                "No extra endpoints detected",
+            ],
             "Suggestions": ["Add negative tests", "Document error codes in OpenAPI"],
         }
     },
@@ -106,7 +114,9 @@ def detect_template_from_prompt(prompt: str) -> str:
         return "risks"
     elif "decision" in text_lower:
         return "decisions"
-    elif ("pr" in text_lower or "pull request" in text_lower) and "confidence" in text_lower:
+    elif (
+        "pr" in text_lower or "pull request" in text_lower
+    ) and "confidence" in text_lower:
         return "pr_confidence"
     elif ("life" in text_lower or "track" in text_lower) and "ticket" in text_lower:
         return "life_of_ticket"

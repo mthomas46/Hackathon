@@ -17,7 +17,11 @@ class OrchestratorMonitor:
     """Monitor for orchestrator Redis pub/sub activity and configuration."""
 
     def __init__(self):
-        self._pubsub_activity = {"ingestion_requested": [], "findings_created": [], "other_events": []}
+        self._pubsub_activity = {
+            "ingestion_requested": [],
+            "findings_created": [],
+            "other_events": [],
+        }
         self._config_cache = {}
         self._activity_cache = {}
         self._cache_ttl = 30  # Cache for 30 seconds
@@ -29,7 +33,9 @@ class OrchestratorMonitor:
             return False
         return (utc_now() - cache_time).total_seconds() < self._cache_ttl
 
-    async def get_orchestrator_config(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_orchestrator_config(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get orchestrator service configuration."""
         if not force_refresh and self.is_cache_fresh("config"):
             return self._config_cache
@@ -39,7 +45,9 @@ class OrchestratorMonitor:
             orchestrator_url = get_orchestrator_url()
 
             # Get effective config
-            config_response = await clients.get_json(f"{orchestrator_url}/config/effective")
+            config_response = await clients.get_json(
+                f"{orchestrator_url}/config/effective"
+            )
 
             # Get info
             info_response = await clients.get_json(f"{orchestrator_url}/info")
@@ -60,9 +68,17 @@ class OrchestratorMonitor:
             return config_data
 
         except Exception as e:
-            return {"error": str(e), "config": {}, "info": {}, "metrics": {}, "last_updated": utc_now().isoformat()}
+            return {
+                "error": str(e),
+                "config": {},
+                "info": {},
+                "metrics": {},
+                "last_updated": utc_now().isoformat(),
+            }
 
-    async def get_redis_pubsub_activity(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_redis_pubsub_activity(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get Redis pub/sub activity information."""
         if not force_refresh and self.is_cache_fresh("pubsub"):
             return self._activity_cache.get("pubsub", {})
@@ -77,7 +93,9 @@ class OrchestratorMonitor:
             # Try to get infrastructure info
             infrastructure_data = {}
             try:
-                infra_response = await clients.get_json(f"{orchestrator_url}/infrastructure/events/history")
+                infra_response = await clients.get_json(
+                    f"{orchestrator_url}/infrastructure/events/history"
+                )
                 infrastructure_data = infra_response
             except Exception:
                 pass
@@ -120,7 +138,9 @@ class OrchestratorMonitor:
                 "last_updated": utc_now().isoformat(),
             }
 
-    async def get_orchestrator_workflows(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_orchestrator_workflows(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get orchestrator workflow information."""
         if not force_refresh and self.is_cache_fresh("workflows"):
             return self._activity_cache.get("workflows", {})
@@ -133,12 +153,16 @@ class OrchestratorMonitor:
             workflows_response = await clients.get_json(f"{orchestrator_url}/workflows")
 
             # Get workflow history
-            history_response = await clients.get_json(f"{orchestrator_url}/workflows/history")
+            history_response = await clients.get_json(
+                f"{orchestrator_url}/workflows/history"
+            )
 
             workflow_data = {
                 "available_workflows": workflows_response.get("data", {}),
                 "recent_history": history_response.get("items", []),
-                "workflow_stats": self._calculate_workflow_stats(history_response.get("items", [])),
+                "workflow_stats": self._calculate_workflow_stats(
+                    history_response.get("items", [])
+                ),
                 "last_updated": utc_now().isoformat(),
             }
 
@@ -156,7 +180,9 @@ class OrchestratorMonitor:
                 "last_updated": utc_now().isoformat(),
             }
 
-    def _analyze_pubsub_activity(self, infrastructure_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_pubsub_activity(
+        self, infrastructure_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze pub/sub activity from infrastructure data."""
         # This is a simplified analysis - in a real implementation,
         # you'd have actual Redis monitoring data
@@ -207,7 +233,9 @@ class OrchestratorMonitor:
             "time_range": time_range,
         }
 
-    def _calculate_workflow_stats(self, history: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _calculate_workflow_stats(
+        self, history: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Calculate workflow statistics from history."""
         if not history:
             return {
@@ -236,10 +264,16 @@ class OrchestratorMonitor:
         # Find most common workflow
         workflow_counts = defaultdict(int)
         for workflow in history:
-            workflow_type = workflow.get("workflow_type") or workflow.get("type") or "unknown"
+            workflow_type = (
+                workflow.get("workflow_type") or workflow.get("type") or "unknown"
+            )
             workflow_counts[workflow_type] += 1
 
-        most_common = max(workflow_counts.items(), key=lambda x: x[1]) if workflow_counts else None
+        most_common = (
+            max(workflow_counts.items(), key=lambda x: x[1])
+            if workflow_counts
+            else None
+        )
 
         return {
             "total_workflows": total,
@@ -267,7 +301,11 @@ class OrchestratorMonitor:
             }
 
         except Exception as e:
-            return {"orchestrator_healthy": False, "error": str(e), "last_checked": utc_now().isoformat()}
+            return {
+                "orchestrator_healthy": False,
+                "error": str(e),
+                "last_checked": utc_now().isoformat(),
+            }
 
 
 # Global instance

@@ -69,7 +69,9 @@ class DataStreamer:
         except Exception as e:
             yield f"Error streaming file: {str(e)}".encode()
 
-    async def stream_json_array(self, data: List[Dict], chunk_size: int = 50) -> AsyncGenerator[str, None]:
+    async def stream_json_array(
+        self, data: List[Dict], chunk_size: int = 50
+    ) -> AsyncGenerator[str, None]:
         """Stream JSON array data in chunks."""
         total_items = len(data)
 
@@ -84,7 +86,9 @@ class DataStreamer:
             }
             yield json.dumps(chunk_data, separators=(",", ":"))
 
-    async def stream_database_results(self, query_func: Callable, params: Dict = None) -> AsyncGenerator[Dict, None]:
+    async def stream_database_results(
+        self, query_func: Callable, params: Dict = None
+    ) -> AsyncGenerator[Dict, None]:
         """Stream database query results."""
         params = params or {}
 
@@ -111,7 +115,9 @@ class LazyLoader:
         self.dependencies: Dict[str, List[str]] = {}
         self.streamer = DataStreamer()
 
-    async def load_lazy(self, key: str, loader_func: Callable, dependencies: List[str] = None) -> Any:
+    async def load_lazy(
+        self, key: str, loader_func: Callable, dependencies: List[str] = None
+    ) -> Any:
         """Load data lazily with dependency management."""
         # Check if already loaded
         if key in self.loaded_items:
@@ -137,7 +143,9 @@ class LazyLoader:
 
         try:
             # Load the data
-            data = await asyncio.wait_for(loader_func(), timeout=self.config.timeout_seconds)
+            data = await asyncio.wait_for(
+                loader_func(), timeout=self.config.timeout_seconds
+            )
 
             # Cache the result
             self.loaded_items[key] = data
@@ -254,7 +262,10 @@ class ProgressiveLoader:
                     chunk_index=chunk_index,
                     total_chunks=-1,  # Unknown for streaming
                     has_more=True,  # Assume more data available
-                    metadata={"chunk_size": len(chunk) if hasattr(chunk, "__len__") else 1, "streaming": True},
+                    metadata={
+                        "chunk_size": len(chunk) if hasattr(chunk, "__len__") else 1,
+                        "streaming": True,
+                    },
                 )
 
                 yield result
@@ -357,13 +368,17 @@ class SmartLazyLoader:
         # In a real implementation, this would use ML models
 
         if key in self.prefetch_predictions:
-            predicted_keys = self.prefetch_predictions[key][: self.base_loader.config.prefetch_count]
+            predicted_keys = self.prefetch_predictions[key][
+                : self.base_loader.config.prefetch_count
+            ]
 
             # Prefetch predicted items in background
             for predicted_key in predicted_keys:
                 if predicted_key not in self.base_loader.loaded_items:
                     asyncio.create_task(
-                        self.base_loader.load_lazy(predicted_key, lambda: self._get_related_data(predicted_key))
+                        self.base_loader.load_lazy(
+                            predicted_key, lambda: self._get_related_data(predicted_key)
+                        )
                     )
 
     async def _get_related_data(self, key: str) -> Any:

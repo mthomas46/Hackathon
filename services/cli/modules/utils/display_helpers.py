@@ -32,7 +32,13 @@ def print_list(console, title: str, items: List[Dict[str, Any]]) -> None:
     console.print(table)
 
 
-async def save_data(console, data: Dict[str, Any], fmt: str, path: str, content_key: Optional[str] = None) -> None:
+async def save_data(
+    console,
+    data: Dict[str, Any],
+    fmt: str,
+    path: str,
+    content_key: Optional[str] = None,
+) -> None:
     import json
     import os
 

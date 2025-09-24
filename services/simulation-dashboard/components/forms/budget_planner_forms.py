@@ -19,7 +19,9 @@ except ImportError:
 
 
 def render_budget_planner_form(
-    budget_key: str = "budget_config", title: str = "💰 Budget Planner", project_config: Optional[Dict[str, Any]] = None
+    budget_key: str = "budget_config",
+    title: str = "💰 Budget Planner",
+    project_config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Render budget planner form for project financial planning.
 
@@ -32,7 +34,9 @@ def render_budget_planner_form(
         Dictionary containing budget configuration
     """
     st.markdown(f"### {title}")
-    st.markdown("Plan and manage your project budget with intelligent cost estimation and ROI analysis.")
+    st.markdown(
+        "Plan and manage your project budget with intelligent cost estimation and ROI analysis."
+    )
 
     # Initialize budget configuration
     if budget_key not in st.session_state:
@@ -93,14 +97,21 @@ def render_budget_planner_form(
     }
 
     # Create pie chart for cost breakdown
-    cost_df = pd.DataFrame({"Category": list(cost_categories.keys()), "Amount": list(cost_categories.values())})
+    cost_df = pd.DataFrame(
+        {
+            "Category": list(cost_categories.keys()),
+            "Amount": list(cost_categories.values()),
+        }
+    )
 
     # Filter out zero values
     cost_df = cost_df[cost_df["Amount"] > 0]
 
     if not cost_df.empty:
         if PLOTLY_AVAILABLE:
-            fig = px.pie(cost_df, values="Amount", names="Category", title="Budget Allocation")
+            fig = px.pie(
+                cost_df, values="Amount", names="Category", title="Budget Allocation"
+            )
             st.plotly_chart(fig, use_container_width=True)
         else:
             st.bar_chart(cost_df.set_index("Category"))
@@ -160,7 +171,9 @@ def render_budget_planner_form(
     # Simple ROI calculation
     if total_costs > 0:
         roi_percentage = ((total_benefits - total_costs) / total_costs) * 100
-        npv = calculate_npv(total_benefits, total_costs, project_lifespan, discount_rate)
+        npv = calculate_npv(
+            total_benefits, total_costs, project_lifespan, discount_rate
+        )
 
         col_roi3, col_roi4 = st.columns(2)
 
@@ -180,8 +193,18 @@ def render_budget_planner_form(
     st.markdown("#### 📊 Budget vs Benefits")
 
     comparison_data = {
-        "Category": ["Total Costs", "Annual Revenue", "Operational Savings", "Net Benefit"],
-        "Amount": [total_costs, expected_revenue, operational_savings, total_benefits - total_costs],
+        "Category": [
+            "Total Costs",
+            "Annual Revenue",
+            "Operational Savings",
+            "Net Benefit",
+        ],
+        "Amount": [
+            total_costs,
+            expected_revenue,
+            operational_savings,
+            total_benefits - total_costs,
+        ],
     }
 
     comparison_df = pd.DataFrame(comparison_data)
@@ -204,7 +227,10 @@ def render_budget_planner_form(
     st.markdown("#### 💡 Budget Recommendations")
 
     recommendations = generate_budget_recommendations(
-        estimated_costs, roi_percentage if "roi_percentage" in locals() else 0, project_complexity, project_duration
+        estimated_costs,
+        roi_percentage if "roi_percentage" in locals() else 0,
+        project_complexity,
+        project_duration,
     )
 
     for rec in recommendations:
@@ -311,7 +337,9 @@ def render_cost_adjustment_form(budget_key: str, estimated_costs: Dict[str, Any]
         location_factor = st.selectbox(
             "Location Cost Factor",
             options=["Low Cost", "Medium Cost", "High Cost"],
-            index=["Low Cost", "Medium Cost", "High Cost"].index(custom_factors.get("location_factor", "Medium Cost")),
+            index=["Low Cost", "Medium Cost", "High Cost"].index(
+                custom_factors.get("location_factor", "Medium Cost")
+            ),
             key=f"{budget_key}_location",
         )
         custom_factors["location_factor"] = location_factor
@@ -332,7 +360,11 @@ def estimate_project_costs(
     """Estimate project costs based on parameters."""
 
     # Base rates per complexity level
-    base_rates = {"Simple": 8000, "Medium": 12000, "Complex": 20000}  # $8K/week  # $12K/week  # $20K/week
+    base_rates = {
+        "Simple": 8000,
+        "Medium": 12000,
+        "Complex": 20000,
+    }  # $8K/week  # $12K/week  # $20K/week
 
     base_weekly_rate = base_rates.get(complexity, 12000)
 
@@ -364,14 +396,18 @@ def estimate_project_costs(
 
         # Location factor
         location_factors = {"Low Cost": 0.8, "Medium Cost": 1.0, "High Cost": 1.3}
-        location_multiplier = location_factors.get(custom_factors.get("location_factor", "Medium Cost"), 1.0)
+        location_multiplier = location_factors.get(
+            custom_factors.get("location_factor", "Medium Cost"), 1.0
+        )
         team_cost *= location_multiplier
         infrastructure_cost *= location_multiplier
 
     # Calculate contingency (15-25% based on complexity)
     contingency_rates = {"Simple": 0.15, "Medium": 0.20, "Complex": 0.25}
     contingency_rate = contingency_rates.get(complexity, 0.20)
-    contingency = (team_cost + infrastructure_cost + tools_cost + training_cost + misc_cost) * contingency_rate
+    contingency = (
+        team_cost + infrastructure_cost + tools_cost + training_cost + misc_cost
+    ) * contingency_rate
 
     # Apply contingency multiplier if provided
     if custom_factors:
@@ -407,7 +443,9 @@ def estimate_project_costs(
     }
 
 
-def calculate_npv(benefits: float, costs: float, lifespan: int, discount_rate: float) -> float:
+def calculate_npv(
+    benefits: float, costs: float, lifespan: int, discount_rate: float
+) -> float:
     """Calculate Net Present Value."""
     npv = -costs  # Initial investment
 
@@ -421,7 +459,10 @@ def calculate_npv(benefits: float, costs: float, lifespan: int, discount_rate: f
 
 
 def generate_budget_recommendations(
-    estimated_costs: Dict[str, Any], roi_percentage: float, complexity: str, duration: int
+    estimated_costs: Dict[str, Any],
+    roi_percentage: float,
+    complexity: str,
+    duration: int,
 ) -> List[Dict[str, Any]]:
     """Generate budget recommendations based on analysis."""
 
@@ -430,15 +471,24 @@ def generate_budget_recommendations(
     # ROI recommendations
     if roi_percentage < 0:
         recommendations.append(
-            {"type": "warning", "message": "Negative ROI detected - consider reducing scope or extending timeline"}
+            {
+                "type": "warning",
+                "message": "Negative ROI detected - consider reducing scope or extending timeline",
+            }
         )
     elif roi_percentage < 25:
         recommendations.append(
-            {"type": "info", "message": "Low ROI - focus on high-value features and cost optimization"}
+            {
+                "type": "info",
+                "message": "Low ROI - focus on high-value features and cost optimization",
+            }
         )
     else:
         recommendations.append(
-            {"type": "success", "message": "Strong ROI projection - project appears financially viable"}
+            {
+                "type": "success",
+                "message": "Strong ROI projection - project appears financially viable",
+            }
         )
 
     # Complexity recommendations
@@ -451,21 +501,32 @@ def generate_budget_recommendations(
         )
 
     # Contingency recommendations
-    contingency_percentage = (estimated_costs["contingency"] / estimated_costs["subtotal"]) * 100
+    contingency_percentage = (
+        estimated_costs["contingency"] / estimated_costs["subtotal"]
+    ) * 100
     if contingency_percentage < 15:
         recommendations.append(
-            {"type": "info", "message": "Low contingency buffer - consider increasing for risk mitigation"}
+            {
+                "type": "info",
+                "message": "Low contingency buffer - consider increasing for risk mitigation",
+            }
         )
     elif contingency_percentage > 30:
         recommendations.append(
-            {"type": "info", "message": "High contingency buffer - ensure it's justified by project risks"}
+            {
+                "type": "info",
+                "message": "High contingency buffer - ensure it's justified by project risks",
+            }
         )
 
     # Cost distribution recommendations
     team_percentage = (estimated_costs["team_cost"] / estimated_costs["total"]) * 100
     if team_percentage > 70:
         recommendations.append(
-            {"type": "info", "message": "High team cost percentage - consider optimizing team composition"}
+            {
+                "type": "info",
+                "message": "High team cost percentage - consider optimizing team composition",
+            }
         )
 
     return recommendations

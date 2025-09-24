@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.di_container import get_simulation_container
 from simulation.infrastructure.logging import get_simulation_logger
@@ -64,10 +66,16 @@ class SimulationCLI:
                     print(f"\n🚀 Starting simulation execution...")
                     await self.execute_simulation_by_id(simulation_id, args)
                 else:
-                    print(f"\n💡 Use 'simulation execute {simulation_id}' to start execution")
-                    print(f"💡 Use 'simulation status {simulation_id}' to check progress")
+                    print(
+                        f"\n💡 Use 'simulation execute {simulation_id}' to start execution"
+                    )
+                    print(
+                        f"💡 Use 'simulation status {simulation_id}' to check progress"
+                    )
             else:
-                print(f"❌ Failed to create simulation: {result.get('message', 'Unknown error')}")
+                print(
+                    f"❌ Failed to create simulation: {result.get('message', 'Unknown error')}"
+                )
                 sys.exit(1)
 
         except Exception as e:
@@ -80,7 +88,9 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.info("Executing simulation via CLI", simulation_id=simulation_id)
+            self.logger.info(
+                "Executing simulation via CLI", simulation_id=simulation_id
+            )
 
             result = await self.application_service.execute_simulation(simulation_id)
 
@@ -100,15 +110,23 @@ class SimulationCLI:
                 print(f"   ws://localhost:5075/ws/simulations/{simulation_id}")
 
             else:
-                print(f"❌ Failed to execute simulation: {result.get('message', 'Unknown error')}")
+                print(
+                    f"❌ Failed to execute simulation: {result.get('message', 'Unknown error')}"
+                )
                 sys.exit(1)
 
         except Exception as e:
-            self.logger.error("CLI simulation execution failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                "CLI simulation execution failed",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             print(f"❌ Error executing simulation: {str(e)}")
             sys.exit(1)
 
-    async def execute_simulation_by_id(self, simulation_id: str, args: Optional[argparse.Namespace] = None) -> None:
+    async def execute_simulation_by_id(
+        self, simulation_id: str, args: Optional[argparse.Namespace] = None
+    ) -> None:
         """Execute simulation by ID (internal method)."""
         # Create a minimal args object if not provided
         if args is None:
@@ -122,7 +140,9 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.debug("Getting simulation status via CLI", simulation_id=simulation_id)
+            self.logger.debug(
+                "Getting simulation status via CLI", simulation_id=simulation_id
+            )
 
             result = await self.application_service.get_simulation_status(simulation_id)
 
@@ -151,7 +171,11 @@ class SimulationCLI:
                 sys.exit(1)
 
         except Exception as e:
-            self.logger.error("CLI simulation status check failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                "CLI simulation status check failed",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             print(f"❌ Error getting simulation status: {str(e)}")
             sys.exit(1)
 
@@ -160,9 +184,13 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.debug("Getting simulation results via CLI", simulation_id=simulation_id)
+            self.logger.debug(
+                "Getting simulation results via CLI", simulation_id=simulation_id
+            )
 
-            result = await self.application_service.get_simulation_results(simulation_id)
+            result = await self.application_service.get_simulation_results(
+                simulation_id
+            )
 
             if result["success"]:
                 print(f"📋 Simulation Results: {simulation_id}")
@@ -172,12 +200,24 @@ class SimulationCLI:
                 results_data = result.get("results", {})
 
                 if results_data:
-                    print(f"📊 Documents Generated: {results_data.get('total_documents', 0)}")
-                    print(f"🔄 Workflows Executed: {results_data.get('total_workflows', 0)}")
-                    print(f"⏱️  Execution Time: {results_data.get('execution_time_seconds', 0):.2f}s")
-                    print(f"🎯 Success Rate: {results_data.get('success_rate', 0):.1f}%")
-                    print(f"🔍 Inconsistencies Found: {results_data.get('inconsistencies_detected', 0)}")
-                    print(f"💡 Insights Generated: {len(results_data.get('insights', []))}")
+                    print(
+                        f"📊 Documents Generated: {results_data.get('total_documents', 0)}"
+                    )
+                    print(
+                        f"🔄 Workflows Executed: {results_data.get('total_workflows', 0)}"
+                    )
+                    print(
+                        f"⏱️  Execution Time: {results_data.get('execution_time_seconds', 0):.2f}s"
+                    )
+                    print(
+                        f"🎯 Success Rate: {results_data.get('success_rate', 0):.1f}%"
+                    )
+                    print(
+                        f"🔍 Inconsistencies Found: {results_data.get('inconsistencies_detected', 0)}"
+                    )
+                    print(
+                        f"💡 Insights Generated: {len(results_data.get('insights', []))}"
+                    )
 
                     # Show insights if available
                     insights = results_data.get("insights", [])
@@ -188,15 +228,25 @@ class SimulationCLI:
                         if len(insights) > 5:
                             print(f"   ... and {len(insights) - 5} more")
                 else:
-                    print("⏳ Results not yet available - simulation may still be running")
-                    print("💡 Use 'simulation status {simulation_id}' to check progress")
+                    print(
+                        "⏳ Results not yet available - simulation may still be running"
+                    )
+                    print(
+                        "💡 Use 'simulation status {simulation_id}' to check progress"
+                    )
 
             else:
-                print(f"❌ Failed to get simulation results: {result.get('error', 'Unknown error')}")
+                print(
+                    f"❌ Failed to get simulation results: {result.get('error', 'Unknown error')}"
+                )
                 sys.exit(1)
 
         except Exception as e:
-            self.logger.error("CLI simulation results retrieval failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                "CLI simulation results retrieval failed",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             print(f"❌ Error getting simulation results: {str(e)}")
             sys.exit(1)
 
@@ -206,9 +256,13 @@ class SimulationCLI:
             status_filter = getattr(args, "status", None)
             limit = getattr(args, "limit", 50)
 
-            self.logger.debug("Listing simulations via CLI", status_filter=status_filter, limit=limit)
+            self.logger.debug(
+                "Listing simulations via CLI", status_filter=status_filter, limit=limit
+            )
 
-            result = await self.application_service.list_simulations(status_filter, limit)
+            result = await self.application_service.list_simulations(
+                status_filter, limit
+            )
 
             if result["success"]:
                 simulations = result.get("simulations", [])
@@ -220,11 +274,15 @@ class SimulationCLI:
                 if not simulations:
                     print("📭 No simulations found")
                     if status_filter:
-                        print(f"💡 Try removing the status filter or use 'simulation list --all'")
+                        print(
+                            f"💡 Try removing the status filter or use 'simulation list --all'"
+                        )
                     return
 
                 # Display simulations in a table format
-                print(f"{'ID':<36} {'Name':<20} {'Status':<12} {'Progress':<10} {'Created':<19}")
+                print(
+                    f"{'ID':<36} {'Name':<20} {'Status':<12} {'Progress':<10} {'Created':<19}"
+                )
                 print("-" * 100)
 
                 for sim in simulations:
@@ -232,9 +290,13 @@ class SimulationCLI:
                     name = sim.get("name", "")[:19]
                     status = sim.get("status", "")[:11]
                     progress = f"{sim.get('progress', 0):>3.0f}%"
-                    created = sim.get("created_at", "")[:19] if sim.get("created_at") else ""
+                    created = (
+                        sim.get("created_at", "")[:19] if sim.get("created_at") else ""
+                    )
 
-                    print(f"{sim_id:<36} {name:<20} {status:<12} {progress:<10} {created:<19}")
+                    print(
+                        f"{sim_id:<36} {name:<20} {status:<12} {progress:<10} {created:<19}"
+                    )
 
                 print(f"\n📊 Showing {len(simulations)} of {total} simulations")
 
@@ -248,7 +310,9 @@ class SimulationCLI:
                 print(f"   simulation results <id>   - View results")
 
             else:
-                print(f"❌ Failed to list simulations: {result.get('error', 'Unknown error')}")
+                print(
+                    f"❌ Failed to list simulations: {result.get('error', 'Unknown error')}"
+                )
                 sys.exit(1)
 
         except Exception as e:
@@ -261,7 +325,9 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.info("Cancelling simulation via CLI", simulation_id=simulation_id)
+            self.logger.info(
+                "Cancelling simulation via CLI", simulation_id=simulation_id
+            )
 
             result = await self.application_service.cancel_simulation(simulation_id)
 
@@ -269,13 +335,21 @@ class SimulationCLI:
                 print(f"✅ Simulation cancelled successfully!")
                 print(f"📋 Simulation ID: {simulation_id}")
                 print(f"🛑 Status: Cancelled")
-                print(f"📅 Cancelled at: {result.get('cancelled_at', datetime.now().isoformat())}")
+                print(
+                    f"📅 Cancelled at: {result.get('cancelled_at', datetime.now().isoformat())}"
+                )
             else:
-                print(f"❌ Failed to cancel simulation: {result.get('error', 'Unknown error')}")
+                print(
+                    f"❌ Failed to cancel simulation: {result.get('error', 'Unknown error')}"
+                )
                 sys.exit(1)
 
         except Exception as e:
-            self.logger.error("CLI simulation cancellation failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                "CLI simulation cancellation failed",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             print(f"❌ Error cancelling simulation: {str(e)}")
             sys.exit(1)
 
@@ -299,7 +373,9 @@ class SimulationCLI:
                 )
                 print(f"🏷️  Service: {service_health.get('service', 'Unknown')}")
                 print(f"🏷️  Version: {service_health.get('version', 'Unknown')}")
-                print(f"⏰ Uptime: {service_health.get('uptime_seconds', 0):.0f} seconds")
+                print(
+                    f"⏰ Uptime: {service_health.get('uptime_seconds', 0):.0f} seconds"
+                )
 
                 # Simulation-specific health
                 sim_specific = health.get("simulation_specific", {})
@@ -321,14 +397,22 @@ class SimulationCLI:
                     print(f"\n🔗 Critical Ecosystem Services:")
                     for service_name, service_info in critical_services.items():
                         status = service_info.get("status", "unknown")
-                        status_icon = "✅" if status == "healthy" else "❌" if status == "unhealthy" else "⚠️"
+                        status_icon = (
+                            "✅"
+                            if status == "healthy"
+                            else "❌" if status == "unhealthy" else "⚠️"
+                        )
                         response_time = service_info.get("response_time_ms", "N/A")
-                        print(f"   {service_name}: {status_icon} {status} ({response_time}ms)")
+                        print(
+                            f"   {service_name}: {status_icon} {status} ({response_time}ms)"
+                        )
 
                 print(f"\n💡 Health check completed at: {datetime.now().isoformat()}")
 
             else:
-                print(f"❌ Failed to get health status: {result.get('error', 'Unknown error')}")
+                print(
+                    f"❌ Failed to get health status: {result.get('error', 'Unknown error')}"
+                )
                 sys.exit(1)
 
         except Exception as e:
@@ -341,7 +425,9 @@ class SimulationCLI:
         simulation_id = args.simulation_id
 
         try:
-            self.logger.info("Starting simulation watch via CLI", simulation_id=simulation_id)
+            self.logger.info(
+                "Starting simulation watch via CLI", simulation_id=simulation_id
+            )
 
             print(f"👀 Watching simulation: {simulation_id}")
             print("Press Ctrl+C to stop watching")
@@ -370,7 +456,9 @@ class SimulationCLI:
                         # Clear screen and print new status
                         print("\033[2J\033[H", end="")  # Clear screen
                         print(current_output)
-                        print(f"\n🔄 Last updated: {datetime.now().strftime('%H:%M:%S')}")
+                        print(
+                            f"\n🔄 Last updated: {datetime.now().strftime('%H:%M:%S')}"
+                        )
                         print("💡 Press Ctrl+C to stop watching")
                         last_status = current_output
 
@@ -385,7 +473,9 @@ class SimulationCLI:
                     await asyncio.sleep(5)  # Wait longer on error
 
         except Exception as e:
-            self.logger.error("CLI simulation watch failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                "CLI simulation watch failed", error=str(e), simulation_id=simulation_id
+            )
             print(f"❌ Error watching simulation: {str(e)}")
             sys.exit(1)
 
@@ -405,56 +495,89 @@ def get_simulation_cli() -> SimulationCLI:
 def create_simulation_parser(subparsers) -> None:
     """Create argument parser for simulation commands."""
     simulation_parser = subparsers.add_parser(
-        "simulation", help="Manage project simulations", description="Create, execute, and monitor project simulations"
+        "simulation",
+        help="Manage project simulations",
+        description="Create, execute, and monitor project simulations",
     )
 
-    simulation_subparsers = simulation_parser.add_subparsers(dest="simulation_command", help="Simulation commands")
+    simulation_subparsers = simulation_parser.add_subparsers(
+        dest="simulation_command", help="Simulation commands"
+    )
 
     # Create simulation command
-    create_parser = simulation_subparsers.add_parser("create", help="Create a new simulation")
+    create_parser = simulation_subparsers.add_parser(
+        "create", help="Create a new simulation"
+    )
     create_parser.add_argument("name", help="Simulation name")
     create_parser.add_argument("--description", help="Simulation description")
     create_parser.add_argument(
         "--type",
-        choices=["web_application", "api_service", "mobile_application", "data_science", "devops_tool"],
+        choices=[
+            "web_application",
+            "api_service",
+            "mobile_application",
+            "data_science",
+            "devops_tool",
+        ],
         default="web_application",
         help="Project type",
     )
     create_parser.add_argument("--team-size", type=int, default=5, help="Team size")
     create_parser.add_argument(
-        "--complexity", choices=["simple", "medium", "complex"], default="medium", help="Project complexity"
+        "--complexity",
+        choices=["simple", "medium", "complex"],
+        default="medium",
+        help="Project complexity",
     )
-    create_parser.add_argument("--duration-weeks", type=int, default=8, help="Project duration in weeks")
     create_parser.add_argument(
-        "--start-immediately", action="store_true", help="Start simulation immediately after creation"
+        "--duration-weeks", type=int, default=8, help="Project duration in weeks"
+    )
+    create_parser.add_argument(
+        "--start-immediately",
+        action="store_true",
+        help="Start simulation immediately after creation",
     )
 
     # Execute simulation command
-    execute_parser = simulation_subparsers.add_parser("execute", help="Execute a simulation")
+    execute_parser = simulation_subparsers.add_parser(
+        "execute", help="Execute a simulation"
+    )
     execute_parser.add_argument("simulation_id", help="Simulation ID to execute")
 
     # Status command
-    status_parser = simulation_subparsers.add_parser("status", help="Get simulation status")
+    status_parser = simulation_subparsers.add_parser(
+        "status", help="Get simulation status"
+    )
     status_parser.add_argument("simulation_id", help="Simulation ID")
 
     # Results command
-    results_parser = simulation_subparsers.add_parser("results", help="Get simulation results")
+    results_parser = simulation_subparsers.add_parser(
+        "results", help="Get simulation results"
+    )
     results_parser.add_argument("simulation_id", help="Simulation ID")
 
     # List command
     list_parser = simulation_subparsers.add_parser("list", help="List simulations")
     list_parser.add_argument("--status", help="Filter by status")
-    list_parser.add_argument("--limit", type=int, default=50, help="Maximum number of results")
+    list_parser.add_argument(
+        "--limit", type=int, default=50, help="Maximum number of results"
+    )
 
     # Cancel command
-    cancel_parser = simulation_subparsers.add_parser("cancel", help="Cancel a simulation")
+    cancel_parser = simulation_subparsers.add_parser(
+        "cancel", help="Cancel a simulation"
+    )
     cancel_parser.add_argument("simulation_id", help="Simulation ID to cancel")
 
     # Health command
-    health_parser = simulation_subparsers.add_parser("health", help="Get system health status")
+    health_parser = simulation_subparsers.add_parser(
+        "health", help="Get system health status"
+    )
 
     # Watch command
-    watch_parser = simulation_subparsers.add_parser("watch", help="Watch simulation progress in real-time")
+    watch_parser = simulation_subparsers.add_parser(
+        "watch", help="Watch simulation progress in real-time"
+    )
     watch_parser.add_argument("simulation_id", help="Simulation ID to watch")
 
 
@@ -486,4 +609,9 @@ async def handle_simulation_command(args: argparse.Namespace) -> None:
         sys.exit(1)
 
 
-__all__ = ["SimulationCLI", "get_simulation_cli", "create_simulation_parser", "handle_simulation_command"]
+__all__ = [
+    "SimulationCLI",
+    "get_simulation_cli",
+    "create_simulation_parser",
+    "handle_simulation_command",
+]

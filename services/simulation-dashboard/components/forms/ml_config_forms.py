@@ -121,7 +121,12 @@ def render_ml_config_form(
         config["random_state"] = random_state
 
         # Algorithm-specific parameters
-        if selected_algorithm in ["Random Forest", "Gradient Boosting", "XGBoost", "LightGBM"]:
+        if selected_algorithm in [
+            "Random Forest",
+            "Gradient Boosting",
+            "XGBoost",
+            "LightGBM",
+        ]:
             n_estimators = st.slider(
                 "Number of Estimators",
                 min_value=10,
@@ -132,7 +137,11 @@ def render_ml_config_form(
             config["n_estimators"] = n_estimators
 
             max_depth = st.slider(
-                "Max Depth", min_value=3, max_value=20, value=config.get("max_depth", 10), key=f"{config_key}_max_depth"
+                "Max Depth",
+                min_value=3,
+                max_value=20,
+                value=config.get("max_depth", 10),
+                key=f"{config_key}_max_depth",
             )
             config["max_depth"] = max_depth
 
@@ -149,14 +158,20 @@ def render_ml_config_form(
             kernel = st.selectbox(
                 "Kernel",
                 options=["linear", "poly", "rbf", "sigmoid"],
-                index=["linear", "poly", "rbf", "sigmoid"].index(config.get("kernel", "rbf")),
+                index=["linear", "poly", "rbf", "sigmoid"].index(
+                    config.get("kernel", "rbf")
+                ),
                 key=f"{config_key}_kernel",
             )
             config["kernel"] = kernel
 
         elif selected_algorithm in ["ARIMA", "SARIMA"]:
             p_param = st.slider(
-                "AR Order (p)", min_value=0, max_value=5, value=config.get("p_param", 1), key=f"{config_key}_p_param"
+                "AR Order (p)",
+                min_value=0,
+                max_value=5,
+                value=config.get("p_param", 1),
+                key=f"{config_key}_p_param",
             )
             config["p_param"] = p_param
 
@@ -170,7 +185,11 @@ def render_ml_config_form(
             config["d_param"] = d_param
 
             q_param = st.slider(
-                "MA Order (q)", min_value=0, max_value=5, value=config.get("q_param", 1), key=f"{config_key}_q_param"
+                "MA Order (q)",
+                min_value=0,
+                max_value=5,
+                value=config.get("q_param", 1),
+                key=f"{config_key}_q_param",
             )
             config["q_param"] = q_param
 
@@ -189,7 +208,11 @@ def render_ml_config_form(
 
         if enable_cross_validation:
             cv_folds = st.slider(
-                "CV Folds", min_value=3, max_value=10, value=config.get("cv_folds", 5), key=f"{config_key}_cv_folds"
+                "CV Folds",
+                min_value=3,
+                max_value=10,
+                value=config.get("cv_folds", 5),
+                key=f"{config_key}_cv_folds",
             )
             config["cv_folds"] = cv_folds
 
@@ -209,19 +232,28 @@ def render_ml_config_form(
         config["enable_early_stopping"] = enable_early_stopping
 
         enable_grid_search = st.checkbox(
-            "Enable Grid Search", value=config.get("enable_grid_search", False), key=f"{config_key}_grid_search"
+            "Enable Grid Search",
+            value=config.get("enable_grid_search", False),
+            key=f"{config_key}_grid_search",
         )
         config["enable_grid_search"] = enable_grid_search
 
         save_model = st.checkbox(
-            "Save Trained Model", value=config.get("save_model", True), key=f"{config_key}_save_model"
+            "Save Trained Model",
+            value=config.get("save_model", True),
+            key=f"{config_key}_save_model",
         )
         config["save_model"] = save_model
 
     # Performance metrics
     st.markdown("#### 📊 Performance Metrics")
 
-    available_metrics = ["Mean Absolute Error", "Mean Squared Error", "Root Mean Squared Error", "R² Score"]
+    available_metrics = [
+        "Mean Absolute Error",
+        "Mean Squared Error",
+        "Root Mean Squared Error",
+        "R² Score",
+    ]
 
     if problem_type == "Classification":
         available_metrics.extend(["Accuracy", "Precision", "Recall", "F1 Score"])
@@ -246,8 +278,12 @@ def render_ml_config_form(
         st.write(f"**Test Size:** {config['test_size']}%")
 
     with summary_col2:
-        st.write(f"**Cross-Validation:** {'Enabled' if config.get('enable_cross_validation', False) else 'Disabled'}")
-        st.write(f"**Feature Selection:** {'Enabled' if config.get('enable_feature_selection', False) else 'Disabled'}")
+        st.write(
+            f"**Cross-Validation:** {'Enabled' if config.get('enable_cross_validation', False) else 'Disabled'}"
+        )
+        st.write(
+            f"**Feature Selection:** {'Enabled' if config.get('enable_feature_selection', False) else 'Disabled'}"
+        )
         st.write(f"**Metrics:** {len(config.get('evaluation_metrics', []))}")
 
     # Save configuration
@@ -259,7 +295,8 @@ def render_ml_config_form(
 
 
 def render_model_training_form(
-    training_key: str = "training_config", title: str = "🎓 Model Training Configuration"
+    training_key: str = "training_config",
+    title: str = "🎓 Model Training Configuration",
 ) -> Dict[str, Any]:
     """Render model training configuration form.
 
@@ -284,16 +321,26 @@ def render_model_training_form(
 
         data_source = st.selectbox(
             "Data Source",
-            options=["Upload File", "Database Connection", "API Endpoint", "Sample Data"],
-            index=["Upload File", "Database Connection", "API Endpoint", "Sample Data"].index(
-                training_config.get("data_source", "Sample Data")
-            ),
+            options=[
+                "Upload File",
+                "Database Connection",
+                "API Endpoint",
+                "Sample Data",
+            ],
+            index=[
+                "Upload File",
+                "Database Connection",
+                "API Endpoint",
+                "Sample Data",
+            ].index(training_config.get("data_source", "Sample Data")),
             key=f"{training_key}_data_source",
         )
         training_config["data_source"] = data_source
 
         if data_source == "Upload File":
-            uploaded_file = st.file_uploader("Upload training data (CSV)", type=["csv"], key=f"{training_key}_upload")
+            uploaded_file = st.file_uploader(
+                "Upload training data (CSV)", type=["csv"], key=f"{training_key}_upload"
+            )
             if uploaded_file:
                 training_config["uploaded_file"] = uploaded_file
 
@@ -338,12 +385,16 @@ def render_model_training_form(
 
     with col3:
         enable_scaling = st.checkbox(
-            "Enable Feature Scaling", value=training_config.get("enable_scaling", True), key=f"{training_key}_scaling"
+            "Enable Feature Scaling",
+            value=training_config.get("enable_scaling", True),
+            key=f"{training_key}_scaling",
         )
         training_config["enable_scaling"] = enable_scaling
 
         handle_missing = st.checkbox(
-            "Handle Missing Values", value=training_config.get("handle_missing", True), key=f"{training_key}_missing"
+            "Handle Missing Values",
+            value=training_config.get("handle_missing", True),
+            key=f"{training_key}_missing",
         )
         training_config["handle_missing"] = handle_missing
 
@@ -356,7 +407,9 @@ def render_model_training_form(
         training_config["encode_categorical"] = encode_categorical
 
         remove_outliers = st.checkbox(
-            "Remove Outliers", value=training_config.get("remove_outliers", False), key=f"{training_key}_outliers"
+            "Remove Outliers",
+            value=training_config.get("remove_outliers", False),
+            key=f"{training_key}_outliers",
         )
         training_config["remove_outliers"] = remove_outliers
 
