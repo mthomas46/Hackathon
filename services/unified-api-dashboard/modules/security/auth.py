@@ -161,7 +161,9 @@ class UserManager:
             raise ValueError(f"Username '{username}' already exists")
 
         user_id = f"user_{secrets.token_hex(8)}"
-        hashed_password = self._hash_password(password) if provider == AuthProvider.LOCAL else None
+        hashed_password = (
+            self._hash_password(password) if provider == AuthProvider.LOCAL else None
+        )
 
         user = User(
             user_id=user_id,
@@ -271,7 +273,11 @@ class AuthenticationManager:
         self.sessions = {}
 
     async def login(
-        self, username: str, password: str, ip_address: str = None, user_agent: str = None
+        self,
+        username: str,
+        password: str,
+        ip_address: str = None,
+        user_agent: str = None,
     ) -> Optional[AuthToken]:
         """Authenticate user and create session."""
         user = await self.user_manager.authenticate_user(username, password)
@@ -319,7 +325,10 @@ class AuthenticationManager:
             payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
 
             # Check if session exists and is active
-            session = next((s for s in self.sessions.values() if s.token == token and s.is_active), None)
+            session = next(
+                (s for s in self.sessions.values() if s.token == token and s.is_active),
+                None,
+            )
             if not session:
                 return None
 
@@ -388,7 +397,9 @@ class AuthorizationManager:
     def __init__(self, user_manager: UserManager):
         self.user_manager = user_manager
 
-    async def check_permission(self, user_id: str, permission: Permission, resource: str = None) -> bool:
+    async def check_permission(
+        self, user_id: str, permission: Permission, resource: str = None
+    ) -> bool:
         """Check if user has specific permission."""
         user = await self.user_manager.get_user(user_id)
         if not user or not user.is_active:
@@ -396,7 +407,9 @@ class AuthorizationManager:
 
         return permission in user.permissions
 
-    async def check_permissions(self, user_id: str, permissions: List[Permission], require_all: bool = True) -> bool:
+    async def check_permissions(
+        self, user_id: str, permissions: List[Permission], require_all: bool = True
+    ) -> bool:
         """Check if user has multiple permissions."""
         user = await self.user_manager.get_user(user_id)
         if not user or not user.is_active:
@@ -435,7 +448,11 @@ class AuthorizationManager:
         }
 
     async def authorize_api_call(
-        self, user_id: str, method: str, path: str, body: Optional[Dict[str, Any]] = None
+        self,
+        user_id: str,
+        method: str,
+        path: str,
+        body: Optional[Dict[str, Any]] = None,
     ) -> Tuple[bool, str]:
         """
         Authorize API call based on method, path, and user permissions.
@@ -480,7 +497,9 @@ class AuthorizationManager:
                 return True, "Authorized"
 
         # Default to read-only access for unknown endpoints
-        has_read_perm = await self.check_permission(user_id, Permission.API_CATALOG_READ)
+        has_read_perm = await self.check_permission(
+            user_id, Permission.API_CATALOG_READ
+        )
         if method == "GET" and has_read_perm:
             return True, "Authorized (read access)"
 

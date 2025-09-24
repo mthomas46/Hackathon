@@ -59,7 +59,10 @@ class OrchestratorIntegration:
                 "steps": [
                     {"service": "secure_analyzer", "action": "scan_vulnerabilities"},
                     {"service": "analysis_service", "action": "assess_risk"},
-                    {"service": "analysis_service", "action": "generate_recommendations"},
+                    {
+                        "service": "analysis_service",
+                        "action": "generate_recommendations",
+                    },
                 ],
                 "output_types": ["pdf", "json", "csv"],
             },
@@ -110,10 +113,14 @@ class OrchestratorIntegration:
         """Discover workflows available through the orchestrator."""
         try:
             # Get registered tools/workflows from orchestrator
-            tools_response = await self.client.get_json(f"{self.orchestrator_url}/tools")
+            tools_response = await self.client.get_json(
+                f"{self.orchestrator_url}/tools"
+            )
 
             # Get LangGraph workflows
-            workflows_response = await self.client.get_json(f"{self.orchestrator_url}/workflows")
+            workflows_response = await self.client.get_json(
+                f"{self.orchestrator_url}/workflows"
+            )
 
             discovered_workflows = {
                 "registered_tools": tools_response.get("tools", []),
@@ -151,10 +158,16 @@ class OrchestratorIntegration:
             }
 
     async def execute_workflow(
-        self, workflow_name: str, parameters: Dict[str, Any], user_id: str = None, output_format: str = "json"
+        self,
+        workflow_name: str,
+        parameters: Dict[str, Any],
+        user_id: str = None,
+        output_format: str = "json",
     ) -> Dict[str, Any]:
         """Execute a workflow through the orchestrator."""
-        execution_id = f"exec_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{workflow_name}"
+        execution_id = (
+            f"exec_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{workflow_name}"
+        )
 
         try:
             # Check if it's a template workflow
@@ -183,16 +196,24 @@ class OrchestratorIntegration:
             }
 
             # Execute workflow
-            response = await self.client.post_json(f"{self.orchestrator_url}/workflows/execute", execution_request)
+            response = await self.client.post_json(
+                f"{self.orchestrator_url}/workflows/execute", execution_request
+            )
 
             # Update execution status
             if response.get("success"):
                 self.active_executions[execution_id]["status"] = "completed"
-                self.active_executions[execution_id]["completed_at"] = datetime.utcnow().isoformat()
-                self.active_executions[execution_id]["results"] = response.get("results", {})
+                self.active_executions[execution_id][
+                    "completed_at"
+                ] = datetime.utcnow().isoformat()
+                self.active_executions[execution_id]["results"] = response.get(
+                    "results", {}
+                )
             else:
                 self.active_executions[execution_id]["status"] = "failed"
-                self.active_executions[execution_id]["error"] = response.get("error", "Unknown error")
+                self.active_executions[execution_id]["error"] = response.get(
+                    "error", "Unknown error"
+                )
 
             # Create execution result
             execution_result = {
@@ -208,7 +229,9 @@ class OrchestratorIntegration:
             }
 
             if not response.get("success"):
-                execution_result["error"] = response.get("error", "Workflow execution failed")
+                execution_result["error"] = response.get(
+                    "error", "Workflow execution failed"
+                )
 
             # Add to history
             self.execution_history.append(execution_result)
@@ -237,7 +260,12 @@ class OrchestratorIntegration:
                 "workflow_execution_error",
                 f"Failed to execute workflow {workflow_name}: {str(e)}",
                 ServiceNames.INTERPRETER,
-                {"execution_id": execution_id, "workflow": workflow_name, "error": str(e), "user_id": user_id},
+                {
+                    "execution_id": execution_id,
+                    "workflow": workflow_name,
+                    "error": str(e),
+                    "user_id": user_id,
+                },
             )
 
             return {
@@ -249,7 +277,12 @@ class OrchestratorIntegration:
             }
 
     async def _execute_template_workflow(
-        self, workflow_name: str, parameters: Dict[str, Any], execution_id: str, user_id: str, output_format: str
+        self,
+        workflow_name: str,
+        parameters: Dict[str, Any],
+        execution_id: str,
+        user_id: str,
+        output_format: str,
     ) -> Dict[str, Any]:
         """Execute a predefined template workflow."""
         template = self.workflow_templates[workflow_name]
@@ -307,7 +340,9 @@ class OrchestratorIntegration:
             results["status"] = "completed"
 
             # Generate summary based on results
-            results["summary"] = await self._generate_workflow_summary(template, results)
+            results["summary"] = await self._generate_workflow_summary(
+                template, results
+            )
 
             return results
 
@@ -351,7 +386,9 @@ class OrchestratorIntegration:
 
         try:
             # Call the service
-            response = await self.client.post_json(f"{service_url}/execute", request_data)
+            response = await self.client.post_json(
+                f"{service_url}/execute", request_data
+            )
 
             return {
                 "success": response.get("success", False),
@@ -362,7 +399,9 @@ class OrchestratorIntegration:
 
         except Exception:
             # For now, create mock results to demonstrate the flow
-            return await self._create_mock_service_result(service_name, action, parameters)
+            return await self._create_mock_service_result(
+                service_name, action, parameters
+            )
 
     async def _create_mock_service_result(
         self, service_name: str, action: str, parameters: Dict[str, Any]
@@ -375,13 +414,20 @@ class OrchestratorIntegration:
                     "success": True,
                     "data": {
                         "analysis_type": "content_analysis",
-                        "metrics": {"readability_score": 0.85, "complexity_score": 0.72, "quality_score": 0.91},
+                        "metrics": {
+                            "readability_score": 0.85,
+                            "complexity_score": 0.72,
+                            "quality_score": 0.91,
+                        },
                         "insights": [
                             "Content is well-structured and readable",
                             "Technical complexity is moderate",
                             "Overall quality is high",
                         ],
-                        "recommendations": ["Consider adding more examples", "Improve technical explanations"],
+                        "recommendations": [
+                            "Consider adding more examples",
+                            "Improve technical explanations",
+                        ],
                     },
                 }
             elif action == "generate_summary":
@@ -403,7 +449,11 @@ class OrchestratorIntegration:
                 "data": {
                     "document_id": "doc_12345",
                     "content": "Sample document content for analysis",
-                    "metadata": {"size": 1024, "type": "text/markdown", "created": datetime.utcnow().isoformat()},
+                    "metadata": {
+                        "size": 1024,
+                        "type": "text/markdown",
+                        "created": datetime.utcnow().isoformat(),
+                    },
                 },
             }
 
@@ -443,9 +493,13 @@ class OrchestratorIntegration:
             },
         }
 
-    async def _generate_workflow_summary(self, template: Dict[str, Any], results: Dict[str, Any]) -> str:
+    async def _generate_workflow_summary(
+        self, template: Dict[str, Any], results: Dict[str, Any]
+    ) -> str:
         """Generate a summary of workflow execution results."""
-        successful_steps = len([s for s in results["steps_executed"] if s["status"] == "completed"])
+        successful_steps = len(
+            [s for s in results["steps_executed"] if s["status"] == "completed"]
+        )
         total_steps = len(results["steps_executed"])
 
         summary = f"""
@@ -473,17 +527,27 @@ Results: The workflow executed successfully and generated comprehensive results.
             if execution["execution_id"] == execution_id:
                 return execution
 
-        return {"execution_id": execution_id, "status": "not_found", "error": "Execution not found"}
+        return {
+            "execution_id": execution_id,
+            "status": "not_found",
+            "error": "Execution not found",
+        }
 
     async def get_execution_metrics(self) -> Dict[str, Any]:
         """Get metrics about workflow executions."""
         total_executions = len(self.execution_history)
-        successful_executions = len([e for e in self.execution_history if e["status"] == "completed"])
+        successful_executions = len(
+            [e for e in self.execution_history if e["status"] == "completed"]
+        )
 
         return {
             "total_executions": total_executions,
             "successful_executions": successful_executions,
-            "success_rate": successful_executions / total_executions if total_executions > 0 else 0.0,
+            "success_rate": (
+                successful_executions / total_executions
+                if total_executions > 0
+                else 0.0
+            ),
             "active_executions": len(self.active_executions),
             "available_workflows": len(self.workflow_templates),
             "orchestrator_connected": self.orchestrator_available,

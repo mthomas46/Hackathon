@@ -131,7 +131,9 @@ class PerformanceProfiler:
             PerformanceMetrics object for tracking
         """
         metrics = PerformanceMetrics(
-            operation_name=operation_name, start_time=datetime.now(timezone.utc), custom_metrics=context
+            operation_name=operation_name,
+            start_time=datetime.now(timezone.utc),
+            custom_metrics=context,
         )
 
         # Collect initial system metrics
@@ -151,7 +153,9 @@ class PerformanceProfiler:
         self._current_metrics = metrics
         return metrics
 
-    def end_operation(self, metrics: Optional[PerformanceMetrics] = None) -> PerformanceMetrics:
+    def end_operation(
+        self, metrics: Optional[PerformanceMetrics] = None
+    ) -> PerformanceMetrics:
         """End profiling an operation.
 
         Args:
@@ -280,13 +284,19 @@ class PerformanceProfiler:
                 "min": min(durations) if durations else 0,
                 "max": max(durations) if durations else 0,
                 "avg": sum(durations) / len(durations) if durations else 0,
-                "slow_operations": len([d for d in durations if d > self._slow_threshold_ms]),
+                "slow_operations": len(
+                    [d for d in durations if d > self._slow_threshold_ms]
+                ),
             },
             "memory_stats": {
                 "min_delta": min(memory_deltas) if memory_deltas else 0,
                 "max_delta": max(memory_deltas) if memory_deltas else 0,
-                "avg_delta": sum(memory_deltas) / len(memory_deltas) if memory_deltas else 0,
-                "memory_issues": len([d for d in memory_deltas if abs(d) > self._memory_threshold_mb]),
+                "avg_delta": (
+                    sum(memory_deltas) / len(memory_deltas) if memory_deltas else 0
+                ),
+                "memory_issues": len(
+                    [d for d in memory_deltas if abs(d) > self._memory_threshold_mb]
+                ),
             },
         }
 
@@ -319,7 +329,9 @@ class AsyncProfiler(PerformanceProfiler):
         finally:
             self.end_operation(metrics)
 
-    async def profile_async_function(self, func: Callable[..., T], *args, **kwargs) -> T:
+    async def profile_async_function(
+        self, func: Callable[..., T], *args, **kwargs
+    ) -> T:
         """Profile an async function execution.
 
         Args:

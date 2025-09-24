@@ -105,9 +105,13 @@ class Prompt(BaseEntity):
         )
         prompt.id = data.get("id")
         if "created_at" in data:
-            prompt.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            prompt.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "updated_at" in data:
-            prompt.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            prompt.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
         return prompt
 
 
@@ -155,7 +159,9 @@ class PromptVersion(BaseEntity):
         )
         version.id = data.get("id")
         if "created_at" in data:
-            version.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            version.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         return version
 
 
@@ -221,13 +227,21 @@ class ABTest(BaseEntity):
         )
         test.id = data.get("id")
         if "start_date" in data:
-            test.start_date = datetime.fromisoformat(data["start_date"].replace("Z", "+00:00"))
+            test.start_date = datetime.fromisoformat(
+                data["start_date"].replace("Z", "+00:00")
+            )
         if "end_date" in data and data["end_date"]:
-            test.end_date = datetime.fromisoformat(data["end_date"].replace("Z", "+00:00"))
+            test.end_date = datetime.fromisoformat(
+                data["end_date"].replace("Z", "+00:00")
+            )
         if "created_at" in data:
-            test.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            test.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "updated_at" in data:
-            test.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            test.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
         return test
 
 
@@ -289,7 +303,9 @@ class PromptUsage(BaseEntity):
         )
         usage.id = data.get("id")
         if "created_at" in data:
-            usage.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            usage.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         return usage
 
 
@@ -335,9 +351,13 @@ class PromptRelationship(BaseEntity):
         )
         relationship.id = data.get("id")
         if "created_at" in data:
-            relationship.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            relationship.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "updated_at" in data:
-            relationship.updated_at = datetime.fromisoformat(data["updated_at"].replace("Z", "+00:00"))
+            relationship.updated_at = datetime.fromisoformat(
+                data["updated_at"].replace("Z", "+00:00")
+            )
         return relationship
 
 
@@ -386,7 +406,9 @@ class ABTestResult(BaseEntity):
         )
         result.id = data.get("id")
         if "recorded_at" in data:
-            result.created_at = datetime.fromisoformat(data["recorded_at"].replace("Z", "+00:00"))
+            result.created_at = datetime.fromisoformat(
+                data["recorded_at"].replace("Z", "+00:00")
+            )
         return result
 
 
@@ -425,7 +447,9 @@ class BulkOperation(BaseEntity):
             "results": self.results,
             "created_by": self.created_by,
             "created_at": self.created_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
         }
 
     @classmethod
@@ -445,7 +469,11 @@ class BulkOperation(BaseEntity):
             id=data.get("id"),
         )
         if "created_at" in data:
-            operation.created_at = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+            operation.created_at = datetime.fromisoformat(
+                data["created_at"].replace("Z", "+00:00")
+            )
         if "completed_at" in data and data["completed_at"]:
-            operation.completed_at = datetime.fromisoformat(data["completed_at"].replace("Z", "+00:00"))
+            operation.completed_at = datetime.fromisoformat(
+                data["completed_at"].replace("Z", "+00:00")
+            )
         return operation

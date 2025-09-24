@@ -11,7 +11,9 @@ import streamlit as st
 
 
 def render_team_builder_form(
-    team_key: str = "team_config", title: str = "👥 Team Builder", max_team_size: int = 15
+    team_key: str = "team_config",
+    title: str = "👥 Team Builder",
+    max_team_size: int = 15,
 ) -> Dict[str, Any]:
     """Render team builder form for configuring project teams.
 
@@ -73,7 +75,9 @@ def render_team_builder_form(
         render_team_analysis(team_config)
 
     else:
-        st.info("👋 No team members added yet. Click 'Add New Team Member' to get started!")
+        st.info(
+            "👋 No team members added yet. Click 'Add New Team Member' to get started!"
+        )
 
     # Quick team templates
     st.markdown("#### 🏗️ Quick Team Templates")
@@ -106,7 +110,9 @@ def render_add_team_member_form(team_key: str, max_team_size: int):
     col1, col2 = st.columns(2)
 
     with col1:
-        name = st.text_input("Full Name *", key=f"{team_key}_new_name", placeholder="e.g., John Doe")
+        name = st.text_input(
+            "Full Name *", key=f"{team_key}_new_name", placeholder="e.g., John Doe"
+        )
 
         role = st.selectbox(
             "Role *",
@@ -136,11 +142,20 @@ def render_add_team_member_form(team_key: str, max_team_size: int):
 
     with col2:
         hourly_rate = st.number_input(
-            "Hourly Rate ($)", min_value=25, max_value=200, value=65, step=5, key=f"{team_key}_new_rate"
+            "Hourly Rate ($)",
+            min_value=25,
+            max_value=200,
+            value=65,
+            step=5,
+            key=f"{team_key}_new_rate",
         )
 
         availability = st.slider(
-            "Availability (%)", min_value=50, max_value=100, value=100, key=f"{team_key}_new_availability"
+            "Availability (%)",
+            min_value=50,
+            max_value=100,
+            value=100,
+            key=f"{team_key}_new_availability",
         )
 
         # Skills selection
@@ -175,7 +190,10 @@ def render_add_team_member_form(team_key: str, max_team_size: int):
         ]
 
         selected_skills = st.multiselect(
-            "Select relevant skills", options=available_skills, key=f"{team_key}_new_skills", max_selections=8
+            "Select relevant skills",
+            options=available_skills,
+            key=f"{team_key}_new_skills",
+            max_selections=8,
         )
 
     # Add member button
@@ -241,8 +259,12 @@ def render_team_member_card(index: int, member: Dict[str, Any], team_key: str):
                 st.session_state[f"{team_key}_editing"] = index
                 st.rerun()
 
-            if st.button("🗑️ Remove", key=f"{team_key}_remove_{index}", type="secondary"):
-                if st.checkbox("Confirm removal", key=f"{team_key}_confirm_remove_{index}"):
+            if st.button(
+                "🗑️ Remove", key=f"{team_key}_remove_{index}", type="secondary"
+            ):
+                if st.checkbox(
+                    "Confirm removal", key=f"{team_key}_confirm_remove_{index}"
+                ):
                     team_config = st.session_state[team_key]
                     team_config["team_members"].pop(index)
                     update_team_statistics(team_config)
@@ -262,7 +284,9 @@ def render_edit_team_member_form(index: int, member: Dict[str, Any], team_key: s
     col1, col2 = st.columns(2)
 
     with col1:
-        new_name = st.text_input("Name", value=member["name"], key=f"{team_key}_edit_name_{index}")
+        new_name = st.text_input(
+            "Name", value=member["name"], key=f"{team_key}_edit_name_{index}"
+        )
 
         new_role = st.selectbox(
             "Role",
@@ -319,7 +343,9 @@ def render_edit_team_member_form(index: int, member: Dict[str, Any], team_key: s
     col_save, col_cancel = st.columns(2)
 
     with col_save:
-        if st.button("💾 Save Changes", key=f"{team_key}_save_edit_{index}", type="primary"):
+        if st.button(
+            "💾 Save Changes", key=f"{team_key}_save_edit_{index}", type="primary"
+        ):
             team_config = st.session_state[team_key]
 
             # Update member
@@ -367,7 +393,9 @@ def render_team_analysis(team_config: Dict[str, Any]):
         st.markdown("**Role Distribution**")
         if len(role_counts) > 0:
             # Create a simple bar chart for roles
-            role_df = pd.DataFrame({"Role": role_counts.index, "Count": role_counts.values})
+            role_df = pd.DataFrame(
+                {"Role": role_counts.index, "Count": role_counts.values}
+            )
             st.bar_chart(role_df.set_index("Role"))
 
     with col2:
@@ -376,7 +404,9 @@ def render_team_analysis(team_config: Dict[str, Any]):
         expertise_counts = pd.Series(expertise_levels).value_counts()
 
         if len(expertise_counts) > 0:
-            expertise_df = pd.DataFrame({"Level": expertise_counts.index, "Count": expertise_counts.values})
+            expertise_df = pd.DataFrame(
+                {"Level": expertise_counts.index, "Count": expertise_counts.values}
+            )
             st.bar_chart(expertise_df.set_index("Level"))
 
     # Team insights
@@ -396,27 +426,50 @@ def render_team_analysis(team_config: Dict[str, Any]):
     ]
     business_roles = ["Product Manager", "Business Analyst", "Scrum Master"]
 
-    technical_count = sum(1 for member in team_members if member["role"] in technical_roles)
-    business_count = sum(1 for member in team_members if member["role"] in business_roles)
+    technical_count = sum(
+        1 for member in team_members if member["role"] in technical_roles
+    )
+    business_count = sum(
+        1 for member in team_members if member["role"] in business_roles
+    )
 
     if technical_count == 0:
-        insights.append({"type": "warning", "message": "⚠️ No technical roles in the team"})
+        insights.append(
+            {"type": "warning", "message": "⚠️ No technical roles in the team"}
+        )
     elif business_count == 0:
-        insights.append({"type": "warning", "message": "⚠️ No business roles in the team"})
+        insights.append(
+            {"type": "warning", "message": "⚠️ No business roles in the team"}
+        )
 
     # Check for cost efficiency
-    avg_hourly_rate = sum(member["hourly_rate"] for member in team_members) / len(team_members)
+    avg_hourly_rate = sum(member["hourly_rate"] for member in team_members) / len(
+        team_members
+    )
     if avg_hourly_rate > 100:
-        insights.append({"type": "info", "message": "💰 High-cost team - consider optimizing for budget"})
+        insights.append(
+            {
+                "type": "info",
+                "message": "💰 High-cost team - consider optimizing for budget",
+            }
+        )
     elif avg_hourly_rate < 50:
-        insights.append({"type": "info", "message": "💰 Cost-effective team composition"})
+        insights.append(
+            {"type": "info", "message": "💰 Cost-effective team composition"}
+        )
 
     # Check for expertise balance
-    expert_count = sum(1 for member in team_members if member["expertise_level"] in ["Expert", "Lead"])
+    expert_count = sum(
+        1 for member in team_members if member["expertise_level"] in ["Expert", "Lead"]
+    )
     if expert_count == 0:
-        insights.append({"type": "warning", "message": "⚠️ No senior expertise in the team"})
+        insights.append(
+            {"type": "warning", "message": "⚠️ No senior expertise in the team"}
+        )
     elif expert_count > len(team_members) / 2:
-        insights.append({"type": "info", "message": "✅ Strong senior leadership presence"})
+        insights.append(
+            {"type": "info", "message": "✅ Strong senior leadership presence"}
+        )
 
     # Display insights
     for insight in insights:
@@ -575,7 +628,9 @@ def apply_team_template(team_key: str, template_name: str):
                 "availability": 100,
                 "skills": member_data["skills"],
                 "monthly_cost": calculate_monthly_cost(member_data["hourly_rate"], 100),
-                "productivity_multiplier": get_productivity_multiplier(member_data["expertise_level"]),
+                "productivity_multiplier": get_productivity_multiplier(
+                    member_data["expertise_level"]
+                ),
                 "added_at": str(pd.Timestamp.now()),
             }
             team_config["team_members"].append(member)
@@ -583,7 +638,9 @@ def apply_team_template(team_key: str, template_name: str):
         # Update team statistics
         update_team_statistics(team_config)
 
-        st.success(f"✅ Applied {template_name.title()} team template with {len(template_members)} members!")
+        st.success(
+            f"✅ Applied {template_name.title()} team template with {len(template_members)} members!"
+        )
 
 
 def calculate_monthly_cost(hourly_rate: float, availability: float) -> float:
@@ -595,7 +652,13 @@ def calculate_monthly_cost(hourly_rate: float, availability: float) -> float:
 
 def get_productivity_multiplier(expertise_level: str) -> float:
     """Get productivity multiplier based on expertise level."""
-    multipliers = {"Junior": 0.7, "Intermediate": 1.0, "Senior": 1.2, "Expert": 1.4, "Lead": 1.6}
+    multipliers = {
+        "Junior": 0.7,
+        "Intermediate": 1.0,
+        "Senior": 1.2,
+        "Expert": 1.4,
+        "Lead": 1.6,
+    }
     return multipliers.get(expertise_level, 1.0)
 
 
@@ -609,7 +672,10 @@ def update_team_statistics(team_config: Dict[str, Any]):
 
     # Calculate average expertise
     if team_members:
-        total_expertise = sum(get_productivity_multiplier(member["expertise_level"]) for member in team_members)
+        total_expertise = sum(
+            get_productivity_multiplier(member["expertise_level"])
+            for member in team_members
+        )
         team_config["average_expertise"] = round(total_expertise / len(team_members), 2)
     else:
         team_config["average_expertise"] = 0

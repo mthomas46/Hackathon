@@ -6,15 +6,15 @@ Handles relationship data queries and graph operations.
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import DocumentRelationship
-from ...core.repository import BaseRepository
+from services.shared.utilities import SqlRepository
 from ...db.queries import execute_query
 
 
-class RelationshipsRepository(BaseRepository[DocumentRelationship]):
+class RelationshipsRepository(SqlRepository[DocumentRelationship]):
     """Repository for relationship data access."""
 
-    def __init__(self):
-        super().__init__("document_relationships")
+    def __init__(self, connection_string: str):
+        super().__init__(DocumentRelationship, connection_string)
 
     def _row_to_entity(self, row: Dict[str, Any]) -> DocumentRelationship:
         """Convert database row to DocumentRelationship entity."""
@@ -43,7 +43,11 @@ class RelationshipsRepository(BaseRepository[DocumentRelationship]):
         }
 
     def get_relationships_for_document(
-        self, document_id: str, relationship_type: Optional[str] = None, direction: str = "both", limit: int = 50
+        self,
+        document_id: str,
+        relationship_type: Optional[str] = None,
+        direction: str = "both",
+        limit: int = 50,
     ) -> List[DocumentRelationship]:
         """Get relationships for a specific document."""
         query_conditions = []
@@ -55,7 +59,9 @@ class RelationshipsRepository(BaseRepository[DocumentRelationship]):
 
         if direction in ["incoming", "both"]:
             if query_conditions:
-                query_conditions[0] = f"({query_conditions[0]} OR target_document_id = ?)"
+                query_conditions[0] = (
+                    f"({query_conditions[0]} OR target_document_id = ?)"
+                )
             else:
                 query_conditions.append("target_document_id = ?")
             params.append(document_id)
@@ -91,7 +97,9 @@ class RelationshipsRepository(BaseRepository[DocumentRelationship]):
 
         return {row["relationship_type"]: row["count"] for row in rows}
 
-    def find_paths(self, start_id: str, end_id: str, max_depth: int = 3) -> List[List[str]]:
+    def find_paths(
+        self, start_id: str, end_id: str, max_depth: int = 3
+    ) -> List[List[str]]:
         """Find paths between two documents."""
         # Simplified path finding - in a full implementation this would use graph algorithms
         paths = []
@@ -108,7 +116,9 @@ class RelationshipsRepository(BaseRepository[DocumentRelationship]):
                 paths.append(path.copy())
             else:
                 # Get outgoing relationships
-                relationships = self.get_relationships_for_document(current_id, direction="outgoing")
+                relationships = self.get_relationships_for_document(
+                    current_id, direction="outgoing"
+                )
                 for rel in relationships:
                     if rel.target_document_id not in path:
                         dfs(rel.target_document_id, target_id, path, depth + 1)
@@ -130,7 +140,9 @@ class RelationshipsRepository(BaseRepository[DocumentRelationship]):
         }
 
         # Basic counts
-        result = execute_query("SELECT COUNT(*) as count FROM document_relationships", fetch_one=True)
+        result = execute_query(
+            "SELECT COUNT(*) as count FROM document_relationships", fetch_one=True
+        )
         stats["total_relationships"] = result["count"] if result else 0
 
         # Unique documents
@@ -161,12 +173,16 @@ class RelationshipsRepository(BaseRepository[DocumentRelationship]):
             """,
                 fetch_one=True,
             )
-            total_connections_count = total_connections["count"] if total_connections else 0
+            total_connections_count = (
+                total_connections["count"] if total_connections else 0
+            )
             stats["avg_degree"] = total_connections_count / stats["unique_documents"]
 
         return stats
 
-    def get_related_documents(self, document_id: str, depth: int = 1) -> List[Dict[str, Any]]:
+    def get_related_documents(
+        self, document_id: str, depth: int = 1
+    ) -> List[Dict[str, Any]]:
         """Get related documents up to specified depth."""
         related = set()
         current_level = {document_id}

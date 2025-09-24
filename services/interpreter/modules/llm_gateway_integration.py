@@ -20,9 +20,13 @@ class LLMGatewayIntegration:
 
     def __init__(self):
         self.clients = ServiceClients()
-        self.llm_gateway_url = get_config_value("LLM_GATEWAY_URL", "http://llm-gateway:5055", section="services")
+        self.llm_gateway_url = get_config_value(
+            "LLM_GATEWAY_URL", "http://llm-gateway:5055", section="services"
+        )
 
-    async def enhance_query_understanding(self, query: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def enhance_query_understanding(
+        self, query: str, context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Use LLM Gateway to enhance query understanding."""
         try:
             enhanced_prompt = f"""
@@ -48,7 +52,9 @@ Provide your analysis in JSON format with keys: intent, entities, categories, fo
                 "temperature": 0.3,
             }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 # Parse LLM response as JSON
@@ -65,14 +71,22 @@ Provide your analysis in JSON format with keys: intent, entities, categories, fo
                     }
                 except json.JSONDecodeError:
                     return {
-                        "enhanced_understanding": {"intent": "unknown", "entities": [], "categories": []},
+                        "enhanced_understanding": {
+                            "intent": "unknown",
+                            "entities": [],
+                            "categories": [],
+                        },
                         "original_query": query,
                         "llm_used": response["data"]["provider"],
                         "error": "Failed to parse LLM response as JSON",
                     }
             else:
                 return {
-                    "enhanced_understanding": {"intent": "unknown", "entities": [], "categories": []},
+                    "enhanced_understanding": {
+                        "intent": "unknown",
+                        "entities": [],
+                        "categories": [],
+                    },
                     "original_query": query,
                     "error": response.get("message", "LLM Gateway request failed"),
                 }
@@ -85,12 +99,18 @@ Provide your analysis in JSON format with keys: intent, entities, categories, fo
                 {"query": query[:100], "error": str(e)},
             )
             return {
-                "enhanced_understanding": {"intent": "unknown", "entities": [], "categories": []},
+                "enhanced_understanding": {
+                    "intent": "unknown",
+                    "entities": [],
+                    "categories": [],
+                },
                 "original_query": query,
                 "error": str(e),
             }
 
-    async def optimize_prompt_for_llm(self, original_prompt: str, task_type: str) -> str:
+    async def optimize_prompt_for_llm(
+        self, original_prompt: str, task_type: str
+    ) -> str:
         """Use LLM Gateway to optimize prompts for better LLM performance."""
         try:
             optimization_prompt = f"""
@@ -108,9 +128,16 @@ Provide an optimized version that:
 Return only the optimized prompt, no explanation.
             """.strip()
 
-            llm_request = {"prompt": optimization_prompt, "provider": "ollama", "max_tokens": 1000, "temperature": 0.7}
+            llm_request = {
+                "prompt": optimization_prompt,
+                "provider": "ollama",
+                "max_tokens": 1000,
+                "temperature": 0.7,
+            }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 return response["data"]["response"].strip()
@@ -126,10 +153,14 @@ Return only the optimized prompt, no explanation.
             )
             return original_prompt
 
-    async def extract_entities_with_llm(self, text: str, entity_types: Optional[List[str]] = None) -> Dict[str, Any]:
+    async def extract_entities_with_llm(
+        self, text: str, entity_types: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """Use LLM Gateway for advanced entity extraction."""
         try:
-            entity_types_str = ", ".join(entity_types) if entity_types else "any relevant entities"
+            entity_types_str = (
+                ", ".join(entity_types) if entity_types else "any relevant entities"
+            )
 
             extraction_prompt = f"""
 Extract {entity_types_str} from the following text. Return the results as a JSON object with entity types as keys and lists of extracted entities as values.
@@ -146,9 +177,16 @@ Example format:
 }}
             """.strip()
 
-            llm_request = {"prompt": extraction_prompt, "provider": "ollama", "max_tokens": 1000, "temperature": 0.2}
+            llm_request = {
+                "prompt": extraction_prompt,
+                "provider": "ollama",
+                "max_tokens": 1000,
+                "temperature": 0.2,
+            }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -183,9 +221,15 @@ Example format:
                 ServiceNames.INTERPRETER,
                 {"text_length": len(text), "error": str(e)},
             )
-            return {"entities": {}, "extraction_method": "llm_enhanced", "error": str(e)}
+            return {
+                "entities": {},
+                "extraction_method": "llm_enhanced",
+                "error": str(e),
+            }
 
-    async def classify_intent_with_llm(self, query: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def classify_intent_with_llm(
+        self, query: str, context: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Use LLM Gateway for advanced intent classification."""
         try:
             context_str = f"\nContext: {context}" if context else ""
@@ -213,9 +257,16 @@ Return a JSON object with:
 - suggested_actions: List of recommended next steps
             """.strip()
 
-            llm_request = {"prompt": classification_prompt, "provider": "ollama", "max_tokens": 800, "temperature": 0.3}
+            llm_request = {
+                "prompt": classification_prompt,
+                "provider": "ollama",
+                "max_tokens": 800,
+                "temperature": 0.3,
+            }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -259,12 +310,18 @@ Return a JSON object with:
                 {"query": query[:100], "error": str(e)},
             )
             return {
-                "classification": {"primary_intent": "unknown", "confidence": 0.0, "reasoning": str(e)},
+                "classification": {
+                    "primary_intent": "unknown",
+                    "confidence": 0.0,
+                    "reasoning": str(e),
+                },
                 "method": "llm_enhanced",
                 "error": str(e),
             }
 
-    async def generate_workflow_suggestions(self, query: str, available_services: List[str]) -> Dict[str, Any]:
+    async def generate_workflow_suggestions(
+        self, query: str, available_services: List[str]
+    ) -> Dict[str, Any]:
         """Use LLM Gateway to generate workflow suggestions based on query and available services."""
         try:
             services_str = ", ".join(available_services)
@@ -291,9 +348,16 @@ Return a JSON object with:
 - alternative_workflows: Array of alternative approaches (if applicable)
             """.strip()
 
-            llm_request = {"prompt": workflow_prompt, "provider": "ollama", "max_tokens": 1200, "temperature": 0.4}
+            llm_request = {
+                "prompt": workflow_prompt,
+                "provider": "ollama",
+                "max_tokens": 1200,
+                "temperature": 0.4,
+            }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -333,7 +397,11 @@ Return a JSON object with:
                 "interpreter_workflow_suggestion_error",
                 f"Workflow suggestion error: {str(e)}",
                 ServiceNames.INTERPRETER,
-                {"query": query[:100], "available_services": available_services, "error": str(e)},
+                {
+                    "query": query[:100],
+                    "available_services": available_services,
+                    "error": str(e),
+                },
             )
             return {
                 "workflow_suggestion": {

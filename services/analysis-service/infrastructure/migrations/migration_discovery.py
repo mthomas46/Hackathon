@@ -70,7 +70,11 @@ class MigrationDiscovery:
         migrations = []
 
         # Try to import migration modules
-        migration_modules = ["migrations", "database.migrations", "infrastructure.migrations"]
+        migration_modules = [
+            "migrations",
+            "database.migrations",
+            "infrastructure.migrations",
+        ]
 
         for module_name in migration_modules:
             try:
@@ -80,7 +84,9 @@ class MigrationDiscovery:
             except ImportError:
                 continue
             except Exception as e:
-                print(f"Warning: Failed to load migrations from module {module_name}: {e}")
+                print(
+                    f"Warning: Failed to load migrations from module {module_name}: {e}"
+                )
 
         return migrations
 
@@ -96,7 +102,11 @@ class MigrationDiscovery:
 
             # Find migration classes
             for name, obj in inspect.getmembers(module):
-                if inspect.isclass(obj) and issubclass(obj, Migration) and obj != Migration:
+                if (
+                    inspect.isclass(obj)
+                    and issubclass(obj, Migration)
+                    and obj != Migration
+                ):
                     try:
                         # Try to instantiate with default parameters
                         migration = self._instantiate_migration(obj, name)
@@ -122,7 +132,12 @@ class MigrationDiscovery:
 
                 from .migration import SchemaMigration
 
-                return SchemaMigration(migration_id=migration_id, name=migration_name, up_sql=up_sql, down_sql=down_sql)
+                return SchemaMigration(
+                    migration_id=migration_id,
+                    name=migration_name,
+                    up_sql=up_sql,
+                    down_sql=down_sql,
+                )
 
         except Exception as e:
             print(f"Warning: Failed to parse SQL migration {file_path}: {e}")
@@ -173,7 +188,9 @@ class MigrationDiscovery:
 
         return migrations
 
-    def _instantiate_migration(self, migration_class: Type[Migration], name: str) -> Optional[Migration]:
+    def _instantiate_migration(
+        self, migration_class: Type[Migration], name: str
+    ) -> Optional[Migration]:
         """Instantiate migration class."""
         try:
             # Try to create with default migration ID
@@ -255,18 +272,29 @@ class MigrationDiscovery:
         """Get migration by ID."""
         return self.discovered_migrations.get(migration_id)
 
-    def filter_migrations_by_type(self, migration_type: MigrationType) -> List[Migration]:
+    def filter_migrations_by_type(
+        self, migration_type: MigrationType
+    ) -> List[Migration]:
         """Filter migrations by type."""
-        return [m for m in self.discovered_migrations.values() if m.migration_type == migration_type]
+        return [
+            m
+            for m in self.discovered_migrations.values()
+            if m.migration_type == migration_type
+        ]
 
-    def filter_migrations_by_version(self, min_version: str, max_version: Optional[str] = None) -> List[Migration]:
+    def filter_migrations_by_version(
+        self, min_version: str, max_version: Optional[str] = None
+    ) -> List[Migration]:
         """Filter migrations by version range."""
         filtered = []
 
         for migration in self.discovered_migrations.values():
             try:
                 if self._compare_versions(migration.version, min_version) >= 0:
-                    if max_version is None or self._compare_versions(migration.version, max_version) <= 0:
+                    if (
+                        max_version is None
+                        or self._compare_versions(migration.version, max_version) <= 0
+                    ):
                         filtered.append(migration)
             except (ValueError, AttributeError):
                 continue
@@ -279,7 +307,11 @@ class MigrationDiscovery:
             "valid": True,
             "errors": [],
             "warnings": [],
-            "summary": {"total_migrations": len(self.discovered_migrations), "by_type": {}, "by_version": {}},
+            "summary": {
+                "total_migrations": len(self.discovered_migrations),
+                "by_type": {},
+                "by_version": {},
+            },
         }
 
         # Count by type
@@ -310,7 +342,10 @@ class MigrationDiscovery:
             for dep in migration.get_required_dependencies():
                 if dep in self.discovered_migrations:
                     dep_migration = self.discovered_migrations[dep]
-                    if migration.migration_id in dep_migration.get_required_dependencies():
+                    if (
+                        migration.migration_id
+                        in dep_migration.get_required_dependencies()
+                    ):
                         validation_result["errors"].append(
                             f"Circular dependency detected between {migration.migration_id} and {dep}"
                         )

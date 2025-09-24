@@ -26,7 +26,9 @@ class TestAdvancedHATEOAS:
         # Mock API response with HATEOAS links
         base_url = "http://localhost:8000/api/v1"
 
-        def generate_hateoas_links(resource_type: str, resource_id: str = None) -> Dict[str, Any]:
+        def generate_hateoas_links(
+            resource_type: str, resource_id: str = None
+        ) -> Dict[str, Any]:
             """Generate HATEOAS links for a resource."""
             links = {"self": {"href": f"{base_url}/{resource_type}"}}
 
@@ -40,22 +42,34 @@ class TestAdvancedHATEOAS:
                         "create": {"href": f"{base_url}/simulations", "method": "POST"},
                         "list": {"href": f"{base_url}/simulations", "method": "GET"},
                         "execute": (
-                            {"href": f"{base_url}/simulations/{resource_id}/execute", "method": "POST"}
+                            {
+                                "href": f"{base_url}/simulations/{resource_id}/execute",
+                                "method": "POST",
+                            }
                             if resource_id
                             else None
                         ),
                         "status": (
-                            {"href": f"{base_url}/simulations/{resource_id}/status", "method": "GET"}
+                            {
+                                "href": f"{base_url}/simulations/{resource_id}/status",
+                                "method": "GET",
+                            }
                             if resource_id
                             else None
                         ),
                         "documents": (
-                            {"href": f"{base_url}/simulations/{resource_id}/documents", "method": "GET"}
+                            {
+                                "href": f"{base_url}/simulations/{resource_id}/documents",
+                                "method": "GET",
+                            }
                             if resource_id
                             else None
                         ),
                         "events": (
-                            {"href": f"{base_url}/simulations/{resource_id}/events", "method": "GET"}
+                            {
+                                "href": f"{base_url}/simulations/{resource_id}/events",
+                                "method": "GET",
+                            }
                             if resource_id
                             else None
                         ),
@@ -65,17 +79,26 @@ class TestAdvancedHATEOAS:
                 links.update(
                     {
                         "download": (
-                            {"href": f"{base_url}/documents/{resource_id}/download", "method": "GET"}
+                            {
+                                "href": f"{base_url}/documents/{resource_id}/download",
+                                "method": "GET",
+                            }
                             if resource_id
                             else None
                         ),
                         "analyze": (
-                            {"href": f"{base_url}/documents/{resource_id}/analyze", "method": "POST"}
+                            {
+                                "href": f"{base_url}/documents/{resource_id}/analyze",
+                                "method": "POST",
+                            }
                             if resource_id
                             else None
                         ),
                         "versions": (
-                            {"href": f"{base_url}/documents/{resource_id}/versions", "method": "GET"}
+                            {
+                                "href": f"{base_url}/documents/{resource_id}/versions",
+                                "method": "GET",
+                            }
                             if resource_id
                             else None
                         ),
@@ -138,9 +161,18 @@ class TestAdvancedHATEOAS:
                     "id": "sim_123",
                     "name": "Test Simulation",
                     "_links": {
-                        "self": {"href": "/api/v1/simulations/sim_123", "method": "GET"},
-                        "execute": {"href": "/api/v1/simulations/sim_123/execute", "method": "POST"},
-                        "status": {"href": "/api/v1/simulations/sim_123/status", "method": "GET"},
+                        "self": {
+                            "href": "/api/v1/simulations/sim_123",
+                            "method": "GET",
+                        },
+                        "execute": {
+                            "href": "/api/v1/simulations/sim_123/execute",
+                            "method": "POST",
+                        },
+                        "status": {
+                            "href": "/api/v1/simulations/sim_123/status",
+                            "method": "GET",
+                        },
                     },
                 }
             ],
@@ -155,10 +187,22 @@ class TestAdvancedHATEOAS:
             "status": "running",
             "_links": {
                 "self": {"href": "/api/v1/simulations/sim_123", "method": "GET"},
-                "execute": {"href": "/api/v1/simulations/sim_123/execute", "method": "POST"},
-                "status": {"href": "/api/v1/simulations/sim_123/status", "method": "GET"},
-                "documents": {"href": "/api/v1/simulations/sim_123/documents", "method": "GET"},
-                "events": {"href": "/api/v1/simulations/sim_123/events", "method": "GET"},
+                "execute": {
+                    "href": "/api/v1/simulations/sim_123/execute",
+                    "method": "POST",
+                },
+                "status": {
+                    "href": "/api/v1/simulations/sim_123/status",
+                    "method": "GET",
+                },
+                "documents": {
+                    "href": "/api/v1/simulations/sim_123/documents",
+                    "method": "GET",
+                },
+                "events": {
+                    "href": "/api/v1/simulations/sim_123/events",
+                    "method": "GET",
+                },
                 "stop": {"href": "/api/v1/simulations/sim_123/stop", "method": "POST"},
             },
         }
@@ -168,8 +212,14 @@ class TestAdvancedHATEOAS:
         # Navigate to documents
         documents_response = {
             "_links": {
-                "self": {"href": "/api/v1/simulations/sim_123/documents", "method": "GET"},
-                "create": {"href": "/api/v1/simulations/sim_123/documents", "method": "POST"},
+                "self": {
+                    "href": "/api/v1/simulations/sim_123/documents",
+                    "method": "GET",
+                },
+                "create": {
+                    "href": "/api/v1/simulations/sim_123/documents",
+                    "method": "POST",
+                },
             },
             "documents": [
                 {
@@ -177,8 +227,14 @@ class TestAdvancedHATEOAS:
                     "type": "requirements_doc",
                     "_links": {
                         "self": {"href": "/api/v1/documents/doc_456", "method": "GET"},
-                        "download": {"href": "/api/v1/documents/doc_456/download", "method": "GET"},
-                        "analyze": {"href": "/api/v1/documents/doc_456/analyze", "method": "POST"},
+                        "download": {
+                            "href": "/api/v1/documents/doc_456/download",
+                            "method": "GET",
+                        },
+                        "analyze": {
+                            "href": "/api/v1/documents/doc_456/analyze",
+                            "method": "POST",
+                        },
                     },
                 }
             ],
@@ -216,8 +272,14 @@ class TestAdvancedHATEOAS:
                 "message": "The requested simulation does not exist",
                 "status_code": 404,
                 "_links": {
-                    "collection": {"href": "/api/v1/simulations", "title": "Back to simulations"},
-                    "help": {"href": "/api/v1/docs/errors", "title": "Error documentation"},
+                    "collection": {
+                        "href": "/api/v1/simulations",
+                        "title": "Back to simulations",
+                    },
+                    "help": {
+                        "href": "/api/v1/docs/errors",
+                        "title": "Error documentation",
+                    },
                     "support": {"href": "/api/v1/support", "title": "Get support"},
                 },
             },
@@ -227,8 +289,14 @@ class TestAdvancedHATEOAS:
                 "status_code": 401,
                 "_links": {
                     "login": {"href": "/api/v1/auth/login", "title": "Login"},
-                    "register": {"href": "/api/v1/auth/register", "title": "Register new account"},
-                    "docs": {"href": "/api/v1/docs/authentication", "title": "Authentication docs"},
+                    "register": {
+                        "href": "/api/v1/auth/register",
+                        "title": "Register new account",
+                    },
+                    "docs": {
+                        "href": "/api/v1/docs/authentication",
+                        "title": "Authentication docs",
+                    },
                 },
             },
             {
@@ -236,9 +304,18 @@ class TestAdvancedHATEOAS:
                 "message": "Invalid simulation configuration",
                 "status_code": 422,
                 "_links": {
-                    "schema": {"href": "/api/v1/schemas/simulation", "title": "Simulation schema"},
-                    "examples": {"href": "/api/v1/examples/simulations", "title": "Valid examples"},
-                    "validate": {"href": "/api/v1/validate/simulation", "title": "Validation endpoint"},
+                    "schema": {
+                        "href": "/api/v1/schemas/simulation",
+                        "title": "Simulation schema",
+                    },
+                    "examples": {
+                        "href": "/api/v1/examples/simulations",
+                        "title": "Valid examples",
+                    },
+                    "validate": {
+                        "href": "/api/v1/validate/simulation",
+                        "title": "Validation endpoint",
+                    },
                 },
             },
         ]
@@ -272,8 +349,18 @@ class TestCLICommandValidation:
             "start": {
                 "description": "Start a new simulation",
                 "args": [
-                    {"name": "--config", "type": "file", "required": True, "help": "Configuration file path"},
-                    {"name": "--name", "type": "string", "required": False, "help": "Simulation name"},
+                    {
+                        "name": "--config",
+                        "type": "file",
+                        "required": True,
+                        "help": "Configuration file path",
+                    },
+                    {
+                        "name": "--name",
+                        "type": "string",
+                        "required": False,
+                        "help": "Simulation name",
+                    },
                 ],
                 "examples": [
                     "simulation start --config config.yaml",
@@ -282,7 +369,14 @@ class TestCLICommandValidation:
             },
             "status": {
                 "description": "Check simulation status",
-                "args": [{"name": "simulation_id", "type": "string", "required": True, "help": "Simulation ID"}],
+                "args": [
+                    {
+                        "name": "simulation_id",
+                        "type": "string",
+                        "required": True,
+                        "help": "Simulation ID",
+                    }
+                ],
                 "examples": ["simulation status sim_123"],
             },
             "list": {
@@ -294,9 +388,18 @@ class TestCLICommandValidation:
                         "required": False,
                         "choices": ["active", "completed", "failed"],
                     },
-                    {"name": "--limit", "type": "int", "required": False, "default": 10},
+                    {
+                        "name": "--limit",
+                        "type": "int",
+                        "required": False,
+                        "default": 10,
+                    },
                 ],
-                "examples": ["simulation list", "simulation list --status active", "simulation list --limit 20"],
+                "examples": [
+                    "simulation list",
+                    "simulation list --status active",
+                    "simulation list --limit 20",
+                ],
             },
         }
 
@@ -313,7 +416,9 @@ class TestCLICommandValidation:
                 assert "required" in arg
                 # Help is optional for some args
                 if arg.get("required", False):
-                    assert "help" in arg, f"Required argument {arg['name']} must have help text"
+                    assert (
+                        "help" in arg
+                    ), f"Required argument {arg['name']} must have help text"
 
                 # Validate argument types
                 valid_types = ["string", "int", "file", "choice", "bool"]
@@ -341,33 +446,47 @@ class TestCLICommandValidation:
             if command == "start":
                 if "config" not in args:
                     validation_result["valid"] = False
-                    validation_result["errors"].append("Missing required argument: --config")
+                    validation_result["errors"].append(
+                        "Missing required argument: --config"
+                    )
 
                 config_path = args.get("config")
                 if config_path and not config_path.endswith((".yaml", ".yml", ".json")):
-                    validation_result["warnings"].append("Config file should have .yaml, .yml, or .json extension")
+                    validation_result["warnings"].append(
+                        "Config file should have .yaml, .yml, or .json extension"
+                    )
 
                 name = args.get("name", "")
                 if len(name) > 100:
-                    validation_result["errors"].append("Simulation name too long (max 100 characters)")
+                    validation_result["errors"].append(
+                        "Simulation name too long (max 100 characters)"
+                    )
 
             elif command == "status":
                 if "simulation_id" not in args:
                     validation_result["valid"] = False
-                    validation_result["errors"].append("Missing required argument: simulation_id")
+                    validation_result["errors"].append(
+                        "Missing required argument: simulation_id"
+                    )
 
                 sim_id = args.get("simulation_id", "")
                 if sim_id and not sim_id.startswith("sim_"):
-                    validation_result["warnings"].append("Simulation ID should start with 'sim_'")
+                    validation_result["warnings"].append(
+                        "Simulation ID should start with 'sim_'"
+                    )
 
             elif command == "list":
                 limit = args.get("limit", 10)
                 if not isinstance(limit, int) or limit < 1 or limit > 100:
-                    validation_result["errors"].append("Limit must be an integer between 1 and 100")
+                    validation_result["errors"].append(
+                        "Limit must be an integer between 1 and 100"
+                    )
 
                 status = args.get("status")
                 if status and status not in ["active", "completed", "failed"]:
-                    validation_result["errors"].append("Status must be one of: active, completed, failed")
+                    validation_result["errors"].append(
+                        "Status must be one of: active, completed, failed"
+                    )
 
             return validation_result
 
@@ -380,7 +499,13 @@ class TestCLICommandValidation:
             ("list", {"limit": 20}, True, [], []),
             # Invalid cases
             ("start", {}, False, ["Missing required argument: --config"], []),
-            ("start", {"config": "config.txt"}, True, [], ["Config file should have .yaml, .yml, or .json extension"]),
+            (
+                "start",
+                {"config": "config.txt"},
+                True,
+                [],
+                ["Config file should have .yaml, .yml, or .json extension"],
+            ),
             (
                 "start",
                 {"config": "config.yaml", "name": "x" * 150},
@@ -388,22 +513,46 @@ class TestCLICommandValidation:
                 ["Simulation name too long (max 100 characters)"],
                 [],
             ),
-            ("list", {"limit": 150}, False, ["Limit must be an integer between 1 and 100"], []),
-            ("list", {"status": "invalid"}, False, ["Status must be one of: active, completed, failed"], []),
+            (
+                "list",
+                {"limit": 150},
+                False,
+                ["Limit must be an integer between 1 and 100"],
+                [],
+            ),
+            (
+                "list",
+                {"status": "invalid"},
+                False,
+                ["Status must be one of: active, completed, failed"],
+                [],
+            ),
         ]
 
-        for command, args, expected_valid, expected_errors, expected_warnings in test_cases:
+        for (
+            command,
+            args,
+            expected_valid,
+            expected_errors,
+            expected_warnings,
+        ) in test_cases:
             result = validate_cli_args(command, args)
 
-            assert result["valid"] == expected_valid, f"Validation failed for {command} with args {args}"
+            assert (
+                result["valid"] == expected_valid
+            ), f"Validation failed for {command} with args {args}"
 
             # Check errors
             for expected_error in expected_errors:
-                assert expected_error in result["errors"], f"Expected error not found: {expected_error}"
+                assert (
+                    expected_error in result["errors"]
+                ), f"Expected error not found: {expected_error}"
 
             # Check warnings
             for expected_warning in expected_warnings:
-                assert expected_warning in result["warnings"], f"Expected warning not found: {expected_warning}"
+                assert (
+                    expected_warning in result["warnings"]
+                ), f"Expected warning not found: {expected_warning}"
 
         print("✅ CLI argument validation tested")
 
@@ -417,15 +566,15 @@ Simulation CLI Tool
 Usage: simulation [COMMAND] [OPTIONS]
 
 Commands:
-  start    Start a new simulation
-  status   Check simulation status
-  list     List all simulations
-  stop     Stop a running simulation
-  logs     View simulation logs
+    start    Start a new simulation
+    status   Check simulation status
+    list     List all simulations
+    stop     Stop a running simulation
+    logs     View simulation logs
 
 Options:
-  -h, --help     Show this help message
-  -v, --version  Show version information
+    -h, --help     Show this help message
+    -v, --version  Show version information
 
 Use 'simulation [COMMAND] --help' for more information about a command.
             """,
@@ -435,15 +584,15 @@ Start a new simulation
 Usage: simulation start [OPTIONS]
 
 Options:
-  --config FILE       Configuration file path (required)
-  --name TEXT         Simulation name
-  --team-size INT     Team size (default: 5)
-  --duration INT      Duration in weeks (default: 8)
-  -h, --help          Show this help message
+    --config FILE       Configuration file path (required)
+    --name TEXT         Simulation name
+    --team-size INT     Team size (default: 5)
+    --duration INT      Duration in weeks (default: 8)
+    -h, --help          Show this help message
 
 Examples:
-  simulation start --config config.yaml
-  simulation start --config config.yaml --name "My Simulation"
+    simulation start --config config.yaml
+    simulation start --config config.yaml --name "My Simulation"
             """,
         }
 
@@ -488,31 +637,48 @@ class TestWebSocketStreaming:
             ]
 
             for message in messages:
-                connection_events.append({"event": "message_received", "data": message, "timestamp": time.time()})
+                connection_events.append(
+                    {
+                        "event": "message_received",
+                        "data": message,
+                        "timestamp": time.time(),
+                    }
+                )
                 await asyncio.sleep(0.01)  # Simulate processing time
 
                 # Send response
                 if message["type"] == "ping":
                     connection_events.append(
-                        {"event": "message_sent", "data": {"type": "pong"}, "timestamp": time.time()}
+                        {
+                            "event": "message_sent",
+                            "data": {"type": "pong"},
+                            "timestamp": time.time(),
+                        }
                     )
                 elif message["type"] == "subscribe":
                     connection_events.append(
                         {
                             "event": "message_sent",
-                            "data": {"type": "subscribed", "channels": message["channels"]},
+                            "data": {
+                                "type": "subscribed",
+                                "channels": message["channels"],
+                            },
                             "timestamp": time.time(),
                         }
                     )
 
             # Connection closed
-            connection_events.append({"event": "disconnected", "timestamp": time.time()})
+            connection_events.append(
+                {"event": "disconnected", "timestamp": time.time()}
+            )
 
         # Run the mock WebSocket handler
         await mock_websocket_handler()
 
         # Validate connection lifecycle
-        assert len(connection_events) >= 6  # connected + 3 messages received + 2 messages sent + disconnected
+        assert (
+            len(connection_events) >= 6
+        )  # connected + 3 messages received + 2 messages sent + disconnected
 
         # Check event sequence
         event_types = [e["event"] for e in connection_events]
@@ -522,7 +688,9 @@ class TestWebSocketStreaming:
         assert event_types.count("message_sent") >= 2
 
         # Validate message handling
-        messages_received = [e for e in connection_events if e["event"] == "message_received"]
+        messages_received = [
+            e for e in connection_events if e["event"] == "message_received"
+        ]
         assert len(messages_received) == 3
 
         messages_sent = [e for e in connection_events if e["event"] == "message_sent"]
@@ -555,7 +723,9 @@ class TestWebSocketStreaming:
             if message_type == "subscribe":
                 if "channels" not in message:
                     validation_result["valid"] = False
-                    validation_result["errors"].append("Subscribe message must have 'channels' field")
+                    validation_result["errors"].append(
+                        "Subscribe message must have 'channels' field"
+                    )
 
                 if not isinstance(message.get("channels", []), list):
                     validation_result["valid"] = False
@@ -564,46 +734,72 @@ class TestWebSocketStreaming:
             elif message_type == "unsubscribe":
                 if "channels" not in message:
                     validation_result["valid"] = False
-                    validation_result["errors"].append("Unsubscribe message must have 'channels' field")
+                    validation_result["errors"].append(
+                        "Unsubscribe message must have 'channels' field"
+                    )
 
             elif message_type == "simulation_command":
                 required_fields = ["command", "simulation_id"]
                 for field in required_fields:
                     if field not in message:
                         validation_result["valid"] = False
-                        validation_result["errors"].append(f"Missing required field: {field}")
+                        validation_result["errors"].append(
+                            f"Missing required field: {field}"
+                        )
 
             return validation_result
 
         # Test various message types
         test_messages = [
             # Valid messages
-            ({"type": "subscribe", "channels": ["progress", "events"]}, True, "subscribe"),
+            (
+                {"type": "subscribe", "channels": ["progress", "events"]},
+                True,
+                "subscribe",
+            ),
             ({"type": "unsubscribe", "channels": ["progress"]}, True, "unsubscribe"),
             ({"type": "ping"}, True, "ping"),
             (
-                {"type": "simulation_command", "command": "start", "simulation_id": "sim_123"},
+                {
+                    "type": "simulation_command",
+                    "command": "start",
+                    "simulation_id": "sim_123",
+                },
                 True,
                 "simulation_command",
             ),
             # Invalid messages
             ({}, False, None),  # Missing type
             ({"type": "subscribe"}, False, "subscribe"),  # Missing channels
-            ({"type": "subscribe", "channels": "progress"}, False, "subscribe"),  # Wrong channels type
-            ({"type": "simulation_command", "command": "start"}, False, "simulation_command"),  # Missing simulation_id
+            (
+                {"type": "subscribe", "channels": "progress"},
+                False,
+                "subscribe",
+            ),  # Wrong channels type
+            (
+                {"type": "simulation_command", "command": "start"},
+                False,
+                "simulation_command",
+            ),  # Missing simulation_id
             ("not an object", False, None),  # Wrong type
         ]
 
         for message, expected_valid, expected_type in test_messages:
             result = validate_websocket_message(message)
 
-            assert result["valid"] == expected_valid, f"Validation failed for message: {message}"
+            assert (
+                result["valid"] == expected_valid
+            ), f"Validation failed for message: {message}"
 
             if expected_type:
-                assert result["message_type"] == expected_type, f"Wrong message type for: {message}"
+                assert (
+                    result["message_type"] == expected_type
+                ), f"Wrong message type for: {message}"
 
             if not expected_valid:
-                assert len(result["errors"]) > 0, f"No errors reported for invalid message: {message}"
+                assert (
+                    len(result["errors"]) > 0
+                ), f"No errors reported for invalid message: {message}"
 
         print("✅ WebSocket message validation tested")
 
@@ -633,9 +829,21 @@ class TestWebSocketStreaming:
 
         # Broadcast multiple messages
         messages = [
-            {"type": "simulation_progress", "simulation_id": "sim_123", "progress": 25.0},
-            {"type": "simulation_event", "simulation_id": "sim_123", "event": "phase_completed"},
-            {"type": "simulation_status", "simulation_id": "sim_123", "status": "running"},
+            {
+                "type": "simulation_progress",
+                "simulation_id": "sim_123",
+                "progress": 25.0,
+            },
+            {
+                "type": "simulation_event",
+                "simulation_id": "sim_123",
+                "event": "phase_completed",
+            },
+            {
+                "type": "simulation_status",
+                "simulation_id": "sim_123",
+                "status": "running",
+            },
         ]
 
         for message in messages:
@@ -656,7 +864,9 @@ class TestWebSocketStreaming:
         total_messages_sent = len(clients) * len(messages)
         messages_per_second = total_messages_sent / total_time
 
-        assert messages_per_second > 100, f"Broadcasting rate too low: {messages_per_second:.1f} msg/s"
+        assert (
+            messages_per_second > 100
+        ), f"Broadcasting rate too low: {messages_per_second:.1f} msg/s"
 
         print("✅ WebSocket broadcasting efficiency validated")
 
@@ -668,9 +878,17 @@ class TestAPIEnhancementFeatures:
         """Test API versioning support and compatibility."""
         # Mock API versioning system
         api_versions = {
-            "v1": {"endpoints": ["/api/v1/simulations", "/api/v1/health"], "deprecated": False, "sunset_date": None},
+            "v1": {
+                "endpoints": ["/api/v1/simulations", "/api/v1/health"],
+                "deprecated": False,
+                "sunset_date": None,
+            },
             "v2": {
-                "endpoints": ["/api/v2/simulations", "/api/v2/health", "/api/v2/analytics"],
+                "endpoints": [
+                    "/api/v2/simulations",
+                    "/api/v2/health",
+                    "/api/v2/analytics",
+                ],
                 "deprecated": False,
                 "sunset_date": None,
             },
@@ -689,12 +907,16 @@ class TestAPIEnhancementFeatures:
         assert "v1" in supported_versions  # Backward compatibility
 
         # Check deprecated versions
-        deprecated_versions = [v for v, config in api_versions.items() if config["deprecated"]]
+        deprecated_versions = [
+            v for v, config in api_versions.items() if config["deprecated"]
+        ]
 
         if deprecated_versions:
             for version in deprecated_versions:
                 config = api_versions[version]
-                assert config["sunset_date"] is not None, f"Deprecated version {version} missing sunset date"
+                assert (
+                    config["sunset_date"] is not None
+                ), f"Deprecated version {version} missing sunset date"
 
         # Validate endpoint consistency across versions
         base_endpoints = ["/health"]  # Endpoints that should exist in all versions
@@ -727,17 +949,29 @@ class TestAPIEnhancementFeatures:
 
             # Count recent requests (simplified)
             recent_requests = len(
-                [r for r in request_log if r["user_type"] == user_type and time.time() - r["timestamp"] < 60]
+                [
+                    r
+                    for r in request_log
+                    if r["user_type"] == user_type and time.time() - r["timestamp"] < 60
+                ]
             )  # Last minute
 
             allowed = recent_requests < limits["requests_per_minute"]
 
             if allowed:
-                request_log.append({"user_type": user_type, "endpoint": endpoint, "timestamp": time.time()})
+                request_log.append(
+                    {
+                        "user_type": user_type,
+                        "endpoint": endpoint,
+                        "timestamp": time.time(),
+                    }
+                )
 
             return {
                 "allowed": allowed,
-                "remaining_requests": max(0, limits["requests_per_minute"] - recent_requests - 1),
+                "remaining_requests": max(
+                    0, limits["requests_per_minute"] - recent_requests - 1
+                ),
                 "reset_time": int(time.time()) + 60,
             }
 
@@ -824,7 +1058,12 @@ class TestAPIEnhancementFeatures:
 @pytest.fixture
 def mock_websocket_server():
     """Create a mock WebSocket server for testing."""
-    return {"host": "localhost", "port": 8080, "connected_clients": [], "message_history": []}
+    return {
+        "host": "localhost",
+        "port": 8080,
+        "connected_clients": [],
+        "message_history": [],
+    }
 
 
 @pytest.fixture
@@ -845,7 +1084,11 @@ def api_response_builder():
     """Create a mock API response builder for testing."""
 
     def build_response(data=None, status_code=200, headers=None):
-        response = {"status_code": status_code, "headers": headers or {}, "body": data or {}}
+        response = {
+            "status_code": status_code,
+            "headers": headers or {},
+            "body": data or {},
+        }
 
         # Add HATEOAS links if data is present
         if isinstance(data, dict) and data:

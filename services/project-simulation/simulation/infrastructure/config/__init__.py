@@ -16,4 +16,10 @@ def is_development() -> bool:
     return config.service.environment.lower() == "development"
 
 
-__all__ = ["ConfigManager", "get_config", "is_development", "EnvironmentConfig", "ConfigValidator"]
+__all__ = [
+    "ConfigManager",
+    "get_config",
+    "is_development",
+    "EnvironmentConfig",
+    "ConfigValidator",
+]

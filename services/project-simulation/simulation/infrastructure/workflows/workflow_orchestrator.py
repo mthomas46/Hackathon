@@ -10,7 +10,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 try:
     from integrations.orchestration.orchestration import WorkflowOrchestrator
 except (ImportError, AttributeError):
@@ -47,13 +49,19 @@ class SimulationWorkflowOrchestrator:
         self.analysis_client = get_analysis_service_client()
         self.llm_client = get_llm_gateway_client()
 
-    async def execute_phase_workflow(self, workflow_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_phase_workflow(
+        self, workflow_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute workflow for a simulation phase."""
         start_time = datetime.now()
         phase_name = workflow_config.get("phase", "unknown")
 
         try:
-            self.logger.info("Executing phase workflow", phase=phase_name, workflow_type="phase_execution")
+            self.logger.info(
+                "Executing phase workflow",
+                phase=phase_name,
+                workflow_type="phase_execution",
+            )
 
             # Execute workflow through orchestrator service
             workflow_data = {
@@ -61,8 +69,16 @@ class SimulationWorkflowOrchestrator:
                 "type": "simulation_phase",
                 "config": workflow_config,
                 "steps": [
-                    {"name": "validate_phase", "type": "validation", "config": {"phase": phase_name}},
-                    {"name": "execute_phase_logic", "type": "execution", "config": workflow_config},
+                    {
+                        "name": "validate_phase",
+                        "type": "validation",
+                        "config": {"phase": phase_name},
+                    },
+                    {
+                        "name": "execute_phase_logic",
+                        "type": "execution",
+                        "config": workflow_config,
+                    },
                     {
                         "name": "validate_results",
                         "type": "validation",
@@ -72,9 +88,13 @@ class SimulationWorkflowOrchestrator:
             }
 
             if self.orchestrator_client:
-                workflow_id = await self.orchestrator_client.create_workflow(workflow_data)
+                workflow_id = await self.orchestrator_client.create_workflow(
+                    workflow_data
+                )
                 if workflow_id:
-                    result = await self.orchestrator_client.execute_workflow(workflow_id)
+                    result = await self.orchestrator_client.execute_workflow(
+                        workflow_id
+                    )
                     execution_time = (datetime.now() - start_time).total_seconds()
 
                     return {
@@ -96,7 +116,9 @@ class SimulationWorkflowOrchestrator:
             }
 
         except Exception as e:
-            self.logger.error("Phase workflow execution failed", error=str(e), phase=phase_name)
+            self.logger.error(
+                "Phase workflow execution failed", error=str(e), phase=phase_name
+            )
             return {
                 "success": False,
                 "execution_time": (datetime.now() - start_time).total_seconds(),
@@ -104,7 +126,9 @@ class SimulationWorkflowOrchestrator:
                 "phase": phase_name,
             }
 
-    async def run_analysis_workflow(self, analysis_config: Dict[str, Any]) -> Dict[str, Any]:
+    async def run_analysis_workflow(
+        self, analysis_config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Run analysis workflow on simulation results."""
         start_time = datetime.now()
         simulation_id = analysis_config.get("simulation_id", "unknown")
@@ -118,7 +142,9 @@ class SimulationWorkflowOrchestrator:
 
             # Run analysis through analysis service
             if self.analysis_client and analysis_config.get("documents"):
-                analysis_result = await self.analysis_client.analyze_documents(analysis_config["documents"])
+                analysis_result = await self.analysis_client.analyze_documents(
+                    analysis_config["documents"]
+                )
 
                 # Generate insights
                 insights_result = await self.analysis_client.generate_insights(
@@ -166,7 +192,9 @@ class SimulationWorkflowOrchestrator:
             }
 
         except Exception as e:
-            self.logger.error("Analysis workflow failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                "Analysis workflow failed", error=str(e), simulation_id=simulation_id
+            )
             return {
                 "success": False,
                 "execution_time": (datetime.now() - start_time).total_seconds(),
@@ -174,7 +202,9 @@ class SimulationWorkflowOrchestrator:
                 "simulation_id": simulation_id,
             }
 
-    async def _analyze_document_patterns(self, documents: List[Dict[str, Any]], simulation_id: str) -> Dict[str, Any]:
+    async def _analyze_document_patterns(
+        self, documents: List[Dict[str, Any]], simulation_id: str
+    ) -> Dict[str, Any]:
         """Analyze patterns in documents for insights and trends."""
         try:
             # Extract document types and content
@@ -213,7 +243,9 @@ class SimulationWorkflowOrchestrator:
             }
 
         except Exception as e:
-            self.logger.error(f"Pattern analysis failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                f"Pattern analysis failed", error=str(e), simulation_id=simulation_id
+            )
             return {"error": str(e), "patterns": []}
 
     async def _analyze_document_consistency(
@@ -240,7 +272,9 @@ class SimulationWorkflowOrchestrator:
                     content_references[ref] = content_references.get(ref, 0) + 1
 
             # Identify potential duplicate references
-            duplicate_refs = [ref for ref, count in content_references.items() if count > 2]
+            duplicate_refs = [
+                ref for ref, count in content_references.items() if count > 2
+            ]
 
             return {
                 "consistency_score": max(0, 100 - len(consistency_issues) * 10),
@@ -259,7 +293,11 @@ class SimulationWorkflowOrchestrator:
             }
 
         except Exception as e:
-            self.logger.error(f"Consistency analysis failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                f"Consistency analysis failed",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             return {"error": str(e), "consistency_score": 0, "issues": []}
 
     async def orchestrate_document_generation_workflow(
@@ -300,7 +338,9 @@ class SimulationWorkflowOrchestrator:
 
             # Step 3: Store documents in doc_store
             stored_docs = []
-            all_docs = project_docs.get("documents_created", []) + user_stories.get("documents_created", [])
+            all_docs = project_docs.get("documents_created", []) + user_stories.get(
+                "documents_created", []
+            )
 
             for doc in all_docs:
                 doc_id = await self.doc_store_client.store_document(
@@ -379,13 +419,17 @@ class SimulationWorkflowOrchestrator:
                 "error": str(e),
             }
 
-    async def orchestrate_team_dynamics_workflow(self, simulation_id: str, team_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def orchestrate_team_dynamics_workflow(
+        self, simulation_id: str, team_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Orchestrate team dynamics analysis workflow."""
         start_time = datetime.now()
 
         try:
             self.logger.info(
-                "Starting team dynamics workflow", simulation_id=simulation_id, workflow_type="team_dynamics"
+                "Starting team dynamics workflow",
+                simulation_id=simulation_id,
+                workflow_type="team_dynamics",
             )
 
             # Generate team activities
@@ -393,7 +437,11 @@ class SimulationWorkflowOrchestrator:
                 {
                     "project_name": team_data.get("project_name", "Unknown Project"),
                     "team_members": team_data.get("members", []),
-                    "activity_types": ["code_commit", "meeting_notes", "design_decision"],
+                    "activity_types": [
+                        "code_commit",
+                        "meeting_notes",
+                        "design_decision",
+                    ],
                     "time_range_days": 30,
                     "activity_count": 20,
                 }
@@ -461,13 +509,17 @@ class SimulationWorkflowOrchestrator:
                 "error": str(e),
             }
 
-    async def orchestrate_full_simulation_workflow(self, simulation_id: str, config: Dict[str, Any]) -> Dict[str, Any]:
+    async def orchestrate_full_simulation_workflow(
+        self, simulation_id: str, config: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Orchestrate complete simulation workflow with all phases."""
         start_time = datetime.now()
 
         try:
             self.logger.info(
-                "Starting full simulation workflow", simulation_id=simulation_id, workflow_type="full_simulation"
+                "Starting full simulation workflow",
+                simulation_id=simulation_id,
+                workflow_type="full_simulation",
             )
 
             workflow_results = []
@@ -490,7 +542,9 @@ class SimulationWorkflowOrchestrator:
             if config.get("include_timeline_events", True):
                 timeline_result = await self.mock_data_client.generate_timeline_events(
                     {
-                        "project_name": config.get("project_config", {}).get("name", "Unknown"),
+                        "project_name": config.get("project_config", {}).get(
+                            "name", "Unknown"
+                        ),
                         "timeline_phases": config.get("timeline_phases", []),
                         "include_past_events": True,
                         "include_future_events": False,
@@ -501,13 +555,19 @@ class SimulationWorkflowOrchestrator:
                         "success": timeline_result.get("success", False),
                         "workflow_type": "timeline_events",
                         "execution_time_seconds": 0.5,  # Mock execution time
-                        "events_generated": len(timeline_result.get("documents_created", [])),
+                        "events_generated": len(
+                            timeline_result.get("documents_created", [])
+                        ),
                     }
                 )
 
             # Calculate overall results
-            successful_workflows = sum(1 for r in workflow_results if r.get("success", False))
-            total_execution_time = sum(r.get("execution_time_seconds", 0) for r in workflow_results)
+            successful_workflows = sum(
+                1 for r in workflow_results if r.get("success", False)
+            )
+            total_execution_time = sum(
+                r.get("execution_time_seconds", 0) for r in workflow_results
+            )
 
             result = {
                 "success": successful_workflows == len(workflow_results),
@@ -517,7 +577,11 @@ class SimulationWorkflowOrchestrator:
                 "workflows_succeeded": successful_workflows,
                 "total_sub_execution_time": total_execution_time,
                 "workflow_results": workflow_results,
-                "overall_efficiency": successful_workflows / len(workflow_results) if workflow_results else 0,
+                "overall_efficiency": (
+                    successful_workflows / len(workflow_results)
+                    if workflow_results
+                    else 0
+                ),
             }
 
             self.logger.info(
@@ -554,8 +618,13 @@ class SimulationWorkflowOrchestrator:
 
         for line in lines:
             line = line.strip()
-            if any(keyword in line.lower() for keyword in ["recommend", "suggest", "should", "consider"]):
-                if len(line) > 20 and not line.startswith("   "):  # Filter out sub-points
+            if any(
+                keyword in line.lower()
+                for keyword in ["recommend", "suggest", "should", "consider"]
+            ):
+                if len(line) > 20 and not line.startswith(
+                    "   "
+                ):  # Filter out sub-points
                     recommendations.append(line)
 
         return recommendations[:5]  # Limit to top 5 recommendations
@@ -584,15 +653,19 @@ class EcosystemWorkflowCoordinator:
             workflow_type = workflow_config.get("type", "full_simulation")
 
             if workflow_type == "document_generation":
-                result = await self.orchestrator.orchestrate_document_generation_workflow(
-                    simulation_id, workflow_config.get("project_config", {})
+                result = (
+                    await self.orchestrator.orchestrate_document_generation_workflow(
+                        simulation_id, workflow_config.get("project_config", {})
+                    )
                 )
             elif workflow_type == "team_dynamics":
                 result = await self.orchestrator.orchestrate_team_dynamics_workflow(
                     simulation_id, workflow_config.get("team_config", {})
                 )
             elif workflow_type == "full_simulation":
-                result = await self.orchestrator.orchestrate_full_simulation_workflow(simulation_id, workflow_config)
+                result = await self.orchestrator.orchestrate_full_simulation_workflow(
+                    simulation_id, workflow_config
+                )
             else:
                 raise ValueError(f"Unknown workflow type: {workflow_type}")
 
@@ -625,4 +698,8 @@ def get_workflow_coordinator() -> EcosystemWorkflowCoordinator:
     return _workflow_coordinator
 
 
-__all__ = ["SimulationWorkflowOrchestrator", "EcosystemWorkflowCoordinator", "get_workflow_coordinator"]
+__all__ = [
+    "SimulationWorkflowOrchestrator",
+    "EcosystemWorkflowCoordinator",
+    "get_workflow_coordinator",
+]

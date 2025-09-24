@@ -4,7 +4,6 @@ This module contains comprehensive tests for Hypermedia as the Engine of Applica
 implementation. Tests cover API discoverability, link relations, and hypermedia-driven navigation.
 """
 
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -24,7 +23,14 @@ class TestAPIDiscovery:
         links = data["_links"]
 
         # Essential API links
-        essential_links = ["self", "health", "simulations", "config", "documentation", "openapi"]
+        essential_links = [
+            "self",
+            "health",
+            "simulations",
+            "config",
+            "documentation",
+            "openapi",
+        ]
 
         for link in essential_links:
             assert link in links, f"Missing essential link: {link}"
@@ -184,7 +190,15 @@ class TestLinkRelationSemantics:
 
         # Custom relations should have descriptions or be self-documenting
         for relation, link_data in links.items():
-            if relation not in ["self", "collection", "item", "first", "last", "next", "prev"]:
+            if relation not in [
+                "self",
+                "collection",
+                "item",
+                "first",
+                "last",
+                "next",
+                "prev",
+            ]:
                 # Custom relations should have titles or descriptions
                 assert "title" in link_data or "description" in link_data
 
@@ -211,7 +225,10 @@ class TestLinkRelationSemantics:
                         collection_href = collection_links["self"]["href"]
                         item_collection_href = item_links["collection"]["href"]
                         # Normalize URLs for comparison
-                        assert collection_href.split("?")[0] == item_collection_href.split("?")[0]
+                        assert (
+                            collection_href.split("?")[0]
+                            == item_collection_href.split("?")[0]
+                        )
 
 
 class TestHATEOASWorkflows:
@@ -275,7 +292,9 @@ class TestHATEOASWorkflows:
         # Should have links to help recover from error
         recovery_options = ["collection", "help", "documentation", "support"]
         has_recovery_link = any(option in recovery_links for option in recovery_options)
-        assert has_recovery_link, "Error response should provide recovery navigation links"
+        assert (
+            has_recovery_link
+        ), "Error response should provide recovery navigation links"
 
 
 class TestHATEOASContentNegotiation:
@@ -347,7 +366,9 @@ class TestHATEOASDocumentation:
         for link_name, link_data in links.items():
             # Should have title or description
             has_description = "title" in link_data or "description" in link_data
-            assert has_description, f"Link {link_name} should have descriptive information"
+            assert (
+                has_description
+            ), f"Link {link_name} should have descriptive information"
 
     def test_api_provides_link_relation_documentation(self, test_client):
         """Test that API provides documentation for link relations."""

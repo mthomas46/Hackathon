@@ -32,12 +32,16 @@ class AnalysisHandlers:
             for target_id in req.targets:
                 if target_id.startswith("doc:"):
                     # Fetch from doc_store
-                    doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{target_id}")
+                    doc_data = await service_client.get_json(
+                        f"{service_client.doc_store_url()}/documents/{target_id}"
+                    )
                     if doc_data:
                         docs.append(Document(**doc_data))
                 elif target_id.startswith("api:"):
                     # Fetch from swagger-agent or similar
-                    api_data = await service_client.get_json(f"{service_client.source_agent_url()}/specs/{target_id}")
+                    api_data = await service_client.get_json(
+                        f"{service_client.source_agent_url()}/specs/{target_id}"
+                    )
                     if api_data:
                         apis.append(api_data)
 
@@ -54,7 +58,9 @@ class AnalysisHandlers:
             if aioredis and findings:
                 from services.shared.core.config.config import get_config_value
 
-                redis_host = get_config_value("REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST")
+                redis_host = get_config_value(
+                    "REDIS_HOST", "redis", section="redis", env_key="REDIS_HOST"
+                )
                 client = aioredis.from_url(f"redis://{redis_host}")
                 try:
                     await client.publish(
@@ -78,7 +84,10 @@ class AnalysisHandlers:
                     sev: len([f for f in findings if f.severity == sev])
                     for sev in ["critical", "high", "medium", "low"]
                 },
-                type_counts={typ: len([f for f in findings if f.type == typ]) for typ in set(f.type for f in findings)},
+                type_counts={
+                    typ: len([f for f in findings if f.type == typ])
+                    for typ in set(f.type for f in findings)
+                },
             )
 
         except Exception as e:
@@ -107,7 +116,9 @@ class AnalysisHandlers:
             from services.shared.utilities.error_handling import ServiceException
 
             raise ServiceException(
-                "Analysis failed", error_code="ANALYSIS_FAILED", details={"error": str(e), "request": req.model_dump()}
+                "Analysis failed",
+                error_code="ANALYSIS_FAILED",
+                details={"error": str(e), "request": req.model_dump()},
             )
 
     @staticmethod
@@ -119,12 +130,22 @@ class AnalysisHandlers:
         if limit < 1 or limit > 1000:
             from fastapi import HTTPException
 
-            raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
+            raise HTTPException(
+                status_code=400, detail="Limit must be between 1 and 1000"
+            )
 
-        if severity is not None and severity not in ["low", "medium", "high", "critical"]:
+        if severity is not None and severity not in [
+            "low",
+            "medium",
+            "high",
+            "critical",
+        ]:
             from fastapi import HTTPException
 
-            raise HTTPException(status_code=400, detail="Severity must be one of: low, medium, high, critical")
+            raise HTTPException(
+                status_code=400,
+                detail="Severity must be one of: low, medium, high, critical",
+            )
 
         if finding_type_filter is not None and finding_type_filter not in [
             "drift",
@@ -135,7 +156,8 @@ class AnalysisHandlers:
             from fastapi import HTTPException
 
             raise HTTPException(
-                status_code=400, detail="Finding type filter must be one of: drift, missing_doc, inconsistency, quality"
+                status_code=400,
+                detail="Finding type filter must be one of: drift, missing_doc, inconsistency, quality",
             )
 
         try:
@@ -148,8 +170,14 @@ class AnalysisHandlers:
                     title="Documentation Drift Detected",
                     description="README and API docs are out of sync",
                     severity="medium",
-                    source_refs=[{"id": "readme:main", "type": "document"}, {"id": "api:docs", "type": "document"}],
-                    evidence=["Content overlap below threshold", "Endpoint descriptions differ"],
+                    source_refs=[
+                        {"id": "readme:main", "type": "document"},
+                        {"id": "api:docs", "type": "document"},
+                    ],
+                    evidence=[
+                        "Content overlap below threshold",
+                        "Endpoint descriptions differ",
+                    ],
                     suggestion="Review and synchronize documentation",
                     score=70,
                     rationale="Documentation drift can lead to confusion and maintenance issues",
@@ -161,7 +189,10 @@ class AnalysisHandlers:
                     description="POST /orders endpoint is not documented",
                     severity="high",
                     source_refs=[{"id": "POST /orders", "type": "endpoint"}],
-                    evidence=["Endpoint exists in API spec", "No corresponding documentation found"],
+                    evidence=[
+                        "Endpoint exists in API spec",
+                        "No corresponding documentation found",
+                    ],
                     suggestion="Add documentation for this endpoint",
                     score=90,
                     rationale="Undocumented endpoints create usability and maintenance issues",
@@ -183,7 +214,10 @@ class AnalysisHandlers:
                     sev: len([f for f in findings if f.severity == sev])
                     for sev in ["critical", "high", "medium", "low"]
                 },
-                type_counts={typ: len([f for f in findings if f.type == typ]) for typ in set(f.type for f in findings)},
+                type_counts={
+                    typ: len([f for f in findings if f.type == typ])
+                    for typ in set(f.type for f in findings)
+                },
             )
 
         except Exception as e:
@@ -192,11 +226,17 @@ class AnalysisHandlers:
             raise ServiceException(
                 "Failed to retrieve findings",
                 error_code="FINDINGS_RETRIEVAL_FAILED",
-                details={"error": str(e), "limit": limit, "type_filter": finding_type_filter},
+                details={
+                    "error": str(e),
+                    "limit": limit,
+                    "type_filter": finding_type_filter,
+                },
             )
 
     @staticmethod
-    async def handle_semantic_similarity_analysis(req: SemanticSimilarityRequest) -> SemanticSimilarityResponse:
+    async def handle_semantic_similarity_analysis(
+        req: SemanticSimilarityRequest,
+    ) -> SemanticSimilarityResponse:
         """Analyze semantic similarity between documents."""
         try:
             # Fetch documents from doc store
@@ -205,7 +245,9 @@ class AnalysisHandlers:
 
             for doc_id in req.document_ids:
                 try:
-                    doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{doc_id}")
+                    doc_data = await service_client.get_json(
+                        f"{service_client.doc_store_url()}/documents/{doc_id}"
+                    )
                     if doc_data:
                         documents.append(Document(**doc_data))
                 except Exception as e:
@@ -228,7 +270,9 @@ class AnalysisHandlers:
 
             # Perform semantic similarity analysis
             analysis_result = await analyze_semantic_similarity(
-                documents=documents, similarity_threshold=req.similarity_threshold, analysis_scope=req.analysis_scope
+                documents=documents,
+                similarity_threshold=req.similarity_threshold,
+                analysis_scope=req.analysis_scope,
             )
 
             if "error" in analysis_result:
@@ -332,18 +376,29 @@ class AnalysisHandlers:
         }
 
     @staticmethod
-    async def handle_sentiment_analysis(req: SentimentAnalysisRequest) -> SentimentAnalysisResponse:
+    async def handle_sentiment_analysis(
+        req: SentimentAnalysisRequest,
+    ) -> SentimentAnalysisResponse:
         """Analyze sentiment and clarity of a document."""
         try:
             # Fetch document from doc store
             service_client = get_analysis_service_client()
 
-            doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{req.document_id}")
+            doc_data = await service_client.get_json(
+                f"{service_client.doc_store_url()}/documents/{req.document_id}"
+            )
             if not doc_data:
                 return SentimentAnalysisResponse(
                     document_id=req.document_id,
-                    sentiment_analysis={"sentiment": "neutral", "confidence": 0.0, "error": "Document not found"},
-                    readability_metrics={"readability_score": 0.5, "clarity_score": 0.5},
+                    sentiment_analysis={
+                        "sentiment": "neutral",
+                        "confidence": 0.0,
+                        "error": "Document not found",
+                    },
+                    readability_metrics={
+                        "readability_score": 0.5,
+                        "clarity_score": 0.5,
+                    },
                     tone_analysis={},
                     quality_score=0.0,
                     processing_time=0.0,
@@ -352,14 +407,23 @@ class AnalysisHandlers:
 
             # Perform sentiment analysis
             analysis_result = await analyze_document_sentiment(
-                document=doc_data, use_transformer=req.use_transformer, include_tone_analysis=req.include_tone_analysis
+                document=doc_data,
+                use_transformer=req.use_transformer,
+                include_tone_analysis=req.include_tone_analysis,
             )
 
             if "error" in analysis_result:
                 return SentimentAnalysisResponse(
                     document_id=req.document_id,
-                    sentiment_analysis={"sentiment": "neutral", "confidence": 0.0, "error": analysis_result["message"]},
-                    readability_metrics={"readability_score": 0.5, "clarity_score": 0.5},
+                    sentiment_analysis={
+                        "sentiment": "neutral",
+                        "confidence": 0.0,
+                        "error": analysis_result["message"],
+                    },
+                    readability_metrics={
+                        "readability_score": 0.5,
+                        "clarity_score": 0.5,
+                    },
                     tone_analysis={},
                     quality_score=0.0,
                     processing_time=analysis_result.get("processing_time", 0.0),
@@ -380,7 +444,11 @@ class AnalysisHandlers:
             logger.error(f"Sentiment analysis failed: {e}")
             return SentimentAnalysisResponse(
                 document_id=req.document_id,
-                sentiment_analysis={"sentiment": "neutral", "confidence": 0.0, "error": str(e)},
+                sentiment_analysis={
+                    "sentiment": "neutral",
+                    "confidence": 0.0,
+                    "error": str(e),
+                },
                 readability_metrics={"readability_score": 0.5, "clarity_score": 0.5},
                 tone_analysis={},
                 quality_score=0.0,
@@ -395,12 +463,19 @@ class AnalysisHandlers:
             # Fetch document from doc store
             service_client = get_analysis_service_client()
 
-            doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{req.document_id}")
+            doc_data = await service_client.get_json(
+                f"{service_client.doc_store_url()}/documents/{req.document_id}"
+            )
             if not doc_data:
                 return ToneAnalysisResponse(
                     document_id=req.document_id,
                     primary_tone="neutral",
-                    tone_scores={"positive": 0, "negative": 0, "professional": 0, "technical": 0},
+                    tone_scores={
+                        "positive": 0,
+                        "negative": 0,
+                        "professional": 0,
+                        "technical": 0,
+                    },
                     tone_indicators={
                         "positive_words": 0,
                         "negative_words": 0,
@@ -421,7 +496,12 @@ class AnalysisHandlers:
                 return ToneAnalysisResponse(
                     document_id=req.document_id,
                     primary_tone="neutral",
-                    tone_scores={"positive": 0, "negative": 0, "professional": 0, "technical": 0},
+                    tone_scores={
+                        "positive": 0,
+                        "negative": 0,
+                        "professional": 0,
+                        "technical": 0,
+                    },
                     tone_indicators={
                         "positive_words": 0,
                         "negative_words": 0,
@@ -484,7 +564,12 @@ class AnalysisHandlers:
             return ToneAnalysisResponse(
                 document_id=req.document_id,
                 primary_tone="neutral",
-                tone_scores={"positive": 0, "negative": 0, "professional": 0, "technical": 0},
+                tone_scores={
+                    "positive": 0,
+                    "negative": 0,
+                    "professional": 0,
+                    "technical": 0,
+                },
                 tone_indicators={
                     "positive_words": 0,
                     "negative_words": 0,
@@ -497,13 +582,17 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_content_quality_assessment(req: ContentQualityRequest) -> ContentQualityResponse:
+    async def handle_content_quality_assessment(
+        req: ContentQualityRequest,
+    ) -> ContentQualityResponse:
         """Assess content quality of a document."""
         try:
             # Fetch document from doc store
             service_client = get_analysis_service_client()
 
-            doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{req.document_id}")
+            doc_data = await service_client.get_json(
+                f"{service_client.doc_store_url()}/documents/{req.document_id}"
+            )
             if not doc_data:
                 return ContentQualityResponse(
                     document_id=req.document_id,
@@ -542,10 +631,16 @@ class AnalysisHandlers:
             return ContentQualityResponse(
                 document_id=req.document_id,
                 quality_assessment=quality_result["quality_assessment"],
-                detailed_metrics=quality_result["detailed_metrics"] if req.include_detailed_metrics else None,
+                detailed_metrics=(
+                    quality_result["detailed_metrics"]
+                    if req.include_detailed_metrics
+                    else None
+                ),
                 recommendations=quality_result.get("recommendations", []),
                 processing_time=quality_result.get("processing_time", 0.0),
-                analysis_timestamp=quality_result.get("analysis_timestamp", time.time()),
+                analysis_timestamp=quality_result.get(
+                    "analysis_timestamp", time.time()
+                ),
             )
 
         except Exception as e:
@@ -626,12 +721,16 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_portfolio_trend_analysis(req: PortfolioTrendAnalysisRequest) -> PortfolioTrendAnalysisResponse:
+    async def handle_portfolio_trend_analysis(
+        req: PortfolioTrendAnalysisRequest,
+    ) -> PortfolioTrendAnalysisResponse:
         """Analyze trends across a portfolio of documents."""
         try:
             # Perform portfolio trend analysis
             portfolio_result = await analyze_portfolio_trends(
-                analysis_results=req.analysis_results, group_by=req.group_by, prediction_days=req.prediction_days
+                analysis_results=req.analysis_results,
+                group_by=req.group_by,
+                prediction_days=req.prediction_days,
             )
 
             if "error" in portfolio_result:
@@ -651,7 +750,9 @@ class AnalysisHandlers:
                 portfolio_summary=portfolio_result.get("portfolio_summary", {}),
                 document_trends=portfolio_result.get("document_trends", []),
                 processing_time=portfolio_result.get("processing_time", 0.0),
-                analysis_timestamp=portfolio_result.get("analysis_timestamp", time.time()),
+                analysis_timestamp=portfolio_result.get(
+                    "analysis_timestamp", time.time()
+                ),
             )
 
         except Exception as e:
@@ -669,12 +770,16 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_risk_assessment(req: RiskAssessmentRequest) -> RiskAssessmentResponse:
+    async def handle_risk_assessment(
+        req: RiskAssessmentRequest,
+    ) -> RiskAssessmentResponse:
         """Assess risk factors for a document."""
         try:
             # Perform risk assessment
             risk_result = await assess_document_risk(
-                document_id=req.document_id, document_data=req.document_data, analysis_history=req.analysis_history
+                document_id=req.document_id,
+                document_data=req.document_data,
+                analysis_history=req.analysis_history,
             )
 
             if "error" in risk_result:
@@ -694,7 +799,9 @@ class AnalysisHandlers:
                 risk_factors=risk_result.get("risk_factors", {}),
                 risk_drivers=risk_result.get("risk_drivers", []),
                 recommendations=risk_result.get("recommendations", []),
-                assessment_timestamp=risk_result.get("assessment_timestamp", time.time()),
+                assessment_timestamp=risk_result.get(
+                    "assessment_timestamp", time.time()
+                ),
                 processing_time=risk_result.get("processing_time", 0.0),
             )
 
@@ -711,11 +818,15 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_portfolio_risk_assessment(req: PortfolioRiskAssessmentRequest) -> PortfolioRiskAssessmentResponse:
+    async def handle_portfolio_risk_assessment(
+        req: PortfolioRiskAssessmentRequest,
+    ) -> PortfolioRiskAssessmentResponse:
         """Assess risks across a portfolio of documents."""
         try:
             # Perform portfolio risk assessment
-            portfolio_result = await assess_portfolio_risks(documents=req.documents, group_by=req.group_by)
+            portfolio_result = await assess_portfolio_risks(
+                documents=req.documents, group_by=req.group_by
+            )
 
             if "error" in portfolio_result:
                 return PortfolioRiskAssessmentResponse(
@@ -736,7 +847,9 @@ class AnalysisHandlers:
                 document_assessments=portfolio_result.get("document_assessments", []),
                 high_risk_documents=portfolio_result.get("high_risk_documents", []),
                 processing_time=portfolio_result.get("processing_time", 0.0),
-                assessment_timestamp=portfolio_result.get("assessment_timestamp", time.time()),
+                assessment_timestamp=portfolio_result.get(
+                    "assessment_timestamp", time.time()
+                ),
             )
 
         except Exception as e:
@@ -755,12 +868,16 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_maintenance_forecast(req: MaintenanceForecastRequest) -> MaintenanceForecastResponse:
+    async def handle_maintenance_forecast(
+        req: MaintenanceForecastRequest,
+    ) -> MaintenanceForecastResponse:
         """Forecast maintenance needs for a document."""
         try:
             # Perform maintenance forecasting
             forecast_result = await forecast_document_maintenance(
-                document_id=req.document_id, document_data=req.document_data, analysis_history=req.analysis_history
+                document_id=req.document_id,
+                document_data=req.document_data,
+                analysis_history=req.analysis_history,
             )
 
             if "error" in forecast_result:
@@ -769,7 +886,9 @@ class AnalysisHandlers:
                     forecast_data={
                         "overall_forecast": {
                             "predicted_days": 90,
-                            "predicted_date": (datetime.now() + timedelta(days=90)).isoformat(),
+                            "predicted_date": (
+                                datetime.now() + timedelta(days=90)
+                            ).isoformat(),
                             "urgency_score": 0.5,
                             "priority_level": "medium",
                             "confidence": 0.5,
@@ -778,7 +897,9 @@ class AnalysisHandlers:
                         "urgent_factors": [],
                         "maintenance_schedule": {},
                     },
-                    recommendations=["Maintenance forecasting failed - using default schedule"],
+                    recommendations=[
+                        "Maintenance forecasting failed - using default schedule"
+                    ],
                     processing_time=forecast_result.get("processing_time", 0.0),
                     forecast_timestamp=time.time(),
                 )
@@ -788,17 +909,23 @@ class AnalysisHandlers:
                 forecast_data=forecast_result.get("forecast_data", {}),
                 recommendations=forecast_result.get("recommendations", []),
                 processing_time=forecast_result.get("processing_time", 0.0),
-                forecast_timestamp=forecast_result.get("forecast_timestamp", time.time()),
+                forecast_timestamp=forecast_result.get(
+                    "forecast_timestamp", time.time()
+                ),
             )
 
         except Exception as e:
-            logger.error(f"Maintenance forecasting failed for document {req.document_id}: {e}")
+            logger.error(
+                f"Maintenance forecasting failed for document {req.document_id}: {e}"
+            )
             return MaintenanceForecastResponse(
                 document_id=req.document_id,
                 forecast_data={
                     "overall_forecast": {
                         "predicted_days": 90,
-                        "predicted_date": (datetime.now() + timedelta(days=90)).isoformat(),
+                        "predicted_date": (
+                            datetime.now() + timedelta(days=90)
+                        ).isoformat(),
                         "urgency_score": 0.5,
                         "priority_level": "medium",
                         "confidence": 0.5,
@@ -819,7 +946,9 @@ class AnalysisHandlers:
         """Forecast maintenance needs across a portfolio of documents."""
         try:
             # Perform portfolio maintenance forecasting
-            portfolio_result = await forecast_portfolio_maintenance(documents=req.documents, group_by=req.group_by)
+            portfolio_result = await forecast_portfolio_maintenance(
+                documents=req.documents, group_by=req.group_by
+            )
 
             if "error" in portfolio_result:
                 return PortfolioMaintenanceForecastResponse(
@@ -827,7 +956,9 @@ class AnalysisHandlers:
                         "total_documents": len(req.documents),
                         "forecasted_documents": 0,
                         "average_urgency": 0.5,
-                        "message": portfolio_result.get("message", "Forecasting failed"),
+                        "message": portfolio_result.get(
+                            "message", "Forecasting failed"
+                        ),
                     },
                     maintenance_schedule=[],
                     document_forecasts=[],
@@ -840,7 +971,9 @@ class AnalysisHandlers:
                 maintenance_schedule=portfolio_result.get("maintenance_schedule", []),
                 document_forecasts=portfolio_result.get("document_forecasts", []),
                 processing_time=portfolio_result.get("processing_time", 0.0),
-                forecast_timestamp=portfolio_result.get("forecast_timestamp", time.time()),
+                forecast_timestamp=portfolio_result.get(
+                    "forecast_timestamp", time.time()
+                ),
             )
 
         except Exception as e:
@@ -895,7 +1028,9 @@ class AnalysisHandlers:
 
             return QualityDegradationDetectionResponse(
                 document_id=req.document_id,
-                degradation_detected=detection_result.get("degradation_detected", False),
+                degradation_detected=detection_result.get(
+                    "degradation_detected", False
+                ),
                 severity_assessment=detection_result.get("severity_assessment", {}),
                 trend_analysis=detection_result.get("trend_analysis", {}),
                 volatility_analysis=detection_result.get("volatility_analysis", {}),
@@ -907,11 +1042,15 @@ class AnalysisHandlers:
                 alert_threshold=req.alert_threshold,
                 alerts=detection_result.get("alerts", []),
                 processing_time=detection_result.get("processing_time", 0.0),
-                detection_timestamp=detection_result.get("detection_timestamp", time.time()),
+                detection_timestamp=detection_result.get(
+                    "detection_timestamp", time.time()
+                ),
             )
 
         except Exception as e:
-            logger.error(f"Quality degradation detection failed for document {req.document_id}: {e}")
+            logger.error(
+                f"Quality degradation detection failed for document {req.document_id}: {e}"
+            )
             return QualityDegradationDetectionResponse(
                 document_id=req.document_id,
                 degradation_detected=False,
@@ -948,7 +1087,9 @@ class AnalysisHandlers:
                         "total_documents": len(req.documents),
                         "analyzed_documents": 0,
                         "degradation_detected": 0,
-                        "message": monitoring_result.get("message", "Monitoring failed"),
+                        "message": monitoring_result.get(
+                            "message", "Monitoring failed"
+                        ),
                     },
                     degradation_results=[],
                     alerts_summary=[],
@@ -961,7 +1102,9 @@ class AnalysisHandlers:
                 degradation_results=monitoring_result.get("degradation_results", []),
                 alerts_summary=monitoring_result.get("alerts_summary", []),
                 processing_time=monitoring_result.get("processing_time", 0.0),
-                monitoring_timestamp=monitoring_result.get("monitoring_timestamp", time.time()),
+                monitoring_timestamp=monitoring_result.get(
+                    "monitoring_timestamp", time.time()
+                ),
             )
 
         except Exception as e:
@@ -980,7 +1123,9 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_change_impact_analysis(req: ChangeImpactAnalysisRequest) -> ChangeImpactAnalysisResponse:
+    async def handle_change_impact_analysis(
+        req: ChangeImpactAnalysisRequest,
+    ) -> ChangeImpactAnalysisResponse:
         """Analyze the impact of changes to a document."""
         try:
             # Perform change impact analysis
@@ -1005,7 +1150,9 @@ class AnalysisHandlers:
                         "document_impacts": {},
                     },
                     related_documents_analysis={},
-                    recommendations=["Change impact analysis failed - using default analysis"],
+                    recommendations=[
+                        "Change impact analysis failed - using default analysis"
+                    ],
                     processing_time=impact_result.get("processing_time", 0.0),
                     analysis_timestamp=time.time(),
                 )
@@ -1015,20 +1162,28 @@ class AnalysisHandlers:
                 change_description=impact_result.get("change_description", {}),
                 document_features=impact_result.get("document_features", {}),
                 impact_analysis=impact_result.get("impact_analysis", {}),
-                related_documents_analysis=impact_result.get("related_documents_analysis", {}),
+                related_documents_analysis=impact_result.get(
+                    "related_documents_analysis", {}
+                ),
                 recommendations=impact_result.get("recommendations", []),
                 processing_time=impact_result.get("processing_time", 0.0),
                 analysis_timestamp=impact_result.get("analysis_timestamp", time.time()),
             )
 
         except Exception as e:
-            logger.error(f"Change impact analysis failed for document {req.document_id}: {e}")
+            logger.error(
+                f"Change impact analysis failed for document {req.document_id}: {e}"
+            )
             return ChangeImpactAnalysisResponse(
                 document_id=req.document_id,
                 change_description=req.change_description,
                 document_features={},
                 impact_analysis={
-                    "overall_impact": {"overall_impact_score": 0.0, "impact_level": "error", "message": str(e)},
+                    "overall_impact": {
+                        "overall_impact_score": 0.0,
+                        "impact_level": "error",
+                        "message": str(e),
+                    },
                     "document_impacts": {},
                 },
                 related_documents_analysis={},
@@ -1065,7 +1220,9 @@ class AnalysisHandlers:
                 portfolio_summary=portfolio_result.get("portfolio_summary", {}),
                 change_impacts=portfolio_result.get("change_impacts", []),
                 processing_time=portfolio_result.get("processing_time", 0.0),
-                analysis_timestamp=portfolio_result.get("analysis_timestamp", time.time()),
+                analysis_timestamp=portfolio_result.get(
+                    "analysis_timestamp", time.time()
+                ),
             )
 
         except Exception as e:
@@ -1083,13 +1240,18 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_automated_remediation(req: AutomatedRemediationRequest) -> AutomatedRemediationResponse:
+    async def handle_automated_remediation(
+        req: AutomatedRemediationRequest,
+    ) -> AutomatedRemediationResponse:
         """Handle automated remediation requests."""
         try:
             if req.preview_only:
                 # Return preview instead of actual remediation
                 preview_result = await preview_remediation(
-                    content=req.content, issues=req.issues, doc_type=req.doc_type, metadata=req.metadata
+                    content=req.content,
+                    issues=req.issues,
+                    doc_type=req.doc_type,
+                    metadata=req.metadata,
                 )
 
                 if "error" in preview_result:
@@ -1102,11 +1264,16 @@ class AnalysisHandlers:
                                 "original_length": len(req.content),
                                 "final_length": len(req.content),
                                 "changes_made": 0,
-                                "processing_time": preview_result.get("processing_time", 0.0),
+                                "processing_time": preview_result.get(
+                                    "processing_time", 0.0
+                                ),
                                 "safety_status": "preview_only",
                             },
                             "applied_fixes": [],
-                            "safety_assessment": {"safe": True, "warnings": ["Preview mode - no changes applied"]},
+                            "safety_assessment": {
+                                "safe": True,
+                                "warnings": ["Preview mode - no changes applied"],
+                            },
                             "quality_improvements": {},
                             "recommendations": preview_result.get("proposed_fixes", []),
                         },
@@ -1125,17 +1292,24 @@ class AnalysisHandlers:
                             "original_length": len(req.content),
                             "final_length": len(req.content),
                             "changes_made": 0,
-                            "processing_time": preview_result.get("estimated_processing_time", 0.0),
+                            "processing_time": preview_result.get(
+                                "estimated_processing_time", 0.0
+                            ),
                             "safety_status": "preview_only",
                         },
                         "applied_fixes": [],
-                        "safety_assessment": {"safe": True, "warnings": ["Preview mode - no changes applied"]},
+                        "safety_assessment": {
+                            "safe": True,
+                            "warnings": ["Preview mode - no changes applied"],
+                        },
                         "quality_improvements": {},
                         "recommendations": preview_result.get("proposed_fixes", []),
                     },
                     changes_applied=0,
                     safety_status="preview_only",
-                    processing_time=preview_result.get("estimated_processing_time", 0.0),
+                    processing_time=preview_result.get(
+                        "estimated_processing_time", 0.0
+                    ),
                     remediation_timestamp=time.time(),
                 )
 
@@ -1162,9 +1336,14 @@ class AnalysisHandlers:
                             "safety_status": "error",
                         },
                         "applied_fixes": [],
-                        "safety_assessment": {"safe": False, "error": result.get("message", "Unknown error")},
+                        "safety_assessment": {
+                            "safe": False,
+                            "error": result.get("message", "Unknown error"),
+                        },
                         "quality_improvements": {},
-                        "recommendations": ["Remediation failed - review error details"],
+                        "recommendations": [
+                            "Remediation failed - review error details"
+                        ],
                     },
                     changes_applied=0,
                     safety_status="error",
@@ -1209,17 +1388,24 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_remediation_preview(req: RemediationPreviewRequest) -> RemediationPreviewResponse:
+    async def handle_remediation_preview(
+        req: RemediationPreviewRequest,
+    ) -> RemediationPreviewResponse:
         """Handle remediation preview requests."""
         try:
             result = await preview_remediation(
-                content=req.content, issues=req.issues, doc_type=req.doc_type, metadata=req.metadata
+                content=req.content,
+                issues=req.issues,
+                doc_type=req.doc_type,
+                metadata=req.metadata,
             )
 
             if "error" in result:
                 return RemediationPreviewResponse(
                     preview_available=False,
-                    proposed_fixes=[f"Preview failed: {result.get('message', 'Unknown error')}"],
+                    proposed_fixes=[
+                        f"Preview failed: {result.get('message', 'Unknown error')}"
+                    ],
                     fix_count=0,
                     estimated_processing_time=result.get("processing_time", 0.0),
                     preview_timestamp=time.time(),
@@ -1308,7 +1494,9 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_workflow_status(req: WorkflowStatusRequest) -> WorkflowStatusResponse:
+    async def handle_workflow_status(
+        req: WorkflowStatusRequest,
+    ) -> WorkflowStatusResponse:
         """Handle workflow status check requests."""
         try:
             # Import the workflow trigger instance
@@ -1332,7 +1520,9 @@ class AnalysisHandlers:
             return WorkflowStatusResponse(
                 workflow_id=req.workflow_id,
                 status=workflow_record.get("status", "unknown"),
-                priority=workflow_record.get("event_context", {}).get("priority", "medium"),
+                priority=workflow_record.get("event_context", {}).get(
+                    "priority", "medium"
+                ),
                 created_at=workflow_record.get("created_at", 0.0),
                 processed_at=workflow_record.get("processed_at"),
                 completed_at=workflow_record.get("completed_at"),
@@ -1398,19 +1588,26 @@ class AnalysisHandlers:
             # In a real implementation, this would integrate with webhook providers
             return WebhookConfigResponse(
                 configured=True,
-                enabled_events=req.enabled_events or ["pull_request", "push", "release", "documentation_update"],
+                enabled_events=req.enabled_events
+                or ["pull_request", "push", "release", "documentation_update"],
                 webhook_url="/webhooks/workflow",  # Placeholder URL
             )
 
         except Exception as e:
             logger.error(f"Webhook configuration failed: {e}")
-            return WebhookConfigResponse(configured=False, enabled_events=[], webhook_url=None)
+            return WebhookConfigResponse(
+                configured=False, enabled_events=[], webhook_url=None
+            )
 
     @staticmethod
-    async def handle_cross_repository_analysis(req: CrossRepositoryAnalysisRequest) -> CrossRepositoryAnalysisResponse:
+    async def handle_cross_repository_analysis(
+        req: CrossRepositoryAnalysisRequest,
+    ) -> CrossRepositoryAnalysisResponse:
         """Handle cross-repository analysis requests."""
         try:
-            result = await analyze_repositories(repositories=req.repositories, analysis_types=req.analysis_types)
+            result = await analyze_repositories(
+                repositories=req.repositories, analysis_types=req.analysis_types
+            )
 
             if "error" in result:
                 return CrossRepositoryAnalysisResponse(
@@ -1456,20 +1653,29 @@ class AnalysisHandlers:
                 dependency_analysis={},
                 overall_score=0.0,
                 recommendations=[
-                    {"type": "error", "priority": "high", "title": "Analysis Failed", "description": str(e)}
+                    {
+                        "type": "error",
+                        "priority": "high",
+                        "title": "Analysis Failed",
+                        "description": str(e),
+                    }
                 ],
                 processing_time=0.0,
                 analysis_timestamp=time.time(),
             )
 
     @staticmethod
-    async def handle_repository_connectivity(req: RepositoryConnectivityRequest) -> RepositoryConnectivityResponse:
+    async def handle_repository_connectivity(
+        req: RepositoryConnectivityRequest,
+    ) -> RepositoryConnectivityResponse:
         """Handle repository connectivity analysis requests."""
         try:
             # Import the cross repository analyzer
             from .cross_repository_analyzer import cross_repository_analyzer
 
-            result = await cross_repository_analyzer.analyze_repository_connectivity(req.repositories)
+            result = await cross_repository_analyzer.analyze_repository_connectivity(
+                req.repositories
+            )
 
             if "error" in result:
                 return RepositoryConnectivityResponse(
@@ -1510,9 +1716,13 @@ class AnalysisHandlers:
             # Import the cross repository analyzer
             from .cross_repository_analyzer import cross_repository_analyzer
 
-            success = cross_repository_analyzer.configure_repository_connector(req.connector_type, req.config)
+            success = cross_repository_analyzer.configure_repository_connector(
+                req.connector_type, req.config
+            )
 
-            connector_info = cross_repository_analyzer.repository_connectors.get(req.connector_type, {})
+            connector_info = cross_repository_analyzer.repository_connectors.get(
+                req.connector_type, {}
+            )
 
             return RepositoryConnectorConfigResponse(
                 connector_type=req.connector_type,
@@ -1524,7 +1734,10 @@ class AnalysisHandlers:
         except Exception as e:
             logger.error(f"Repository connector configuration failed: {e}")
             return RepositoryConnectorConfigResponse(
-                connector_type=req.connector_type, configured=False, supported_features=[], rate_limits={}
+                connector_type=req.connector_type,
+                configured=False,
+                supported_features=[],
+                rate_limits={},
             )
 
     @staticmethod
@@ -1539,9 +1752,13 @@ class AnalysisHandlers:
 
             for connector_type in connectors:
                 if connector_type in cross_repository_analyzer.repository_connectors:
-                    connector_details[connector_type] = cross_repository_analyzer.repository_connectors[connector_type]
+                    connector_details[connector_type] = (
+                        cross_repository_analyzer.repository_connectors[connector_type]
+                    )
 
-            return SupportedConnectorsResponse(connectors=connector_details, total_supported=len(connectors))
+            return SupportedConnectorsResponse(
+                connectors=connector_details, total_supported=len(connectors)
+            )
 
         except Exception as e:
             logger.error(f"Supported connectors retrieval failed: {e}")
@@ -1556,18 +1773,24 @@ class AnalysisHandlers:
 
             frameworks = cross_repository_analyzer.get_analysis_frameworks()
 
-            return AnalysisFrameworksResponse(frameworks=frameworks, total_frameworks=len(frameworks))
+            return AnalysisFrameworksResponse(
+                frameworks=frameworks, total_frameworks=len(frameworks)
+            )
 
         except Exception as e:
             logger.error(f"Analysis frameworks retrieval failed: {e}")
             return AnalysisFrameworksResponse(frameworks={}, total_frameworks=0)
 
     @staticmethod
-    async def handle_submit_distributed_task(req: DistributedTaskRequest) -> DistributedTaskResponse:
+    async def handle_submit_distributed_task(
+        req: DistributedTaskRequest,
+    ) -> DistributedTaskResponse:
         """Handle distributed task submission."""
         try:
             task_id = await submit_distributed_task(
-                task_type=req.task_type, data=req.data, priority=req.priority or "normal"
+                task_type=req.task_type,
+                data=req.data,
+                priority=req.priority or "normal",
             )
 
             # Get task status for response
@@ -1579,7 +1802,9 @@ class AnalysisHandlers:
                 status=status["status"] if status else "pending",
                 priority=req.priority or "normal",
                 submitted_at=datetime.now().isoformat(),
-                estimated_completion=status.get("estimated_completion") if status else None,
+                estimated_completion=(
+                    status.get("estimated_completion") if status else None
+                ),
             )
 
         except Exception as e:
@@ -1611,12 +1836,16 @@ class AnalysisHandlers:
             task_ids = await distributed_processor.submit_batch_tasks(formatted_tasks)
 
             return BatchTasksResponse(
-                task_ids=task_ids, total_tasks=len(task_ids), submitted_at=datetime.now().isoformat()
+                task_ids=task_ids,
+                total_tasks=len(task_ids),
+                submitted_at=datetime.now().isoformat(),
             )
 
         except Exception as e:
             logger.error(f"Batch task submission failed: {e}")
-            return BatchTasksResponse(task_ids=[], total_tasks=0, submitted_at=datetime.now().isoformat())
+            return BatchTasksResponse(
+                task_ids=[], total_tasks=0, submitted_at=datetime.now().isoformat()
+            )
 
     @staticmethod
     async def handle_get_task_status(req: TaskStatusRequest) -> TaskStatusResponse:
@@ -1670,12 +1899,20 @@ class AnalysisHandlers:
             return {
                 "task_id": req.task_id,
                 "cancelled": success,
-                "message": "Task cancelled successfully" if success else "Task not found or already completed",
+                "message": (
+                    "Task cancelled successfully"
+                    if success
+                    else "Task not found or already completed"
+                ),
             }
 
         except Exception as e:
             logger.error(f"Task cancellation failed: {e}")
-            return {"task_id": req.task_id, "cancelled": False, "message": f"Cancellation failed: {str(e)}"}
+            return {
+                "task_id": req.task_id,
+                "cancelled": False,
+                "message": f"Cancellation failed: {str(e)}",
+            }
 
     @staticmethod
     async def handle_get_workers_status() -> WorkersStatusResponse:
@@ -1692,7 +1929,9 @@ class AnalysisHandlers:
 
         except Exception as e:
             logger.error(f"Workers status retrieval failed: {e}")
-            return WorkersStatusResponse(workers={}, total_workers=0, available_workers=0, busy_workers=0)
+            return WorkersStatusResponse(
+                workers={}, total_workers=0, available_workers=0, busy_workers=0
+            )
 
     @staticmethod
     async def handle_get_processing_stats() -> ProcessingStatsResponse:
@@ -1736,7 +1975,9 @@ class AnalysisHandlers:
             new_count = len(distributed_processor.workers)
 
             return ScaleWorkersResponse(
-                previous_count=previous_count, new_count=new_count, scaled_at=datetime.now().isoformat()
+                previous_count=previous_count,
+                new_count=new_count,
+                scaled_at=datetime.now().isoformat(),
             )
 
         except Exception as e:
@@ -1754,14 +1995,22 @@ class AnalysisHandlers:
             # Start the processing loop if not already running
             asyncio.create_task(distributed_processor.process_task_queue())
 
-            return {"started": True, "message": "Distributed processing started successfully"}
+            return {
+                "started": True,
+                "message": "Distributed processing started successfully",
+            }
 
         except Exception as e:
             logger.error(f"Failed to start distributed processing: {e}")
-            return {"started": False, "message": f"Failed to start processing: {str(e)}"}
+            return {
+                "started": False,
+                "message": f"Failed to start processing: {str(e)}",
+            }
 
     @staticmethod
-    async def handle_set_load_balancing_strategy(req: LoadBalancingStrategyRequest) -> LoadBalancingStrategyResponse:
+    async def handle_set_load_balancing_strategy(
+        req: LoadBalancingStrategyRequest,
+    ) -> LoadBalancingStrategyResponse:
         """Handle load balancing strategy configuration."""
         try:
             strategy_map = {
@@ -1826,7 +2075,9 @@ class AnalysisHandlers:
             )
 
     @staticmethod
-    async def handle_configure_load_balancing(req: LoadBalancingConfigRequest) -> LoadBalancingConfigResponse:
+    async def handle_configure_load_balancing(
+        req: LoadBalancingConfigRequest,
+    ) -> LoadBalancingConfigResponse:
         """Handle load balancing configuration."""
         try:
             # Update strategy if provided

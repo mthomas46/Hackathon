@@ -90,9 +90,18 @@ class TraceSpan:
         """Add a tag to the span."""
         self._tags[key] = value
 
-    def log(self, event: str, timestamp: Optional[datetime] = None, fields: Optional[Dict[str, Any]] = None):
+    def log(
+        self,
+        event: str,
+        timestamp: Optional[datetime] = None,
+        fields: Optional[Dict[str, Any]] = None,
+    ):
         """Add a log entry to the span."""
-        log_entry = {"event": event, "timestamp": (timestamp or datetime.utcnow()).isoformat(), "fields": fields or {}}
+        log_entry = {
+            "event": event,
+            "timestamp": (timestamp or datetime.utcnow()).isoformat(),
+            "fields": fields or {},
+        }
         self._logs.append(log_entry)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -116,6 +125,4 @@ class TraceSpan:
         return result
 
     def __repr__(self) -> str:
-        return (
-            f"TraceSpan(span_id='{self._span_id}', service='{self._service_name}', operation='{self._operation_name}')"
-        )
+        return f"TraceSpan(span_id='{self._span_id}', service='{self._service_name}', operation='{self._operation_name}')"

@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, List
 
 from langchain_core.tools import BaseTool, tool
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 from services.shared.utilities import get_service_client
 
 
@@ -49,13 +49,15 @@ class AnalysisServiceIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Analysis Service."""
 
     def __init__(self):
-        super().__init__(ServiceNames.ANALYSIS_SERVICE)
+        super().__init__("analysis-service")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize analysis service tools."""
 
         @tool
-        async def analyze_document_tool(doc_id: str, analysis_types: List[str]) -> Dict[str, Any]:
+        async def analyze_document_tool(
+            doc_id: str, analysis_types: List[str]
+        ) -> Dict[str, Any]:
             """Analyze a document using the Analysis Service."""
             try:
                 result = await self.service_client.post_json(
@@ -82,7 +84,9 @@ class AnalysisServiceIntegration(LangGraphServiceIntegration):
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def cross_reference_analysis_tool(doc_ids: List[str], reference_docs: List[str]) -> Dict[str, Any]:
+        async def cross_reference_analysis_tool(
+            doc_ids: List[str], reference_docs: List[str]
+        ) -> Dict[str, Any]:
             """Perform cross-reference analysis between documents."""
             try:
                 result = await self.service_client.post_json(
@@ -124,18 +128,24 @@ class DocumentStoreIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Document Store."""
 
     def __init__(self):
-        super().__init__(ServiceNames.DOCUMENT_STORE)
+        super().__init__("doc-store")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize document store tools."""
 
         @tool
-        async def store_document_tool(content: str, metadata: Dict[str, Any], source: str) -> Dict[str, Any]:
+        async def store_document_tool(
+            content: str, metadata: Dict[str, Any], source: str
+        ) -> Dict[str, Any]:
             """Store a document in the document store."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/documents",
-                    {"content": content, "metadata": {**metadata, "source": "langgraph_workflow"}, "source": source},
+                    {
+                        "content": content,
+                        "metadata": {**metadata, "source": "langgraph_workflow"},
+                        "source": source,
+                    },
                 )
                 return {"success": True, "document_id": result.get("id")}
             except Exception as e:
@@ -145,18 +155,25 @@ class DocumentStoreIntegration(LangGraphServiceIntegration):
         async def retrieve_document_tool(doc_id: str) -> Dict[str, Any]:
             """Retrieve a document from the document store."""
             try:
-                result = await self.service_client.get_json(f"{self.service_name}/api/v1/documents/{doc_id}")
+                result = await self.service_client.get_json(
+                    f"{self.service_name}/api/v1/documents/{doc_id}"
+                )
                 return {"success": True, "document": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def search_documents_tool(query: str, filters: Dict[str, Any]) -> Dict[str, Any]:
+        async def search_documents_tool(
+            query: str, filters: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Search documents in the document store."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/search",
-                    {"query": query, "filters": {**filters, "source": "langgraph_workflow"}},
+                    {
+                        "query": query,
+                        "filters": {**filters, "source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "search_results": result}
             except Exception as e:
@@ -200,13 +217,15 @@ class PromptStoreIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Prompt Store."""
 
     def __init__(self):
-        super().__init__(ServiceNames.PROMPT_STORE)
+        super().__init__("prompt-store")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize prompt store tools."""
 
         @tool
-        async def create_prompt_tool(name: str, category: str, content: str, variables: List[str]) -> Dict[str, Any]:
+        async def create_prompt_tool(
+            name: str, category: str, content: str, variables: List[str]
+        ) -> Dict[str, Any]:
             """Create a new prompt in the prompt store."""
             try:
                 result = await self.service_client.post_json(
@@ -235,24 +254,34 @@ class PromptStoreIntegration(LangGraphServiceIntegration):
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_optimal_prompt_tool(task_type: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        async def get_optimal_prompt_tool(
+            task_type: str, context: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Get the optimal prompt for a task."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/orchestration/prompts/select",
-                    {"task_type": task_type, "context": {**context, "source": "langgraph_workflow"}},
+                    {
+                        "task_type": task_type,
+                        "context": {**context, "source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "optimal_prompt": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def update_prompt_performance_tool(prompt_id: str, performance_metrics: Dict[str, Any]) -> Dict[str, Any]:
+        async def update_prompt_performance_tool(
+            prompt_id: str, performance_metrics: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Update prompt performance metrics."""
             try:
                 result = await self.service_client.put_json(
                     f"{self.service_name}/api/v1/prompts/{prompt_id}/performance",
-                    {"performance_metrics": performance_metrics, "updated_by": "langgraph_workflow"},
+                    {
+                        "performance_metrics": performance_metrics,
+                        "updated_by": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "updated": result}
             except Exception as e:
@@ -285,18 +314,23 @@ class InterpreterIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Interpreter Service."""
 
     def __init__(self):
-        super().__init__(ServiceNames.INTERPRETER)
+        super().__init__("interpreter")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize interpreter service tools."""
 
         @tool
-        async def interpret_query_tool(query: str, context: Dict[str, Any]) -> Dict[str, Any]:
+        async def interpret_query_tool(
+            query: str, context: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Interpret a natural language query."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/interpret",
-                    {"query": query, "context": {**context, "source": "langgraph_workflow"}},
+                    {
+                        "query": query,
+                        "context": {**context, "source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "interpretation": result}
             except Exception as e:
@@ -307,7 +341,8 @@ class InterpreterIntegration(LangGraphServiceIntegration):
             """Extract intent from text."""
             try:
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/intent", {"text": text, "analysis_context": "langgraph_workflow"}
+                    f"{self.service_name}/api/v1/intent",
+                    {"text": text, "analysis_context": "langgraph_workflow"},
                 )
                 return {"success": True, "intent": result}
             except Exception as e:
@@ -317,7 +352,9 @@ class InterpreterIntegration(LangGraphServiceIntegration):
         async def get_ecosystem_context_tool() -> Dict[str, Any]:
             """Get current ecosystem context."""
             try:
-                result = await self.service_client.get_json(f"{self.service_name}/api/v1/ecosystem/context")
+                result = await self.service_client.get_json(
+                    f"{self.service_name}/api/v1/ecosystem/context"
+                )
                 return {"success": True, "ecosystem_context": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
@@ -348,30 +385,42 @@ class DiscoveryAgentIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Discovery Agent."""
 
     def __init__(self):
-        super().__init__(ServiceNames.DISCOVERY_AGENT)
+        super().__init__("discovery-agent")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize discovery agent tools."""
 
         @tool
-        async def discover_service_tools(service_name: str, service_url: str) -> Dict[str, Any]:
+        async def discover_service_tools(
+            service_name: str, service_url: str
+        ) -> Dict[str, Any]:
             """Discover tools for a service."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/discover/tools",
-                    {"service_name": service_name, "service_url": service_url, "context": "langgraph_workflow"},
+                    {
+                        "service_name": service_name,
+                        "service_url": service_url,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "discovered_tools": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def register_tools_with_orchestrator(tools_data: Dict[str, Any]) -> Dict[str, Any]:
+        async def register_tools_with_orchestrator(
+            tools_data: Dict[str, Any],
+        ) -> Dict[str, Any]:
             """Register discovered tools with orchestrator."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/register/tools",
-                    {"tools_data": tools_data, "target": "orchestrator", "context": "langgraph_workflow"},
+                    {
+                        "tools_data": tools_data,
+                        "target": "orchestrator",
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "registration_result": result}
             except Exception as e:
@@ -383,7 +432,10 @@ class DiscoveryAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/validate",
-                    {"service_name": service_name, "validation_context": "langgraph_integration"},
+                    {
+                        "service_name": service_name,
+                        "validation_context": "langgraph_integration",
+                    },
                 )
                 return {"success": True, "validation_result": result}
             except Exception as e:
@@ -415,18 +467,24 @@ class SourceAgentIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Source Agent."""
 
     def __init__(self):
-        super().__init__(ServiceNames.SOURCE_AGENT)
+        super().__init__("source-agent")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize source agent tools."""
 
         @tool
-        async def fetch_repository_content_tool(repo_url: str, file_path: str) -> Dict[str, Any]:
+        async def fetch_repository_content_tool(
+            repo_url: str, file_path: str
+        ) -> Dict[str, Any]:
             """Fetch content from a repository."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/fetch",
-                    {"repo_url": repo_url, "file_path": file_path, "context": "langgraph_workflow"},
+                    {
+                        "repo_url": repo_url,
+                        "file_path": file_path,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "content": result}
             except Exception as e:
@@ -448,7 +506,9 @@ class SourceAgentIntegration(LangGraphServiceIntegration):
         async def get_repository_metadata_tool(repo_url: str) -> Dict[str, Any]:
             """Get repository metadata."""
             try:
-                result = await self.service_client.get_json(f"{self.service_name}/api/v1/repos/{repo_url}/metadata")
+                result = await self.service_client.get_json(
+                    f"{self.service_name}/api/v1/repos/{repo_url}/metadata"
+                )
                 return {"success": True, "metadata": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
@@ -479,13 +539,15 @@ class SummarizerHubIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Summarizer Hub."""
 
     def __init__(self):
-        super().__init__(ServiceNames.SUMMARIZER_HUB)
+        super().__init__("summarizer-hub")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize summarizer hub tools."""
 
         @tool
-        async def summarize_content_tool(content: str, summary_type: str, max_length: int) -> Dict[str, Any]:
+        async def summarize_content_tool(
+            content: str, summary_type: str, max_length: int
+        ) -> Dict[str, Any]:
             """Summarize content using the summarizer hub."""
             try:
                 result = await self.service_client.post_json(
@@ -502,7 +564,9 @@ class SummarizerHubIntegration(LangGraphServiceIntegration):
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def compare_summaries_tool(summaries: List[str], comparison_criteria: List[str]) -> Dict[str, Any]:
+        async def compare_summaries_tool(
+            summaries: List[str], comparison_criteria: List[str]
+        ) -> Dict[str, Any]:
             """Compare multiple summaries."""
             try:
                 result = await self.service_client.post_json(
@@ -554,42 +618,60 @@ class SecureAnalyzerIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Secure Analyzer."""
 
     def __init__(self):
-        super().__init__(ServiceNames.SECURE_ANALYZER)
+        super().__init__("secure-analyzer")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize secure analyzer tools."""
 
         @tool
-        async def analyze_security_risks_tool(content: str, analysis_scope: str) -> Dict[str, Any]:
+        async def analyze_security_risks_tool(
+            content: str, analysis_scope: str
+        ) -> Dict[str, Any]:
             """Analyze content for security risks."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/analyze/security",
-                    {"content": content, "analysis_scope": analysis_scope, "context": "langgraph_workflow"},
+                    {
+                        "content": content,
+                        "analysis_scope": analysis_scope,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "security_analysis": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def scan_for_vulnerabilities_tool(content: str, vulnerability_types: List[str]) -> Dict[str, Any]:
+        async def scan_for_vulnerabilities_tool(
+            content: str, vulnerability_types: List[str]
+        ) -> Dict[str, Any]:
             """Scan content for specific vulnerabilities."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/scan/vulnerabilities",
-                    {"content": content, "vulnerability_types": vulnerability_types, "context": "langgraph_workflow"},
+                    {
+                        "content": content,
+                        "vulnerability_types": vulnerability_types,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "vulnerability_scan": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def validate_security_compliance_tool(content: str, compliance_framework: str) -> Dict[str, Any]:
+        async def validate_security_compliance_tool(
+            content: str, compliance_framework: str
+        ) -> Dict[str, Any]:
             """Validate content against security compliance framework."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/validate/compliance",
-                    {"content": content, "compliance_framework": compliance_framework, "context": "langgraph_workflow"},
+                    {
+                        "content": content,
+                        "compliance_framework": compliance_framework,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "compliance_validation": result}
             except Exception as e:
@@ -621,18 +703,24 @@ class CodeAnalyzerIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Code Analyzer."""
 
     def __init__(self):
-        super().__init__(ServiceNames.CODE_ANALYZER)
+        super().__init__("code-analyzer")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize code analyzer tools."""
 
         @tool
-        async def analyze_codebase_tool(repo_url: str, analysis_types: List[str]) -> Dict[str, Any]:
+        async def analyze_codebase_tool(
+            repo_url: str, analysis_types: List[str]
+        ) -> Dict[str, Any]:
             """Analyze a codebase."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/analyze/codebase",
-                    {"repo_url": repo_url, "analysis_types": analysis_types, "context": "langgraph_workflow"},
+                    {
+                        "repo_url": repo_url,
+                        "analysis_types": analysis_types,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "codebase_analysis": result}
             except Exception as e:
@@ -651,12 +739,18 @@ class CodeAnalyzerIntegration(LangGraphServiceIntegration):
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def generate_code_documentation_tool(code_content: str, doc_type: str) -> Dict[str, Any]:
+        async def generate_code_documentation_tool(
+            code_content: str, doc_type: str
+        ) -> Dict[str, Any]:
             """Generate documentation for code."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/generate/documentation",
-                    {"code_content": code_content, "doc_type": doc_type, "context": "langgraph_workflow"},
+                    {
+                        "code_content": code_content,
+                        "doc_type": doc_type,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "documentation": result}
             except Exception as e:
@@ -688,25 +782,33 @@ class ArchitectureDigitizerIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Architecture Digitizer."""
 
     def __init__(self):
-        super().__init__(ServiceNames.ARCHITECTURE_DIGITIZER)
+        super().__init__("architecture-digitizer")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize architecture digitizer tools."""
 
         @tool
-        async def digitize_architecture_diagram_tool(image_path: str, diagram_type: str) -> Dict[str, Any]:
+        async def digitize_architecture_diagram_tool(
+            image_path: str, diagram_type: str
+        ) -> Dict[str, Any]:
             """Digitize an architecture diagram."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/digitize",
-                    {"image_path": image_path, "diagram_type": diagram_type, "context": "langgraph_workflow"},
+                    {
+                        "image_path": image_path,
+                        "diagram_type": diagram_type,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "digitized_architecture": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def extract_architecture_components_tool(diagram_data: Dict[str, Any]) -> Dict[str, Any]:
+        async def extract_architecture_components_tool(
+            diagram_data: Dict[str, Any],
+        ) -> Dict[str, Any]:
             """Extract components from architecture diagram."""
             try:
                 result = await self.service_client.post_json(
@@ -725,7 +827,11 @@ class ArchitectureDigitizerIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/validate/consistency",
-                    {"components": components, "rules": rules, "context": "langgraph_workflow"},
+                    {
+                        "components": components,
+                        "rules": rules,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "validation_result": result}
             except Exception as e:
@@ -757,13 +863,15 @@ class MemoryAgentIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Memory Agent."""
 
     def __init__(self):
-        super().__init__(ServiceNames.MEMORY_AGENT)
+        super().__init__("memory-agent")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize memory agent tools."""
 
         @tool
-        async def store_memory_tool(content: str, memory_type: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        async def store_memory_tool(
+            content: str, memory_type: str, metadata: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Store information in memory."""
             try:
                 result = await self.service_client.post_json(
@@ -784,19 +892,28 @@ class MemoryAgentIntegration(LangGraphServiceIntegration):
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/memory/retrieve",
-                    {"query": query, "memory_type": memory_type, "context": "langgraph_workflow"},
+                    {
+                        "query": query,
+                        "memory_type": memory_type,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "retrieved_memories": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def search_memory_tool(query: str, filters: Dict[str, Any]) -> Dict[str, Any]:
+        async def search_memory_tool(
+            query: str, filters: Dict[str, Any]
+        ) -> Dict[str, Any]:
             """Search memory with filters."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/memory/search",
-                    {"query": query, "filters": {**filters, "source": "langgraph_workflow"}},
+                    {
+                        "query": query,
+                        "filters": {**filters, "source": "langgraph_workflow"},
+                    },
                 )
                 return {"success": True, "search_results": result}
             except Exception as e:
@@ -815,32 +932,47 @@ class MemoryAgentIntegration(LangGraphServiceIntegration):
         return {}
 
     def get_capabilities(self) -> List[str]:
-        return ["memory_storage", "memory_retrieval", "memory_search", "context_preservation", "knowledge_management"]
+        return [
+            "memory_storage",
+            "memory_retrieval",
+            "memory_search",
+            "context_preservation",
+            "knowledge_management",
+        ]
 
 
 class NotificationServiceIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Notification Service."""
 
     def __init__(self):
-        super().__init__(ServiceNames.NOTIFICATION_SERVICE)
+        super().__init__("notification-service")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize notification service tools."""
 
         @tool
-        async def send_notification_tool(message: str, recipients: List[str], urgency: str) -> Dict[str, Any]:
+        async def send_notification_tool(
+            message: str, recipients: List[str], urgency: str
+        ) -> Dict[str, Any]:
             """Send a notification."""
             try:
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/notifications/send",
-                    {"message": message, "recipients": recipients, "urgency": urgency, "context": "langgraph_workflow"},
+                    {
+                        "message": message,
+                        "recipients": recipients,
+                        "urgency": urgency,
+                        "context": "langgraph_workflow",
+                    },
                 )
                 return {"success": True, "notification_result": result}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def schedule_notification_tool(message: str, recipients: List[str], schedule_time: str) -> Dict[str, Any]:
+        async def schedule_notification_tool(
+            message: str, recipients: List[str], schedule_time: str
+        ) -> Dict[str, Any]:
             """Schedule a notification for later."""
             try:
                 result = await self.service_client.post_json(
@@ -857,7 +989,9 @@ class NotificationServiceIntegration(LangGraphServiceIntegration):
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_notification_history_tool(user_id: str, time_range: str) -> Dict[str, Any]:
+        async def get_notification_history_tool(
+            user_id: str, time_range: str
+        ) -> Dict[str, Any]:
             """Get notification history."""
             try:
                 result = await self.service_client.get_json(
@@ -893,7 +1027,7 @@ class LogCollectorIntegration(LangGraphServiceIntegration):
     """LangGraph integration for Log Collector."""
 
     def __init__(self):
-        super().__init__(ServiceNames.LOG_COLLECTOR)
+        super().__init__("log-collector")
 
     async def initialize_tools(self) -> Dict[str, BaseTool]:
         """Initialize log collector tools."""
@@ -970,22 +1104,24 @@ class LogCollectorIntegration(LangGraphServiceIntegration):
 # Service Integration Registry
 SERVICE_INTEGRATIONS = {
     ServiceNames.ANALYSIS_SERVICE: AnalysisServiceIntegration,
-    ServiceNames.DOCUMENT_STORE: DocumentStoreIntegration,
-    ServiceNames.PROMPT_STORE: PromptStoreIntegration,
-    ServiceNames.INTERPRETER: InterpreterIntegration,
-    ServiceNames.DISCOVERY_AGENT: DiscoveryAgentIntegration,
-    ServiceNames.SOURCE_AGENT: SourceAgentIntegration,
-    ServiceNames.SUMMARIZER_HUB: SummarizerHubIntegration,
-    ServiceNames.SECURE_ANALYZER: SecureAnalyzerIntegration,
-    ServiceNames.CODE_ANALYZER: CodeAnalyzerIntegration,
-    ServiceNames.ARCHITECTURE_DIGITIZER: ArchitectureDigitizerIntegration,
-    ServiceNames.MEMORY_AGENT: MemoryAgentIntegration,
-    ServiceNames.NOTIFICATION_SERVICE: NotificationServiceIntegration,
-    ServiceNames.LOG_COLLECTOR: LogCollectorIntegration,
+    "doc-store": DocumentStoreIntegration,
+    "prompt-store": PromptStoreIntegration,
+    "interpreter": InterpreterIntegration,
+    "discovery-agent": DiscoveryAgentIntegration,
+    "source-agent": SourceAgentIntegration,
+    "summarizer-hub": SummarizerHubIntegration,
+    "secure-analyzer": SecureAnalyzerIntegration,
+    "code-analyzer": CodeAnalyzerIntegration,
+    "architecture-digitizer": ArchitectureDigitizerIntegration,
+    "memory-agent": MemoryAgentIntegration,
+    "notification-service": NotificationServiceIntegration,
+    "log-collector": LogCollectorIntegration,
 }
 
 
-async def initialize_all_service_integrations() -> Dict[str, LangGraphServiceIntegration]:
+async def initialize_all_service_integrations() -> (
+    Dict[str, LangGraphServiceIntegration]
+):
     """Initialize all service integrations."""
     integrations = {}
 
@@ -1004,7 +1140,9 @@ async def initialize_all_service_integrations() -> Dict[str, LangGraphServiceInt
     return integrations
 
 
-async def get_service_integration_tools(service_names: List[str]) -> Dict[str, BaseTool]:
+async def get_service_integration_tools(
+    service_names: List[str],
+) -> Dict[str, BaseTool]:
     """Get tools for specified services."""
     all_tools = {}
 

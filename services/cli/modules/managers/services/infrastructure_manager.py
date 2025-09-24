@@ -16,7 +16,9 @@ from ...base.base_manager import BaseManager
 class InfrastructureManager(BaseManager):
     """Manager for infrastructure power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def infrastructure_menu(self):
@@ -98,7 +100,9 @@ class InfrastructureManager(BaseManager):
         """View Redis info."""
         try:
             with self.console.status("[bold green]Fetching Redis info...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/redis/info")
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/redis/info"
+                )
 
             if response.get("redis_info"):
                 info = response["redis_info"]
@@ -112,19 +116,19 @@ Used Memory: {info.get('used_memory_human', 'unknown')}
 Total Connections: {info.get('total_connections_received', 0)}
 
 Key Statistics:
-  Total Keys: {info.get('total_keys', 0)}
-  Keys with Expiry: {info.get('keys_with_expiry', 0)}
-  Expired Keys: {info.get('expired_keys', 0)}
+    Total Keys: {info.get('total_keys', 0)}
+    Keys with Expiry: {info.get('keys_with_expiry', 0)}
+    Expired Keys: {info.get('expired_keys', 0)}
 
 Memory:
-  Used: {info.get('used_memory_human', 'unknown')}
-  Peak: {info.get('used_memory_peak_human', 'unknown')}
-  Fragmentation: {info.get('mem_fragmentation_ratio', 0):.2f}
+    Used: {info.get('used_memory_human', 'unknown')}
+    Peak: {info.get('used_memory_peak_human', 'unknown')}
+    Fragmentation: {info.get('mem_fragmentation_ratio', 0):.2f}
 
 Connections:
-  Connected: {info.get('connected_clients', 0)}
-  Blocked: {info.get('blocked_clients', 0)}
-  Tracking: {info.get('tracking_clients', 0)}
+    Connected: {info.get('connected_clients', 0)}
+    Blocked: {info.get('blocked_clients', 0)}
+    Tracking: {info.get('tracking_clients', 0)}
 """
                 print_panel(self.console, content, border_style="red")
             else:
@@ -136,8 +140,12 @@ Connections:
     async def monitor_pubsub(self):
         """Monitor Pub/Sub channels."""
         try:
-            with self.console.status("[bold green]Monitoring Pub/Sub channels...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/redis/pubsub")
+            with self.console.status(
+                "[bold green]Monitoring Pub/Sub channels..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/redis/pubsub"
+                )
 
             if response.get("pubsub_info"):
                 pubsub = response["pubsub_info"]
@@ -152,18 +160,16 @@ Channel Activity (last 5 minutes):
 """
                 if pubsub.get("recent_activity"):
                     for activity in pubsub["recent_activity"]:
-                        content += (
-                            f"  {activity.get('channel', 'unknown')}: {activity.get('message_count', 0)} messages\n"
-                        )
+                        content += f"  {activity.get('channel', 'unknown')}: {activity.get('message_count', 0)} messages\n"
 
                 content += f"\nActive Channels:\n"
                 if pubsub.get("channels"):
                     for channel in pubsub["channels"][:10]:  # Show first 10
-                        content += (
-                            f"  • {channel.get('name', 'unknown')}: {channel.get('subscriber_count', 0)} subscribers\n"
-                        )
+                        content += f"  • {channel.get('name', 'unknown')}: {channel.get('subscriber_count', 0)} subscribers\n"
                     if len(pubsub["channels"]) > 10:
-                        content += f"  ... and {len(pubsub['channels']) - 10} more channels\n"
+                        content += (
+                            f"  ... and {len(pubsub['channels']) - 10} more channels\n"
+                        )
 
                 print_panel(self.console, content, border_style="cyan")
             else:
@@ -175,10 +181,15 @@ Channel Activity (last 5 minutes):
     async def key_space_analysis(self):
         """Key space analysis."""
         try:
-            pattern = Prompt.ask("[bold cyan]Key pattern (e.g., 'doc:*', 'wf:*')[/bold cyan]", default="*")
+            pattern = Prompt.ask(
+                "[bold cyan]Key pattern (e.g., 'doc:*', 'wf:*')[/bold cyan]",
+                default="*",
+            )
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="100")
 
-            with self.console.status(f"[bold green]Analyzing keys matching '{pattern}'...") as status:
+            with self.console.status(
+                f"[bold green]Analyzing keys matching '{pattern}'..."
+            ) as status:
                 response = await self.clients.get_json(
                     f"orchestrator/infrastructure/redis/keys?pattern={pattern}&limit={limit}"
                 )
@@ -200,8 +211,8 @@ Key Types:
 
                 content += f"""
 Memory Usage:
-  Total: {analysis.get('total_memory_bytes', 0)} bytes
-  Average per Key: {analysis.get('avg_memory_per_key', 0):.2f} bytes
+    Total: {analysis.get('total_memory_bytes', 0)} bytes
+    Average per Key: {analysis.get('avg_memory_per_key', 0):.2f} bytes
 
 Sample Keys:
 """
@@ -219,8 +230,12 @@ Sample Keys:
     async def redis_performance(self):
         """Redis performance metrics."""
         try:
-            with self.console.status("[bold green]Fetching Redis performance metrics...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/redis/performance")
+            with self.console.status(
+                "[bold green]Fetching Redis performance metrics..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/redis/performance"
+                )
 
             if response.get("performance"):
                 perf = response["performance"]
@@ -231,25 +246,27 @@ Commands Processed: {perf.get('total_commands_processed', 0)}
 Commands per Second: {perf.get('instantaneous_ops_per_sec', 0)}
 
 Network:
-  Bytes Received: {perf.get('total_net_input_bytes', 0)} bytes
-  Bytes Sent: {perf.get('total_net_output_bytes', 0)} bytes
-  Connections: {perf.get('total_connections_received', 0)}
+    Bytes Received: {perf.get('total_net_input_bytes', 0)} bytes
+    Bytes Sent: {perf.get('total_net_output_bytes', 0)} bytes
+    Connections: {perf.get('total_connections_received', 0)}
 
 Cache Performance:
-  Keyspace Hits: {perf.get('keyspace_hits', 0)}
-  Keyspace Misses: {perf.get('keyspace_misses', 0)}
-  Hit Rate: {perf.get('hit_rate_percent', 0):.2f}%
+    Keyspace Hits: {perf.get('keyspace_hits', 0)}
+    Keyspace Misses: {perf.get('keyspace_misses', 0)}
+    Hit Rate: {perf.get('hit_rate_percent', 0):.2f}%
 
 Latency:
-  Average: {perf.get('avg_latency_ms', 0):.2f} ms
-  Max: {perf.get('max_latency_ms', 0):.2f} ms
+    Average: {perf.get('avg_latency_ms', 0):.2f} ms
+    Max: {perf.get('max_latency_ms', 0):.2f} ms
 
 Evictions: {perf.get('evicted_keys', 0)}
 Expired Keys: {perf.get('expired_keys', 0)}
 """
                 print_panel(self.console, content, border_style="magenta")
             else:
-                self.console.print("[yellow]Performance metrics not available.[/yellow]")
+                self.console.print(
+                    "[yellow]Performance metrics not available.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error fetching performance metrics: {e}[/red]")
@@ -257,17 +274,25 @@ Expired Keys: {perf.get('expired_keys', 0)}
     async def clear_redis_keys(self):
         """Clear Redis keys."""
         try:
-            pattern = Prompt.ask("[bold cyan]Key pattern to delete[/bold cyan]", default="")
-            confirm = Confirm.ask(f"[bold red]This will delete ALL keys matching '{pattern}'. Continue?[/bold red]")
+            pattern = Prompt.ask(
+                "[bold cyan]Key pattern to delete[/bold cyan]", default=""
+            )
+            confirm = Confirm.ask(
+                f"[bold red]This will delete ALL keys matching '{pattern}'. Continue?[/bold red]"
+            )
 
             if confirm:
-                with self.console.status(f"[bold green]Deleting keys matching '{pattern}'...") as status:
+                with self.console.status(
+                    f"[bold green]Deleting keys matching '{pattern}'..."
+                ) as status:
                     response = await self.clients.post_json(
                         "orchestrator/infrastructure/redis/clear", {"pattern": pattern}
                     )
 
                 if response.get("deleted_count"):
-                    self.console.print(f"[green]✅ Deleted {response['deleted_count']} keys[/green]")
+                    self.console.print(
+                        f"[green]✅ Deleted {response['deleted_count']} keys[/green]"
+                    )
                 else:
                     self.console.print("[yellow]No keys matched the pattern.[/yellow]")
             else:
@@ -279,8 +304,12 @@ Expired Keys: {perf.get('expired_keys', 0)}
     async def redis_configuration(self):
         """Redis configuration."""
         try:
-            with self.console.status("[bold green]Fetching Redis configuration...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/redis/config")
+            with self.console.status(
+                "[bold green]Fetching Redis configuration..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/redis/config"
+                )
 
             if response.get("config"):
                 config = response["config"]
@@ -304,7 +333,9 @@ Expired Keys: {perf.get('expired_keys', 0)}
 
                 print_panel(self.console, content, border_style="blue")
             else:
-                self.console.print("[yellow]Redis configuration not available.[/yellow]")
+                self.console.print(
+                    "[yellow]Redis configuration not available.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error fetching Redis configuration: {e}[/red]")
@@ -312,7 +343,9 @@ Expired Keys: {perf.get('expired_keys', 0)}
     async def dlq_management_menu(self):
         """DLQ management submenu."""
         while True:
-            menu = create_menu_table("Dead Letter Queue Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Dead Letter Queue Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -349,8 +382,12 @@ Expired Keys: {perf.get('expired_keys', 0)}
     async def dlq_statistics(self):
         """View DLQ statistics."""
         try:
-            with self.console.status("[bold green]Fetching DLQ statistics...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/dlq/stats")
+            with self.console.status(
+                "[bold green]Fetching DLQ statistics..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/dlq/stats"
+                )
 
             if response.get("dlq_stats"):
                 stats = response["dlq_stats"]
@@ -376,9 +413,9 @@ Queues:
 
                 content += f"""
 Retry Statistics:
-  Successful Retries: {stats.get('successful_retries', 0)}
-  Failed Retries: {stats.get('failed_retries', 0)}
-  Success Rate: {stats.get('retry_success_rate', 0):.1f}%
+    Successful Retries: {stats.get('successful_retries', 0)}
+    Failed Retries: {stats.get('failed_retries', 0)}
+    Success Rate: {stats.get('retry_success_rate', 0):.1f}%
 """
                 print_panel(self.console, content, border_style="red")
             else:
@@ -428,21 +465,30 @@ Retry Statistics:
         """Retry failed messages."""
         try:
             queue_name = Prompt.ask("[bold cyan]Queue name[/bold cyan]", default="")
-            message_ids = Prompt.ask("[bold cyan]Message IDs (comma-separated, or 'all')[/bold cyan]", default="")
+            message_ids = Prompt.ask(
+                "[bold cyan]Message IDs (comma-separated, or 'all')[/bold cyan]",
+                default="",
+            )
 
             retry_config = {}
             if queue_name:
                 retry_config["queue"] = queue_name
             if message_ids and message_ids != "all":
-                retry_config["message_ids"] = [id.strip() for id in message_ids.split(",")]
+                retry_config["message_ids"] = [
+                    id.strip() for id in message_ids.split(",")
+                ]
 
             confirm = Confirm.ask(
                 f"[bold yellow]This will retry {'all' if message_ids == 'all' else len(retry_config.get('message_ids', []))} failed messages. Continue?[/bold yellow]"
             )
 
             if confirm:
-                with self.console.status("[bold green]Retrying failed messages...") as status:
-                    response = await self.clients.post_json("orchestrator/infrastructure/dlq/retry", retry_config)
+                with self.console.status(
+                    "[bold green]Retrying failed messages..."
+                ) as status:
+                    response = await self.clients.post_json(
+                        "orchestrator/infrastructure/dlq/retry", retry_config
+                    )
 
                 if response.get("retry_result"):
                     result = response["retry_result"]
@@ -462,7 +508,11 @@ Details:
                             content += f"  {status_icon} {detail.get('message_id', 'unknown')[:8]}: {detail.get('result', 'unknown')}\n"
 
                     print_panel(
-                        self.console, content, border_style="green" if result.get("success_rate", 0) > 50 else "red"
+                        self.console,
+                        content,
+                        border_style=(
+                            "green" if result.get("success_rate", 0) > 50 else "red"
+                        ),
                     )
                 else:
                     self.console.print("[red]❌ Retry operation failed[/red]")
@@ -476,7 +526,10 @@ Details:
         """Clear DLQ messages."""
         try:
             queue_name = Prompt.ask("[bold cyan]Queue name[/bold cyan]", default="")
-            criteria = Prompt.ask("[bold cyan]Clear criteria (JSON)[/bold cyan]", default='{"age_hours": {"$gt": 24}}')
+            criteria = Prompt.ask(
+                "[bold cyan]Clear criteria (JSON)[/bold cyan]",
+                default='{"age_hours": {"$gt": 24}}',
+            )
 
             import json
 
@@ -491,13 +544,21 @@ Details:
                 if queue_name:
                     clear_config["queue"] = queue_name
 
-                with self.console.status("[bold green]Clearing DLQ messages...") as status:
-                    response = await self.clients.post_json("orchestrator/infrastructure/dlq/clear", clear_config)
+                with self.console.status(
+                    "[bold green]Clearing DLQ messages..."
+                ) as status:
+                    response = await self.clients.post_json(
+                        "orchestrator/infrastructure/dlq/clear", clear_config
+                    )
 
                 if response.get("cleared_count"):
-                    self.console.print(f"[green]✅ Cleared {response['cleared_count']} DLQ messages[/green]")
+                    self.console.print(
+                        f"[green]✅ Cleared {response['cleared_count']} DLQ messages[/green]"
+                    )
                 else:
-                    self.console.print("[yellow]No messages matched the clear criteria.[/yellow]")
+                    self.console.print(
+                        "[yellow]No messages matched the clear criteria.[/yellow]"
+                    )
             else:
                 self.console.print("[yellow]DLQ clear operation cancelled.[/yellow]")
 
@@ -507,8 +568,12 @@ Details:
     async def dlq_configuration(self):
         """DLQ configuration."""
         try:
-            with self.console.status("[bold green]Fetching DLQ configuration...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/dlq/config")
+            with self.console.status(
+                "[bold green]Fetching DLQ configuration..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/dlq/config"
+                )
 
             if response.get("dlq_config"):
                 config = response["dlq_config"]
@@ -524,13 +589,17 @@ Queues:
                 if config.get("queues"):
                     for queue_name, queue_config in config["queues"].items():
                         content += f"  {queue_name}:\n"
-                        content += f"    Max retries: {queue_config.get('max_retries', 0)}\n"
-                        content += f"    TTL: {queue_config.get('ttl_hours', 0)} hours\n"
+                        content += (
+                            f"    Max retries: {queue_config.get('max_retries', 0)}\n"
+                        )
+                        content += (
+                            f"    TTL: {queue_config.get('ttl_hours', 0)} hours\n"
+                        )
 
                 content += f"""
 Monitoring:
-  Alert threshold: {config.get('alert_threshold', 0)} messages
-  Auto-cleanup: {'Enabled' if config.get('auto_cleanup') else 'Disabled'}
+    Alert threshold: {config.get('alert_threshold', 0)} messages
+    Auto-cleanup: {'Enabled' if config.get('auto_cleanup') else 'Disabled'}
 """
                 print_panel(self.console, content, border_style="blue")
             else:
@@ -542,7 +611,9 @@ Monitoring:
     async def saga_monitoring_menu(self):
         """Saga orchestration monitoring submenu."""
         while True:
-            menu = create_menu_table("Saga Orchestration Monitoring", ["Option", "Description"])
+            menu = create_menu_table(
+                "Saga Orchestration Monitoring", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -577,7 +648,9 @@ Monitoring:
         """View active sagas."""
         try:
             with self.console.status("[bold green]Fetching active sagas...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/saga/active")
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/saga/active"
+                )
 
             if response.get("sagas"):
                 table = Table(title="Active Sagas")
@@ -588,7 +661,9 @@ Monitoring:
                 table.add_column("Progress", style="blue")
 
                 for saga in response["sagas"]:
-                    progress = f"{saga.get('completed_steps', 0)}/{saga.get('total_steps', 0)}"
+                    progress = (
+                        f"{saga.get('completed_steps', 0)}/{saga.get('total_steps', 0)}"
+                    )
                     status_color = {
                         "running": "yellow",
                         "waiting": "blue",
@@ -614,8 +689,12 @@ Monitoring:
     async def saga_statistics(self):
         """Saga statistics."""
         try:
-            with self.console.status("[bold green]Fetching saga statistics...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/saga/stats")
+            with self.console.status(
+                "[bold green]Fetching saga statistics..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/saga/stats"
+                )
 
             if response.get("saga_stats"):
                 stats = response["saga_stats"]
@@ -657,8 +736,12 @@ Longest Running Saga: {stats.get('longest_running_saga_age_minutes', 0)} minutes
         try:
             saga_id = Prompt.ask("[bold cyan]Failed saga ID[/bold cyan]")
 
-            with self.console.status(f"[bold green]Attempting recovery for saga {saga_id}...") as status:
-                response = await self.clients.post_json(f"orchestrator/infrastructure/saga/{saga_id}/recover", {})
+            with self.console.status(
+                f"[bold green]Attempting recovery for saga {saga_id}..."
+            ) as status:
+                response = await self.clients.post_json(
+                    f"orchestrator/infrastructure/saga/{saga_id}/recover", {}
+                )
 
             if response.get("recovery_result"):
                 result = response["recovery_result"]
@@ -676,11 +759,13 @@ Details:
                 if result.get("details"):
                     for detail in result["details"]:
                         status_icon = "✅" if detail.get("success") else "❌"
-                        content += (
-                            f"  {status_icon} {detail.get('step', 'unknown')}: {detail.get('result', 'unknown')}\n"
-                        )
+                        content += f"  {status_icon} {detail.get('step', 'unknown')}: {detail.get('result', 'unknown')}\n"
 
-                print_panel(self.console, content, border_style="green" if result.get("successful") else "red")
+                print_panel(
+                    self.console,
+                    content,
+                    border_style="green" if result.get("successful") else "red",
+                )
             else:
                 self.console.print("[red]❌ Saga recovery failed[/red]")
 
@@ -690,8 +775,12 @@ Details:
     async def saga_configuration(self):
         """Saga configuration."""
         try:
-            with self.console.status("[bold green]Fetching saga configuration...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/saga/config")
+            with self.console.status(
+                "[bold green]Fetching saga configuration..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/saga/config"
+                )
 
             if response.get("saga_config"):
                 config = response["saga_config"]
@@ -699,20 +788,20 @@ Details:
 [bold]Saga Configuration[/bold]
 
 Timeout Settings:
-  Default timeout: {config.get('default_timeout_minutes', 0)} minutes
-  Max timeout: {config.get('max_timeout_minutes', 0)} minutes
+    Default timeout: {config.get('default_timeout_minutes', 0)} minutes
+    Max timeout: {config.get('max_timeout_minutes', 0)} minutes
 
 Retry Settings:
-  Max retries: {config.get('max_retries', 0)}
-  Retry delay: {config.get('retry_delay_seconds', 0)} seconds
+    Max retries: {config.get('max_retries', 0)}
+    Retry delay: {config.get('retry_delay_seconds', 0)} seconds
 
 Compensation:
-  Auto-compensation: {'Enabled' if config.get('auto_compensation') else 'Disabled'}
-  Compensation timeout: {config.get('compensation_timeout_minutes', 0)} minutes
+    Auto-compensation: {'Enabled' if config.get('auto_compensation') else 'Disabled'}
+    Compensation timeout: {config.get('compensation_timeout_minutes', 0)} minutes
 
 Monitoring:
-  Alert threshold: {config.get('alert_threshold_failures', 0)} failures
-  Metrics collection: {'Enabled' if config.get('metrics_enabled') else 'Disabled'}
+    Alert threshold: {config.get('alert_threshold_failures', 0)} failures
+    Metrics collection: {'Enabled' if config.get('metrics_enabled') else 'Disabled'}
 """
                 print_panel(self.console, content, border_style="blue")
             else:
@@ -759,8 +848,12 @@ Monitoring:
     async def tracing_statistics(self):
         """Tracing statistics."""
         try:
-            with self.console.status("[bold green]Fetching tracing statistics...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/tracing/stats")
+            with self.console.status(
+                "[bold green]Fetching tracing statistics..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/tracing/stats"
+                )
 
             if response.get("tracing_stats"):
                 stats = response["tracing_stats"]
@@ -772,9 +865,9 @@ Active Traces: {stats.get('active_traces', 0)}
 Completed Today: {stats.get('completed_today', 0)}
 
 Performance:
-  Average Trace Duration: {stats.get('avg_trace_duration_ms', 0):.2f} ms
-  95th Percentile: {stats.get('p95_duration_ms', 0):.2f} ms
-  99th Percentile: {stats.get('p99_duration_ms', 0):.2f} ms
+    Average Trace Duration: {stats.get('avg_trace_duration_ms', 0):.2f} ms
+    95th Percentile: {stats.get('p95_duration_ms', 0):.2f} ms
+    99th Percentile: {stats.get('p99_duration_ms', 0):.2f} ms
 
 Services Involved:
 """
@@ -784,12 +877,12 @@ Services Involved:
 
                 content += f"""
 Error Traces:
-  Total: {stats.get('error_traces', 0)}
-  Error Rate: {stats.get('error_rate_percent', 0):.2f}%
+    Total: {stats.get('error_traces', 0)}
+    Error Rate: {stats.get('error_rate_percent', 0):.2f}%
 
 Sampling:
-  Sample Rate: {stats.get('sample_rate_percent', 0):.2f}%
-  Traces Sampled: {stats.get('sampled_traces', 0)}
+    Sample Rate: {stats.get('sample_rate_percent', 0):.2f}%
+    Traces Sampled: {stats.get('sampled_traces', 0)}
 """
                 print_panel(self.console, content, border_style="purple")
             else:
@@ -803,8 +896,12 @@ Sampling:
         try:
             trace_id = Prompt.ask("[bold cyan]Trace ID[/bold cyan]")
 
-            with self.console.status(f"[bold green]Fetching trace {trace_id}...") as status:
-                response = await self.clients.get_json(f"orchestrator/infrastructure/tracing/trace/{trace_id}")
+            with self.console.status(
+                f"[bold green]Fetching trace {trace_id}..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"orchestrator/infrastructure/tracing/trace/{trace_id}"
+                )
 
             if response.get("trace"):
                 trace = response["trace"]
@@ -878,7 +975,9 @@ Service Timeline:
 
                 self.console.print(table)
             else:
-                self.console.print("[yellow]No traces found matching criteria.[/yellow]")
+                self.console.print(
+                    "[yellow]No traces found matching criteria.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error searching traces: {e}[/red]")
@@ -886,8 +985,12 @@ Service Timeline:
     async def tracing_configuration(self):
         """Tracing configuration."""
         try:
-            with self.console.status("[bold green]Fetching tracing configuration...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/tracing/config")
+            with self.console.status(
+                "[bold green]Fetching tracing configuration..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/tracing/config"
+                )
 
             if response.get("tracing_config"):
                 config = response["tracing_config"]
@@ -905,9 +1008,9 @@ Exporters:
 
                 content += f"""
 Settings:
-  Max spans per trace: {config.get('max_spans_per_trace', 0)}
-  Max trace duration: {config.get('max_trace_duration_minutes', 0)} minutes
-  Retention period: {config.get('retention_days', 0)} days
+    Max spans per trace: {config.get('max_spans_per_trace', 0)}
+    Max trace duration: {config.get('max_trace_duration_minutes', 0)} minutes
+    Retention period: {config.get('retention_days', 0)} days
 
 Tags:
 """
@@ -917,7 +1020,9 @@ Tags:
 
                 print_panel(self.console, content, border_style="blue")
             else:
-                self.console.print("[yellow]Tracing configuration not available.[/yellow]")
+                self.console.print(
+                    "[yellow]Tracing configuration not available.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error fetching tracing configuration: {e}[/red]")
@@ -925,7 +1030,9 @@ Tags:
     async def event_history_menu(self):
         """Event history and replay submenu."""
         while True:
-            menu = create_menu_table("Event History & Replay", ["Option", "Description"])
+            menu = create_menu_table(
+                "Event History & Replay", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -962,7 +1069,9 @@ Tags:
             limit = Prompt.ask("[bold cyan]Limit[/bold cyan]", default="50")
 
             with self.console.status("[bold green]Fetching event history...") as status:
-                response = await self.clients.get_json(f"orchestrator/infrastructure/events/history?limit={limit}")
+                response = await self.clients.get_json(
+                    f"orchestrator/infrastructure/events/history?limit={limit}"
+                )
 
             if response.get("events"):
                 table = Table(title="Event History")
@@ -1000,12 +1109,16 @@ Tags:
                 search_params += f"&aggregate_id={aggregate_id}"
 
             with self.console.status("[bold green]Searching events...") as status:
-                response = await self.clients.get_json(f"orchestrator/infrastructure/events/search{search_params}")
+                response = await self.clients.get_json(
+                    f"orchestrator/infrastructure/events/search{search_params}"
+                )
 
             if response.get("events"):
                 self.display_event_results(response["events"], f"Event Search Results")
             else:
-                self.console.print("[yellow]No events found matching criteria.[/yellow]")
+                self.console.print(
+                    "[yellow]No events found matching criteria.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error searching events: {e}[/red]")
@@ -1038,16 +1151,21 @@ Tags:
     async def replay_events(self):
         """Replay events."""
         try:
-            event_ids = Prompt.ask("[bold cyan]Event IDs to replay (comma-separated)[/bold cyan]")
+            event_ids = Prompt.ask(
+                "[bold cyan]Event IDs to replay (comma-separated)[/bold cyan]"
+            )
 
             event_id_list = [id.strip() for id in event_ids.split(",")]
 
-            confirm = Confirm.ask(f"[bold yellow]This will replay {len(event_id_list)} events. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                f"[bold yellow]This will replay {len(event_id_list)} events. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Replaying events...") as status:
                     response = await self.clients.post_json(
-                        "orchestrator/infrastructure/events/replay", {"event_ids": event_id_list}
+                        "orchestrator/infrastructure/events/replay",
+                        {"event_ids": event_id_list},
                     )
 
                 if response.get("replay_result"):
@@ -1066,7 +1184,11 @@ Details:
                             status_icon = "✅" if detail.get("success") else "❌"
                             content += f"  {status_icon} {detail.get('event_id', 'unknown')[:8]}: {detail.get('result', 'unknown')}\n"
 
-                    print_panel(self.console, content, border_style="green" if result.get("failed", 0) == 0 else "red")
+                    print_panel(
+                        self.console,
+                        content,
+                        border_style="green" if result.get("failed", 0) == 0 else "red",
+                    )
                 else:
                     self.console.print("[red]❌ Event replay failed[/red]")
             else:
@@ -1078,8 +1200,12 @@ Details:
     async def event_statistics(self):
         """Event statistics."""
         try:
-            with self.console.status("[bold green]Fetching event statistics...") as status:
-                response = await self.clients.get_json("orchestrator/infrastructure/events/stats")
+            with self.console.status(
+                "[bold green]Fetching event statistics..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "orchestrator/infrastructure/events/stats"
+                )
 
             if response.get("event_stats"):
                 stats = response["event_stats"]
@@ -1098,14 +1224,14 @@ Event Types:
 
                 content += f"""
 Processing:
-  Average Processing Time: {stats.get('avg_processing_time_ms', 0):.2f} ms
-  Failed Events: {stats.get('failed_events', 0)}
-  Retry Rate: {stats.get('retry_rate_percent', 0):.2f}%
+    Average Processing Time: {stats.get('avg_processing_time_ms', 0):.2f} ms
+    Failed Events: {stats.get('failed_events', 0)}
+    Retry Rate: {stats.get('retry_rate_percent', 0):.2f}%
 
 Storage:
-  Events Stored: {stats.get('events_stored', 0)}
-  Storage Size: {stats.get('storage_size_mb', 0):.2f} MB
-  Retention Days: {stats.get('retention_days', 0)}
+    Events Stored: {stats.get('events_stored', 0)}
+    Storage Size: {stats.get('storage_size_mb', 0):.2f} MB
+    Retention Days: {stats.get('retention_days', 0)}
 """
                 print_panel(self.console, content, border_style="cyan")
             else:
@@ -1117,12 +1243,22 @@ Storage:
     async def infrastructure_health_dashboard(self):
         """Infrastructure health dashboard."""
         try:
-            with self.console.status("[bold green]Generating infrastructure health dashboard...") as status:
+            with self.console.status(
+                "[bold green]Generating infrastructure health dashboard..."
+            ) as status:
                 # Fetch all infrastructure health data
-                redis_response = await self.clients.get_json("orchestrator/infrastructure/redis/info")
-                dlq_response = await self.clients.get_json("orchestrator/infrastructure/dlq/stats")
-                saga_response = await self.clients.get_json("orchestrator/infrastructure/saga/stats")
-                tracing_response = await self.clients.get_json("orchestrator/infrastructure/tracing/stats")
+                redis_response = await self.clients.get_json(
+                    "orchestrator/infrastructure/redis/info"
+                )
+                dlq_response = await self.clients.get_json(
+                    "orchestrator/infrastructure/dlq/stats"
+                )
+                saga_response = await self.clients.get_json(
+                    "orchestrator/infrastructure/saga/stats"
+                )
+                tracing_response = await self.clients.get_json(
+                    "orchestrator/infrastructure/tracing/stats"
+                )
 
             content = "[bold]Infrastructure Health Dashboard[/bold]\n\n"
 
@@ -1142,7 +1278,11 @@ Storage:
             if dlq_response.get("dlq_stats"):
                 dlq = dlq_response["dlq_stats"]
                 total_msgs = dlq.get("total_messages", 0)
-                status = "✅ Healthy" if total_msgs < 100 else "⚠️ High" if total_msgs < 1000 else "❌ Critical"
+                status = (
+                    "✅ Healthy"
+                    if total_msgs < 100
+                    else "⚠️ High" if total_msgs < 1000 else "❌ Critical"
+                )
                 content += f"  Status: {status} ({total_msgs} messages)\n"
                 content += f"  Processed Today: {dlq.get('processed_today', 0)}\n"
             else:
@@ -1154,7 +1294,11 @@ Storage:
             if saga_response.get("saga_stats"):
                 saga = saga_response["saga_stats"]
                 success_rate = saga.get("success_rate_percent", 0)
-                status = "✅ Healthy" if success_rate > 95 else "⚠️ Degraded" if success_rate > 80 else "❌ Critical"
+                status = (
+                    "✅ Healthy"
+                    if success_rate > 95
+                    else "⚠️ Degraded" if success_rate > 80 else "❌ Critical"
+                )
                 content += f"  Status: {status} ({success_rate:.1f}% success rate)\n"
                 content += f"  Active Sagas: {saga.get('active_sagas', 0)}\n"
                 content += f"  Failed Today: {saga.get('failed_today', 0)}\n"
@@ -1167,7 +1311,11 @@ Storage:
             if tracing_response.get("tracing_stats"):
                 tracing = tracing_response["tracing_stats"]
                 error_rate = tracing.get("error_rate_percent", 0)
-                status = "✅ Healthy" if error_rate < 5 else "⚠️ Issues" if error_rate < 15 else "❌ Problems"
+                status = (
+                    "✅ Healthy"
+                    if error_rate < 5
+                    else "⚠️ Issues" if error_rate < 15 else "❌ Problems"
+                )
                 content += f"  Status: {status} ({error_rate:.1f}% error rate)\n"
                 content += f"  Active Traces: {tracing.get('active_traces', 0)}\n"
                 content += f"  Average Duration: {tracing.get('avg_trace_duration_ms', 0):.2f} ms\n"
@@ -1177,4 +1325,6 @@ Storage:
             print_panel(self.console, content, border_style="green")
 
         except Exception as e:
-            self.console.print(f"[red]Error generating infrastructure health dashboard: {e}[/red]")
+            self.console.print(
+                f"[red]Error generating infrastructure health dashboard: {e}[/red]"
+            )

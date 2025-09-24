@@ -31,7 +31,9 @@ class DiscoveryAgentMonitoring:
             "performance_data": [],
         }
 
-    async def log_discovery_event(self, event_type: str, data: Dict[str, Any], level: str = "INFO") -> bool:
+    async def log_discovery_event(
+        self, event_type: str, data: Dict[str, Any], level: str = "INFO"
+    ) -> bool:
         """Log a discovery-related event to the log-collector service"""
 
         log_entry = {
@@ -41,7 +43,11 @@ class DiscoveryAgentMonitoring:
             "event_type": event_type,
             "level": level,
             "data": data,
-            "metadata": {"component": "discovery_agent", "version": "1.0.0", "environment": "development"},
+            "metadata": {
+                "component": "discovery_agent",
+                "version": "1.0.0",
+                "environment": "development",
+            },
         }
 
         try:
@@ -61,7 +67,9 @@ class DiscoveryAgentMonitoring:
             # Still return True to not break the flow
             return True
 
-    async def monitor_service_discovery(self, service_name: str, discovery_result: Dict[str, Any]):
+    async def monitor_service_discovery(
+        self, service_name: str, discovery_result: Dict[str, Any]
+    ):
         """Monitor and log service discovery operations"""
 
         # Extract key metrics
@@ -77,7 +85,9 @@ class DiscoveryAgentMonitoring:
                 "health_status": health_status,
                 "tools_discovered": tools_count,
                 "response_time_ms": response_time * 1000,
-                "openapi_success": discovery_result.get("openapi", {}).get("success", False),
+                "openapi_success": discovery_result.get("openapi", {}).get(
+                    "success", False
+                ),
             },
         )
 
@@ -103,12 +113,32 @@ class DiscoveryAgentMonitoring:
         # Extract security metrics
         risk_level = scan_result.get("risk_level", "unknown")
         vulnerabilities_count = len(scan_result.get("vulnerabilities", []))
-        secure_analyzer_success = scan_result.get("secure_analyzer_result", {}).get("success", False)
+        secure_analyzer_success = scan_result.get("secure_analyzer_result", {}).get(
+            "success", False
+        )
 
         # Categorize vulnerabilities by severity
-        high_vulns = len([v for v in scan_result.get("vulnerabilities", []) if v.get("severity") == "high"])
-        medium_vulns = len([v for v in scan_result.get("vulnerabilities", []) if v.get("severity") == "medium"])
-        low_vulns = len([v for v in scan_result.get("vulnerabilities", []) if v.get("severity") == "low"])
+        high_vulns = len(
+            [
+                v
+                for v in scan_result.get("vulnerabilities", [])
+                if v.get("severity") == "high"
+            ]
+        )
+        medium_vulns = len(
+            [
+                v
+                for v in scan_result.get("vulnerabilities", [])
+                if v.get("severity") == "medium"
+            ]
+        )
+        low_vulns = len(
+            [
+                v
+                for v in scan_result.get("vulnerabilities", [])
+                if v.get("severity") == "low"
+            ]
+        )
 
         # Log security scan event
         await self.log_discovery_event(
@@ -129,9 +159,13 @@ class DiscoveryAgentMonitoring:
         # Update metrics
         self.metrics["security_scans"] += 1
 
-        print(f"🔒 Logged security scan for {tool_name}: {risk_level} risk, {vulnerabilities_count} vulnerabilities")
+        print(
+            f"🔒 Logged security scan for {tool_name}: {risk_level} risk, {vulnerabilities_count} vulnerabilities"
+        )
 
-    async def monitor_tool_execution(self, tool_name: str, service: str, execution_result: Dict[str, Any]):
+    async def monitor_tool_execution(
+        self, tool_name: str, service: str, execution_result: Dict[str, Any]
+    ):
         """Monitor and log tool execution events"""
 
         success = execution_result.get("success", False)
@@ -182,7 +216,9 @@ class DiscoveryAgentMonitoring:
                 "performance_trend": self._analyze_performance_trend(),
             },
             "security_metrics": {
-                "services_scanned": len(set(p.get("service") for p in self.metrics["performance_data"])),
+                "services_scanned": len(
+                    set(p.get("service") for p in self.metrics["performance_data"])
+                ),
                 "avg_scan_time": "< 1s",
                 "high_risk_tools": 0,  # Would be calculated from actual scans
                 "security_trend": "improving",
@@ -212,7 +248,9 @@ class DiscoveryAgentMonitoring:
         """Check the health of the log-collector service"""
         try:
             async with self.service_client.session() as session:
-                async with session.get(f"{self.log_collector_url}/health", timeout=3) as response:
+                async with session.get(
+                    f"{self.log_collector_url}/health", timeout=3
+                ) as response:
                     if response.status == 200:
                         return "healthy"
                     else:
@@ -229,7 +267,9 @@ class DiscoveryAgentMonitoring:
         if not self.metrics["performance_data"]:
             return 0.0
 
-        total_time = sum(p.get("response_time", 0) for p in self.metrics["performance_data"])
+        total_time = sum(
+            p.get("response_time", 0) for p in self.metrics["performance_data"]
+        )
         return total_time / len(self.metrics["performance_data"])
 
     def _get_fastest_discovery(self) -> Dict[str, Any]:
@@ -237,7 +277,10 @@ class DiscoveryAgentMonitoring:
         if not self.metrics["performance_data"]:
             return {"service": "none", "time": 0}
 
-        fastest = min(self.metrics["performance_data"], key=lambda x: x.get("response_time", float("inf")))
+        fastest = min(
+            self.metrics["performance_data"],
+            key=lambda x: x.get("response_time", float("inf")),
+        )
         return {
             "service": fastest.get("service", "unknown"),
             "time": fastest.get("response_time", 0),
@@ -249,7 +292,9 @@ class DiscoveryAgentMonitoring:
         if not self.metrics["performance_data"]:
             return {"service": "none", "time": 0}
 
-        slowest = max(self.metrics["performance_data"], key=lambda x: x.get("response_time", 0))
+        slowest = max(
+            self.metrics["performance_data"], key=lambda x: x.get("response_time", 0)
+        )
         return {
             "service": slowest.get("service", "unknown"),
             "time": slowest.get("response_time", 0),
@@ -261,7 +306,9 @@ class DiscoveryAgentMonitoring:
         if not self.metrics["performance_data"]:
             return 0.0
 
-        total_tools = sum(p.get("tools_count", 0) for p in self.metrics["performance_data"])
+        total_tools = sum(
+            p.get("tools_count", 0) for p in self.metrics["performance_data"]
+        )
         return total_tools / len(self.metrics["performance_data"])
 
     def _analyze_performance_trend(self) -> str:
@@ -271,10 +318,17 @@ class DiscoveryAgentMonitoring:
 
         # Simple trend analysis - compare first half to second half
         midpoint = len(self.metrics["performance_data"]) // 2
-        first_half_avg = sum(p.get("response_time", 0) for p in self.metrics["performance_data"][:midpoint]) / midpoint
-        second_half_avg = sum(p.get("response_time", 0) for p in self.metrics["performance_data"][midpoint:]) / (
-            len(self.metrics["performance_data"]) - midpoint
+        first_half_avg = (
+            sum(
+                p.get("response_time", 0)
+                for p in self.metrics["performance_data"][:midpoint]
+            )
+            / midpoint
         )
+        second_half_avg = sum(
+            p.get("response_time", 0)
+            for p in self.metrics["performance_data"][midpoint:]
+        ) / (len(self.metrics["performance_data"]) - midpoint)
 
         if second_half_avg < first_half_avg * 0.9:
             return "improving"
@@ -291,7 +345,9 @@ class DiscoveryAgentMonitoring:
 
     def _calculate_error_rate(self) -> float:
         """Calculate error rate percentage"""
-        total_operations = self.metrics["discovery_operations"] + self.metrics["security_scans"]
+        total_operations = (
+            self.metrics["discovery_operations"] + self.metrics["security_scans"]
+        )
         if total_operations == 0:
             return 0.0
 
@@ -304,22 +360,30 @@ class DiscoveryAgentMonitoring:
         # Performance recommendations
         avg_time = self._calculate_avg_discovery_time()
         if avg_time > 2.0:
-            recommendations.append("Discovery operations are slow - optimize service health checks")
+            recommendations.append(
+                "Discovery operations are slow - optimize service health checks"
+            )
 
         # Error rate recommendations
         error_rate = self._calculate_error_rate()
         if error_rate > 10:
-            recommendations.append("High error rate detected - investigate service connectivity")
+            recommendations.append(
+                "High error rate detected - investigate service connectivity"
+            )
         elif error_rate > 5:
             recommendations.append("Moderate error rate - monitor service stability")
 
         # Coverage recommendations
         if self.metrics["tools_discovered"] < 50:
-            recommendations.append("Low tool discovery count - verify service OpenAPI specifications")
+            recommendations.append(
+                "Low tool discovery count - verify service OpenAPI specifications"
+            )
 
         # Security recommendations
         if self.metrics["security_scans"] == 0:
-            recommendations.append("No security scans performed - implement regular security scanning")
+            recommendations.append(
+                "No security scans performed - implement regular security scanning"
+            )
 
         # General recommendations
         recommendations.extend(

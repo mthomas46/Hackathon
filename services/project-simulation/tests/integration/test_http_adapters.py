@@ -11,7 +11,10 @@ from typing import Any, Dict
 import httpx
 import pytest
 from simulation.domain.value_objects import ServiceEndpoint, ServiceHealth
-from simulation.infrastructure.clients.ecosystem_clients import EcosystemServiceClient, EcosystemServiceRegistry
+from simulation.infrastructure.clients.ecosystem_clients import (
+    EcosystemServiceClient,
+    EcosystemServiceRegistry,
+)
 
 
 class TestHTTPAdapterConnectionPooling:
@@ -254,7 +257,9 @@ class TestHTTPAdapterResilience:
     @pytest.mark.asyncio
     async def test_graceful_error_handling(self):
         """Test graceful error handling for various failure scenarios."""
-        endpoint = ServiceEndpoint("http://non-existent-service-12345.com", timeout_seconds=5)
+        endpoint = ServiceEndpoint(
+            "http://non-existent-service-12345.com", timeout_seconds=5
+        )
         client = EcosystemServiceClient("failing_service", endpoint)
 
         try:

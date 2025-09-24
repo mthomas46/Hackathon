@@ -76,7 +76,9 @@ class CreateFindingUseCase:
             validation_result = self.finding_validator.validate(finding)
             if not validation_result.is_valid:
                 return CreateFindingResult(
-                    finding=finding, is_valid=False, validation_errors=[error for error in validation_result.errors]
+                    finding=finding,
+                    is_valid=False,
+                    validation_errors=[error for error in validation_result.errors],
                 )
 
             # Check business rules
@@ -85,7 +87,9 @@ class CreateFindingUseCase:
             # Save finding
             await self.finding_repository.save(finding)
 
-            return CreateFindingResult(finding=finding, is_valid=True, validation_errors=[])
+            return CreateFindingResult(
+                finding=finding, is_valid=True, validation_errors=[]
+            )
 
         except Exception as e:
             # Log error and re-raise
@@ -95,7 +99,9 @@ class CreateFindingUseCase:
     async def _validate_business_rules(self, finding: Finding) -> None:
         """Validate business rules for finding creation."""
         # Check for duplicate findings (simplified - in real app this would be more sophisticated)
-        existing_findings = await self.finding_repository.get_by_document_id(finding.document_id.value)
+        existing_findings = await self.finding_repository.get_by_document_id(
+            finding.document_id.value
+        )
         for existing in existing_findings:
             if (
                 existing.title == finding.title
@@ -108,7 +114,9 @@ class CreateFindingUseCase:
 
         # Ensure confidence is reasonable for severity
         if finding.severity.value == "critical" and finding.confidence < 0.9:
-            print(f"Warning: Critical finding with low confidence: {finding.confidence}")
+            print(
+                f"Warning: Critical finding with low confidence: {finding.confidence}"
+            )
 
         if finding.severity.value == "info" and finding.confidence > 0.9:
             print(f"Warning: Info finding with high confidence: {finding.confidence}")

@@ -68,7 +68,14 @@ class UpdateDocumentRequest:
             errors.append("Document ID is required")
 
         # At least one field should be provided for update
-        updatable_fields = [self.title, self.content, self.format, self.author, self.tags, self.metadata]
+        updatable_fields = [
+            self.title,
+            self.content,
+            self.format,
+            self.author,
+            self.tags,
+            self.metadata,
+        ]
         if not any(field is not None for field in updatable_fields):
             errors.append("At least one field must be provided for update")
 
@@ -127,12 +134,18 @@ class PerformAnalysisRequest:
         ]
 
         if self.analysis_type not in valid_types:
-            errors.append(f"Invalid analysis type. Must be one of: {', '.join(valid_types)}")
+            errors.append(
+                f"Invalid analysis type. Must be one of: {', '.join(valid_types)}"
+            )
 
         if self.priority not in ["low", "normal", "high", "critical"]:
-            errors.append("Invalid priority. Must be one of: low, normal, high, critical")
+            errors.append(
+                "Invalid priority. Must be one of: low, normal, high, critical"
+            )
 
-        if self.timeout_seconds is not None and (self.timeout_seconds < 10 or self.timeout_seconds > 3600):
+        if self.timeout_seconds is not None and (
+            self.timeout_seconds < 10 or self.timeout_seconds > 3600
+        ):
             errors.append("Timeout must be between 10 and 3600 seconds")
 
         if self.configuration:
@@ -165,7 +178,14 @@ class CreateFindingRequest:
         """Validate the request."""
         errors = []
 
-        required_fields = ["document_id", "analysis_id", "title", "description", "severity", "category"]
+        required_fields = [
+            "document_id",
+            "analysis_id",
+            "title",
+            "description",
+            "severity",
+            "category",
+        ]
         for field in required_fields:
             value = getattr(self, field)
             if not value or not str(value).strip():
@@ -180,9 +200,17 @@ class CreateFindingRequest:
         if self.severity not in ["info", "low", "medium", "high", "critical"]:
             errors.append("Invalid severity")
 
-        valid_categories = ["consistency", "quality", "security", "performance", "usability"]
+        valid_categories = [
+            "consistency",
+            "quality",
+            "security",
+            "performance",
+            "usability",
+        ]
         if self.category not in valid_categories:
-            errors.append(f"Invalid category. Must be one of: {', '.join(valid_categories)}")
+            errors.append(
+                f"Invalid category. Must be one of: {', '.join(valid_categories)}"
+            )
 
         if not 0.0 <= self.confidence <= 1.0:
             errors.append("Confidence must be between 0.0 and 1.0")
@@ -238,13 +266,27 @@ class UpdateFindingRequest:
         if self.description and len(self.description) > 1000:
             errors.append("Description too long (max 1000 characters)")
 
-        if self.severity and self.severity not in ["info", "low", "medium", "high", "critical"]:
+        if self.severity and self.severity not in [
+            "info",
+            "low",
+            "medium",
+            "high",
+            "critical",
+        ]:
             errors.append("Invalid severity")
 
         if self.category:
-            valid_categories = ["consistency", "quality", "security", "performance", "usability"]
+            valid_categories = [
+                "consistency",
+                "quality",
+                "security",
+                "performance",
+                "usability",
+            ]
             if self.category not in valid_categories:
-                errors.append(f"Invalid category. Must be one of: {', '.join(valid_categories)}")
+                errors.append(
+                    f"Invalid category. Must be one of: {', '.join(valid_categories)}"
+                )
 
         if self.confidence is not None and not 0.0 <= self.confidence <= 1.0:
             errors.append("Confidence must be between 0.0 and 1.0")
@@ -312,13 +354,27 @@ class GetFindingsRequest:
         if self.offset < 0:
             errors.append("Offset must be non-negative")
 
-        if self.severity and self.severity not in ["info", "low", "medium", "high", "critical"]:
+        if self.severity and self.severity not in [
+            "info",
+            "low",
+            "medium",
+            "high",
+            "critical",
+        ]:
             errors.append("Invalid severity")
 
         if self.category:
-            valid_categories = ["consistency", "quality", "security", "performance", "usability"]
+            valid_categories = [
+                "consistency",
+                "quality",
+                "security",
+                "performance",
+                "usability",
+            ]
             if self.category not in valid_categories:
-                errors.append(f"Invalid category. Must be one of: {', '.join(valid_categories)}")
+                errors.append(
+                    f"Invalid category. Must be one of: {', '.join(valid_categories)}"
+                )
 
         if self.confidence_min is not None and not 0.0 <= self.confidence_min <= 1.0:
             errors.append("Confidence minimum must be between 0.0 and 1.0")

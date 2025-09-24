@@ -22,9 +22,9 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 
-from services.shared.core.constants_new import EnvVars, ServiceNames  # type: ignore
-from services.shared.monitoring.logging import fire_and_forget  # type: ignore
-from services.shared.utilities import attach_self_register  # type: ignore
+from services.shared.infrastructure.config import load_service_config
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.utilities import attach_self_register
 
 try:
     from .modules.circuit_breaker import circuit_breaker, operation_timeout_context
@@ -40,10 +40,16 @@ except ImportError:
     from modules.content_detector import content_detector
     from modules.policy_enforcer import policy_enforcer
 
-# Service configuration constants
-SERVICE_NAME = "secure-analyzer"
-SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 5070
+# Load standardized configuration
+config = load_service_config(
+    service_type="secure-analyzer",
+    config_file="./config.yaml",  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Content validation limits
 MAX_CONTENT_SIZE_BYTES = 1000000  # 1MB
@@ -59,12 +65,15 @@ app = FastAPI(
     title="Secure Analyzer",
     version=SERVICE_VERSION,
     description="AI content security analysis service with policy enforcement and circuit breaker protection",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
-# Use common middleware setup to reduce duplication across services
+
+# Setup standardized middleware and utilities
 from services.shared.utilities import setup_common_middleware
 
-setup_common_middleware(app, ServiceNames.SECURE_ANALYZER)
-attach_self_register(app, ServiceNames.SECURE_ANALYZER)
+setup_common_middleware(app, service_name=config.service_name)
+attach_self_register(app, config.service_name)
 
 
 @app.get("/health")
@@ -105,7 +114,9 @@ class DetectRequest(BaseModel):
         if not v or not v.strip():
             raise ValueError("Content cannot be empty or contain only whitespace")
         if len(v) > MAX_CONTENT_SIZE_BYTES:
-            raise ValueError(f"Content exceeds maximum size of {MAX_CONTENT_SIZE_BYTES:,} bytes")
+            raise ValueError(
+                f"Content exceeds maximum size of {MAX_CONTENT_SIZE_BYTES:,} bytes"
+            )
         return v
 
     @field_validator("keywords")
@@ -117,7 +128,9 @@ class DetectRequest(BaseModel):
                 raise ValueError(f"Too many keywords (maximum {MAX_KEYWORDS_COUNT})")
             for keyword in v:
                 if len(keyword) > MAX_KEYWORD_LENGTH:
-                    raise ValueError(f"Keyword exceeds maximum length of {MAX_KEYWORD_LENGTH} characters")
+                    raise ValueError(
+                        f"Keyword exceeds maximum length of {MAX_KEYWORD_LENGTH} characters"
+                    )
         return v
 
 
@@ -153,14 +166,19 @@ async def detect(req: DetectRequest):
     """
     # Check circuit breaker to prevent cascade failures
     if circuit_breaker.is_open():
-        print(f"[{SERVICE_NAME.upper()}] Circuit breaker is OPEN - rejecting detect request")
-        raise HTTPException(status_code=503, detail="Service temporarily unavailable due to circuit breaker")
+        print(
+            f"[{SERVICE_NAME.upper()}] Circuit breaker is OPEN - rejecting detect request"
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="Service temporarily unavailable due to circuit breaker",
+        )
 
     async with operation_timeout_context("detect"):
         fire_and_forget(
             "info",
             "detect",
-            ServiceNames.SECURE_ANALYZER,
+            config.service_name,
             {
                 "has_keywords": bool(req.keywords),
                 "has_keyword_doc": bool(req.keyword_document),
@@ -171,15 +189,21 @@ async def detect(req: DetectRequest):
         # Load additional keywords from URL if provided
         extra_keywords = req.keywords or []
         if req.keyword_document:
-            print(f"[{SERVICE_NAME.upper()}] Loading keywords from URL: {req.keyword_document}")
+            print(
+                f"[{SERVICE_NAME.upper()}] Loading keywords from URL: {req.keyword_document}"
+            )
             try:
                 # TODO: Implement URL keyword loading
-                print(f"[{SERVICE_NAME.upper()}] Loaded {len(extra_keywords)} keywords total")
+                print(
+                    f"[{SERVICE_NAME.upper()}] Loaded {len(extra_keywords)} keywords total"
+                )
             except Exception as e:
                 print(f"[{SERVICE_NAME.upper()}] Failed to load keywords from URL: {e}")
 
         # Detect sensitive content using pattern matching
-        detection_result = content_detector.detect_sensitive_content(req.content, extra_keywords)
+        detection_result = content_detector.detect_sensitive_content(
+            req.content, extra_keywords
+        )
 
         return DetectResponse(**detection_result)
 
@@ -222,24 +246,41 @@ async def suggest(req: SuggestRequest):
     # Check circuit breaker
     if circuit_breaker.is_open():
         print(f"[SECURE_ANALYZER] Circuit breaker is OPEN - rejecting suggest request")
-        raise HTTPException(status_code=503, detail="Service temporarily unavailable due to circuit breaker")
+        raise HTTPException(
+            status_code=503,
+            detail="Service temporarily unavailable due to circuit breaker",
+        )
 
     async with operation_timeout_context("suggest"):
         print(f"[SECURE_ANALYZER] Starting suggest operation")
-        fire_and_forget("info", "suggest", ServiceNames.SECURE_ANALYZER, {"has_kw": bool(req.keywords)})
+        fire_and_forget(
+            "info", "suggest", config.service_name, {"has_kw": bool(req.keywords)}
+        )
 
         # Detect sensitive content
         detection = await detect(
-            DetectRequest(content=req.content, keywords=req.keywords, keyword_document=req.keyword_document)
+            DetectRequest(
+                content=req.content,
+                keywords=req.keywords,
+                keyword_document=req.keyword_document,
+            )
         )
-        print(f"[SECURE_ANALYZER] Detection completed, sensitive: {detection.sensitive}")
+        print(
+            f"[SECURE_ANALYZER] Detection completed, sensitive: {detection.sensitive}"
+        )
 
         # Get allowed models based on policy
         allowed_models = policy_enforcer.get_allowed_models(detection.sensitive)
         suggestion = policy_enforcer.get_policy_suggestion(detection.sensitive)
 
-        print(f"[SECURE_ANALYZER] Suggest operation completed, returning {len(allowed_models)} allowed models")
-        return SuggestResponse(sensitive=detection.sensitive, allowed_models=allowed_models, suggestion=suggestion)
+        print(
+            f"[SECURE_ANALYZER] Suggest operation completed, returning {len(allowed_models)} allowed models"
+        )
+        return SuggestResponse(
+            sensitive=detection.sensitive,
+            allowed_models=allowed_models,
+            suggestion=suggestion,
+        )
 
 
 class SummarizeRequest(BaseModel):
@@ -290,24 +331,39 @@ class SummarizeRequest(BaseModel):
 async def summarize(req: SummarizeRequest):
     # Check circuit breaker
     if circuit_breaker.is_open():
-        print(f"[SECURE_ANALYZER] Circuit breaker is OPEN - rejecting summarize request")
-        raise HTTPException(status_code=503, detail="Service temporarily unavailable due to circuit breaker")
+        print(
+            f"[SECURE_ANALYZER] Circuit breaker is OPEN - rejecting summarize request"
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="Service temporarily unavailable due to circuit breaker",
+        )
 
     async with operation_timeout_context("summarize"):
         print(f"[SECURE_ANALYZER] Starting summarize operation")
-        fire_and_forget("info", "summarize", ServiceNames.SECURE_ANALYZER, {"override": req.override_policy})
+        fire_and_forget(
+            "info", "summarize", config.service_name, {"override": req.override_policy}
+        )
 
-        hub = os.environ.get(EnvVars.SUMMARIZER_HUB_URL_ENV, "http://summarizer-hub:5060")
+        hub = os.environ.get(
+            EnvVars.SUMMARIZER_HUB_URL_ENV, "http://summarizer-hub:5060"
+        )
         print(f"[SECURE_ANALYZER] Summarizer hub URL: {hub}")
 
         # Detect sensitive content
         det = await detect(
-            DetectRequest(content=req.content, keywords=req.keywords, keyword_document=req.keyword_document)
+            DetectRequest(
+                content=req.content,
+                keywords=req.keywords,
+                keyword_document=req.keyword_document,
+            )
         )
         print(f"[SECURE_ANALYZER] Detection completed, sensitive: {det.sensitive}")
 
         # Filter providers based on policy
-        providers = policy_enforcer.filter_providers(req.providers, det.sensitive, req.override_policy)
+        providers = policy_enforcer.filter_providers(
+            req.providers, det.sensitive, req.override_policy
+        )
     # Set default prompt if none provided
     if not req.prompt:
         try:
@@ -315,13 +371,19 @@ async def summarize(req: SummarizeRequest):
 
             req.prompt = get_prompt("summarization.security_focused")
         except Exception:
-            req.prompt = "Summarize focusing on risks, PII, secrets, and client information."
+            req.prompt = (
+                "Summarize focusing on risks, PII, secrets, and client information."
+            )
 
     # Mock response for testing
     if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("TESTING"):
         provider_used = providers[0].get("name", "ollama") if providers else "ollama"
-        base_summary = f"Mock summary (len={len(req.content)}), providers={len(providers)}"
-        if req.prompt and ("security" in req.prompt.lower() or "risk" in req.prompt.lower()):
+        base_summary = (
+            f"Mock summary (len={len(req.content)}), providers={len(providers)}"
+        )
+        if req.prompt and (
+            "security" in req.prompt.lower() or "risk" in req.prompt.lower()
+        ):
             base_summary = f"Security-focused summary: This content has been analyzed for security risks and potential vulnerabilities. Key findings include {len(det.matches)} sensitive elements and {len(det.topics)} security topics identified."
 
         return {

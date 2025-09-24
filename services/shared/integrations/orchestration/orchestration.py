@@ -51,10 +51,14 @@ class EventOrderer:
         self._seen_events: Dict[str, float] = {}
 
     def create_event_metadata(
-        self, priority: EventPriority = EventPriority.NORMAL, correlation_id: Optional[str] = None
+        self,
+        priority: EventPriority = EventPriority.NORMAL,
+        correlation_id: Optional[str] = None,
     ) -> EventMetadata:
         self._sequence_counter += 1
-        sequence_id = f"{self.service_name}:{int(time.time() * 1000)}:{self._sequence_counter}"
+        sequence_id = (
+            f"{self.service_name}:{int(time.time() * 1000)}:{self._sequence_counter}"
+        )
 
         return EventMetadata(
             sequence_id=sequence_id,
@@ -182,7 +186,9 @@ class DeadLetterQueue:
     async def get_retryable_events(self, limit: int = 10) -> List[DLQEntry]:
         redis = await self._get_redis()
         now = time.time()
-        event_ids = await redis.zrangebyscore(self.retry_key, 0, now, start=0, num=limit)
+        event_ids = await redis.zrangebyscore(
+            self.retry_key, 0, now, start=0, num=limit
+        )
         events = []
         for event_id in event_ids:
             event_data = await redis.hget(self.dlq_key, event_id)
@@ -191,7 +197,9 @@ class DeadLetterQueue:
                 events.append(DLQEntry(**event_dict))
         return events
 
-    async def retry_event(self, event_id: str, processor_func: Callable[[Dict[str, Any]], Any]) -> bool:
+    async def retry_event(
+        self, event_id: str, processor_func: Callable[[Dict[str, Any]], Any]
+    ) -> bool:
         redis = await self._get_redis()
         event_data = await redis.hget(self.dlq_key, event_id)
         if not event_data:
@@ -207,13 +215,19 @@ class DeadLetterQueue:
         except Exception as e:
             dlq_entry.retry_count += 1
             if dlq_entry.retry_count < dlq_entry.max_retries:
-                dlq_entry.next_retry_at = self._calculate_next_retry(dlq_entry.retry_count, dlq_entry.retry_policy)
+                dlq_entry.next_retry_at = self._calculate_next_retry(
+                    dlq_entry.retry_count, dlq_entry.retry_policy
+                )
                 await redis.hset(self.dlq_key, event_id, json.dumps(asdict(dlq_entry)))
                 await redis.zadd(self.retry_key, {event_id: dlq_entry.next_retry_at})
-                logger.warning(f"Retry {dlq_entry.retry_count} failed for event {event_id}: {e}")
+                logger.warning(
+                    f"Retry {dlq_entry.retry_count} failed for event {event_id}: {e}"
+                )
             else:
                 await redis.zrem(self.retry_key, event_id)
-                logger.error(f"Event {event_id} exceeded max retries, moved to permanent DLQ")
+                logger.error(
+                    f"Event {event_id} exceeded max retries, moved to permanent DLQ"
+                )
             return False
 
 
@@ -271,7 +285,9 @@ class SagaOrchestrator:
     def set_service_client(self, service_name: str, client):
         self._service_clients[service_name] = client
 
-    async def create_saga(self, correlation_id: str, steps: List[Dict[str, Any]]) -> str:
+    async def create_saga(
+        self, correlation_id: str, steps: List[Dict[str, Any]]
+    ) -> str:
         saga_id = str(uuid.uuid4())
         now = time.time()
         saga_steps = []
@@ -287,7 +303,11 @@ class SagaOrchestrator:
             )
             saga_steps.append(step)
         saga = SagaTransaction(
-            saga_id=saga_id, correlation_id=correlation_id, steps=saga_steps, created_at=now, updated_at=now
+            saga_id=saga_id,
+            correlation_id=correlation_id,
+            steps=saga_steps,
+            created_at=now,
+            updated_at=now,
         )
         redis = await self._get_redis()
         await redis.hset(self.saga_key, saga_id, json.dumps(asdict(saga)))
@@ -454,21 +474,30 @@ class DocConsistencySaga:
                 "action": "POST /ingest",
                 "payload": {"source": "github", "correlation_id": correlation_id},
                 "compensation": "POST /ingest/rollback",
-                "compensation_payload": {"source": "github", "correlation_id": correlation_id},
+                "compensation_payload": {
+                    "source": "github",
+                    "correlation_id": correlation_id,
+                },
             },
             {
                 "service_name": "jira-agent",
                 "action": "POST /ingest",
                 "payload": {"source": "jira", "correlation_id": correlation_id},
                 "compensation": "POST /ingest/rollback",
-                "compensation_payload": {"source": "jira", "correlation_id": correlation_id},
+                "compensation_payload": {
+                    "source": "jira",
+                    "correlation_id": correlation_id,
+                },
             },
             {
                 "service_name": "confluence-agent",
                 "action": "POST /ingest",
                 "payload": {"source": "confluence", "correlation_id": correlation_id},
                 "compensation": "POST /ingest/rollback",
-                "compensation_payload": {"source": "confluence", "correlation_id": correlation_id},
+                "compensation_payload": {
+                    "source": "confluence",
+                    "correlation_id": correlation_id,
+                },
             },
             {
                 "service_name": "consistency-engine",
@@ -480,7 +509,9 @@ class DocConsistencySaga:
         ]
 
     @staticmethod
-    def create_notification_saga(correlation_id: str, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def create_notification_saga(
+        correlation_id: str, findings: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Create saga for notification workflow."""
         return [
             {
@@ -488,6 +519,9 @@ class DocConsistencySaga:
                 "action": "POST /reports/findings/notify-owners",
                 "payload": {"findings": findings, "correlation_id": correlation_id},
                 "compensation": "POST /reports/findings/notify-owners/rollback",
-                "compensation_payload": {"findings": findings, "correlation_id": correlation_id},
+                "compensation_payload": {
+                    "findings": findings,
+                    "correlation_id": correlation_id,
+                },
             }
         ]

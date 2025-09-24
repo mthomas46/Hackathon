@@ -8,11 +8,16 @@ import os
 from typing import Any, Dict, Optional
 from abc import ABC, abstractmethod
 
-from pydantic import BaseSettings, ValidationError
+try:
+    from pydantic_settings import BaseSettings
+except ImportError:
+    from pydantic import BaseSettings
+from pydantic import ValidationError
 
 
 class ConfigValidationError(Exception):
     """Raised when configuration validation fails."""
+
     pass
 
 
@@ -37,17 +42,17 @@ class BaseConfig(ABC):
         pass
 
     @classmethod
-    def from_env(cls, prefix: str = "") -> 'BaseConfig':
+    def from_env(cls, prefix: str = "") -> "BaseConfig":
         """Create configuration from environment variables."""
         env_data = {}
         for key, value in os.environ.items():
             if prefix and key.startswith(prefix):
-                config_key = key[len(prefix):].lower()
+                config_key = key[len(prefix) :].lower()
                 env_data[config_key] = cls._parse_env_value(value)
         return cls(**env_data)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BaseConfig':
+    def from_dict(cls, data: Dict[str, Any]) -> "BaseConfig":
         """Create configuration from dictionary."""
         return cls(**data)
 
@@ -55,11 +60,11 @@ class BaseConfig(ABC):
     def _parse_env_value(value: str) -> Any:
         """Parse environment variable value to appropriate type."""
         # Simple type coercion for common cases
-        if value.lower() in ('true', 'false'):
-            return value.lower() == 'true'
+        if value.lower() in ("true", "false"):
+            return value.lower() == "true"
         if value.isdigit():
             return int(value)
-        if '.' in value and all(part.isdigit() for part in value.split('.')):
+        if "." in value and all(part.isdigit() for part in value.split(".")):
             try:
                 return float(value)
             except ValueError:
@@ -86,7 +91,7 @@ class EnvironmentConfig(BaseConfig):
         config = {}
         for key, value in os.environ.items():
             if not prefix or key.startswith(prefix):
-                config_key = key[len(prefix):].lower() if prefix else key.lower()
+                config_key = key[len(prefix) :].lower() if prefix else key.lower()
                 config[config_key] = self._parse_env_value(value)
         return config
 
@@ -121,11 +126,12 @@ class FileConfig(BaseConfig):
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Configuration file not found: {file_path}")
 
-        with open(file_path, 'r', encoding='utf-8') as f:
-            if file_path.endswith(('.yaml', '.yml')):
+        with open(file_path, "r", encoding="utf-8") as f:
+            if file_path.endswith((".yaml", ".yml")):
                 return yaml.safe_load(f) or {}
-            elif file_path.endswith('.json'):
+            elif file_path.endswith(".json"):
                 import json
+
                 return json.load(f)
             else:
                 raise ValueError(f"Unsupported configuration file format: {file_path}")
@@ -147,14 +153,14 @@ class ConfigLoader:
         """Initialize configuration loader."""
         self._sources: list = []
 
-    def add_environment_source(self, prefix: str = "") -> 'ConfigLoader':
+    def add_environment_source(self, prefix: str = "") -> "ConfigLoader":
         """Add environment variables as configuration source."""
-        self._sources.append(('env', prefix))
+        self._sources.append(("env", prefix))
         return self
 
-    def add_file_source(self, file_path: str) -> 'ConfigLoader':
+    def add_file_source(self, file_path: str) -> "ConfigLoader":
         """Add configuration file as source."""
-        self._sources.append(('file', file_path))
+        self._sources.append(("file", file_path))
         return self
 
     def load(self, config_class: type, **overrides) -> BaseConfig:
@@ -171,9 +177,9 @@ class ConfigLoader:
 
         for source_type, source_param in self._sources:
             try:
-                if source_type == 'env':
+                if source_type == "env":
                     source_config = EnvironmentConfig(source_param)
-                elif source_type == 'file':
+                elif source_type == "file":
                     source_config = FileConfig(source_param)
                 else:
                     continue

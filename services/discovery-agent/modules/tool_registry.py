@@ -55,7 +55,11 @@ class ToolRegistryStorage:
             registry = await self.load_tools_registry()
 
             # Update with new tools
-            registry[service_name] = {"last_updated": "2025-01-17T21:30:00Z", "tool_count": len(tools), "tools": tools}
+            registry[service_name] = {
+                "last_updated": "2025-01-17T21:30:00Z",
+                "tool_count": len(tools),
+                "tools": tools,
+            }
 
             # Save to file
             with open(self.tools_file, "w") as f:
@@ -66,7 +70,9 @@ class ToolRegistryStorage:
         except Exception as e:
             print(f"⚠️ Failed to save tools for {service_name}: {e}")
 
-    async def save_security_report(self, service_name: str, security_report: Dict[str, Any]):
+    async def save_security_report(
+        self, service_name: str, security_report: Dict[str, Any]
+    ):
         """Save security scan results for a service"""
 
         try:
@@ -161,7 +167,10 @@ class ToolRegistryStorage:
 
                 # Check readiness filter
                 if "langraph_ready" in criteria:
-                    if tool.get("langraph_ready", {}).get("ready") != criteria["langraph_ready"]:
+                    if (
+                        tool.get("langraph_ready", {}).get("ready")
+                        != criteria["langraph_ready"]
+                    ):
                         matches = False
 
                 if matches:
@@ -197,7 +206,9 @@ class ToolRegistryStorage:
             for tool in tools:
                 if tool.get("category"):
                     stats["categories"].add(tool["category"])
-                    stats["service_breakdown"][service]["categories"].add(tool["category"])
+                    stats["service_breakdown"][service]["categories"].add(
+                        tool["category"]
+                    )
 
                 if tool.get("method"):
                     stats["service_breakdown"][service]["methods"].add(tool["method"])

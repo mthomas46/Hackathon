@@ -15,7 +15,11 @@ class QueryType(Enum):
     @property
     def requires_interpretation(self) -> bool:
         """Check if this query type requires NLP interpretation."""
-        return self in (QueryType.NATURAL_LANGUAGE, QueryType.HYBRID, QueryType.CONVERSATIONAL)
+        return self in (
+            QueryType.NATURAL_LANGUAGE,
+            QueryType.HYBRID,
+            QueryType.CONVERSATIONAL,
+        )
 
     @property
     def can_be_executed(self) -> bool:

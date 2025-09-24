@@ -27,7 +27,9 @@ from typing import Any, Dict, List, Optional, Union
 import yaml
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.logging import get_simulation_logger
 
@@ -142,23 +144,33 @@ class EnvironmentManager:
         # Validate configuration
         await self._validate_configuration()
 
-        self.logger.info(f"Environment manager initialized for {self.current_environment.value}")
+        self.logger.info(
+            f"Environment manager initialized for {self.current_environment.value}"
+        )
 
-    async def switch_environment(self, environment: Environment, validate: bool = True) -> bool:
+    async def switch_environment(
+        self, environment: Environment, validate: bool = True
+    ) -> bool:
         """Switch to a different environment."""
         try:
             self.logger.info(f"Switching to environment: {environment.value}")
 
             # Validate target environment exists
             if environment.value not in self.environment_configs:
-                self.logger.error(f"Environment configuration not found: {environment.value}")
+                self.logger.error(
+                    f"Environment configuration not found: {environment.value}"
+                )
                 return False
 
             # Validate current environment health if requested
             if validate:
-                health_status = await self._validate_environment_health(self.current_environment)
+                health_status = await self._validate_environment_health(
+                    self.current_environment
+                )
                 if not health_status:
-                    self.logger.warning("Current environment health check failed, proceeding with switch")
+                    self.logger.warning(
+                        "Current environment health check failed, proceeding with switch"
+                    )
 
             # Switch environment
             old_environment = self.current_environment
@@ -174,7 +186,9 @@ class EnvironmentManager:
                 if not health_status:
                     self.logger.warning("New environment health check failed")
 
-            self.logger.info(f"Successfully switched from {old_environment.value} to {environment.value}")
+            self.logger.info(
+                f"Successfully switched from {old_environment.value} to {environment.value}"
+            )
             return True
 
         except Exception as e:
@@ -185,7 +199,9 @@ class EnvironmentManager:
         """Get current environment configuration."""
         return self.current_config
 
-    async def get_environment_info(self, environment: Optional[Environment] = None) -> Dict[str, Any]:
+    async def get_environment_info(
+        self, environment: Optional[Environment] = None
+    ) -> Dict[str, Any]:
         """Get comprehensive environment information."""
         target_env = environment or self.current_environment
         if not target_env or target_env.value not in self.environment_configs:
@@ -201,7 +217,9 @@ class EnvironmentManager:
                 services_health[service_name] = {
                     "status": health.status.value,
                     "response_time": health.response_time,
-                    "last_check": health.last_check.isoformat() if health.last_check else None,
+                    "last_check": (
+                        health.last_check.isoformat() if health.last_check else None
+                    ),
                     "version": health.version,
                 }
 
@@ -216,7 +234,9 @@ class EnvironmentManager:
             "last_updated": datetime.now().isoformat(),
         }
 
-    async def validate_environment(self, environment: Optional[Environment] = None) -> Dict[str, Any]:
+    async def validate_environment(
+        self, environment: Optional[Environment] = None
+    ) -> Dict[str, Any]:
         """Validate an environment configuration."""
         target_env = environment or self.current_environment
         if not target_env or target_env.value not in self.environment_configs:
@@ -228,7 +248,9 @@ class EnvironmentManager:
         # Validate service endpoints
         for service_name, endpoint in config.service_endpoints.items():
             if not self._is_valid_url(endpoint):
-                issues.append(f"Invalid service endpoint for {service_name}: {endpoint}")
+                issues.append(
+                    f"Invalid service endpoint for {service_name}: {endpoint}"
+                )
 
         # Validate required configurations
         if not config.database_config:
@@ -241,7 +263,9 @@ class EnvironmentManager:
                 issues.append(f"Required feature flag missing: {flag}")
 
         # Check service health
-        health_issues = await self._validate_environment_health(target_env, return_issues=True)
+        health_issues = await self._validate_environment_health(
+            target_env, return_issues=True
+        )
         issues.extend(health_issues)
 
         return {
@@ -283,7 +307,10 @@ class EnvironmentManager:
         drift_issues = []
 
         # Check service endpoints
-        for service_name, expected_endpoint in self.current_config.service_endpoints.items():
+        for (
+            service_name,
+            expected_endpoint,
+        ) in self.current_config.service_endpoints.items():
             # This would check actual running services vs expected
             # For now, just validate the endpoint format
             if not self._is_valid_url(expected_endpoint):
@@ -309,7 +336,9 @@ class EnvironmentManager:
             "timestamp": datetime.now().isoformat(),
         }
 
-    async def export_environment_config(self, environment: Environment, format: str = "yaml") -> Optional[str]:
+    async def export_environment_config(
+        self, environment: Environment, format: str = "yaml"
+    ) -> Optional[str]:
         """Export environment configuration."""
         if environment.value not in self.environment_configs:
             return None
@@ -356,9 +385,9 @@ class EnvironmentManager:
 
         # Create default configs if none loaded
         if not self.environment_configs:
-            self._create_default_configs()
+            await self._create_default_configs()
 
-    def _create_default_configs(self) -> None:
+    async def _create_default_configs(self) -> None:
         """Create default environment configurations."""
         self.logger.info("Creating default environment configurations")
 
@@ -379,7 +408,11 @@ class EnvironmentManager:
                 "max_overflow": 20,
             },
             cache_config={"redis_url": "redis://localhost:6379/0", "ttl_seconds": 3600},
-            monitoring_config={"enabled": True, "metrics_interval": 30, "health_check_interval": 60},
+            monitoring_config={
+                "enabled": True,
+                "metrics_interval": 30,
+                "health_check_interval": 60,
+            },
             feature_flags={
                 "enable_health_checks": True,
                 "enable_monitoring": True,
@@ -387,7 +420,11 @@ class EnvironmentManager:
                 "enable_cors": True,
                 "enable_swagger": True,
             },
-            resource_limits={"max_simulations": 10, "max_concurrent_workflows": 5, "memory_limit_mb": 1024},
+            resource_limits={
+                "max_simulations": 10,
+                "max_concurrent_workflows": 5,
+                "memory_limit_mb": 1024,
+            },
         )
 
         # Production environment
@@ -430,7 +467,11 @@ class EnvironmentManager:
                 "enable_cors": False,
                 "enable_swagger": False,
             },
-            resource_limits={"max_simulations": 100, "max_concurrent_workflows": 50, "memory_limit_mb": 8192},
+            resource_limits={
+                "max_simulations": 100,
+                "max_concurrent_workflows": 50,
+                "memory_limit_mb": 8192,
+            },
         )
 
         self.environment_configs[Environment.DEVELOPMENT.value] = dev_config
@@ -446,7 +487,9 @@ class EnvironmentManager:
 
             for env_name, config in self.environment_configs.items():
                 config_file = self.config_dir / f"env_{env_name}.yaml"
-                config_yaml = await self.export_environment_config(config.environment, "yaml")
+                config_yaml = await self.export_environment_config(
+                    config.environment, "yaml"
+                )
 
                 if config_yaml:
                     with open(config_file, "w") as f:
@@ -481,12 +524,19 @@ class EnvironmentManager:
 
     async def _load_current_environment(self) -> None:
         """Load the current environment configuration."""
-        if self.current_environment and self.current_environment.value in self.environment_configs:
-            self.current_config = self.environment_configs[self.current_environment.value]
+        if (
+            self.current_environment
+            and self.current_environment.value in self.environment_configs
+        ):
+            self.current_config = self.environment_configs[
+                self.current_environment.value
+            ]
         else:
             # Fallback to development
             self.current_environment = Environment.DEVELOPMENT
-            self.current_config = self.environment_configs.get(Environment.DEVELOPMENT.value)
+            self.current_config = self.environment_configs.get(
+                Environment.DEVELOPMENT.value
+            )
 
     async def _validate_configuration(self) -> None:
         """Validate the current environment configuration."""
@@ -495,7 +545,9 @@ class EnvironmentManager:
 
         validation = await self.validate_environment(self.current_environment)
         if not validation["valid"]:
-            self.logger.warning(f"Configuration validation issues: {validation['issues']}")
+            self.logger.warning(
+                f"Configuration validation issues: {validation['issues']}"
+            )
 
     async def _apply_environment_config(self) -> None:
         """Apply the current environment configuration."""
@@ -504,7 +556,9 @@ class EnvironmentManager:
 
         # This would apply configuration to various system components
         # For now, just log the configuration
-        self.logger.info(f"Applied configuration for environment: {self.current_environment.value}")
+        self.logger.info(
+            f"Applied configuration for environment: {self.current_environment.value}"
+        )
 
     async def _validate_environment_health(
         self, environment: Optional[Environment] = None, return_issues: bool = False
@@ -528,18 +582,24 @@ class EnvironmentManager:
             return issues
 
         # Consider environment healthy if most services are healthy
-        healthy_count = sum(1 for h in self.service_health.values() if h.status == ServiceStatus.HEALTHY)
+        healthy_count = sum(
+            1 for h in self.service_health.values() if h.status == ServiceStatus.HEALTHY
+        )
         total_count = len(config.service_endpoints)
 
         return healthy_count >= total_count * 0.8  # 80% healthy threshold
 
-    async def _check_service_health(self, service_name: str, endpoint: str) -> ServiceHealth:
+    async def _check_service_health(
+        self, service_name: str, endpoint: str
+    ) -> ServiceHealth:
         """Check the health of a service."""
         import time
 
         import aiohttp
 
-        health = ServiceHealth(name=service_name, status=ServiceStatus.UNKNOWN, last_check=datetime.now())
+        health = ServiceHealth(
+            name=service_name, status=ServiceStatus.UNKNOWN, last_check=datetime.now()
+        )
 
         try:
             async with aiohttp.ClientSession() as session:

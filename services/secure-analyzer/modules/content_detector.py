@@ -27,7 +27,9 @@ class ContentDetector:
     def __init__(self):
         self._patterns = [re.compile(p, re.IGNORECASE) for p in DEFAULT_PATTERNS]
 
-    def detect_sensitive_content(self, content: str, additional_keywords: Optional[List[str]] = None) -> Dict[str, Any]:
+    def detect_sensitive_content(
+        self, content: str, additional_keywords: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """Detect sensitive content and return analysis results."""
 
         # Load additional keywords
@@ -46,7 +48,11 @@ class ContentDetector:
         # Determine sensitivity
         sensitive = self._determine_sensitivity(content, matches)
 
-        return {"sensitive": sensitive, "matches": matches[:100], "topics": topics}  # Limit matches
+        return {
+            "sensitive": sensitive,
+            "matches": matches[:100],
+            "topics": topics,
+        }  # Limit matches
 
     def _compile_patterns(self, keywords: List[str]) -> List[re.Pattern[str]]:
         """Compile regex patterns from keywords."""
@@ -96,7 +102,9 @@ class ContentDetector:
                 if (
                     keyword in content_lower
                     or re.search(r"\b" + re.escape(keyword) + r"\b", content_lower)
-                    or re.search(r"\b" + re.escape(keyword) + r"s?\b", content_lower)  # Handle plurals
+                    or re.search(
+                        r"\b" + re.escape(keyword) + r"s?\b", content_lower
+                    )  # Handle plurals
                     or any(keyword in word for word in content_lower.split())
                 ):  # Handle compound words
 
@@ -137,7 +145,9 @@ class ContentDetector:
         ]
 
         content_lower = (content or "").lower()
-        has_technical_context = any(indicator in content_lower for indicator in technical_context_indicators)
+        has_technical_context = any(
+            indicator in content_lower for indicator in technical_context_indicators
+        )
 
         # If we have matches but also technical context, be more lenient
         if matches and has_technical_context and len(matches) <= 3:

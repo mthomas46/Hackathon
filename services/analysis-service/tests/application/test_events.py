@@ -134,7 +134,10 @@ class TestApplicationEvents:
     def test_event_serialization(self):
         """Test event serialization."""
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         # Test to_dict
@@ -205,7 +208,10 @@ class TestEventBus:
         bus.subscribe("analysis_requested", subscriber)
 
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         await bus.publish(event)
@@ -231,7 +237,10 @@ class TestEventBus:
 
         # Publish event
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         await bus.publish(event)
@@ -262,7 +271,10 @@ class TestEventBus:
         bus = EventBus()
 
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         # Should not raise exception
@@ -280,7 +292,10 @@ class TestEventBus:
         bus.subscribe("analysis_requested", subscriber)
 
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         # Should handle subscriber errors gracefully
@@ -310,7 +325,10 @@ class TestEventPublisher:
         publisher._event_bus = mock_bus
 
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         await publisher.publish(event)
@@ -330,7 +348,10 @@ class TestEventPublisher:
 
         events = [
             AnalysisRequestedEvent(
-                event_id="event-1", correlation_id="corr-1", document_id="doc-1", analysis_type="semantic_similarity"
+                event_id="event-1",
+                correlation_id="corr-1",
+                document_id="doc-1",
+                analysis_type="semantic_similarity",
             ),
             AnalysisCompletedEvent(
                 event_id="event-2",
@@ -363,7 +384,10 @@ class TestEventPublisher:
         publisher._event_bus = mock_bus
 
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         # Should succeed on retry
@@ -387,7 +411,10 @@ class TestEventSubscriber:
         subscriber = EventSubscriber()
 
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         # Should handle event without error (base implementation)
@@ -408,11 +435,18 @@ class TestEventSubscriber:
 
         # Create events of different types
         analysis_event = AnalysisRequestedEvent(
-            event_id="event-1", correlation_id="corr-1", document_id="doc-1", analysis_type="semantic_similarity"
+            event_id="event-1",
+            correlation_id="corr-1",
+            document_id="doc-1",
+            analysis_type="semantic_similarity",
         )
 
         document_event = DocumentCreatedEvent(
-            event_id="event-2", correlation_id="corr-2", document_id="doc-2", repository_id="repo-1", author="user-1"
+            event_id="event-2",
+            correlation_id="corr-2",
+            document_id="doc-2",
+            repository_id="repo-1",
+            author="user-1",
         )
 
         # Subscriber should handle both (base implementation accepts all)
@@ -441,7 +475,10 @@ class TestEventIntegration:
 
         # Create and publish events
         requested_event = AnalysisRequestedEvent(
-            event_id="event-1", correlation_id="corr-123", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-1",
+            correlation_id="corr-123",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         completed_event = AnalysisCompletedEvent(
@@ -521,7 +558,9 @@ class TestEventIntegration:
 
         # Subscriber that fails
         bad_subscriber = Mock()
-        bad_subscriber.handle_event = AsyncMock(side_effect=Exception("Subscriber failed"))
+        bad_subscriber.handle_event = AsyncMock(
+            side_effect=Exception("Subscriber failed")
+        )
 
         # Subscribe both
         bus.subscribe("analysis_requested", good_subscriber)
@@ -529,7 +568,10 @@ class TestEventIntegration:
 
         # Publish event
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         # Should not raise exception despite one subscriber failing
@@ -638,7 +680,10 @@ class TestEventMonitoring:
         # Publish some events
         events = [
             AnalysisRequestedEvent(
-                event_id="event-1", correlation_id="corr-1", document_id="doc-1", analysis_type="semantic_similarity"
+                event_id="event-1",
+                correlation_id="corr-1",
+                document_id="doc-1",
+                analysis_type="semantic_similarity",
             ),
             AnalysisCompletedEvent(
                 event_id="event-2",
@@ -686,7 +731,10 @@ class TestEventMonitoring:
 
         # Publish event
         event = AnalysisRequestedEvent(
-            event_id="event-123", correlation_id="corr-456", document_id="doc-123", analysis_type="semantic_similarity"
+            event_id="event-123",
+            correlation_id="corr-456",
+            document_id="doc-123",
+            analysis_type="semantic_similarity",
         )
 
         await bus.publish(event)

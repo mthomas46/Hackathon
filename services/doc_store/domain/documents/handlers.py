@@ -26,7 +26,9 @@ class DocumentHandlers:
     def __init__(self):
         self.service = DocumentService()
 
-    async def handle_create_document(self, request: DocumentRequest) -> DocumentResponse:
+    async def handle_create_document(
+        self, request: DocumentRequest
+    ) -> DocumentResponse:
         """Handle document creation."""
         try:
             # Process metadata
@@ -52,14 +54,18 @@ class DocumentHandlers:
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to create document: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to create document: {str(e)}"
+            )
 
     async def handle_get_document(self, document_id: str) -> DocumentResponse:
         """Handle document retrieval."""
         try:
             document = self.service.get_entity(document_id)
             if not document:
-                raise HTTPException(status_code=404, detail=f"Document {document_id} not found")
+                raise HTTPException(
+                    status_code=404, detail=f"Document {document_id} not found"
+                )
 
             return DocumentResponse(
                 id=document.id,
@@ -72,33 +78,49 @@ class DocumentHandlers:
         except HTTPException:
             raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to retrieve document: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to retrieve document: {str(e)}"
+            )
 
-    async def handle_list_documents(self, limit: int = 50, offset: int = 0) -> DocumentListResponse:
+    async def handle_list_documents(
+        self, limit: int = 50, offset: int = 0
+    ) -> DocumentListResponse:
         """Handle document listing."""
         try:
             result = self.service.list_entities(limit, offset)
 
             # Return DocumentListResponse directly
             return DocumentListResponse(
-                items=result.get("items", []), total=result.get("total", 0), has_more=result.get("has_more", False)
+                items=result.get("items", []),
+                total=result.get("total", 0),
+                has_more=result.get("has_more", False),
             )
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to list documents: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to list documents: {str(e)}"
+            )
 
-    async def handle_update_metadata(self, document_id: str, request: MetadataUpdateRequest) -> Dict[str, Any]:
+    async def handle_update_metadata(
+        self, document_id: str, request: MetadataUpdateRequest
+    ) -> Dict[str, Any]:
         """Handle metadata updates."""
         try:
             self.service.update_entity(document_id, {"metadata": request.metadata})
 
             # Return simple success response
-            return {"success": True, "message": "Document metadata updated successfully", "document_id": document_id}
+            return {
+                "success": True,
+                "message": "Document metadata updated successfully",
+                "document_id": document_id,
+            }
 
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to update metadata: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to update metadata: {str(e)}"
+            )
 
     async def handle_search_documents(self, request: SearchRequest) -> SearchResponse:
         """Handle document search."""
@@ -116,7 +138,9 @@ class DocumentHandlers:
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to search documents: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to search documents: {str(e)}"
+            )
 
     async def handle_get_quality_metrics(self, limit: int = 1000) -> QualityResponse:
         """Handle quality metrics retrieval."""
@@ -131,29 +155,44 @@ class DocumentHandlers:
             )
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to get quality metrics: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to get quality metrics: {str(e)}"
+            )
 
     async def handle_get_related_documents(self, correlation_id: str) -> Dict[str, Any]:
         """Handle related documents retrieval."""
         try:
             documents = self.service.get_related_documents(correlation_id)
 
-            return {"success": True, "documents": documents, "correlation_id": correlation_id, "count": len(documents)}
+            return {
+                "success": True,
+                "documents": documents,
+                "correlation_id": correlation_id,
+                "count": len(documents),
+            }
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to get related documents: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to get related documents: {str(e)}"
+            )
 
     async def handle_delete_document(self, document_id: str) -> Dict[str, Any]:
         """Handle document deletion."""
         try:
             self.service.delete_entity(document_id)
 
-            return {"success": True, "message": "Document deleted successfully", "document_id": document_id}
+            return {
+                "success": True,
+                "message": "Document deleted successfully",
+                "document_id": document_id,
+            }
 
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to delete document: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to delete document: {str(e)}"
+            )
 
 
 # Global instance for backward compatibility

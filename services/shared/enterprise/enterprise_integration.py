@@ -27,13 +27,20 @@ from pydantic import BaseModel, Field, validator
 from ..caching.intelligent_caching import get_service_cache
 from ..core.constants_new import ServiceNames
 from ..monitoring.logging import fire_and_forget
-from .error_handling.error_handling import ErrorCategory, ErrorContext, ErrorSeverity, enterprise_error_handler
+from .error_handling.error_handling import (
+    ErrorCategory,
+    ErrorContext,
+    ErrorSeverity,
+    enterprise_error_handler,
+)
 
 # Context variables for request tracking
 request_id_context: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
 workflow_id_context: ContextVar[Optional[str]] = ContextVar("workflow_id", default=None)
 user_id_context: ContextVar[Optional[str]] = ContextVar("user_id", default=None)
-correlation_id_context: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)
+correlation_id_context: ContextVar[Optional[str]] = ContextVar(
+    "correlation_id", default=None
+)
 
 
 class APIVersion(Enum):
@@ -60,14 +67,22 @@ class WorkflowContext(BaseModel):
     user_id: Optional[str] = Field(None, description="User initiating the workflow")
     correlation_id: str = Field(..., description="Request correlation identifier")
     request_id: str = Field(..., description="Unique request identifier")
-    parent_workflow_id: Optional[str] = Field(None, description="Parent workflow if nested")
+    parent_workflow_id: Optional[str] = Field(
+        None, description="Parent workflow if nested"
+    )
     step_id: Optional[str] = Field(None, description="Current workflow step")
     step_name: Optional[str] = Field(None, description="Current step name")
     total_steps: Optional[int] = Field(None, description="Total workflow steps")
     current_step: Optional[int] = Field(None, description="Current step number")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional workflow metadata")
-    created_at: datetime = Field(default_factory=datetime.now, description="Workflow creation timestamp")
-    updated_at: datetime = Field(default_factory=datetime.now, description="Last update timestamp")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional workflow metadata"
+    )
+    created_at: datetime = Field(
+        default_factory=datetime.now, description="Workflow creation timestamp"
+    )
+    updated_at: datetime = Field(
+        default_factory=datetime.now, description="Last update timestamp"
+    )
 
     @validator("workflow_id", "correlation_id", "request_id")
     def validate_ids(cls, v):
@@ -107,11 +122,23 @@ class WorkflowContext(BaseModel):
                 parent_workflow_id=headers.get("X-Parent-Workflow-ID"),
                 step_id=headers.get("X-Step-ID"),
                 step_name=headers.get("X-Step-Name"),
-                total_steps=int(headers.get("X-Total-Steps")) if headers.get("X-Total-Steps") else None,
-                current_step=int(headers.get("X-Current-Step")) if headers.get("X-Current-Step") else None,
+                total_steps=(
+                    int(headers.get("X-Total-Steps"))
+                    if headers.get("X-Total-Steps")
+                    else None
+                ),
+                current_step=(
+                    int(headers.get("X-Current-Step"))
+                    if headers.get("X-Current-Step")
+                    else None
+                ),
                 metadata=json.loads(headers.get("X-Workflow-Metadata", "{}")),
-                created_at=datetime.fromisoformat(headers.get("X-Workflow-Created", datetime.now().isoformat())),
-                updated_at=datetime.fromisoformat(headers.get("X-Workflow-Updated", datetime.now().isoformat())),
+                created_at=datetime.fromisoformat(
+                    headers.get("X-Workflow-Created", datetime.now().isoformat())
+                ),
+                updated_at=datetime.fromisoformat(
+                    headers.get("X-Workflow-Updated", datetime.now().isoformat())
+                ),
             )
         except (ValueError, json.JSONDecodeError):
             return None
@@ -175,7 +202,9 @@ class ServiceMeshClient:
                     # Cache successful GET requests
                     if method.upper() == "GET" and response.status == 200:
                         cache_key = self._generate_cache_key(method, url, kwargs)
-                        await self.cache.set(cache_key, result, ttl_seconds=300)  # 5 minute TTL
+                        await self.cache.set(
+                            cache_key, result, ttl_seconds=300
+                        )  # 5 minute TTL
 
                     return result
 
@@ -189,9 +218,15 @@ class ServiceMeshClient:
                     error_context = ErrorContext(
                         service_name=self.service_name,
                         operation=f"http_{method.lower()}_request",
-                        workflow_id=workflow_context.workflow_id if workflow_context else None,
+                        workflow_id=(
+                            workflow_context.workflow_id if workflow_context else None
+                        ),
                         user_id=workflow_context.user_id if workflow_context else None,
-                        severity=ErrorSeverity.HIGH if attempt == self.retries - 1 else ErrorSeverity.MEDIUM,
+                        severity=(
+                            ErrorSeverity.HIGH
+                            if attempt == self.retries - 1
+                            else ErrorSeverity.MEDIUM
+                        ),
                         category=ErrorCategory.NETWORK,
                     )
 
@@ -221,7 +256,9 @@ class ServiceMeshClient:
         """DELETE request."""
         return await self.request("DELETE", url, **kwargs)
 
-    async def _handle_response(self, response: aiohttp.ClientResponse) -> Dict[str, Any]:
+    async def _handle_response(
+        self, response: aiohttp.ClientResponse
+    ) -> Dict[str, Any]:
         """Handle HTTP response with standardized error handling."""
         if response.status >= 400:
             error_text = await response.text()
@@ -287,14 +324,26 @@ class StandardizedAPIResponse(BaseModel):
     success: bool = Field(..., description="Operation success status")
     message: str = Field("", description="Human-readable message")
     data: Optional[Any] = Field(None, description="Response data")
-    errors: List[Dict[str, Any]] = Field(default_factory=list, description="Error details")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Response metadata")
-    request_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Request identifier")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
+    errors: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Error details"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Response metadata"
+    )
+    request_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()), description="Request identifier"
+    )
+    timestamp: datetime = Field(
+        default_factory=datetime.now, description="Response timestamp"
+    )
     version: str = Field("v1", description="API version")
-    processing_time_ms: Optional[float] = Field(None, description="Processing time in milliseconds")
+    processing_time_ms: Optional[float] = Field(
+        None, description="Processing time in milliseconds"
+    )
 
-    def add_error(self, code: str, message: str, details: Optional[Dict[str, Any]] = None):
+    def add_error(
+        self, code: str, message: str, details: Optional[Dict[str, Any]] = None
+    ):
         """Add an error to the response."""
         self.errors.append({"code": code, "message": message, "details": details or {}})
         self.success = False
@@ -307,11 +356,21 @@ class StandardizedAPIResponse(BaseModel):
 class StandardizedAPIRequest(BaseModel):
     """Standardized API request model."""
 
-    request_id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Request identifier")
-    workflow_context: Optional[WorkflowContext] = Field(None, description="Workflow context")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Request parameters")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Request metadata")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Request timestamp")
+    request_id: str = Field(
+        default_factory=lambda: str(uuid.uuid4()), description="Request identifier"
+    )
+    workflow_context: Optional[WorkflowContext] = Field(
+        None, description="Workflow context"
+    )
+    parameters: Dict[str, Any] = Field(
+        default_factory=dict, description="Request parameters"
+    )
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Request metadata"
+    )
+    timestamp: datetime = Field(
+        default_factory=datetime.now, description="Request timestamp"
+    )
 
     @classmethod
     def from_request(cls, request: web.Request) -> "StandardizedAPIRequest":
@@ -347,7 +406,10 @@ class ServiceRegistry:
         self.redis = redis.from_url(self.redis_url)
 
     async def register_service(
-        self, service_name: str, endpoints: Dict[str, Any], metadata: Optional[Dict[str, Any]] = None
+        self,
+        service_name: str,
+        endpoints: Dict[str, Any],
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """Register a service with its endpoints."""
         service_info = {
@@ -361,7 +423,9 @@ class ServiceRegistry:
         self.service_endpoints[service_name] = service_info
 
         if self.redis:
-            await self.redis.setex(f"service:{service_name}", 300, json.dumps(service_info))  # 5 minute TTL
+            await self.redis.setex(
+                f"service:{service_name}", 300, json.dumps(service_info)
+            )  # 5 minute TTL
 
     async def discover_service(self, service_name: str) -> Optional[Dict[str, Any]]:
         """Discover a service endpoint."""
@@ -379,7 +443,9 @@ class ServiceRegistry:
 
         return None
 
-    async def update_health_status(self, service_name: str, status: str, details: Dict[str, Any]):
+    async def update_health_status(
+        self, service_name: str, status: str, details: Dict[str, Any]
+    ):
         """Update service health status."""
         self.health_checks[service_name] = {
             "status": status,
@@ -389,7 +455,9 @@ class ServiceRegistry:
 
         if self.redis:
             await self.redis.setex(
-                f"health:{service_name}", 60, json.dumps(self.health_checks[service_name])  # 1 minute TTL
+                f"health:{service_name}",
+                60,
+                json.dumps(self.health_checks[service_name]),  # 1 minute TTL
             )
 
     async def get_service_health(self, service_name: str) -> Optional[Dict[str, Any]]:
@@ -426,7 +494,9 @@ def standardized_api_handler(api_version: APIVersion = APIVersion.V1):
                 if std_request.workflow_context:
                     workflow_id_context.set(std_request.workflow_context.workflow_id)
                     user_id_context.set(std_request.workflow_context.user_id)
-                    correlation_id_context.set(std_request.workflow_context.correlation_id)
+                    correlation_id_context.set(
+                        std_request.workflow_context.correlation_id
+                    )
 
                 # Call the actual handler
                 result = await func(request, std_request)
@@ -438,7 +508,9 @@ def standardized_api_handler(api_version: APIVersion = APIVersion.V1):
                     response = result
                 else:
                     response = StandardizedAPIResponse(
-                        success=True, data=result, message="Operation completed successfully"
+                        success=True,
+                        data=result,
+                        message="Operation completed successfully",
                     )
 
                 response.version = api_version.value
@@ -460,7 +532,9 @@ def standardized_api_handler(api_version: APIVersion = APIVersion.V1):
                 error_response = StandardizedAPIResponse(
                     success=False,
                     message="Internal server error",
-                    errors=[{"code": "INTERNAL_ERROR", "message": str(e), "details": {}}],
+                    errors=[
+                        {"code": "INTERNAL_ERROR", "message": str(e), "details": {}}
+                    ],
                 )
                 error_response.set_processing_time(start_time)
 
@@ -479,7 +553,9 @@ def standardized_api_handler(api_version: APIVersion = APIVersion.V1):
                     status=500,
                     headers={
                         "X-API-Version": api_version.value,
-                        "X-Request-ID": request.headers.get("X-Request-ID", str(uuid.uuid4())),
+                        "X-Request-ID": request.headers.get(
+                            "X-Request-ID", str(uuid.uuid4())
+                        ),
                         "X-Processing-Time": f"{error_response.processing_time_ms:.2f}ms",
                     },
                 )
@@ -581,7 +657,12 @@ async def initialize_enterprise_integration():
                 "health_endpoint": "/health",
                 "api_endpoints": {"v1": f"/api/v1", "docs": "/docs"},
             },
-            {"type": "microservice", "framework": "fastapi", "language": "python", "version": "1.0.0"},
+            {
+                "type": "microservice",
+                "framework": "fastapi",
+                "language": "python",
+                "version": "1.0.0",
+            },
         )
 
     fire_and_forget("info", "Enterprise integration initialized successfully", "system")
@@ -608,9 +689,13 @@ class StandardizedAPIManager:
     async def initialize(self):
         """Initialize API manager."""
 
-    def create_response(self, success: bool, message: str, data: Any = None, **kwargs) -> StandardizedAPIResponse:
+    def create_response(
+        self, success: bool, message: str, data: Any = None, **kwargs
+    ) -> StandardizedAPIResponse:
         """Create standardized API response."""
-        return StandardizedAPIResponse(success=success, message=message, data=data, metadata=kwargs)
+        return StandardizedAPIResponse(
+            success=success, message=message, data=data, metadata=kwargs
+        )
 
 
 class ContextPropagationManager:
@@ -624,7 +709,9 @@ class ContextPropagationManager:
 
     def get_current_context(self) -> Optional[RequestContext]:
         """Get current request context."""
-        return RequestContext(request_id=str(uuid.uuid4())) if self.context_stack else None
+        return (
+            RequestContext(request_id=str(uuid.uuid4())) if self.context_stack else None
+        )
 
 
 class ServiceDiscoveryManager:
@@ -643,7 +730,9 @@ class ServiceDiscoveryManager:
             "analysis_service": {"host": "localhost", "port": 5100, "version": "1.0.0"},
         }
 
-    async def get_service_endpoint(self, service_name: str, operation: str) -> Optional[str]:
+    async def get_service_endpoint(
+        self, service_name: str, operation: str
+    ) -> Optional[str]:
         """Get service endpoint for operation."""
         if service_name in self.services:
             service = self.services[service_name]
@@ -667,11 +756,17 @@ class EnterpriseIntegrationManager:
             await self.api_manager.initialize()
             await self.context_manager.initialize()
             self.initialized = True
-            fire_and_forget("info", "Enterprise integration manager initialized", "system")
+            fire_and_forget(
+                "info", "Enterprise integration manager initialized", "system"
+            )
 
-    async def get_service_endpoint(self, service_name: str, operation: str) -> Optional[str]:
+    async def get_service_endpoint(
+        self, service_name: str, operation: str
+    ) -> Optional[str]:
         """Get service endpoint for operation."""
-        return await self.service_discovery.get_service_endpoint(service_name, operation)
+        return await self.service_discovery.get_service_endpoint(
+            service_name, operation
+        )
 
     def create_standardized_response(
         self, success: bool, message: str, data: Any = None, **kwargs
@@ -685,7 +780,9 @@ class EnterpriseIntegrationManager:
 
 
 # Utility functions
-def create_workflow_context(workflow_id: Optional[str] = None, user_id: Optional[str] = None) -> WorkflowContext:
+def create_workflow_context(
+    workflow_id: Optional[str] = None, user_id: Optional[str] = None
+) -> WorkflowContext:
     """Create a new workflow context."""
     return WorkflowContext(
         workflow_id=workflow_id or str(uuid.uuid4()),

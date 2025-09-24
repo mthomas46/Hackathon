@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 
 from ...base.base_manager import BaseManager
 
@@ -18,23 +18,25 @@ from ...base.base_manager import BaseManager
 class SettingsManager(BaseManager):
     """Manager for settings and system diagnostics."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
         self.all_services = [
-            ServiceNames.ORCHESTRATOR,
-            ServiceNames.PROMPT_STORE,
-            ServiceNames.SOURCE_AGENT,
-            ServiceNames.ANALYSIS_SERVICE,
-            ServiceNames.DOC_STORE,
-            ServiceNames.DISCOVERY_AGENT,
-            ServiceNames.INTERPRETER,
-            ServiceNames.FRONTEND,
-            ServiceNames.SUMMARIZER_HUB,
-            ServiceNames.SECURE_ANALYZER,
-            ServiceNames.MEMORY_AGENT,
-            ServiceNames.CODE_ANALYZER,
-            ServiceNames.LOG_COLLECTOR,
-            ServiceNames.NOTIFICATION_SERVICE,
+            "orchestrator",
+            "prompt-store",
+            "source-agent",
+            "analysis-service",
+            "doc-store",
+            "discovery-agent",
+            "interpreter",
+            "frontend",
+            "summarizer-hub",
+            "secure-analyzer",
+            "memory-agent",
+            "code-analyzer",
+            "log-collector",
+            "notification-service",
         ]
 
     async def get_main_menu(self) -> List[Tuple[str, str]]:
@@ -68,14 +70,20 @@ class SettingsManager(BaseManager):
         self.display.show_info("Checking status of all services...")
 
         health_results = await self.check_services_health(self.all_services)
-        await self.display_service_health_table(health_results, "Complete Service Health Status")
+        await self.display_service_health_table(
+            health_results, "Complete Service Health Status"
+        )
 
         # Show summary
-        healthy_count = sum(1 for result in health_results.values() if self.is_service_healthy(result))
+        healthy_count = sum(
+            1 for result in health_results.values() if self.is_service_healthy(result)
+        )
         total_count = len(health_results)
 
         if healthy_count == total_count:
-            self.display.show_success(f"All {total_count} services are healthy and running!")
+            self.display.show_success(
+                f"All {total_count} services are healthy and running!"
+            )
         else:
             unhealthy_count = total_count - healthy_count
             self.display.show_warning(
@@ -101,7 +109,9 @@ class SettingsManager(BaseManager):
 
             self.console.print(table)
 
-            choice = Prompt.ask("[bold green]Select service[/bold green]").strip().lower()
+            choice = (
+                Prompt.ask("[bold green]Select service[/bold green]").strip().lower()
+            )
 
             if choice == "b" or choice == "back":
                 break
@@ -141,7 +151,9 @@ class SettingsManager(BaseManager):
             self.display.show_success(f"✅ {service_name} is healthy and responding!")
         else:
             self.display.show_error(f"❌ {service_name} is not reachable.")
-            self.display.show_info("Check that the service is running and network connectivity is available.")
+            self.display.show_info(
+                "Check that the service is running and network connectivity is available."
+            )
 
     async def system_diagnostics(self) -> None:
         """Perform comprehensive system diagnostics."""
@@ -169,19 +181,25 @@ class SettingsManager(BaseManager):
         self.console.print("\n[bold blue]System Diagnostics Results:[/bold blue]")
 
         if healthy_services:
-            self.console.print(f"[green]✅ Healthy Services ({len(healthy_services)}):[/green]")
+            self.console.print(
+                f"[green]✅ Healthy Services ({len(healthy_services)}):[/green]"
+            )
             for service in healthy_services:
                 self.console.print(f"  • {service}")
 
         if unreachable_services:
-            self.console.print(f"[red]❌ Unreachable Services ({len(unreachable_services)}):[/red]")
+            self.console.print(
+                f"[red]❌ Unreachable Services ({len(unreachable_services)}):[/red]"
+            )
             for service in unreachable_services:
                 health_data = health_results[service]
                 error = health_data.get("error", "Unknown error")
                 self.console.print(f"  • {service}: {error}")
 
         if unhealthy_services:
-            self.console.print(f"[yellow]⚠️ Unhealthy Services ({len(unhealthy_services)}):[/yellow]")
+            self.console.print(
+                f"[yellow]⚠️ Unhealthy Services ({len(unhealthy_services)}):[/yellow]"
+            )
             for service in unhealthy_services:
                 self.console.print(f"  • {service}")
 
@@ -189,19 +207,29 @@ class SettingsManager(BaseManager):
         total_services = len(self.all_services)
         healthy_count = len(healthy_services)
 
-        self.console.print(f"\n[bold]Overall Status: {healthy_count}/{total_services} services operational[/bold]")
+        self.console.print(
+            f"\n[bold]Overall Status: {healthy_count}/{total_services} services operational[/bold]"
+        )
 
         if healthy_count == total_services:
-            self.display.show_success("🎉 All systems operational! The ecosystem is fully functional.")
+            self.display.show_success(
+                "🎉 All systems operational! The ecosystem is fully functional."
+            )
         elif healthy_count >= total_services * 0.8:  # 80% healthy
-            self.display.show_warning("⚠️ Most systems operational. Some services may be unavailable.")
+            self.display.show_warning(
+                "⚠️ Most systems operational. Some services may be unavailable."
+            )
         else:
-            self.display.show_error("❌ Critical systems unavailable. Ecosystem functionality is limited.")
+            self.display.show_error(
+                "❌ Critical systems unavailable. Ecosystem functionality is limited."
+            )
 
     async def show_service_dependencies(self) -> None:
         """Show service dependency relationships."""
         self.display.show_info("Service Dependencies Overview")
-        self.display.show_info("This shows which services are required by different CLI managers.")
+        self.display.show_info(
+            "This shows which services are required by different CLI managers."
+        )
 
         # For now, show a simple dependency map
         # In the future, this could be dynamically determined from manager get_required_services() methods
@@ -230,8 +258,12 @@ class SettingsManager(BaseManager):
 
         self.console.print(table)
 
-        self.display.show_info("Note: Managers will check these dependencies before allowing menu progression.")
-        self.display.show_info("If required services are unavailable, you'll see an error message and cannot proceed.")
+        self.display.show_info(
+            "Note: Managers will check these dependencies before allowing menu progression."
+        )
+        self.display.show_info(
+            "If required services are unavailable, you'll see an error message and cannot proceed."
+        )
 
     async def show_configuration(self) -> None:
         """Show current configuration overview."""
@@ -255,5 +287,9 @@ class SettingsManager(BaseManager):
 
         self.console.print(table)
 
-        self.display.show_info("These settings ensure robust operation and user experience.")
-        self.display.show_info("Service dependency validation prevents errors when services are unavailable.")
+        self.display.show_info(
+            "These settings ensure robust operation and user experience."
+        )
+        self.display.show_info(
+            "Service dependency validation prevents errors when services are unavailable."
+        )

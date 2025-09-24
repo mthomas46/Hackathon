@@ -15,15 +15,22 @@ class WorkflowExecutor:
 
     def __init__(self, action_executor_factory: Callable = None):
         """Initialize with optional action executor factory."""
-        self.action_executor_factory = action_executor_factory or self._default_action_executor
+        self.action_executor_factory = (
+            action_executor_factory or self._default_action_executor
+        )
 
     async def execute_workflow(
-        self, workflow: Workflow, execution: WorkflowExecution, external_services: Optional[Dict[str, Any]] = None
+        self,
+        workflow: Workflow,
+        execution: WorkflowExecution,
+        external_services: Optional[Dict[str, Any]] = None,
     ) -> WorkflowExecution:
         """Execute a workflow and update the execution entity."""
         try:
             # Execute actions in dependency order
-            action_results = await self._execute_actions(workflow, execution.parameters, external_services)
+            action_results = await self._execute_actions(
+                workflow, execution.parameters, external_services
+            )
 
             # Update execution with results
             for result in action_results.values():
@@ -32,7 +39,9 @@ class WorkflowExecutor:
             # Check if execution was successful
             failed_actions = [r for r in action_results.values() if r.has_error]
             if failed_actions:
-                error_msg = f"Actions failed: {', '.join(r.action_id for r in failed_actions)}"
+                error_msg = (
+                    f"Actions failed: {', '.join(r.action_id for r in failed_actions)}"
+                )
                 execution.fail(error_msg)
             else:
                 execution.complete()
@@ -43,7 +52,10 @@ class WorkflowExecutor:
         return execution
 
     async def _execute_actions(
-        self, workflow: Workflow, parameters: Dict[str, Any], external_services: Optional[Dict[str, Any]] = None
+        self,
+        workflow: Workflow,
+        parameters: Dict[str, Any],
+        external_services: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, ActionResult]:
         """Execute all actions in the workflow."""
         results = {}
@@ -64,7 +76,9 @@ class WorkflowExecutor:
             # Execute actions concurrently
             execution_tasks = []
             for action in executable_actions:
-                task = asyncio.create_task(self._execute_action(action, parameters, results, external_services))
+                task = asyncio.create_task(
+                    self._execute_action(action, parameters, results, external_services)
+                )
                 execution_tasks.append((action.action_id, task))
 
             # Wait for all to complete
@@ -73,14 +87,18 @@ class WorkflowExecutor:
                     result = await task
                     results[action_id] = result
                 except Exception as e:
-                    results[action_id] = ActionResult.failure(action_id, f"Execution failed: {str(e)}", 0)
+                    results[action_id] = ActionResult.failure(
+                        action_id, f"Execution failed: {str(e)}", 0
+                    )
                 finally:
                     del pending_actions[action_id]
 
         return results
 
     def _get_executable_actions(
-        self, pending_actions: Dict[str, WorkflowAction], results: Dict[str, ActionResult]
+        self,
+        pending_actions: Dict[str, WorkflowAction],
+        results: Dict[str, ActionResult],
     ) -> List[WorkflowAction]:
         """Get actions that can be executed (all dependencies satisfied)."""
         executable = []
@@ -115,34 +133,52 @@ class WorkflowExecutor:
 
         try:
             # Check if action should be skipped based on condition
-            if not action.can_execute({k: v.output for k, v in previous_results.items()}):
+            if not action.can_execute(
+                {k: v.output for k, v in previous_results.items()}
+            ):
                 return ActionResult.skipped(action.action_id)
 
             # Execute the action
-            result = await self.action_executor_factory(action, parameters, external_services)
+            result = await self.action_executor_factory(
+                action, parameters, external_services
+            )
 
-            execution_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+            execution_time = int(
+                (datetime.utcnow() - start_time).total_seconds() * 1000
+            )
             return ActionResult.success(action.action_id, result, execution_time)
 
         except Exception as e:
-            execution_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+            execution_time = int(
+                (datetime.utcnow() - start_time).total_seconds() * 1000
+            )
             return ActionResult.failure(action.action_id, str(e), execution_time)
 
     async def _default_action_executor(
-        self, action: WorkflowAction, parameters: Dict[str, Any], external_services: Optional[Dict[str, Any]] = None
+        self,
+        action: WorkflowAction,
+        parameters: Dict[str, Any],
+        external_services: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Default action executor - should be replaced with proper implementation."""
         # This is a placeholder - in real implementation, this would delegate
         # to specific executors based on action type
         if action.action_type.value == "service_call":
-            return await self._execute_service_call(action, parameters, external_services)
+            return await self._execute_service_call(
+                action, parameters, external_services
+            )
         elif action.action_type.value == "prompt_execution":
             return await self._execute_prompt(action, parameters, external_services)
         else:
-            raise NotImplementedError(f"Action type {action.action_type.value} not implemented")
+            raise NotImplementedError(
+                f"Action type {action.action_type.value} not implemented"
+            )
 
     async def _execute_service_call(
-        self, action: WorkflowAction, parameters: Dict[str, Any], external_services: Optional[Dict[str, Any]] = None
+        self,
+        action: WorkflowAction,
+        parameters: Dict[str, Any],
+        external_services: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Execute a service call action."""
         # Placeholder implementation
@@ -157,10 +193,17 @@ class WorkflowExecutor:
         return {"status": "mock_success", "service": service_name, "endpoint": endpoint}
 
     async def _execute_prompt(
-        self, action: WorkflowAction, parameters: Dict[str, Any], external_services: Optional[Dict[str, Any]] = None
+        self,
+        action: WorkflowAction,
+        parameters: Dict[str, Any],
+        external_services: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """Execute a prompt action."""
         # Placeholder implementation
         prompt_id = action.config.get("prompt_id")
 
-        return {"status": "success", "prompt_id": prompt_id, "output": "Mock prompt response"}
+        return {
+            "status": "success",
+            "prompt_id": prompt_id,
+            "output": "Mock prompt response",
+        }

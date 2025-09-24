@@ -13,7 +13,7 @@ from services.prompt_store.core.models import (
     PromptLifecycleUpdate,
 )
 from services.prompt_store.domain.lifecycle.service import LifecycleService
-from services.shared.core.responses.responses import create_success_response
+from services.shared.presentation.responses import create_success_response
 
 
 class LifecycleHandlers(BaseHandler):
@@ -24,38 +24,55 @@ class LifecycleHandlers(BaseHandler):
         super().__init__(self.lifecycle_service)
 
     async def handle_update_lifecycle_status(
-        self, prompt_id: str, update_data: PromptLifecycleUpdate, user_id: str = "api_user"
+        self,
+        prompt_id: str,
+        update_data: PromptLifecycleUpdate,
+        user_id: str = "api_user",
     ) -> Dict[str, Any]:
         """Handle lifecycle status update request."""
 
         try:
             result = await self.lifecycle_service.update_lifecycle_status(
-                prompt_id=prompt_id, new_status=update_data.status, reason=update_data.reason or "", user_id=user_id
+                prompt_id=prompt_id,
+                new_status=update_data.status,
+                reason=update_data.reason or "",
+                user_id=user_id,
             )
 
             response = create_success_response(
-                data=result, message=f"Prompt lifecycle status updated to {update_data.status}"
+                data=result,
+                message=f"Prompt lifecycle status updated to {update_data.status}",
             )
             return response.model_dump()
 
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to update lifecycle status: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to update lifecycle status: {str(e)}"
+            )
 
-    async def handle_get_prompts_by_status(self, status: str, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+    async def handle_get_prompts_by_status(
+        self, status: str, limit: int = 50, offset: int = 0
+    ) -> Dict[str, Any]:
         """Handle request to get prompts by lifecycle status."""
 
         try:
-            result = await self.lifecycle_service.get_prompts_by_status(status=status, limit=limit, offset=offset)
+            result = await self.lifecycle_service.get_prompts_by_status(
+                status=status, limit=limit, offset=offset
+            )
 
-            response = create_success_response(data=result, message=f"Retrieved prompts with status '{status}'")
+            response = create_success_response(
+                data=result, message=f"Retrieved prompts with status '{status}'"
+            )
             return response.model_dump()
 
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to retrieve prompts: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to retrieve prompts: {str(e)}"
+            )
 
     def handle_get_lifecycle_history(self, prompt_id: str) -> Dict[str, Any]:
         """Handle request to get lifecycle history for a prompt."""
@@ -64,14 +81,18 @@ class LifecycleHandlers(BaseHandler):
             result = self.lifecycle_service.get_lifecycle_history(prompt_id)
 
             response = create_success_response(
-                data=result, message=f"Retrieved lifecycle history for prompt {prompt_id}"
+                data=result,
+                message=f"Retrieved lifecycle history for prompt {prompt_id}",
             )
             return response.model_dump()
 
         except ValueError as e:
             raise HTTPException(status_code=404, detail=str(e))
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to retrieve lifecycle history: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to retrieve lifecycle history: {str(e)}",
+            )
 
     def handle_get_status_counts(self) -> Dict[str, Any]:
         """Handle request to get lifecycle status counts."""
@@ -79,11 +100,15 @@ class LifecycleHandlers(BaseHandler):
         try:
             result = self.lifecycle_service.get_status_counts()
 
-            response = create_success_response(data=result, message="Retrieved lifecycle status counts")
+            response = create_success_response(
+                data=result, message="Retrieved lifecycle status counts"
+            )
             return response.model_dump()
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to retrieve status counts: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to retrieve status counts: {str(e)}"
+            )
 
     def handle_get_transition_rules(self) -> Dict[str, Any]:
         """Handle request to get lifecycle transition rules."""
@@ -91,23 +116,33 @@ class LifecycleHandlers(BaseHandler):
         try:
             result = self.lifecycle_service.get_transition_rules()
 
-            response = create_success_response(data=result, message="Retrieved lifecycle transition rules")
+            response = create_success_response(
+                data=result, message="Retrieved lifecycle transition rules"
+            )
             return response.model_dump()
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to retrieve transition rules: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to retrieve transition rules: {str(e)}"
+            )
 
-    def handle_validate_transition(self, prompt_id: str, new_status: str) -> Dict[str, Any]:
+    def handle_validate_transition(
+        self, prompt_id: str, new_status: str
+    ) -> Dict[str, Any]:
         """Handle request to validate a lifecycle transition."""
 
         try:
             result = self.lifecycle_service.validate_transition(prompt_id, new_status)
 
-            response = create_success_response(data=result, message=f"Validated transition for prompt {prompt_id}")
+            response = create_success_response(
+                data=result, message=f"Validated transition for prompt {prompt_id}"
+            )
             return response.model_dump()
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to validate transition: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to validate transition: {str(e)}"
+            )
 
     async def handle_bulk_lifecycle_update(
         self, update_data: BulkLifecycleUpdate, user_id: str = "api_user"
@@ -129,4 +164,6 @@ class LifecycleHandlers(BaseHandler):
             return response.model_dump()
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to perform bulk update: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to perform bulk update: {str(e)}"
+            )

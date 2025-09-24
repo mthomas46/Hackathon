@@ -56,7 +56,9 @@ class WorkflowValidator:
             if param.default_value is not None:
                 valid, error = param.validate_value(param.default_value)
                 if not valid:
-                    errors.append(f"Invalid default value for parameter '{param.name}': {error}")
+                    errors.append(
+                        f"Invalid default value for parameter '{param.name}': {error}"
+                    )
 
         return errors
 
@@ -78,7 +80,9 @@ class WorkflowValidator:
 
             # Validate retry configuration
             if action.retry_count < 0:
-                errors.append(f"Action '{action.action_id}' retry count cannot be negative")
+                errors.append(
+                    f"Action '{action.action_id}' retry count cannot be negative"
+                )
 
             if action.timeout_seconds <= 0:
                 errors.append(f"Action '{action.action_id}' timeout must be positive")
@@ -96,19 +100,29 @@ class WorkflowValidator:
 
         if action.action_type.value == "service_call":
             if not action.config.get("service"):
-                errors.append(f"Action '{action.action_id}' missing required 'service' configuration")
+                errors.append(
+                    f"Action '{action.action_id}' missing required 'service' configuration"
+                )
             if not action.config.get("endpoint"):
-                errors.append(f"Action '{action.action_id}' missing required 'endpoint' configuration")
+                errors.append(
+                    f"Action '{action.action_id}' missing required 'endpoint' configuration"
+                )
 
         elif action.action_type.value == "prompt_execution":
             if not action.config.get("prompt_id"):
-                errors.append(f"Action '{action.action_id}' missing required 'prompt_id' configuration")
+                errors.append(
+                    f"Action '{action.action_id}' missing required 'prompt_id' configuration"
+                )
 
         elif action.action_type.value == "external_api_call":
             if not action.config.get("url"):
-                errors.append(f"Action '{action.action_id}' missing required 'url' configuration")
+                errors.append(
+                    f"Action '{action.action_id}' missing required 'url' configuration"
+                )
             if not action.config.get("method"):
-                errors.append(f"Action '{action.action_id}' missing required 'method' configuration")
+                errors.append(
+                    f"Action '{action.action_id}' missing required 'method' configuration"
+                )
 
         return errors
 
@@ -121,7 +135,9 @@ class WorkflowValidator:
         for action in actions:
             for dep_id in action.depends_on:
                 if dep_id not in action_ids:
-                    errors.append(f"Action '{action.action_id}' depends on unknown action '{dep_id}'")
+                    errors.append(
+                        f"Action '{action.action_id}' depends on unknown action '{dep_id}'"
+                    )
 
         # Check for circular dependencies
         if WorkflowValidator._has_circular_dependencies(actions):

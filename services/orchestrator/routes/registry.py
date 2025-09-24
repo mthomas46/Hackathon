@@ -2,7 +2,8 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Request
 
-from services.shared.core.config.config import get_config_value
+# Config now handled by standardized config system in main.py
+import os
 from services.shared.integrations.clients.clients import ServiceClients
 
 router = APIRouter()
@@ -19,7 +20,13 @@ def _get_registry(request: Request) -> Dict[str, Dict[str, Any]]:
 @router.post("/registry/sync-peers")
 async def registry_sync_peers(request: Request):
     peers = [
-        p.strip() for p in (get_config_value("ORCHESTRATOR_PEERS", "", section="orchestrator").split(",")) if p.strip()
+        p.strip()
+        for p in (
+            os.getenv("ORCHESTRATOR_PEERS", "").split(
+                ","
+            )
+        )
+        if p.strip()
     ]
     sent = 0
     try:

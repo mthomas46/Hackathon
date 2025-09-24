@@ -92,7 +92,9 @@ class SagaInstance:
     @property
     def current_step(self) -> Optional[SagaStep]:
         """Get the current step."""
-        if self._status == SagaStatus.STARTED and 0 <= self._current_step_index < len(self._steps):
+        if self._status == SagaStatus.STARTED and 0 <= self._current_step_index < len(
+            self._steps
+        ):
             return self._steps[self._current_step_index]
         return None
 
@@ -189,8 +191,12 @@ class SagaInstance:
                     "operation": step.operation,
                     "compensation_operation": step.compensation_operation,
                     "status": step.status,
-                    "executed_at": step.executed_at.isoformat() if step.executed_at else None,
-                    "completed_at": step.completed_at.isoformat() if step.completed_at else None,
+                    "executed_at": (
+                        step.executed_at.isoformat() if step.executed_at else None
+                    ),
+                    "completed_at": (
+                        step.completed_at.isoformat() if step.completed_at else None
+                    ),
                     "error_message": step.error_message,
                 }
                 for step in self._steps
@@ -198,7 +204,9 @@ class SagaInstance:
             "metadata": self._metadata,
             "created_at": self._created_at.isoformat(),
             "started_at": self._started_at.isoformat() if self._started_at else None,
-            "completed_at": self._completed_at.isoformat() if self._completed_at else None,
+            "completed_at": (
+                self._completed_at.isoformat() if self._completed_at else None
+            ),
             "error_message": self._error_message,
             "duration_seconds": self.duration_seconds,
         }

@@ -7,7 +7,9 @@ from services.shared.integrations.clients.clients import ServiceClients
 from ...utils.display_helpers import print_kv, print_list
 
 
-def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
+def build_actions(
+    console, clients: ServiceClients
+) -> List[Tuple[str, Callable[[], Any]]]:
     # ============================================================================
     # SUMMARIZATION ENDPOINTS
     # ============================================================================
@@ -19,7 +21,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         max_length = Prompt.ask("Max length", default="500")
 
         url = f"{clients.summarizer_hub_url()}/summarize"
-        rx = await clients.post_json(url, {"content": text, "format": format_type, "max_length": int(max_length)})
+        rx = await clients.post_json(
+            url, {"content": text, "format": format_type, "max_length": int(max_length)}
+        )
         print_kv(console, "Summary Result", rx)
 
     async def summarize_ensemble():
@@ -30,7 +34,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         providers = [{"name": provider, **({"model": model} if model else {})}]
 
         url = f"{clients.summarizer_hub_url()}/summarize/ensemble"
-        rx = await clients.post_json(url, {"text": text, "providers": providers, "use_hub_config": True})
+        rx = await clients.post_json(
+            url, {"text": text, "providers": providers, "use_hub_config": True}
+        )
         print_kv(console, "Ensemble Summary", rx)
 
     # ============================================================================
@@ -41,15 +47,26 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         """Categorize a single document."""
         doc_id = Prompt.ask("Document ID")
         content = Prompt.ask("Document content")
-        candidate_categories_input = Prompt.ask("Candidate categories (comma-separated, optional)", default="")
-        use_zero_shot = Prompt.ask("Use zero-shot classification? (yes/no)", default="yes")
+        candidate_categories_input = Prompt.ask(
+            "Candidate categories (comma-separated, optional)", default=""
+        )
+        use_zero_shot = Prompt.ask(
+            "Use zero-shot classification? (yes/no)", default="yes"
+        )
 
         document = {"id": doc_id, "content": content}
         candidate_categories = None
         if candidate_categories_input.strip():
-            candidate_categories = [cat.strip() for cat in candidate_categories_input.split(",") if cat.strip()]
+            candidate_categories = [
+                cat.strip()
+                for cat in candidate_categories_input.split(",")
+                if cat.strip()
+            ]
 
-        payload = {"document": document, "use_zero_shot": use_zero_shot.lower() == "yes"}
+        payload = {
+            "document": document,
+            "use_zero_shot": use_zero_shot.lower() == "yes",
+        }
         if candidate_categories:
             payload["candidate_categories"] = candidate_categories
 
@@ -69,10 +86,16 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             content = Prompt.ask(f"Document {i+1} content")
             documents.append({"id": doc_id, "content": content})
 
-        candidate_categories_input = Prompt.ask("Candidate categories (comma-separated, optional)", default="")
+        candidate_categories_input = Prompt.ask(
+            "Candidate categories (comma-separated, optional)", default=""
+        )
         candidate_categories = None
         if candidate_categories_input.strip():
-            candidate_categories = [cat.strip() for cat in candidate_categories_input.split(",") if cat.strip()]
+            candidate_categories = [
+                cat.strip()
+                for cat in candidate_categories_input.split(",")
+                if cat.strip()
+            ]
 
         payload = {"documents": documents, "use_zero_shot": True}
         if candidate_categories:
@@ -96,14 +119,24 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         """Perform peer review on documentation."""
         doc_id = Prompt.ask("Document ID")
         content = Prompt.ask("Document content")
-        review_type = Prompt.ask("Review type (comprehensive|quick|technical)", default="comprehensive")
-        criteria_input = Prompt.ask("Specific criteria (comma-separated, optional)", default="")
+        review_type = Prompt.ask(
+            "Review type (comprehensive|quick|technical)", default="comprehensive"
+        )
+        criteria_input = Prompt.ask(
+            "Specific criteria (comma-separated, optional)", default=""
+        )
 
         criteria = None
         if criteria_input.strip():
-            criteria = [crit.strip() for crit in criteria_input.split(",") if crit.strip()]
+            criteria = [
+                crit.strip() for crit in criteria_input.split(",") if crit.strip()
+            ]
 
-        payload = {"document_id": doc_id, "content": content, "review_type": review_type}
+        payload = {
+            "document_id": doc_id,
+            "content": content,
+            "review_type": review_type,
+        }
         if criteria:
             payload["criteria"] = criteria
 
@@ -116,7 +149,10 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         doc_id = Prompt.ask("Document ID")
         version1_content = Prompt.ask("Version 1 content")
         version2_content = Prompt.ask("Version 2 content")
-        comparison_type = Prompt.ask("Comparison type (semantic|structural|comprehensive)", default="comprehensive")
+        comparison_type = Prompt.ask(
+            "Comparison type (semantic|structural|comprehensive)",
+            default="comprehensive",
+        )
 
         payload = {
             "document_id": doc_id,
@@ -150,7 +186,12 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         url = f"{clients.summarizer_hub_url()}/summarize/ensemble"
         try:
             rx = await clients.post_json(
-                url, {"text": "ping", "providers": [{"name": "ollama"}], "use_hub_config": True}
+                url,
+                {
+                    "text": "ping",
+                    "providers": [{"name": "ollama"}],
+                    "use_hub_config": True,
+                },
             )
             ok = rx and "success" in rx and rx["success"]
         except Exception as e:
@@ -167,7 +208,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
     async def benchmark_summarization():
         """Benchmark summarization performance."""
-        test_text = "This is a test document for benchmarking summarization performance. " * 10
+        test_text = (
+            "This is a test document for benchmarking summarization performance. " * 10
+        )
         iterations = Prompt.ask("Number of iterations", default="3")
         iterations = int(iterations)
 
@@ -179,7 +222,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             console.print(f"Benchmarking iteration {i+1}/{iterations}...")
             try:
                 url = f"{clients.summarizer_hub_url()}/summarize"
-                await clients.post_json(url, {"content": test_text, "format": "text", "max_length": 100})
+                await clients.post_json(
+                    url, {"content": test_text, "format": "text", "max_length": 100}
+                )
             except Exception as e:
                 console.print(f"[red]Iteration {i+1} failed: {e}[/red]")
 

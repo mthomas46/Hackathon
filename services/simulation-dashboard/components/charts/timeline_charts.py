@@ -50,7 +50,9 @@ def render_timeline_chart(
         df = []
 
         for phase in phases:
-            start_date = datetime.now()  # Default to now, should be calculated from project start
+            start_date = (
+                datetime.now()
+            )  # Default to now, should be calculated from project start
             duration_days = phase.get("duration_days", 7)
 
             # Calculate start and end dates based on dependencies and durations
@@ -81,7 +83,13 @@ def render_timeline_chart(
             group_tasks=True,
         )
 
-        fig.update_layout(title=title, width=width, height=height, xaxis_title="Timeline", yaxis_title="Project Phases")
+        fig.update_layout(
+            title=title,
+            width=width,
+            height=height,
+            xaxis_title="Timeline",
+            yaxis_title="Project Phases",
+        )
 
         st.plotly_chart(fig, use_container_width=True)
 
@@ -124,14 +132,18 @@ def render_milestone_chart(
 
         for milestone in milestones:
             milestone_names.append(milestone.get("name", "Unnamed Milestone"))
-            milestone_dates.append(pd.to_datetime(milestone.get("due_date", datetime.now())))
+            milestone_dates.append(
+                pd.to_datetime(milestone.get("due_date", datetime.now()))
+            )
             milestone_status.append(milestone.get("status", "Planned"))
 
         # Create scatter plot for milestones
         fig = go.Figure()
 
         # Add milestone points
-        for i, (name, date, status) in enumerate(zip(milestone_names, milestone_dates, milestone_status)):
+        for i, (name, date, status) in enumerate(
+            zip(milestone_names, milestone_dates, milestone_status)
+        ):
             color = get_status_color(status)
 
             fig.add_trace(
@@ -149,7 +161,13 @@ def render_milestone_chart(
 
         # Add vertical line for current date
         current_date = datetime.now()
-        fig.add_vline(x=current_date, line_width=2, line_dash="dash", line_color="red", annotation_text="Today")
+        fig.add_vline(
+            x=current_date,
+            line_width=2,
+            line_dash="dash",
+            line_color="red",
+            annotation_text="Today",
+        )
 
         fig.update_layout(
             title=title,
@@ -157,7 +175,11 @@ def render_milestone_chart(
             yaxis_title="",
             width=width,
             height=height,
-            yaxis=dict(tickmode="array", tickvals=list(range(len(milestone_names))), ticktext=milestone_names),
+            yaxis=dict(
+                tickmode="array",
+                tickvals=list(range(len(milestone_names))),
+                ticktext=milestone_names,
+            ),
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -215,7 +237,13 @@ def render_dependency_chart(
 
             for dep in dependencies:
                 if dep in node_map and phase_id in node_map:
-                    links.append({"source": node_map[dep], "target": node_map[phase_id], "value": 1})
+                    links.append(
+                        {
+                            "source": node_map[dep],
+                            "target": node_map[phase_id],
+                            "value": 1,
+                        }
+                    )
 
         if not nodes:
             st.info("No valid dependency data to display")
@@ -232,10 +260,16 @@ def render_dependency_chart(
 
             for link in links:
                 source_idx = node_labels.index(
-                    next((n["label"] for n in nodes if n["id"] == link["source"]), "Unknown")
+                    next(
+                        (n["label"] for n in nodes if n["id"] == link["source"]),
+                        "Unknown",
+                    )
                 )
                 target_idx = node_labels.index(
-                    next((n["label"] for n in nodes if n["id"] == link["target"]), "Unknown")
+                    next(
+                        (n["label"] for n in nodes if n["id"] == link["target"]),
+                        "Unknown",
+                    )
                 )
 
                 source_indices.append(source_idx)
@@ -252,7 +286,9 @@ def render_dependency_chart(
                             label=node_labels,
                             color=[node["color"] for node in nodes],
                         ),
-                        link=dict(source=source_indices, target=target_indices, value=values),
+                        link=dict(
+                            source=source_indices, target=target_indices, value=values
+                        ),
                     )
                 ]
             )
@@ -345,9 +381,15 @@ def render_timeline_summary(phases: List[Dict[str, Any]]) -> None:
 
         # Calculate summary metrics
         total_duration = sum(phase.get("duration_days", 0) for phase in phases)
-        completed_phases = sum(1 for phase in phases if phase.get("status") == "completed")
-        in_progress_phases = sum(1 for phase in phases if phase.get("status") == "in_progress")
-        planned_phases = sum(1 for phase in phases if phase.get("status") in ["planned", None])
+        completed_phases = sum(
+            1 for phase in phases if phase.get("status") == "completed"
+        )
+        in_progress_phases = sum(
+            1 for phase in phases if phase.get("status") == "in_progress"
+        )
+        planned_phases = sum(
+            1 for phase in phases if phase.get("status") in ["planned", None]
+        )
 
         # Display metrics
         col1, col2, col3, col4 = st.columns(4)
@@ -366,11 +408,17 @@ def render_timeline_summary(phases: List[Dict[str, Any]]) -> None:
             st.metric("In Progress", in_progress_phases)
 
         # Phase status breakdown
-        status_counts = {"Completed": completed_phases, "In Progress": in_progress_phases, "Planned": planned_phases}
+        status_counts = {
+            "Completed": completed_phases,
+            "In Progress": in_progress_phases,
+            "Planned": planned_phases,
+        }
 
         # Create status pie chart
         fig = px.pie(
-            values=list(status_counts.values()), names=list(status_counts.keys()), title="Phase Status Distribution"
+            values=list(status_counts.values()),
+            names=list(status_counts.keys()),
+            title="Phase Status Distribution",
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -406,7 +454,13 @@ def calculate_phase_start_date(
 
 def get_status_color(status: str) -> str:
     """Get color for milestone status."""
-    color_map = {"completed": "green", "in_progress": "blue", "planned": "gray", "overdue": "red", "at_risk": "orange"}
+    color_map = {
+        "completed": "green",
+        "in_progress": "blue",
+        "planned": "gray",
+        "overdue": "red",
+        "at_risk": "orange",
+    }
     return color_map.get(status.lower(), "gray")
 
 

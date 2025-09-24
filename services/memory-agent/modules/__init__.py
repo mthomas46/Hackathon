@@ -35,4 +35,8 @@ def initialize_memory_agent_client():
 
 
 # Export key module functions for easier importing
-__all__ = ["get_memory_agent_client", "initialize_memory_agent_client", "memory_agent_client"]
+__all__ = [
+    "get_memory_agent_client",
+    "initialize_memory_agent_client",
+    "memory_agent_client",
+]

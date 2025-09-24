@@ -7,7 +7,7 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import Prompt
-from services.prompt_store.core.service import BaseService
+from services.shared.utilities import BaseService
 from services.prompt_store.domain.prompts.repository import PromptRepository
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.prompt_store.infrastructure.utils import (
@@ -25,16 +25,27 @@ class PromptService(BaseService[Prompt]):
     """Service for prompt business logic."""
 
     def __init__(self):
-        super().__init__(PromptRepository())
+        from ...db.connection import get_prompt_store_connection_string
 
-    def create_entity(self, data: Dict[str, Any], entity_id: Optional[str] = None) -> Prompt:
-        """Create a new prompt with validation and business rules."""
+        super().__init__(PromptRepository(get_prompt_store_connection_string()))
+
+    def _validate_entity(self, entity: Prompt) -> None:
+        """Validate prompt entity."""
         # Validate required fields
-        required_fields = ["name", "category", "content"]
-        missing = [field for field in required_fields if field not in data]
-        if missing:
-            raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        if not entity.name or not entity.name.strip():
+            raise ValueError("Prompt name is required")
+        if not entity.category or not entity.category.strip():
+            raise ValueError("Prompt category is required")
+        if not entity.content or not entity.content.strip():
+            raise ValueError("Prompt content is required")
 
+        # Additional business rule validations can be added here
+        # (duplicate checking moved to _create_entity_from_data since it needs data access)
+
+    async def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> Prompt:
+        """Create prompt entity from data."""
         # Sanitize and validate content
         content = sanitize_prompt_content(data["content"])
         if not content:
@@ -45,18 +56,22 @@ class PromptService(BaseService[Prompt]):
         if data.get("is_template", False):
             validation = validate_template_variables(content, variables)
             if not validation["valid"]:
-                raise ValueError(f"Template validation failed: {', '.join(validation['errors'])}")
+                raise ValueError(
+                    f"Template validation failed: {', '.join(validation['errors'])}"
+                )
 
         # Check for duplicate prompt by content hash
         content_hash = generate_prompt_hash(content, variables)
-        existing = self._find_by_content_hash(content_hash)
+        existing = await self._find_by_content_hash(content_hash)
         if existing:
-            raise ValueError(f"Similar prompt already exists: {existing.name} in {existing.category}")
+            raise ValueError(
+                f"Similar prompt already exists: {existing.name} in {existing.category}"
+            )
 
         # Check for duplicate name in category
         category = data["category"]
         name = data["name"]
-        existing_by_name = self.repository.get_by_name(category, name)
+        existing_by_name = await self.repository.get_by_name(category, name)
         if existing_by_name:
             raise ValueError(f"Prompt '{name}' already exists in category '{category}'")
 
@@ -65,6 +80,7 @@ class PromptService(BaseService[Prompt]):
 
         # Create prompt entity
         prompt = Prompt(
+            id=entity_id,
             name=name,
             category=category,
             description=data.get("description", ""),
@@ -75,20 +91,11 @@ class PromptService(BaseService[Prompt]):
             created_by=data.get("created_by", "api_user"),
             performance_score=complexity,  # Initial score based on complexity
         )
-        prompt.id = entity_id or generate_id()
 
-        # Save to database
-        saved_prompt = self.repository.save(prompt)
+        # Cache the prompt (async operation)
+        asyncio.create_task(self._cache_prompt(prompt))
 
-        # Cache the prompt (only if event loop is running)
-        try:
-            loop = asyncio.get_running_loop()
-            loop.create_task(self._cache_prompt(saved_prompt))
-        except RuntimeError:
-            # No event loop running (e.g., in tests), skip async caching
-            pass
-
-        return saved_prompt
+        return prompt
 
     def get_prompt_by_name(self, category: str, name: str) -> Optional[Prompt]:
         """Get prompt by category and name with caching."""
@@ -130,12 +137,18 @@ class PromptService(BaseService[Prompt]):
         return filled_content
 
     def search_prompts(
-        self, query: str, category: Optional[str] = None, tags: Optional[List[str]] = None, limit: int = 50
+        self,
+        query: str,
+        category: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        limit: int = 50,
     ) -> List[Prompt]:
         """Search prompts with enhanced filtering."""
         return self.repository.search_prompts(query, category, tags, limit)
 
-    def get_prompts_by_category(self, category: str, limit: int = 50, offset: int = 0) -> List[Prompt]:
+    def get_prompts_by_category(
+        self, category: str, limit: int = 50, offset: int = 0
+    ) -> List[Prompt]:
         """Get prompts by category."""
         return self.repository.get_by_category(category, limit, offset)
 
@@ -144,7 +157,11 @@ class PromptService(BaseService[Prompt]):
         return self.repository.get_by_tags(tags, limit)
 
     def fork_prompt(
-        self, prompt_id: str, new_name: str, created_by: str, changes: Optional[Dict[str, Any]] = None
+        self,
+        prompt_id: str,
+        new_name: str,
+        created_by: str,
+        changes: Optional[Dict[str, Any]] = None,
     ) -> Prompt:
         """Fork a prompt to create a new version."""
         original = self.get_entity(prompt_id)
@@ -207,14 +224,23 @@ class PromptService(BaseService[Prompt]):
         # Get prompt versions history
         versions = self._get_prompt_versions(prompt_id)
         if not versions:
-            return {"drift_detected": False, "drift_score": 0.0, "significant_changes": []}
+            return {
+                "drift_detected": False,
+                "drift_score": 0.0,
+                "significant_changes": [],
+            }
 
         current_prompt = self.get_entity(prompt_id)
         if not current_prompt:
             raise ValueError(f"Prompt {prompt_id} not found")
 
         historical_versions = [
-            {"content": v.content, "version": v.version, "created_at": v.created_at.isoformat()} for v in versions
+            {
+                "content": v.content,
+                "version": v.version,
+                "created_at": v.created_at.isoformat(),
+            }
+            for v in versions
         ]
 
         return detect_prompt_drift(current_prompt.content, historical_versions)
@@ -228,10 +254,15 @@ class PromptService(BaseService[Prompt]):
         # Get similar prompts in the same category
         similar_prompts = self.get_prompts_by_category(prompt.category, limit=10)
 
-        return generate_prompt_suggestions(prompt.category, [p.to_dict() for p in similar_prompts])
+        return generate_prompt_suggestions(
+            prompt.category, [p.to_dict() for p in similar_prompts]
+        )
 
     def bulk_update_tags(
-        self, prompt_ids: List[str], tags_to_add: Optional[List[str]] = None, tags_to_remove: Optional[List[str]] = None
+        self,
+        prompt_ids: List[str],
+        tags_to_add: Optional[List[str]] = None,
+        tags_to_remove: Optional[List[str]] = None,
     ) -> int:
         """Bulk update tags on multiple prompts."""
         updated_count = 0
@@ -258,10 +289,14 @@ class PromptService(BaseService[Prompt]):
         # For now, return None (no duplicate checking)
         return None
 
-    def _create_version_record(self, prompt: Prompt, change_summary: str, created_by: str) -> None:
+    def _create_version_record(
+        self, prompt: Prompt, change_summary: str, created_by: str
+    ) -> None:
         """Create a version record for prompt changes."""
         from services.prompt_store.core.entities import PromptVersion
-        from services.prompt_store.domain.prompts.versioning_repository import PromptVersioningRepository
+        from services.prompt_store.domain.prompts.versioning_repository import (
+            PromptVersioningRepository,
+        )
 
         version_repo = PromptVersioningRepository()
         version = PromptVersion(
@@ -276,7 +311,9 @@ class PromptService(BaseService[Prompt]):
 
     def _get_prompt_versions(self, prompt_id: str) -> List[Any]:
         """Get version history for a prompt."""
-        from services.prompt_store.domain.prompts.versioning_repository import PromptVersioningRepository
+        from services.prompt_store.domain.prompts.versioning_repository import (
+            PromptVersioningRepository,
+        )
 
         version_repo = PromptVersioningRepository()
         return version_repo.get_versions_for_prompt(prompt_id)
@@ -320,7 +357,11 @@ class PromptService(BaseService[Prompt]):
             "total_documents": len(documents),
             "documents": documents,
             "refinement_sessions": len(
-                [d for d in documents if d.get("metadata", {}).get("refinement_type") == "llm_assisted"]
+                [
+                    d
+                    for d in documents
+                    if d.get("metadata", {}).get("refinement_type") == "llm_assisted"
+                ]
             ),
             "llm_services_used": list(
                 set(

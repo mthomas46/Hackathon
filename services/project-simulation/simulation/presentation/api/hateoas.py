@@ -19,7 +19,9 @@ class Link(BaseModel):
     method: str = Field(default="GET", description="HTTP method for the link")
     title: Optional[str] = Field(None, description="Human-readable title for the link")
     type: Optional[str] = Field(None, description="Media type of the linked resource")
-    templated: bool = Field(default=False, description="Whether the href is a URI template")
+    templated: bool = Field(
+        default=False, description="Whether the href is a URI template"
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert link to dictionary."""
@@ -57,7 +59,10 @@ class HateoasResponse(BaseModel):
     success: bool = Field(default=True, description="Operation success status")
     data: Any = Field(..., description="The response data")
     links: Links = Field(..., description="HATEOAS links", alias="_links")
-    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Response timestamp")
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now().isoformat(),
+        description="Response timestamp",
+    )
     version: str = Field(default="1.0.0", description="API version")
     status: str = Field(default="success", description="Response status")
 
@@ -76,36 +81,74 @@ class SimulationResource:
         base_path = f"{base_url}/api/v1/simulations"
 
         links = Links(
-            self=Link(href=f"{base_path}/{simulation_id}", rel="self", method="GET", title="Get simulation details")
+            self=Link(
+                href=f"{base_path}/{simulation_id}",
+                rel="self",
+                method="GET",
+                title="Get simulation details",
+            )
         )
 
         # Add action links
         links.add_link(
-            Link(href=f"{base_path}/{simulation_id}/execute", rel="execute", method="POST", title="Execute simulation")
-        )
-
-        links.add_link(
             Link(
-                href=f"{base_path}/{simulation_id}/results", rel="results", method="GET", title="Get simulation results"
+                href=f"{base_path}/{simulation_id}/execute",
+                rel="execute",
+                method="POST",
+                title="Execute simulation",
             )
         )
 
         links.add_link(
-            Link(href=f"{base_path}/{simulation_id}", rel="cancel", method="DELETE", title="Cancel simulation")
+            Link(
+                href=f"{base_path}/{simulation_id}/results",
+                rel="results",
+                method="GET",
+                title="Get simulation results",
+            )
         )
 
-        links.add_link(Link(href=f"{base_path}", rel="collection", method="GET", title="List all simulations"))
+        links.add_link(
+            Link(
+                href=f"{base_path}/{simulation_id}",
+                rel="cancel",
+                method="DELETE",
+                title="Cancel simulation",
+            )
+        )
+
+        links.add_link(
+            Link(
+                href=f"{base_path}",
+                rel="collection",
+                method="GET",
+                title="List all simulations",
+            )
+        )
 
         return links
 
     @staticmethod
-    def create_simulation_collection_links(base_url: str = "", pagination: Optional[Dict[str, Any]] = None) -> Links:
+    def create_simulation_collection_links(
+        base_url: str = "", pagination: Optional[Dict[str, Any]] = None
+    ) -> Links:
         """Create HATEOAS links for simulation collection."""
         base_path = f"{base_url}/api/v1/simulations"
 
-        links = Links(self=Link(href=base_path, rel="self", method="GET", title="List simulations"))
+        links = Links(
+            self=Link(
+                href=base_path, rel="self", method="GET", title="List simulations"
+            )
+        )
 
-        links.add_link(Link(href=f"{base_path}", rel="create", method="POST", title="Create new simulation"))
+        links.add_link(
+            Link(
+                href=f"{base_path}",
+                rel="create",
+                method="POST",
+                title="Create new simulation",
+            )
+        )
 
         # Add pagination links if provided
         if pagination:
@@ -129,7 +172,14 @@ class SimulationResource:
                     )
                 )
 
-            links.add_link(Link(href=f"{base_path}?page=1", rel="first", method="GET", title="First page"))
+            links.add_link(
+                Link(
+                    href=f"{base_path}?page=1",
+                    rel="first",
+                    method="GET",
+                    title="First page",
+                )
+            )
 
             links.add_link(
                 Link(
@@ -149,17 +199,29 @@ class RootResource:
     @staticmethod
     def create_root_links(base_url: str = "") -> Links:
         """Create HATEOAS links for API root."""
-        links = Links(self=Link(href=f"{base_url}/", rel="self", method="GET", title="API root"))
+        links = Links(
+            self=Link(href=f"{base_url}/", rel="self", method="GET", title="API root")
+        )
 
         # API documentation links
         links.add_link(
             Link(
-                href=f"{base_url}/docs", rel="documentation", method="GET", title="API documentation", type="text/html"
+                href=f"{base_url}/docs",
+                rel="documentation",
+                method="GET",
+                title="API documentation",
+                type="text/html",
             )
         )
 
         links.add_link(
-            Link(href=f"{base_url}/redoc", rel="redoc", method="GET", title="ReDoc API documentation", type="text/html")
+            Link(
+                href=f"{base_url}/redoc",
+                rel="redoc",
+                method="GET",
+                title="ReDoc API documentation",
+                type="text/html",
+            )
         )
 
         links.add_link(
@@ -174,11 +236,23 @@ class RootResource:
 
         # Resource collection links
         links.add_link(
-            Link(href=f"{base_url}/api/v1/simulations", rel="simulations", method="GET", title="List simulations")
+            Link(
+                href=f"{base_url}/api/v1/simulations",
+                rel="simulations",
+                method="GET",
+                title="List simulations",
+            )
         )
 
         # Health and monitoring links
-        links.add_link(Link(href=f"{base_url}/health", rel="health", method="GET", title="Service health check"))
+        links.add_link(
+            Link(
+                href=f"{base_url}/health",
+                rel="health",
+                method="GET",
+                title="Service health check",
+            )
+        )
 
         links.add_link(
             Link(
@@ -198,18 +272,37 @@ class HealthResource:
     @staticmethod
     def create_health_links(base_url: str = "", include_system: bool = False) -> Links:
         """Create HATEOAS links for health endpoints."""
-        links = Links(self=Link(href=f"{base_url}/health", rel="self", method="GET", title="Basic health check"))
+        links = Links(
+            self=Link(
+                href=f"{base_url}/health",
+                rel="self",
+                method="GET",
+                title="Basic health check",
+            )
+        )
 
         links.add_link(
-            Link(href=f"{base_url}/health/detailed", rel="detailed", method="GET", title="Detailed health information")
+            Link(
+                href=f"{base_url}/health/detailed",
+                rel="detailed",
+                method="GET",
+                title="Detailed health information",
+            )
         )
 
         if include_system:
             links.add_link(
-                Link(href=f"{base_url}/health/system", rel="system", method="GET", title="System-wide health check")
+                Link(
+                    href=f"{base_url}/health/system",
+                    rel="system",
+                    method="GET",
+                    title="System-wide health check",
+                )
             )
 
-        links.add_link(Link(href=f"{base_url}/", rel="root", method="GET", title="API root"))
+        links.add_link(
+            Link(href=f"{base_url}/", rel="root", method="GET", title="API root")
+        )
 
         return links
 
@@ -227,7 +320,9 @@ def add_cors_headers(response_data: Dict[str, Any]) -> Dict[str, Any]:
     return response_data
 
 
-def create_error_response(error: str, status_code: int = 500, links: Optional[Links] = None) -> Dict[str, Any]:
+def create_error_response(
+    error: str, status_code: int = 500, links: Optional[Links] = None
+) -> Dict[str, Any]:
     """Create a HATEOAS-enabled error response."""
     if links is None:
         # Create basic root links for error recovery
@@ -245,8 +340,16 @@ def create_error_response(error: str, status_code: int = 500, links: Optional[Li
 # API Resource Templates
 SIMULATION_LINKS_TEMPLATE = {
     "self": {"href": "/api/v1/simulations/{id}", "rel": "self", "method": "GET"},
-    "execute": {"href": "/api/v1/simulations/{id}/execute", "rel": "execute", "method": "POST"},
-    "results": {"href": "/api/v1/simulations/{id}/results", "rel": "results", "method": "GET"},
+    "execute": {
+        "href": "/api/v1/simulations/{id}/execute",
+        "rel": "execute",
+        "method": "POST",
+    },
+    "results": {
+        "href": "/api/v1/simulations/{id}/results",
+        "rel": "results",
+        "method": "GET",
+    },
     "cancel": {"href": "/api/v1/simulations/{id}", "rel": "cancel", "method": "DELETE"},
     "collection": {"href": "/api/v1/simulations", "rel": "collection", "method": "GET"},
 }
@@ -255,11 +358,17 @@ COLLECTION_LINKS_TEMPLATE = {
     "self": {"href": "/api/v1/simulations", "rel": "self", "method": "GET"},
     "create": {"href": "/api/v1/simulations", "rel": "create", "method": "POST"},
     "first": {"href": "/api/v1/simulations?page=1", "rel": "first", "method": "GET"},
-    "last": {"href": "/api/v1/simulations?page={total_pages}", "rel": "last", "method": "GET"},
+    "last": {
+        "href": "/api/v1/simulations?page={total_pages}",
+        "rel": "last",
+        "method": "GET",
+    },
 }
 
 
-def generate_pagination_links(base_url: str, current_page: int, total_pages: int, **params) -> List[Link]:
+def generate_pagination_links(
+    base_url: str, current_page: int, total_pages: int, **params
+) -> List[Link]:
     """Generate pagination links based on current page and total pages."""
     links = []
 
@@ -270,32 +379,70 @@ def generate_pagination_links(base_url: str, current_page: int, total_pages: int
     else:
         query_params = f"?page={current_page}"
 
-    links.append(Link(href=f"{base_url}{query_params}", rel="self", method="GET", title=f"Page {current_page}"))
+    links.append(
+        Link(
+            href=f"{base_url}{query_params}",
+            rel="self",
+            method="GET",
+            title=f"Page {current_page}",
+        )
+    )
 
     # Previous page
     if current_page > 1:
         prev_params = f"?page={current_page - 1}"
         if query_params and "&page=" in query_params:
-            prev_params = query_params.replace(f"page={current_page}", f"page={current_page - 1}")
-        links.append(Link(href=f"{base_url}{prev_params}", rel="previous", method="GET", title="Previous page"))
+            prev_params = query_params.replace(
+                f"page={current_page}", f"page={current_page - 1}"
+            )
+        links.append(
+            Link(
+                href=f"{base_url}{prev_params}",
+                rel="previous",
+                method="GET",
+                title="Previous page",
+            )
+        )
 
     # Next page
     if current_page < total_pages:
         next_params = f"?page={current_page + 1}"
         if query_params and "&page=" in query_params:
-            next_params = query_params.replace(f"page={current_page}", f"page={current_page + 1}")
-        links.append(Link(href=f"{base_url}{next_params}", rel="next", method="GET", title="Next page"))
+            next_params = query_params.replace(
+                f"page={current_page}", f"page={current_page + 1}"
+            )
+        links.append(
+            Link(
+                href=f"{base_url}{next_params}",
+                rel="next",
+                method="GET",
+                title="Next page",
+            )
+        )
 
     # First page
     first_params = "?page=1"
     if query_params and "&page=" in query_params:
         first_params = query_params.replace(f"page={current_page}", "page=1")
-    links.append(Link(href=f"{base_url}{first_params}", rel="first", method="GET", title="First page"))
+    links.append(
+        Link(
+            href=f"{base_url}{first_params}",
+            rel="first",
+            method="GET",
+            title="First page",
+        )
+    )
 
     # Last page
     last_params = f"?page={total_pages}"
     if query_params and "&page=" in query_params:
-        last_params = query_params.replace(f"page={current_page}", f"page={total_pages}")
-    links.append(Link(href=f"{base_url}{last_params}", rel="last", method="GET", title="Last page"))
+        last_params = query_params.replace(
+            f"page={current_page}", f"page={total_pages}"
+        )
+    links.append(
+        Link(
+            href=f"{base_url}{last_params}", rel="last", method="GET", title="Last page"
+        )
+    )
 
     return links

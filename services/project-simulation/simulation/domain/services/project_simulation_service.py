@@ -50,14 +50,20 @@ class ISimulationRepository(Protocol):
 class IDocumentGenerationService(Protocol):
     """Service interface for document generation."""
 
-    async def generate_project_documents(self, project: Project) -> List[Dict[str, Any]]: ...
-    async def generate_phase_documents(self, project: Project, phase_name: str) -> List[Dict[str, Any]]: ...
+    async def generate_project_documents(
+        self, project: Project
+    ) -> List[Dict[str, Any]]: ...
+    async def generate_phase_documents(
+        self, project: Project, phase_name: str
+    ) -> List[Dict[str, Any]]: ...
 
 
 class IWorkflowExecutionService(Protocol):
     """Service interface for workflow execution."""
 
-    async def execute_document_analysis_workflow(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]: ...
+    async def execute_document_analysis_workflow(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]: ...
     async def execute_team_dynamics_workflow(self, team: Team) -> Dict[str, Any]: ...
 
 
@@ -96,7 +102,9 @@ class ProjectSimulationService:
             real_time_progress=True,
         )
         simulation = Simulation(
-            id=None, project_id=str(project.id.value), configuration=simulation_config  # Will be auto-generated
+            id=None,
+            project_id=str(project.id.value),
+            configuration=simulation_config,  # Will be auto-generated
         )
 
         # Save all aggregates
@@ -125,12 +133,19 @@ class ProjectSimulationService:
         simulation.start_simulation()
 
         start_time = datetime.now()
-        results = {"documents_generated": [], "workflows_executed": [], "errors": [], "insights": []}
+        results = {
+            "documents_generated": [],
+            "workflows_executed": [],
+            "errors": [],
+            "insights": [],
+        }
 
         try:
             # Execute simulation phases
             for phase in timeline.phases:
-                await self._execute_simulation_phase(simulation, project, timeline, team, phase, results)
+                await self._execute_simulation_phase(
+                    simulation, project, timeline, team, phase, results
+                )
 
             # Calculate final metrics
             execution_time = (datetime.now() - start_time).total_seconds()
@@ -142,7 +157,11 @@ class ProjectSimulationService:
                 execution_time_seconds=execution_time,
                 average_response_time_ms=100.0,  # Mock value
                 error_count=len(results["errors"]),
-                success_rate=Percentage(95.0) if len(results["errors"]) == 0 else Percentage(80.0),
+                success_rate=(
+                    Percentage(95.0)
+                    if len(results["errors"]) == 0
+                    else Percentage(80.0)
+                ),
             )
 
             # Complete simulation
@@ -186,15 +205,23 @@ class ProjectSimulationService:
         # Generate documents for this phase
         if simulation.configuration.should_generate_documents():
             try:
-                documents = await self.document_generation_service.generate_phase_documents(project, phase.name)
+                documents = (
+                    await self.document_generation_service.generate_phase_documents(
+                        project, phase.name
+                    )
+                )
                 results["documents_generated"].extend(documents)
 
                 for doc in documents:
                     simulation.record_document_generation(
-                        doc.get("type", "unknown"), doc.get("title", "Untitled"), doc.get("word_count", 0)
+                        doc.get("type", "unknown"),
+                        doc.get("title", "Untitled"),
+                        doc.get("word_count", 0),
                     )
             except Exception as e:
-                results["errors"].append(f"Document generation failed for phase {phase.name}: {str(e)}")
+                results["errors"].append(
+                    f"Document generation failed for phase {phase.name}: {str(e)}"
+                )
 
         # Execute workflows
         if simulation.configuration.should_execute_workflows():
@@ -213,13 +240,19 @@ class ProjectSimulationService:
 
                 # Team dynamics workflow
                 if simulation.configuration.should_simulate_team_dynamics():
-                    workflow_result = await self.workflow_execution_service.execute_team_dynamics_workflow(team)
+                    workflow_result = await self.workflow_execution_service.execute_team_dynamics_workflow(
+                        team
+                    )
                     results["workflows_executed"].append(workflow_result)
                     simulation.record_workflow_execution(
-                        "team_dynamics", workflow_result.get("execution_time", 0), workflow_result.get("success", True)
+                        "team_dynamics",
+                        workflow_result.get("execution_time", 0),
+                        workflow_result.get("success", True),
                     )
             except Exception as e:
-                results["errors"].append(f"Workflow execution failed for phase {phase.name}: {str(e)}")
+                results["errors"].append(
+                    f"Workflow execution failed for phase {phase.name}: {str(e)}"
+                )
 
         # Complete phase
         simulation.update_progress(phase.name, completed=True)
@@ -254,7 +287,9 @@ class ProjectSimulationService:
 
         return project
 
-    def _create_timeline_from_config(self, config: Dict[str, Any], project_id: str) -> Timeline:
+    def _create_timeline_from_config(
+        self, config: Dict[str, Any], project_id: str
+    ) -> Timeline:
         """Create Timeline aggregate from configuration."""
         from ..entities.timeline import Timeline, TimelineId, TimelinePhase
 
@@ -269,7 +304,8 @@ class ProjectSimulationService:
                     display_name=phase_config["display_name"],
                     description=phase_config["description"],
                     planned_duration=Duration(
-                        weeks=phase_config["duration_weeks"], days=phase_config.get("duration_days", 0)
+                        weeks=phase_config["duration_weeks"],
+                        days=phase_config.get("duration_days", 0),
                     ),
                     dependencies=phase_config.get("dependencies", []),
                     team_allocation=phase_config.get("team_allocation", {}),
@@ -280,7 +316,14 @@ class ProjectSimulationService:
 
     def _create_team_from_config(self, config: Dict[str, Any], project_id: str) -> Team:
         """Create Team aggregate from configuration."""
-        from ..entities.team import CommunicationStyle, ExpertiseLevel, Team, TeamId, TeamMemberEntity, WorkStyle
+        from ..entities.team import (
+            CommunicationStyle,
+            ExpertiseLevel,
+            Team,
+            TeamId,
+            TeamMemberEntity,
+            WorkStyle,
+        )
 
         team = Team(
             id=TeamId(),
@@ -298,7 +341,9 @@ class ProjectSimulationService:
                     email=member_config["email"],
                     role=member_config["role"],
                     expertise_level=ExpertiseLevel(member_config["expertise_level"]),
-                    communication_style=CommunicationStyle(member_config["communication_style"]),
+                    communication_style=CommunicationStyle(
+                        member_config["communication_style"]
+                    ),
                     work_style=WorkStyle(member_config["work_style"]),
                     specialization=member_config.get("specialization", []),
                 )

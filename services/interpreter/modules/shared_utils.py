@@ -8,8 +8,10 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 # Import shared utilities
 from services.shared.integrations.clients.clients import ServiceClients
@@ -37,23 +39,36 @@ def get_interpreter_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:
     return ServiceClients(timeout=timeout)
 
 
-def handle_interpreter_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
+def handle_interpreter_error(
+    operation: str, error: Exception, **context
+) -> Dict[str, Any]:
     """Standardized error handling for interpreter operations.
 
     Logs the error and returns a standardized error response.
     """
-    fire_and_forget("error", f"Interpreter {operation} error: {error}", ServiceNames.INTERPRETER, context)
+    fire_and_forget(
+        "error",
+        f"Interpreter {operation} error: {error}",
+        ServiceNames.INTERPRETER,
+        context,
+    )
     return create_error_response(
-        f"Failed to {operation}", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(error), **context}
+        f"Failed to {operation}",
+        error_code=ErrorCodes.INTERNAL_ERROR,
+        details={"error": str(error), **context},
     )
 
 
-def create_interpreter_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
+def create_interpreter_success_response(
+    operation: str, data: Any, **context
+) -> Dict[str, Any]:
     """Standardized success response for interpreter operations.
 
     Returns a consistent success response format.
     """
-    return create_success_response(f"Interpreter {operation} successful", data, **context)
+    return create_success_response(
+        f"Interpreter {operation} successful", data, **context
+    )
 
 
 def build_interpreter_context(operation: str, **additional) -> Dict[str, Any]:
@@ -69,14 +84,20 @@ def build_interpreter_context(operation: str, **additional) -> Dict[str, Any]:
 def validate_user_query(query: Dict[str, Any]) -> None:
     """Validate user query parameters."""
     if not query.get("query"):
-        raise ValidationException("Query text is required", {"query": ["Required field - cannot be empty"]})
+        raise ValidationException(
+            "Query text is required", {"query": ["Required field - cannot be empty"]}
+        )
 
     query_text = query["query"].strip()
     if len(query_text) < 3:
-        raise ValidationException("Query too short", {"query": ["Must be at least 3 characters long"]})
+        raise ValidationException(
+            "Query too short", {"query": ["Must be at least 3 characters long"]}
+        )
 
     if len(query_text) > 1000:
-        raise ValidationException("Query too long", {"query": ["Must be less than 1000 characters"]})
+        raise ValidationException(
+            "Query too long", {"query": ["Must be less than 1000 characters"]}
+        )
 
 
 def extract_entities_with_pattern(query: str, pattern: str) -> List[str]:
@@ -88,17 +109,27 @@ def extract_entities_with_pattern(query: str, pattern: str) -> List[str]:
     return list(set(matches)) if matches else []
 
 
-def add_entity_if_found(entities: Dict[str, Any], entity_list: List[str], key: str) -> None:
+def add_entity_if_found(
+    entities: Dict[str, Any], entity_list: List[str], key: str
+) -> None:
     """Add entity to entities dict if found."""
     if entity_list:
         entities[key] = entity_list
 
 
 def build_workflow_response(
-    intent: str, confidence: float, entities: Dict[str, Any], workflow: Optional[Any] = None
+    intent: str,
+    confidence: float,
+    entities: Dict[str, Any],
+    workflow: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """Build standardized workflow response."""
-    response = {"intent": intent, "confidence": confidence, "entities": entities, "timestamp": utc_now().isoformat()}
+    response = {
+        "intent": intent,
+        "confidence": confidence,
+        "entities": entities,
+        "timestamp": utc_now().isoformat(),
+    }
 
     if workflow:
         response["workflow"] = workflow
@@ -106,7 +137,9 @@ def build_workflow_response(
     return response
 
 
-def generate_response_text(intent: str, confidence: float, entities: Dict[str, Any], workflow: Optional[Any]) -> str:
+def generate_response_text(
+    intent: str, confidence: float, entities: Dict[str, Any], workflow: Optional[Any]
+) -> str:
     """Generate human-readable response text based on interpretation."""
     if confidence < 0.3:
         return "I'm not sure what you're asking for. Could you please rephrase your request?"
@@ -233,10 +266,14 @@ def validate_workflow_step(step: Dict[str, Any]) -> None:
             )
 
     if not step.get("step_id"):
-        raise ValidationException("Workflow step ID cannot be empty", {"step_id": ["Cannot be empty"]})
+        raise ValidationException(
+            "Workflow step ID cannot be empty", {"step_id": ["Cannot be empty"]}
+        )
 
     if not step.get("service"):
-        raise ValidationException("Workflow step service cannot be empty", {"service": ["Cannot be empty"]})
+        raise ValidationException(
+            "Workflow step service cannot be empty", {"service": ["Cannot be empty"]}
+        )
 
 
 def get_supported_intents() -> Dict[str, Dict[str, Any]]:
@@ -274,7 +311,12 @@ def get_supported_intents() -> Dict[str, Dict[str, Any]]:
         },
         "ingest_jira": {
             "description": "Ingest data from Jira tickets and projects",
-            "examples": ["ingest jira tickets", "pull from jira project", "import jira issues", "sync jira data"],
+            "examples": [
+                "ingest jira tickets",
+                "pull from jira project",
+                "import jira issues",
+                "sync jira data",
+            ],
             "confidence_threshold": 0.8,
         },
         "ingest_confluence": {
@@ -319,18 +361,30 @@ def get_supported_intents() -> Dict[str, Dict[str, Any]]:
         },
         "help": {
             "description": "Get help and information about capabilities",
-            "examples": ["help me", "what can you do", "show commands", "list available features"],
+            "examples": [
+                "help me",
+                "what can you do",
+                "show commands",
+                "list available features",
+            ],
             "confidence_threshold": 0.9,
         },
         "status": {
             "description": "Check system status and health",
-            "examples": ["show status", "system status", "health check", "how are you doing"],
+            "examples": [
+                "show status",
+                "system status",
+                "health check",
+                "how are you doing",
+            ],
             "confidence_threshold": 0.8,
         },
     }
 
 
-def log_interpretation_metrics(query: str, intent: str, confidence: float, processing_time: float) -> None:
+def log_interpretation_metrics(
+    query: str, intent: str, confidence: float, processing_time: float
+) -> None:
     """Log interpretation metrics for monitoring."""
     context = {
         "query_length": len(query),
@@ -339,4 +393,6 @@ def log_interpretation_metrics(query: str, intent: str, confidence: float, proce
         "processing_time_ms": processing_time * 1000,
         "service": ServiceNames.INTERPRETER,
     }
-    fire_and_forget("info", "Query interpretation completed", ServiceNames.INTERPRETER, context)
+    fire_and_forget(
+        "info", "Query interpretation completed", ServiceNames.INTERPRETER, context
+    )

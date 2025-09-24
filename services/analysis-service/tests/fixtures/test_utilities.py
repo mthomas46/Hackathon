@@ -4,13 +4,26 @@ import asyncio
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from typing import Any, AsyncIterator, Awaitable, Callable, Dict, List, Optional, TypeVar
+from typing import (
+    Any,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    TypeVar,
+)
 from unittest.mock import AsyncMock, Mock
 
 from ...domain.entities.analysis import AnalysisStatus
 from ...domain.entities.finding import FindingSeverity
 from ...domain.services import AnalysisService
-from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
+from ...infrastructure.repositories import (
+    AnalysisRepository,
+    DocumentRepository,
+    FindingRepository,
+)
 
 T = TypeVar("T")
 
@@ -25,7 +38,9 @@ class MockFactory:
 
         # Mock successful operations
         mock_repo.save = AsyncMock(return_value=None)
-        mock_repo.get_by_id = AsyncMock(return_value=Mock(id="test-doc", title="Test Document"))
+        mock_repo.get_by_id = AsyncMock(
+            return_value=Mock(id="test-doc", title="Test Document")
+        )
         mock_repo.get_all = AsyncMock(return_value=[])
         mock_repo.delete = AsyncMock(return_value=None)
         mock_repo.exists = AsyncMock(return_value=True)
@@ -39,7 +54,9 @@ class MockFactory:
 
         # Mock successful operations
         mock_repo.save = AsyncMock(return_value=None)
-        mock_repo.get_by_id = AsyncMock(return_value=Mock(id="test-analysis", status=AnalysisStatus.COMPLETED))
+        mock_repo.get_by_id = AsyncMock(
+            return_value=Mock(id="test-analysis", status=AnalysisStatus.COMPLETED)
+        )
         mock_repo.get_by_document_id = AsyncMock(return_value=[])
         mock_repo.get_recent = AsyncMock(return_value=[])
         mock_repo.delete = AsyncMock(return_value=None)
@@ -53,7 +70,9 @@ class MockFactory:
 
         # Mock successful operations
         mock_repo.save = AsyncMock(return_value=None)
-        mock_repo.get_by_id = AsyncMock(return_value=Mock(id="test-finding", severity=FindingSeverity.MEDIUM))
+        mock_repo.get_by_id = AsyncMock(
+            return_value=Mock(id="test-finding", severity=FindingSeverity.MEDIUM)
+        )
         mock_repo.get_by_analysis_id = AsyncMock(return_value=[])
         mock_repo.get_by_document_id = AsyncMock(return_value=[])
         mock_repo.get_by_filters = AsyncMock(return_value=[])
@@ -72,7 +91,9 @@ class MockFactory:
                 "analysis_id": "semantic-analysis-001",
                 "status": "completed",
                 "similarity_matrix": [[1.0, 0.8], [0.8, 1.0]],
-                "similar_pairs": [{"source": "doc-1", "target": "doc-2", "similarity": 0.8}],
+                "similar_pairs": [
+                    {"source": "doc-1", "target": "doc-2", "similarity": 0.8}
+                ],
             }
         )
 
@@ -105,7 +126,11 @@ class MockFactory:
 
         if service_name == "semantic_analyzer":
             mock_service.analyze_similarity = AsyncMock(
-                return_value={"similarity_score": 0.85, "embedding_distance": 0.15, "confidence": 0.92}
+                return_value={
+                    "similarity_score": 0.85,
+                    "embedding_distance": 0.15,
+                    "confidence": 0.92,
+                }
             )
         elif service_name == "sentiment_analyzer":
             mock_service.analyze_sentiment = AsyncMock(
@@ -165,11 +190,19 @@ class MockFactory:
         mock_queue = Mock()
 
         mock_queue.enqueue = AsyncMock(return_value="task-123")
-        mock_queue.dequeue = AsyncMock(return_value={"task_id": "task-123", "data": "test"})
-        mock_queue.get_status = AsyncMock(return_value={"status": "pending", "position": 1})
+        mock_queue.dequeue = AsyncMock(
+            return_value={"task_id": "task-123", "data": "test"}
+        )
+        mock_queue.get_status = AsyncMock(
+            return_value={"status": "pending", "position": 1}
+        )
         mock_queue.cancel = AsyncMock(return_value=True)
         mock_queue.get_stats = AsyncMock(
-            return_value={"queue_length": 5, "processing_rate": 10, "total_processed": 100}
+            return_value={
+                "queue_length": 5,
+                "processing_rate": 10,
+                "total_processed": 100,
+            }
         )
 
         return mock_queue
@@ -186,9 +219,16 @@ class MockFactory:
                 {"worker_id": "worker-2", "status": "idle", "current_task": None},
             ]
         )
-        mock_pool.scale_workers = AsyncMock(return_value={"previous_count": 2, "new_count": 4})
+        mock_pool.scale_workers = AsyncMock(
+            return_value={"previous_count": 2, "new_count": 4}
+        )
         mock_pool.get_stats = AsyncMock(
-            return_value={"active_workers": 3, "idle_workers": 1, "total_workers": 4, "avg_utilization": 0.75}
+            return_value={
+                "active_workers": 3,
+                "idle_workers": 1,
+                "total_workers": 4,
+                "avg_utilization": 0.75,
+            }
         )
 
         return mock_pool
@@ -198,7 +238,9 @@ class AsyncMockHelper:
     """Helper for creating and managing async mocks."""
 
     @staticmethod
-    def create_async_mock(return_value: Any = None, side_effect: Any = None) -> AsyncMock:
+    def create_async_mock(
+        return_value: Any = None, side_effect: Any = None
+    ) -> AsyncMock:
         """Create an async mock with specified behavior."""
         mock = AsyncMock()
         if return_value is not None:
@@ -208,7 +250,9 @@ class AsyncMockHelper:
         return mock
 
     @staticmethod
-    def create_delayed_mock(delay_seconds: float, return_value: Any = None) -> AsyncMock:
+    def create_delayed_mock(
+        delay_seconds: float, return_value: Any = None
+    ) -> AsyncMock:
         """Create an async mock that introduces a delay."""
 
         async def delayed_function(*args, **kwargs):
@@ -298,7 +342,10 @@ class TestDataBuilder:
                 "document_id": "test-doc-123",
                 "analysis_options": {"include_detailed_scores": True},
             },
-            "content_quality": {"document_id": "test-doc-123", "quality_checks": ["readability", "grammar"]},
+            "content_quality": {
+                "document_id": "test-doc-123",
+                "quality_checks": ["readability", "grammar"],
+            },
         }
 
         request_data = requests.get(request_type, {})
@@ -378,7 +425,9 @@ async def mock_database_session() -> AsyncIterator[Any]:
 
 
 @asynccontextmanager
-async def mock_external_service(service_name: str, response_data: Any = None) -> AsyncIterator[Any]:
+async def mock_external_service(
+    service_name: str, response_data: Any = None
+) -> AsyncIterator[Any]:
     """Context manager for mocking external services."""
     if response_data is None:
         response_data = {"status": "success", "data": f"mock_{service_name}_response"}
@@ -421,7 +470,12 @@ class TestScenarioRunner:
             raise ValueError(f"Scenario '{name}' not found")
 
         scenario = self.scenarios[name]
-        results: Dict[str, Any] = {"scenario": name, "steps_executed": [], "errors": [], "duration": 0.0}
+        results: Dict[str, Any] = {
+            "scenario": name,
+            "steps_executed": [],
+            "errors": [],
+            "duration": 0.0,
+        }
 
         start_time: float = time.time()
 
@@ -437,14 +491,18 @@ class TestScenarioRunner:
                     await step(**kwargs)
                     results["steps_executed"].append(step_name)
                 except Exception as e:
-                    results["errors"].append({"step": step_name, "error": str(e), "type": type(e).__name__})
+                    results["errors"].append(
+                        {"step": step_name, "error": str(e), "type": type(e).__name__}
+                    )
 
             # Teardown
             if scenario["teardown"]:
                 await scenario["teardown"](**kwargs)
 
         except Exception as e:
-            results["errors"].append({"step": "setup/teardown", "error": str(e), "type": type(e).__name__})
+            results["errors"].append(
+                {"step": "setup/teardown", "error": str(e), "type": type(e).__name__}
+            )
 
         results["duration"] = time.time() - start_time
         return results
@@ -472,17 +530,23 @@ class ValidationHelper:
         return all(field in finding_data for field in required_fields)
 
     @staticmethod
-    def validate_api_response(response_data: Dict[str, Any], expected_fields: List[str]) -> bool:
+    def validate_api_response(
+        response_data: Dict[str, Any], expected_fields: List[str]
+    ) -> bool:
         """Validate API response structure."""
         return all(field in response_data for field in expected_fields)
 
     @staticmethod
-    def validate_performance_threshold(actual_time: float, max_threshold: float) -> bool:
+    def validate_performance_threshold(
+        actual_time: float, max_threshold: float
+    ) -> bool:
         """Validate performance against threshold."""
         return actual_time <= max_threshold
 
     @staticmethod
-    def compare_response_times(times: List[float], tolerance_percent: float = 10.0) -> bool:
+    def compare_response_times(
+        times: List[float], tolerance_percent: float = 10.0
+    ) -> bool:
         """Compare response times for consistency."""
         if len(times) < 2:
             return True

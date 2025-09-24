@@ -53,7 +53,9 @@ class ChangeImpactAnalyzer:
             logger.warning("Change impact analysis dependencies not available")
             return False
 
-        self.vectorizer = TfidfVectorizer(max_features=1000, stop_words="english", ngram_range=(1, 2))
+        self.vectorizer = TfidfVectorizer(
+            max_features=1000, stop_words="english", ngram_range=(1, 2)
+        )
         self.initialized = True
         return True
 
@@ -79,9 +81,17 @@ class ChangeImpactAnalyzer:
                 "low": ["changelog", "readme", "contributing"],
             },
             "change_severity": {
-                "breaking_change": ["api_endpoint_removal", "parameter_removal", "response_format_change"],
+                "breaking_change": [
+                    "api_endpoint_removal",
+                    "parameter_removal",
+                    "response_format_change",
+                ],
                 "major_change": ["new_feature", "behavior_change", "deprecation"],
-                "minor_change": ["bug_fix", "documentation_update", "formatting_change"],
+                "minor_change": [
+                    "bug_fix",
+                    "documentation_update",
+                    "formatting_change",
+                ],
                 "trivial_change": ["typo_fix", "grammar_correction"],
             },
         }
@@ -121,7 +131,9 @@ class ChangeImpactAnalyzer:
             },
         }
 
-    def _extract_document_features(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_document_features(
+        self, document_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Extract features from document for impact analysis."""
         content = document_data.get("content", "")
         metadata = document_data.get("metadata", {})
@@ -136,7 +148,9 @@ class ChangeImpactAnalyzer:
             "code_blocks": len(re.findall(r"```[\s\S]*?```", content)),
             "links": len(re.findall(r"\[([^\]]+)\]\(([^)]+)\)", content)),
             "headings": len(re.findall(r"^#{1,6}\s+.+", content, re.MULTILINE)),
-            "api_endpoints": len(re.findall(r"`(GET|POST|PUT|DELETE|PATCH)\s+[^`]+`", content)),
+            "api_endpoints": len(
+                re.findall(r"`(GET|POST|PUT|DELETE|PATCH)\s+[^`]+`", content)
+            ),
             "technical_terms": self._extract_technical_terms(content),
             "stakeholder_groups": self._identify_stakeholder_groups(document_data),
             "business_criticality": metadata.get("business_criticality", "medium"),
@@ -172,15 +186,26 @@ class ChangeImpactAnalyzer:
         stakeholder_groups = []
 
         # Analyze content for stakeholder indicators
-        if any(term in content for term in ["user", "customer", "end-user", "consumer"]):
+        if any(
+            term in content for term in ["user", "customer", "end-user", "consumer"]
+        ):
             stakeholder_groups.append("end_users")
-        if any(term in content for term in ["developer", "engineer", "programmer", "coder"]):
+        if any(
+            term in content for term in ["developer", "engineer", "programmer", "coder"]
+        ):
             stakeholder_groups.append("developers")
-        if any(term in content for term in ["admin", "administrator", "operator", "devops"]):
+        if any(
+            term in content for term in ["admin", "administrator", "operator", "devops"]
+        ):
             stakeholder_groups.append("administrators")
-        if any(term in content for term in ["manager", "lead", "architect", "director"]):
+        if any(
+            term in content for term in ["manager", "lead", "architect", "director"]
+        ):
             stakeholder_groups.append("management")
-        if any(term in content for term in ["security", "compliance", "audit", "governance"]):
+        if any(
+            term in content
+            for term in ["security", "compliance", "audit", "governance"]
+        ):
             stakeholder_groups.append("security_compliance")
         if any(term in content for term in ["support", "helpdesk", "customer service"]):
             stakeholder_groups.append("support_team")
@@ -211,8 +236,12 @@ class ChangeImpactAnalyzer:
             return {}
 
         # Extract content for similarity analysis
-        documents = [source_doc.get("content", "")] + [doc.get("content", "") for doc in target_docs]
-        document_ids = [source_doc.get("document_id", "source")] + [doc.get("document_id", "") for doc in target_docs]
+        documents = [source_doc.get("content", "")] + [
+            doc.get("content", "") for doc in target_docs
+        ]
+        document_ids = [source_doc.get("document_id", "source")] + [
+            doc.get("document_id", "") for doc in target_docs
+        ]
 
         # Remove empty documents
         valid_docs = [(i, doc) for i, doc in enumerate(documents) if doc.strip()]
@@ -236,11 +265,20 @@ class ChangeImpactAnalyzer:
                 similarity_score = similarity_matrix[source_idx, i]
 
                 # Classify similarity level
-                if similarity_score >= self.impact_thresholds["semantic_similarity"]["high_impact"]:
+                if (
+                    similarity_score
+                    >= self.impact_thresholds["semantic_similarity"]["high_impact"]
+                ):
                     similarity_level = "high"
-                elif similarity_score >= self.impact_thresholds["semantic_similarity"]["medium_impact"]:
+                elif (
+                    similarity_score
+                    >= self.impact_thresholds["semantic_similarity"]["medium_impact"]
+                ):
                     similarity_level = "medium"
-                elif similarity_score >= self.impact_thresholds["semantic_similarity"]["low_impact"]:
+                elif (
+                    similarity_score
+                    >= self.impact_thresholds["semantic_similarity"]["low_impact"]
+                ):
                     similarity_level = "low"
                 else:
                     similarity_level = "minimal"
@@ -248,9 +286,12 @@ class ChangeImpactAnalyzer:
                 similarities[target_doc_id] = {
                     "similarity_score": float(similarity_score),
                     "similarity_level": similarity_level,
-                    "confidence": min(0.95, similarity_score + 0.1),  # Simplified confidence
+                    "confidence": min(
+                        0.95, similarity_score + 0.1
+                    ),  # Simplified confidence
                     "shared_terms": self._find_shared_terms(
-                        source_doc.get("content", ""), target_docs[original_idx - 1].get("content", "")
+                        source_doc.get("content", ""),
+                        target_docs[original_idx - 1].get("content", ""),
                     ),
                 }
 
@@ -260,7 +301,9 @@ class ChangeImpactAnalyzer:
             logger.warning(f"Semantic similarity analysis failed: {e}")
             return {}
 
-    def _find_shared_terms(self, source_content: str, target_content: str, max_terms: int = 10) -> List[str]:
+    def _find_shared_terms(
+        self, source_content: str, target_content: str, max_terms: int = 10
+    ) -> List[str]:
         """Find shared technical terms between two documents."""
         source_terms = set(self._extract_technical_terms(source_content))
         target_terms = set(self._extract_technical_terms(target_content))
@@ -303,17 +346,32 @@ class ChangeImpactAnalyzer:
 
             shared_sentences = source_sentences.intersection(target_sentences)
             overlap_score = (
-                len(shared_sentences) / max(len(source_sentences), len(target_sentences)) if source_sentences else 0
+                len(shared_sentences)
+                / max(len(source_sentences), len(target_sentences))
+                if source_sentences
+                else 0
             )
 
             # Classify overlap level
-            if overlap_score >= self.impact_thresholds["content_overlap"]["critical_overlap"]:
+            if (
+                overlap_score
+                >= self.impact_thresholds["content_overlap"]["critical_overlap"]
+            ):
                 overlap_level = "critical"
-            elif overlap_score >= self.impact_thresholds["content_overlap"]["high_overlap"]:
+            elif (
+                overlap_score
+                >= self.impact_thresholds["content_overlap"]["high_overlap"]
+            ):
                 overlap_level = "high"
-            elif overlap_score >= self.impact_thresholds["content_overlap"]["medium_overlap"]:
+            elif (
+                overlap_score
+                >= self.impact_thresholds["content_overlap"]["medium_overlap"]
+            ):
                 overlap_level = "medium"
-            elif overlap_score >= self.impact_thresholds["content_overlap"]["low_overlap"]:
+            elif (
+                overlap_score
+                >= self.impact_thresholds["content_overlap"]["low_overlap"]
+            ):
                 overlap_level = "low"
             else:
                 overlap_level = "minimal"
@@ -363,7 +421,9 @@ class ChangeImpactAnalyzer:
             # Check stakeholder overlap
             source_stakeholders = set(self._identify_stakeholder_groups(source_doc))
             target_stakeholders = set(self._identify_stakeholder_groups(target_doc))
-            stakeholder_overlap = len(source_stakeholders.intersection(target_stakeholders))
+            stakeholder_overlap = len(
+                source_stakeholders.intersection(target_stakeholders)
+            )
             if stakeholder_overlap > 0:
                 relationship_score += min(0.2, stakeholder_overlap * 0.1)
                 relationship_factors.append("stakeholder_overlap")
@@ -376,15 +436,17 @@ class ChangeImpactAnalyzer:
                 relationship_factors.append("explicit_reference")
 
             # Determine primary relationship type
-            primary_relationship = self._determine_relationship_type(relationship_factors, source_type, target_type)
+            primary_relationship = self._determine_relationship_type(
+                relationship_factors, source_type, target_type
+            )
 
             relationships[target_id] = {
                 "relationship_score": float(relationship_score),
                 "primary_relationship": primary_relationship,
                 "relationship_factors": relationship_factors,
-                "impact_multiplier": self.relationship_types.get(primary_relationship, {}).get(
-                    "impact_multiplier", 0.5
-                ),
+                "impact_multiplier": self.relationship_types.get(
+                    primary_relationship, {}
+                ).get("impact_multiplier", 0.5),
             }
 
         return relationships
@@ -392,7 +454,12 @@ class ChangeImpactAnalyzer:
     def _are_related_types(self, source_type: str, target_type: str) -> bool:
         """Check if two document types are related."""
         type_relationships = {
-            "api_reference": ["developer_guide", "user_guide", "tutorial", "architecture"],
+            "api_reference": [
+                "developer_guide",
+                "user_guide",
+                "tutorial",
+                "architecture",
+            ],
             "user_guide": ["tutorial", "getting_started", "faq", "troubleshooting"],
             "developer_guide": ["api_reference", "architecture", "internal_docs"],
             "tutorial": ["user_guide", "getting_started", "api_reference"],
@@ -403,7 +470,9 @@ class ChangeImpactAnalyzer:
 
         return target_type in type_relationships.get(source_type, [])
 
-    def _determine_relationship_type(self, factors: List[str], source_type: str, target_type: str) -> str:
+    def _determine_relationship_type(
+        self, factors: List[str], source_type: str, target_type: str
+    ) -> str:
         """Determine the primary relationship type based on factors."""
         if "explicit_reference" in factors:
             return "reference_link"
@@ -425,25 +494,35 @@ class ChangeImpactAnalyzer:
         """Calculate the overall impact of the change."""
 
         change_severity = self._assess_change_severity(change_description)
-        stakeholder_impact = self._assess_stakeholder_impact(document_features, change_severity)
+        stakeholder_impact = self._assess_stakeholder_impact(
+            document_features, change_severity
+        )
 
         # Calculate impact scores for each related document
         impact_scores = {}
         for doc_id, relationship_data in related_documents.items():
-            impact_score = self._calculate_document_impact(change_severity, relationship_data)
+            impact_score = self._calculate_document_impact(
+                change_severity, relationship_data
+            )
             impact_scores[doc_id] = {
                 "impact_score": impact_score,
                 "impact_level": self._classify_impact_level(impact_score),
                 "relationship_strength": relationship_data.get("relationship_score", 0),
-                "propagation_path": relationship_data.get("primary_relationship", "unknown"),
+                "propagation_path": relationship_data.get(
+                    "primary_relationship", "unknown"
+                ),
             }
 
         # Aggregate overall impact
         if impact_scores:
-            avg_impact = sum(score["impact_score"] for score in impact_scores.values()) / len(impact_scores)
+            avg_impact = sum(
+                score["impact_score"] for score in impact_scores.values()
+            ) / len(impact_scores)
             max_impact = max(score["impact_score"] for score in impact_scores.values())
             high_impact_docs = [
-                doc_id for doc_id, score in impact_scores.items() if score["impact_level"] in ["critical", "high"]
+                doc_id
+                for doc_id, score in impact_scores.items()
+                if score["impact_level"] in ["critical", "high"]
             ]
         else:
             avg_impact = 0.0
@@ -467,7 +546,9 @@ class ChangeImpactAnalyzer:
             "change_analysis": change_description,
         }
 
-    def _assess_change_severity(self, change_description: Dict[str, Any]) -> Dict[str, Any]:
+    def _assess_change_severity(
+        self, change_description: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Assess the severity of the change."""
         change_type = change_description.get("change_type", "unknown")
         change_scope = change_description.get("change_scope", "unknown")
@@ -508,7 +589,11 @@ class ChangeImpactAnalyzer:
             else (
                 "high"
                 if severity_score >= 0.6
-                else "medium" if severity_score >= 0.3 else "low" if severity_score >= 0.1 else "minimal"
+                else (
+                    "medium"
+                    if severity_score >= 0.3
+                    else "low" if severity_score >= 0.1 else "minimal"
+                )
             )
         )
 
@@ -574,7 +659,9 @@ class ChangeImpactAnalyzer:
             "business_criticality": business_criticality,
         }
 
-    def _calculate_document_impact(self, change_severity: Dict[str, Any], relationship_data: Dict[str, Any]) -> float:
+    def _calculate_document_impact(
+        self, change_severity: Dict[str, Any], relationship_data: Dict[str, Any]
+    ) -> float:
         """Calculate the impact score for a specific document."""
         severity_score = change_severity["severity_score"]
         relationship_score = relationship_data.get("relationship_score", 0)
@@ -602,7 +689,9 @@ class ChangeImpactAnalyzer:
         else:
             return "minimal"
 
-    def _generate_impact_recommendations(self, impact_analysis: Dict[str, Any]) -> List[str]:
+    def _generate_impact_recommendations(
+        self, impact_analysis: Dict[str, Any]
+    ) -> List[str]:
         """Generate recommendations based on impact analysis."""
         recommendations = []
 
@@ -615,19 +704,29 @@ class ChangeImpactAnalyzer:
 
         # Overall impact recommendations
         if impact_level == "critical":
-            recommendations.append("🚨 CRITICAL IMPACT: Immediate change management required")
-            recommendations.append("Schedule comprehensive impact assessment meeting with all stakeholders")
+            recommendations.append(
+                "🚨 CRITICAL IMPACT: Immediate change management required"
+            )
+            recommendations.append(
+                "Schedule comprehensive impact assessment meeting with all stakeholders"
+            )
             recommendations.append("Prepare rollback plan and communication strategy")
             recommendations.append("Consider phased rollout to minimize disruption")
 
         elif impact_level == "high":
-            recommendations.append("⚠️ HIGH IMPACT: Schedule change review within 1 week")
+            recommendations.append(
+                "⚠️ HIGH IMPACT: Schedule change review within 1 week"
+            )
             recommendations.append("Notify all affected stakeholders and teams")
-            recommendations.append("Prepare detailed impact analysis and mitigation plan")
+            recommendations.append(
+                "Prepare detailed impact analysis and mitigation plan"
+            )
             recommendations.append("Monitor closely after implementation")
 
         elif impact_level == "medium":
-            recommendations.append("📊 MEDIUM IMPACT: Include in next change management cycle")
+            recommendations.append(
+                "📊 MEDIUM IMPACT: Include in next change management cycle"
+            )
             recommendations.append("Inform key stakeholders of potential impacts")
             recommendations.append("Monitor implementation and gather feedback")
 
@@ -637,23 +736,33 @@ class ChangeImpactAnalyzer:
 
         # Change-specific recommendations
         if change_severity == "breaking_change":
-            recommendations.append("Breaking change detected - ensure comprehensive testing and validation")
+            recommendations.append(
+                "Breaking change detected - ensure comprehensive testing and validation"
+            )
             recommendations.append("Update all dependent systems and documentation")
         elif change_severity == "major_change":
-            recommendations.append("Major change - validate impact on all dependent components")
+            recommendations.append(
+                "Major change - validate impact on all dependent components"
+            )
             recommendations.append("Consider user communication and training needs")
 
         # Document-specific recommendations
         high_impact_docs = overall_impact.get("high_impact_documents", [])
         if high_impact_docs:
-            recommendations.append(f"Focus immediate attention on {len(high_impact_docs)} high-impact documents")
-            recommendations.append("Prioritize testing and validation for critical dependencies")
+            recommendations.append(
+                f"Focus immediate attention on {len(high_impact_docs)} high-impact documents"
+            )
+            recommendations.append(
+                "Prioritize testing and validation for critical dependencies"
+            )
 
         # Stakeholder recommendations
         stakeholder_impact = overall_impact.get("stakeholder_impact", {})
         stakeholder_level = stakeholder_impact.get("impact_level", "unknown")
         if stakeholder_level in ["critical", "high"]:
-            recommendations.append("High stakeholder impact - prepare detailed communication plan")
+            recommendations.append(
+                "High stakeholder impact - prepare detailed communication plan"
+            )
             recommendations.append("Consider user training and support requirements")
 
         return recommendations[:8]  # Limit to 8 recommendations
@@ -681,9 +790,15 @@ class ChangeImpactAnalyzer:
 
             # Analyze relationships with related documents
             if related_documents:
-                semantic_similarities = self._analyze_semantic_similarity(document_data, related_documents)
-                content_overlaps = self._analyze_content_overlap(document_data, related_documents)
-                relationships = self._analyze_relationships(document_data, related_documents)
+                semantic_similarities = self._analyze_semantic_similarity(
+                    document_data, related_documents
+                )
+                content_overlaps = self._analyze_content_overlap(
+                    document_data, related_documents
+                )
+                relationships = self._analyze_relationships(
+                    document_data, related_documents
+                )
 
                 # Combine relationship data
                 combined_relationships = {}
@@ -691,10 +806,14 @@ class ChangeImpactAnalyzer:
                     doc_id_key = doc_id.get("document_id", "")
                     if doc_id_key:
                         combined_relationships[doc_id_key] = {
-                            "semantic_similarity": semantic_similarities.get(doc_id_key, {}),
+                            "semantic_similarity": semantic_similarities.get(
+                                doc_id_key, {}
+                            ),
                             "content_overlap": content_overlaps.get(doc_id_key, {}),
                             "relationship": relationships.get(doc_id_key, {}),
-                            "relationship_score": relationships.get(doc_id_key, {}).get("relationship_score", 0),
+                            "relationship_score": relationships.get(doc_id_key, {}).get(
+                                "relationship_score", 0
+                            ),
                         }
             else:
                 combined_relationships = {}
@@ -721,7 +840,9 @@ class ChangeImpactAnalyzer:
             }
 
         except Exception as e:
-            logger.error(f"Change impact analysis failed for document {document_id}: {e}")
+            logger.error(
+                f"Change impact analysis failed for document {document_id}: {e}"
+            )
             return {
                 "error": "Change impact analysis failed",
                 "message": str(e),
@@ -744,10 +865,16 @@ class ChangeImpactAnalyzer:
 
         try:
             if not changes or not document_portfolio:
-                return {"portfolio_summary": {}, "change_impacts": [], "processing_time": time.time() - start_time}
+                return {
+                    "portfolio_summary": {},
+                    "change_impacts": [],
+                    "processing_time": time.time() - start_time,
+                }
 
             # Create document lookup for efficient access
-            document_lookup = {doc.get("document_id", ""): doc for doc in document_portfolio}
+            document_lookup = {
+                doc.get("document_id", ""): doc for doc in document_portfolio
+            }
 
             # Analyze each change
             change_impacts = []
@@ -759,20 +886,33 @@ class ChangeImpactAnalyzer:
 
                 if document_data:
                     # Find related documents for this change
-                    related_docs = [doc for doc in document_portfolio if doc.get("document_id") != document_id]
+                    related_docs = [
+                        doc
+                        for doc in document_portfolio
+                        if doc.get("document_id") != document_id
+                    ]
 
-                    impact_result = await self.analyze_change_impact(document_id, document_data, change, related_docs)
+                    impact_result = await self.analyze_change_impact(
+                        document_id, document_data, change, related_docs
+                    )
 
                     if "error" not in impact_result:
                         change_impacts.append(impact_result)
 
                         # Track portfolio-level impacts
-                        overall_impact = impact_result["impact_analysis"]["overall_impact"]
-                        portfolio_impacts[overall_impact["impact_level"]].append(document_id)
+                        overall_impact = impact_result["impact_analysis"][
+                            "overall_impact"
+                        ]
+                        portfolio_impacts[overall_impact["impact_level"]].append(
+                            document_id
+                        )
 
             if not change_impacts:
                 return {
-                    "portfolio_summary": {"total_changes": len(changes), "analyzed_changes": 0},
+                    "portfolio_summary": {
+                        "total_changes": len(changes),
+                        "analyzed_changes": 0,
+                    },
                     "change_impacts": [],
                     "processing_time": time.time() - start_time,
                 }
@@ -782,11 +922,17 @@ class ChangeImpactAnalyzer:
             analyzed_changes = len(change_impacts)
 
             impact_distribution = dict(
-                Counter(impact["impact_analysis"]["overall_impact"]["impact_level"] for impact in change_impacts)
+                Counter(
+                    impact["impact_analysis"]["overall_impact"]["impact_level"]
+                    for impact in change_impacts
+                )
             )
 
             avg_impact_score = (
-                sum(impact["impact_analysis"]["overall_impact"]["overall_impact_score"] for impact in change_impacts)
+                sum(
+                    impact["impact_analysis"]["overall_impact"]["overall_impact_score"]
+                    for impact in change_impacts
+                )
                 / analyzed_changes
                 if analyzed_changes > 0
                 else 0
@@ -795,7 +941,8 @@ class ChangeImpactAnalyzer:
             high_impact_changes = [
                 impact["document_id"]
                 for impact in change_impacts
-                if impact["impact_analysis"]["overall_impact"]["impact_level"] in ["critical", "high"]
+                if impact["impact_analysis"]["overall_impact"]["impact_level"]
+                in ["critical", "high"]
             ]
 
             portfolio_summary = {
@@ -805,7 +952,9 @@ class ChangeImpactAnalyzer:
                 "impact_distribution": impact_distribution,
                 "high_impact_changes_count": len(high_impact_changes),
                 "high_impact_changes": high_impact_changes,
-                "most_impacted_documents": self._find_most_impacted_documents(change_impacts),
+                "most_impacted_documents": self._find_most_impacted_documents(
+                    change_impacts
+                ),
             }
 
             processing_time = time.time() - start_time
@@ -825,12 +974,16 @@ class ChangeImpactAnalyzer:
                 "processing_time": time.time() - start_time,
             }
 
-    def _find_most_impacted_documents(self, change_impacts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _find_most_impacted_documents(
+        self, change_impacts: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Find documents that are most frequently impacted by changes."""
         impact_counts = Counter()
 
         for change_impact in change_impacts:
-            document_impacts = change_impact.get("impact_analysis", {}).get("document_impacts", {})
+            document_impacts = change_impact.get("impact_analysis", {}).get(
+                "document_impacts", {}
+            )
             for doc_id in document_impacts.keys():
                 impact_score = document_impacts[doc_id].get("impact_score", 0)
                 if impact_score >= 0.3:  # Only count significant impacts
@@ -838,9 +991,14 @@ class ChangeImpactAnalyzer:
 
         # Return top 10 most impacted documents
         most_impacted = impact_counts.most_common(10)
-        return [{"document_id": doc_id, "impact_frequency": count} for doc_id, count in most_impacted]
+        return [
+            {"document_id": doc_id, "impact_frequency": count}
+            for doc_id, count in most_impacted
+        ]
 
-    def update_impact_thresholds(self, custom_thresholds: Dict[str, Dict[str, Any]]) -> bool:
+    def update_impact_thresholds(
+        self, custom_thresholds: Dict[str, Dict[str, Any]]
+    ) -> bool:
         """Update change impact analysis thresholds."""
         try:
             for threshold_name, config in custom_thresholds.items():

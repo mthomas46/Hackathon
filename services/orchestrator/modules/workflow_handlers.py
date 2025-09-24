@@ -6,8 +6,11 @@ Includes LangGraph workflow integration for advanced orchestration.
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.core.constants_new import ErrorCodes
-from services.shared.core.responses.responses import create_error_response, create_success_response
+# Error codes now handled by standardized error handling
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 
 # Import LangGraph components
@@ -36,7 +39,10 @@ class WorkflowHandlers:
             # Check if LangGraph is available and use it
             if LANGGRAPH_AVAILABLE:
                 return await WorkflowHandlers._handle_langgraph_workflow(
-                    workflow_type, parameters, context, getattr(request, "user_id", None)
+                    workflow_type,
+                    parameters,
+                    context,
+                    getattr(request, "user_id", None),
                 )
             else:
                 # Fallback to basic workflow execution
@@ -45,13 +51,19 @@ class WorkflowHandlers:
         except Exception as e:
             return create_error_response(
                 "Workflow execution failed",
-                error_code=ErrorCodes.INTERNAL_ERROR,
-                details={"workflow_type": getattr(request, "workflow_type", "unknown"), "error": str(e)},
+                error_code="INTERNAL_ERROR",
+                details={
+                    "workflow_type": getattr(request, "workflow_type", "unknown"),
+                    "error": str(e),
+                },
             )
 
     @staticmethod
     async def _handle_langgraph_workflow(
-        workflow_type: str, parameters: Dict[str, Any], context: Dict[str, Any], user_id: Optional[str] = None
+        workflow_type: str,
+        parameters: Dict[str, Any],
+        context: Dict[str, Any],
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Handle workflow execution using LangGraph."""
         try:
@@ -59,7 +71,9 @@ class WorkflowHandlers:
             engine = LangGraphWorkflowEngine()
 
             # Initialize tools for the required services
-            required_services = WorkflowHandlers._get_services_for_workflow(workflow_type)
+            required_services = WorkflowHandlers._get_services_for_workflow(
+                workflow_type
+            )
             tools = await engine.initialize_tools(required_services)
 
             # Register workflows if not already registered
@@ -67,15 +81,20 @@ class WorkflowHandlers:
 
             # Execute the workflow
             result = await engine.execute_workflow(
-                workflow_type=workflow_type, input_data=parameters, tools=tools, user_id=user_id
+                workflow_type=workflow_type,
+                input_data=parameters,
+                tools=tools,
+                user_id=user_id,
             )
 
-            return create_success_response(f"LangGraph workflow '{workflow_type}' completed successfully", result)
+            return create_success_response(
+                f"LangGraph workflow '{workflow_type}' completed successfully", result
+            )
 
         except Exception as e:
             return create_error_response(
                 f"LangGraph workflow execution failed: {str(e)}",
-                error_code=ErrorCodes.INTERNAL_ERROR,
+                error_code="INTERNAL_ERROR",
                 details={
                     "workflow_type": workflow_type,
                     "error_type": type(e).__name__,
@@ -148,9 +167,13 @@ class WorkflowHandlers:
             engine.workflows["end_to_end_test"] = e2e_workflow
 
             # Register PR confidence orchestration workflow
-            from .workflows.pr_confidence_orchestration import pr_confidence_orchestration_workflow
+            from .workflows.pr_confidence_orchestration import (
+                pr_confidence_orchestration_workflow,
+            )
 
-            engine.workflows["pr_confidence_analysis"] = pr_confidence_orchestration_workflow.workflow
+            engine.workflows["pr_confidence_analysis"] = (
+                pr_confidence_orchestration_workflow.workflow
+            )
 
             # Additional workflows can be registered here as they are implemented
             print(f"✓ Registered {len(engine.workflows)} LangGraph workflows")
@@ -179,7 +202,7 @@ class WorkflowHandlers:
         except Exception as e:
             return create_error_response(
                 "Ingestion request failed",
-                error_code=ErrorCodes.VALIDATION_ERROR,
+                error_code="VALIDATION_ERROR",
                 details={"source_url": request.source_url, "error": str(e)},
             )
 
@@ -199,7 +222,7 @@ class WorkflowHandlers:
         except Exception as e:
             return create_error_response(
                 "Service registration failed",
-                error_code=ErrorCodes.VALIDATION_ERROR,
+                error_code="VALIDATION_ERROR",
                 details={"service_name": request.service_name, "error": str(e)},
             )
 
@@ -224,10 +247,14 @@ class WorkflowHandlers:
                     "last_seen": "2024-01-01T00:00:00Z",
                 },
             ]
-            return create_success_response("Registry retrieved successfully", {"services": services})
+            return create_success_response(
+                "Registry retrieved successfully", {"services": services}
+            )
         except Exception as e:
             return create_error_response(
-                "Failed to retrieve registry", error_code=ErrorCodes.DATABASE_ERROR, details={"error": str(e)}
+                "Failed to retrieve registry",
+                error_code="DATABASE_ERROR",
+                details={"error": str(e)},
             )
 
     @staticmethod
@@ -236,10 +263,14 @@ class WorkflowHandlers:
         try:
             # Placeholder - would integrate with actual peer discovery
             peers = []
-            return create_success_response("Peers retrieved successfully", {"peers": peers})
+            return create_success_response(
+                "Peers retrieved successfully", {"peers": peers}
+            )
         except Exception as e:
             return create_error_response(
-                "Failed to retrieve peers", error_code=ErrorCodes.DATABASE_ERROR, details={"error": str(e)}
+                "Failed to retrieve peers",
+                error_code="DATABASE_ERROR",
+                details={"error": str(e)},
             )
 
     @staticmethod
@@ -259,7 +290,9 @@ class WorkflowHandlers:
             return create_success_response("OpenAPI polling completed", result)
         except Exception as e:
             return create_error_response(
-                "OpenAPI polling failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+                "OpenAPI polling failed",
+                error_code=ErrorCodes.INTERNAL_ERROR,
+                details={"error": str(e)},
             )
 
     @staticmethod
@@ -272,10 +305,15 @@ class WorkflowHandlers:
 
             # Placeholder - would integrate with actual workflow history
             history = []
-            return create_success_response("Workflow history retrieved successfully", {"history": history, "total": 0})
+            return create_success_response(
+                "Workflow history retrieved successfully",
+                {"history": history, "total": 0},
+            )
         except Exception as e:
             return create_error_response(
-                "Failed to retrieve workflow history", error_code=ErrorCodes.DATABASE_ERROR, details={"error": str(e)}
+                "Failed to retrieve workflow history",
+                error_code="DATABASE_ERROR",
+                details={"error": str(e)},
             )
 
     @staticmethod
@@ -295,7 +333,9 @@ class WorkflowHandlers:
             return create_success_response("Quality recalculation job queued", result)
         except Exception as e:
             return create_error_response(
-                "Quality recalculation job failed", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+                "Quality recalculation job failed",
+                error_code=ErrorCodes.INTERNAL_ERROR,
+                details={"error": str(e)},
             )
 
     @staticmethod
@@ -317,7 +357,7 @@ class WorkflowHandlers:
         except Exception as e:
             return create_error_response(
                 "Consolidation notification failed",
-                error_code=ErrorCodes.INTERNAL_ERROR,
+                error_code="INTERNAL_ERROR",
                 details={"consolidation_id": request.consolidation_id, "error": str(e)},
             )
 

@@ -43,11 +43,15 @@ class DistributedAnalysisHandler(BaseAnalysisHandler):
                 operation = "stats"
             else:
                 result = await submit_distributed_task(
-                    request.task_type, getattr(request, "data", {}), getattr(request, "priority", "normal")
+                    request.task_type,
+                    getattr(request, "data", {}),
+                    getattr(request, "priority", "normal"),
                 )
                 operation = "submit"
 
-            analysis_id = f"distributed-{operation}-{int(datetime.now(timezone.utc).timestamp())}"
+            analysis_id = (
+                f"distributed-{operation}-{int(datetime.now(timezone.utc).timestamp())}"
+            )
 
             return self._create_analysis_result(
                 analysis_id=analysis_id,
@@ -58,7 +62,9 @@ class DistributedAnalysisHandler(BaseAnalysisHandler):
         except Exception as e:
             error_msg = f"Distributed analysis failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
-            return await self._handle_error(e, f"distributed-{int(datetime.now(timezone.utc).timestamp())}")
+            return await self._handle_error(
+                e, f"distributed-{int(datetime.now(timezone.utc).timestamp())}"
+            )
 
     async def _mock_distributed_submit(self, task_type, data, priority):
         """Mock distributed task submission."""
@@ -85,7 +91,11 @@ class DistributedAnalysisHandler(BaseAnalysisHandler):
 
     async def _mock_distributed_cancel(self, task_id):
         """Mock distributed task cancellation."""
-        return {"task_id": task_id, "cancelled": True, "message": "Task cancelled successfully"}
+        return {
+            "task_id": task_id,
+            "cancelled": True,
+            "message": "Task cancelled successfully",
+        }
 
     async def _mock_worker_stats(self):
         """Mock worker statistics."""

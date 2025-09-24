@@ -3,11 +3,14 @@
 Handles prompt store browsing and analytics.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 
-from ..shared_utils import build_frontend_context, create_html_response, handle_frontend_error
+from ..shared_utils import (
+    build_frontend_context,
+    create_html_response,
+    handle_frontend_error,
+)
 
 
 class PromptStoreUIHandlers:
@@ -325,8 +328,8 @@ class PromptStoreUIHandlers:
 
             document.getElementById('prompts-container').innerHTML = 'Loading prompts...';
 
-            let url = \`/api/prompt-store/prompts?limit={{limit}&offset={{currentPromptOffset}\`;
-            if (category) url += \`&category={{encodeURIComponent(category)}\`;
+            let url = `/api/prompt-store/prompts?limit=${limit}&offset=${currentPromptOffset}`;
+            if (category) url += `&category=${encodeURIComponent(category)}`;
 
             try {
                 const response = await fetch(url);
@@ -361,7 +364,7 @@ class PromptStoreUIHandlers:
                 const updated = prompt.updated_at ? new Date(prompt.updated_at).toLocaleString() : 'Unknown';
                 const variables = prompt.variables || [];
 
-                html += \`
+                html += `
                     <div class="prompt-item" onclick="viewPrompt('{{prompt.id}')">
                         <div class="prompt-title">{{prompt.name || prompt.id}</div>
                         <div class="prompt-meta">
@@ -372,13 +375,13 @@ class PromptStoreUIHandlers:
                             <span>Usage: {{prompt.usage_count || 0}</span>
                         </div>
                         <div class="prompt-text">{{(prompt.text || 'No prompt text').substring(0, 200)}...</div>
-                        {{variables.length > 0 ? \`
+                        {{variables.length > 0 ? `
                             <div class="prompt-variables">
-                                <strong>Variables:</strong> {{variables.map(v => \`<span class="variable-tag">{{{{v}}}</span>\`).join('')}
+                                <strong>Variables:</strong> {{variables.map(v => `<span class="variable-tag">{{{{v}}}</span>`).join('')}
                             </div>
-                        \` : ''}
+                        ` : ''}
                     </div>
-                \`;
+                `;
             });
 
             // Pagination
@@ -386,9 +389,9 @@ class PromptStoreUIHandlers:
             const hasPrev = currentPromptOffset > 0;
 
             html += '<div class="pagination">';
-            html += \`<button class="page-btn {{hasPrev ? '' : 'disabled'}" onclick="prevPromptPage()">Previous</button>\`;
-            html += \`<span>Page {{Math.floor(currentPromptOffset / parseInt(document.getElementById('prompt-limit').value)) + 1}</span>\`;
-            html += \`<button class="page-btn {{hasNext ? '' : 'disabled'}" onclick="nextPromptPage()">Next</button>\`;
+            html += `<button class="page-btn {{hasPrev ? '' : 'disabled'}" onclick="prevPromptPage()">Previous</button>`;
+            html += `<span>Page {{Math.floor(currentPromptOffset / parseInt(document.getElementById('prompt-limit').value)) + 1}</span>`;
+            html += `<button class="page-btn {{hasNext ? '' : 'disabled'}" onclick="nextPromptPage()">Next</button>`;
             html += '</div>';
 
             document.getElementById('prompts-container').innerHTML = html;
@@ -443,7 +446,7 @@ class PromptStoreUIHandlers:
             let html = '<div class="analytics-grid">';
 
             // Overview metrics
-            html += \`
+            html += `
                 <div class="analytics-card">
                     <div class="analytics-label">Total Prompts</div>
                     <div class="analytics-value">{{analytics.total_prompts || 0}</div>
@@ -464,7 +467,7 @@ class PromptStoreUIHandlers:
                     <div class="analytics-value">{{analytics.avg_performance ? analytics.avg_performance.toFixed(2) : 'N/A'}</div>
                     <div>Score out of 10</div>
                 </div>
-            \`;
+            `;
 
             html += '</div>';
 
@@ -473,14 +476,14 @@ class PromptStoreUIHandlers:
                 html += '<h4>Prompt Usage by Category</h4><div class="analytics-grid">';
 
                 Object.entries(analytics.category_breakdown).forEach(([category, stats]) => {
-                    html += \`
+                    html += `
                         <div class="analytics-card">
                             <div class="analytics-label">{{category}</div>
                             <div class="analytics-value">{{stats.count || 0}</div>
                             <div>Prompts</div>
                             <div style="font-size: 11px; margin-top: 5px;">{{stats.avg_usage || 0} avg usage</div>
                         </div>
-                    \`;
+                    `;
                 });
 
                 html += '</div>';
@@ -491,12 +494,12 @@ class PromptStoreUIHandlers:
                 html += '<h4>Performance Metrics</h4><div class="performance-metrics">';
 
                 Object.entries(analytics.performance_metrics).forEach(([metric, value]) => {
-                    html += \`
+                    html += `
                         <div class="metric-item">
                             <div class="metric-label">{{metric.replace(/_/g, ' ')}</div>
                             <div class="metric-value">{{typeof value === 'number' ? value.toFixed(2) : value}</div>
                         </div>
-                    \`;
+                    `;
                 });
 
                 html += '</div>';
@@ -550,7 +553,7 @@ class PromptStoreUIHandlers:
                 const totalUsage = categoryPrompts.reduce((sum, p) => sum + (p.usage_count || 0), 0);
                 const avgPerformance = categoryPrompts.reduce((sum, p) => sum + (p.performance_score || 0), 0) / categoryPrompts.length;
 
-                html += \`
+                html += `
                     <div class="category-section">
                         <div class="category-title">
                             {{categoryName} ({{categoryPrompts.length} prompts)
@@ -559,12 +562,12 @@ class PromptStoreUIHandlers:
                                 Avg Performance: {{avgPerformance ? avgPerformance.toFixed(1) : 'N/A'}
                             </span>
                         </div>
-                \`;
+                `;
 
                 categoryPrompts.forEach(prompt => {
                     const created = prompt.created_at ? new Date(prompt.created_at).toLocaleString() : 'Unknown';
 
-                    html += \`
+                    html += `
                         <div class="prompt-item" onclick="viewPrompt('{{prompt.id}')">
                             <div class="prompt-title">{{prompt.name || prompt.id}</div>
                             <div class="prompt-meta">
@@ -575,7 +578,7 @@ class PromptStoreUIHandlers:
                             </div>
                             <div class="prompt-text">{{(prompt.text || 'No prompt text').substring(0, 150)}...</div>
                         </div>
-                    \`;
+                    `;
                 });
 
                 html += '</div>';
@@ -586,7 +589,7 @@ class PromptStoreUIHandlers:
 
         function viewPrompt(promptId) {
             // Could open a modal or navigate to prompt detail view
-            alert(\`Prompt details for ID: {{promptId}\\n\\nFeature not yet implemented.\`);
+            alert(`Prompt details for ID: {{promptId}\\n\\nFeature not yet implemented.`);
         }
 
         function prevPromptPage() {
@@ -614,5 +617,7 @@ class PromptStoreUIHandlers:
             return create_html_response(html, "Prompt Store Browser")
         except Exception as e:
             return handle_frontend_error(
-                "render prompt store browser", e, **build_frontend_context("render_prompt_store_browser")
+                "render prompt store browser",
+                e,
+                **build_frontend_context("render_prompt_store_browser")
             )

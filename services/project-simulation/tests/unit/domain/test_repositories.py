@@ -29,7 +29,14 @@ class TestRepositoryContracts:
         # Get all abstract methods from the interface
         abstract_methods = IProjectRepository.__abstractmethods__
 
-        expected_methods = {"save", "find_by_id", "find_by_name", "find_all", "find_by_status", "delete"}
+        expected_methods = {
+            "save",
+            "find_by_id",
+            "find_by_name",
+            "find_all",
+            "find_by_status",
+            "delete",
+        }
 
         assert abstract_methods == expected_methods
 
@@ -44,7 +51,13 @@ class TestRepositoryContracts:
         """Test TimelineRepository interface contract."""
         abstract_methods = ITimelineRepository.__abstractmethods__
 
-        expected_methods = {"save", "find_by_id", "find_by_project_id", "find_all_for_project", "delete"}
+        expected_methods = {
+            "save",
+            "find_by_id",
+            "find_by_project_id",
+            "find_all_for_project",
+            "delete",
+        }
 
         assert abstract_methods == expected_methods
 
@@ -67,7 +80,14 @@ class TestRepositoryContracts:
         """Test SimulationRepository interface contract."""
         abstract_methods = ISimulationRepository.__abstractmethods__
 
-        expected_methods = {"save", "find_by_id", "find_by_project_id", "find_by_status", "find_recent", "delete"}
+        expected_methods = {
+            "save",
+            "find_by_id",
+            "find_by_project_id",
+            "find_by_status",
+            "find_recent",
+            "delete",
+        }
 
         assert abstract_methods == expected_methods
 
@@ -76,17 +96,32 @@ class TestRepositoryContracts:
         abstract_methods = IUnitOfWork.__abstractmethods__
 
         # The interface should have both transaction methods and repository properties as abstract
-        expected_transaction_methods = {"begin", "commit", "rollback", "__enter__", "__exit__"}
+        expected_transaction_methods = {
+            "begin",
+            "commit",
+            "rollback",
+            "__enter__",
+            "__exit__",
+        }
 
-        expected_repository_properties = {"projects", "timelines", "teams", "simulations"}
+        expected_repository_properties = {
+            "projects",
+            "timelines",
+            "teams",
+            "simulations",
+        }
 
         # Check that all expected transaction methods are present
         for method in expected_transaction_methods:
-            assert method in abstract_methods, f"Transaction method {method} missing from abstract methods"
+            assert (
+                method in abstract_methods
+            ), f"Transaction method {method} missing from abstract methods"
 
         # Check that all expected repository properties are present
         for prop in expected_repository_properties:
-            assert prop in abstract_methods, f"Repository property {prop} missing from abstract methods"
+            assert (
+                prop in abstract_methods
+            ), f"Repository property {prop} missing from abstract methods"
 
         # Test that UnitOfWork provides repository properties
         assert hasattr(IUnitOfWork, "projects")
@@ -220,7 +255,9 @@ class TestRepositoryErrorHandling:
         mock_repo = Mock(spec=IProjectRepository)
 
         # Simulate optimistic locking failure
-        mock_repo.save.side_effect = ConcurrentModificationError("Entity modified by another transaction")
+        mock_repo.save.side_effect = ConcurrentModificationError(
+            "Entity modified by another transaction"
+        )
 
         project = create_test_project()
 
@@ -454,7 +491,5 @@ class ConcurrentModificationError(Exception):
     """Exception for concurrent modification scenarios."""
 
 
-
 class ConnectionError(Exception):
     """Exception for database connection issues."""
-

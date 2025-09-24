@@ -21,7 +21,9 @@ class OrchestratorIntegration:
         self.service_client = ServiceClients()
         self.workflow_cache = {}
 
-    async def register_discovered_tools(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def register_discovered_tools(
+        self, tools: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Register discovered tools with the orchestrator for workflow use
 
         Args:
@@ -30,7 +32,12 @@ class OrchestratorIntegration:
         Returns:
             Registration results with success/failure status
         """
-        results = {"total_tools": len(tools), "registered_tools": 0, "failed_registrations": 0, "details": []}
+        results = {
+            "total_tools": len(tools),
+            "registered_tools": 0,
+            "failed_registrations": 0,
+            "details": [],
+        }
 
         print(f"🔗 Registering {len(tools)} discovered tools with orchestrator...")
 
@@ -39,7 +46,11 @@ class OrchestratorIntegration:
                 # Check if tool is LangGraph-ready
                 if not tool.get("langraph_ready", {}).get("ready", False):
                     results["details"].append(
-                        {"tool": tool["name"], "status": "skipped", "reason": "Not LangGraph-ready"}
+                        {
+                            "tool": tool["name"],
+                            "status": "skipped",
+                            "reason": "Not LangGraph-ready",
+                        }
                     )
                     continue
 
@@ -58,12 +69,18 @@ class OrchestratorIntegration:
                 else:
                     results["failed_registrations"] += 1
                     results["details"].append(
-                        {"tool": tool["name"], "status": "failed", "error": registration_result.get("error")}
+                        {
+                            "tool": tool["name"],
+                            "status": "failed",
+                            "error": registration_result.get("error"),
+                        }
                     )
 
             except Exception as e:
                 results["failed_registrations"] += 1
-                results["details"].append({"tool": tool["name"], "status": "error", "error": str(e)})
+                results["details"].append(
+                    {"tool": tool["name"], "status": "error", "error": str(e)}
+                )
 
         print(
             f"✅ Registration complete: {results['registered_tools']} registered, {results['failed_registrations']} failed"
@@ -71,7 +88,9 @@ class OrchestratorIntegration:
 
         return results
 
-    async def _register_tool_with_orchestrator(self, tool: Dict[str, Any]) -> Dict[str, Any]:
+    async def _register_tool_with_orchestrator(
+        self, tool: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Register a single tool with the orchestrator"""
         try:
             # Prepare tool registration payload
@@ -100,12 +119,17 @@ class OrchestratorIntegration:
                         }
                     else:
                         error_text = await response.text()
-                        return {"success": False, "error": f"Registration failed: {response.status} - {error_text}"}
+                        return {
+                            "success": False,
+                            "error": f"Registration failed: {response.status} - {error_text}",
+                        }
 
         except Exception as e:
             return {"success": False, "error": f"Connection error: {str(e)}"}
 
-    async def create_dynamic_workflow(self, workflow_request: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_dynamic_workflow(
+        self, workflow_request: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create a dynamic workflow using discovered tools
 
         Args:
@@ -115,7 +139,9 @@ class OrchestratorIntegration:
             Workflow creation results
         """
         try:
-            print(f"🔄 Creating dynamic workflow: {workflow_request.get('name', 'unnamed')}")
+            print(
+                f"🔄 Creating dynamic workflow: {workflow_request.get('name', 'unnamed')}"
+            )
 
             # Validate required tools are available
             required_tools = workflow_request.get("required_tools", [])
@@ -154,7 +180,9 @@ class OrchestratorIntegration:
         except Exception as e:
             return {"success": False, "error": f"Workflow creation failed: {str(e)}"}
 
-    async def _check_tool_availability(self, required_tools: List[str]) -> Dict[str, Any]:
+    async def _check_tool_availability(
+        self, required_tools: List[str]
+    ) -> Dict[str, Any]:
         """Check if required tools are available in the orchestrator"""
         try:
             async with self.service_client.session() as session:
@@ -173,7 +201,9 @@ class OrchestratorIntegration:
                             for available_tool in available_tools:
                                 if available_tool["name"] == required_tool:
                                     tool_found = True
-                                    tool_sources[required_tool] = available_tool.get("service", "unknown")
+                                    tool_sources[required_tool] = available_tool.get(
+                                        "service", "unknown"
+                                    )
                                     break
 
                             if not tool_found:
@@ -209,7 +239,9 @@ class OrchestratorIntegration:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/create-dynamic"
 
-                async with session.post(url, json=workflow_spec, timeout=15) as response:
+                async with session.post(
+                    url, json=workflow_spec, timeout=15
+                ) as response:
                     if response.status == 201:
                         result = await response.json()
                         return {
@@ -228,7 +260,9 @@ class OrchestratorIntegration:
         except Exception as e:
             return {"success": False, "error": f"Workflow registration error: {str(e)}"}
 
-    async def execute_dynamic_workflow(self, workflow_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_dynamic_workflow(
+        self, workflow_name: str, parameters: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a previously created dynamic workflow"""
         try:
             # Get workflow spec from cache or orchestrator
@@ -236,9 +270,14 @@ class OrchestratorIntegration:
 
             if not workflow_spec:
                 # Try to retrieve from orchestrator
-                workflow_spec = await self._get_workflow_from_orchestrator(workflow_name)
+                workflow_spec = await self._get_workflow_from_orchestrator(
+                    workflow_name
+                )
                 if not workflow_spec:
-                    return {"success": False, "error": f"Workflow '{workflow_name}' not found"}
+                    return {
+                        "success": False,
+                        "error": f"Workflow '{workflow_name}' not found",
+                    }
 
             # Execute workflow
             execution_payload = {
@@ -250,7 +289,9 @@ class OrchestratorIntegration:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/execute-dynamic"
 
-                async with session.post(url, json=execution_payload, timeout=30) as response:
+                async with session.post(
+                    url, json=execution_payload, timeout=30
+                ) as response:
                     if response.status in [200, 201]:
                         result = await response.json()
                         return {
@@ -269,7 +310,9 @@ class OrchestratorIntegration:
         except Exception as e:
             return {"success": False, "error": f"Workflow execution error: {str(e)}"}
 
-    async def _get_workflow_from_orchestrator(self, workflow_name: str) -> Optional[Dict[str, Any]]:
+    async def _get_workflow_from_orchestrator(
+        self, workflow_name: str
+    ) -> Optional[Dict[str, Any]]:
         """Retrieve workflow specification from orchestrator"""
         try:
             async with self.service_client.session() as session:
@@ -289,7 +332,9 @@ class OrchestratorIntegration:
         """Get orchestrator status and available capabilities"""
         try:
             async with self.service_client.session() as session:
-                async with session.get(f"{self.orchestrator_url}/health", timeout=5) as response:
+                async with session.get(
+                    f"{self.orchestrator_url}/health", timeout=5
+                ) as response:
                     if response.status == 200:
                         health_data = await response.json()
                         return {
@@ -299,7 +344,10 @@ class OrchestratorIntegration:
                             "workflows": health_data.get("active_workflows", 0),
                         }
                     else:
-                        return {"status": "unhealthy", "error": f"Orchestrator returned {response.status}"}
+                        return {
+                            "status": "unhealthy",
+                            "error": f"Orchestrator returned {response.status}",
+                        }
 
         except Exception as e:
             return {"status": "unreachable", "error": str(e)}
@@ -319,7 +367,10 @@ class OrchestratorIntegration:
                             "total_count": workflows_data.get("total_count", 0),
                         }
                     else:
-                        return {"success": False, "error": f"Failed to list workflows: {response.status}"}
+                        return {
+                            "success": False,
+                            "error": f"Failed to list workflows: {response.status}",
+                        }
 
         except Exception as e:
             return {"success": False, "error": str(e)}

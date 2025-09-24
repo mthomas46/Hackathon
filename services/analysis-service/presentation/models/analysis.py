@@ -38,10 +38,16 @@ class SeverityLevel(str, Enum):
 class AnalysisRequest(BaseModel):
     """Base analysis request model."""
 
-    targets: List[str] = Field(..., description="Document or content targets to analyze")
+    targets: List[str] = Field(
+        ..., description="Document or content targets to analyze"
+    )
     analysis_type: AnalysisType = Field(..., description="Type of analysis to perform")
-    detectors: Optional[List[str]] = Field(None, description="Specific detectors to use")
-    options: Optional[Dict[str, Any]] = Field(None, description="Analysis-specific options")
+    detectors: Optional[List[str]] = Field(
+        None, description="Specific detectors to use"
+    )
+    options: Optional[Dict[str, Any]] = Field(
+        None, description="Analysis-specific options"
+    )
 
     @validator("targets")
     def validate_targets(cls, v):
@@ -61,7 +67,9 @@ class AnalysisResponse(BaseResponse):
     targets: List[str] = Field(..., description="Targets that were analyzed")
     status: str = Field(..., description="Analysis status")
     results: Dict[str, Any] = Field(..., description="Analysis results")
-    findings: Optional[List[Dict[str, Any]]] = Field(None, description="Analysis findings")
+    findings: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Analysis findings"
+    )
     metadata: Optional[Dict[str, Any]] = Field(None, description="Analysis metadata")
 
 
@@ -70,10 +78,13 @@ class SemanticSimilarityRequest(AnalysisRequest):
 
     analysis_type: AnalysisType = AnalysisType.SEMANTIC_SIMILARITY
     threshold: float = Field(0.8, ge=0.0, le=1.0, description="Similarity threshold")
-    embedding_model: Optional[str] = Field("sentence-transformers/all-MiniLM-L6-v2", description="Embedding model")
+    embedding_model: Optional[str] = Field(
+        "sentence-transformers/all-MiniLM-L6-v2", description="Embedding model"
+    )
     similarity_metric: Optional[str] = Field("cosine", description="Similarity metric")
     options: Optional[Dict[str, Any]] = Field(
-        {"normalize_embeddings": True, "batch_size": 32}, description="Embedding options"
+        {"normalize_embeddings": True, "batch_size": 32},
+        description="Embedding options",
     )
 
     @validator("similarity_metric")
@@ -81,7 +92,9 @@ class SemanticSimilarityRequest(AnalysisRequest):
         """Validate similarity metric."""
         valid_metrics = ["cosine", "euclidean", "manhattan", "dot_product"]
         if v not in valid_metrics:
-            raise ValueError(f"Invalid similarity metric: {v}. Must be one of {valid_metrics}")
+            raise ValueError(
+                f"Invalid similarity metric: {v}. Must be one of {valid_metrics}"
+            )
         return v
 
 
@@ -90,17 +103,23 @@ class SemanticSimilarityResponse(AnalysisResponse):
 
     analysis_type: AnalysisType = AnalysisType.SEMANTIC_SIMILARITY
     similarities: List[Dict[str, Any]] = Field(..., description="Similarity results")
-    clusters: Optional[List[Dict[str, Any]]] = Field(None, description="Similarity clusters")
+    clusters: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Similarity clusters"
+    )
 
 
 class SentimentAnalysisRequest(AnalysisRequest):
     """Sentiment analysis request."""
 
     analysis_type: AnalysisType = AnalysisType.SENTIMENT
-    model: Optional[str] = Field("cardiffnlp/twitter-roberta-base-sentiment-latest", description="Sentiment model")
+    model: Optional[str] = Field(
+        "cardiffnlp/twitter-roberta-base-sentiment-latest",
+        description="Sentiment model",
+    )
     language: Optional[str] = Field("en", description="Content language")
     options: Optional[Dict[str, Any]] = Field(
-        {"return_all_scores": True, "truncation": True}, description="Sentiment analysis options"
+        {"return_all_scores": True, "truncation": True},
+        description="Sentiment analysis options",
     )
 
 
@@ -109,7 +128,9 @@ class SentimentAnalysisResponse(AnalysisResponse):
 
     analysis_type: AnalysisType = AnalysisType.SENTIMENT
     sentiments: List[Dict[str, Any]] = Field(..., description="Sentiment results")
-    overall_sentiment: Optional[Dict[str, Any]] = Field(None, description="Overall sentiment summary")
+    overall_sentiment: Optional[Dict[str, Any]] = Field(
+        None, description="Overall sentiment summary"
+    )
 
 
 class ToneAnalysisRequest(AnalysisRequest):
@@ -117,7 +138,8 @@ class ToneAnalysisRequest(AnalysisRequest):
 
     analysis_type: AnalysisType = AnalysisType.TONE
     aspects: Optional[List[str]] = Field(
-        ["formality", "confidence", "urgency", "clarity", "technical_level"], description="Tone aspects to analyze"
+        ["formality", "confidence", "urgency", "clarity", "technical_level"],
+        description="Tone aspects to analyze",
     )
     options: Optional[Dict[str, Any]] = Field(None, description="Tone analysis options")
 
@@ -127,7 +149,9 @@ class ToneAnalysisResponse(AnalysisResponse):
 
     analysis_type: AnalysisType = AnalysisType.TONE
     tone_scores: Dict[str, float] = Field(..., description="Tone scores by aspect")
-    recommendations: Optional[List[str]] = Field(None, description="Tone improvement recommendations")
+    recommendations: Optional[List[str]] = Field(
+        None, description="Tone improvement recommendations"
+    )
 
 
 class ContentQualityRequest(AnalysisRequest):
@@ -139,31 +163,45 @@ class ContentQualityRequest(AnalysisRequest):
         description="Quality metrics to evaluate",
     )
     thresholds: Optional[Dict[str, float]] = Field(
-        {"readability_min": 60.0, "completeness_min": 0.7, "accuracy_min": 0.8}, description="Quality thresholds"
+        {"readability_min": 60.0, "completeness_min": 0.7, "accuracy_min": 0.8},
+        description="Quality thresholds",
     )
-    options: Optional[Dict[str, Any]] = Field(None, description="Quality analysis options")
+    options: Optional[Dict[str, Any]] = Field(
+        None, description="Quality analysis options"
+    )
 
 
 class ContentQualityResponse(AnalysisResponse):
     """Content quality analysis response."""
 
     analysis_type: AnalysisType = AnalysisType.QUALITY
-    quality_score: float = Field(..., ge=0.0, le=1.0, description="Overall quality score")
+    quality_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Overall quality score"
+    )
     metrics: Dict[str, Any] = Field(..., description="Detailed quality metrics")
-    recommendations: List[str] = Field(..., description="Quality improvement recommendations")
+    recommendations: List[str] = Field(
+        ..., description="Quality improvement recommendations"
+    )
 
 
 class TrendAnalysisRequest(AnalysisRequest):
     """Trend analysis request."""
 
     analysis_type: AnalysisType = AnalysisType.TREND
-    time_range: Optional[str] = Field("30d", description="Time range for trend analysis")
+    time_range: Optional[str] = Field(
+        "30d", description="Time range for trend analysis"
+    )
     granularity: Optional[str] = Field("daily", description="Analysis granularity")
     metrics: Optional[List[str]] = Field(
-        ["quality_score", "finding_count", "severity_distribution"], description="Metrics to analyze"
+        ["quality_score", "finding_count", "severity_distribution"],
+        description="Metrics to analyze",
     )
-    forecast_periods: Optional[int] = Field(7, description="Number of periods to forecast")
-    options: Optional[Dict[str, Any]] = Field(None, description="Trend analysis options")
+    forecast_periods: Optional[int] = Field(
+        7, description="Number of periods to forecast"
+    )
+    options: Optional[Dict[str, Any]] = Field(
+        None, description="Trend analysis options"
+    )
 
     @validator("time_range")
     def validate_time_range(cls, v):
@@ -171,7 +209,9 @@ class TrendAnalysisRequest(AnalysisRequest):
         import re
 
         if not re.match(r"^\d+[dhwmy]$", v):
-            raise ValueError("Time range must be in format: <number><unit> (e.g., 30d, 1w, 6m)")
+            raise ValueError(
+                "Time range must be in format: <number><unit> (e.g., 30d, 1w, 6m)"
+            )
         return v
 
     @validator("granularity")
@@ -179,7 +219,9 @@ class TrendAnalysisRequest(AnalysisRequest):
         """Validate granularity."""
         valid_granularities = ["hourly", "daily", "weekly", "monthly"]
         if v not in valid_granularities:
-            raise ValueError(f"Invalid granularity: {v}. Must be one of {valid_granularities}")
+            raise ValueError(
+                f"Invalid granularity: {v}. Must be one of {valid_granularities}"
+            )
         return v
 
 
@@ -187,8 +229,12 @@ class TrendAnalysisResponse(AnalysisResponse):
     """Trend analysis response."""
 
     analysis_type: AnalysisType = AnalysisType.TREND
-    trends: Dict[str, List[Dict[str, Any]]] = Field(..., description="Trend data by metric")
-    forecasts: Optional[Dict[str, List[Dict[str, Any]]]] = Field(None, description="Forecast data")
+    trends: Dict[str, List[Dict[str, Any]]] = Field(
+        ..., description="Trend data by metric"
+    )
+    forecasts: Optional[Dict[str, List[Dict[str, Any]]]] = Field(
+        None, description="Forecast data"
+    )
     insights: List[str] = Field(..., description="Key insights from trend analysis")
 
 
@@ -201,9 +247,12 @@ class RiskAssessmentRequest(AnalysisRequest):
         description="Risk factors to assess",
     )
     severity_thresholds: Optional[Dict[str, float]] = Field(
-        {"critical": 0.8, "high": 0.6, "medium": 0.4}, description="Risk severity thresholds"
+        {"critical": 0.8, "high": 0.6, "medium": 0.4},
+        description="Risk severity thresholds",
     )
-    options: Optional[Dict[str, Any]] = Field(None, description="Risk assessment options")
+    options: Optional[Dict[str, Any]] = Field(
+        None, description="Risk assessment options"
+    )
 
 
 class RiskAssessmentResponse(AnalysisResponse):
@@ -211,8 +260,12 @@ class RiskAssessmentResponse(AnalysisResponse):
 
     analysis_type: AnalysisType = AnalysisType.RISK
     risk_score: float = Field(..., ge=0.0, le=1.0, description="Overall risk score")
-    risk_factors: Dict[str, Any] = Field(..., description="Detailed risk factor assessments")
-    mitigation_actions: List[str] = Field(..., description="Recommended mitigation actions")
+    risk_factors: Dict[str, Any] = Field(
+        ..., description="Detailed risk factor assessments"
+    )
+    mitigation_actions: List[str] = Field(
+        ..., description="Recommended mitigation actions"
+    )
 
 
 class MaintenanceForecastRequest(AnalysisRequest):
@@ -221,9 +274,12 @@ class MaintenanceForecastRequest(AnalysisRequest):
     analysis_type: AnalysisType = AnalysisType.MAINTENANCE
     forecast_horizon: Optional[int] = Field(90, description="Forecast horizon in days")
     factors: Optional[List[str]] = Field(
-        ["content_age", "update_frequency", "quality_trends", "usage_patterns"], description="Forecast factors"
+        ["content_age", "update_frequency", "quality_trends", "usage_patterns"],
+        description="Forecast factors",
     )
-    confidence_level: Optional[float] = Field(0.95, description="Forecast confidence level")
+    confidence_level: Optional[float] = Field(
+        0.95, description="Forecast confidence level"
+    )
     options: Optional[Dict[str, Any]] = Field(None, description="Forecast options")
 
     @validator("forecast_horizon")
@@ -246,29 +302,43 @@ class MaintenanceForecastResponse(AnalysisResponse):
 
     analysis_type: AnalysisType = AnalysisType.MAINTENANCE
     forecasts: List[Dict[str, Any]] = Field(..., description="Maintenance forecasts")
-    schedule: Dict[str, Any] = Field(..., description="Recommended maintenance schedule")
-    resource_requirements: Optional[Dict[str, Any]] = Field(None, description="Resource requirements")
+    schedule: Dict[str, Any] = Field(
+        ..., description="Recommended maintenance schedule"
+    )
+    resource_requirements: Optional[Dict[str, Any]] = Field(
+        None, description="Resource requirements"
+    )
 
 
 class QualityDegradationRequest(AnalysisRequest):
     """Quality degradation detection request."""
 
     analysis_type: AnalysisType = AnalysisType.DEGRADATION
-    baseline_period: Optional[str] = Field("30d", description="Baseline period for comparison")
+    baseline_period: Optional[str] = Field(
+        "30d", description="Baseline period for comparison"
+    )
     degradation_metrics: Optional[List[str]] = Field(
         ["quality_score", "readability", "completeness", "consistency"],
         description="Metrics to monitor for degradation",
     )
-    sensitivity: Optional[float] = Field(0.1, description="Degradation detection sensitivity")
-    options: Optional[Dict[str, Any]] = Field(None, description="Degradation detection options")
+    sensitivity: Optional[float] = Field(
+        0.1, description="Degradation detection sensitivity"
+    )
+    options: Optional[Dict[str, Any]] = Field(
+        None, description="Degradation detection options"
+    )
 
 
 class QualityDegradationResponse(AnalysisResponse):
     """Quality degradation detection response."""
 
     analysis_type: AnalysisType = AnalysisType.DEGRADATION
-    degradation_score: float = Field(..., ge=0.0, le=1.0, description="Overall degradation score")
-    degraded_metrics: Dict[str, Any] = Field(..., description="Degraded metrics details")
+    degradation_score: float = Field(
+        ..., ge=0.0, le=1.0, description="Overall degradation score"
+    )
+    degraded_metrics: Dict[str, Any] = Field(
+        ..., description="Degraded metrics details"
+    )
     alerts: List[str] = Field(..., description="Quality degradation alerts")
 
 
@@ -277,16 +347,22 @@ class ChangeImpactRequest(AnalysisRequest):
 
     analysis_type: AnalysisType = AnalysisType.CHANGE_IMPACT
     change_description: str = Field(..., description="Description of the change")
-    impact_scope: Optional[str] = Field("related", description="Scope of impact analysis")
+    impact_scope: Optional[str] = Field(
+        "related", description="Scope of impact analysis"
+    )
     stakeholders: Optional[List[str]] = Field(None, description="Affected stakeholders")
-    options: Optional[Dict[str, Any]] = Field(None, description="Impact analysis options")
+    options: Optional[Dict[str, Any]] = Field(
+        None, description="Impact analysis options"
+    )
 
     @validator("impact_scope")
     def validate_impact_scope(cls, v):
         """Validate impact scope."""
         valid_scopes = ["direct", "related", "full"]
         if v not in valid_scopes:
-            raise ValueError(f"Invalid impact scope: {v}. Must be one of {valid_scopes}")
+            raise ValueError(
+                f"Invalid impact scope: {v}. Must be one of {valid_scopes}"
+            )
         return v
 
 
@@ -295,9 +371,13 @@ class ChangeImpactResponse(AnalysisResponse):
 
     analysis_type: AnalysisType = AnalysisType.CHANGE_IMPACT
     impact_score: float = Field(..., ge=0.0, le=1.0, description="Overall impact score")
-    affected_entities: List[Dict[str, Any]] = Field(..., description="Affected entities")
+    affected_entities: List[Dict[str, Any]] = Field(
+        ..., description="Affected entities"
+    )
     risk_assessment: Dict[str, Any] = Field(..., description="Impact risk assessment")
-    recommendations: List[str] = Field(..., description="Impact mitigation recommendations")
+    recommendations: List[str] = Field(
+        ..., description="Impact mitigation recommendations"
+    )
 
 
 class FindingFilter(BaseModel):
@@ -315,4 +395,6 @@ class FindingsResponse(BaseResponse):
 
     findings: List[Dict[str, Any]] = Field(..., description="List of findings")
     total_count: int = Field(..., description="Total number of findings")
-    filter_applied: Optional[Dict[str, Any]] = Field(None, description="Applied filters")
+    filter_applied: Optional[Dict[str, Any]] = Field(
+        None, description="Applied filters"
+    )

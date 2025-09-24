@@ -12,7 +12,9 @@ class TableFormatter:
     def __init__(self, console: Console):
         self.console = console
 
-    def create_service_health_table(self, health_data: Dict[str, Dict[str, Any]]) -> Table:
+    def create_service_health_table(
+        self, health_data: Dict[str, Dict[str, Any]]
+    ) -> Table:
         """Create a table showing service health status."""
         table = Table(title="Service Health Status")
         table.add_column("Service", style="cyan")
@@ -38,7 +40,10 @@ class TableFormatter:
             status_display = self._format_status(status)
 
             table.add_row(
-                workflow.get("id", ""), workflow.get("name", ""), status_display, workflow.get("created_at", "")
+                workflow.get("id", ""),
+                workflow.get("name", ""),
+                status_display,
+                workflow.get("created_at", ""),
             )
 
         return table
@@ -56,7 +61,12 @@ class TableFormatter:
             status_display = self._format_status(status)
             findings_count = len(analysis.get("findings", []))
 
-            table.add_row(analysis.get("id", ""), analysis.get("type", ""), status_display, str(findings_count))
+            table.add_row(
+                analysis.get("id", ""),
+                analysis.get("type", ""),
+                status_display,
+                str(findings_count),
+            )
 
         return table
 
@@ -70,12 +80,17 @@ class TableFormatter:
 
         for config in configs:
             table.add_row(
-                config.get("service", ""), config.get("filename", ""), config.get("type", ""), config.get("size", "")
+                config.get("service", ""),
+                config.get("filename", ""),
+                config.get("type", ""),
+                config.get("size", ""),
             )
 
         return table
 
-    def _format_health_status(self, service: str, data: Dict[str, Any]) -> tuple[str, str]:
+    def _format_health_status(
+        self, service: str, data: Dict[str, Any]
+    ) -> tuple[str, str]:
         """Format health status for display."""
         status = data.get("status", "unknown")
 

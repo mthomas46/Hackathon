@@ -159,8 +159,12 @@ async def process_natural_query(query: UserQuery):
         interpretation = await query_handlers.handle_interpret_query(query)
 
         # Get ecosystem context for the query
-        detected_services = interpretation.entities.get("ecosystem_context", {}).get("detected_services", [])
-        detected_capabilities = interpretation.entities.get("ecosystem_context", {}).get("detected_capabilities", [])
+        detected_services = interpretation.entities.get("ecosystem_context", {}).get(
+            "detected_services", []
+        )
+        detected_capabilities = interpretation.entities.get(
+            "ecosystem_context", {}
+        ).get("detected_capabilities", [])
 
         # Find matching LangGraph workflows
         langgraph_match = await langgraph_discovery.find_matching_langgraph_workflow(
@@ -182,11 +186,16 @@ async def process_natural_query(query: UserQuery):
                 "best_match": langgraph_match,
                 "available_count": len(langgraph_discovery.discovered_workflows),
             },
-            "processing_metadata": {"ecosystem_aware": True, "langgraph_enabled": True, "prompt_engineered": True},
+            "processing_metadata": {
+                "ecosystem_aware": True,
+                "langgraph_enabled": True,
+                "prompt_engineered": True,
+            },
         }
 
         return create_success_response(
-            "Natural language query processed with full ecosystem context", enhanced_response
+            "Natural language query processed with full ecosystem context",
+            enhanced_response,
         )
 
     except Exception as e:
@@ -229,7 +238,9 @@ async def execute_natural_workflow(query: UserQuery):
             parameters = interpretation.get("entities", {})
 
             # Validate and execute
-            validation = await langgraph_discovery.validate_langgraph_workflow(workflow_name, parameters)
+            validation = await langgraph_discovery.validate_langgraph_workflow(
+                workflow_name, parameters
+            )
             if validation["valid"]:
                 execution_result = await langgraph_discovery.execute_langgraph_workflow(
                     workflow_name, parameters, query.user_id
@@ -252,13 +263,23 @@ async def execute_natural_workflow(query: UserQuery):
             "execution_result": execution_result,
             "ecosystem_context": data["ecosystem_context"],
             "processing_summary": {
-                "total_services_involved": len(data["ecosystem_context"]["detected_services"]),
-                "workflows_available": len(data["ecosystem_context"]["available_workflows"]),
-                "execution_success": execution_result.get("status") == "success" if execution_result else False,
+                "total_services_involved": len(
+                    data["ecosystem_context"]["detected_services"]
+                ),
+                "workflows_available": len(
+                    data["ecosystem_context"]["available_workflows"]
+                ),
+                "execution_success": (
+                    execution_result.get("status") == "success"
+                    if execution_result
+                    else False
+                ),
             },
         }
 
-        return create_success_response("Natural workflow execution completed", enhanced_result)
+        return create_success_response(
+            "Natural workflow execution completed", enhanced_result
+        )
 
     except Exception as e:
         return create_error_response(
@@ -294,7 +315,9 @@ async def get_ecosystem_capabilities():
             "workflows": {
                 "traditional": traditional_workflows,
                 "langgraph": (
-                    langgraph_workflows.get("workflows", {}) if langgraph_workflows.get("status") == "success" else {}
+                    langgraph_workflows.get("workflows", {})
+                    if langgraph_workflows.get("status") == "success"
+                    else {}
                 ),
             },
             "tools": orchestrator_tools,
@@ -305,18 +328,24 @@ async def get_ecosystem_capabilities():
                 "total_services": len(services),
                 "traditional_workflows": len(traditional_workflows),
                 "langgraph_workflows": (
-                    langgraph_workflows.get("count", 0) if langgraph_workflows.get("status") == "success" else 0
+                    langgraph_workflows.get("count", 0)
+                    if langgraph_workflows.get("status") == "success"
+                    else 0
                 ),
                 "available_tools": len(orchestrator_tools) if orchestrator_tools else 0,
                 "last_updated": "2024-01-01T00:00:00Z",  # Would be dynamic in real implementation
             },
         }
 
-        return create_success_response("Ecosystem capabilities retrieved successfully", capabilities_response)
+        return create_success_response(
+            "Ecosystem capabilities retrieved successfully", capabilities_response
+        )
 
     except Exception as e:
         return create_error_response(
-            "Failed to retrieve ecosystem capabilities", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            "Failed to retrieve ecosystem capabilities",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -347,22 +376,30 @@ async def discover_workflows():
             },
             "summary": {
                 "total_langgraph_workflows": (
-                    langgraph_result.get("count", 0) if langgraph_result.get("status") == "success" else 0
+                    langgraph_result.get("count", 0)
+                    if langgraph_result.get("status") == "success"
+                    else 0
                 ),
                 "total_traditional_workflows": len(traditional_workflows),
                 "total_workflows": (
-                    langgraph_result.get("count", 0) if langgraph_result.get("status") == "success" else 0
+                    langgraph_result.get("count", 0)
+                    if langgraph_result.get("status") == "success"
+                    else 0
                 )
                 + len(traditional_workflows),
                 "discovery_status": "completed",
             },
         }
 
-        return create_success_response("Workflow discovery completed successfully", discovery_response)
+        return create_success_response(
+            "Workflow discovery completed successfully", discovery_response
+        )
 
     except Exception as e:
         return create_error_response(
-            "Failed to discover workflows", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            "Failed to discover workflows",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -397,7 +434,9 @@ async def translate_prompt(query: UserQuery):
                 "suggested_workflow": translation.get("workflow_type"),
                 "confidence": translation.get("confidence", 0),
                 "services_needed": translation.get("services", []),
-                "estimated_complexity": "high" if len(translation.get("services", [])) > 2 else "medium",
+                "estimated_complexity": (
+                    "high" if len(translation.get("services", [])) > 2 else "medium"
+                ),
             },
             "prompt_metadata": {
                 "translation_method": translation.get("translation_method", "unknown"),
@@ -406,7 +445,9 @@ async def translate_prompt(query: UserQuery):
             },
         }
 
-        return create_success_response("Query translated to workflow prompt successfully", prompt_response)
+        return create_success_response(
+            "Query translated to workflow prompt successfully", prompt_response
+        )
 
     except Exception as e:
         return create_error_response(
@@ -488,7 +529,9 @@ async def execute_workflow_endpoint(execution_request: dict):
         priority = execution_request.get("priority", "normal")
 
         # Execute workflow through enhanced execution engine
-        execution_result = await workflow_execution_engine.execute_workflow(execution_plan, user_id, None, priority)
+        execution_result = await workflow_execution_engine.execute_workflow(
+            execution_plan, user_id, None, priority
+        )
 
         return create_success_response(
             {
@@ -558,7 +601,9 @@ async def discover_workflows():
     """Discover available workflows from orchestrator and LangGraph integration."""
     try:
         # Discover traditional workflows
-        traditional_workflows = await orchestrator_integration.discover_available_workflows()
+        traditional_workflows = (
+            await orchestrator_integration.discover_available_workflows()
+        )
 
         # Discover LangGraph workflows
         langgraph_workflows = await langgraph_discovery.discover_langgraph_workflows()
@@ -577,12 +622,21 @@ async def discover_workflows():
                     + dispatcher_workflows["total_count"]
                 ),
                 "discovery_timestamp": datetime.utcnow().isoformat(),
-                "summary": {"orchestrator_integrated": True, "langgraph_enabled": True, "intelligent_dispatch": True},
+                "summary": {
+                    "orchestrator_integrated": True,
+                    "langgraph_enabled": True,
+                    "intelligent_dispatch": True,
+                },
             }
         )
 
     except Exception as e:
-        return create_success_response({"error": str(e), "fallback_workflows": workflow_dispatcher.get_all_workflows()})
+        return create_success_response(
+            {
+                "error": str(e),
+                "fallback_workflows": workflow_dispatcher.get_all_workflows(),
+            }
+        )
 
 
 @app.get("/execution/{execution_id}/status")
@@ -593,7 +647,9 @@ async def get_execution_status(execution_id: str):
         return create_success_response(status)
 
     except Exception as e:
-        return create_success_response({"error": str(e), "execution_id": execution_id, "status": "error"})
+        return create_success_response(
+            {"error": str(e), "execution_id": execution_id, "status": "error"}
+        )
 
 
 @app.get("/health/ecosystem")
@@ -618,7 +674,11 @@ async def get_ecosystem_health():
         if execution_metrics["success_rate"] < 0.8:
             health_score -= 0.3
 
-        health_status = "healthy" if health_score > 0.7 else "degraded" if health_score > 0.4 else "unhealthy"
+        health_status = (
+            "healthy"
+            if health_score > 0.7
+            else "degraded" if health_score > 0.4 else "unhealthy"
+        )
 
         return create_success_response(
             {
@@ -632,7 +692,11 @@ async def get_ecosystem_health():
                 },
                 "component_status": {
                     "interpreter": "healthy",
-                    "orchestrator": "connected" if orchestrator_health.get("healthy") else "disconnected",
+                    "orchestrator": (
+                        "connected"
+                        if orchestrator_health.get("healthy")
+                        else "disconnected"
+                    ),
                     "workflow_dispatcher": "operational",
                     "conversation_memory": "active",
                     "execution_engine": "operational",
@@ -644,7 +708,11 @@ async def get_ecosystem_health():
     except Exception as e:
         return create_success_response(
             {
-                "ecosystem_health": {"overall_status": "error", "health_score": 0.0, "error": str(e)},
+                "ecosystem_health": {
+                    "overall_status": "error",
+                    "health_score": 0.0,
+                    "error": str(e),
+                },
                 "component_status": {"interpreter": "healthy", "error_details": str(e)},
             }
         )
@@ -665,10 +733,14 @@ async def execute_query_endpoint(request: dict):
         filename_prefix = request.get("filename_prefix")
 
         if not query:
-            return create_success_response({"error": "Query is required", "status": "failed"})
+            return create_success_response(
+                {"error": "Query is required", "status": "failed"}
+            )
 
         # Step 1: Process natural language query
-        query_data = UserQuery(query=query, user_id=user_id, context=request.get("context", {}))
+        query_data = UserQuery(
+            query=query, user_id=user_id, context=request.get("context", {})
+        )
 
         preprocessing_result = await query_preprocessor.preprocess_query(
             query_data.query, query_data.user_id, query_data.context
@@ -688,12 +760,17 @@ async def execute_query_endpoint(request: dict):
         # Step 3: Execute workflow through orchestrator
         if dispatch_result.get("workflow_name"):
             workflow_result = await orchestrator_integration.execute_workflow(
-                dispatch_result["workflow_name"], dispatch_result.get("parameters", {}), user_id, output_format
+                dispatch_result["workflow_name"],
+                dispatch_result.get("parameters", {}),
+                user_id,
+                output_format,
             )
 
             # Step 4: Generate output file
             if workflow_result.get("status") == "completed":
-                output_info = await output_generator.generate_output(workflow_result, output_format, filename_prefix)
+                output_info = await output_generator.generate_output(
+                    workflow_result, output_format, filename_prefix
+                )
 
                 # Step 5: Update conversation memory
                 await conversation_memory.update_conversation(
@@ -725,7 +802,9 @@ async def execute_query_endpoint(request: dict):
                         "execution_id": workflow_result.get("execution_id"),
                         "query": query,
                         "status": "failed",
-                        "error": workflow_result.get("error", "Workflow execution failed"),
+                        "error": workflow_result.get(
+                            "error", "Workflow execution failed"
+                        ),
                         "workflow_attempted": dispatch_result["workflow_name"],
                     }
                 )
@@ -761,7 +840,9 @@ async def execute_workflow_direct(request: dict):
         filename_prefix = request.get("filename_prefix")
 
         if not workflow_name:
-            return create_success_response({"error": "workflow_name is required", "status": "failed"})
+            return create_success_response(
+                {"error": "workflow_name is required", "status": "failed"}
+            )
 
         # Execute workflow
         workflow_result = await orchestrator_integration.execute_workflow(
@@ -770,7 +851,9 @@ async def execute_workflow_direct(request: dict):
 
         # Generate output if successful
         if workflow_result.get("status") == "completed":
-            output_info = await output_generator.generate_output(workflow_result, output_format, filename_prefix)
+            output_info = await output_generator.generate_output(
+                workflow_result, output_format, filename_prefix
+            )
 
             return create_success_response(
                 {
@@ -793,7 +876,11 @@ async def execute_workflow_direct(request: dict):
 
     except Exception as e:
         return create_success_response(
-            {"workflow_name": request.get("workflow_name"), "status": "error", "error": str(e)}
+            {
+                "workflow_name": request.get("workflow_name"),
+                "status": "error",
+                "error": str(e),
+            }
         )
 
 
@@ -806,10 +893,14 @@ async def download_output_file(file_id: str):
         file_info = await output_generator.get_file_info(file_id)
 
         if not file_info:
-            return create_success_response({"error": "File not found", "file_id": file_id})
+            return create_success_response(
+                {"error": "File not found", "file_id": file_id}
+            )
 
         return FileResponse(
-            path=file_info["filepath"], filename=file_info["filename"], media_type="application/octet-stream"
+            path=file_info["filepath"],
+            filename=file_info["filename"],
+            media_type="application/octet-stream",
         )
 
     except Exception as e:
@@ -858,13 +949,19 @@ async def get_document_provenance(document_id: str):
         doc_store_url = "http://doc-store:5087"
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{doc_store_url}/documents/{document_id}") as response:
+            async with session.get(
+                f"{doc_store_url}/documents/{document_id}"
+            ) as response:
                 if response.status == 200:
                     doc_data = await response.json()
 
                     # Extract provenance from metadata
-                    provenance = doc_data.get("metadata", {}).get("workflow_provenance", {})
-                    execution_metadata = doc_data.get("metadata", {}).get("execution_metadata", {})
+                    provenance = doc_data.get("metadata", {}).get(
+                        "workflow_provenance", {}
+                    )
+                    execution_metadata = doc_data.get("metadata", {}).get(
+                        "execution_metadata", {}
+                    )
 
                     return create_success_response(
                         {
@@ -874,20 +971,28 @@ async def get_document_provenance(document_id: str):
                             "document_info": {
                                 "title": doc_data.get("metadata", {}).get("title"),
                                 "format": doc_data.get("metadata", {}).get("format"),
-                                "created_at": doc_data.get("metadata", {}).get("generated_at"),
+                                "created_at": doc_data.get("metadata", {}).get(
+                                    "generated_at"
+                                ),
                                 "author": doc_data.get("metadata", {}).get("author"),
-                                "category": doc_data.get("metadata", {}).get("category"),
+                                "category": doc_data.get("metadata", {}).get(
+                                    "category"
+                                ),
                             },
                             "workflow_chain": {
                                 "services_used": provenance.get("services_chain", []),
                                 "prompts_used": provenance.get("prompts_used", []),
                                 "data_lineage": provenance.get("data_lineage", {}),
-                                "quality_metrics": provenance.get("quality_metrics", {}),
+                                "quality_metrics": provenance.get(
+                                    "quality_metrics", {}
+                                ),
                             },
                         }
                     )
                 else:
-                    return create_success_response({"error": "Document not found", "document_id": document_id})
+                    return create_success_response(
+                        {"error": "Document not found", "document_id": document_id}
+                    )
 
     except Exception as e:
         return create_success_response({"error": str(e), "document_id": document_id})
@@ -898,10 +1003,14 @@ async def get_workflow_execution_trace(execution_id: str):
     """Get detailed execution trace for a workflow."""
     try:
         # Get execution details from orchestrator integration
-        execution_status = await orchestrator_integration.get_execution_status(execution_id)
+        execution_status = await orchestrator_integration.get_execution_status(
+            execution_id
+        )
 
         if execution_status.get("status") == "not_found":
-            return create_success_response({"error": "Execution not found", "execution_id": execution_id})
+            return create_success_response(
+                {"error": "Execution not found", "execution_id": execution_id}
+            )
 
         # Get associated documents
         documents = await _get_documents_by_execution_id(execution_id)
@@ -929,10 +1038,16 @@ async def get_documents_by_workflow(workflow_name: str, limit: int = 50):
         # Query doc_store for workflow-generated documents
         doc_store_url = "http://doc-store:5087"
 
-        query_params = {"category": "workflow_output", "tags": f"workflow_{workflow_name}", "limit": limit}
+        query_params = {
+            "category": "workflow_output",
+            "tags": f"workflow_{workflow_name}",
+            "limit": limit,
+        }
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{doc_store_url}/documents/search", params=query_params) as response:
+            async with session.get(
+                f"{doc_store_url}/documents/search", params=query_params
+            ) as response:
                 if response.status == 200:
                     doc_results = await response.json()
 
@@ -943,12 +1058,16 @@ async def get_documents_by_workflow(workflow_name: str, limit: int = 50):
                                 "document_id": doc.get("id"),
                                 "title": doc.get("metadata", {}).get("title"),
                                 "format": doc.get("metadata", {}).get("format"),
-                                "created_at": doc.get("metadata", {}).get("generated_at"),
+                                "created_at": doc.get("metadata", {}).get(
+                                    "generated_at"
+                                ),
                                 "execution_id": doc.get("metadata", {})
                                 .get("execution_metadata", {})
                                 .get("execution_id"),
                                 "author": doc.get("metadata", {}).get("author"),
-                                "quality_score": doc.get("metadata", {}).get("quality_score"),
+                                "quality_score": doc.get("metadata", {}).get(
+                                    "quality_score"
+                                ),
                                 "size_bytes": len(doc.get("content", "")),
                                 "download_url": f"/documents/download/{doc.get('id')}",
                             }
@@ -964,11 +1083,17 @@ async def get_documents_by_workflow(workflow_name: str, limit: int = 50):
                     )
                 else:
                     return create_success_response(
-                        {"error": "Failed to query doc_store", "workflow_name": workflow_name, "documents": []}
+                        {
+                            "error": "Failed to query doc_store",
+                            "workflow_name": workflow_name,
+                            "documents": [],
+                        }
                     )
 
     except Exception as e:
-        return create_success_response({"error": str(e), "workflow_name": workflow_name, "documents": []})
+        return create_success_response(
+            {"error": str(e), "workflow_name": workflow_name, "documents": []}
+        )
 
 
 @app.get("/documents/{document_id}/download")
@@ -983,7 +1108,9 @@ async def download_document_from_doc_store(document_id: str):
         doc_store_url = "http://doc-store:5087"
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{doc_store_url}/documents/{document_id}") as response:
+            async with session.get(
+                f"{doc_store_url}/documents/{document_id}"
+            ) as response:
                 if response.status == 200:
                     doc_data = await response.json()
 
@@ -997,15 +1124,23 @@ async def download_document_from_doc_store(document_id: str):
                         content_bytes = content.encode("utf-8")
 
                     # Get content type and filename
-                    content_type = metadata.get("content_type", "application/octet-stream")
+                    content_type = metadata.get(
+                        "content_type", "application/octet-stream"
+                    )
                     filename = metadata.get("filename", f"document_{document_id}")
 
-                    headers = {"Content-Disposition": f"attachment; filename={filename}", "Content-Type": content_type}
+                    headers = {
+                        "Content-Disposition": f"attachment; filename={filename}",
+                        "Content-Type": content_type,
+                    }
 
                     return Response(content=content_bytes, headers=headers)
                 else:
                     return create_success_response(
-                        {"error": "Document not found in doc_store", "document_id": document_id}
+                        {
+                            "error": "Document not found in doc_store",
+                            "document_id": document_id,
+                        }
                     )
 
     except Exception as e:
@@ -1057,10 +1192,16 @@ async def _get_documents_by_execution_id(execution_id: str) -> List[Dict[str, An
         doc_store_url = "http://doc-store:5087"
 
         # Search for documents with this execution_id in metadata
-        query_params = {"category": "workflow_output", "execution_id": execution_id, "limit": 100}
+        query_params = {
+            "category": "workflow_output",
+            "execution_id": execution_id,
+            "limit": 100,
+        }
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{doc_store_url}/documents/search", params=query_params) as response:
+            async with session.get(
+                f"{doc_store_url}/documents/search", params=query_params
+            ) as response:
                 if response.status == 200:
                     doc_results = await response.json()
 
@@ -1073,7 +1214,9 @@ async def _get_documents_by_execution_id(execution_id: str) -> List[Dict[str, An
                                 "format": doc.get("metadata", {}).get("format"),
                                 "filename": doc.get("metadata", {}).get("filename"),
                                 "size_bytes": len(doc.get("content", "")),
-                                "created_at": doc.get("metadata", {}).get("generated_at"),
+                                "created_at": doc.get("metadata", {}).get(
+                                    "generated_at"
+                                ),
                                 "download_url": f"/documents/download/{doc.get('id')}",
                             }
                         )

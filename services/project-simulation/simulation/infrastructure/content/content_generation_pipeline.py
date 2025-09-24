@@ -14,7 +14,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.clients.ecosystem_clients import (
     get_analysis_service_client,
@@ -39,7 +41,9 @@ class ContentGenerationPipeline:
         self.llm_client = get_llm_gateway_client()
         self.summarizer_client = get_summarizer_hub_client()
 
-    async def execute_document_generation(self, phase_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def execute_document_generation(
+        self, phase_config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Execute document generation for a simulation phase."""
         try:
             # Generate different types of documents based on phase
@@ -63,7 +67,9 @@ class ContentGenerationPipeline:
             self.logger.error(f"Document generation failed", error=str(e))
             return []
 
-    async def _generate_confluence_documents(self, phase_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _generate_confluence_documents(
+        self, phase_config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate Confluence-style documents."""
         phase_name = phase_config.get("phase_name", "unknown")
         project_config = phase_config.get("project_config", {})
@@ -85,7 +91,11 @@ class ContentGenerationPipeline:
                         "type": "confluence_requirements",
                         "title": f"Project Requirements - {project_config.get('name', 'Unknown')}",
                         "content": doc.get("content", ""),
-                        "metadata": {"document_type": "confluence", "phase": phase_name, "category": "requirements"},
+                        "metadata": {
+                            "document_type": "confluence",
+                            "phase": phase_name,
+                            "category": "requirements",
+                        },
                     }
                 )
 
@@ -104,13 +114,19 @@ class ContentGenerationPipeline:
                         "type": "confluence_architecture",
                         "title": f"System Architecture - {project_config.get('name', 'Unknown')}",
                         "content": doc.get("content", ""),
-                        "metadata": {"document_type": "confluence", "phase": phase_name, "category": "architecture"},
+                        "metadata": {
+                            "document_type": "confluence",
+                            "phase": phase_name,
+                            "category": "architecture",
+                        },
                     }
                 )
 
         return documents
 
-    async def _generate_jira_tickets(self, phase_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _generate_jira_tickets(
+        self, phase_config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate JIRA-style tickets."""
         phase_name = phase_config.get("phase_name", "unknown")
         project_config = phase_config.get("project_config", {})
@@ -138,7 +154,9 @@ class ContentGenerationPipeline:
                             "phase": phase_name,
                             "ticket_type": "task",
                             "priority": "high",
-                            "assignee": team_config.get("members", [{}])[0].get("name", "Unassigned"),
+                            "assignee": team_config.get("members", [{}])[0].get(
+                                "name", "Unassigned"
+                            ),
                         },
                     }
                 )
@@ -163,14 +181,18 @@ class ContentGenerationPipeline:
                             "phase": phase_name,
                             "ticket_type": "story",
                             "priority": "medium",
-                            "assignee": team_config.get("members", [{}])[0].get("name", "Unassigned"),
+                            "assignee": team_config.get("members", [{}])[0].get(
+                                "name", "Unassigned"
+                            ),
                         },
                     }
                 )
 
         return tickets
 
-    async def _generate_github_prs(self, phase_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _generate_github_prs(
+        self, phase_config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate GitHub PR-style documents."""
         phase_name = phase_config.get("phase_name", "unknown")
         project_config = phase_config.get("project_config", {})
@@ -214,7 +236,9 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                         "phase": phase_name,
                         "pr_number": 123,
                         "status": "open",
-                        "author": phase_config.get("team_config", {}).get("members", [{}])[0].get("name", "developer"),
+                        "author": phase_config.get("team_config", {})
+                        .get("members", [{}])[0]
+                        .get("name", "developer"),
                         "reviewers": ["reviewer1", "reviewer2"],
                     },
                 }
@@ -223,7 +247,10 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
         return prs
 
     async def execute_full_pipeline(
-        self, simulation_id: str, project_config: Dict[str, Any], generation_config: Dict[str, Any]
+        self,
+        simulation_id: str,
+        project_config: Dict[str, Any],
+        generation_config: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Execute the complete content generation pipeline."""
         start_time = datetime.now()
@@ -245,7 +272,9 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             }
 
             # Stage 1: Generate project documentation
-            generation_result = await self._generate_project_content(simulation_id, project_config, generation_config)
+            generation_result = await self._generate_project_content(
+                simulation_id, project_config, generation_config
+            )
             pipeline_results["stages"].append(
                 {
                     "stage": "generation",
@@ -259,7 +288,9 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                 return pipeline_results
 
             # Stage 2: Validate content quality
-            validation_result = await self._validate_content_quality(generation_result["documents"])
+            validation_result = await self._validate_content_quality(
+                generation_result["documents"]
+            )
             pipeline_results["stages"].append(
                 {
                     "stage": "validation",
@@ -298,9 +329,15 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             )
 
             # Set final status
-            failed_stages = [s for s in pipeline_results["stages"] if s["status"] == "failed"]
-            pipeline_results["overall_status"] = "failed" if failed_stages else "completed"
-            pipeline_results["pipeline_duration_seconds"] = (datetime.now() - start_time).total_seconds()
+            failed_stages = [
+                s for s in pipeline_results["stages"] if s["status"] == "failed"
+            ]
+            pipeline_results["overall_status"] = (
+                "failed" if failed_stages else "completed"
+            )
+            pipeline_results["pipeline_duration_seconds"] = (
+                datetime.now() - start_time
+            ).total_seconds()
 
             self.logger.info(
                 "Content generation pipeline completed",
@@ -316,7 +353,9 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
         except Exception as e:
             pipeline_results["overall_status"] = "failed"
             pipeline_results["errors"].append(str(e))
-            pipeline_results["pipeline_duration_seconds"] = (datetime.now() - start_time).total_seconds()
+            pipeline_results["pipeline_duration_seconds"] = (
+                datetime.now() - start_time
+            ).total_seconds()
 
             self.logger.error(
                 "Content generation pipeline failed",
@@ -328,7 +367,10 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             return pipeline_results
 
     async def _generate_project_content(
-        self, simulation_id: str, project_config: Dict[str, Any], generation_config: Dict[str, Any]
+        self,
+        simulation_id: str,
+        project_config: Dict[str, Any],
+        generation_config: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Generate project content using mock-data-generator."""
         try:
@@ -343,7 +385,13 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                 "complexity": project_config.get("complexity", "medium"),
                 "duration_weeks": project_config.get("duration_weeks", 8),
                 "document_types": generation_config.get(
-                    "document_types", ["project_requirements", "architecture_diagram", "user_story", "technical_design"]
+                    "document_types",
+                    [
+                        "project_requirements",
+                        "architecture_diagram",
+                        "user_story",
+                        "technical_design",
+                    ],
                 ),
                 "include_context": generation_config.get("include_context", True),
                 "quality_level": generation_config.get("quality_level", "high"),
@@ -355,7 +403,9 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             # Generate project documentation
             if "project_requirements" in generation_request["document_types"]:
                 project_docs = await execute_with_resilience(
-                    "mock_data_generator", "generate_project_documents", generation_request
+                    "mock_data_generator",
+                    "generate_project_documents",
+                    generation_request,
                 )
                 generated_content.extend(project_docs.get("documents_created", []))
 
@@ -375,10 +425,14 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                     "generate_timeline_events",
                     {
                         "project_name": project_config.get("name"),
-                        "timeline_phases": self._generate_timeline_phases(project_config),
+                        "timeline_phases": self._generate_timeline_phases(
+                            project_config
+                        ),
                         "include_past_events": True,
                         "include_future_events": False,
-                        "event_count": generation_config.get("timeline_event_count", 20),
+                        "event_count": generation_config.get(
+                            "timeline_event_count", 20
+                        ),
                     },
                 )
                 generated_content.extend(timeline_events.get("documents_created", []))
@@ -391,9 +445,15 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                     {
                         "project_name": project_config.get("name"),
                         "team_members": project_config.get("team_members", []),
-                        "activity_types": ["code_commit", "meeting_notes", "design_decision"],
+                        "activity_types": [
+                            "code_commit",
+                            "meeting_notes",
+                            "design_decision",
+                        ],
                         "time_range_days": 30,
-                        "activity_count": generation_config.get("team_activity_count", 25),
+                        "activity_count": generation_config.get(
+                            "team_activity_count", 25
+                        ),
                     },
                 )
                 generated_content.extend(team_activities.get("documents_created", []))
@@ -402,28 +462,42 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                 "success": True,
                 "documents": generated_content,
                 "document_count": len(generated_content),
-                "document_types": list(set(d.get("type") for d in generated_content if d.get("type"))),
+                "document_types": list(
+                    set(d.get("type") for d in generated_content if d.get("type"))
+                ),
             }
 
         except Exception as e:
-            self.logger.error("Content generation failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                "Content generation failed", error=str(e), simulation_id=simulation_id
+            )
             return {"success": False, "error": str(e), "documents": []}
 
-    async def _validate_content_quality(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def _validate_content_quality(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Validate content quality using analysis service."""
         try:
-            self.logger.info("Validating content quality", document_count=len(documents))
+            self.logger.info(
+                "Validating content quality", document_count=len(documents)
+            )
 
             if not documents:
                 return {
                     "success": True,
                     "validated_documents": [],
                     "quality_score": 0.0,
-                    "validation_summary": {"total_documents": 0, "passed": 0, "failed": 0},
+                    "validation_summary": {
+                        "total_documents": 0,
+                        "passed": 0,
+                        "failed": 0,
+                    },
                 }
 
             # Analyze documents for quality
-            analysis_result = await execute_with_resilience("analysis_service", "analyze_documents", documents)
+            analysis_result = await execute_with_resilience(
+                "analysis_service", "analyze_documents", documents
+            )
 
             # Validate each document
             validated_documents = []
@@ -437,7 +511,9 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                 )
 
                 # Calculate quality score (simplified)
-                quality_score = self._calculate_document_quality_score(doc, doc_analysis)
+                quality_score = self._calculate_document_quality_score(
+                    doc, doc_analysis
+                )
 
                 validated_doc = {
                     **doc,
@@ -453,10 +529,18 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             # Summary statistics
             validation_summary = {
                 "total_documents": len(documents),
-                "passed": sum(1 for d in validated_documents if d["validation_status"] == "passed"),
-                "failed": sum(1 for d in validated_documents if d["validation_status"] == "failed"),
-                "average_quality_score": sum(quality_scores) / len(quality_scores) if quality_scores else 0.0,
-                "quality_score_distribution": self._calculate_quality_distribution(quality_scores),
+                "passed": sum(
+                    1 for d in validated_documents if d["validation_status"] == "passed"
+                ),
+                "failed": sum(
+                    1 for d in validated_documents if d["validation_status"] == "failed"
+                ),
+                "average_quality_score": (
+                    sum(quality_scores) / len(quality_scores) if quality_scores else 0.0
+                ),
+                "quality_score_distribution": self._calculate_quality_distribution(
+                    quality_scores
+                ),
             }
 
             return {
@@ -472,7 +556,8 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             return {
                 "success": True,
                 "validated_documents": [
-                    {**doc, "validation_status": "unvalidated", "quality_score": 0.5} for doc in documents
+                    {**doc, "validation_status": "unvalidated", "quality_score": 0.5}
+                    for doc in documents
                 ],
                 "quality_score": 0.5,
                 "validation_summary": {
@@ -489,7 +574,9 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
         """Store validated content in doc_store."""
         try:
             self.logger.info(
-                "Storing validated content", simulation_id=simulation_id, document_count=len(validated_documents)
+                "Storing validated content",
+                simulation_id=simulation_id,
+                document_count=len(validated_documents),
             )
 
             stored_documents = []
@@ -503,8 +590,12 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                         "document_type": doc.get("type", "unknown"),
                         "quality_score": doc.get("quality_score", 0.0),
                         "validation_status": doc.get("validation_status", "unknown"),
-                        "generated_at": doc.get("generated_at", datetime.now().isoformat()),
-                        "validated_at": doc.get("validation_timestamp", datetime.now().isoformat()),
+                        "generated_at": doc.get(
+                            "generated_at", datetime.now().isoformat()
+                        ),
+                        "validated_at": doc.get(
+                            "validation_timestamp", datetime.now().isoformat()
+                        ),
                         "project_context": {
                             "name": doc.get("project_name", "Unknown"),
                             "type": doc.get("project_type", "unknown"),
@@ -532,13 +623,19 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                             }
                         )
                     else:
-                        failed_documents.append({"title": doc.get("title"), "error": "Storage failed"})
+                        failed_documents.append(
+                            {"title": doc.get("title"), "error": "Storage failed"}
+                        )
 
                 except Exception as doc_error:
                     self.logger.warning(
-                        "Failed to store document", document_title=doc.get("title"), error=str(doc_error)
+                        "Failed to store document",
+                        document_title=doc.get("title"),
+                        error=str(doc_error),
                     )
-                    failed_documents.append({"title": doc.get("title"), "error": str(doc_error)})
+                    failed_documents.append(
+                        {"title": doc.get("title"), "error": str(doc_error)}
+                    )
 
             return {
                 "success": True,
@@ -548,12 +645,18 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                     "total_attempted": len(validated_documents),
                     "successfully_stored": len(stored_documents),
                     "failed": len(failed_documents),
-                    "success_rate": len(stored_documents) / len(validated_documents) if validated_documents else 0.0,
+                    "success_rate": (
+                        len(stored_documents) / len(validated_documents)
+                        if validated_documents
+                        else 0.0
+                    ),
                 },
             }
 
         except Exception as e:
-            self.logger.error("Content storage failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                "Content storage failed", error=str(e), simulation_id=simulation_id
+            )
             return {
                 "success": False,
                 "error": str(e),
@@ -562,12 +665,17 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             }
 
     async def _generate_content_insights(
-        self, simulation_id: str, project_config: Dict[str, Any], validated_documents: List[Dict[str, Any]]
+        self,
+        simulation_id: str,
+        project_config: Dict[str, Any],
+        validated_documents: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Generate insights and analytics from generated content."""
         try:
             self.logger.info(
-                "Generating content insights", simulation_id=simulation_id, document_count=len(validated_documents)
+                "Generating content insights",
+                simulation_id=simulation_id,
+                document_count=len(validated_documents),
             )
 
             # Analyze document types and distribution
@@ -625,10 +733,16 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                 "analytics": {
                     "document_distribution": doc_types,
                     "quality_metrics": {
-                        "average_score": sum(quality_scores) / len(quality_scores) if quality_scores else 0.0,
+                        "average_score": (
+                            sum(quality_scores) / len(quality_scores)
+                            if quality_scores
+                            else 0.0
+                        ),
                         "min_score": min(quality_scores) if quality_scores else 0.0,
                         "max_score": max(quality_scores) if quality_scores else 0.0,
-                        "distribution": self._calculate_quality_distribution(quality_scores),
+                        "distribution": self._calculate_quality_distribution(
+                            quality_scores
+                        ),
                     },
                     "content_metrics": {
                         "total_documents": len(validated_documents),
@@ -642,9 +756,16 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
 
         except Exception as e:
             self.logger.error("Content insights generation failed", error=str(e))
-            return {"success": False, "error": str(e), "insights": "Insights generation failed", "analytics": {}}
+            return {
+                "success": False,
+                "error": str(e),
+                "insights": "Insights generation failed",
+                "analytics": {},
+            }
 
-    def _calculate_document_quality_score(self, document: Dict[str, Any], analysis: Dict[str, Any]) -> float:
+    def _calculate_document_quality_score(
+        self, document: Dict[str, Any], analysis: Dict[str, Any]
+    ) -> float:
         """Calculate quality score for a document."""
         score = 0.5  # Base score
 
@@ -695,26 +816,57 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
 
         # Expected document types for different project types
         expected_types = {
-            "web_application": ["project_requirements", "architecture_diagram", "user_story", "technical_design"],
-            "api_service": ["project_requirements", "architecture_diagram", "technical_design", "api_contract"],
-            "mobile_application": ["project_requirements", "architecture_diagram", "user_story", "design_mockups"],
-            "data_science": ["project_requirements", "data_analysis", "model_design", "validation_report"],
-            "devops_tool": ["project_requirements", "architecture_diagram", "deployment_guide", "monitoring_setup"],
+            "web_application": [
+                "project_requirements",
+                "architecture_diagram",
+                "user_story",
+                "technical_design",
+            ],
+            "api_service": [
+                "project_requirements",
+                "architecture_diagram",
+                "technical_design",
+                "api_contract",
+            ],
+            "mobile_application": [
+                "project_requirements",
+                "architecture_diagram",
+                "user_story",
+                "design_mockups",
+            ],
+            "data_science": [
+                "project_requirements",
+                "data_analysis",
+                "model_design",
+                "validation_report",
+            ],
+            "devops_tool": [
+                "project_requirements",
+                "architecture_diagram",
+                "deployment_guide",
+                "monitoring_setup",
+            ],
         }
 
         expected = set(expected_types.get(project_type, []))
         actual = set(d.get("type") for d in documents if d.get("type"))
 
         # Calculate coverage
-        coverage = len(expected.intersection(actual)) / len(expected) if expected else 0.0
+        coverage = (
+            len(expected.intersection(actual)) / len(expected) if expected else 0.0
+        )
 
         # Adjust for complexity
         if complexity == "complex" and coverage < 0.8:
-            coverage *= 0.9  # Penalty for complex projects with incomplete documentation
+            coverage *= (
+                0.9  # Penalty for complex projects with incomplete documentation
+            )
 
         return min(coverage, 1.0)
 
-    def _generate_timeline_phases(self, project_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _generate_timeline_phases(
+        self, project_config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate timeline phases based on project configuration."""
         duration_weeks = project_config.get("duration_weeks", 8)
         complexity = project_config.get("complexity", "medium")
@@ -731,7 +883,11 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                 "name": "Design",
                 "description": "System design and architecture planning",
                 "duration_days": max(7, duration_weeks * 7 // 8),  # ~25% of total
-                "deliverables": ["architecture_diagram", "technical_design", "api_contract"],
+                "deliverables": [
+                    "architecture_diagram",
+                    "technical_design",
+                    "api_contract",
+                ],
             },
             {
                 "name": "Development",
@@ -755,13 +911,19 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                     "name": "Analysis",
                     "description": "Detailed analysis and feasibility study",
                     "duration_days": max(3, duration_weeks * 7 // 16),
-                    "deliverables": ["feasibility_report", "risk_analysis", "cost_benefit_analysis"],
+                    "deliverables": [
+                        "feasibility_report",
+                        "risk_analysis",
+                        "cost_benefit_analysis",
+                    ],
                 },
             )
 
         return base_phases
 
-    def _calculate_pipeline_metrics(self, generation, validation, storage, insights) -> Dict[str, Any]:
+    def _calculate_pipeline_metrics(
+        self, generation, validation, storage, insights
+    ) -> Dict[str, Any]:
         """Calculate comprehensive pipeline metrics."""
         return {
             "generation": {
@@ -778,7 +940,9 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
                 "documents_stored": len(storage.get("stored_documents", [])),
                 "documents_failed": len(storage.get("failed_documents", [])),
                 "storage_success": storage.get("success", False),
-                "success_rate": storage.get("storage_summary", {}).get("success_rate", 0.0),
+                "success_rate": storage.get("storage_summary", {}).get(
+                    "success_rate", 0.0
+                ),
             },
             "insights": {
                 "insights_generated": insights.get("success", False),
@@ -786,7 +950,11 @@ Implementation of core features for {project_config.get('name', 'Unknown Project
             },
             "overall": {
                 "pipeline_success": all(
-                    [generation.get("success", False), validation.get("success", False), storage.get("success", False)]
+                    [
+                        generation.get("success", False),
+                        validation.get("success", False),
+                        storage.get("success", False),
+                    ]
                 ),
                 "data_quality_score": (
                     generation.get("document_count", 0)

@@ -38,7 +38,17 @@ class MemoryAgentAdapter(BaseServiceAdapter):
 
     def get_available_commands(self) -> List[str]:
         """Return list of available commands for this service"""
-        return ["status", "memories", "contexts", "search", "store", "recall", "forget", "stats", "clear"]
+        return [
+            "status",
+            "memories",
+            "contexts",
+            "search",
+            "store",
+            "recall",
+            "forget",
+            "stats",
+            "clear",
+        ]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         """Execute a command against the Memory Agent service"""
@@ -78,9 +88,13 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get Memory Agent status: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get Memory Agent status: {str(e)}"
+            )
 
-    async def _list_memories(self, limit: int = 10, context_id: Optional[str] = None) -> CommandResult:
+    async def _list_memories(
+        self, limit: int = 10, context_id: Optional[str] = None
+    ) -> CommandResult:
         """List stored memories"""
         try:
             start_time = time.time()
@@ -99,7 +113,9 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list memories: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list memories: {str(e)}"
+            )
 
     async def _list_contexts(self) -> CommandResult:
         """List conversation contexts"""
@@ -116,9 +132,13 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list contexts: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list contexts: {str(e)}"
+            )
 
-    async def _search_memories(self, query: str, context_id: Optional[str] = None) -> CommandResult:
+    async def _search_memories(
+        self, query: str, context_id: Optional[str] = None
+    ) -> CommandResult:
         """Search memories by content"""
         try:
             start_time = time.time()
@@ -137,10 +157,15 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to search memories: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to search memories: {str(e)}"
+            )
 
     async def _store_memory(
-        self, content: str, context_id: Optional[str] = None, metadata: Optional[Dict] = None
+        self,
+        content: str,
+        context_id: Optional[str] = None,
+        metadata: Optional[Dict] = None,
     ) -> CommandResult:
         """Store a new memory"""
         try:
@@ -160,7 +185,9 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to store memory: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to store memory: {str(e)}"
+            )
 
     async def _recall_memory(self, memory_id: str) -> CommandResult:
         """Recall a specific memory"""
@@ -171,10 +198,15 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message=f"Memory recalled: {memory_id}", execution_time=execution_time
+                success=True,
+                data=response,
+                message=f"Memory recalled: {memory_id}",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to recall memory {memory_id}: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to recall memory {memory_id}: {str(e)}"
+            )
 
     async def _forget_memory(self, memory_id: str) -> CommandResult:
         """Delete a specific memory"""
@@ -185,10 +217,15 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message=f"Memory forgotten: {memory_id}", execution_time=execution_time
+                success=True,
+                data=response,
+                message=f"Memory forgotten: {memory_id}",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to forget memory {memory_id}: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to forget memory {memory_id}: {str(e)}"
+            )
 
     async def _clear_memories(self, context_id: Optional[str] = None) -> CommandResult:
         """Clear memories (optionally for a specific context)"""
@@ -204,10 +241,15 @@ class MemoryAgentAdapter(BaseServiceAdapter):
 
             context_msg = f" for context {context_id}" if context_id else ""
             return CommandResult(
-                success=True, data=response, message=f"Memories cleared{context_msg}", execution_time=execution_time
+                success=True,
+                data=response,
+                message=f"Memories cleared{context_msg}",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to clear memories: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to clear memories: {str(e)}"
+            )
 
     async def _get_stats(self) -> CommandResult:
         """Get Memory Agent statistics"""
@@ -218,12 +260,16 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             status_response = await self.clients.get_json(f"{self.base_url}/status")
 
             # Try to get memory count
-            memories_response = await self.clients.get_json(f"{self.base_url}/memories", params={"limit": 1})
+            memories_response = await self.clients.get_json(
+                f"{self.base_url}/memories", params={"limit": 1}
+            )
             memory_count = memories_response.get("total", 0) if memories_response else 0
 
             # Try to get context count
             contexts_response = await self.clients.get_json(f"{self.base_url}/contexts")
-            context_count = len(contexts_response.get("contexts", [])) if contexts_response else 0
+            context_count = (
+                len(contexts_response.get("contexts", [])) if contexts_response else 0
+            )
 
             execution_time = time.time() - start_time
 
@@ -231,7 +277,11 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 "status": status_response,
                 "memory_count": memory_count,
                 "context_count": context_count,
-                "service_uptime": status_response.get("uptime", "unknown") if status_response else "unknown",
+                "service_uptime": (
+                    status_response.get("uptime", "unknown")
+                    if status_response
+                    else "unknown"
+                ),
             }
 
             return CommandResult(
@@ -241,7 +291,9 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get Memory Agent stats: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get Memory Agent stats: {str(e)}"
+            )
 
     def format_response(self, result: CommandResult, command: str) -> None:
         """Format and display the command result"""
@@ -264,10 +316,14 @@ class MemoryAgentAdapter(BaseServiceAdapter):
             # Generic formatting
             self.console.print(f"[green]✅ {result.message}[/green]")
             if result.data:
-                self.console.print(Panel(str(result.data), title="Response Data", border_style="blue"))
+                self.console.print(
+                    Panel(str(result.data), title="Response Data", border_style="blue")
+                )
 
         if result.execution_time:
-            self.console.print(f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]")
+            self.console.print(
+                f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]"
+            )
 
     def _format_status_response(self, data: Dict[str, Any]) -> None:
         """Format status response"""
@@ -303,7 +359,10 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 content = content[:47] + "..."
 
             table.add_row(
-                memory.get("id", "N/A"), content, memory.get("context_id", "default"), memory.get("created_at", "N/A")
+                memory.get("id", "N/A"),
+                content,
+                memory.get("context_id", "default"),
+                memory.get("created_at", "N/A"),
             )
 
         self.console.print(table)
@@ -356,7 +415,10 @@ class MemoryAgentAdapter(BaseServiceAdapter):
                 content = content[:57] + "..."
 
             table.add_row(
-                f"{result.get('score', 0):.3f}", content, result.get("id", "N/A"), result.get("context_id", "default")
+                f"{result.get('score', 0):.3f}",
+                content,
+                result.get("id", "N/A"),
+                result.get("context_id", "default"),
             )
 
         self.console.print(table)

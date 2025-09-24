@@ -66,7 +66,9 @@ def render_progress_indicator(
 
     # Stage progress
     if total_stages > 1:
-        st.markdown(f"**Current Stage:** {current_stage} ({progress_data.get('current_stage_num', 1)}/{total_stages})")
+        st.markdown(
+            f"**Current Stage:** {current_stage} ({progress_data.get('current_stage_num', 1)}/{total_stages})"
+        )
 
         if current_stage_progress >= 0:
             stage_progress = min(current_stage_progress / 100, 1.0)
@@ -89,13 +91,22 @@ def render_progress_indicator(
     return {
         "current_progress": progress_percent,
         "status": status,
-        "estimated_completion": calculate_eta(start_time, estimated_duration, progress_percent),
-        "stage_info": {"current": current_stage, "progress": current_stage_progress, "total_stages": total_stages},
+        "estimated_completion": calculate_eta(
+            start_time, estimated_duration, progress_percent
+        ),
+        "stage_info": {
+            "current": current_stage,
+            "progress": current_stage_progress,
+            "total_stages": total_stages,
+        },
     }
 
 
 def display_time_information(
-    start_time: Optional[datetime], estimated_duration: float, progress: float, show_eta: bool
+    start_time: Optional[datetime],
+    estimated_duration: float,
+    progress: float,
+    show_eta: bool,
 ):
     """Display time-related information."""
     if not start_time:
@@ -140,7 +151,9 @@ def display_detailed_progress(progress_data: Dict[str, Any]):
                     if isinstance(metric_value, (int, float)):
                         st.metric(metric_name.replace("_", " ").title(), ".2f")
                     else:
-                        st.metric(metric_name.replace("_", " ").title(), str(metric_value))
+                        st.metric(
+                            metric_name.replace("_", " ").title(), str(metric_value)
+                        )
 
         # Recent activities
         activities = progress_data.get("recent_activities", [])
@@ -150,7 +163,11 @@ def display_detailed_progress(progress_data: Dict[str, Any]):
                 timestamp = activity.get("timestamp", datetime.now())
                 message = activity.get("message", "Unknown activity")
 
-                time_str = timestamp.strftime("%H:%M:%S") if isinstance(timestamp, datetime) else str(timestamp)
+                time_str = (
+                    timestamp.strftime("%H:%M:%S")
+                    if isinstance(timestamp, datetime)
+                    else str(timestamp)
+                )
                 st.write(f"• {time_str}: {message}")
 
         # Performance information
@@ -172,7 +189,9 @@ def display_detailed_progress(progress_data: Dict[str, Any]):
                     st.metric("Error Rate", ".1f")
 
 
-def display_progress_controls(progress_data: Dict[str, Any], on_complete: Callable, on_error: Callable):
+def display_progress_controls(
+    progress_data: Dict[str, Any], on_complete: Callable, on_error: Callable
+):
     """Display progress control buttons."""
     status = progress_data.get("status", "pending")
     operation_id = progress_data.get("operation_id", "unknown")
@@ -194,7 +213,9 @@ def display_progress_controls(progress_data: Dict[str, Any], on_complete: Callab
     with col3:
         if status in ["running", "paused", "processing"]:
             if st.button("⏹️ Stop", key=f"stop_{operation_id}", type="secondary"):
-                if st.checkbox("Confirm stop operation", key=f"confirm_stop_{operation_id}"):
+                if st.checkbox(
+                    "Confirm stop operation", key=f"confirm_stop_{operation_id}"
+                ):
                     progress_data["status"] = "stopped"
                     st.warning("⏹️ Operation stopped")
                     if on_error:
@@ -287,7 +308,12 @@ def simulate_progress_updates(progress_data: Dict[str, Any]):
 
         # Add to activity log
         activities = progress_data.get("recent_activities", [])
-        activities.append({"timestamp": datetime.now(), "message": f"Progress updated to {new_progress:.1f}%"})
+        activities.append(
+            {
+                "timestamp": datetime.now(),
+                "message": f"Progress updated to {new_progress:.1f}%",
+            }
+        )
 
         # Keep only recent activities
         if len(activities) > 20:
@@ -296,7 +322,9 @@ def simulate_progress_updates(progress_data: Dict[str, Any]):
         progress_data["recent_activities"] = activities
 
 
-def calculate_eta(start_time: datetime, estimated_duration: float, progress: float) -> Optional[datetime]:
+def calculate_eta(
+    start_time: datetime, estimated_duration: float, progress: float
+) -> Optional[datetime]:
     """Calculate estimated time of arrival."""
     if not start_time or progress <= 0 or progress >= 100:
         return None
@@ -352,22 +380,51 @@ def get_default_progress_data() -> Dict[str, Any]:
         "current_stage_num": 2,
         "total_stages": 5,
         "current_stage_progress": 78.3,
-        "stages": ["Initialization", "Data Processing", "Analysis", "Reporting", "Cleanup"],
-        "metrics": {"records_processed": 1250, "success_rate": 98.5, "average_response_time": 245.8},
-        "performance": {"cpu_usage": 67.3, "memory_usage": 72.1, "throughput": 1250.0, "error_rate": 0.05},
+        "stages": [
+            "Initialization",
+            "Data Processing",
+            "Analysis",
+            "Reporting",
+            "Cleanup",
+        ],
+        "metrics": {
+            "records_processed": 1250,
+            "success_rate": 98.5,
+            "average_response_time": 245.8,
+        },
+        "performance": {
+            "cpu_usage": 67.3,
+            "memory_usage": 72.1,
+            "throughput": 1250.0,
+            "error_rate": 0.05,
+        },
         "recent_activities": [
-            {"timestamp": datetime.now() - timedelta(minutes=2), "message": "Started data processing phase"},
-            {"timestamp": datetime.now() - timedelta(minutes=1), "message": "Processed 750 records"},
+            {
+                "timestamp": datetime.now() - timedelta(minutes=2),
+                "message": "Started data processing phase",
+            },
+            {
+                "timestamp": datetime.now() - timedelta(minutes=1),
+                "message": "Processed 750 records",
+            },
             {"timestamp": datetime.now(), "message": "Analysis phase initiated"},
         ],
         "logs": [
-            {"timestamp": datetime.now() - timedelta(minutes=15), "level": "INFO", "message": "Operation started"},
+            {
+                "timestamp": datetime.now() - timedelta(minutes=15),
+                "level": "INFO",
+                "message": "Operation started",
+            },
             {
                 "timestamp": datetime.now() - timedelta(minutes=12),
                 "level": "INFO",
                 "message": "Initialization completed",
             },
-            {"timestamp": datetime.now() - timedelta(minutes=10), "level": "INFO", "message": "Data loading completed"},
+            {
+                "timestamp": datetime.now() - timedelta(minutes=10),
+                "level": "INFO",
+                "message": "Data loading completed",
+            },
             {
                 "timestamp": datetime.now() - timedelta(minutes=2),
                 "level": "INFO",

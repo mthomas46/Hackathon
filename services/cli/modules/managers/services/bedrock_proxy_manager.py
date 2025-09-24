@@ -20,16 +20,28 @@ from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 class BedrockProxyManager(BaseManager):
     """Manager for bedrock proxy power-user operations."""
 
-    SUPPORTED_TEMPLATES = ["summary", "risks", "decisions", "pr_confidence", "life_of_ticket"]
+    SUPPORTED_TEMPLATES = [
+        "summary",
+        "risks",
+        "decisions",
+        "pr_confidence",
+        "life_of_ticket",
+    ]
     SUPPORTED_FORMATS = ["md", "txt", "json"]
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
         self.invocation_history = []
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for bedrock proxy operations."""
-        return [("1", "Template Management"), ("2", "Format Configuration"), ("3", "Invocation History")]
+        return [
+            ("1", "Template Management"),
+            ("2", "Format Configuration"),
+            ("3", "Invocation History"),
+        ]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -39,7 +51,9 @@ class BedrockProxyManager(BaseManager):
     async def bedrock_proxy_menu(self):
         """Main bedrock proxy menu."""
         while True:
-            menu = create_menu_table("Bedrock Proxy Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Bedrock Proxy Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -124,11 +138,16 @@ class BedrockProxyManager(BaseManager):
             }
 
             for template in self.SUPPORTED_TEMPLATES:
-                template_table.add_row(template, template_descriptions.get(template, "Custom template"))
+                template_table.add_row(
+                    template, template_descriptions.get(template, "Custom template")
+                )
 
             self.console.print(template_table)
 
-            template = Prompt.ask("[bold cyan]Select template[/bold cyan]", choices=self.SUPPORTED_TEMPLATES)
+            template = Prompt.ask(
+                "[bold cyan]Select template[/bold cyan]",
+                choices=self.SUPPORTED_TEMPLATES,
+            )
 
             # Prompt input
             prompt = Prompt.ask("[bold cyan]Enter prompt text[/bold cyan]")
@@ -136,8 +155,14 @@ class BedrockProxyManager(BaseManager):
             # Optional parameters
             model = Prompt.ask("[bold cyan]Model (optional)[/bold cyan]", default="")
             region = Prompt.ask("[bold cyan]Region (optional)[/bold cyan]", default="")
-            fmt = Prompt.ask("[bold cyan]Output format[/bold cyan]", default="md", choices=self.SUPPORTED_FORMATS)
-            title = Prompt.ask("[bold cyan]Custom title (optional)[/bold cyan]", default="")
+            fmt = Prompt.ask(
+                "[bold cyan]Output format[/bold cyan]",
+                default="md",
+                choices=self.SUPPORTED_FORMATS,
+            )
+            title = Prompt.ask(
+                "[bold cyan]Custom title (optional)[/bold cyan]", default=""
+            )
 
             # Build request
             request_data = {"prompt": prompt, "template": template, "format": fmt}
@@ -152,7 +177,9 @@ class BedrockProxyManager(BaseManager):
             with self.console.status(
                 f"[bold green]Invoking AI model with {template} template...[/bold green]"
             ) as status:
-                response = await self.clients.post_json("bedrock-proxy/invoke", request_data)
+                response = await self.clients.post_json(
+                    "bedrock-proxy/invoke", request_data
+                )
 
             if response:
                 # Store in history
@@ -168,7 +195,9 @@ class BedrockProxyManager(BaseManager):
                 self.invocation_history.append(invocation_record)
 
                 await self.display_ai_response(response, template, fmt)
-                self.console.print(f"[green]✅ AI invocation completed and stored in history[/green]")
+                self.console.print(
+                    f"[green]✅ AI invocation completed and stored in history[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to invoke AI model[/red]")
 
@@ -187,8 +216,14 @@ class BedrockProxyManager(BaseManager):
             # Optional parameters
             model = Prompt.ask("[bold cyan]Model (optional)[/bold cyan]", default="")
             region = Prompt.ask("[bold cyan]Region (optional)[/bold cyan]", default="")
-            fmt = Prompt.ask("[bold cyan]Output format[/bold cyan]", default="md", choices=self.SUPPORTED_FORMATS)
-            title = Prompt.ask("[bold cyan]Custom title (optional)[/bold cyan]", default="")
+            fmt = Prompt.ask(
+                "[bold cyan]Output format[/bold cyan]",
+                default="md",
+                choices=self.SUPPORTED_FORMATS,
+            )
+            title = Prompt.ask(
+                "[bold cyan]Custom title (optional)[/bold cyan]", default=""
+            )
 
             # Build request
             request_data = {"prompt": prompt, "format": fmt}
@@ -200,8 +235,12 @@ class BedrockProxyManager(BaseManager):
             if title:
                 request_data["title"] = title
 
-            with self.console.status("[bold green]Invoking AI model with custom prompt...[/bold green]") as status:
-                response = await self.clients.post_json("bedrock-proxy/invoke", request_data)
+            with self.console.status(
+                "[bold green]Invoking AI model with custom prompt...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "bedrock-proxy/invoke", request_data
+                )
 
             if response:
                 # Store in history
@@ -242,13 +281,21 @@ class BedrockProxyManager(BaseManager):
 
                 request_data = {"prompt": prompt, "template": template, "format": "md"}
 
-                response = await self.clients.post_json("bedrock-proxy/invoke", request_data)
+                response = await self.clients.post_json(
+                    "bedrock-proxy/invoke", request_data
+                )
 
                 if response:
-                    results.append({"template": template, "success": True, "response": response})
-                    self.console.print(f"[green]✅ {template} template test passed[/green]")
+                    results.append(
+                        {"template": template, "success": True, "response": response}
+                    )
+                    self.console.print(
+                        f"[green]✅ {template} template test passed[/green]"
+                    )
                 else:
-                    results.append({"template": template, "success": False, "response": None})
+                    results.append(
+                        {"template": template, "success": False, "response": None}
+                    )
                     self.console.print(f"[red]❌ {template} template test failed[/red]")
 
             # Display summary
@@ -273,7 +320,11 @@ class BedrockProxyManager(BaseManager):
                     if not result["success"]:
                         content += f"• {result['template']}\n"
 
-            print_panel(self.console, content, border_style="green" if success_count == total_count else "yellow")
+            print_panel(
+                self.console,
+                content,
+                border_style="green" if success_count == total_count else "yellow",
+            )
 
         except Exception as e:
             self.console.print(f"[red]Error testing templates: {e}[/red]")
@@ -281,8 +332,12 @@ class BedrockProxyManager(BaseManager):
     async def format_comparison(self):
         """Compare output formats for the same prompt."""
         try:
-            prompt = Prompt.ask("[bold cyan]Enter prompt to test all formats[/bold cyan]")
-            template = Prompt.ask("[bold cyan]Template (optional)[/bold cyan]", default="summary")
+            prompt = Prompt.ask(
+                "[bold cyan]Enter prompt to test all formats[/bold cyan]"
+            )
+            template = Prompt.ask(
+                "[bold cyan]Template (optional)[/bold cyan]", default="summary"
+            )
 
             if not prompt.strip():
                 self.console.print("[yellow]Prompt cannot be empty[/yellow]")
@@ -295,7 +350,9 @@ class BedrockProxyManager(BaseManager):
 
                 request_data = {"prompt": prompt, "template": template, "format": fmt}
 
-                response = await self.clients.post_json("bedrock-proxy/invoke", request_data)
+                response = await self.clients.post_json(
+                    "bedrock-proxy/invoke", request_data
+                )
 
                 if response:
                     format_results[fmt] = response
@@ -333,7 +390,9 @@ class BedrockProxyManager(BaseManager):
         """Test different model and region combinations."""
         try:
             prompt = Prompt.ask("[bold cyan]Enter test prompt[/bold cyan]")
-            template = Prompt.ask("[bold cyan]Template (optional)[/bold cyan]", default="summary")
+            template = Prompt.ask(
+                "[bold cyan]Template (optional)[/bold cyan]", default="summary"
+            )
 
             if not prompt.strip():
                 self.console.print("[yellow]Prompt cannot be empty[/yellow]")
@@ -350,7 +409,9 @@ class BedrockProxyManager(BaseManager):
             results = []
 
             for config in test_configs:
-                config_name = f"{config['model'] or 'default'}@{config['region'] or 'default'}"
+                config_name = (
+                    f"{config['model'] or 'default'}@{config['region'] or 'default'}"
+                )
                 self.console.print(f"[yellow]Testing {config_name}...[/yellow]")
 
                 request_data = {"prompt": prompt, "template": template, "format": "md"}
@@ -360,9 +421,17 @@ class BedrockProxyManager(BaseManager):
                 if config["region"]:
                     request_data["region"] = config["region"]
 
-                response = await self.clients.post_json("bedrock-proxy/invoke", request_data)
+                response = await self.clients.post_json(
+                    "bedrock-proxy/invoke", request_data
+                )
 
-                results.append({"config": config_name, "success": response is not None, "response": response})
+                results.append(
+                    {
+                        "config": config_name,
+                        "success": response is not None,
+                        "response": response,
+                    }
+                )
 
                 status = "✅" if response else "❌"
                 self.console.print(f"{status} {config_name}")
@@ -386,7 +455,9 @@ class BedrockProxyManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error testing models/regions: {e}[/red]")
 
-    async def display_ai_response(self, response: Dict[str, Any], template: str, fmt: str):
+    async def display_ai_response(
+        self, response: Dict[str, Any], template: str, fmt: str
+    ):
         """Display AI response in a formatted way."""
         if not response:
             self.console.print("[yellow]No response to display[/yellow]")
@@ -505,7 +576,10 @@ class BedrockProxyManager(BaseManager):
     async def view_template_details(self):
         """View detailed information about a specific template."""
         try:
-            template = Prompt.ask("[bold cyan]Select template to view[/bold cyan]", choices=self.SUPPORTED_TEMPLATES)
+            template = Prompt.ask(
+                "[bold cyan]Select template to view[/bold cyan]",
+                choices=self.SUPPORTED_TEMPLATES,
+            )
 
             # Get template details from test data or documentation
             template_details = {
@@ -525,7 +599,12 @@ class BedrockProxyManager(BaseManager):
                     "best_for": "Architecture documentation, governance, knowledge sharing",
                 },
                 "pr_confidence": {
-                    "sections": ["Inputs", "Extracted Endpoints", "Confidence", "Suggestions"],
+                    "sections": [
+                        "Inputs",
+                        "Extracted Endpoints",
+                        "Confidence",
+                        "Suggestions",
+                    ],
                     "sample_output": "Analyzes PR implementation confidence with endpoint validation",
                     "best_for": "Code review automation, quality gates, deployment validation",
                 },
@@ -559,7 +638,10 @@ class BedrockProxyManager(BaseManager):
     async def test_template_sample(self):
         """Test a template with sample data."""
         try:
-            template = Prompt.ask("[bold cyan]Select template to test[/bold cyan]", choices=self.SUPPORTED_TEMPLATES)
+            template = Prompt.ask(
+                "[bold cyan]Select template to test[/bold cyan]",
+                choices=self.SUPPORTED_TEMPLATES,
+            )
 
             # Use predefined sample prompts for each template
             sample_prompts = {
@@ -572,17 +654,25 @@ class BedrockProxyManager(BaseManager):
 
             prompt = sample_prompts.get(template, "Please provide a sample analysis.")
 
-            self.console.print(f"[yellow]Testing template '{template}' with sample prompt:[/yellow]")
+            self.console.print(
+                f"[yellow]Testing template '{template}' with sample prompt:[/yellow]"
+            )
             self.console.print(f"[dim]{prompt}[/dim]\n")
 
             request_data = {"prompt": prompt, "template": template, "format": "md"}
 
-            with self.console.status("[bold green]Testing template...[/bold green]") as status:
-                response = await self.clients.post_json("bedrock-proxy/invoke", request_data)
+            with self.console.status(
+                "[bold green]Testing template...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "bedrock-proxy/invoke", request_data
+                )
 
             if response:
                 await self.display_ai_response(response, template, "md")
-                self.console.print(f"[green]✅ Template '{template}' test completed[/green]")
+                self.console.print(
+                    f"[green]✅ Template '{template}' test completed[/green]"
+                )
             else:
                 self.console.print(f"[red]❌ Template '{template}' test failed[/red]")
 
@@ -592,7 +682,9 @@ class BedrockProxyManager(BaseManager):
     async def compare_template_outputs(self):
         """Compare outputs from different templates for the same prompt."""
         try:
-            prompt = Prompt.ask("[bold cyan]Enter prompt to compare across templates[/bold cyan]")
+            prompt = Prompt.ask(
+                "[bold cyan]Enter prompt to compare across templates[/bold cyan]"
+            )
 
             if not prompt.strip():
                 self.console.print("[yellow]Prompt cannot be empty[/yellow]")
@@ -605,7 +697,9 @@ class BedrockProxyManager(BaseManager):
 
                 request_data = {"prompt": prompt, "template": template, "format": "md"}
 
-                response = await self.clients.post_json("bedrock-proxy/invoke", request_data)
+                response = await self.clients.post_json(
+                    "bedrock-proxy/invoke", request_data
+                )
 
                 if response:
                     template_results[template] = response
@@ -632,12 +726,16 @@ class BedrockProxyManager(BaseManager):
             self.console.print(table)
 
             # Show detailed comparison if requested
-            show_details = Confirm.ask("[bold cyan]Show detailed comparison?[/bold cyan]", default=False)
+            show_details = Confirm.ask(
+                "[bold cyan]Show detailed comparison?[/bold cyan]", default=False
+            )
 
             if show_details:
                 for template, response in template_results.items():
                     if response:
-                        self.console.print(f"\n[bold]{template.upper()} Template Output:[/bold]")
+                        self.console.print(
+                            f"\n[bold]{template.upper()} Template Output:[/bold]"
+                        )
                         await self.display_ai_response(response, template, "md")
 
         except Exception as e:
@@ -670,17 +768,23 @@ class BedrockProxyManager(BaseManager):
 [bold green]Template Usage:[/bold green]
 """
 
-            for template, count in sorted(template_counts.items(), key=lambda x: x[1], reverse=True):
+            for template, count in sorted(
+                template_counts.items(), key=lambda x: x[1], reverse=True
+            ):
                 percentage = (count / len(self.invocation_history)) * 100
                 content += f"• {template}: {count} ({percentage:.1f}%)\n"
 
             content += f"\n[bold yellow]Format Usage:[/bold yellow]\n"
-            for fmt, count in sorted(format_counts.items(), key=lambda x: x[1], reverse=True):
+            for fmt, count in sorted(
+                format_counts.items(), key=lambda x: x[1], reverse=True
+            ):
                 percentage = (count / len(self.invocation_history)) * 100
                 content += f"• {fmt}: {count} ({percentage:.1f}%)\n"
 
             content += f"\n[bold cyan]Model Usage:[/bold cyan]\n"
-            for model, count in sorted(model_counts.items(), key=lambda x: x[1], reverse=True):
+            for model, count in sorted(
+                model_counts.items(), key=lambda x: x[1], reverse=True
+            ):
                 percentage = (count / len(self.invocation_history)) * 100
                 content += f"• {model}: {count} ({percentage:.1f}%)\n"
 
@@ -731,7 +835,12 @@ class BedrockProxyManager(BaseManager):
                 return
 
             limit = min(
-                int(Prompt.ask("[bold cyan]Number of recent invocations to show[/bold cyan]", default="10")),
+                int(
+                    Prompt.ask(
+                        "[bold cyan]Number of recent invocations to show[/bold cyan]",
+                        default="10",
+                    )
+                ),
                 len(self.invocation_history),
             )
 
@@ -764,12 +873,14 @@ class BedrockProxyManager(BaseManager):
             # Option to view details of a specific invocation
             if recent_history:
                 view_details = Confirm.ask(
-                    "[bold cyan]View details of a specific invocation?[/bold cyan]", default=False
+                    "[bold cyan]View details of a specific invocation?[/bold cyan]",
+                    default=False,
                 )
                 if view_details:
                     indices = [str(i + 1) for i in range(len(recent_history))]
                     choice = Prompt.ask(
-                        f"[bold cyan]Select invocation (1-{len(recent_history)})[/bold cyan]", choices=indices
+                        f"[bold cyan]Select invocation (1-{len(recent_history)})[/bold cyan]",
+                        choices=indices,
                     )
 
                     selected_record = recent_history[int(choice) - 1]
@@ -817,7 +928,9 @@ class BedrockProxyManager(BaseManager):
                 self.console.print("[yellow]No invocation history available[/yellow]")
                 return
 
-            search_term = Prompt.ask("[bold cyan]Search term (template, model, or prompt content)[/bold cyan]")
+            search_term = Prompt.ask(
+                "[bold cyan]Search term (template, model, or prompt content)[/bold cyan]"
+            )
 
             if not search_term.strip():
                 self.console.print("[yellow]Search term cannot be empty[/yellow]")
@@ -833,7 +946,9 @@ class BedrockProxyManager(BaseManager):
                     matching_records.append(record)
 
             if matching_records:
-                self.console.print(f"[green]Found {len(matching_records)} matching invocations[/green]")
+                self.console.print(
+                    f"[green]Found {len(matching_records)} matching invocations[/green]"
+                )
 
                 table = Table(title=f"Search Results for '{search_term}'")
                 table.add_column("Time", style="blue", no_wrap=True)
@@ -858,7 +973,9 @@ class BedrockProxyManager(BaseManager):
 
                 self.console.print(table)
             else:
-                self.console.print(f"[yellow]No invocations found matching '{search_term}'[/yellow]")
+                self.console.print(
+                    f"[yellow]No invocations found matching '{search_term}'[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error searching history: {e}[/red]")
@@ -870,7 +987,10 @@ class BedrockProxyManager(BaseManager):
                 self.console.print("[yellow]No invocation history to export[/yellow]")
                 return
 
-            file_path = Prompt.ask("[bold cyan]Export file path[/bold cyan]", default="bedrock_history.json")
+            file_path = Prompt.ask(
+                "[bold cyan]Export file path[/bold cyan]",
+                default="bedrock_history.json",
+            )
 
             # Prepare export data
             export_data = {
@@ -882,7 +1002,9 @@ class BedrockProxyManager(BaseManager):
             with open(file_path, "w") as f:
                 json.dump(export_data, f, indent=2, default=str)
 
-            self.console.print(f"[green]✅ Exported {len(self.invocation_history)} invocations to {file_path}[/green]")
+            self.console.print(
+                f"[green]✅ Exported {len(self.invocation_history)} invocations to {file_path}[/green]"
+            )
 
         except Exception as e:
             self.console.print(f"[red]Error exporting history: {e}[/red]")
@@ -967,17 +1089,23 @@ class BedrockProxyManager(BaseManager):
 [bold green]🎯 Template Usage[/bold green]
 """
 
-            for template, count in sorted(stats["templates_used"].items(), key=lambda x: x[1], reverse=True):
+            for template, count in sorted(
+                stats["templates_used"].items(), key=lambda x: x[1], reverse=True
+            ):
                 percentage = (count / stats["total_invocations"]) * 100
                 content += f"• {template}: {count} ({percentage:.1f}%)\n"
 
             content += f"\n[bold yellow]🤖 Model Usage[/bold yellow]\n"
-            for model, count in sorted(stats["models_used"].items(), key=lambda x: x[1], reverse=True):
+            for model, count in sorted(
+                stats["models_used"].items(), key=lambda x: x[1], reverse=True
+            ):
                 percentage = (count / stats["total_invocations"]) * 100
                 content += f"• {model}: {count} ({percentage:.1f}%)\n"
 
             content += f"\n[bold cyan]📄 Format Usage[/bold cyan]\n"
-            for fmt, count in sorted(stats["formats_used"].items(), key=lambda x: x[1], reverse=True):
+            for fmt, count in sorted(
+                stats["formats_used"].items(), key=lambda x: x[1], reverse=True
+            ):
                 percentage = (count / stats["total_invocations"]) * 100
                 content += f"• {fmt}: {count} ({percentage:.1f}%)\n"
 
@@ -989,7 +1117,9 @@ class BedrockProxyManager(BaseManager):
     async def model_performance_menu(self):
         """Model performance analysis submenu."""
         while True:
-            menu = create_menu_table("Model Performance Analysis", ["Option", "Description"])
+            menu = create_menu_table(
+                "Model Performance Analysis", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -1023,7 +1153,9 @@ class BedrockProxyManager(BaseManager):
     async def response_time_analysis(self):
         """Analyze response times (placeholder for future implementation)."""
         try:
-            self.console.print("[yellow]Response time analysis would measure AI model response times[/yellow]")
+            self.console.print(
+                "[yellow]Response time analysis would measure AI model response times[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1032,7 +1164,9 @@ class BedrockProxyManager(BaseManager):
     async def model_accuracy_comparison(self):
         """Compare model accuracy (placeholder)."""
         try:
-            self.console.print("[yellow]Model accuracy comparison would evaluate response quality[/yellow]")
+            self.console.print(
+                "[yellow]Model accuracy comparison would evaluate response quality[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1042,11 +1176,15 @@ class BedrockProxyManager(BaseManager):
         """Analyze template effectiveness."""
         try:
             if not self.invocation_history:
-                self.console.print("[yellow]No history available for template analysis[/yellow]")
+                self.console.print(
+                    "[yellow]No history available for template analysis[/yellow]"
+                )
                 return
 
             # Analyze template usage and success patterns
-            template_stats = defaultdict(lambda: {"count": 0, "success": 0, "avg_sections": 0})
+            template_stats = defaultdict(
+                lambda: {"count": 0, "success": 0, "avg_sections": 0}
+            )
 
             for record in self.invocation_history:
                 template = record.get("template", "unknown")
@@ -1058,7 +1196,9 @@ class BedrockProxyManager(BaseManager):
                     template_stats[template]["success"] += 1
                     sections = len(response)
                     template_stats[template]["avg_sections"] = (
-                        template_stats[template]["avg_sections"] * (template_stats[template]["count"] - 1) + sections
+                        template_stats[template]["avg_sections"]
+                        * (template_stats[template]["count"] - 1)
+                        + sections
                     ) / template_stats[template]["count"]
 
             # Display effectiveness analysis
@@ -1068,19 +1208,34 @@ class BedrockProxyManager(BaseManager):
             table.add_column("Success Rate", style="yellow", justify="right")
             table.add_column("Avg Sections", style="blue", justify="right")
 
-            for template, stats in sorted(template_stats.items(), key=lambda x: x[1]["count"], reverse=True):
-                success_rate = (stats["success"] / stats["count"]) * 100 if stats["count"] > 0 else 0
-                table.add_row(template, str(stats["count"]), f"{success_rate:.1f}%", f"{stats['avg_sections']:.1f}")
+            for template, stats in sorted(
+                template_stats.items(), key=lambda x: x[1]["count"], reverse=True
+            ):
+                success_rate = (
+                    (stats["success"] / stats["count"]) * 100
+                    if stats["count"] > 0
+                    else 0
+                )
+                table.add_row(
+                    template,
+                    str(stats["count"]),
+                    f"{success_rate:.1f}%",
+                    f"{stats['avg_sections']:.1f}",
+                )
 
             self.console.print(table)
 
         except Exception as e:
-            self.console.print(f"[red]Error analyzing template effectiveness: {e}[/red]")
+            self.console.print(
+                f"[red]Error analyzing template effectiveness: {e}[/red]"
+            )
 
     async def cost_analysis(self):
         """Analyze costs (placeholder)."""
         try:
-            self.console.print("[yellow]Cost analysis would track AI API usage costs[/yellow]")
+            self.console.print(
+                "[yellow]Cost analysis would track AI API usage costs[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1089,7 +1244,9 @@ class BedrockProxyManager(BaseManager):
     async def performance_trends(self):
         """Show performance trends (placeholder)."""
         try:
-            self.console.print("[yellow]Performance trends would show usage patterns over time[/yellow]")
+            self.console.print(
+                "[yellow]Performance trends would show usage patterns over time[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1132,7 +1289,9 @@ class BedrockProxyManager(BaseManager):
     async def process_multiple_prompts(self):
         """Process multiple prompts in batch."""
         try:
-            self.console.print("[yellow]Batch processing would handle multiple prompts efficiently[/yellow]")
+            self.console.print(
+                "[yellow]Batch processing would handle multiple prompts efficiently[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1141,7 +1300,9 @@ class BedrockProxyManager(BaseManager):
     async def bulk_template_testing(self):
         """Bulk template testing."""
         try:
-            self.console.print("[yellow]Bulk template testing would validate all templates systematically[/yellow]")
+            self.console.print(
+                "[yellow]Bulk template testing would validate all templates systematically[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1150,7 +1311,9 @@ class BedrockProxyManager(BaseManager):
     async def batch_file_processing(self):
         """Process prompts from file."""
         try:
-            self.console.print("[yellow]Batch file processing would handle input files with multiple prompts[/yellow]")
+            self.console.print(
+                "[yellow]Batch file processing would handle input files with multiple prompts[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1170,7 +1333,9 @@ class BedrockProxyManager(BaseManager):
     async def batch_results_analysis(self):
         """Analyze batch processing results."""
         try:
-            self.console.print("[yellow]Batch results analysis would provide insights from bulk operations[/yellow]")
+            self.console.print(
+                "[yellow]Batch results analysis would provide insights from bulk operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1236,7 +1401,9 @@ class BedrockProxyManager(BaseManager):
     async def configuration_settings(self):
         """View proxy configuration."""
         try:
-            self.console.print("[yellow]Configuration settings would show current proxy parameters[/yellow]")
+            self.console.print(
+                "[yellow]Configuration settings would show current proxy parameters[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1268,7 +1435,9 @@ class BedrockProxyManager(BaseManager):
     async def rate_limiting_status(self):
         """Show rate limiting status."""
         try:
-            self.console.print("[yellow]Rate limiting status would show current usage limits[/yellow]")
+            self.console.print(
+                "[yellow]Rate limiting status would show current usage limits[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1277,7 +1446,9 @@ class BedrockProxyManager(BaseManager):
     async def proxy_logs(self):
         """View proxy service logs."""
         try:
-            self.console.print("[yellow]Proxy logs would show bedrock proxy internal operations[/yellow]")
+            self.console.print(
+                "[yellow]Proxy logs would show bedrock proxy internal operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1286,8 +1457,12 @@ class BedrockProxyManager(BaseManager):
     async def invoke_ai_from_cli(self, request_data: Dict[str, Any]):
         """Invoke AI model for CLI usage."""
         try:
-            with self.console.status("[bold green]Invoking AI model...[/bold green]") as status:
-                response = await self.clients.post_json("bedrock-proxy/invoke", request_data)
+            with self.console.status(
+                "[bold green]Invoking AI model...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "bedrock-proxy/invoke", request_data
+                )
 
             if response:
                 # Store in history
@@ -1307,7 +1482,9 @@ class BedrockProxyManager(BaseManager):
                 self.invocation_history.append(invocation_record)
 
                 await self.display_ai_response(
-                    response, request_data.get("template", "custom"), request_data.get("format", "md")
+                    response,
+                    request_data.get("template", "custom"),
+                    request_data.get("format", "md"),
                 )
                 self.console.print("[green]✅ AI invocation completed[/green]")
             else:

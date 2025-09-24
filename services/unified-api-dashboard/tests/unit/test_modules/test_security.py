@@ -35,7 +35,10 @@ class TestUserManager:
     async def test_create_user(self, user_manager):
         """Test user creation."""
         user = await user_manager.create_user(
-            username="testuser", email="test@example.com", password="password123", role=UserRole.DEVELOPER
+            username="testuser",
+            email="test@example.com",
+            password="password123",
+            role=UserRole.DEVELOPER,
         )
 
         assert user.username == "testuser"
@@ -47,10 +50,14 @@ class TestUserManager:
     async def test_authenticate_user_success(self, user_manager):
         """Test successful user authentication."""
         # First create a user
-        await user_manager.create_user("testuser", "test@example.com", "password123", UserRole.DEVELOPER)
+        await user_manager.create_user(
+            "testuser", "test@example.com", "password123", UserRole.DEVELOPER
+        )
 
         # Test authentication
-        user = await user_manager.authenticate_user("testuser", "admin")  # Using simple auth for demo
+        user = await user_manager.authenticate_user(
+            "testuser", "admin"
+        )  # Using simple auth for demo
         assert user is not None
         assert user.username == "testuser"
 
@@ -63,7 +70,9 @@ class TestUserManager:
     @pytest.mark.asyncio
     async def test_get_user(self, user_manager):
         """Test user retrieval."""
-        created_user = await user_manager.create_user("testuser", "test@example.com", "pass", UserRole.DEVELOPER)
+        created_user = await user_manager.create_user(
+            "testuser", "test@example.com", "pass", UserRole.DEVELOPER
+        )
         retrieved_user = await user_manager.get_user(created_user.user_id)
 
         assert retrieved_user.user_id == created_user.user_id
@@ -113,7 +122,9 @@ class TestAuthenticationManager:
         mock_user.role = Mock(value="developer")
         mock_user.permissions = set()
 
-        with patch.object(auth_manager.user_manager, "authenticate_user", return_value=mock_user):
+        with patch.object(
+            auth_manager.user_manager, "authenticate_user", return_value=mock_user
+        ):
             token = await auth_manager.login("testuser", "password")
             assert token is not None
 
@@ -178,7 +189,9 @@ class TestAuthorizationManager:
         mock_user.permissions = set(Permission)
         mock_user_manager.get_user.return_value = mock_user
 
-        has_perm = await authz_manager.check_permission("user123", Permission.API_CATALOG_READ)
+        has_perm = await authz_manager.check_permission(
+            "user123", Permission.API_CATALOG_READ
+        )
         assert has_perm == True
 
     @pytest.mark.asyncio
@@ -189,8 +202,12 @@ class TestAuthorizationManager:
         mock_user.permissions = {Permission.API_CATALOG_READ, Permission.ANALYTICS_READ}
         mock_user_manager.get_user.return_value = mock_user
 
-        has_read_perm = await authz_manager.check_permission("user123", Permission.API_CATALOG_READ)
-        has_write_perm = await authz_manager.check_permission("user123", Permission.API_CATALOG_WRITE)
+        has_read_perm = await authz_manager.check_permission(
+            "user123", Permission.API_CATALOG_READ
+        )
+        has_write_perm = await authz_manager.check_permission(
+            "user123", Permission.API_CATALOG_WRITE
+        )
 
         assert has_read_perm == True
         assert has_write_perm == False
@@ -202,18 +219,24 @@ class TestAuthorizationManager:
         mock_user.role = UserRole.DEVELOPER
         mock_user_manager.get_user.return_value = mock_user
 
-        authorized, reason = await authz_manager.authorize_api_call("user123", "GET", "/api/catalog")
+        authorized, reason = await authz_manager.authorize_api_call(
+            "user123", "GET", "/api/catalog"
+        )
         assert authorized == True
         assert reason == "Read access granted"
 
     @pytest.mark.asyncio
-    async def test_authorize_api_call_write_denied(self, authz_manager, mock_user_manager):
+    async def test_authorize_api_call_write_denied(
+        self, authz_manager, mock_user_manager
+    ):
         """Test API authorization denial for write operations."""
         mock_user = Mock()
         mock_user.role = UserRole.GUEST
         mock_user_manager.get_user.return_value = mock_user
 
-        authorized, reason = await authz_manager.authorize_api_call("user123", "POST", "/api/catalog")
+        authorized, reason = await authz_manager.authorize_api_call(
+            "user123", "POST", "/api/catalog"
+        )
         assert authorized == False
         assert "Access denied" in reason
 
@@ -230,7 +253,11 @@ class TestAuditLogger:
     async def test_log_event(self, audit_logger):
         """Test audit event logging."""
         event_id = await audit_logger.log_event(
-            AuditEventType.AUTH_LOGIN, "user123", "testuser", resource="/api/login", action="login_success"
+            AuditEventType.AUTH_LOGIN,
+            "user123",
+            "testuser",
+            resource="/api/login",
+            action="login_success",
         )
 
         assert event_id is not None
@@ -247,8 +274,12 @@ class TestAuditLogger:
     async def test_get_events(self, audit_logger):
         """Test audit event retrieval."""
         # Log some events
-        await audit_logger.log_event(AuditEventType.API_ACCESS, "user1", "user1", resource="/api/test")
-        await audit_logger.log_event(AuditEventType.API_ACCESS, "user2", "user2", resource="/api/other")
+        await audit_logger.log_event(
+            AuditEventType.API_ACCESS, "user1", "user1", resource="/api/test"
+        )
+        await audit_logger.log_event(
+            AuditEventType.API_ACCESS, "user2", "user2", resource="/api/other"
+        )
 
         events = await audit_logger.get_events()
         assert len(events) == 2
@@ -360,7 +391,9 @@ class TestPermissionManager:
         """Test permission granting."""
         from ....modules.security.auth import Permission
 
-        grant_id = await permission_manager.grant_permission("granter123", "grantee123", {Permission.API_CATALOG_READ})
+        grant_id = await permission_manager.grant_permission(
+            "granter123", "grantee123", {Permission.API_CATALOG_READ}
+        )
 
         assert grant_id is not None
         assert len(permission_manager.grants) == 1
@@ -369,7 +402,9 @@ class TestPermissionManager:
     async def test_revoke_permission(self, permission_manager):
         """Test permission revocation."""
         # First grant a permission
-        grant_id = await permission_manager.grant_permission("granter123", "grantee123", {Permission.API_CATALOG_READ})
+        grant_id = await permission_manager.grant_permission(
+            "granter123", "grantee123", {Permission.API_CATALOG_READ}
+        )
 
         # Then revoke it
         result = await permission_manager.revoke_permission(grant_id)
@@ -390,12 +425,18 @@ class TestAccessControlManager:
     @pytest.mark.asyncio
     async def test_evaluate_access_default_allow(self, access_control_manager):
         """Test access evaluation with default allow."""
-        from ....modules.security.access_control import AccessRequest, Resource, ResourceType
+        from ....modules.security.access_control import (
+            AccessRequest,
+            Resource,
+            ResourceType,
+        )
 
         request = AccessRequest(
             user=Mock(user_id="user123", role=UserRole.DEVELOPER),
             resource=Resource(
-                resource_id="test_resource", resource_type=ResourceType.API_ENDPOINT, owner_id="owner123"
+                resource_id="test_resource",
+                resource_type=ResourceType.API_ENDPOINT,
+                owner_id="owner123",
             ),
             action="read",
         )

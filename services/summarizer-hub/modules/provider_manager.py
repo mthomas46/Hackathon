@@ -30,7 +30,10 @@ class ProviderManager:
             content = (prompt + "\n\n" if prompt else "") + text
             return f"[{provider_name}]\n" + content
         output = await impl(provider_config, prompt, text)
-        return output or f"[{provider_name}]\n" + ((prompt + "\n\n") if prompt else "") + text
+        return (
+            output
+            or f"[{provider_name}]\n" + ((prompt + "\n\n") if prompt else "") + text
+        )
 
 
 # Create singleton instance

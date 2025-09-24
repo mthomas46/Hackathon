@@ -8,12 +8,18 @@ import httpx
 from ..core.config.config import get_config_value
 
 
-async def post_log(level: str, message: str, service: str, context: Optional[Dict[str, Any]] = None) -> None:
+async def post_log(
+    level: str, message: str, service: str, context: Optional[Dict[str, Any]] = None
+) -> None:
     """Asynchronously send a log item to log-collector. Never raises.
 
     Honors LOG_COLLECTOR_URL; when set to http://testserver, uses in-process ASGI transport.
     """
-    url = str(get_config_value("LOG_COLLECTOR_URL", "", section=None, env_key="LOG_COLLECTOR_URL")).strip()
+    url = str(
+        get_config_value(
+            "LOG_COLLECTOR_URL", "", section=None, env_key="LOG_COLLECTOR_URL"
+        )
+    ).strip()
     if not url:
         return
     payload = {
@@ -42,7 +48,9 @@ async def post_log(level: str, message: str, service: str, context: Optional[Dic
         return
 
 
-def fire_and_forget(level: str, message: str, service: str, context: Optional[Dict[str, Any]] = None) -> None:
+def fire_and_forget(
+    level: str, message: str, service: str, context: Optional[Dict[str, Any]] = None
+) -> None:
     """Schedule non-blocking log emission; safe to call from sync/async contexts."""
     try:
         loop = asyncio.get_running_loop()

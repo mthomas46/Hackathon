@@ -180,7 +180,15 @@ class IntentRecognizer:
             # Create patterns for service-specific actions
             for capability in capabilities:
                 capability.replace("_", " ").split()
-                action_words = ["analyze", "check", "create", "find", "generate", "process", "scan"]
+                action_words = [
+                    "analyze",
+                    "check",
+                    "create",
+                    "find",
+                    "generate",
+                    "process",
+                    "scan",
+                ]
 
                 # Create intent patterns for service + capability combinations
                 for action in action_words:
@@ -225,16 +233,26 @@ class IntentRecognizer:
                     match = re.search(pattern, query_lower, re.IGNORECASE)
                     if match:
                         # Enhanced scoring with ecosystem context
-                        score = self._calculate_intent_score(intent, query_lower, match, pattern)
-                        intent_metadata[intent] = {"pattern": pattern, "match": match.group(), "score": score}
+                        score = self._calculate_intent_score(
+                            intent, query_lower, match, pattern
+                        )
+                        intent_metadata[intent] = {
+                            "pattern": pattern,
+                            "match": match.group(),
+                            "score": score,
+                        }
 
                         if score > best_score:
                             best_score = score
                             best_intent = intent
 
             # Use ecosystem context for additional intent recognition
-            if best_score < 0.7:  # If confidence is low, try ecosystem-aware recognition
-                ecosystem_intent, ecosystem_score, ecosystem_meta = self._recognize_with_ecosystem_context(query_lower)
+            if (
+                best_score < 0.7
+            ):  # If confidence is low, try ecosystem-aware recognition
+                ecosystem_intent, ecosystem_score, ecosystem_meta = (
+                    self._recognize_with_ecosystem_context(query_lower)
+                )
                 if ecosystem_score > best_score:
                     best_intent = ecosystem_intent
                     best_score = ecosystem_score
@@ -246,18 +264,26 @@ class IntentRecognizer:
             # Add ecosystem context to entities
             entities["ecosystem_context"] = {
                 "detected_services": self._detect_services_in_query(query_lower),
-                "detected_capabilities": self._detect_capabilities_in_query(query_lower),
-                "suggested_workflows": self._suggest_workflows(query_lower, best_intent),
+                "detected_capabilities": self._detect_capabilities_in_query(
+                    query_lower
+                ),
+                "suggested_workflows": self._suggest_workflows(
+                    query_lower, best_intent
+                ),
             }
 
             return best_intent, best_score, entities
 
         except Exception as e:
             # Return unknown intent with error context on failure
-            handle_interpreter_error("recognize intent", e, query_length=len(query), **context)
+            handle_interpreter_error(
+                "recognize intent", e, query_length=len(query), **context
+            )
             return "unknown", 0.0, {"error": str(e)}
 
-    def _calculate_intent_score(self, intent: str, query: str, match, pattern: str) -> float:
+    def _calculate_intent_score(
+        self, intent: str, query: str, match, pattern: str
+    ) -> float:
         """Calculate intent confidence score with enhanced logic."""
         base_score = 0.6
 
@@ -268,12 +294,25 @@ class IntentRecognizer:
             base_score = 0.9
 
         # Medium-high confidence for action verbs
-        action_verbs = ["analyze", "check", "review", "examine", "create", "find", "generate", "process", "scan"]
+        action_verbs = [
+            "analyze",
+            "check",
+            "review",
+            "examine",
+            "create",
+            "find",
+            "generate",
+            "process",
+            "scan",
+        ]
         if any(verb in query for verb in action_verbs):
             base_score = max(base_score, 0.8)
 
         # Boost for service-specific patterns
-        if "_" in intent and any(service in intent for service in ecosystem_context.service_capabilities.keys()):
+        if "_" in intent and any(
+            service in intent
+            for service in ecosystem_context.service_capabilities.keys()
+        ):
             base_score += 0.1
 
         # Reduce score for very short matches
@@ -282,7 +321,9 @@ class IntentRecognizer:
 
         return min(base_score, 1.0)
 
-    def _recognize_with_ecosystem_context(self, query: str) -> Tuple[str, float, Dict[str, Any]]:
+    def _recognize_with_ecosystem_context(
+        self, query: str
+    ) -> Tuple[str, float, Dict[str, Any]]:
         """Use ecosystem context for intent recognition when pattern matching is uncertain."""
         best_intent = "unknown"
         best_score = 0.0
@@ -293,7 +334,9 @@ class IntentRecognizer:
         if detected_services:
             # Try to infer intent based on mentioned services
             for service in detected_services:
-                service_capabilities = ecosystem_context.service_capabilities.get(service, {}).get("capabilities", [])
+                service_capabilities = ecosystem_context.service_capabilities.get(
+                    service, {}
+                ).get("capabilities", [])
                 for capability in service_capabilities:
                     # Look for capability-related words in query
                     capability_words = capability.replace("_", " ").split()
@@ -303,10 +346,15 @@ class IntentRecognizer:
                         if score > best_score:
                             best_score = score
                             best_intent = intent
-                            metadata = {"detected_service": service, "detected_capability": capability}
+                            metadata = {
+                                "detected_service": service,
+                                "detected_capability": capability,
+                            }
 
         # Check for workflow-related queries
-        if any(word in query for word in ["workflow", "process", "pipeline", "automation"]):
+        if any(
+            word in query for word in ["workflow", "process", "pipeline", "automation"]
+        ):
             best_intent = "execute_workflow"
             best_score = 0.8
             metadata = {"workflow_focus": True}
@@ -316,7 +364,10 @@ class IntentRecognizer:
     def _detect_services_in_query(self, query: str) -> List[str]:
         """Detect service mentions in the query."""
         detected = []
-        for service_name, service_info in ecosystem_context.service_capabilities.items():
+        for (
+            service_name,
+            service_info,
+        ) in ecosystem_context.service_capabilities.items():
             aliases = service_info.get("aliases", [])
             all_names = [service_name.replace("_", " ")] + aliases
 
@@ -372,11 +423,15 @@ class IntentRecognizer:
 
         # Add intent-specific context
         if intent:
-            entities["intent_context"] = self._extract_intent_specific_entities(query, intent)
+            entities["intent_context"] = self._extract_intent_specific_entities(
+                query, intent
+            )
 
         return entities
 
-    def _extract_intent_specific_entities(self, query: str, intent: str) -> Dict[str, Any]:
+    def _extract_intent_specific_entities(
+        self, query: str, intent: str
+    ) -> Dict[str, Any]:
         """Extract entities specific to the detected intent."""
         context_entities = {}
 
@@ -393,7 +448,9 @@ class IntentRecognizer:
         elif intent.startswith("ingest_"):
             # Extract source information
             context_entities["source_type"] = intent.replace("ingest_", "")
-            context_entities["source_urls"] = self.extract_entities(query).get("url", [])
+            context_entities["source_urls"] = self.extract_entities(query).get(
+                "url", []
+            )
 
         elif intent == "find_prompt":
             # Extract prompt search criteria
@@ -434,5 +491,7 @@ class IntentRecognizer:
 
         except Exception as e:
             # Return empty entities with error context on failure
-            handle_interpreter_error("extract entities", e, query_length=len(query), **context)
+            handle_interpreter_error(
+                "extract entities", e, query_length=len(query), **context
+            )
             return {"error": str(e)}

@@ -11,7 +11,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from .hateoas import Links
 
@@ -68,7 +70,9 @@ class SimulationResponse:
         """Initialize simulation response."""
         self.success = success
         self.data = data
-        self.message = message or ("Operation successful" if success else "Operation failed")
+        self.message = message or (
+            "Operation successful" if success else "Operation failed"
+        )
         self.error_code = error_code
         self.status = status
         self.links = links
@@ -172,10 +176,15 @@ class SimulationResponseBuilder:
         )
 
     @staticmethod
-    def no_content(message: Optional[str] = None, links: Optional[Links] = None) -> SimulationResponse:
+    def no_content(
+        message: Optional[str] = None, links: Optional[Links] = None
+    ) -> SimulationResponse:
         """Create a no content response."""
         return SimulationResponse(
-            success=True, message=message or "Operation completed", status=HTTPStatus.NO_CONTENT, links=links
+            success=True,
+            message=message or "Operation completed",
+            status=HTTPStatus.NO_CONTENT,
+            links=links,
         )
 
     @staticmethod
@@ -197,7 +206,9 @@ class SimulationResponseBuilder:
 
     @staticmethod
     def not_found(
-        resource_type: str = "Resource", resource_id: Optional[str] = None, links: Optional[Links] = None
+        resource_type: str = "Resource",
+        resource_id: Optional[str] = None,
+        links: Optional[Links] = None,
     ) -> SimulationResponse:
         """Create a not found error response."""
         message = f"{resource_type} not found"
@@ -205,7 +216,11 @@ class SimulationResponseBuilder:
             message += f": {resource_id}"
 
         return SimulationResponse(
-            success=False, message=message, error_code="RESOURCE_NOT_FOUND", status=HTTPStatus.NOT_FOUND, links=links
+            success=False,
+            message=message,
+            error_code="RESOURCE_NOT_FOUND",
+            status=HTTPStatus.NOT_FOUND,
+            links=links,
         )
 
     @staticmethod
@@ -248,7 +263,9 @@ class SimulationResponseBuilder:
 
     @staticmethod
     def too_many_requests(
-        message: str = "Rate limit exceeded", retry_after: Optional[int] = None, links: Optional[Links] = None
+        message: str = "Rate limit exceeded",
+        retry_after: Optional[int] = None,
+        links: Optional[Links] = None,
     ) -> SimulationResponse:
         """Create a too many requests error response."""
         meta = {}
@@ -307,7 +324,9 @@ class SimulationResponseBuilder:
 
 
 # Convenience functions for common responses
-def ok_response(data: Optional[Any] = None, message: str = "OK", links: Optional[Links] = None) -> SimulationResponse:
+def ok_response(
+    data: Optional[Any] = None, message: str = "OK", links: Optional[Links] = None
+) -> SimulationResponse:
     """Create a standard OK response."""
     return SimulationResponseBuilder.success(data, message, HTTPStatus.OK, links)
 
@@ -419,7 +438,10 @@ def paginated_response(
         pagination_meta.update(meta)
 
     return SimulationResponseBuilder.success(
-        data={"items": items}, message=f"Retrieved {len(items)} items", links=links, meta=pagination_meta
+        data={"items": items},
+        message=f"Retrieved {len(items)} items",
+        links=links,
+        meta=pagination_meta,
     )
 
 

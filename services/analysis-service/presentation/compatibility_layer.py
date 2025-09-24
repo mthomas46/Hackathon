@@ -79,7 +79,11 @@ def add_deprecation_warning(
             {
                 "type": "deprecation",
                 "message": f"Endpoint '{endpoint}' is deprecated",
-                "recommended_action": f"Use '{new_endpoint}' instead" if new_endpoint else "Migrate to new API version",
+                "recommended_action": (
+                    f"Use '{new_endpoint}' instead"
+                    if new_endpoint
+                    else "Migrate to new API version"
+                ),
             }
         )
 
@@ -97,7 +101,11 @@ def ensure_backward_compatibility(response: Any) -> Any:
 
     # Add metadata for compatibility
     if isinstance(response_dict, dict):
-        response_dict["_compatibility"] = {"version": "legacy", "ddd_backend": True, "maintained_until": "2026-09-17"}
+        response_dict["_compatibility"] = {
+            "version": "legacy",
+            "ddd_backend": True,
+            "maintained_until": "2026-09-17",
+        }
 
     return response_dict
 
@@ -241,9 +249,13 @@ async def legacy_maintenance_forecast_endpoint(request: MaintenanceForecastReque
 async def legacy_portfolio_maintenance_forecast_endpoint(request: Dict[str, Any]):
     """LEGACY: Portfolio maintenance forecast - Original endpoint preserved."""
     try:
-        result = await AnalysisController.analyze_portfolio_maintenance_forecast(request)
+        result = await AnalysisController.analyze_portfolio_maintenance_forecast(
+            request
+        )
         result = ensure_backward_compatibility(result)
-        result = add_deprecation_warning(result, "/analyze/maintenance/forecast/portfolio")
+        result = add_deprecation_warning(
+            result, "/analyze/maintenance/forecast/portfolio"
+        )
         return result
     except Exception as e:
         logger.error(f"Error in legacy portfolio maintenance forecast endpoint: {e}")
@@ -269,7 +281,9 @@ async def legacy_portfolio_quality_degradation_endpoint(request: Dict[str, Any])
     try:
         result = await AnalysisController.analyze_portfolio_quality_degradation(request)
         result = ensure_backward_compatibility(result)
-        result = add_deprecation_warning(result, "/analyze/quality/degradation/portfolio")
+        result = add_deprecation_warning(
+            result, "/analyze/quality/degradation/portfolio"
+        )
         return result
     except Exception as e:
         logger.error(f"Error in legacy portfolio quality degradation endpoint: {e}")
@@ -713,7 +727,9 @@ async def legacy_natural_language_analysis_endpoint(request: Dict[str, Any]):
     try:
         result = await IntegrationController.natural_language_analysis(request)
         result = ensure_backward_compatibility(result)
-        result = add_deprecation_warning(result, "/integration/natural-language-analysis")
+        result = add_deprecation_warning(
+            result, "/integration/natural-language-analysis"
+        )
         return result
     except Exception as e:
         logger.error(f"Error in legacy natural language analysis endpoint: {e}")

@@ -91,11 +91,17 @@ class QueryInterpreterService:
         parameters = self._extract_parameters(query.query, best_intent, entities)
 
         # Generate suggestions
-        suggested_actions = self._generate_suggested_actions(best_intent, confidence_level)
-        clarification_questions = self._generate_clarification_questions(best_intent, confidence_level)
+        suggested_actions = self._generate_suggested_actions(
+            best_intent, confidence_level
+        )
+        clarification_questions = self._generate_clarification_questions(
+            best_intent, confidence_level
+        )
 
         # Alternative interpretations
-        alternative_interpretations = self._generate_alternatives(intent_matches, best_intent)
+        alternative_interpretations = self._generate_alternatives(
+            intent_matches, best_intent
+        )
 
         return QueryInterpretation(
             query_id=query.query_id,
@@ -135,13 +141,17 @@ class QueryInterpreterService:
 
         return intent_scores
 
-    def _select_best_intent(self, intent_matches: Dict[QueryIntent, float]) -> Tuple[QueryIntent, float]:
+    def _select_best_intent(
+        self, intent_matches: Dict[QueryIntent, float]
+    ) -> Tuple[QueryIntent, float]:
         """Select the best intent match."""
         if not intent_matches:
             return QueryIntent.UNKNOWN, 0.0
 
         # Sort by score, then by priority
-        sorted_intents = sorted(intent_matches.items(), key=lambda x: (x[1], x[0].priority), reverse=True)
+        sorted_intents = sorted(
+            intent_matches.items(), key=lambda x: (x[1], x[0].priority), reverse=True
+        )
 
         best_intent, best_score = sorted_intents[0]
 
@@ -157,7 +167,9 @@ class QueryInterpreterService:
             return QueryType.CONVERSATIONAL
         elif query.query.startswith(("run ", "execute ", "start ", "create ")):
             return QueryType.COMMAND
-        elif "?" in query.query or query.query.lower().startswith(("what ", "how ", "why ", "when ", "where ", "who ")):
+        elif "?" in query.query or query.query.lower().startswith(
+            ("what ", "how ", "why ", "when ", "where ", "who ")
+        ):
             return QueryType.NATURAL_LANGUAGE
         else:
             return QueryType.STRUCTURED
@@ -169,25 +181,33 @@ class QueryInterpreterService:
         # Simple entity extraction based on intent
         if intent == QueryIntent.SEARCH_DOCUMENTS:
             # Look for document types or topics
-            doc_types = re.findall(r"\b(document|file|paper|article|report)\b", query_text, re.IGNORECASE)
+            doc_types = re.findall(
+                r"\b(document|file|paper|article|report)\b", query_text, re.IGNORECASE
+            )
             if doc_types:
                 entities["document_type"] = doc_types[0].lower()
 
         elif intent == QueryIntent.CHECK_STATUS:
             # Look for service or component names
-            services = re.findall(r"\b(orchestrator|analyzer|store|gateway)\b", query_text, re.IGNORECASE)
+            services = re.findall(
+                r"\b(orchestrator|analyzer|store|gateway)\b", query_text, re.IGNORECASE
+            )
             if services:
                 entities["service_name"] = services[0].lower()
 
         elif intent == QueryIntent.EXECUTE_WORKFLOW:
             # Look for workflow names or types
-            workflow_indicators = re.findall(r"\b(workflow|process|task|job)\b", query_text, re.IGNORECASE)
+            workflow_indicators = re.findall(
+                r"\b(workflow|process|task|job)\b", query_text, re.IGNORECASE
+            )
             if workflow_indicators:
                 entities["workflow_type"] = workflow_indicators[0].lower()
 
         return entities
 
-    def _extract_parameters(self, query_text: str, intent: QueryIntent, entities: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_parameters(
+        self, query_text: str, intent: QueryIntent, entities: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Extract parameters for execution."""
         parameters = {}
 
@@ -195,26 +215,36 @@ class QueryInterpreterService:
             # For executable intents, try to extract actionable parameters
             if intent == QueryIntent.EXECUTE_WORKFLOW:
                 # Look for workflow identifiers - more specific patterns
-                workflow_id_match = re.search(r"\b(workflow|analysis)[_-]?(\w+)\b", query_text, re.IGNORECASE)
+                workflow_id_match = re.search(
+                    r"\b(workflow|analysis)[_-]?(\w+)\b", query_text, re.IGNORECASE
+                )
                 if workflow_id_match:
                     parameters["workflow_id"] = workflow_id_match.group(0)
                 else:
                     # Look for any identifier after the intent words
                     words = query_text.lower().split()
                     for i, word in enumerate(words):
-                        if word in ["workflow", "analysis", "process"] and i + 1 < len(words):
+                        if word in ["workflow", "analysis", "process"] and i + 1 < len(
+                            words
+                        ):
                             parameters["workflow_id"] = words[i + 1]
                             break
 
             elif intent == QueryIntent.SEARCH_DOCUMENTS:
                 # Look for search terms
-                search_terms = re.findall(r'"([^"]*)"|\b(\w+)\b(?=\s+(?:in|about|for|on))', query_text)
+                search_terms = re.findall(
+                    r'"([^"]*)"|\b(\w+)\b(?=\s+(?:in|about|for|on))', query_text
+                )
                 if search_terms:
-                    parameters["search_terms"] = [term for group in search_terms for term in group if term]
+                    parameters["search_terms"] = [
+                        term for group in search_terms for term in group if term
+                    ]
 
         return parameters
 
-    def _generate_suggested_actions(self, intent: QueryIntent, confidence: QueryConfidence) -> List[str]:
+    def _generate_suggested_actions(
+        self, intent: QueryIntent, confidence: QueryConfidence
+    ) -> List[str]:
         """Generate suggested actions based on intent and confidence."""
         actions = []
 
@@ -229,7 +259,9 @@ class QueryInterpreterService:
 
         return actions
 
-    def _generate_clarification_questions(self, intent: QueryIntent, confidence: QueryConfidence) -> List[str]:
+    def _generate_clarification_questions(
+        self, intent: QueryIntent, confidence: QueryConfidence
+    ) -> List[str]:
         """Generate clarification questions if needed."""
         questions = []
 
@@ -253,13 +285,23 @@ class QueryInterpreterService:
 
         # Include intents with reasonable confidence (top 3, excluding the best)
         sorted_intents = sorted(
-            [(intent, score) for intent, score in intent_matches.items() if intent != best_intent],
+            [
+                (intent, score)
+                for intent, score in intent_matches.items()
+                if intent != best_intent
+            ],
             key=lambda x: x[1],
             reverse=True,
         )
 
         for intent, score in sorted_intents[:3]:
             if score > 0.2:  # Minimum threshold for alternatives
-                alternatives.append({"intent": intent.value, "confidence_score": score, "description": str(intent)})
+                alternatives.append(
+                    {
+                        "intent": intent.value,
+                        "confidence_score": score,
+                        "description": str(intent),
+                    }
+                )
 
         return alternatives

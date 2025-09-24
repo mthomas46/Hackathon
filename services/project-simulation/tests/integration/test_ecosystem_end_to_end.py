@@ -39,7 +39,13 @@ class TestCompleteSimulationWorkflow:
             },
             "timeline": {
                 "duration_weeks": 12,
-                "milestones": ["planning", "design", "development", "testing", "deployment"],
+                "milestones": [
+                    "planning",
+                    "design",
+                    "development",
+                    "testing",
+                    "deployment",
+                ],
                 "iterations": 4,
             },
             "goals": [
@@ -68,19 +74,35 @@ class TestCompleteSimulationWorkflow:
         execution_events = []
 
         def record_event(event_type, data):
-            execution_events.append({"type": event_type, "timestamp": time.time(), "data": data})
+            execution_events.append(
+                {"type": event_type, "timestamp": time.time(), "data": data}
+            )
 
         # Simulate phase progression
-        phases = ["initialization", "planning", "design", "development", "testing", "deployment"]
+        phases = [
+            "initialization",
+            "planning",
+            "design",
+            "development",
+            "testing",
+            "deployment",
+        ]
         for i, phase in enumerate(phases):
-            record_event("phase_started", {"phase": phase, "simulation_id": simulation_id})
+            record_event(
+                "phase_started", {"phase": phase, "simulation_id": simulation_id}
+            )
 
             # Simulate phase work
             await asyncio.sleep(0.01)  # Minimal delay to simulate work
 
             record_event(
                 "phase_completed",
-                {"phase": phase, "simulation_id": simulation_id, "duration": 0.01, "artifacts_generated": i + 1},
+                {
+                    "phase": phase,
+                    "simulation_id": simulation_id,
+                    "duration": 0.01,
+                    "artifacts_generated": i + 1,
+                },
             )
 
         # Step 4: Generate documents during simulation
@@ -124,12 +146,21 @@ class TestCompleteSimulationWorkflow:
             ]
             for activity in activities:
                 team_activities.append(
-                    {"member": member, "activity": activity, "timestamp": time.time(), "duration_hours": 2}
+                    {
+                        "member": member,
+                        "activity": activity,
+                        "timestamp": time.time(),
+                        "duration_hours": 2,
+                    }
                 )
 
         # Step 6: Generate analysis and insights
         analysis_results = {
-            "quality_metrics": {"documentation_completeness": 0.92, "code_quality_score": 0.88, "test_coverage": 0.85},
+            "quality_metrics": {
+                "documentation_completeness": 0.92,
+                "code_quality_score": 0.88,
+                "test_coverage": 0.85,
+            },
             "team_performance": {
                 "productivity_index": 0.91,
                 "collaboration_score": 0.87,
@@ -138,7 +169,10 @@ class TestCompleteSimulationWorkflow:
             "risk_assessment": {
                 "technical_risks": ["scalability", "security"],
                 "schedule_risks": ["dependency_delays"],
-                "mitigation_strategies": ["agile_methodology", "continuous_integration"],
+                "mitigation_strategies": [
+                    "agile_methodology",
+                    "continuous_integration",
+                ],
             },
         }
 
@@ -155,13 +189,19 @@ class TestCompleteSimulationWorkflow:
             "phases_completed": len(phases),
             "documents_generated": len(documents_generated),
             "team_activities": len(team_activities),
-            "success_metrics": {"on_time_delivery": True, "quality_standards_met": True, "budget_adherence": 0.95},
+            "success_metrics": {
+                "on_time_delivery": True,
+                "quality_standards_met": True,
+                "budget_adherence": 0.95,
+            },
         }
 
         record_event("simulation_completed", completion_data)
 
         # Step 8: Validate complete workflow
-        assert len(execution_events) >= 15  # At least initialization + phases + completion
+        assert (
+            len(execution_events) >= 15
+        )  # At least initialization + phases + completion
         assert len(documents_generated) == len(document_types)
         assert len(team_activities) == len(team_members) * 6  # 6 activities per member
 
@@ -187,7 +227,12 @@ class TestCompleteSimulationWorkflow:
         def simulate_service_failure(service_name, error_type):
             """Simulate service failure during simulation."""
             failure_events.append(
-                {"service": service_name, "error": error_type, "timestamp": time.time(), "recovered": False}
+                {
+                    "service": service_name,
+                    "error": error_type,
+                    "timestamp": time.time(),
+                    "recovered": False,
+                }
             )
 
             # Simulate recovery
@@ -219,7 +264,14 @@ class TestCompleteSimulationWorkflow:
                     time.sleep(0.005)  # Simulate work
             except Exception as e:
                 failed_steps += 1
-                failure_events.append({"service": step, "error": str(e), "timestamp": time.time(), "recovered": False})
+                failure_events.append(
+                    {
+                        "service": step,
+                        "error": str(e),
+                        "timestamp": time.time(),
+                        "recovered": False,
+                    }
+                )
 
         # Validate failure handling
         assert failed_steps > 0, "Should have some failures for testing"
@@ -345,13 +397,22 @@ class TestCrossServiceDataConsistency:
             # Validate simulation ID consistency
             event_sim_id = event["data"].get("simulation_id")
             if event_sim_id:
-                assert event_sim_id == simulation_id, f"Simulation ID mismatch in {event['id']}"
+                assert (
+                    event_sim_id == simulation_id
+                ), f"Simulation ID mismatch in {event['id']}"
 
             event_sequence.append(event["type"])
 
         # Validate logical sequence
-        expected_sequence = ["simulation_started", "document_generated", "analysis_completed", "simulation_completed"]
-        assert event_sequence == expected_sequence, f"Event sequence incorrect: {event_sequence}"
+        expected_sequence = [
+            "simulation_started",
+            "document_generated",
+            "analysis_completed",
+            "simulation_completed",
+        ]
+        assert (
+            event_sequence == expected_sequence
+        ), f"Event sequence incorrect: {event_sequence}"
 
         # Validate timestamps are monotonic
         timestamps = [e["timestamp"] for e in events]
@@ -369,7 +430,12 @@ class TestCrossServiceDataConsistency:
             "project_repository": {
                 "team_size": 8,
                 "active_members": ["alice", "bob", "carol", "dave"],
-                "roles_assigned": {"alice": "developer", "bob": "qa", "carol": "designer", "dave": "developer"},
+                "roles_assigned": {
+                    "alice": "developer",
+                    "bob": "qa",
+                    "carol": "designer",
+                    "dave": "developer",
+                },
             },
             "timeline_service": {
                 "assigned_tasks": {
@@ -382,7 +448,11 @@ class TestCrossServiceDataConsistency:
         }
 
         # Validate data consistency
-        team_sizes = [data.get("team_size") for data in team_data_sources.values() if "team_size" in data]
+        team_sizes = [
+            data.get("team_size")
+            for data in team_data_sources.values()
+            if "team_size" in data
+        ]
         if team_sizes:
             assert len(set(team_sizes)) == 1, "Team size inconsistent across services"
 
@@ -426,7 +496,11 @@ class TestServiceFailureScenarios:
                     "warning": "Service operating in degraded mode",
                 }
             elif health["status"] == "healthy":
-                return {"status": "success", "service": service_name, "response_time": health["response_time"]}
+                return {
+                    "status": "success",
+                    "service": service_name,
+                    "response_time": health["response_time"],
+                }
             else:
                 raise Exception(f"Service {service_name} unavailable")
 
@@ -449,7 +523,9 @@ class TestServiceFailureScenarios:
         assert len(responses) == len(requests)
 
         # Check that degraded service still works but with warning
-        analysis_response = next(r for r in responses if r.get("service") == "analysis_service")
+        analysis_response = next(
+            r for r in responses if r.get("service") == "analysis_service"
+        )
         assert analysis_response["status"] == "success_with_warning"
         assert "warning" in analysis_response
 
@@ -474,7 +550,12 @@ class TestServiceFailureScenarios:
             """Simulate service failure with isolation."""
             service_status[service_name] = "failed"
             failure_isolation_events.append(
-                {"service": service_name, "failure_type": failure_type, "timestamp": time.time(), "isolated": True}
+                {
+                    "service": service_name,
+                    "failure_type": failure_type,
+                    "timestamp": time.time(),
+                    "isolated": True,
+                }
             )
 
             # Check dependent services
@@ -494,8 +575,14 @@ class TestServiceFailureScenarios:
         simulate_service_failure("doc_store", "database_connection_lost")
 
         # Check that dependent services handled the failure
-        doc_store_failures = [e for e in failure_isolation_events if e.get("failed_dependency") == "doc_store"]
-        assert len(doc_store_failures) >= 2, "Dependent services should handle doc_store failure"
+        doc_store_failures = [
+            e
+            for e in failure_isolation_events
+            if e.get("failed_dependency") == "doc_store"
+        ]
+        assert (
+            len(doc_store_failures) >= 2
+        ), "Dependent services should handle doc_store failure"
 
         # Validate isolation
         isolation_events = [e for e in failure_isolation_events if e.get("isolated")]
@@ -544,20 +631,27 @@ class TestServiceFailureScenarios:
                     "strategy": scenario["recovery_strategy"],
                     "actual_recovery_time": recovery_time,
                     "expected_recovery_time": scenario["expected_recovery_time"],
-                    "recovery_successful": recovery_time < scenario["expected_recovery_time"],
+                    "recovery_successful": recovery_time
+                    < scenario["expected_recovery_time"],
                 }
             )
 
         # Validate recovery results
-        successful_recoveries = [r for r in recovery_results if r["recovery_successful"]]
-        assert len(successful_recoveries) > 0, "Should have at least one successful recovery"
+        successful_recoveries = [
+            r for r in recovery_results if r["recovery_successful"]
+        ]
+        assert (
+            len(successful_recoveries) > 0
+        ), "Should have at least one successful recovery"
 
         # Different strategies should have different recovery times
         strategies = set(r["strategy"] for r in recovery_results)
         assert len(strategies) >= 2, "Should test multiple recovery strategies"
 
         print("✅ Service recovery patterns validated")
-        print(f"   Successful recoveries: {len(successful_recoveries)}/{len(recovery_results)}")
+        print(
+            f"   Successful recoveries: {len(successful_recoveries)}/{len(recovery_results)}"
+        )
 
 
 class TestEcosystemIntegrationMetrics:
@@ -597,18 +691,27 @@ class TestEcosystemIntegrationMetrics:
             key = f"{from_service}->{to_service}"
             if key not in interaction_metrics["service_interactions"]:
                 interaction_metrics["service_interactions"][key] = []
-            interaction_metrics["service_interactions"][key].append({"status": status, "response_time": response_time})
+            interaction_metrics["service_interactions"][key].append(
+                {"status": status, "response_time": response_time}
+            )
 
         # Calculate metrics
         if response_times:
-            interaction_metrics["average_response_time"] = sum(response_times) / len(response_times)
+            interaction_metrics["average_response_time"] = sum(response_times) / len(
+                response_times
+            )
 
-        success_rate = interaction_metrics["successful_requests"] / interaction_metrics["total_requests"]
+        success_rate = (
+            interaction_metrics["successful_requests"]
+            / interaction_metrics["total_requests"]
+        )
 
         # Validate metrics
         assert interaction_metrics["total_requests"] == len(interactions)
         assert success_rate >= 0.6, f"Success rate too low: {success_rate:.2f}"
-        assert interaction_metrics["average_response_time"] < 1.0, "Average response time too high"
+        assert (
+            interaction_metrics["average_response_time"] < 1.0
+        ), "Average response time too high"
 
         # Should have multiple service interactions
         assert len(interaction_metrics["service_interactions"]) >= 3
@@ -616,7 +719,9 @@ class TestEcosystemIntegrationMetrics:
         print("✅ Service interaction metrics validated")
         print(f"   Total requests: {interaction_metrics['total_requests']}")
         print(f"   Success rate: {success_rate:.2f}")
-        print(f"   Average response time: {interaction_metrics['average_response_time']:.3f}s")
+        print(
+            f"   Average response time: {interaction_metrics['average_response_time']:.3f}s"
+        )
 
     def test_data_flow_consistency(self):
         """Test consistency of data flow through the ecosystem."""
@@ -657,7 +762,9 @@ class TestEcosystemIntegrationMetrics:
 
             # Validate that service added expected fields
             for field in service_config["adds_fields"]:
-                assert field in current_data, f"Service {service_config['service']} should add field {field}"
+                assert (
+                    field in current_data
+                ), f"Service {service_config['service']} should add field {field}"
 
         # Validate final data structure
         assert "status" in current_data
@@ -667,7 +774,9 @@ class TestEcosystemIntegrationMetrics:
 
         # Validate data integrity
         assert current_data["id"] == "req_123"  # Original ID preserved
-        assert current_data["project_config"]["name"] == "Test Project"  # Original data preserved
+        assert (
+            current_data["project_config"]["name"] == "Test Project"
+        )  # Original data preserved
 
         print("✅ Data flow consistency validated")
 
@@ -685,7 +794,10 @@ def mock_service_ecosystem():
     }
 
     # Configure mock behaviors
-    services["mock_data_generator"].generate_document.return_value = {"id": "doc_123", "content": "test"}
+    services["mock_data_generator"].generate_document.return_value = {
+        "id": "doc_123",
+        "content": "test",
+    }
     services["analysis_service"].analyze.return_value = {"quality_score": 0.85}
     services["doc_store"].store.return_value = {"status": "stored"}
 
@@ -697,7 +809,17 @@ def simulation_test_data():
     """Create test data for simulation workflows."""
     return {
         "simulation_id": "test_sim_001",
-        "project_config": {"name": "Test E-commerce Platform", "type": "web_application", "complexity": "complex"},
-        "team_config": {"size": 6, "roles": ["developer", "qa", "designer", "product_manager"]},
-        "timeline_config": {"duration_weeks": 8, "phases": ["planning", "design", "development", "testing"]},
+        "project_config": {
+            "name": "Test E-commerce Platform",
+            "type": "web_application",
+            "complexity": "complex",
+        },
+        "team_config": {
+            "size": 6,
+            "roles": ["developer", "qa", "designer", "product_manager"],
+        },
+        "timeline_config": {
+            "duration_weeks": 8,
+            "phases": ["planning", "design", "development", "testing"],
+        },
     }

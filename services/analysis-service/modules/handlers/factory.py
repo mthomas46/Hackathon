@@ -2,14 +2,10 @@
 
 from typing import Dict, List, Optional, Type
 
-from services.shared.core.di.registry import get_service
-from services.shared.core.di.services import (
-    ICacheService,
-    IEventPublisher,
-    ILoggerService,
-    IMetricsService,
-    IServiceClient,
-)
+# Using standardized shared services
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.intelligent_caching import get_service_cache
+from services.shared.integrations.clients.clients import ServiceClients
 
 from .base_handler import BaseAnalysisHandler
 from .cross_repository_handler import CrossRepositoryAnalysisHandler
@@ -113,7 +109,9 @@ class HandlerFactory:
         """Get list of available handler types."""
         return list(self._handler_classes.keys())
 
-    def register_handler(self, handler_type: str, handler_class: Type[BaseAnalysisHandler]) -> None:
+    def register_handler(
+        self, handler_type: str, handler_class: Type[BaseAnalysisHandler]
+    ) -> None:
         """Register a custom handler type."""
         self._handler_classes[handler_type] = handler_class
 
@@ -130,7 +128,10 @@ class HandlerFactory:
                 handler = self.create_handler(handler_type)
                 handlers[handler_type] = handler
             except Exception as e:
-                await self._logger.warning(f"Failed to create handler {handler_type}: {e}", handler_type=handler_type)
+                await self._logger.warning(
+                    f"Failed to create handler {handler_type}: {e}",
+                    handler_type=handler_type,
+                )
         return handlers
 
 

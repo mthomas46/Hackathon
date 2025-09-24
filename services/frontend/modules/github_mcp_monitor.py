@@ -63,7 +63,9 @@ class GithubMcpMonitor:
                 "last_updated": utc_now().isoformat(),
             }
 
-    async def get_available_tools(self, toolsets: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_available_tools(
+        self, toolsets: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """Get list of available GitHub MCP tools."""
         try:
             clients = get_frontend_clients()
@@ -99,7 +101,9 @@ class GithubMcpMonitor:
             if correlation_id:
                 payload["correlation_id"] = correlation_id
 
-            response = await clients.post_json(f"{mcp_url}/tools/{tool_name}/invoke", payload)
+            response = await clients.post_json(
+                f"{mcp_url}/tools/{tool_name}/invoke", payload
+            )
 
             if response.get("success") or "result" in response:
                 # Cache the invocation
@@ -128,10 +132,20 @@ class GithubMcpMonitor:
                     "result": response,
                 }
 
-            return {"success": False, "error": "Tool invocation failed", "tool": tool_name, "result": response}
+            return {
+                "success": False,
+                "error": "Tool invocation failed",
+                "tool": tool_name,
+                "result": response,
+            }
 
         except Exception as e:
-            return {"success": False, "error": str(e), "tool": tool_name, "result": None}
+            return {
+                "success": False,
+                "error": str(e),
+                "tool": tool_name,
+                "result": None,
+            }
 
     def _calculate_tool_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached tool invocations."""

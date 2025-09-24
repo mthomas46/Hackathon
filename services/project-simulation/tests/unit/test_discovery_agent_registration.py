@@ -24,7 +24,9 @@ class TestDiscoveryAgentRegistration:
         """Setup test fixtures."""
         self.mock_registry = Mock(spec=ServiceRegistry)
         self.mock_http_client = Mock(spec=httpx.AsyncClient)
-        self.discovery_agent = DiscoveryAgent(registry=self.mock_registry, http_client=self.mock_http_client)
+        self.discovery_agent = DiscoveryAgent(
+            registry=self.mock_registry, http_client=self.mock_http_client
+        )
 
     @pytest.mark.asyncio
     async def test_register_simulation_service_endpoints(self):
@@ -43,7 +45,9 @@ class TestDiscoveryAgentRegistration:
         ]
 
         # Act
-        await self.discovery_agent.register_simulation_service(service_name=service_name, base_url=base_url)
+        await self.discovery_agent.register_simulation_service(
+            service_name=service_name, base_url=base_url
+        )
 
         # Assert
         self.mock_registry.register_service.assert_called_once()
@@ -56,7 +60,9 @@ class TestDiscoveryAgentRegistration:
         # Verify specific endpoints are registered
         endpoint_paths = [ep.path for ep in call_args.endpoints]
         for expected_path in expected_endpoints:
-            assert expected_path in endpoint_paths, f"Expected endpoint {expected_path} not found"
+            assert (
+                expected_path in endpoint_paths
+            ), f"Expected endpoint {expected_path} not found"
 
     @pytest.mark.asyncio
     async def test_discover_simulation_service_health(self):
@@ -92,12 +98,15 @@ class TestDiscoveryAgentRegistration:
     async def test_handle_service_registration_failure(self):
         """Test handling service registration failures gracefully."""
         # Arrange
-        self.mock_registry.register_service.side_effect = Exception("Registration failed")
+        self.mock_registry.register_service.side_effect = Exception(
+            "Registration failed"
+        )
 
         # Act & Assert
         with pytest.raises(Exception, match="Registration failed"):
             await self.discovery_agent.register_simulation_service(
-                service_name="project-simulation", base_url="http://project-simulation:5075"
+                service_name="project-simulation",
+                base_url="http://project-simulation:5075",
             )
 
     @pytest.mark.asyncio
@@ -105,7 +114,9 @@ class TestDiscoveryAgentRegistration:
         """Test updating service endpoints when they change."""
         # Arrange
         service_name = "project-simulation"
-        original_endpoints = [ServiceEndpoint(path="/api/v1/simulations", method="POST")]
+        original_endpoints = [
+            ServiceEndpoint(path="/api/v1/simulations", method="POST")
+        ]
         updated_endpoints = [
             ServiceEndpoint(path="/api/v1/simulations", method="POST"),
             ServiceEndpoint(path="/api/v1/simulations/{id}/execute", method="POST"),
@@ -113,20 +124,28 @@ class TestDiscoveryAgentRegistration:
 
         # Mock existing registration
         existing_registration = ServiceRegistration(
-            service_name=service_name, base_url="http://project-simulation:5075", endpoints=original_endpoints
+            service_name=service_name,
+            base_url="http://project-simulation:5075",
+            endpoints=original_endpoints,
         )
         self.mock_registry.get_service.return_value = existing_registration
 
         # Act
-        await self.discovery_agent.update_service_endpoints(service_name=service_name, new_endpoints=updated_endpoints)
+        await self.discovery_agent.update_service_endpoints(
+            service_name=service_name, new_endpoints=updated_endpoints
+        )
 
         # Assert
         self.mock_registry.update_service.assert_called_once()
         call_args = self.mock_registry.update_service.call_args[0]
-        updated_registration = call_args[1]  # Second argument should be updated registration
+        updated_registration = call_args[
+            1
+        ]  # Second argument should be updated registration
 
         assert len(updated_registration.endpoints) == 2
-        assert updated_registration.endpoints[1].path == "/api/v1/simulations/{id}/execute"
+        assert (
+            updated_registration.endpoints[1].path == "/api/v1/simulations/{id}/execute"
+        )
 
     @pytest.mark.asyncio
     async def test_validate_endpoint_accessibility(self):
@@ -151,8 +170,12 @@ class TestDiscoveryAgentRegistration:
         assert all(result.is_accessible for result in validation_results)
 
         # Verify HTTP calls were made (implementation sends empty JSON for POST)
-        self.mock_http_client.post.assert_called_with("http://project-simulation:5075/api/v1/simulations", json={})
-        self.mock_http_client.get.assert_called_with("http://project-simulation:5075/api/v1/interpreter/capabilities")
+        self.mock_http_client.post.assert_called_with(
+            "http://project-simulation:5075/api/v1/simulations", json={}
+        )
+        self.mock_http_client.get.assert_called_with(
+            "http://project-simulation:5075/api/v1/interpreter/capabilities"
+        )
 
     @pytest.mark.asyncio
     async def test_service_discovery_with_fallback(self):
@@ -174,15 +197,21 @@ class TestDiscoveryAgentRegistration:
         self.mock_http_client.get.return_value.json.return_value = fallback_response
 
         # Act
-        discovered_service = await self.discovery_agent.discover_service_with_fallback(service_name=service_name)
+        discovered_service = await self.discovery_agent.discover_service_with_fallback(
+            service_name=service_name
+        )
 
         # Assert
         assert discovered_service is not None
         assert discovered_service.service_name == service_name
-        assert discovered_service.status == "found"  # Implementation returns "found" for successful discovery
+        assert (
+            discovered_service.status == "found"
+        )  # Implementation returns "found" for successful discovery
 
         # Verify fallback was attempted
-        self.mock_http_client.get.assert_called_with(f"http://discovery-agent:8080/api/v1/services/{service_name}")
+        self.mock_http_client.get.assert_called_with(
+            f"http://discovery-agent:8080/api/v1/services/{service_name}"
+        )
 
 
 class TestServiceRegistry:
@@ -215,8 +244,12 @@ class TestServiceRegistry:
         """Test listing all registered services."""
         # Arrange
         services = [
-            ServiceRegistration(service_name="service1", base_url="http://service1:8080", endpoints=[]),
-            ServiceRegistration(service_name="service2", base_url="http://service2:8081", endpoints=[]),
+            ServiceRegistration(
+                service_name="service1", base_url="http://service1:8080", endpoints=[]
+            ),
+            ServiceRegistration(
+                service_name="service2", base_url="http://service2:8081", endpoints=[]
+            ),
         ]
 
         for service in services:

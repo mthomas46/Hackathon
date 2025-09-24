@@ -73,7 +73,10 @@ class LogEntry:
     def from_dict(cls, data: Dict[str, Any]) -> "LogEntry":
         """Create LogEntry from dictionary."""
         return cls(
-            id=data.get("id", str(hashlib.md5(json.dumps(data, sort_keys=True).encode()).hexdigest())),
+            id=data.get(
+                "id",
+                str(hashlib.md5(json.dumps(data, sort_keys=True).encode()).hexdigest()),
+            ),
             timestamp=data.get("timestamp", time.time()),
             level=data.get("level", "INFO"),
             service_name=data.get("service_name", "unknown"),
@@ -180,26 +183,44 @@ class MemoryLogStorage(LogStorageBackend):
 
         # Apply filters
         if query.service_name:
-            filtered_logs = [log for log in filtered_logs if log.service_name == query.service_name]
+            filtered_logs = [
+                log for log in filtered_logs if log.service_name == query.service_name
+            ]
         if query.level:
             filtered_logs = [log for log in filtered_logs if log.level == query.level]
         if query.correlation_id:
-            filtered_logs = [log for log in filtered_logs if log.correlation_id == query.correlation_id]
+            filtered_logs = [
+                log
+                for log in filtered_logs
+                if log.correlation_id == query.correlation_id
+            ]
         if query.operation:
-            filtered_logs = [log for log in filtered_logs if log.operation == query.operation]
+            filtered_logs = [
+                log for log in filtered_logs if log.operation == query.operation
+            ]
         if query.start_time:
-            filtered_logs = [log for log in filtered_logs if log.timestamp >= query.start_time]
+            filtered_logs = [
+                log for log in filtered_logs if log.timestamp >= query.start_time
+            ]
         if query.end_time:
-            filtered_logs = [log for log in filtered_logs if log.timestamp <= query.end_time]
+            filtered_logs = [
+                log for log in filtered_logs if log.timestamp <= query.end_time
+            ]
         if query.message_contains:
-            filtered_logs = [log for log in filtered_logs if query.message_contains.lower() in log.message.lower()]
+            filtered_logs = [
+                log
+                for log in filtered_logs
+                if query.message_contains.lower() in log.message.lower()
+            ]
 
         # Apply ordering
         if query.order_by == "timestamp":
             filtered_logs.sort(key=lambda x: x.timestamp, reverse=query.order_desc)
         elif query.order_by == "level":
             level_order = {level.value: i for i, level in enumerate(LogLevel)}
-            filtered_logs.sort(key=lambda x: level_order.get(x.level, 99), reverse=query.order_desc)
+            filtered_logs.sort(
+                key=lambda x: level_order.get(x.level, 99), reverse=query.order_desc
+            )
 
         # Apply pagination
         start_idx = query.offset
@@ -269,7 +290,9 @@ class SQLiteLogStorage(LogStorageBackend):
             )
             conn.execute("CREATE INDEX IF NOT EXISTS idx_timestamp ON logs(timestamp)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_service ON logs(service_name)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_correlation ON logs(correlation_id)")
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_correlation ON logs(correlation_id)"
+            )
             conn.execute("CREATE INDEX IF NOT EXISTS idx_level ON logs(level)")
 
     async def store_log(self, log_entry: LogEntry) -> None:
@@ -281,8 +304,8 @@ class SQLiteLogStorage(LogStorageBackend):
                     """
                     INSERT OR REPLACE INTO logs
                     (id, timestamp, level, service_name, message, correlation_id,
-                     operation, user_id, session_id, request_id, extra_data,
-                     stack_trace, performance_data, tags)
+                    operation, user_id, session_id, request_id, extra_data,
+                    stack_trace, performance_data, tags)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                     (
@@ -298,7 +321,11 @@ class SQLiteLogStorage(LogStorageBackend):
                         log_entry.request_id,
                         json.dumps(log_entry.extra_data),
                         log_entry.stack_trace,
-                        json.dumps(log_entry.performance_data) if log_entry.performance_data else None,
+                        (
+                            json.dumps(log_entry.performance_data)
+                            if log_entry.performance_data
+                            else None
+                        ),
                         json.dumps(log_entry.tags),
                     ),
                 )
@@ -338,7 +365,9 @@ class SQLiteLogStorage(LogStorageBackend):
                     params.append(f"%{query.message_contains}%")
 
                 where_clause = " AND ".join(conditions) if conditions else "1=1"
-                order_clause = f"ORDER BY {query.order_by} {'DESC' if query.order_desc else 'ASC'}"
+                order_clause = (
+                    f"ORDER BY {query.order_by} {'DESC' if query.order_desc else 'ASC'}"
+                )
                 limit_clause = f"LIMIT {query.limit} OFFSET {query.offset}"
 
                 sql = f"SELECT * FROM logs WHERE {where_clause} {order_clause} {limit_clause}"
@@ -363,7 +392,9 @@ class SQLiteLogStorage(LogStorageBackend):
             request_id=row["request_id"],
             extra_data=json.loads(row["extra_data"]) if row["extra_data"] else {},
             stack_trace=row["stack_trace"],
-            performance_data=json.loads(row["performance_data"]) if row["performance_data"] else None,
+            performance_data=(
+                json.loads(row["performance_data"]) if row["performance_data"] else None
+            ),
             tags=json.loads(row["tags"]) if row["tags"] else [],
         )
 
@@ -393,7 +424,9 @@ class SQLiteLogStorage(LogStorageBackend):
                 ).fetchall()
 
                 # Get database file size
-                db_size = os.path.getsize(self.db_path) if os.path.exists(self.db_path) else 0
+                db_size = (
+                    os.path.getsize(self.db_path) if os.path.exists(self.db_path) else 0
+                )
 
                 return {
                     "storage_type": "sqlite",
@@ -411,7 +444,9 @@ class SQLiteLogStorage(LogStorageBackend):
 
         def _cleanup():
             with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.execute("DELETE FROM logs WHERE timestamp < ?", (cutoff_time,))
+                cursor = conn.execute(
+                    "DELETE FROM logs WHERE timestamp < ?", (cutoff_time,)
+                )
                 return cursor.rowcount
 
         return await asyncio.get_event_loop().run_in_executor(None, _cleanup)
@@ -460,7 +495,9 @@ class FileLogStorage(LogStorageBackend):
 
         current_date = start_datetime
         while current_date <= end_datetime:
-            log_file = self.log_directory / f"logs_{current_date.strftime('%Y-%m-%d')}.jsonl"
+            log_file = (
+                self.log_directory / f"logs_{current_date.strftime('%Y-%m-%d')}.jsonl"
+            )
 
             if log_file.exists():
                 file_results = await self._query_file(log_file, query)
@@ -515,7 +552,10 @@ class FileLogStorage(LogStorageBackend):
             return False
         if query.end_time and entry.timestamp > query.end_time:
             return False
-        if query.message_contains and query.message_contains.lower() not in entry.message.lower():
+        if (
+            query.message_contains
+            and query.message_contains.lower() not in entry.message.lower()
+        ):
             return False
         return True
 
@@ -541,7 +581,9 @@ class FileLogStorage(LogStorageBackend):
                             if line.strip():
                                 try:
                                     data = json.loads(line)
-                                    service_counts[data.get("service_name", "unknown")] += 1
+                                    service_counts[
+                                        data.get("service_name", "unknown")
+                                    ] += 1
                                     level_counts[data.get("level", "INFO")] += 1
                                 except json.JSONDecodeError:
                                     continue
@@ -567,13 +609,21 @@ class FileLogStorage(LogStorageBackend):
 
             for log_file in self.log_directory.glob("logs_*.jsonl"):
                 # Extract date from filename
-                date_match = re.search(r"logs_(\d{4}-\d{2}-\d{2})\.jsonl", log_file.name)
+                date_match = re.search(
+                    r"logs_(\d{4}-\d{2}-\d{2})\.jsonl", log_file.name
+                )
                 if date_match:
                     file_date = datetime.strptime(date_match.group(1), "%Y-%m-%d")
                     if file_date < cutoff_date:
                         # Archive if configured
-                        if retention_policy.archive_path and retention_policy.compression_enabled:
-                            archive_file = Path(retention_policy.archive_path) / f"{log_file.name}.gz"
+                        if (
+                            retention_policy.archive_path
+                            and retention_policy.compression_enabled
+                        ):
+                            archive_file = (
+                                Path(retention_policy.archive_path)
+                                / f"{log_file.name}.gz"
+                            )
                             archive_file.parent.mkdir(exist_ok=True)
 
                             with open(log_file, "rb") as f_in:
@@ -629,21 +679,35 @@ class CentralizedLoggingService:
 
     async def get_correlation_logs(self, correlation_id: str) -> List[LogEntry]:
         """Get all logs for a specific correlation ID."""
-        return await self.query_logs(correlation_id=correlation_id, order_by="timestamp")
+        return await self.query_logs(
+            correlation_id=correlation_id, order_by="timestamp"
+        )
 
     async def get_error_logs(
-        self, service_name: Optional[str] = None, start_time: Optional[float] = None, limit: int = 100
+        self,
+        service_name: Optional[str] = None,
+        start_time: Optional[float] = None,
+        limit: int = 100,
     ) -> List[LogEntry]:
         """Get error and critical logs."""
         return await self.query_logs(
-            service_name=service_name, level="ERROR", start_time=start_time, limit=limit, order_desc=True
+            service_name=service_name,
+            level="ERROR",
+            start_time=start_time,
+            limit=limit,
+            order_desc=True,
         )
 
     async def get_performance_logs(
-        self, service_name: Optional[str] = None, operation: Optional[str] = None, start_time: Optional[float] = None
+        self,
+        service_name: Optional[str] = None,
+        operation: Optional[str] = None,
+        start_time: Optional[float] = None,
     ) -> List[LogEntry]:
         """Get performance-related logs."""
-        logs = await self.query_logs(service_name=service_name, operation=operation, start_time=start_time)
+        logs = await self.query_logs(
+            service_name=service_name, operation=operation, start_time=start_time
+        )
 
         # Filter for logs with performance data
         return [log for log in logs if log.performance_data]
@@ -660,7 +724,9 @@ class CentralizedLoggingService:
         service_health = {}
         if "services" in storage_stats:
             for service, count in storage_stats["services"].items():
-                service_errors = await self.get_error_logs(service_name=service, limit=100)
+                service_errors = await self.get_error_logs(
+                    service_name=service, limit=100
+                )
                 error_rate = len(service_errors) / max(1, count)
                 if error_rate > 0.1:  # 10% error rate threshold
                     service_health[service] = "unhealthy"
@@ -680,7 +746,9 @@ class CentralizedLoggingService:
             },
         }
 
-    def add_alert_callback(self, callback: Callable[[str, Dict[str, Any]], None]) -> None:
+    def add_alert_callback(
+        self, callback: Callable[[str, Dict[str, Any]], None]
+    ) -> None:
         """Add callback for logging alerts."""
         self._alert_callbacks.append(callback)
 
@@ -806,7 +874,11 @@ def get_centralized_logging_service() -> CentralizedLoggingService:
     global _centralized_logging_service
     if _centralized_logging_service is None:
         # Use SQLite for persistence in production
-        storage_type = LogStorageType.SQLITE if os.getenv("ENVIRONMENT") != "development" else LogStorageType.MEMORY
+        storage_type = (
+            LogStorageType.SQLITE
+            if os.getenv("ENVIRONMENT") != "development"
+            else LogStorageType.MEMORY
+        )
         _centralized_logging_service = CentralizedLoggingService(storage_type)
     return _centralized_logging_service
 

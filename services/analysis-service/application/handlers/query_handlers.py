@@ -1,10 +1,15 @@
-"""Query handlers for CQRS pattern."""
+"""Query handlers for CQRS pattern using standardized base classes."""
 
-from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+from services.shared.utilities import QueryHandler, QueryResult
 
 from ...domain.entities import Analysis, Document, Finding
-from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
+from ...infrastructure.repositories import (
+    AnalysisRepository,
+    DocumentRepository,
+    FindingRepository,
+)
 from .queries import (
     GetAnalysesQuery,
     GetAnalysisQuery,
@@ -16,34 +21,31 @@ from .queries import (
 )
 
 
-class QueryHandler(ABC):
-    """Base class for query handlers."""
-
-    @abstractmethod
-    async def handle(self, query):
-        """Handle the query."""
-
-
-class GetDocumentQueryHandler(QueryHandler):
+class GetDocumentQueryHandler(QueryHandler[GetDocumentQuery, Document]):
     """Handler for getting documents."""
 
     def __init__(self, document_repository: DocumentRepository):
         """Initialize handler with dependencies."""
         self.document_repository = document_repository
 
-    async def handle(self, query: GetDocumentQuery) -> Optional[Document]:
-        """Handle get document query."""
-        return await self.document_repository.get_by_id(query.document_id)
+    async def _execute(
+        self, query: GetDocumentQuery
+    ) -> Tuple[Optional[Document], Optional[int]]:
+        """Execute get document query."""
+        result = await self.document_repository.get_by_id(query.document_id)
+        return result, 1 if result else 0
 
 
-class GetDocumentsQueryHandler(QueryHandler):
+class GetDocumentsQueryHandler(QueryHandler[GetDocumentsQuery, List[Document]]):
     """Handler for getting multiple documents."""
 
     def __init__(self, document_repository: DocumentRepository):
         """Initialize handler with dependencies."""
         self.document_repository = document_repository
 
-    async def handle(self, query: GetDocumentsQuery) -> List[Document]:
+    async def _execute(
+        self, query: GetDocumentsQuery
+    ) -> Tuple[List[Document], Optional[int]]:
         """Handle get documents query."""
         # Get all documents (in a real implementation, this would be filtered in the repository)
         all_documents = await self.document_repository.get_all()
@@ -54,17 +56,27 @@ class GetDocumentsQueryHandler(QueryHandler):
         # Apply pagination
         start_idx = query.offset
         end_idx = start_idx + query.limit
-        return filtered_documents[start_idx:end_idx]
+        paginated_documents = filtered_documents[start_idx:end_idx]
+        return paginated_documents, len(filtered_documents)
 
-    def _apply_filters(self, documents: List[Document], query: GetDocumentsQuery) -> List[Document]:
+    def _apply_filters(
+        self, documents: List[Document], query: GetDocumentsQuery
+    ) -> List[Document]:
         """Apply filters to document list."""
         filtered = documents
 
         if query.author:
-            filtered = [d for d in filtered if d.metadata.author and query.author.lower() in d.metadata.author.lower()]
+            filtered = [
+                d
+                for d in filtered
+                if d.metadata.author
+                and query.author.lower() in d.metadata.author.lower()
+            ]
 
         if query.tags:
-            filtered = [d for d in filtered if any(tag in d.metadata.tags for tag in query.tags)]
+            filtered = [
+                d for d in filtered if any(tag in d.metadata.tags for tag in query.tags)
+            ]
 
         if query.repository_id:
             filtered = [d for d in filtered if d.repository_id == query.repository_id]
@@ -111,7 +123,9 @@ class GetAnalysesQueryHandler(QueryHandler):
             end_idx = start_idx + query.limit
             return filtered_analyses[start_idx:end_idx]
 
-    def _apply_filters(self, analyses: List[Analysis], query: GetAnalysesQuery) -> List[Analysis]:
+    def _apply_filters(
+        self, analyses: List[Analysis], query: GetAnalysesQuery
+    ) -> List[Analysis]:
         """Apply filters to analysis list."""
         filtered = analyses
 
@@ -166,7 +180,9 @@ class GetFindingsQueryHandler(QueryHandler):
             end_idx = start_idx + query.limit
             return filtered_findings[start_idx:end_idx]
 
-    def _apply_filters(self, findings: List[Finding], query: GetFindingsQuery) -> List[Finding]:
+    def _apply_filters(
+        self, findings: List[Finding], query: GetFindingsQuery
+    ) -> List[Finding]:
         """Apply filters to findings list."""
         filtered = findings
 
@@ -213,8 +229,12 @@ class GetStatisticsQueryHandler(QueryHandler):
             documents = await self.document_repository.get_all()
             stats["documents"] = {
                 "total": len(documents),
-                "by_format": self._count_by_attribute(documents, lambda d: d.content.format),
-                "by_author": self._count_by_attribute(documents, lambda d: d.metadata.author or "Unknown"),
+                "by_format": self._count_by_attribute(
+                    documents, lambda d: d.content.format
+                ),
+                "by_author": self._count_by_attribute(
+                    documents, lambda d: d.metadata.author or "Unknown"
+                ),
                 "recent": len([d for d in documents if d.is_recently_updated]),
             }
 
@@ -222,8 +242,12 @@ class GetStatisticsQueryHandler(QueryHandler):
             analyses = await self.analysis_repository.get_all()
             stats["analyses"] = {
                 "total": len(analyses),
-                "by_type": self._count_by_attribute(analyses, lambda a: a.analysis_type),
-                "by_status": self._count_by_attribute(analyses, lambda a: a.status.value),
+                "by_type": self._count_by_attribute(
+                    analyses, lambda a: a.analysis_type
+                ),
+                "by_status": self._count_by_attribute(
+                    analyses, lambda a: a.status.value
+                ),
                 "completed": len([a for a in analyses if a.is_completed]),
             }
 
@@ -233,7 +257,9 @@ class GetStatisticsQueryHandler(QueryHandler):
             stats["findings"] = {
                 "total": len(findings),
                 "by_category": self._count_by_attribute(findings, lambda f: f.category),
-                "by_severity": self._count_by_attribute(findings, lambda f: f.severity.value),
+                "by_severity": self._count_by_attribute(
+                    findings, lambda f: f.severity.value
+                ),
                 "unresolved": len(unresolved),
                 "resolved": len(findings) - len(unresolved),
             }

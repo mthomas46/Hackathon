@@ -108,7 +108,10 @@ class RetryService:
                 timeout_per_attempt=10.0,
             ),
             "file_operations": RetryPolicy(
-                max_attempts=2, strategy=RetryStrategy.FIXED, base_delay_ms=500, jitter_strategy=BackoffStrategy.NONE
+                max_attempts=2,
+                strategy=RetryStrategy.FIXED,
+                base_delay_ms=500,
+                jitter_strategy=BackoffStrategy.NONE,
             ),
             "critical_operation": RetryPolicy(
                 max_attempts=8,
@@ -142,7 +145,9 @@ class RetryService:
             try:
                 # Apply timeout if specified
                 if policy.timeout_per_attempt:
-                    result = await asyncio.wait_for(operation(), timeout=policy.timeout_per_attempt)
+                    result = await asyncio.wait_for(
+                        operation(), timeout=policy.timeout_per_attempt
+                    )
                 else:
                     result = await operation()
 
@@ -183,7 +188,9 @@ class RetryService:
         if last_exception:
             raise last_exception
         else:
-            raise RuntimeError(f"Retry operation {operation_name} failed with unknown error")
+            raise RuntimeError(
+                f"Retry operation {operation_name} failed with unknown error"
+            )
 
     def _should_retry(self, exception: Exception, policy: RetryPolicy) -> bool:
         """Determine if an exception should trigger a retry."""
@@ -203,9 +210,16 @@ class RetryService:
             return False  # If retryable list exists but doesn't match, don't retry
 
         # Default behavior: retry on common network/transient errors
-        default_retryable = (ConnectionError, TimeoutError, OSError, asyncio.TimeoutError)
+        default_retryable = (
+            ConnectionError,
+            TimeoutError,
+            OSError,
+            asyncio.TimeoutError,
+        )
 
-        return any(issubclass(exception_type, retryable) for retryable in default_retryable)
+        return any(
+            issubclass(exception_type, retryable) for retryable in default_retryable
+        )
 
     def _calculate_delay(self, attempt: int, policy: RetryPolicy) -> float:
         """Calculate delay for the given attempt using the configured strategy."""
@@ -292,7 +306,9 @@ def get_retry_service() -> RetryService:
 
 
 async def retry_with_policy(
-    operation: Callable[[], Awaitable[T]], policy_name: str = "external_api", operation_name: str = "unknown"
+    operation: Callable[[], Awaitable[T]],
+    policy_name: str = "external_api",
+    operation_name: str = "unknown",
 ) -> T:
     """Convenience function to retry with a named policy."""
     service = get_retry_service()
@@ -300,8 +316,12 @@ async def retry_with_policy(
 
 
 async def retry_with_custom_policy(
-    operation: Callable[[], Awaitable[T]], policy: RetryPolicy, operation_name: str = "unknown"
+    operation: Callable[[], Awaitable[T]],
+    policy: RetryPolicy,
+    operation_name: str = "unknown",
 ) -> T:
     """Convenience function to retry with a custom policy."""
     service = get_retry_service()
-    return await service.execute_with_retry(operation, custom_policy=policy, operation_name=operation_name)
+    return await service.execute_with_retry(
+        operation, custom_policy=policy, operation_name=operation_name
+    )

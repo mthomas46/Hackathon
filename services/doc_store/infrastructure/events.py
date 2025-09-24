@@ -173,10 +173,14 @@ class NotificationManager:
             "event_id": event.id,
             "delivered": delivered,
             "failed": failed,
-            "total_webhooks": len([w for w in self.webhooks.values() if w["is_active"]]),
+            "total_webhooks": len(
+                [w for w in self.webhooks.values() if w["is_active"]]
+            ),
         }
 
-    def get_event_history(self, event_type: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_event_history(
+        self, event_type: Optional[str] = None, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """Get event history with optional filtering."""
         events = self.event_history
 

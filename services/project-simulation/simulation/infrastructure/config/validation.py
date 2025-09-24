@@ -70,7 +70,9 @@ class ConfigValidator:
             self._validate_cross_dependencies(config)
 
         except Exception as e:
-            self.errors.append(ValidationError("general", f"Validation failed: {str(e)}"))
+            self.errors.append(
+                ValidationError("general", f"Validation failed: {str(e)}")
+            )
 
         return len(self.errors) == 0
 
@@ -79,7 +81,11 @@ class ConfigValidator:
         # Service name
         if not service_config.name or not service_config.name.strip():
             self.errors.append(
-                ValidationError("service.name", "Service name is required", "Set SERVICE_NAME environment variable")
+                ValidationError(
+                    "service.name",
+                    "Service name is required",
+                    "Set SERVICE_NAME environment variable",
+                )
             )
 
         # Version format
@@ -96,7 +102,9 @@ class ConfigValidator:
         if not (1024 <= service_config.port <= 65535):
             self.errors.append(
                 ValidationError(
-                    "service.port", "Port must be between 1024 and 65535", "Choose a port in the valid range"
+                    "service.port",
+                    "Port must be between 1024 and 65535",
+                    "Choose a port in the valid range",
                 )
             )
 
@@ -116,7 +124,11 @@ class ConfigValidator:
         # Database URL format
         if not db_config.url:
             self.errors.append(
-                ValidationError("database.url", "Database URL is required", "Set DATABASE_URL environment variable")
+                ValidationError(
+                    "database.url",
+                    "Database URL is required",
+                    "Set DATABASE_URL environment variable",
+                )
             )
         else:
             parsed = urlparse(db_config.url)
@@ -135,7 +147,9 @@ class ConfigValidator:
                 if db_path and db_path != ":memory:":
                     db_file = Path(db_path)
                     if not db_file.parent.exists():
-                        self.warnings.append(f"SQLite database directory does not exist: {db_file.parent}")
+                        self.warnings.append(
+                            f"SQLite database directory does not exist: {db_file.parent}"
+                        )
 
         # Connection pool settings
         if db_config.pool_size < 1:
@@ -160,14 +174,20 @@ class ConfigValidator:
         """Validate Redis configuration."""
         if not redis_config.url:
             self.errors.append(
-                ValidationError("redis.url", "Redis URL is required", "Set REDIS_URL environment variable")
+                ValidationError(
+                    "redis.url",
+                    "Redis URL is required",
+                    "Set REDIS_URL environment variable",
+                )
             )
         else:
             parsed = urlparse(redis_config.url)
             if parsed.scheme not in ["redis", "rediss"]:
                 self.errors.append(
                     ValidationError(
-                        "redis.url", "Redis URL must use redis:// or rediss:// scheme", "Use proper Redis URL format"
+                        "redis.url",
+                        "Redis URL must use redis:// or rediss:// scheme",
+                        "Use proper Redis URL format",
                     )
                 )
 
@@ -211,13 +231,17 @@ class ConfigValidator:
     def _validate_external_services_config(self, external_config):
         """Validate external services configuration."""
         # Ollama URL
-        self._validate_service_url("external.ollama_base_url", external_config.ollama_base_url)
+        self._validate_service_url(
+            "external.ollama_base_url", external_config.ollama_base_url
+        )
 
         # Ollama model
         if not external_config.ollama_model:
             self.errors.append(
                 ValidationError(
-                    "external.ollama_model", "Ollama model name is required", "Set OLLAMA_MODEL environment variable"
+                    "external.ollama_model",
+                    "Ollama model name is required",
+                    "Set OLLAMA_MODEL environment variable",
                 )
             )
 
@@ -289,7 +313,9 @@ class ConfigValidator:
         if logging_config.enable_file and logging_config.log_file:
             log_file = Path(logging_config.log_file)
             if not log_file.parent.exists():
-                self.warnings.append(f"Log file directory does not exist: {log_file.parent}")
+                self.warnings.append(
+                    f"Log file directory does not exist: {log_file.parent}"
+                )
 
     def _validate_monitoring_config(self, monitoring_config):
         """Validate monitoring configuration."""
@@ -307,7 +333,9 @@ class ConfigValidator:
         if monitoring_config.enable_profiling:
             profile_dir = Path(monitoring_config.profiling_output_dir)
             if not profile_dir.exists():
-                self.warnings.append(f"Profiling directory does not exist: {profile_dir}")
+                self.warnings.append(
+                    f"Profiling directory does not exist: {profile_dir}"
+                )
 
     def _validate_service_url(self, field_name: str, url: str):
         """Validate a service URL."""
@@ -333,7 +361,11 @@ class ConfigValidator:
                 )
         except Exception as e:
             self.errors.append(
-                ValidationError(field_name, f"Invalid URL format: {str(e)}", "Use a properly formatted URL")
+                ValidationError(
+                    field_name,
+                    f"Invalid URL format: {str(e)}",
+                    "Use a properly formatted URL",
+                )
             )
 
     def _validate_paths(self):
@@ -344,7 +376,9 @@ class ConfigValidator:
         if "sqlite" in config.database.url and ":memory:" not in config.database.url:
             db_path = Path(config.database.url.replace("sqlite:///", ""))
             if not db_path.parent.exists():
-                self.warnings.append(f"SQLite database directory does not exist: {db_path.parent}")
+                self.warnings.append(
+                    f"SQLite database directory does not exist: {db_path.parent}"
+                )
 
         # Log file directory
         if config.logging.enable_file and config.logging.log_file:
@@ -356,7 +390,9 @@ class ConfigValidator:
         if config.monitoring.enable_profiling:
             profile_dir = Path(config.monitoring.profiling_output_dir)
             if not profile_dir.exists():
-                self.warnings.append(f"Profiling directory does not exist: {profile_dir}")
+                self.warnings.append(
+                    f"Profiling directory does not exist: {profile_dir}"
+                )
 
     def _validate_cross_dependencies(self, config):
         """Validate cross-configuration dependencies."""
@@ -384,10 +420,15 @@ class ConfigValidator:
                 )
 
         # Test database in production
-        if config.service.environment == "production" and "test" in config.database.url.lower():
+        if (
+            config.service.environment == "production"
+            and "test" in config.database.url.lower()
+        ):
             self.errors.append(
                 ValidationError(
-                    "database.url", "Test database should not be used in production", "Use production database URL"
+                    "database.url",
+                    "Test database should not be used in production",
+                    "Use production database URL",
                 )
             )
 
@@ -395,7 +436,10 @@ class ConfigValidator:
         """Get validation report."""
         return {
             "valid": len(self.errors) == 0,
-            "errors": [{"field": e.field, "message": e.message, "suggestion": e.suggestion} for e in self.errors],
+            "errors": [
+                {"field": e.field, "message": e.message, "suggestion": e.suggestion}
+                for e in self.errors
+            ],
             "warnings": self.warnings,
             "error_count": len(self.errors),
             "warning_count": len(self.warnings),

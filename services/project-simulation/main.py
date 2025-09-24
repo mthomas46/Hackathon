@@ -39,22 +39,21 @@ sys.path.insert(0, str(project_root))
 
 # Import shared utilities and patterns (with fallbacks)
 try:
-    from services.shared.core.responses.responses import (
-        HTTP_STATUS_CODES,
-        CreateResponse,
-        ErrorResponse,
-        HealthResponse,
-        ListResponse,
-        PaginatedResponse,
-        SuccessResponse,
-        SystemHealthResponse,
-        ValidationErrorResponse,
-        create_crud_response,
-        create_list_response,
-        create_paginated_response,
+    from services.shared.presentation.responses import (
         create_success_response,
+        create_error_response,
+        create_paginated_response,
+        create_list_response,
+        create_crud_response,
         create_validation_error_response,
+        APIResponse,
     )
+
+    # Legacy response types - maintain compatibility
+    HTTP_STATUS_CODES = {}
+    CreateResponse = SuccessResponse = HealthResponse = ListResponse = (
+        PaginatedResponse
+    ) = ErrorResponse = SystemHealthResponse = ValidationErrorResponse = APIResponse
 except ImportError:
     # Fallback response models for testing
     from typing import Any, Dict, List, Optional
@@ -79,18 +78,27 @@ except ImportError:
         version: str = "1.0.0"
 
     # Simple fallback functions
-    def create_success_response(data=None, message=""):
-        return {"success": True, "message": message, "data": data}
-
     def create_error_response(
-        error="", message="", details=None, status_code=None, error_code=None, request_id=None, **kwargs
-    ):
+        error: Optional[str] = None,
+        message: Optional[str] = None,
+        details: Optional[Any] = None,
+        error_code: Optional[str] = None,
+        status_code: Optional[int] = None,
+        request_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Fallback error response creation."""
+        # Response handlers consolidated - use services.shared.presentation.responses
         # For API endpoints, raise HTTPException instead of returning dict
         if status_code is not None:
             raise HTTPException(status_code=status_code, detail=error or message)
         else:
             # Local style - return full response for non-API contexts
-            response = {"success": False, "error": error, "message": message, "details": details}
+            response = {
+                "success": False,
+                "error": error,
+                "message": message,
+                "details": details,
+            }
             if error_code:
                 response["error_code"] = error_code
             if request_id:
@@ -107,7 +115,9 @@ except ImportError:
     def create_list_response(*args, **kwargs):
         return create_success_response(*args, **kwargs)
 
-    def create_crud_response(operation=None, resource_id=None, message="", request_id=None, **kwargs):
+    def create_crud_response(
+        operation=None, resource_id=None, message="", request_id=None, **kwargs
+    ):
         """Create a CRUD response with operation details."""
         # Create the data object with simulation details
         data_obj = {"simulation_id": resource_id, "message": message}
@@ -214,12 +224,16 @@ except ImportError as e:
             return {
                 "status": "healthy",
                 "service": service_name or SERVICE_NAME,
-                "system": {"cpu_percent": 25.5, "memory_percent": 45.2, "disk_usage": 60.1},
+                "system": {
+                    "cpu_percent": 25.5,
+                    "memory_percent": 45.2,
+                    "disk_usage": 60.1,
+                },
             }
 
 
 try:
-    from services.shared.core.logging.correlation_middleware import CorrelationMiddleware
+    from services.shared.utilities.middleware import ServiceMiddleware
 except ImportError:
     # Fallback correlation middleware for testing
     from starlette.middleware.base import BaseHTTPMiddleware
@@ -278,7 +292,10 @@ from simulation.infrastructure.config.discovery import (
 # Import local modules
 from simulation.infrastructure.di_container import get_simulation_container
 from simulation.infrastructure.health import create_simulation_health_endpoints
-from simulation.infrastructure.logging import generate_correlation_id, with_correlation_id
+from simulation.infrastructure.logging import (
+    generate_correlation_id,
+    with_correlation_id,
+)
 from simulation.infrastructure.redis_integration import (
     initialize_redis_integration,
     publish_document_event,
@@ -299,14 +316,18 @@ class CreateSimulationRequest(BaseModel):
     """Request model for creating a simulation."""
 
     name: str = Field(..., min_length=1, max_length=100, description="Project name")
-    description: Optional[str] = Field(None, max_length=500, description="Project description")
+    description: Optional[str] = Field(
+        None, max_length=500, description="Project description"
+    )
     type: str = Field(
         "web_application",
         pattern="^(web_application|api_service|mobile_app|data_science|devops_tool)$",
         description="Project type",
     )
     team_size: int = Field(5, ge=1, le=20, description="Team size")
-    complexity: str = Field("medium", pattern="^(simple|medium|complex)$", description="Project complexity")
+    complexity: str = Field(
+        "medium", pattern="^(simple|medium|complex)$", description="Project complexity"
+    )
     duration_weeks: int = Field(8, ge=1, le=52, description="Duration in weeks")
     team_members: Optional[list] = Field(None, description="Optional team members")
     phases: Optional[list] = Field(None, description="Optional project phases")
@@ -331,21 +352,31 @@ class CreateSimulationFromConfigRequest(BaseModel):
 class CreateSampleConfigRequest(BaseModel):
     """Request model for creating sample configuration file."""
 
-    file_path: str = Field(..., description="Path where sample config should be created")
-    project_name: str = Field("Sample E-commerce Platform", description="Project name for sample config")
+    file_path: str = Field(
+        ..., description="Path where sample config should be created"
+    )
+    project_name: str = Field(
+        "Sample E-commerce Platform", description="Project name for sample config"
+    )
 
 
 class ValidateConfigRequest(BaseModel):
     """Request model for validating configuration file."""
 
-    config_file_path: str = Field(..., description="Path to configuration file to validate")
+    config_file_path: str = Field(
+        ..., description="Path to configuration file to validate"
+    )
 
 
 class GenerateReportsRequest(BaseModel):
     """Request model for generating simulation reports."""
 
     report_types: List[str] = Field(
-        default_factory=lambda: ["executive_summary", "technical_report", "workflow_analysis"],
+        default_factory=lambda: [
+            "executive_summary",
+            "technical_report",
+            "workflow_analysis",
+        ],
         description="Types of reports to generate",
     )
 
@@ -355,25 +386,41 @@ class ExportReportRequest(BaseModel):
 
     report_type: str = Field(..., description="Type of report to export")
     format: str = Field("json", description="Export format (json, html, markdown, pdf)")
-    output_path: Optional[str] = Field(None, description="Optional output path for the exported report")
+    output_path: Optional[str] = Field(
+        None, description="Optional output path for the exported report"
+    )
 
 
 class StopUIMonitoringRequest(BaseModel):
     """Request model for stopping UI monitoring."""
 
-    success: bool = Field(True, description="Whether the simulation completed successfully")
+    success: bool = Field(
+        True, description="Whether the simulation completed successfully"
+    )
 
 
 class ReplayEventsRequest(BaseModel):
     """Request model for replaying simulation events."""
 
-    event_types: Optional[List[str]] = Field(None, description="Types of events to replay")
-    start_time: Optional[str] = Field(None, description="Start time for replay (ISO format)")
-    end_time: Optional[str] = Field(None, description="End time for replay (ISO format)")
+    event_types: Optional[List[str]] = Field(
+        None, description="Types of events to replay"
+    )
+    start_time: Optional[str] = Field(
+        None, description="Start time for replay (ISO format)"
+    )
+    end_time: Optional[str] = Field(
+        None, description="End time for replay (ISO format)"
+    )
     tags: Optional[List[str]] = Field(None, description="Tags to filter events")
-    speed_multiplier: float = Field(1.0, description="Speed multiplier for replay (1.0 = real-time)")
-    include_system_events: bool = Field(False, description="Include system events in replay")
-    max_events: Optional[int] = Field(None, description="Maximum number of events to replay")
+    speed_multiplier: float = Field(
+        1.0, description="Speed multiplier for replay (1.0 = real-time)"
+    )
+    include_system_events: bool = Field(
+        False, description="Include system events in replay"
+    )
+    max_events: Optional[int] = Field(
+        None, description="Maximum number of events to replay"
+    )
 
 
 class CleanupEventsRequest(BaseModel):
@@ -382,13 +429,26 @@ class CleanupEventsRequest(BaseModel):
     days_old: int = Field(30, description="Remove events older than this many days")
 
 
-# Load configuration
-config = get_config()
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
 
-# Service configuration from config
-SERVICE_NAME = config.service.name
-SERVICE_VERSION = config.service.version
-DEFAULT_PORT = config.service.port
+# Load standardized configuration (keeping existing config for compatibility)
+config = get_config()
+standardized_config = load_service_config(
+    service_type="project-simulation",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = standardized_config.service_name
+SERVICE_TITLE = standardized_config.service_description or f"{SERVICE_NAME.replace('-', ' ').title()} Service"
+SERVICE_VERSION = standardized_config.service_version
+DEFAULT_PORT = standardized_config.port
 
 # Rate limiting configuration from config
 RATE_LIMITS = {
@@ -396,14 +456,13 @@ RATE_LIMITS = {
     "/api/v1/simulations/*/execute": (5, 10),  # 5 requests per minute, burst 10
 }
 
-# Initialize FastAPI application with configuration-driven setup
+# Initialize FastAPI application with standardized configuration
 app = FastAPI(
-    title=f"{SERVICE_NAME.replace('-', ' ').title()} Service",
+    title=SERVICE_TITLE,
     description="AI-powered project simulation and ecosystem demonstration service with comprehensive shared infrastructure integration",
     version=SERVICE_VERSION,
-    docs_url="/docs" if config.development.enable_swagger else None,
-    redoc_url="/redoc" if config.development.enable_redoc else None,
-    openapi_url="/openapi.json",
+    docs_url="/docs",
+    redoc_url="/redoc",
     contact={
         "name": "Project Simulation Team",
         "url": "https://github.com/your-org/project-simulation",
@@ -426,7 +485,9 @@ if config.development.enable_cors:
 
 # Setup shared middleware stack
 service_middleware = ServiceMiddleware(
-    service_name=SERVICE_NAME, rate_limits=RATE_LIMITS, enable_rate_limit=config.security.rate_limit_enabled
+    service_name=SERVICE_NAME,
+    rate_limits=RATE_LIMITS,
+    enable_rate_limit=config.security.rate_limit_enabled,
 )
 
 # Skip middleware for now to avoid complex issues
@@ -438,6 +499,9 @@ register_exception_handlers(app)
 
 # Setup common middleware (correlation ID, metrics, etc.)
 setup_common_middleware(app, SERVICE_NAME)
+
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 # Self-registration with discovery service (only in non-development)
 if not is_development():
@@ -453,7 +517,9 @@ try:
 except Exception as e:
     logger.warning(f"Failed to resolve application service from container: {e}")
     # Fallback for testing environments
-    from simulation.application.services.simulation_application_service import SimulationApplicationService
+    from simulation.application.services.simulation_application_service import (
+        SimulationApplicationService,
+    )
     from simulation.infrastructure.repositories.in_memory_repositories import (
         InMemoryProjectRepository,
         InMemoryTeamRepository,
@@ -463,7 +529,9 @@ except Exception as e:
     # Create shared repository instances to ensure consistency
     project_repo = InMemoryProjectRepository()
     # Use SQLite repository for persistent simulation storage
-    from simulation.infrastructure.repositories.sqlite_repositories import get_sqlite_simulation_repository
+    from simulation.infrastructure.repositories.sqlite_repositories import (
+        get_sqlite_simulation_repository,
+    )
 
     simulation_repo = get_sqlite_simulation_repository()
     timeline_repo = InMemoryTimelineRepository()
@@ -482,12 +550,20 @@ try:
 except Exception as e:
     logger.warning(f"Failed to resolve simulation execution engine from container: {e}")
     # Fallback for testing environments
-    from simulation.infrastructure.clients.ecosystem_clients import get_ecosystem_service_registry
+    from simulation.infrastructure.clients.ecosystem_clients import (
+        get_ecosystem_service_registry,
+    )
 
     # Use the same repository instances as the application service
-    from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
-    from simulation.infrastructure.execution.simulation_execution_engine import SimulationExecutionEngine
-    from simulation.infrastructure.workflows.workflow_orchestrator import SimulationWorkflowOrchestrator
+    from simulation.infrastructure.content.content_generation_pipeline import (
+        ContentGenerationPipeline,
+    )
+    from simulation.infrastructure.execution.simulation_execution_engine import (
+        SimulationExecutionEngine,
+    )
+    from simulation.infrastructure.workflows.workflow_orchestrator import (
+        SimulationWorkflowOrchestrator,
+    )
 
     # simulation_repo is already the SQLite repository from above
     simulation_execution_engine = SimulationExecutionEngine(
@@ -558,7 +634,11 @@ async def startup_event():
     """Application startup event handler with timeout protection."""
     import asyncio
 
-    logger.info("Starting Project Simulation Service", version=SERVICE_VERSION, environment=config.service.environment)
+    logger.info(
+        "Starting Project Simulation Service",
+        version=SERVICE_VERSION,
+        environment=config.service.environment,
+    )
 
     # Add timeout protection for startup operations
     startup_timeout = 30.0  # 30 second timeout for startup
@@ -567,7 +647,9 @@ async def startup_event():
         async with asyncio.timeout(startup_timeout):
             # Initialize event persistence with timeout
             try:
-                from simulation.infrastructure.persistence.redis_event_store import initialize_event_persistence
+                from simulation.infrastructure.persistence.redis_event_store import (
+                    initialize_event_persistence,
+                )
 
                 await asyncio.wait_for(initialize_event_persistence(), timeout=10.0)
                 logger.info("Event persistence system initialized")
@@ -578,9 +660,13 @@ async def startup_event():
 
             # Initialize environment management with timeout
             try:
-                from simulation.infrastructure.config.environment_manager import initialize_environment_management
+                from simulation.infrastructure.config.environment_manager import (
+                    initialize_environment_management,
+                )
 
-                await asyncio.wait_for(initialize_environment_management(), timeout=10.0)
+                await asyncio.wait_for(
+                    initialize_environment_management(), timeout=10.0
+                )
                 logger.info("Environment management system initialized")
             except asyncio.TimeoutError:
                 logger.warning("Environment management initialization timed out")
@@ -589,7 +675,9 @@ async def startup_event():
 
             # Initialize Redis integration with timeout
             try:
-                await asyncio.wait_for(initialize_redis_integration(logger), timeout=10.0)
+                await asyncio.wait_for(
+                    initialize_redis_integration(logger), timeout=10.0
+                )
                 logger.info("Redis integration initialized")
             except asyncio.TimeoutError:
                 logger.warning("Redis integration initialization timed out")
@@ -607,20 +695,28 @@ async def startup_event():
                     logger.warning(f"Failed to start service discovery: {e}")
 
     except asyncio.TimeoutError:
-        logger.error("Application startup timed out - service may not be fully initialized")
+        logger.error(
+            "Application startup timed out - service may not be fully initialized"
+        )
     except Exception as e:
         logger.error(f"Critical error during startup: {e}")
         # Don't re-raise - allow service to start in degraded state
 
     # Log service information
     logger.info(
-        "Service configuration", port=config.service.port, debug=config.service.debug, database=config.database.url
+        "Service configuration",
+        port=config.service.port,
+        debug=config.service.debug,
+        database=config.database.url,
     )
 
     # Log ecosystem service status
     if is_development():
         discovery_summary = service_discovery.get_service_discovery_summary()
-        logger.info("Ecosystem service discovery initialized", total_services=discovery_summary["total_services"])
+        logger.info(
+            "Ecosystem service discovery initialized",
+            total_services=discovery_summary["total_services"],
+        )
 
 
 @app.on_event("shutdown")
@@ -649,7 +745,9 @@ async def shutdown_event():
             # For example: close database connections, cleanup resources, etc.
 
     except asyncio.TimeoutError:
-        logger.error("Application shutdown timed out - some resources may not be cleaned up")
+        logger.error(
+            "Application shutdown timed out - some resources may not be cleaned up"
+        )
     except Exception as e:
         logger.error(f"Critical error during shutdown: {e}")
 
@@ -722,7 +820,9 @@ async def health_system(request: Request):
 
 
 @app.post("/api/v1/simulations/{simulation_id}/documents")
-async def save_simulation_document(simulation_id: str, document_data: Dict[str, Any], req: Request):
+async def save_simulation_document(
+    simulation_id: str, document_data: Dict[str, Any], req: Request
+):
     """Save a document generated during simulation to doc-store and link it."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -735,7 +835,9 @@ async def save_simulation_document(simulation_id: str, document_data: Dict[str, 
             document_data.get("metadata", {})
 
             if not document_id or not content:
-                raise HTTPException(status_code=400, detail="Document ID and content are required")
+                raise HTTPException(
+                    status_code=400, detail="Document ID and content are required"
+                )
 
             # Save document to doc-store (mock implementation - in real system, call doc-store API)
             doc_store_reference = f"simulation_{simulation_id}_{document_id}"
@@ -759,7 +861,11 @@ async def save_simulation_document(simulation_id: str, document_data: Dict[str, 
             )
 
         except Exception as e:
-            logger.error("Failed to save simulation document", error=str(e), simulation_id=simulation_id)
+            logger.error(
+                "Failed to save simulation document",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             raise HTTPException(status_code=500, detail="Failed to save document")
 
 
@@ -770,7 +876,9 @@ async def get_simulation_documents(simulation_id: str, req: Request):
 
     with with_correlation_id(correlation_id):
         try:
-            documents = await application_service.get_simulation_documents(simulation_id)
+            documents = await application_service.get_simulation_documents(
+                simulation_id
+            )
 
             return create_success_response(
                 data={"documents": documents, "simulation_id": simulation_id},
@@ -778,7 +886,11 @@ async def get_simulation_documents(simulation_id: str, req: Request):
             )
 
         except Exception as e:
-            logger.error("Failed to get simulation documents", error=str(e), simulation_id=simulation_id)
+            logger.error(
+                "Failed to get simulation documents",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             raise HTTPException(status_code=500, detail="Failed to retrieve documents")
 
 
@@ -790,11 +902,17 @@ async def get_simulation_document(simulation_id: str, document_id: str, req: Req
     with with_correlation_id(correlation_id):
         try:
             # Get document linkage info from our database
-            documents = await application_service.get_simulation_documents(simulation_id)
-            doc_info = next((doc for doc in documents if doc["document_id"] == document_id), None)
+            documents = await application_service.get_simulation_documents(
+                simulation_id
+            )
+            doc_info = next(
+                (doc for doc in documents if doc["document_id"] == document_id), None
+            )
 
             if not doc_info:
-                raise HTTPException(status_code=404, detail="Document not found in simulation")
+                raise HTTPException(
+                    status_code=404, detail="Document not found in simulation"
+                )
 
             # Retrieve document from doc-store (mock implementation)
             # In real system, make HTTP call to doc-store service
@@ -806,13 +924,18 @@ async def get_simulation_document(simulation_id: str, document_id: str, req: Req
                 "retrieved_at": datetime.now().isoformat(),
             }
 
-            return create_success_response(data=document_content, message="Document retrieved successfully")
+            return create_success_response(
+                data=document_content, message="Document retrieved successfully"
+            )
 
         except HTTPException:
             raise
         except Exception as e:
             logger.error(
-                "Failed to get simulation document", error=str(e), simulation_id=simulation_id, document_id=document_id
+                "Failed to get simulation document",
+                error=str(e),
+                simulation_id=simulation_id,
+                document_id=document_id,
             )
             raise HTTPException(status_code=500, detail="Failed to retrieve document")
 
@@ -823,7 +946,9 @@ async def get_simulation_document(simulation_id: str, document_id: str, req: Req
 
 
 @app.post("/api/v1/simulations/{simulation_id}/prompts")
-async def save_simulation_prompt(simulation_id: str, prompt_data: Dict[str, Any], req: Request):
+async def save_simulation_prompt(
+    simulation_id: str, prompt_data: Dict[str, Any], req: Request
+):
     """Save a prompt used during simulation to prompt-store and link it."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -836,7 +961,9 @@ async def save_simulation_prompt(simulation_id: str, prompt_data: Dict[str, Any]
             prompt_data.get("metadata", {})
 
             if not prompt_id or not prompt_text:
-                raise HTTPException(status_code=400, detail="Prompt ID and text are required")
+                raise HTTPException(
+                    status_code=400, detail="Prompt ID and text are required"
+                )
 
             # Save prompt to prompt-store (mock implementation - in real system, call prompt-store API)
             prompt_store_reference = f"simulation_{simulation_id}_{prompt_id}"
@@ -860,7 +987,11 @@ async def save_simulation_prompt(simulation_id: str, prompt_data: Dict[str, Any]
             )
 
         except Exception as e:
-            logger.error("Failed to save simulation prompt", error=str(e), simulation_id=simulation_id)
+            logger.error(
+                "Failed to save simulation prompt",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             raise HTTPException(status_code=500, detail="Failed to save prompt")
 
 
@@ -879,7 +1010,11 @@ async def get_simulation_prompts(simulation_id: str, req: Request):
             )
 
         except Exception as e:
-            logger.error("Failed to get simulation prompts", error=str(e), simulation_id=simulation_id)
+            logger.error(
+                "Failed to get simulation prompts",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             raise HTTPException(status_code=500, detail="Failed to retrieve prompts")
 
 
@@ -892,10 +1027,14 @@ async def get_simulation_prompt(simulation_id: str, prompt_id: str, req: Request
         try:
             # Get prompt linkage info from our database
             prompts = await application_service.get_simulation_prompts(simulation_id)
-            prompt_info = next((prompt for prompt in prompts if prompt["prompt_id"] == prompt_id), None)
+            prompt_info = next(
+                (prompt for prompt in prompts if prompt["prompt_id"] == prompt_id), None
+            )
 
             if not prompt_info:
-                raise HTTPException(status_code=404, detail="Prompt not found in simulation")
+                raise HTTPException(
+                    status_code=404, detail="Prompt not found in simulation"
+                )
 
             # Retrieve prompt from prompt-store (mock implementation)
             # In real system, make HTTP call to prompt-store service
@@ -907,13 +1046,18 @@ async def get_simulation_prompt(simulation_id: str, prompt_id: str, req: Request
                 "retrieved_at": datetime.now().isoformat(),
             }
 
-            return create_success_response(data=prompt_content, message="Prompt retrieved successfully")
+            return create_success_response(
+                data=prompt_content, message="Prompt retrieved successfully"
+            )
 
         except HTTPException:
             raise
         except Exception as e:
             logger.error(
-                "Failed to get simulation prompt", error=str(e), simulation_id=simulation_id, prompt_id=prompt_id
+                "Failed to get simulation prompt",
+                error=str(e),
+                simulation_id=simulation_id,
+                prompt_id=prompt_id,
             )
             raise HTTPException(status_code=500, detail="Failed to retrieve prompt")
 
@@ -924,22 +1068,35 @@ async def get_simulation_prompt(simulation_id: str, prompt_id: str, req: Request
 
 
 @app.post("/api/v1/simulations/{simulation_id}/runs/{run_id}")
-async def save_simulation_run_data(simulation_id: str, run_id: str, run_data: Dict[str, Any], req: Request):
+async def save_simulation_run_data(
+    simulation_id: str, run_id: str, run_data: Dict[str, Any], req: Request
+):
     """Save execution data for a simulation run."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
         try:
             # Save run data to database
-            await application_service.save_simulation_run_data(simulation_id, run_id, run_data)
+            await application_service.save_simulation_run_data(
+                simulation_id, run_id, run_data
+            )
 
             return create_success_response(
-                data={"simulation_id": simulation_id, "run_id": run_id, "saved_at": datetime.now().isoformat()},
+                data={
+                    "simulation_id": simulation_id,
+                    "run_id": run_id,
+                    "saved_at": datetime.now().isoformat(),
+                },
                 message="Simulation run data saved successfully",
             )
 
         except Exception as e:
-            logger.error("Failed to save simulation run data", error=str(e), simulation_id=simulation_id, run_id=run_id)
+            logger.error(
+                "Failed to save simulation run data",
+                error=str(e),
+                simulation_id=simulation_id,
+                run_id=run_id,
+            )
             raise HTTPException(status_code=500, detail="Failed to save run data")
 
 
@@ -950,20 +1107,31 @@ async def get_simulation_run_data(simulation_id: str, run_id: str, req: Request)
 
     with with_correlation_id(correlation_id):
         try:
-            run_data = await application_service.get_simulation_run_data(simulation_id, run_id)
+            run_data = await application_service.get_simulation_run_data(
+                simulation_id, run_id
+            )
 
             if run_data is None:
                 raise HTTPException(status_code=404, detail="Run data not found")
 
             return create_success_response(
-                data={"simulation_id": simulation_id, "run_id": run_id, "run_data": run_data},
+                data={
+                    "simulation_id": simulation_id,
+                    "run_id": run_id,
+                    "run_data": run_data,
+                },
                 message="Simulation run data retrieved successfully",
             )
 
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get simulation run data", error=str(e), simulation_id=simulation_id, run_id=run_id)
+            logger.error(
+                "Failed to get simulation run data",
+                error=str(e),
+                simulation_id=simulation_id,
+                run_id=run_id,
+            )
             raise HTTPException(status_code=500, detail="Failed to retrieve run data")
 
 
@@ -983,7 +1151,11 @@ async def get_service_discovery(req: Request):
                 "service_name": "project-simulation",
                 "service_type": "simulation",
                 "version": SERVICE_VERSION,
-                "port": config.service.port if hasattr(config, "service") and hasattr(config.service, "port") else 5075,
+                "port": (
+                    config.service.port
+                    if hasattr(config, "service") and hasattr(config.service, "port")
+                    else 5075
+                ),
                 "environment": os.getenv("ENVIRONMENT", "development"),
                 "health_endpoint": "/health",
                 "api_base": "/api/v1",
@@ -1010,11 +1182,16 @@ async def get_service_discovery(req: Request):
                 "timestamp": datetime.now().isoformat(),
             }
 
-            return create_success_response(data=service_info, message="Service discovery information retrieved")
+            return create_success_response(
+                data=service_info, message="Service discovery information retrieved"
+            )
 
         except Exception as e:
             logger.error("Failed to get service discovery info", error=str(e))
-            raise HTTPException(status_code=500, detail="Failed to retrieve service discovery information")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to retrieve service discovery information",
+            )
 
 
 @app.get("/api/v1/health/detailed")
@@ -1060,11 +1237,15 @@ async def get_detailed_health(req: Request):
                 },
             }
 
-            return create_success_response(data=health_info, message="Detailed health information retrieved")
+            return create_success_response(
+                data=health_info, message="Detailed health information retrieved"
+            )
 
         except Exception as e:
             logger.error("Failed to get detailed health info", error=str(e))
-            raise HTTPException(status_code=500, detail="Failed to retrieve detailed health information")
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve detailed health information"
+            )
 
 
 # ============================================================================
@@ -1074,23 +1255,32 @@ async def get_detailed_health(req: Request):
 
 @app.post("/api/v1/simulations/{simulation_id}/playback/{run_id}")
 async def start_simulation_playback(
-    simulation_id: str, run_id: str, req: Request, playback_request: Dict[str, Any] = None
+    simulation_id: str,
+    run_id: str,
+    req: Request,
+    playback_request: Dict[str, Any] = None,
 ):
     """Start a simulation playback session."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
         try:
-            from simulation.infrastructure.playback.simulation_playback import create_simulation_playback_engine
+            from simulation.infrastructure.playback.simulation_playback import (
+                create_simulation_playback_engine,
+            )
 
             # Create playback engine
-            playback_engine = create_simulation_playback_engine(application_service, logger)
+            playback_engine = create_simulation_playback_engine(
+                application_service, logger
+            )
 
             # Get playback speed from request
             playback_speed = (playback_request or {}).get("playback_speed", 1.0)
 
             # Start playback session
-            session_id = await playback_engine.start_playback(simulation_id, run_id, playback_speed)
+            session_id = await playback_engine.start_playback(
+                simulation_id, run_id, playback_speed
+            )
 
             return create_success_response(
                 data={
@@ -1105,9 +1295,14 @@ async def start_simulation_playback(
 
         except Exception as e:
             logger.error(
-                "Failed to start simulation playback", error=str(e), simulation_id=simulation_id, run_id=run_id
+                "Failed to start simulation playback",
+                error=str(e),
+                simulation_id=simulation_id,
+                run_id=run_id,
             )
-            raise HTTPException(status_code=500, detail="Failed to start playback session")
+            raise HTTPException(
+                status_code=500, detail="Failed to start playback session"
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/playback/{run_id}/events")
@@ -1117,10 +1312,14 @@ async def get_simulation_playback_events(simulation_id: str, run_id: str, req: R
 
     with with_correlation_id(correlation_id):
         try:
-            from simulation.infrastructure.playback.simulation_playback import create_simulation_playback_engine
+            from simulation.infrastructure.playback.simulation_playback import (
+                create_simulation_playback_engine,
+            )
 
             # Create playback engine
-            playback_engine = create_simulation_playback_engine(application_service, logger)
+            playback_engine = create_simulation_playback_engine(
+                application_service, logger
+            )
 
             # Get playback events
             events = await playback_engine.get_playback_events(simulation_id, run_id)
@@ -1150,9 +1349,14 @@ async def get_simulation_playback_events(simulation_id: str, run_id: str, req: R
 
         except Exception as e:
             logger.error(
-                "Failed to get simulation playback events", error=str(e), simulation_id=simulation_id, run_id=run_id
+                "Failed to get simulation playback events",
+                error=str(e),
+                simulation_id=simulation_id,
+                run_id=run_id,
             )
-            raise HTTPException(status_code=500, detail="Failed to retrieve playback events")
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve playback events"
+            )
 
 
 @app.post("/api/v1/simulations/{simulation_id}/reconstruct/{run_id}")
@@ -1162,60 +1366,91 @@ async def reconstruct_simulation(simulation_id: str, run_id: str, req: Request):
 
     with with_correlation_id(correlation_id):
         try:
-            from simulation.infrastructure.playback.simulation_playback import create_simulation_reconstructor
+            from simulation.infrastructure.playback.simulation_playback import (
+                create_simulation_reconstructor,
+            )
 
             # Create reconstructor
             reconstructor = create_simulation_reconstructor(application_service, logger)
 
             # Reconstruct simulation
-            reconstructed_state = await reconstructor.reconstruct_simulation(simulation_id, run_id)
+            reconstructed_state = await reconstructor.reconstruct_simulation(
+                simulation_id, run_id
+            )
 
             return create_success_response(
-                data=reconstructed_state, message="Simulation state reconstructed successfully"
+                data=reconstructed_state,
+                message="Simulation state reconstructed successfully",
             )
 
         except Exception as e:
-            logger.error("Failed to reconstruct simulation", error=str(e), simulation_id=simulation_id, run_id=run_id)
-            raise HTTPException(status_code=500, detail="Failed to reconstruct simulation")
+            logger.error(
+                "Failed to reconstruct simulation",
+                error=str(e),
+                simulation_id=simulation_id,
+                run_id=run_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to reconstruct simulation"
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/documents/{document_id}/content")
-async def get_simulation_document_content(simulation_id: str, document_id: str, req: Request):
+async def get_simulation_document_content(
+    simulation_id: str, document_id: str, req: Request
+):
     """Get document content via simulation linkage."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
         try:
-            from simulation.infrastructure.playback.simulation_playback import create_simulation_reconstructor
+            from simulation.infrastructure.playback.simulation_playback import (
+                create_simulation_reconstructor,
+            )
 
             # Create reconstructor
             reconstructor = create_simulation_reconstructor(application_service, logger)
 
             # Get document content
-            content = await reconstructor.get_document_content(simulation_id, document_id)
+            content = await reconstructor.get_document_content(
+                simulation_id, document_id
+            )
 
             if not content:
-                raise HTTPException(status_code=404, detail="Document content not found")
+                raise HTTPException(
+                    status_code=404, detail="Document content not found"
+                )
 
-            return create_success_response(data=content, message="Document content retrieved successfully")
+            return create_success_response(
+                data=content, message="Document content retrieved successfully"
+            )
 
         except HTTPException:
             raise
         except Exception as e:
             logger.error(
-                "Failed to get document content", error=str(e), simulation_id=simulation_id, document_id=document_id
+                "Failed to get document content",
+                error=str(e),
+                simulation_id=simulation_id,
+                document_id=document_id,
             )
-            raise HTTPException(status_code=500, detail="Failed to retrieve document content")
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve document content"
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/prompts/{prompt_id}/content")
-async def get_simulation_prompt_content(simulation_id: str, prompt_id: str, req: Request):
+async def get_simulation_prompt_content(
+    simulation_id: str, prompt_id: str, req: Request
+):
     """Get prompt content via simulation linkage."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
         try:
-            from simulation.infrastructure.playback.simulation_playback import create_simulation_reconstructor
+            from simulation.infrastructure.playback.simulation_playback import (
+                create_simulation_reconstructor,
+            )
 
             # Create reconstructor
             reconstructor = create_simulation_reconstructor(application_service, logger)
@@ -1226,13 +1461,22 @@ async def get_simulation_prompt_content(simulation_id: str, prompt_id: str, req:
             if not content:
                 raise HTTPException(status_code=404, detail="Prompt content not found")
 
-            return create_success_response(data=content, message="Prompt content retrieved successfully")
+            return create_success_response(
+                data=content, message="Prompt content retrieved successfully"
+            )
 
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get prompt content", error=str(e), simulation_id=simulation_id, prompt_id=prompt_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve prompt content")
+            logger.error(
+                "Failed to get prompt content",
+                error=str(e),
+                simulation_id=simulation_id,
+                prompt_id=prompt_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve prompt content"
+            )
 
 
 # ============================================================================
@@ -1256,7 +1500,9 @@ async def get_simulation_recommendations(simulation_id: str, req: Request):
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1265,11 +1511,16 @@ async def get_simulation_recommendations(simulation_id: str, req: Request):
                 raise HTTPException(status_code=404, detail="Simulation not found")
 
             # Check if recommendations report exists
-            if hasattr(simulation, "recommendations_report_id") and simulation.recommendations_report_id:
+            if (
+                hasattr(simulation, "recommendations_report_id")
+                and simulation.recommendations_report_id
+            ):
                 return create_success_response(
                     data={
                         "report_id": simulation.recommendations_report_id,
-                        "report_timestamp": getattr(simulation, "recommendations_report_timestamp", None),
+                        "report_timestamp": getattr(
+                            simulation, "recommendations_report_timestamp", None
+                        ),
                         "simulation_id": simulation_id,
                     },
                     message="Recommendations report found",
@@ -1283,8 +1534,15 @@ async def get_simulation_recommendations(simulation_id: str, req: Request):
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get recommendations report linkage", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve recommendations report linkage")
+            logger.error(
+                "Failed to get recommendations report linkage",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to retrieve recommendations report linkage",
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/recommendations/report")
@@ -1303,7 +1561,9 @@ async def get_simulation_recommendations_report(simulation_id: str, req: Request
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1311,14 +1571,22 @@ async def get_simulation_recommendations_report(simulation_id: str, req: Request
             if not simulation:
                 raise HTTPException(status_code=404, detail="Simulation not found")
 
-            if not hasattr(simulation, "recommendations_report_id") or not simulation.recommendations_report_id:
-                raise HTTPException(status_code=404, detail="No recommendations report found for this simulation")
+            if (
+                not hasattr(simulation, "recommendations_report_id")
+                or not simulation.recommendations_report_id
+            ):
+                raise HTTPException(
+                    status_code=404,
+                    detail="No recommendations report found for this simulation",
+                )
 
             # Get the report from doc-store
             doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5051")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(f"{doc_store_url}/api/documents/{simulation.recommendations_report_id}")
+                response = await client.get(
+                    f"{doc_store_url}/api/documents/{simulation.recommendations_report_id}"
+                )
 
                 if response.status_code == 200:
                     doc_data = response.json()
@@ -1329,18 +1597,31 @@ async def get_simulation_recommendations_report(simulation_id: str, req: Request
                         report_content = json.loads(doc_data["data"]["content"])
 
                         return create_success_response(
-                            data=report_content, message="Recommendations report retrieved successfully"
+                            data=report_content,
+                            message="Recommendations report retrieved successfully",
                         )
                     else:
-                        raise HTTPException(status_code=404, detail="Recommendations report not found in doc-store")
+                        raise HTTPException(
+                            status_code=404,
+                            detail="Recommendations report not found in doc-store",
+                        )
                 else:
-                    raise HTTPException(status_code=500, detail="Failed to retrieve report from doc-store")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Failed to retrieve report from doc-store",
+                    )
 
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get recommendations report", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve recommendations report")
+            logger.error(
+                "Failed to get recommendations report",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve recommendations report"
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/recommendations/markdown")
@@ -1359,7 +1640,9 @@ async def get_simulation_recommendations_markdown(simulation_id: str, req: Reque
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1367,15 +1650,23 @@ async def get_simulation_recommendations_markdown(simulation_id: str, req: Reque
             if not simulation:
                 raise HTTPException(status_code=404, detail="Simulation not found")
 
-            if not hasattr(simulation, "recommendations_report_id") or not simulation.recommendations_report_id:
-                raise HTTPException(status_code=404, detail="No recommendations report found for this simulation")
+            if (
+                not hasattr(simulation, "recommendations_report_id")
+                or not simulation.recommendations_report_id
+            ):
+                raise HTTPException(
+                    status_code=404,
+                    detail="No recommendations report found for this simulation",
+                )
 
             # Get the markdown version from doc-store
             md_report_id = f"{simulation.recommendations_report_id}_md"
             doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5051")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(f"{doc_store_url}/api/documents/{md_report_id}")
+                response = await client.get(
+                    f"{doc_store_url}/api/documents/{md_report_id}"
+                )
 
                 if response.status_code == 200:
                     doc_data = response.json()
@@ -1389,15 +1680,28 @@ async def get_simulation_recommendations_markdown(simulation_id: str, req: Reque
                             message="Markdown recommendations report retrieved successfully",
                         )
                     else:
-                        raise HTTPException(status_code=404, detail="Markdown recommendations report not found")
+                        raise HTTPException(
+                            status_code=404,
+                            detail="Markdown recommendations report not found",
+                        )
                 else:
-                    raise HTTPException(status_code=500, detail="Failed to retrieve markdown report from doc-store")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Failed to retrieve markdown report from doc-store",
+                    )
 
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get markdown recommendations report", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve markdown recommendations report")
+            logger.error(
+                "Failed to get markdown recommendations report",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to retrieve markdown recommendations report",
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/analysis")
@@ -1416,7 +1720,9 @@ async def get_simulation_analysis(simulation_id: str, req: Request):
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1425,11 +1731,16 @@ async def get_simulation_analysis(simulation_id: str, req: Request):
                 raise HTTPException(status_code=404, detail="Simulation not found")
 
             # Check if analysis report exists
-            if hasattr(simulation, "analysis_report_id") and simulation.analysis_report_id:
+            if (
+                hasattr(simulation, "analysis_report_id")
+                and simulation.analysis_report_id
+            ):
                 return create_success_response(
                     data={
                         "report_id": simulation.analysis_report_id,
-                        "report_timestamp": getattr(simulation, "analysis_report_timestamp", None),
+                        "report_timestamp": getattr(
+                            simulation, "analysis_report_timestamp", None
+                        ),
                         "simulation_id": simulation_id,
                     },
                     message="Analysis report found",
@@ -1443,8 +1754,14 @@ async def get_simulation_analysis(simulation_id: str, req: Request):
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get analysis report linkage", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve analysis report linkage")
+            logger.error(
+                "Failed to get analysis report linkage",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve analysis report linkage"
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/analysis/report")
@@ -1463,7 +1780,9 @@ async def get_simulation_analysis_report(simulation_id: str, req: Request):
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1471,14 +1790,22 @@ async def get_simulation_analysis_report(simulation_id: str, req: Request):
             if not simulation:
                 raise HTTPException(status_code=404, detail="Simulation not found")
 
-            if not hasattr(simulation, "analysis_report_id") or not simulation.analysis_report_id:
-                raise HTTPException(status_code=404, detail="No analysis report found for this simulation")
+            if (
+                not hasattr(simulation, "analysis_report_id")
+                or not simulation.analysis_report_id
+            ):
+                raise HTTPException(
+                    status_code=404,
+                    detail="No analysis report found for this simulation",
+                )
 
             # Get the report from doc-store
             doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5051")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(f"{doc_store_url}/api/documents/{simulation.analysis_report_id}")
+                response = await client.get(
+                    f"{doc_store_url}/api/documents/{simulation.analysis_report_id}"
+                )
 
                 if response.status_code == 200:
                     doc_data = response.json()
@@ -1489,18 +1816,31 @@ async def get_simulation_analysis_report(simulation_id: str, req: Request):
                         report_content = json.loads(doc_data["data"]["content"])
 
                         return create_success_response(
-                            data=report_content, message="Analysis report retrieved successfully"
+                            data=report_content,
+                            message="Analysis report retrieved successfully",
                         )
                     else:
-                        raise HTTPException(status_code=404, detail="Analysis report not found in doc-store")
+                        raise HTTPException(
+                            status_code=404,
+                            detail="Analysis report not found in doc-store",
+                        )
                 else:
-                    raise HTTPException(status_code=500, detail="Failed to retrieve report from doc-store")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Failed to retrieve report from doc-store",
+                    )
 
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get analysis report", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve analysis report")
+            logger.error(
+                "Failed to get analysis report",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve analysis report"
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/analysis/markdown")
@@ -1519,7 +1859,9 @@ async def get_simulation_analysis_markdown(simulation_id: str, req: Request):
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1527,15 +1869,23 @@ async def get_simulation_analysis_markdown(simulation_id: str, req: Request):
             if not simulation:
                 raise HTTPException(status_code=404, detail="Simulation not found")
 
-            if not hasattr(simulation, "analysis_report_id") or not simulation.analysis_report_id:
-                raise HTTPException(status_code=404, detail="No analysis report found for this simulation")
+            if (
+                not hasattr(simulation, "analysis_report_id")
+                or not simulation.analysis_report_id
+            ):
+                raise HTTPException(
+                    status_code=404,
+                    detail="No analysis report found for this simulation",
+                )
 
             # Get the markdown version from doc-store
             md_report_id = f"{simulation.analysis_report_id}_md"
             doc_store_url = os.getenv("DOC_STORE_URL", "http://localhost:5051")
 
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(f"{doc_store_url}/api/documents/{md_report_id}")
+                response = await client.get(
+                    f"{doc_store_url}/api/documents/{md_report_id}"
+                )
 
                 if response.status_code == 200:
                     doc_data = response.json()
@@ -1549,19 +1899,32 @@ async def get_simulation_analysis_markdown(simulation_id: str, req: Request):
                             message="Markdown analysis report retrieved successfully",
                         )
                     else:
-                        raise HTTPException(status_code=404, detail="Markdown analysis report not found")
+                        raise HTTPException(
+                            status_code=404, detail="Markdown analysis report not found"
+                        )
                 else:
-                    raise HTTPException(status_code=500, detail="Failed to retrieve markdown report from doc-store")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="Failed to retrieve markdown report from doc-store",
+                    )
 
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get markdown analysis report", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve markdown analysis report")
+            logger.error(
+                "Failed to get markdown analysis report",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve markdown analysis report"
+            )
 
 
 @app.post("/api/v1/simulations/{simulation_id}/timeline/place-documents")
-async def place_documents_on_simulation_timeline(simulation_id: str, request: Dict[str, Any], req: Request):
+async def place_documents_on_simulation_timeline(
+    simulation_id: str, request: Dict[str, Any], req: Request
+):
     """Place documents on the simulation timeline based on timestamps."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -1585,11 +1948,15 @@ async def place_documents_on_simulation_timeline(simulation_id: str, request: Di
 
             if not analyzer:
                 # Fallback: create analyzer directly
-                from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
+                from simulation.application.analysis.simulation_analyzer import (
+                    SimulationAnalyzer,
+                )
 
                 analyzer = SimulationAnalyzer()
 
-            placement_result = await analyzer.place_documents_on_timeline(simulation_id, documents, timeline)
+            placement_result = await analyzer.place_documents_on_timeline(
+                simulation_id, documents, timeline
+            )
 
             return create_success_response(
                 data=placement_result,
@@ -1597,8 +1964,14 @@ async def place_documents_on_simulation_timeline(simulation_id: str, request: Di
             )
 
         except Exception as e:
-            logger.error("Failed to place documents on timeline", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to place documents on timeline")
+            logger.error(
+                "Failed to place documents on timeline",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to place documents on timeline"
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/timeline/placement-report")
@@ -1617,7 +1990,9 @@ async def get_timeline_placement_report(simulation_id: str, req: Request):
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1639,12 +2014,20 @@ async def get_timeline_placement_report(simulation_id: str, req: Request):
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get timeline placement report", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve timeline placement report")
+            logger.error(
+                "Failed to get timeline placement report",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve timeline placement report"
+            )
 
 
 @app.post("/api/v1/simulations/{simulation_id}/reports/comprehensive-summary")
-async def generate_comprehensive_summary_report(simulation_id: str, request: Dict[str, Any], req: Request):
+async def generate_comprehensive_summary_report(
+    simulation_id: str, request: Dict[str, Any], req: Request
+):
     """Generate a comprehensive summary report combining all analysis types."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -1666,7 +2049,9 @@ async def generate_comprehensive_summary_report(simulation_id: str, request: Dic
 
             if not analyzer:
                 # Fallback: create analyzer directly
-                from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
+                from simulation.application.analysis.simulation_analyzer import (
+                    SimulationAnalyzer,
+                )
 
                 analyzer = SimulationAnalyzer()
 
@@ -1681,17 +2066,28 @@ async def generate_comprehensive_summary_report(simulation_id: str, request: Dic
                 )
             else:
                 return create_error_response(
-                    summary_result.get("error", "Failed to generate comprehensive report"),
+                    summary_result.get(
+                        "error", "Failed to generate comprehensive report"
+                    ),
                     error_code="REPORT_GENERATION_FAILED",
                 )
 
         except Exception as e:
-            logger.error("Failed to generate comprehensive summary report", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to generate comprehensive summary report")
+            logger.error(
+                "Failed to generate comprehensive summary report",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to generate comprehensive summary report",
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/reports/comprehensive-summary")
-async def get_comprehensive_summary_report(simulation_id: str, req: Request, format: str = "json"):
+async def get_comprehensive_summary_report(
+    simulation_id: str, req: Request, format: str = "json"
+):
     """Get the comprehensive summary report for a simulation."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -1706,7 +2102,9 @@ async def get_comprehensive_summary_report(simulation_id: str, req: Request, for
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1730,12 +2128,21 @@ async def get_comprehensive_summary_report(simulation_id: str, req: Request, for
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get comprehensive summary report", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve comprehensive summary report")
+            logger.error(
+                "Failed to get comprehensive summary report",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to retrieve comprehensive summary report",
+            )
 
 
 @app.post("/api/v1/simulations/{simulation_id}/analysis/pull-request")
-async def analyze_pull_request(simulation_id: str, request: Dict[str, Any], req: Request):
+async def analyze_pull_request(
+    simulation_id: str, request: Dict[str, Any], req: Request
+):
     """Analyze a pull request and provide refactoring suggestions."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -1755,11 +2162,15 @@ async def analyze_pull_request(simulation_id: str, request: Dict[str, Any], req:
 
             if not analyzer:
                 # Fallback: create analyzer directly
-                from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
+                from simulation.application.analysis.simulation_analyzer import (
+                    SimulationAnalyzer,
+                )
 
                 analyzer = SimulationAnalyzer()
 
-            analysis_result = await analyzer.analyze_pull_request(simulation_id, pr_data)
+            analysis_result = await analyzer.analyze_pull_request(
+                simulation_id, pr_data
+            )
 
             if analysis_result.get("analysis_completed"):
                 return create_success_response(
@@ -1768,16 +2179,25 @@ async def analyze_pull_request(simulation_id: str, request: Dict[str, Any], req:
                 )
             else:
                 return create_error_response(
-                    analysis_result.get("error", "Failed to analyze pull request"), error_code="PR_ANALYSIS_FAILED"
+                    analysis_result.get("error", "Failed to analyze pull request"),
+                    error_code="PR_ANALYSIS_FAILED",
                 )
 
         except Exception as e:
-            logger.error("Failed to analyze pull request", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to analyze pull request")
+            logger.error(
+                "Failed to analyze pull request",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to analyze pull request"
+            )
 
 
 @app.get("/api/v1/simulations/{simulation_id}/analysis/pull-request")
-async def get_pull_request_analysis(simulation_id: str, req: Request, format: str = "json"):
+async def get_pull_request_analysis(
+    simulation_id: str, req: Request, format: str = "json"
+):
     """Get the pull request analysis report for a simulation."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -1792,7 +2212,9 @@ async def get_pull_request_analysis(simulation_id: str, req: Request, format: st
 
             if not simulation_repo:
                 # Fallback: try to get from direct repository access
-                from simulation.infrastructure.repositories.sqlite_repositories import SQLiteSimulationRepository
+                from simulation.infrastructure.repositories.sqlite_repositories import (
+                    SQLiteSimulationRepository,
+                )
 
                 simulation_repo = SQLiteSimulationRepository()
 
@@ -1823,8 +2245,14 @@ async def get_pull_request_analysis(simulation_id: str, req: Request, format: st
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("Failed to get pull request analysis", error=str(e), simulation_id=simulation_id)
-            raise HTTPException(status_code=500, detail="Failed to retrieve pull request analysis")
+            logger.error(
+                "Failed to get pull request analysis",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve pull request analysis"
+            )
 
 
 # ============================================================================
@@ -1935,7 +2363,12 @@ async def get_interpreter_capabilities(req: Request):
     with with_correlation_id(correlation_id):
         try:
             capabilities = {
-                "simulation_types": ["web_application", "mobile_app", "api_service", "data_pipeline"],
+                "simulation_types": [
+                    "web_application",
+                    "mobile_app",
+                    "api_service",
+                    "data_pipeline",
+                ],
                 "complexity_levels": ["low", "medium", "high", "complex"],
                 "analysis_types": [
                     "document_generation",
@@ -1958,14 +2391,24 @@ async def get_interpreter_capabilities(req: Request):
                     "recommendations": True,
                     "timeline_visualization": True,
                 },
-                "integrations": {"doc_store": True, "prompt_store": True, "summarizer_hub": True, "redis_pubsub": True},
+                "integrations": {
+                    "doc_store": True,
+                    "prompt_store": True,
+                    "summarizer_hub": True,
+                    "redis_pubsub": True,
+                },
             }
 
-            return create_success_response(data=capabilities, message="Interpreter capabilities retrieved successfully")
+            return create_success_response(
+                data=capabilities,
+                message="Interpreter capabilities retrieved successfully",
+            )
 
         except Exception as e:
             logger.error("Failed to get interpreter capabilities", error=str(e))
-            raise HTTPException(status_code=500, detail="Failed to retrieve capabilities")
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve capabilities"
+            )
 
 
 @app.post("/api/v1/interpreter/mock-data")
@@ -2001,7 +2444,11 @@ async def generate_mock_data_for_interpreter(request: Dict[str, Any], req: Reque
             )
 
         except Exception as e:
-            logger.error("Failed to generate mock data", error=str(e), correlation_id=correlation_id)
+            logger.error(
+                "Failed to generate mock data",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
             raise HTTPException(status_code=500, detail="Failed to generate mock data")
 
 
@@ -2033,12 +2480,15 @@ async def get_environment_info(req: Request):
             )
 
             return create_success_response(
-                data=environment_info, message="Environment information retrieved successfully"
+                data=environment_info,
+                message="Environment information retrieved successfully",
             )
 
         except Exception as e:
             logger.error("Failed to get environment info", error=str(e))
-            raise HTTPException(status_code=500, detail="Failed to retrieve environment information")
+            raise HTTPException(
+                status_code=500, detail="Failed to retrieve environment information"
+            )
 
 
 @app.get("/api/v1/service-discovery")
@@ -2086,12 +2536,16 @@ async def get_service_discovery_info(req: Request):
             }
 
             return create_success_response(
-                data=discovery_info, message="Service discovery information retrieved successfully"
+                data=discovery_info,
+                message="Service discovery information retrieved successfully",
             )
 
         except Exception as e:
             logger.error("Failed to get service discovery info", error=str(e))
-            raise HTTPException(status_code=500, detail="Failed to retrieve service discovery information")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to retrieve service discovery information",
+            )
 
         except Exception as e:
             logger.error("Failed to generate mock data", error=str(e))
@@ -2118,7 +2572,9 @@ async def analyze_with_simulation(request: Dict[str, Any], req: Request):
             )
 
             # Perform analysis using simulation infrastructure
-            analysis_result = await perform_simulation_analysis(content, analysis_type, context)
+            analysis_result = await perform_simulation_analysis(
+                content, analysis_type, context
+            )
 
             return create_success_response(
                 data={
@@ -2140,7 +2596,9 @@ async def analyze_with_simulation(request: Dict[str, Any], req: Request):
 # ============================================================================
 
 
-async def generate_mock_simulation_data(query: str, context: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_mock_simulation_data(
+    query: str, context: Dict[str, Any], config: Dict[str, Any]
+) -> Dict[str, Any]:
     """Generate comprehensive mock data for simulation based on interpreter query."""
     try:
         # Extract keywords from query to generate relevant mock data
@@ -2178,7 +2636,9 @@ async def generate_mock_simulation_data(query: str, context: Dict[str, Any], con
         }
 
 
-async def generate_specific_mock_data(query: str, context: Dict[str, Any], data_types: List[str]) -> Dict[str, Any]:
+async def generate_specific_mock_data(
+    query: str, context: Dict[str, Any], data_types: List[str]
+) -> Dict[str, Any]:
     """Generate specific types of mock data as requested."""
     result = {}
     keywords = extract_keywords_from_query(query)
@@ -2196,46 +2656,70 @@ async def generate_specific_mock_data(query: str, context: Dict[str, Any], data_
     return result
 
 
-async def store_mock_data_in_simulation(simulation_id: str, mock_data: Dict[str, Any]) -> None:
+async def store_mock_data_in_simulation(
+    simulation_id: str, mock_data: Dict[str, Any]
+) -> None:
     """Store generated mock data in simulation for later retrieval."""
     try:
         # Store team members as simulation documents
         if mock_data.get("team_members"):
             for member in mock_data["team_members"]:
                 await application_service.link_document_to_simulation(
-                    simulation_id, f"team_member_{member['id']}", "team_member", f"mock_team_member_{member['id']}"
+                    simulation_id,
+                    f"team_member_{member['id']}",
+                    "team_member",
+                    f"mock_team_member_{member['id']}",
                 )
 
         # Store generated documents
         if mock_data.get("documents"):
             for doc in mock_data["documents"]:
                 await application_service.link_document_to_simulation(
-                    simulation_id, f"doc_{doc['id']}", "generated_document", f"mock_document_{doc['id']}"
+                    simulation_id,
+                    f"doc_{doc['id']}",
+                    "generated_document",
+                    f"mock_document_{doc['id']}",
                 )
 
         # Store mock data as run data
         await application_service.save_simulation_run_data(
             simulation_id,
             "mock_data_generation",
-            {"mock_data": mock_data, "generated_at": datetime.now().isoformat(), "source": "interpreter"},
+            {
+                "mock_data": mock_data,
+                "generated_at": datetime.now().isoformat(),
+                "source": "interpreter",
+            },
         )
 
     except Exception as e:
-        logger.error("Failed to store mock data in simulation", error=str(e), simulation_id=simulation_id)
+        logger.error(
+            "Failed to store mock data in simulation",
+            error=str(e),
+            simulation_id=simulation_id,
+        )
 
 
-async def execute_simulation_with_analysis(simulation_id: str, mock_data: Dict[str, Any]) -> Dict[str, Any]:
+async def execute_simulation_with_analysis(
+    simulation_id: str, mock_data: Dict[str, Any]
+) -> Dict[str, Any]:
     """Execute simulation with comprehensive analysis processing."""
     try:
         # Start simulation execution
-        execution_result = await simulation_execution_engine.execute_simulation(simulation_id)
+        execution_result = await simulation_execution_engine.execute_simulation(
+            simulation_id
+        )
 
         if execution_result.get("success"):
             # Perform additional analysis
-            analysis_results = await perform_comprehensive_analysis(simulation_id, mock_data)
+            analysis_results = await perform_comprehensive_analysis(
+                simulation_id, mock_data
+            )
 
             # Generate summary report
-            summary_report = await generate_simulation_summary_report(simulation_id, analysis_results)
+            summary_report = await generate_simulation_summary_report(
+                simulation_id, analysis_results
+            )
 
             return {
                 "execution_success": True,
@@ -2244,14 +2728,23 @@ async def execute_simulation_with_analysis(simulation_id: str, mock_data: Dict[s
                 "analysis_results": analysis_results,
             }
         else:
-            return {"execution_success": False, "error": execution_result.get("message", "Execution failed")}
+            return {
+                "execution_success": False,
+                "error": execution_result.get("message", "Execution failed"),
+            }
 
     except Exception as e:
-        logger.error("Failed to execute simulation with analysis", error=str(e), simulation_id=simulation_id)
+        logger.error(
+            "Failed to execute simulation with analysis",
+            error=str(e),
+            simulation_id=simulation_id,
+        )
         return {"execution_success": False, "error": str(e)}
 
 
-async def perform_simulation_analysis(content: str, analysis_type: str, context: Dict[str, Any]) -> Dict[str, Any]:
+async def perform_simulation_analysis(
+    content: str, analysis_type: str, context: Dict[str, Any]
+) -> Dict[str, Any]:
     """Perform analysis using simulation infrastructure."""
     # This would integrate with various analysis services
     # For now, return mock analysis results
@@ -2260,12 +2753,17 @@ async def perform_simulation_analysis(content: str, analysis_type: str, context:
         "content_length": len(content),
         "context_provided": bool(context),
         "mock_analysis_result": "Analysis completed successfully",
-        "recommendations": ["Consider consolidating similar documents", "Review outdated content"],
+        "recommendations": [
+            "Consider consolidating similar documents",
+            "Review outdated content",
+        ],
         "analyzed_at": datetime.now().isoformat(),
     }
 
 
-async def perform_comprehensive_analysis(simulation_id: str, mock_data: Dict[str, Any]) -> Dict[str, Any]:
+async def perform_comprehensive_analysis(
+    simulation_id: str, mock_data: Dict[str, Any]
+) -> Dict[str, Any]:
     """Perform comprehensive analysis on simulation data using summarizer-hub."""
     try:
         # Get documents from simulation
@@ -2294,8 +2792,12 @@ async def perform_comprehensive_analysis(simulation_id: str, mock_data: Dict[str
                         "id": doc.get("id", f"doc_{len(formatted_documents)}"),
                         "title": doc.get("title", "Untitled Document"),
                         "content": doc.get("content", ""),
-                        "dateCreated": doc.get("dateCreated", datetime.now().isoformat()),
-                        "dateUpdated": doc.get("dateUpdated", datetime.now().isoformat()),
+                        "dateCreated": doc.get(
+                            "dateCreated", datetime.now().isoformat()
+                        ),
+                        "dateUpdated": doc.get(
+                            "dateUpdated", datetime.now().isoformat()
+                        ),
                     }
                 )
 
@@ -2311,7 +2813,12 @@ async def perform_comprehensive_analysis(simulation_id: str, mock_data: Dict[str
             try:
                 analysis_request = {
                     "documents": formatted_documents,
-                    "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"],
+                    "recommendation_types": [
+                        "consolidation",
+                        "duplicate",
+                        "outdated",
+                        "quality",
+                    ],
                     "confidence_threshold": 0.4,
                     "include_jira_suggestions": True,
                     "timeline": timeline_data,
@@ -2329,24 +2836,38 @@ async def perform_comprehensive_analysis(simulation_id: str, mock_data: Dict[str
 
                         # Extract key information for simulation report
                         return {
-                            "document_analysis": analysis_result.get("recommendations", []),
-                            "team_analysis": mock_data.get("team_analysis", "Team analysis completed"),
-                            "timeline_analysis": analysis_result.get("timeline_analysis", {}),
+                            "document_analysis": analysis_result.get(
+                                "recommendations", []
+                            ),
+                            "team_analysis": mock_data.get(
+                                "team_analysis", "Team analysis completed"
+                            ),
+                            "timeline_analysis": analysis_result.get(
+                                "timeline_analysis", {}
+                            ),
                             "risk_assessment": "Risk assessment based on document analysis",
                             "recommendations": [
                                 rec.get("description", "General recommendation")
                                 for rec in analysis_result.get("recommendations", [])
                             ],
-                            "jira_suggestions": analysis_result.get("suggested_jira_tickets", []),
+                            "jira_suggestions": analysis_result.get(
+                                "suggested_jira_tickets", []
+                            ),
                             "drift_analysis": analysis_result.get("drift_analysis", {}),
-                            "alignment_analysis": analysis_result.get("alignment_analysis", {}),
-                            "inconclusive_analysis": analysis_result.get("inconclusive_analysis", {}),
+                            "alignment_analysis": analysis_result.get(
+                                "alignment_analysis", {}
+                            ),
+                            "inconclusive_analysis": analysis_result.get(
+                                "inconclusive_analysis", {}
+                            ),
                             "analysis_service": "summarizer-hub",
                             "analysis_timestamp": datetime.now().isoformat(),
                         }
 
             except Exception as e:
-                logger.warning("Failed to call summarizer-hub, using mock analysis", error=str(e))
+                logger.warning(
+                    "Failed to call summarizer-hub, using mock analysis", error=str(e)
+                )
 
         # Fallback to mock analysis if summarizer-hub is unavailable
         return {
@@ -2364,7 +2885,9 @@ async def perform_comprehensive_analysis(simulation_id: str, mock_data: Dict[str
         }
 
     except Exception as e:
-        logger.error("Comprehensive analysis failed", error=str(e), simulation_id=simulation_id)
+        logger.error(
+            "Comprehensive analysis failed", error=str(e), simulation_id=simulation_id
+        )
         return {
             "document_analysis": f"Analysis failed: {str(e)}",
             "team_analysis": "Analysis failed",
@@ -2376,7 +2899,9 @@ async def perform_comprehensive_analysis(simulation_id: str, mock_data: Dict[str
         }
 
 
-async def generate_simulation_summary_report(simulation_id: str, analysis_results: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_simulation_summary_report(
+    simulation_id: str, analysis_results: Dict[str, Any]
+) -> Dict[str, Any]:
     """Generate comprehensive summary report for simulation."""
     return {
         "simulation_id": simulation_id,
@@ -2421,7 +2946,9 @@ def extract_keywords_from_query(query: str) -> List[str]:
     return list(set(keywords))[:10]  # Limit to 10 keywords
 
 
-def generate_mock_team_members(keywords: List[str], team_size: int) -> List[Dict[str, Any]]:
+def generate_mock_team_members(
+    keywords: List[str], team_size: int
+) -> List[Dict[str, Any]]:
     """Generate mock team members based on project keywords."""
     roles = ["developer", "qa_engineer", "product_owner", "designer", "architect"]
     team_members = []
@@ -2444,9 +2971,16 @@ def generate_mock_team_members(keywords: List[str], team_size: int) -> List[Dict
     return team_members
 
 
-def generate_mock_documents(keywords: List[str], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+def generate_mock_documents(
+    keywords: List[str], context: Dict[str, Any]
+) -> List[Dict[str, Any]]:
     """Generate mock documents based on keywords and context."""
-    doc_types = ["api_documentation", "architecture_diagram", "requirements_spec", "user_manual"]
+    doc_types = [
+        "api_documentation",
+        "architecture_diagram",
+        "requirements_spec",
+        "user_manual",
+    ]
     documents = []
 
     for i, doc_type in enumerate(doc_types):
@@ -2486,7 +3020,9 @@ def infer_technologies_from_query(query: str, keywords: List[str]) -> List[str]:
     return base_technologies + list(set(inferred_tech))[:5]
 
 
-def generate_mock_timeline(duration_weeks: int, keywords: List[str]) -> List[Dict[str, Any]]:
+def generate_mock_timeline(
+    duration_weeks: int, keywords: List[str]
+) -> List[Dict[str, Any]]:
     """Generate mock project timeline."""
     phases = ["Planning", "Development", "Testing", "Deployment", "Maintenance"]
     timeline = []
@@ -2558,11 +3094,21 @@ async def create_simulation(request: CreateSimulationRequest, req: Request):
                     headers={"X-Correlation-ID": correlation_id},
                 )
             else:
-                raise HTTPException(status_code=400, detail=result.get("message", "Failed to create simulation"))
+                raise HTTPException(
+                    status_code=400,
+                    detail=result.get("message", "Failed to create simulation"),
+                )
 
         except Exception as e:
-            logger.error("Failed to create simulation", error=str(e), correlation_id=correlation_id)
-            raise HTTPException(status_code=500, detail="Internal server error during simulation creation")
+            logger.error(
+                "Failed to create simulation",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
+            raise HTTPException(
+                status_code=500,
+                detail="Internal server error during simulation creation",
+            )
 
 
 @app.post("/api/v1/simulations/{simulation_id}/execute")
@@ -2580,13 +3126,19 @@ async def execute_simulation(simulation_id: str, background_tasks: BackgroundTas
 
         try:
             # Execute simulation in background for long-running operations
-            background_tasks.add_task(_execute_simulation_background, simulation_id, correlation_id)
+            background_tasks.add_task(
+                _execute_simulation_background, simulation_id, correlation_id
+            )
 
             # Create HATEOAS links for the executing simulation
             links = SimulationResource.create_simulation_links(simulation_id)
 
             return create_hateoas_response(
-                data={"simulation_id": simulation_id, "message": "Simulation execution started", "status": "running"},
+                data={
+                    "simulation_id": simulation_id,
+                    "message": "Simulation execution started",
+                    "status": "running",
+                },
                 links=links,
                 status="accepted",
             )
@@ -2615,13 +3167,19 @@ async def get_simulation_status(simulation_id: str):
         )
 
         try:
-            result = await simulation_execution_engine.get_simulation_status(simulation_id)
+            result = await simulation_execution_engine.get_simulation_status(
+                simulation_id
+            )
 
             if result is None:
                 # Simulation not found
                 return JSONResponse(
                     status_code=404,
-                    content={"success": False, "error": "Simulation not found", "error_code": "simulation_not_found"},
+                    content={
+                        "success": False,
+                        "error": "Simulation not found",
+                        "error_code": "simulation_not_found",
+                    },
                 )
 
             if not result.get("success", False):
@@ -2641,8 +3199,16 @@ async def get_simulation_status(simulation_id: str):
             links = SimulationResource.create_simulation_links(simulation_id)
 
             # Create response in the format expected by tests
-            response_data = {"success": True, "_links": links.to_dict(), **simulation_data}
-            return JSONResponse(content=response_data, status_code=200, headers={"X-Correlation-ID": correlation_id})
+            response_data = {
+                "success": True,
+                "_links": links.to_dict(),
+                **simulation_data,
+            }
+            return JSONResponse(
+                content=response_data,
+                status_code=200,
+                headers={"X-Correlation-ID": correlation_id},
+            )
 
         except Exception as e:
             logger.error(
@@ -2656,7 +3222,9 @@ async def get_simulation_status(simulation_id: str):
 
 # Configuration file endpoints
 @app.post("/api/v1/simulations/from-config")
-async def create_simulation_from_config(request: CreateSimulationFromConfigRequest, req: Request):
+async def create_simulation_from_config(
+    request: CreateSimulationFromConfigRequest, req: Request
+):
     """Create a simulation from a configuration file."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -2669,7 +3237,9 @@ async def create_simulation_from_config(request: CreateSimulationFromConfigReque
         )
 
         try:
-            result = await application_service.create_simulation_from_config_file(request.config_file_path)
+            result = await application_service.create_simulation_from_config_file(
+                request.config_file_path
+            )
 
             if result["success"]:
                 simulation_id = result.get("simulation_id")
@@ -2678,7 +3248,9 @@ async def create_simulation_from_config(request: CreateSimulationFromConfigReque
                 response_data = create_crud_response(
                     operation="create",
                     resource_id=simulation_id,
-                    message=result.get("message", "Simulation created from config successfully"),
+                    message=result.get(
+                        "message", "Simulation created from config successfully"
+                    ),
                     request_id=correlation_id,
                 )
 
@@ -2692,7 +3264,9 @@ async def create_simulation_from_config(request: CreateSimulationFromConfigReque
                 )
             else:
                 return create_error_response(
-                    message=result.get("message", "Failed to create simulation from config"),
+                    message=result.get(
+                        "message", "Failed to create simulation from config"
+                    ),
                     error_code="config_simulation_creation_failed",
                     details=result,
                     request_id=correlation_id,
@@ -2700,7 +3274,11 @@ async def create_simulation_from_config(request: CreateSimulationFromConfigReque
                 )
 
         except Exception as e:
-            logger.error("Failed to create simulation from config file", error=str(e), correlation_id=correlation_id)
+            logger.error(
+                "Failed to create simulation from config file",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
             return create_error_response(
                 message="Internal server error during config-based simulation creation",
                 error_code="internal_server_error",
@@ -2724,7 +3302,9 @@ async def create_sample_config(request: CreateSampleConfigRequest, req: Request)
         )
 
         try:
-            result = await application_service.create_sample_config_file(request.file_path, request.project_name)
+            result = await application_service.create_sample_config_file(
+                request.file_path, request.project_name
+            )
 
             if result["success"]:
                 return create_success_response(
@@ -2748,7 +3328,11 @@ async def create_sample_config(request: CreateSampleConfigRequest, req: Request)
                 )
 
         except Exception as e:
-            logger.error("Failed to create sample configuration file", error=str(e), correlation_id=correlation_id)
+            logger.error(
+                "Failed to create sample configuration file",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
             return create_error_response(
                 message="Internal server error during sample config creation",
                 error_code="internal_server_error",
@@ -2771,7 +3355,9 @@ async def validate_config_file(request: ValidateConfigRequest, req: Request):
         )
 
         try:
-            result = await application_service.validate_config_file(request.config_file_path)
+            result = await application_service.validate_config_file(
+                request.config_file_path
+            )
 
             if result["success"]:
                 return create_success_response(
@@ -2796,7 +3382,11 @@ async def validate_config_file(request: ValidateConfigRequest, req: Request):
                 )
 
         except Exception as e:
-            logger.error("Failed to validate configuration file", error=str(e), correlation_id=correlation_id)
+            logger.error(
+                "Failed to validate configuration file",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
             return create_error_response(
                 message="Internal server error during config validation",
                 error_code="internal_server_error",
@@ -2811,7 +3401,11 @@ async def get_config_template(req: Request):
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
     with with_correlation_id(correlation_id):
-        logger.info("Getting configuration template", operation="get_config_template", correlation_id=correlation_id)
+        logger.info(
+            "Getting configuration template",
+            operation="get_config_template",
+            correlation_id=correlation_id,
+        )
 
         try:
             result = await application_service.get_config_template()
@@ -2835,7 +3429,11 @@ async def get_config_template(req: Request):
                 )
 
         except Exception as e:
-            logger.error("Failed to get configuration template", error=str(e), correlation_id=correlation_id)
+            logger.error(
+                "Failed to get configuration template",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
             return create_error_response(
                 message="Internal server error during template retrieval",
                 error_code="internal_server_error",
@@ -2846,7 +3444,9 @@ async def get_config_template(req: Request):
 
 # Reporting endpoints
 @app.post("/api/v1/simulations/{simulation_id}/reports/generate")
-async def generate_simulation_reports(simulation_id: str, request: GenerateReportsRequest, req: Request):
+async def generate_simulation_reports(
+    simulation_id: str, request: GenerateReportsRequest, req: Request
+):
     """Generate comprehensive reports for a simulation."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -2885,7 +3485,11 @@ async def generate_simulation_reports(simulation_id: str, request: GenerateRepor
                     "Workflow automation provides significant time savings",
                 ],
                 "issues": [
-                    {"type": "consistency", "severity": "medium", "description": "Inconsistent naming conventions"}
+                    {
+                        "type": "consistency",
+                        "severity": "medium",
+                        "description": "Inconsistent naming conventions",
+                    }
                 ],
                 "benefits": {"time_saved": 24.5, "cost_savings": 1250.00},
             }
@@ -2896,8 +3500,16 @@ async def generate_simulation_reports(simulation_id: str, request: GenerateRepor
             ]
 
             document_data = [
-                {"type": "requirements", "title": "Project Requirements", "quality_score": 0.88},
-                {"type": "architecture", "title": "System Architecture", "quality_score": 0.92},
+                {
+                    "type": "requirements",
+                    "title": "Project Requirements",
+                    "quality_score": 0.88,
+                },
+                {
+                    "type": "architecture",
+                    "title": "System Architecture",
+                    "quality_score": 0.92,
+                },
             ]
 
             # Generate reports
@@ -3128,7 +3740,9 @@ async def get_simulation_report(simulation_id: str, report_type: str, req: Reque
 
 
 @app.post("/api/v1/simulations/{simulation_id}/reports/export")
-async def export_simulation_report(simulation_id: str, request: ExportReportRequest, req: Request):
+async def export_simulation_report(
+    simulation_id: str, request: ExportReportRequest, req: Request
+):
     """Export a simulation report in specified format."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -3161,7 +3775,9 @@ async def export_simulation_report(simulation_id: str, request: ExportReportRequ
 
             # Export the report
             export_path = await reporting_system.export_report(
-                report_data=report_data, format=request.format, output_path=request.output_path
+                report_data=report_data,
+                format=request.format,
+                output_path=request.output_path,
             )
 
             return create_success_response(
@@ -3207,14 +3823,20 @@ async def start_simulation_ui(simulation_id: str, req: Request):
         )
 
         try:
-            from simulation.infrastructure.ui.terminal_progress_visualizer import start_simulation_monitoring
+            from simulation.infrastructure.ui.terminal_progress_visualizer import (
+                start_simulation_monitoring,
+            )
 
             # Start terminal monitoring (this will run in background)
             start_simulation_monitoring(simulation_id, estimated_duration_minutes=60)
 
             return create_success_response(
                 message=f"Terminal UI monitoring started for simulation {simulation_id}",
-                data={"simulation_id": simulation_id, "monitoring_started": True, "estimated_duration_minutes": 60},
+                data={
+                    "simulation_id": simulation_id,
+                    "monitoring_started": True,
+                    "estimated_duration_minutes": 60,
+                },
                 request_id=correlation_id,
             )
 
@@ -3234,7 +3856,9 @@ async def start_simulation_ui(simulation_id: str, req: Request):
 
 
 @app.post("/api/v1/simulations/{simulation_id}/ui/stop")
-async def stop_simulation_ui(simulation_id: str, request: StopUIMonitoringRequest, req: Request):
+async def stop_simulation_ui(
+    simulation_id: str, request: StopUIMonitoringRequest, req: Request
+):
     """Stop terminal UI monitoring for a simulation."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -3248,7 +3872,9 @@ async def stop_simulation_ui(simulation_id: str, request: StopUIMonitoringReques
         )
 
         try:
-            from simulation.infrastructure.ui.terminal_progress_visualizer import stop_simulation_monitoring
+            from simulation.infrastructure.ui.terminal_progress_visualizer import (
+                stop_simulation_monitoring,
+            )
 
             # Stop terminal monitoring
             stop_simulation_monitoring(simulation_id, request.success)
@@ -3258,7 +3884,9 @@ async def stop_simulation_ui(simulation_id: str, request: StopUIMonitoringReques
                 data={
                     "simulation_id": simulation_id,
                     "monitoring_stopped": True,
-                    "final_status": "success" if request.success else "completed_with_issues",
+                    "final_status": (
+                        "success" if request.success else "completed_with_issues"
+                    ),
                 },
                 request_id=correlation_id,
             )
@@ -3292,7 +3920,9 @@ async def get_simulation_ui_status(simulation_id: str, req: Request):
         )
 
         try:
-            from simulation.infrastructure.ui.terminal_progress_visualizer import get_simulation_terminal_ui
+            from simulation.infrastructure.ui.terminal_progress_visualizer import (
+                get_simulation_terminal_ui,
+            )
 
             ui = get_simulation_terminal_ui(simulation_id)
 
@@ -3304,12 +3934,22 @@ async def get_simulation_ui_status(simulation_id: str, req: Request):
                 data={
                     "simulation_id": simulation_id,
                     "monitoring_active": is_monitoring,
-                    "overall_progress": getattr(ui.visualizer.state, "overall_progress", 0.0),
+                    "overall_progress": getattr(
+                        ui.visualizer.state, "overall_progress", 0.0
+                    ),
                     "current_phase": getattr(ui.visualizer.state, "current_phase", ""),
-                    "documents_generated": getattr(ui.visualizer.state, "documents_generated", 0),
-                    "workflows_executed": getattr(ui.visualizer.state, "workflows_executed", 0),
-                    "active_tasks": len(getattr(ui.visualizer.state, "active_tasks", [])),
-                    "completed_tasks": len(getattr(ui.visualizer.state, "completed_tasks", [])),
+                    "documents_generated": getattr(
+                        ui.visualizer.state, "documents_generated", 0
+                    ),
+                    "workflows_executed": getattr(
+                        ui.visualizer.state, "workflows_executed", 0
+                    ),
+                    "active_tasks": len(
+                        getattr(ui.visualizer.state, "active_tasks", [])
+                    ),
+                    "completed_tasks": len(
+                        getattr(ui.visualizer.state, "completed_tasks", [])
+                    ),
                 },
                 request_id=correlation_id,
             )
@@ -3355,7 +3995,10 @@ async def get_simulation_events(
         )
 
         try:
-            from simulation.infrastructure.persistence.redis_event_store import EventType, get_event_store
+            from simulation.infrastructure.persistence.redis_event_store import (
+                EventType,
+                get_event_store,
+            )
 
             event_store = get_event_store()
 
@@ -3363,10 +4006,14 @@ async def get_simulation_events(
             event_type_list = None
             if event_types:
                 try:
-                    event_type_list = [EventType(et.strip()) for et in event_types.split(",")]
+                    event_type_list = [
+                        EventType(et.strip()) for et in event_types.split(",")
+                    ]
                 except ValueError as e:
                     return create_error_response(
-                        message=f"Invalid event types: {e}", error_code="invalid_event_types", request_id=correlation_id
+                        message=f"Invalid event types: {e}",
+                        error_code="invalid_event_types",
+                        request_id=correlation_id,
                     )
 
             start_dt = datetime.fromisoformat(start_time) if start_time else None
@@ -3446,14 +4093,20 @@ async def get_simulation_timeline(simulation_id: str, req: Request):
         )
 
         try:
-            from simulation.infrastructure.persistence.redis_event_store import get_event_store
+            from simulation.infrastructure.persistence.redis_event_store import (
+                get_event_store,
+            )
 
             event_store = get_event_store()
             timeline = await event_store.get_simulation_timeline(simulation_id)
 
             return create_success_response(
                 message=f"Retrieved timeline with {len(timeline)} events for simulation {simulation_id}",
-                data={"simulation_id": simulation_id, "timeline": timeline, "event_count": len(timeline)},
+                data={
+                    "simulation_id": simulation_id,
+                    "timeline": timeline,
+                    "event_count": len(timeline),
+                },
                 request_id=correlation_id,
             )
 
@@ -3473,7 +4126,9 @@ async def get_simulation_timeline(simulation_id: str, req: Request):
 
 
 @app.post("/api/v1/simulations/{simulation_id}/events/replay")
-async def replay_simulation_events(simulation_id: str, request: ReplayEventsRequest, req: Request):
+async def replay_simulation_events(
+    simulation_id: str, request: ReplayEventsRequest, req: Request
+):
     """Replay events for a simulation."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -3500,14 +4155,24 @@ async def replay_simulation_events(simulation_id: str, request: ReplayEventsRequ
                     event_type_list = [EventType(et) for et in request.event_types]
                 except ValueError as e:
                     return create_error_response(
-                        message=f"Invalid event types: {e}", error_code="invalid_event_types", request_id=correlation_id
+                        message=f"Invalid event types: {e}",
+                        error_code="invalid_event_types",
+                        request_id=correlation_id,
                     )
 
             # Create replay configuration
             config = ReplayConfiguration(
                 simulation_id=simulation_id,
-                start_time=datetime.fromisoformat(request.start_time) if request.start_time else None,
-                end_time=datetime.fromisoformat(request.end_time) if request.end_time else None,
+                start_time=(
+                    datetime.fromisoformat(request.start_time)
+                    if request.start_time
+                    else None
+                ),
+                end_time=(
+                    datetime.fromisoformat(request.end_time)
+                    if request.end_time
+                    else None
+                ),
                 event_types=event_type_list,
                 tags=request.tags,
                 speed_multiplier=request.speed_multiplier,
@@ -3530,7 +4195,9 @@ async def replay_simulation_events(simulation_id: str, request: ReplayEventsRequ
 
             # Start replay
             replay_manager = get_replay_manager()
-            replay_id = await replay_manager.start_replay(simulation_id, replay_callback, config)
+            replay_id = await replay_manager.start_replay(
+                simulation_id, replay_callback, config
+            )
 
             return create_success_response(
                 message=f"Started event replay {replay_id} for simulation {simulation_id}",
@@ -3550,7 +4217,10 @@ async def replay_simulation_events(simulation_id: str, request: ReplayEventsRequ
 
         except Exception as e:
             logger.error(
-                "Failed to start event replay", error=str(e), simulation_id=simulation_id, correlation_id=correlation_id
+                "Failed to start event replay",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id,
             )
             return create_error_response(
                 message="Internal server error during event replay",
@@ -3579,7 +4249,9 @@ async def get_event_statistics(
         )
 
         try:
-            from simulation.infrastructure.persistence.redis_event_store import get_event_store
+            from simulation.infrastructure.persistence.redis_event_store import (
+                get_event_store,
+            )
 
             event_store = get_event_store()
 
@@ -3590,10 +4262,18 @@ async def get_event_statistics(
                 simulation_id=simulation_id, start_time=start_dt, end_time=end_dt
             )
 
-            return create_success_response(message="Retrieved event statistics", data=stats, request_id=correlation_id)
+            return create_success_response(
+                message="Retrieved event statistics",
+                data=stats,
+                request_id=correlation_id,
+            )
 
         except Exception as e:
-            logger.error("Failed to get event statistics", error=str(e), correlation_id=correlation_id)
+            logger.error(
+                "Failed to get event statistics",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
             return create_error_response(
                 message="Internal server error during statistics retrieval",
                 error_code="internal_server_error",
@@ -3603,7 +4283,12 @@ async def get_event_statistics(
 
 
 @app.get("/api/v1/simulations", response_model=PaginatedResponse)
-async def list_simulations(status: Optional[str] = None, page: int = 1, page_size: int = 20, req: Request = None):
+async def list_simulations(
+    status: Optional[str] = None,
+    page: int = 1,
+    page_size: int = 20,
+    req: Request = None,
+):
     """List simulations with shared pagination and response patterns."""
     correlation_id = getattr(req.state, "correlation_id", generate_correlation_id())
 
@@ -3658,10 +4343,16 @@ async def list_simulations(status: Optional[str] = None, page: int = 1, page_siz
             response_data = paginated_response.dict()
             response_data["links"] = links
 
-            return JSONResponse(content=response_data, headers={"X-Correlation-ID": correlation_id})
+            return JSONResponse(
+                content=response_data, headers={"X-Correlation-ID": correlation_id}
+            )
 
         except Exception as e:
-            logger.error("Failed to list simulations", error=str(e), correlation_id=correlation_id)
+            logger.error(
+                "Failed to list simulations",
+                error=str(e),
+                correlation_id=correlation_id,
+            )
             return create_error_response(
                 error="Failed to retrieve simulations",
                 error_code="simulation_list_failed",
@@ -3696,7 +4387,10 @@ async def cancel_simulation(simulation_id: str):
 
         except Exception as e:
             logger.error(
-                "Failed to cancel simulation", error=str(e), simulation_id=simulation_id, correlation_id=correlation_id
+                "Failed to cancel simulation",
+                error=str(e),
+                simulation_id=simulation_id,
+                correlation_id=correlation_id,
             )
             return create_error_response(error=str(e), status_code=500)
 
@@ -3741,7 +4435,9 @@ async def _execute_simulation_background(simulation_id: str, correlation_id: str
     with with_correlation_id(correlation_id):
         try:
             logger.info(
-                "Starting background simulation execution", simulation_id=simulation_id, correlation_id=correlation_id
+                "Starting background simulation execution",
+                simulation_id=simulation_id,
+                correlation_id=correlation_id,
             )
 
             result = await simulation_execution_engine.execute_simulation(simulation_id)
@@ -3909,7 +4605,9 @@ async def get_doc_store_service_url() -> Optional[str]:
         return None
 
 
-async def retrieve_documents_from_doc_store(query: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+async def retrieve_documents_from_doc_store(
+    query: Optional[str] = None, limit: int = 50
+) -> List[Dict[str, Any]]:
     """Retrieve documents from doc-store service for timeline integration."""
     try:
         doc_store_url = await get_doc_store_service_url()
@@ -3924,7 +4622,9 @@ async def retrieve_documents_from_doc_store(query: Optional[str] = None, limit: 
 
         async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.get(
-                f"{doc_store_url}/api/v1/documents/search", params=params, headers={"Content-Type": "application/json"}
+                f"{doc_store_url}/api/v1/documents/search",
+                params=params,
+                headers={"Content-Type": "application/json"},
             )
 
             if response.status_code == 200:
@@ -3938,17 +4638,23 @@ async def retrieve_documents_from_doc_store(query: Optional[str] = None, limit: 
                         "id": doc.get("id", f"doc_{len(transformed_docs)}"),
                         "title": doc.get("title", "Untitled Document"),
                         "content": doc.get("content", ""),
-                        "dateCreated": doc.get("created_at") or doc.get("dateCreated", datetime.now().isoformat()),
-                        "dateUpdated": doc.get("updated_at") or doc.get("dateUpdated", datetime.now().isoformat()),
+                        "dateCreated": doc.get("created_at")
+                        or doc.get("dateCreated", datetime.now().isoformat()),
+                        "dateUpdated": doc.get("updated_at")
+                        or doc.get("dateUpdated", datetime.now().isoformat()),
                         "source": "doc_store",
                         "metadata": doc.get("metadata", {}),
                     }
                     transformed_docs.append(transformed_doc)
 
-                logger.info(f"Retrieved {len(transformed_docs)} documents from doc-store")
+                logger.info(
+                    f"Retrieved {len(transformed_docs)} documents from doc-store"
+                )
                 return transformed_docs
             else:
-                logger.warning(f"Failed to retrieve documents from doc-store: {response.status_code}")
+                logger.warning(
+                    f"Failed to retrieve documents from doc-store: {response.status_code}"
+                )
                 return []
 
     except Exception as e:
@@ -3957,12 +4663,16 @@ async def retrieve_documents_from_doc_store(query: Optional[str] = None, limit: 
 
 
 async def integrate_doc_store_documents_with_timeline(
-    simulation_id: str, mock_documents: List[Dict[str, Any]], timeline: Optional[Dict[str, Any]] = None
+    simulation_id: str,
+    mock_documents: List[Dict[str, Any]],
+    timeline: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     """Integrate documents from doc-store with simulation timeline."""
     try:
         # Retrieve additional documents from doc-store
-        doc_store_docs = await retrieve_documents_from_doc_store(query=f"simulation:{simulation_id}", limit=25)
+        doc_store_docs = await retrieve_documents_from_doc_store(
+            query=f"simulation:{simulation_id}", limit=25
+        )
 
         # Combine mock documents with doc-store documents
         all_documents = mock_documents.copy()
@@ -3987,7 +4697,9 @@ async def integrate_doc_store_documents_with_timeline(
                         "timestamp": datetime.now().isoformat(),
                     }
 
-        logger.info(f"Integrated {len(doc_store_docs)} doc-store documents with {len(mock_documents)} mock documents")
+        logger.info(
+            f"Integrated {len(doc_store_docs)} doc-store documents with {len(mock_documents)} mock documents"
+        )
         return all_documents
 
     except Exception as e:

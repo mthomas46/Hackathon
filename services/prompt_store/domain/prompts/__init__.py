@@ -5,4 +5,9 @@ from .repository import PromptRepository
 from .service import PromptService
 from .versioning_repository import PromptVersioningRepository
 
-__all__ = ["PromptRepository", "PromptVersioningRepository", "PromptService", "PromptHandlers"]
+__all__ = [
+    "PromptRepository",
+    "PromptVersioningRepository",
+    "PromptService",
+    "PromptHandlers",
+]

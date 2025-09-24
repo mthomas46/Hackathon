@@ -28,7 +28,9 @@ class QueryExecutorService:
             QueryIntent.LIST_RESOURCES: self._execute_list_resources,
         }
 
-    async def execute_query(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
+    async def execute_query(
+        self, interpretation: QueryInterpretation
+    ) -> QueryExecutionResult:
         """
         Execute an interpreted query.
 
@@ -49,7 +51,9 @@ class QueryExecutorService:
                     execution_id=execution_id,
                     status=ExecutionStatus.FAILED,
                     error_message="Query interpretation does not support execution",
-                    execution_time_seconds=(datetime.utcnow() - start_time).total_seconds(),
+                    execution_time_seconds=(
+                        datetime.utcnow() - start_time
+                    ).total_seconds(),
                 )
 
             # Get execution handler
@@ -60,7 +64,9 @@ class QueryExecutorService:
                     execution_id=execution_id,
                     status=ExecutionStatus.FAILED,
                     error_message=f"No execution handler for intent: {interpretation.intent}",
-                    execution_time_seconds=(datetime.utcnow() - start_time).total_seconds(),
+                    execution_time_seconds=(
+                        datetime.utcnow() - start_time
+                    ).total_seconds(),
                 )
 
             # Execute the query
@@ -84,7 +90,9 @@ class QueryExecutorService:
                 execution_time_seconds=execution_time,
             )
 
-    async def _execute_search_documents(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
+    async def _execute_search_documents(
+        self, interpretation: QueryInterpretation
+    ) -> QueryExecutionResult:
         """Execute document search."""
         execution_id = str(uuid.uuid4())
 
@@ -122,7 +130,9 @@ class QueryExecutorService:
                 error_message=f"Document search failed: {str(e)}",
             )
 
-    async def _execute_analyze_content(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
+    async def _execute_analyze_content(
+        self, interpretation: QueryInterpretation
+    ) -> QueryExecutionResult:
         """Execute content analysis."""
         execution_id = str(uuid.uuid4())
 
@@ -156,7 +166,9 @@ class QueryExecutorService:
                 error_message=f"Content analysis failed: {str(e)}",
             )
 
-    async def _execute_workflow(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
+    async def _execute_workflow(
+        self, interpretation: QueryInterpretation
+    ) -> QueryExecutionResult:
         """Execute a workflow."""
         execution_id = str(uuid.uuid4())
 
@@ -196,7 +208,9 @@ class QueryExecutorService:
                 error_message=f"Workflow execution failed: {str(e)}",
             )
 
-    async def _execute_check_status(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
+    async def _execute_check_status(
+        self, interpretation: QueryInterpretation
+    ) -> QueryExecutionResult:
         """Check system/component status."""
         execution_id = str(uuid.uuid4())
 
@@ -229,7 +243,9 @@ class QueryExecutorService:
                 error_message=f"Status check failed: {str(e)}",
             )
 
-    async def _execute_get_metrics(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
+    async def _execute_get_metrics(
+        self, interpretation: QueryInterpretation
+    ) -> QueryExecutionResult:
         """Get system metrics."""
         execution_id = str(uuid.uuid4())
 
@@ -262,7 +278,9 @@ class QueryExecutorService:
                 error_message=f"Metrics retrieval failed: {str(e)}",
             )
 
-    async def _execute_summarize_content(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
+    async def _execute_summarize_content(
+        self, interpretation: QueryInterpretation
+    ) -> QueryExecutionResult:
         """Execute content summarization."""
         execution_id = str(uuid.uuid4())
 
@@ -296,7 +314,9 @@ class QueryExecutorService:
                 error_message=f"Content summarization failed: {str(e)}",
             )
 
-    async def _execute_list_resources(self, interpretation: QueryInterpretation) -> QueryExecutionResult:
+    async def _execute_list_resources(
+        self, interpretation: QueryInterpretation
+    ) -> QueryExecutionResult:
         """List available resources."""
         execution_id = str(uuid.uuid4())
 
@@ -328,7 +348,9 @@ class QueryExecutorService:
                 error_message=f"Resource listing failed: {str(e)}",
             )
 
-    def validate_execution_capability(self, interpretation: QueryInterpretation) -> Dict[str, Any]:
+    def validate_execution_capability(
+        self, interpretation: QueryInterpretation
+    ) -> Dict[str, Any]:
         """Validate if an interpretation can be executed."""
         issues = []
 

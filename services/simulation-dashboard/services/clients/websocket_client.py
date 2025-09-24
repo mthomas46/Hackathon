@@ -24,14 +24,15 @@ class WebSocketClientError(Exception):
     """Base exception for WebSocket client errors."""
 
 
-
 class WebSocketClient:
     """WebSocket client for real-time simulation updates."""
 
     def __init__(self, config: WebSocketConfig):
         """Initialize the WebSocket client."""
         if not WEBSOCKETS_AVAILABLE:
-            raise WebSocketClientError("websockets package is required for WebSocket functionality")
+            raise WebSocketClientError(
+                "websockets package is required for WebSocket functionality"
+            )
 
         self.config = config
         self.logger = get_dashboard_logger("websocket_client")
@@ -52,7 +53,9 @@ class WebSocketClient:
 
         # Configuration from simulation service
         dashboard_config = get_config()
-        self.ws_base_url = dashboard_config.simulation_service.base_url.replace("http", "ws")
+        self.ws_base_url = dashboard_config.simulation_service.base_url.replace(
+            "http", "ws"
+        )
 
     def add_message_handler(self, message_type: str, handler: Callable) -> None:
         """Add a message handler for a specific message type."""
@@ -169,13 +172,17 @@ class WebSocketClient:
             while self.connected and self.websocket:
                 try:
                     # Receive message with timeout
-                    message_raw = await asyncio.wait_for(self.websocket.recv(), timeout=self.config.message_timeout)
+                    message_raw = await asyncio.wait_for(
+                        self.websocket.recv(), timeout=self.config.message_timeout
+                    )
 
                     # Parse message
                     message_data = json.loads(message_raw)
                     message_type = message_data.get("type", "unknown")
 
-                    self.logger.log_websocket_message(message_type, message_data.get("simulation_id"))
+                    self.logger.log_websocket_message(
+                        message_type, message_data.get("simulation_id")
+                    )
 
                     # Handle message
                     await self._handle_message(message_data)
@@ -220,7 +227,9 @@ class WebSocketClient:
                 try:
                     await handler(message_data)
                 except Exception as e:
-                    self.logger.error(f"Error in message handler for {message_type}: {str(e)}")
+                    self.logger.error(
+                        f"Error in message handler for {message_type}: {str(e)}"
+                    )
 
     async def _heartbeat(self) -> None:
         """Send periodic heartbeat messages."""
@@ -237,13 +246,17 @@ class WebSocketClient:
         """Attempt to reconnect to WebSocket."""
         for attempt in range(self.config.reconnect_attempts):
             try:
-                self.logger.info(f"Reconnection attempt {attempt + 1}/{self.config.reconnect_attempts}")
+                self.logger.info(
+                    f"Reconnection attempt {attempt + 1}/{self.config.reconnect_attempts}"
+                )
                 await asyncio.sleep(self.config.reconnect_delay * (attempt + 1))
                 await self.connect()
                 self.logger.info("Reconnection successful")
                 return
             except Exception as e:
-                self.logger.warning(f"Reconnection attempt {attempt + 1} failed: {str(e)}")
+                self.logger.warning(
+                    f"Reconnection attempt {attempt + 1} failed: {str(e)}"
+                )
 
         self.logger.error("All reconnection attempts failed")
 
@@ -318,7 +331,11 @@ class SimulationWebSocketManager:
         client = self.get_client(simulation_id)
 
         # Import here to avoid circular imports
-        from pages.monitor import handle_simulation_event, handle_simulation_progress, handle_websocket_connected
+        from pages.monitor import (
+            handle_simulation_event,
+            handle_simulation_progress,
+            handle_websocket_connected,
+        )
 
         # Setup message handlers
         client.add_message_handler("simulation_progress", handle_simulation_progress)

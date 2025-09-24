@@ -21,7 +21,9 @@ class DocumentProcessorService:
             "application/xml": [".xml"],
             "application/pdf": [".pdf"],
             "application/msword": [".doc"],
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+                ".docx"
+            ],
         }
 
     def extract_metadata(
@@ -104,7 +106,9 @@ class DocumentProcessorService:
         # Default to plain text
         return "text/plain"
 
-    def _extract_title(self, raw_content: bytes, content_type: str, source_url: str) -> Optional[str]:
+    def _extract_title(
+        self, raw_content: bytes, content_type: str, source_url: str
+    ) -> Optional[str]:
         """Extract document title from content."""
         try:
             if content_type == "text/html":
@@ -112,7 +116,9 @@ class DocumentProcessorService:
                 # Look for title tag
                 import re
 
-                title_match = re.search(r"<title[^>]*>([^<]+)</title>", content_str, re.IGNORECASE)
+                title_match = re.search(
+                    r"<title[^>]*>([^<]+)</title>", content_str, re.IGNORECASE
+                )
                 if title_match:
                     return title_match.group(1).strip()
 
@@ -131,14 +137,21 @@ class DocumentProcessorService:
             if "/" in source_url:
                 filename = source_url.split("/")[-1]
                 if "." in filename:
-                    return filename.rsplit(".", 1)[0].replace("_", " ").replace("-", " ").title()
+                    return (
+                        filename.rsplit(".", 1)[0]
+                        .replace("_", " ")
+                        .replace("-", " ")
+                        .title()
+                    )
 
         except (UnicodeDecodeError, AttributeError):
             pass
 
         return None
 
-    def _extract_timestamps(self, metadata: Dict[str, Any]) -> tuple[Optional[datetime], Optional[datetime]]:
+    def _extract_timestamps(
+        self, metadata: Dict[str, Any]
+    ) -> tuple[Optional[datetime], Optional[datetime]]:
         """Extract created and modified timestamps from metadata."""
         from datetime import datetime
 
@@ -190,7 +203,10 @@ class DocumentProcessorService:
         return None
 
     def _generate_tags(
-        self, source_type: IngestionSourceType, content_type: str, metadata: Dict[str, Any]
+        self,
+        source_type: IngestionSourceType,
+        content_type: str,
+        metadata: Dict[str, Any],
     ) -> List[str]:
         """Generate tags for the document."""
         tags = []
@@ -221,7 +237,9 @@ class DocumentProcessorService:
 
         return list(set(tags))  # Remove duplicates
 
-    def validate_document(self, metadata: DocumentMetadata, content: bytes) -> Dict[str, Any]:
+    def validate_document(
+        self, metadata: DocumentMetadata, content: bytes
+    ) -> Dict[str, Any]:
         """
         Validate a document and its metadata.
 
@@ -255,10 +273,14 @@ class DocumentProcessorService:
             "valid": len(issues) == 0,
             "issues": issues,
             "warnings": [],  # Could add warnings for non-critical issues
-            "checksum_verified": metadata.checksum == calculated_checksum if metadata.checksum else None,
+            "checksum_verified": (
+                metadata.checksum == calculated_checksum if metadata.checksum else None
+            ),
         }
 
-    def enrich_metadata(self, metadata: DocumentMetadata, additional_data: Dict[str, Any]) -> DocumentMetadata:
+    def enrich_metadata(
+        self, metadata: DocumentMetadata, additional_data: Dict[str, Any]
+    ) -> DocumentMetadata:
         """
         Enrich document metadata with additional information.
 
@@ -279,7 +301,9 @@ class DocumentProcessorService:
 
         # Add processing information
         if "processing_info" in additional_data:
-            metadata.set_custom_metadata("processing", additional_data["processing_info"])
+            metadata.set_custom_metadata(
+                "processing", additional_data["processing_info"]
+            )
 
         return metadata
 
@@ -321,5 +345,7 @@ class DocumentProcessorService:
         return {
             "primary_category": categories[0] if categories else "unknown",
             "all_categories": categories,
-            "confidence": min(0.9, 0.5 + len(categories) * 0.1),  # Higher confidence with more categories
+            "confidence": min(
+                0.9, 0.5 + len(categories) * 0.1
+            ),  # Higher confidence with more categories
         }

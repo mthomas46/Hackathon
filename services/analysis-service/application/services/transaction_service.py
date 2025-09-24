@@ -39,7 +39,9 @@ class TransactionManager(ABC):
     """Abstract base class for transaction managers."""
 
     @abstractmethod
-    async def begin_transaction(self, isolation_level: str = "DEFERRED") -> TransactionContext:
+    async def begin_transaction(
+        self, isolation_level: str = "DEFERRED"
+    ) -> TransactionContext:
         """Begin a new transaction."""
 
     @abstractmethod
@@ -55,12 +57,16 @@ class TransactionManager(ABC):
         """Create a savepoint in the transaction."""
 
     @abstractmethod
-    async def rollback_to_savepoint(self, context: TransactionContext, name: str) -> None:
+    async def rollback_to_savepoint(
+        self, context: TransactionContext, name: str
+    ) -> None:
         """Rollback to a savepoint."""
 
     @abstractmethod
     async def execute_in_transaction(
-        self, operation: Callable[[TransactionContext], Any], isolation_level: str = "DEFERRED"
+        self,
+        operation: Callable[[TransactionContext], Any],
+        isolation_level: str = "DEFERRED",
     ) -> Any:
         """Execute operation within a transaction."""
 
@@ -76,11 +82,17 @@ class SQLiteTransactionManager(TransactionManager):
     def _get_connection(self, task_id: Optional[int] = None) -> sqlite3.Connection:
         """Get database connection for current task."""
         if task_id is None:
-            task_id = asyncio.current_task().get_loop()._task_id if asyncio.current_task() else 0
+            task_id = (
+                asyncio.current_task().get_loop()._task_id
+                if asyncio.current_task()
+                else 0
+            )
 
         if task_id not in self._connection_pool:
             conn = sqlite3.connect(
-                self.database_path, isolation_level=None, check_same_thread=False  # We'll manage isolation manually
+                self.database_path,
+                isolation_level=None,
+                check_same_thread=False,  # We'll manage isolation manually
             )
             conn.execute("PRAGMA foreign_keys = ON")
             conn.execute("PRAGMA journal_mode = WAL")
@@ -92,14 +104,20 @@ class SQLiteTransactionManager(TransactionManager):
     def _close_connection(self, task_id: Optional[int] = None) -> None:
         """Close database connection for current task."""
         if task_id is None:
-            task_id = asyncio.current_task().get_loop()._task_id if asyncio.current_task() else 0
+            task_id = (
+                asyncio.current_task().get_loop()._task_id
+                if asyncio.current_task()
+                else 0
+            )
 
         if task_id in self._connection_pool:
             conn = self._connection_pool[task_id]
             conn.close()
             del self._connection_pool[task_id]
 
-    async def begin_transaction(self, isolation_level: str = "DEFERRED") -> TransactionContext:
+    async def begin_transaction(
+        self, isolation_level: str = "DEFERRED"
+    ) -> TransactionContext:
         """Begin a new transaction."""
         conn = self._get_connection()
         context = TransactionContext(conn, isolation_level)
@@ -156,7 +174,9 @@ class SQLiteTransactionManager(TransactionManager):
         context.connection.execute(f"SAVEPOINT {name}")
         context.savepoints.append(name)
 
-    async def rollback_to_savepoint(self, context: TransactionContext, name: str) -> None:
+    async def rollback_to_savepoint(
+        self, context: TransactionContext, name: str
+    ) -> None:
         """Rollback to a savepoint."""
         if not context.is_active:
             raise ValueError("No active transaction for savepoint rollback")
@@ -171,7 +191,9 @@ class SQLiteTransactionManager(TransactionManager):
         context.savepoints[:] = context.savepoints[:idx]
 
     async def execute_in_transaction(
-        self, operation: Callable[[TransactionContext], Any], isolation_level: str = "DEFERRED"
+        self,
+        operation: Callable[[TransactionContext], Any],
+        isolation_level: str = "DEFERRED",
     ) -> Any:
         """Execute operation within a transaction."""
         context = await self.begin_transaction(isolation_level)
@@ -195,10 +217,16 @@ class TransactionService(ApplicationService):
         self.active_transactions: Dict[int, TransactionContext] = {}
 
     @asynccontextmanager
-    async def transaction(self, isolation_level: str = "DEFERRED", context: Optional[ServiceContext] = None):
+    async def transaction(
+        self,
+        isolation_level: str = "DEFERRED",
+        context: Optional[ServiceContext] = None,
+    ):
         """Context manager for transactions."""
         async with self.operation_context("transaction", context):
-            transaction_context = await self.transaction_manager.begin_transaction(isolation_level)
+            transaction_context = await self.transaction_manager.begin_transaction(
+                isolation_level
+            )
 
             # Store transaction context for current task
             task_id = id(asyncio.current_task())
@@ -224,9 +252,13 @@ class TransactionService(ApplicationService):
     ) -> Any:
         """Execute operation within a transaction."""
         async with self.operation_context("execute_in_transaction", context):
-            return await self.transaction_manager.execute_in_transaction(operation, isolation_level)
+            return await self.transaction_manager.execute_in_transaction(
+                operation, isolation_level
+            )
 
-    async def create_savepoint(self, name: str, context: Optional[ServiceContext] = None) -> None:
+    async def create_savepoint(
+        self, name: str, context: Optional[ServiceContext] = None
+    ) -> None:
         """Create a transaction savepoint."""
         async with self.operation_context("create_savepoint", context):
             task_id = id(asyncio.current_task())
@@ -237,7 +269,9 @@ class TransactionService(ApplicationService):
 
             await self.transaction_manager.create_savepoint(transaction_context, name)
 
-    async def rollback_to_savepoint(self, name: str, context: Optional[ServiceContext] = None) -> None:
+    async def rollback_to_savepoint(
+        self, name: str, context: Optional[ServiceContext] = None
+    ) -> None:
         """Rollback to a transaction savepoint."""
         async with self.operation_context("rollback_to_savepoint", context):
             task_id = id(asyncio.current_task())
@@ -246,7 +280,9 @@ class TransactionService(ApplicationService):
             if not transaction_context:
                 raise ValueError("No active transaction for savepoint rollback")
 
-            await self.transaction_manager.rollback_to_savepoint(transaction_context, name)
+            await self.transaction_manager.rollback_to_savepoint(
+                transaction_context, name
+            )
 
     async def get_transaction_status(self) -> Dict[str, Any]:
         """Get current transaction status."""

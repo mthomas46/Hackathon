@@ -30,7 +30,9 @@ class TestSimulationServiceIntegration:
         return config.simulation_service
 
     @pytest.mark.asyncio
-    async def test_simulation_service_health_check(self, simulation_config, async_client):
+    async def test_simulation_service_health_check(
+        self, simulation_config, async_client
+    ):
         """Test actual health check against simulation service."""
         client = SimulationClient(simulation_config)
 
@@ -354,7 +356,14 @@ class TestDashboardPageIntegration:
     @patch("streamlit.metric")
     @patch("streamlit.info")
     def test_overview_page_rendering(
-        self, mock_info, mock_metric, mock_columns, mock_subheader, mock_header, mock_markdown, mock_streamlit_context
+        self,
+        mock_info,
+        mock_metric,
+        mock_columns,
+        mock_subheader,
+        mock_header,
+        mock_markdown,
+        mock_streamlit_context,
     ):
         """Test overview page rendering without errors."""
         # Mock the required dependencies

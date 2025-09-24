@@ -9,15 +9,15 @@ from typing import Any, Dict, List, Optional
 from services.shared.utilities import validate_sql_identifier
 
 from ...core.entities import DocumentVersion
-from ...core.repository import BaseRepository
+from services.shared.utilities import SqlRepository
 from ...db.queries import execute_query
 
 
-class VersioningRepository(BaseRepository[DocumentVersion]):
+class VersioningRepository(SqlRepository[DocumentVersion]):
     """Repository for versioning data access."""
 
-    def __init__(self):
-        super().__init__("document_versions")
+    def __init__(self, connection_string: str):
+        super().__init__(DocumentVersion, connection_string)
 
         # Validate table name to prevent SQL injection
         if not validate_sql_identifier(self.table_name):
@@ -53,7 +53,9 @@ class VersioningRepository(BaseRepository[DocumentVersion]):
             "updated_at": entity.updated_at.isoformat() if entity.updated_at else None,
         }
 
-    def get_versions_for_document(self, document_id: str, limit: int = 50, offset: int = 0) -> List[DocumentVersion]:
+    def get_versions_for_document(
+        self, document_id: str, limit: int = 50, offset: int = 0
+    ) -> List[DocumentVersion]:
         """Get all versions for a document."""
         rows = execute_query(
             f"SELECT * FROM {self.table_name} WHERE document_id = ? ORDER BY version_number DESC LIMIT ? OFFSET ?",
@@ -62,7 +64,9 @@ class VersioningRepository(BaseRepository[DocumentVersion]):
         )
         return [self._row_to_entity(row) for row in rows]
 
-    def get_version_by_number(self, document_id: str, version_number: int) -> Optional[DocumentVersion]:
+    def get_version_by_number(
+        self, document_id: str, version_number: int
+    ) -> Optional[DocumentVersion]:
         """Get a specific version of a document."""
         row = execute_query(
             f"SELECT * FROM {self.table_name} WHERE document_id = ? AND version_number = ?",
@@ -110,7 +114,9 @@ class VersioningRepository(BaseRepository[DocumentVersion]):
         self.save(version)
         return version
 
-    def compare_versions(self, document_id: str, version_a: int, version_b: int) -> Dict[str, Any]:
+    def compare_versions(
+        self, document_id: str, version_a: int, version_b: int
+    ) -> Dict[str, Any]:
         """Compare two versions of a document."""
         version_a_obj = self.get_version_by_number(document_id, version_a)
         version_b_obj = self.get_version_by_number(document_id, version_b)
@@ -128,7 +134,9 @@ class VersioningRepository(BaseRepository[DocumentVersion]):
 
         # Metadata comparison
         metadata_diff = {}
-        all_keys = set(version_a_obj.metadata.keys()) | set(version_b_obj.metadata.keys())
+        all_keys = set(version_a_obj.metadata.keys()) | set(
+            version_b_obj.metadata.keys()
+        )
         for key in all_keys:
             val_a = version_a_obj.metadata.get(key)
             val_b = version_b_obj.metadata.get(key)
@@ -170,15 +178,22 @@ class VersioningRepository(BaseRepository[DocumentVersion]):
     def get_version_stats(self) -> Dict[str, Any]:
         """Get versioning statistics."""
         # Total versions
-        total_row = execute_query(f"SELECT COUNT(*) as count FROM {self.table_name}", fetch_one=True)
+        total_row = execute_query(
+            f"SELECT COUNT(*) as count FROM {self.table_name}", fetch_one=True
+        )
         total_versions = total_row["count"] if total_row else 0
 
         # Documents with versions
-        docs_row = execute_query(f"SELECT COUNT(DISTINCT document_id) as count FROM {self.table_name}", fetch_one=True)
+        docs_row = execute_query(
+            f"SELECT COUNT(DISTINCT document_id) as count FROM {self.table_name}",
+            fetch_one=True,
+        )
         documents_versioned = docs_row["count"] if docs_row else 0
 
         # Average versions per document
-        avg_versions = total_versions / documents_versioned if documents_versioned > 0 else 0
+        avg_versions = (
+            total_versions / documents_versioned if documents_versioned > 0 else 0
+        )
 
         # Version distribution
         dist_rows = execute_query(
@@ -192,7 +207,9 @@ class VersioningRepository(BaseRepository[DocumentVersion]):
             fetch_all=True,
         )
 
-        version_distribution = {row["document_id"]: row["version_count"] for row in dist_rows}
+        version_distribution = {
+            row["document_id"]: row["version_count"] for row in dist_rows
+        }
 
         return {
             "total_versions": total_versions,

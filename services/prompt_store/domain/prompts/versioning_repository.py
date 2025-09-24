@@ -6,7 +6,11 @@ Handles database operations for prompt versions.
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import PromptVersion
-from services.prompt_store.db.queries import deserialize_json, execute_query, serialize_json
+from services.prompt_store.db.queries import (
+    deserialize_json,
+    execute_query,
+    serialize_json,
+)
 
 
 class PromptVersioningRepository:
@@ -58,13 +62,17 @@ class PromptVersioningRepository:
         execute_query(query, values)
         return entity
 
-    def get_versions_for_prompt(self, prompt_id: str, limit: int = 50) -> List[PromptVersion]:
+    def get_versions_for_prompt(
+        self, prompt_id: str, limit: int = 50
+    ) -> List[PromptVersion]:
         """Get version history for a prompt."""
         query = f"SELECT * FROM {self.table_name} WHERE prompt_id = ? ORDER BY version DESC LIMIT ?"
         rows = execute_query(query, (prompt_id, limit), fetch_all=True)
         return [self._row_to_entity(row) for row in rows]
 
-    def get_version_by_number(self, prompt_id: str, version: int) -> Optional[PromptVersion]:
+    def get_version_by_number(
+        self, prompt_id: str, version: int
+    ) -> Optional[PromptVersion]:
         """Get specific version of a prompt."""
         query = f"SELECT * FROM {self.table_name} WHERE prompt_id = ? AND version = ?"
         row = execute_query(query, (prompt_id, version), fetch_one=True)

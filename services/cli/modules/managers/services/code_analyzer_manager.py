@@ -20,7 +20,9 @@ from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 class CodeAnalyzerManager(BaseManager):
     """Manager for code analyzer power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -43,14 +45,19 @@ class CodeAnalyzerManager(BaseManager):
     async def code_analyzer_menu(self):
         """Main code analyzer menu."""
         while True:
-            menu = create_menu_table("Code Analyzer Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Code Analyzer Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
                     ("1", "Code Analysis (Endpoint extraction, pattern analysis)"),
                     ("2", "File & Repository Analysis"),
                     ("3", "Git Integration (Patch analysis, CI/CD)"),
-                    ("4", "Security Scanning (Vulnerability detection, secret scanning)"),
+                    (
+                        "4",
+                        "Security Scanning (Vulnerability detection, secret scanning)",
+                    ),
                     ("5", "Style Management (Programming standards, examples)"),
                     ("6", "Analysis History & Reporting"),
                     ("7", "Code Analyzer Health & Configuration"),
@@ -117,7 +124,9 @@ class CodeAnalyzerManager(BaseManager):
     async def analyze_code_snippet(self):
         """Analyze a code snippet for API endpoints and patterns."""
         try:
-            self.console.print("[yellow]Enter code snippet to analyze (press Ctrl+D on new line when done):[/yellow]")
+            self.console.print(
+                "[yellow]Enter code snippet to analyze (press Ctrl+D on new line when done):[/yellow]"
+            )
             code_lines = []
             try:
                 while True:
@@ -132,10 +141,16 @@ class CodeAnalyzerManager(BaseManager):
                 return
 
             # Get analysis parameters
-            language = Prompt.ask("[bold cyan]Programming language[/bold cyan]", default="")
-            repo = Prompt.ask("[bold cyan]Repository name (optional)[/bold cyan]", default="")
+            language = Prompt.ask(
+                "[bold cyan]Programming language[/bold cyan]", default=""
+            )
+            repo = Prompt.ask(
+                "[bold cyan]Repository name (optional)[/bold cyan]", default=""
+            )
             path = Prompt.ask("[bold cyan]File path (optional)[/bold cyan]", default="")
-            correlation_id = Prompt.ask("[bold cyan]Correlation ID (optional)[/bold cyan]", default="")
+            correlation_id = Prompt.ask(
+                "[bold cyan]Correlation ID (optional)[/bold cyan]", default=""
+            )
 
             analysis_request = {
                 "content": code,
@@ -145,11 +160,17 @@ class CodeAnalyzerManager(BaseManager):
                 "correlation_id": correlation_id if correlation_id else None,
             }
 
-            with self.console.status("[bold green]Analyzing code for endpoints and patterns...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/analyze/text", analysis_request)
+            with self.console.status(
+                "[bold green]Analyzing code for endpoints and patterns...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/analyze/text", analysis_request
+                )
 
             if response:
-                await self.display_code_analysis_results(response, code[:200] + "..." if len(code) > 200 else code)
+                await self.display_code_analysis_results(
+                    response, code[:200] + "..." if len(code) > 200 else code
+                )
             else:
                 self.console.print("[red]❌ Failed to analyze code[/red]")
 
@@ -158,7 +179,9 @@ class CodeAnalyzerManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error analyzing code: {e}[/red]")
 
-    async def display_code_analysis_results(self, results: Dict[str, Any], code_preview: str):
+    async def display_code_analysis_results(
+        self, results: Dict[str, Any], code_preview: str
+    ):
         """Display code analysis results in a formatted way."""
         document = results.get("document", {})
         metadata = document.get("metadata", {})
@@ -181,7 +204,9 @@ class CodeAnalyzerManager(BaseManager):
         analysis_content = document.get("content", "")
         if analysis_content and "(no endpoints)" not in analysis_content:
             content += f"\n[bold cyan]Extracted Endpoints:[/bold cyan]\n"
-            endpoints = [line.strip() for line in analysis_content.split("\n") if line.strip()]
+            endpoints = [
+                line.strip() for line in analysis_content.split("\n") if line.strip()
+            ]
             for endpoint in endpoints:
                 content += f"• {endpoint}\n"
         else:
@@ -200,7 +225,10 @@ class CodeAnalyzerManager(BaseManager):
 
             for key, value in metadata.items():
                 if key != "source_link":  # Already shown above
-                    metadata_table.add_row(key, str(value)[:50] + "..." if len(str(value)) > 50 else str(value))
+                    metadata_table.add_row(
+                        key,
+                        str(value)[:50] + "..." if len(str(value)) > 50 else str(value),
+                    )
 
             self.console.print(metadata_table)
 
@@ -224,15 +252,25 @@ class CodeAnalyzerManager(BaseManager):
                 "tags": ["functions", "naming", "documentation"],
             }
 
-            analysis_request = {"content": code, "language": language, "style_examples": [style_example]}
+            analysis_request = {
+                "content": code,
+                "language": language,
+                "style_examples": [style_example],
+            }
 
-            with self.console.status("[bold green]Analyzing code with custom style...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/analyze/text", analysis_request)
+            with self.console.status(
+                "[bold green]Analyzing code with custom style...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/analyze/text", analysis_request
+                )
 
             if response:
                 await self.display_code_analysis_results(response, code)
             else:
-                self.console.print("[red]❌ Failed to analyze code with custom style[/red]")
+                self.console.print(
+                    "[red]❌ Failed to analyze code with custom style[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error in custom style analysis: {e}[/red]")
@@ -241,7 +279,9 @@ class CodeAnalyzerManager(BaseManager):
         """Interactive code analysis console."""
         try:
             self.console.print("[yellow]Interactive Code Analysis Console[/yellow]")
-            self.console.print("[yellow]Enter code snippets to analyze (press Enter on empty line to finish):[/yellow]")
+            self.console.print(
+                "[yellow]Enter code snippets to analyze (press Enter on empty line to finish):[/yellow]"
+            )
 
             while True:
                 code = Prompt.ask("[bold cyan]Code snippet[/bold cyan]")
@@ -250,7 +290,9 @@ class CodeAnalyzerManager(BaseManager):
 
                 analysis_request = {"content": code}
 
-                response = await self.clients.post_json("code-analyzer/analyze/text", analysis_request)
+                response = await self.clients.post_json(
+                    "code-analyzer/analyze/text", analysis_request
+                )
 
                 if response:
                     document = response.get("document", {})
@@ -262,11 +304,15 @@ class CodeAnalyzerManager(BaseManager):
                             if line.strip() and line.strip() != "(no endpoints)"
                         ]
                         if endpoints:
-                            self.console.print(f"[green]✅ Found {len(endpoints)} endpoint(s):[/green]")
+                            self.console.print(
+                                f"[green]✅ Found {len(endpoints)} endpoint(s):[/green]"
+                            )
                             for endpoint in endpoints[:3]:  # Show first 3
                                 self.console.print(f"  • {endpoint}")
                             if len(endpoints) > 3:
-                                self.console.print(f"  ... and {len(endpoints) - 3} more")
+                                self.console.print(
+                                    f"  ... and {len(endpoints) - 3} more"
+                                )
                         else:
                             self.console.print("[yellow]No endpoints detected[/yellow]")
                     else:
@@ -274,7 +320,9 @@ class CodeAnalyzerManager(BaseManager):
                 else:
                     self.console.print("[red]Analysis failed[/red]")
 
-                continue_analysis = Confirm.ask("[bold cyan]Continue analyzing?[/bold cyan]", default=True)
+                continue_analysis = Confirm.ask(
+                    "[bold cyan]Continue analyzing?[/bold cyan]", default=True
+                )
                 if not continue_analysis:
                     break
 
@@ -284,7 +332,9 @@ class CodeAnalyzerManager(BaseManager):
     async def batch_code_analysis(self):
         """Perform batch code analysis."""
         try:
-            self.console.print("[yellow]Batch code analysis allows processing multiple code snippets[/yellow]")
+            self.console.print(
+                "[yellow]Batch code analysis allows processing multiple code snippets[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -293,13 +343,24 @@ class CodeAnalyzerManager(BaseManager):
     async def language_specific_analysis(self):
         """Perform language-specific code analysis."""
         try:
-            languages = ["python", "javascript", "typescript", "java", "go", "rust", "cpp", "csharp"]
+            languages = [
+                "python",
+                "javascript",
+                "typescript",
+                "java",
+                "go",
+                "rust",
+                "cpp",
+                "csharp",
+            ]
 
             self.console.print("[yellow]Available languages:[/yellow]")
             for i, lang in enumerate(languages, 1):
                 self.console.print(f"  {i}. {lang}")
 
-            lang_choice = Prompt.ask("[bold cyan]Select language number[/bold cyan]", default="1")
+            lang_choice = Prompt.ask(
+                "[bold cyan]Select language number[/bold cyan]", default="1"
+            )
 
             try:
                 lang_index = int(lang_choice) - 1
@@ -311,7 +372,9 @@ class CodeAnalyzerManager(BaseManager):
                 selected_lang = "python"
 
             self.console.print(f"[yellow]Selected language: {selected_lang}[/yellow]")
-            code = Prompt.ask(f"[bold cyan]{selected_lang.capitalize()} code to analyze[/bold cyan]")
+            code = Prompt.ask(
+                f"[bold cyan]{selected_lang.capitalize()} code to analyze[/bold cyan]"
+            )
 
             if not code.strip():
                 self.console.print("[red]No code provided[/red]")
@@ -319,8 +382,12 @@ class CodeAnalyzerManager(BaseManager):
 
             analysis_request = {"content": code, "language": selected_lang}
 
-            with self.console.status(f"[bold green]Analyzing {selected_lang} code...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/analyze/text", analysis_request)
+            with self.console.status(
+                f"[bold green]Analyzing {selected_lang} code...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/analyze/text", analysis_request
+                )
 
             if response:
                 await self.display_code_analysis_results(response, code)
@@ -333,7 +400,9 @@ class CodeAnalyzerManager(BaseManager):
     async def file_repository_analysis_menu(self):
         """File and repository analysis submenu."""
         while True:
-            menu = create_menu_table("File & Repository Analysis", ["Option", "Description"])
+            menu = create_menu_table(
+                "File & Repository Analysis", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -407,14 +476,24 @@ class CodeAnalyzerManager(BaseManager):
                 "content": content,
                 "language": language,
                 "path": file_path,
-                "repo": os.path.basename(os.path.dirname(file_path)) if os.path.dirname(file_path) else None,
+                "repo": (
+                    os.path.basename(os.path.dirname(file_path))
+                    if os.path.dirname(file_path)
+                    else None
+                ),
             }
 
-            with self.console.status(f"[bold green]Analyzing {os.path.basename(file_path)}...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/analyze/text", analysis_request)
+            with self.console.status(
+                f"[bold green]Analyzing {os.path.basename(file_path)}...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/analyze/text", analysis_request
+                )
 
             if response:
-                content_preview = f"File: {os.path.basename(file_path)} ({len(content)} chars)"
+                content_preview = (
+                    f"File: {os.path.basename(file_path)} ({len(content)} chars)"
+                )
                 await self.display_code_analysis_results(response, content_preview)
             else:
                 self.console.print("[red]❌ Failed to analyze file[/red]")
@@ -434,11 +513,25 @@ class CodeAnalyzerManager(BaseManager):
             import glob
 
             # Find code files
-            extensions = ["*.py", "*.js", "*.ts", "*.java", "*.go", "*.rs", "*.cpp", "*.cc", "*.cxx", "*.c", "*.cs"]
+            extensions = [
+                "*.py",
+                "*.js",
+                "*.ts",
+                "*.java",
+                "*.go",
+                "*.rs",
+                "*.cpp",
+                "*.cc",
+                "*.cxx",
+                "*.c",
+                "*.cs",
+            ]
             code_files = []
 
             for ext in extensions:
-                code_files.extend(glob.glob(os.path.join(directory, "**", ext), recursive=True))
+                code_files.extend(
+                    glob.glob(os.path.join(directory, "**", ext), recursive=True)
+                )
 
             if not code_files:
                 self.console.print("[yellow]No code files found in directory[/yellow]")
@@ -452,7 +545,10 @@ class CodeAnalyzerManager(BaseManager):
             if len(code_files) > 10:
                 self.console.print(f"  ... and {len(code_files) - 10} more files")
 
-            proceed = Confirm.ask(f"[bold cyan]Analyze {len(code_files)} files?[/bold cyan]", default=False)
+            proceed = Confirm.ask(
+                f"[bold cyan]Analyze {len(code_files)} files?[/bold cyan]",
+                default=False,
+            )
 
             if proceed:
                 # Create file items for analysis
@@ -467,7 +563,9 @@ class CodeAnalyzerManager(BaseManager):
                         if total_size + file_size > 500000:  # Total limit
                             break
 
-                        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                        with open(
+                            file_path, "r", encoding="utf-8", errors="ignore"
+                        ) as f:
                             content = f.read()
 
                         if content.strip():
@@ -488,8 +586,12 @@ class CodeAnalyzerManager(BaseManager):
                     "language": None,  # Mixed languages
                 }
 
-                with self.console.status(f"[bold green]Analyzing {len(file_items)} files...[/bold green]") as status:
-                    response = await self.clients.post_json("code-analyzer/analyze/files", analysis_request)
+                with self.console.status(
+                    f"[bold green]Analyzing {len(file_items)} files...[/bold green]"
+                ) as status:
+                    response = await self.clients.post_json(
+                        "code-analyzer/analyze/files", analysis_request
+                    )
 
                 if response:
                     content_preview = f"Directory: {os.path.basename(directory)} ({len(file_items)} files)"
@@ -503,7 +605,9 @@ class CodeAnalyzerManager(BaseManager):
     async def analyze_with_dependencies(self):
         """Analyze file with its dependencies."""
         try:
-            self.console.print("[yellow]Dependency analysis would examine related files and imports[/yellow]")
+            self.console.print(
+                "[yellow]Dependency analysis would examine related files and imports[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -512,7 +616,9 @@ class CodeAnalyzerManager(BaseManager):
     async def repository_endpoint_inventory(self):
         """Create repository endpoint inventory."""
         try:
-            self.console.print("[yellow]Repository endpoint inventory would catalog all API endpoints[/yellow]")
+            self.console.print(
+                "[yellow]Repository endpoint inventory would catalog all API endpoints[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -521,7 +627,9 @@ class CodeAnalyzerManager(BaseManager):
     async def cross_file_analysis(self):
         """Perform cross-file analysis."""
         try:
-            self.console.print("[yellow]Cross-file analysis would examine relationships between files[/yellow]")
+            self.console.print(
+                "[yellow]Cross-file analysis would examine relationships between files[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -566,13 +674,17 @@ class CodeAnalyzerManager(BaseManager):
         try:
             # Try to get current git diff
             try:
-                result = subprocess.run(["git", "diff", "--cached"], capture_output=True, text=True, cwd=".")
+                result = subprocess.run(
+                    ["git", "diff", "--cached"], capture_output=True, text=True, cwd="."
+                )
                 patch_content = result.stdout
             except Exception:
                 patch_content = ""
 
             if not patch_content.strip():
-                self.console.print("[yellow]No staged changes found. Enter patch content manually:[/yellow]")
+                self.console.print(
+                    "[yellow]No staged changes found. Enter patch content manually:[/yellow]"
+                )
                 patch_lines = []
                 try:
                     while True:
@@ -592,12 +704,21 @@ class CodeAnalyzerManager(BaseManager):
                 "correlation_id": f"git-patch-{int(asyncio.get_event_loop().time() * 1000)}",
             }
 
-            with self.console.status("[bold green]Analyzing git patch...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/analyze/patch", analysis_request)
+            with self.console.status(
+                "[bold green]Analyzing git patch...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/analyze/patch", analysis_request
+                )
 
             if response:
                 await self.display_patch_analysis_results(
-                    response, patch_content[:200] + "..." if len(patch_content) > 200 else patch_content
+                    response,
+                    (
+                        patch_content[:200] + "..."
+                        if len(patch_content) > 200
+                        else patch_content
+                    ),
                 )
             else:
                 self.console.print("[red]❌ Failed to analyze patch[/red]")
@@ -607,7 +728,9 @@ class CodeAnalyzerManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error analyzing patch: {e}[/red]")
 
-    async def display_patch_analysis_results(self, results: Dict[str, Any], patch_preview: str):
+    async def display_patch_analysis_results(
+        self, results: Dict[str, Any], patch_preview: str
+    ):
         """Display patch analysis results."""
         content = f"""
 [bold]Git Patch Analysis Results[/bold]
@@ -635,7 +758,9 @@ class CodeAnalyzerManager(BaseManager):
     async def pre_commit_analysis(self):
         """Run analysis as pre-commit hook."""
         try:
-            self.console.print("[yellow]Pre-commit analysis would validate code before commits[/yellow]")
+            self.console.print(
+                "[yellow]Pre-commit analysis would validate code before commits[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -644,7 +769,9 @@ class CodeAnalyzerManager(BaseManager):
     async def ci_cd_integration(self):
         """Integrate with CI/CD pipelines."""
         try:
-            self.console.print("[yellow]CI/CD integration would analyze code in automated pipelines[/yellow]")
+            self.console.print(
+                "[yellow]CI/CD integration would analyze code in automated pipelines[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -653,7 +780,9 @@ class CodeAnalyzerManager(BaseManager):
     async def branch_comparison(self):
         """Compare branches for analysis."""
         try:
-            self.console.print("[yellow]Branch comparison would analyze differences between branches[/yellow]")
+            self.console.print(
+                "[yellow]Branch comparison would analyze differences between branches[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -662,7 +791,9 @@ class CodeAnalyzerManager(BaseManager):
     async def git_history_analysis(self):
         """Analyze git history."""
         try:
-            self.console.print("[yellow]Git history analysis would examine code evolution over time[/yellow]")
+            self.console.print(
+                "[yellow]Git history analysis would examine code evolution over time[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -713,18 +844,26 @@ class CodeAnalyzerManager(BaseManager):
 
             scan_request = {"content": code}
 
-            with self.console.status("[bold green]Scanning code for security issues...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/scan/secure", scan_request)
+            with self.console.status(
+                "[bold green]Scanning code for security issues...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/scan/secure", scan_request
+                )
 
             if response:
-                await self.display_security_scan_results(response, code[:200] + "..." if len(code) > 200 else code)
+                await self.display_security_scan_results(
+                    response, code[:200] + "..." if len(code) > 200 else code
+                )
             else:
                 self.console.print("[red]❌ Failed to scan code[/red]")
 
         except Exception as e:
             self.console.print(f"[red]Error scanning code: {e}[/red]")
 
-    async def display_security_scan_results(self, results: Dict[str, Any], code_preview: str):
+    async def display_security_scan_results(
+        self, results: Dict[str, Any], code_preview: str
+    ):
         """Display security scan results."""
         sensitive = results.get("sensitive", False)
         matches = results.get("matches", [])
@@ -756,10 +895,18 @@ class CodeAnalyzerManager(BaseManager):
                 content += f"    ... and {len(matches) - 10} more matches\n"
 
         # Security assessment
-        risk_level = "HIGH" if sensitive and len(matches) > 3 else "MEDIUM" if sensitive else "LOW"
-        risk_color = {"HIGH": "red", "MEDIUM": "yellow", "LOW": "green"}.get(risk_level, "white")
+        risk_level = (
+            "HIGH"
+            if sensitive and len(matches) > 3
+            else "MEDIUM" if sensitive else "LOW"
+        )
+        risk_color = {"HIGH": "red", "MEDIUM": "yellow", "LOW": "green"}.get(
+            risk_level, "white"
+        )
 
-        content += f"\n[bold {risk_color}]Risk Assessment: {risk_level}[/bold {risk_color}]"
+        content += (
+            f"\n[bold {risk_color}]Risk Assessment: {risk_level}[/bold {risk_color}]"
+        )
 
         if sensitive:
             content += "\n\n[bold red]⚠️  SECURITY RECOMMENDATIONS:[/bold red]"
@@ -776,7 +923,9 @@ class CodeAnalyzerManager(BaseManager):
     async def scan_sensitive_info(self):
         """Scan for sensitive information."""
         try:
-            content = Prompt.ask("[bold cyan]Content to scan for sensitive information[/bold cyan]")
+            content = Prompt.ask(
+                "[bold cyan]Content to scan for sensitive information[/bold cyan]"
+            )
 
             if not content.strip():
                 self.console.print("[red]No content provided[/red]")
@@ -784,7 +933,9 @@ class CodeAnalyzerManager(BaseManager):
 
             scan_request = {"content": content}
 
-            response = await self.clients.post_json("code-analyzer/scan/secure", scan_request)
+            response = await self.clients.post_json(
+                "code-analyzer/scan/secure", scan_request
+            )
 
             if response:
                 await self.display_security_scan_results(response, content)
@@ -798,7 +949,9 @@ class CodeAnalyzerManager(BaseManager):
         """Scan with custom keywords."""
         try:
             content = Prompt.ask("[bold cyan]Content to scan[/bold cyan]")
-            keywords_input = Prompt.ask("[bold cyan]Custom keywords (comma-separated)[/bold cyan]")
+            keywords_input = Prompt.ask(
+                "[bold cyan]Custom keywords (comma-separated)[/bold cyan]"
+            )
 
             if not content.strip():
                 self.console.print("[red]No content provided[/red]")
@@ -808,8 +961,12 @@ class CodeAnalyzerManager(BaseManager):
 
             scan_request = {"content": content, "keywords": keywords}
 
-            with self.console.status("[bold green]Scanning with custom keywords...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/scan/secure", scan_request)
+            with self.console.status(
+                "[bold green]Scanning with custom keywords...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/scan/secure", scan_request
+                )
 
             if response:
                 await self.display_security_scan_results(response, content)
@@ -822,7 +979,9 @@ class CodeAnalyzerManager(BaseManager):
     async def security_audit_report(self):
         """Generate security audit report."""
         try:
-            self.console.print("[yellow]Security audit reports would analyze security posture[/yellow]")
+            self.console.print(
+                "[yellow]Security audit reports would analyze security posture[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -831,7 +990,9 @@ class CodeAnalyzerManager(BaseManager):
     async def vulnerability_assessment(self):
         """Perform vulnerability assessment."""
         try:
-            self.console.print("[yellow]Vulnerability assessment would identify security weaknesses[/yellow]")
+            self.console.print(
+                "[yellow]Vulnerability assessment would identify security weaknesses[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -874,13 +1035,17 @@ class CodeAnalyzerManager(BaseManager):
     async def view_style_examples(self):
         """View programming style examples."""
         try:
-            language = Prompt.ask("[bold cyan]Language filter (optional)[/bold cyan]", default="")
+            language = Prompt.ask(
+                "[bold cyan]Language filter (optional)[/bold cyan]", default=""
+            )
 
             params = {}
             if language:
                 params["language"] = language
 
-            response = await self.clients.get_json("code-analyzer/style/examples", params=params)
+            response = await self.clients.get_json(
+                "code-analyzer/style/examples", params=params
+            )
 
             if response:
                 examples = response
@@ -888,7 +1053,9 @@ class CodeAnalyzerManager(BaseManager):
                     examples = examples["examples"]
 
                 if examples:
-                    table = Table(title=f"Style Examples{' - ' + language if language else ''}")
+                    table = Table(
+                        title=f"Style Examples{' - ' + language if language else ''}"
+                    )
                     table.add_column("Language", style="cyan")
                     table.add_column("Title", style="green")
                     table.add_column("Snippet Preview", style="white")
@@ -896,7 +1063,11 @@ class CodeAnalyzerManager(BaseManager):
                     for example in examples:
                         snippet = example.get("snippet", "")
                         preview = snippet[:50] + "..." if len(snippet) > 50 else snippet
-                        table.add_row(example.get("language", "unknown"), example.get("title", "Untitled"), preview)
+                        table.add_row(
+                            example.get("language", "unknown"),
+                            example.get("title", "Untitled"),
+                            preview,
+                        )
 
                     self.console.print(table)
                 else:
@@ -913,9 +1084,15 @@ class CodeAnalyzerManager(BaseManager):
             language = Prompt.ask("[bold cyan]Programming language[/bold cyan]")
             title = Prompt.ask("[bold cyan]Example title[/bold cyan]")
             snippet = Prompt.ask("[bold cyan]Code snippet[/bold cyan]")
-            description = Prompt.ask("[bold cyan]Description (optional)[/bold cyan]", default="")
-            purpose = Prompt.ask("[bold cyan]Purpose (optional)[/bold cyan]", default="")
-            tags_input = Prompt.ask("[bold cyan]Tags (comma-separated, optional)[/bold cyan]", default="")
+            description = Prompt.ask(
+                "[bold cyan]Description (optional)[/bold cyan]", default=""
+            )
+            purpose = Prompt.ask(
+                "[bold cyan]Purpose (optional)[/bold cyan]", default=""
+            )
+            tags_input = Prompt.ask(
+                "[bold cyan]Tags (comma-separated, optional)[/bold cyan]", default=""
+            )
 
             tags = [tag.strip() for tag in tags_input.split(",") if tag.strip()]
 
@@ -930,12 +1107,16 @@ class CodeAnalyzerManager(BaseManager):
 
             style_request = {"items": [style_example]}
 
-            response = await self.clients.post_json("code-analyzer/style/examples", style_request)
+            response = await self.clients.post_json(
+                "code-analyzer/style/examples", style_request
+            )
 
             if response:
                 self.console.print("[green]✅ Style example added successfully[/green]")
                 if response.get("languages"):
-                    self.console.print(f"[green]Updated languages: {response['languages']}[/green]")
+                    self.console.print(
+                        f"[green]Updated languages: {response['languages']}[/green]"
+                    )
             else:
                 self.console.print("[red]❌ Failed to add style example[/red]")
 
@@ -945,7 +1126,9 @@ class CodeAnalyzerManager(BaseManager):
     async def import_style_examples(self):
         """Import style examples from file."""
         try:
-            self.console.print("[yellow]Style example import would load examples from JSON files[/yellow]")
+            self.console.print(
+                "[yellow]Style example import would load examples from JSON files[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -954,7 +1137,9 @@ class CodeAnalyzerManager(BaseManager):
     async def language_specific_styles(self):
         """Manage language-specific styles."""
         try:
-            self.console.print("[yellow]Language-specific styles would show examples for selected languages[/yellow]")
+            self.console.print(
+                "[yellow]Language-specific styles would show examples for selected languages[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -963,7 +1148,9 @@ class CodeAnalyzerManager(BaseManager):
     async def style_compliance_checking(self):
         """Check style compliance."""
         try:
-            self.console.print("[yellow]Style compliance checking would validate code against style examples[/yellow]")
+            self.console.print(
+                "[yellow]Style compliance checking would validate code against style examples[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -972,7 +1159,9 @@ class CodeAnalyzerManager(BaseManager):
     async def analysis_history_menu(self):
         """Analysis history and reporting submenu."""
         while True:
-            menu = create_menu_table("Analysis History & Reporting", ["Option", "Description"])
+            menu = create_menu_table(
+                "Analysis History & Reporting", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -1006,7 +1195,9 @@ class CodeAnalyzerManager(BaseManager):
     async def view_analysis_history(self):
         """View analysis history."""
         try:
-            self.console.print("[yellow]Analysis history would show past code analysis operations[/yellow]")
+            self.console.print(
+                "[yellow]Analysis history would show past code analysis operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1015,7 +1206,9 @@ class CodeAnalyzerManager(BaseManager):
     async def search_analysis_results(self):
         """Search analysis results."""
         try:
-            self.console.print("[yellow]Analysis search would find specific analysis results[/yellow]")
+            self.console.print(
+                "[yellow]Analysis search would find specific analysis results[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1024,7 +1217,9 @@ class CodeAnalyzerManager(BaseManager):
     async def generate_analysis_report(self):
         """Generate analysis report."""
         try:
-            self.console.print("[yellow]Analysis reports would summarize code quality and findings[/yellow]")
+            self.console.print(
+                "[yellow]Analysis reports would summarize code quality and findings[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1033,7 +1228,9 @@ class CodeAnalyzerManager(BaseManager):
     async def export_analysis_data(self):
         """Export analysis data."""
         try:
-            self.console.print("[yellow]Analysis data export would save results to various formats[/yellow]")
+            self.console.print(
+                "[yellow]Analysis data export would save results to various formats[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1042,7 +1239,9 @@ class CodeAnalyzerManager(BaseManager):
     async def analysis_trends_metrics(self):
         """Show analysis trends and metrics."""
         try:
-            self.console.print("[yellow]Analysis trends would show code quality evolution over time[/yellow]")
+            self.console.print(
+                "[yellow]Analysis trends would show code quality evolution over time[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1051,7 +1250,9 @@ class CodeAnalyzerManager(BaseManager):
     async def code_analyzer_health_menu(self):
         """Code analyzer health and configuration submenu."""
         while True:
-            menu = create_menu_table("Code Analyzer Health & Configuration", ["Option", "Description"])
+            menu = create_menu_table(
+                "Code Analyzer Health & Configuration", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -1116,7 +1317,9 @@ class CodeAnalyzerManager(BaseManager):
     async def rate_limiting_status(self):
         """Check rate limiting status."""
         try:
-            self.console.print("[yellow]Rate limiting status would show current request rates[/yellow]")
+            self.console.print(
+                "[yellow]Rate limiting status would show current request rates[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1125,7 +1328,9 @@ class CodeAnalyzerManager(BaseManager):
     async def configuration_settings(self):
         """View configuration settings."""
         try:
-            self.console.print("[yellow]Configuration settings would show current service parameters[/yellow]")
+            self.console.print(
+                "[yellow]Configuration settings would show current service parameters[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1134,7 +1339,9 @@ class CodeAnalyzerManager(BaseManager):
     async def performance_metrics(self):
         """View performance metrics."""
         try:
-            self.console.print("[yellow]Performance metrics would show analysis speed and resource usage[/yellow]")
+            self.console.print(
+                "[yellow]Performance metrics would show analysis speed and resource usage[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1143,7 +1350,9 @@ class CodeAnalyzerManager(BaseManager):
     async def service_logs(self):
         """View service logs."""
         try:
-            self.console.print("[yellow]Service logs would show recent code analyzer operations[/yellow]")
+            self.console.print(
+                "[yellow]Service logs would show recent code analyzer operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -1152,8 +1361,12 @@ class CodeAnalyzerManager(BaseManager):
     async def analyze_code_from_cli(self, analyze_request: Dict[str, Any]):
         """Analyze code from CLI usage."""
         try:
-            with self.console.status(f"[bold green]Analyzing code...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/analyze/text", analyze_request)
+            with self.console.status(
+                f"[bold green]Analyzing code...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/analyze/text", analyze_request
+                )
 
             if response:
                 content = analyze_request.get("content", "")
@@ -1169,8 +1382,12 @@ class CodeAnalyzerManager(BaseManager):
     async def scan_security_from_cli(self, scan_request: Dict[str, Any]):
         """Scan for security issues from CLI usage."""
         try:
-            with self.console.status(f"[bold green]Scanning for security issues...[/bold green]") as status:
-                response = await self.clients.post_json("code-analyzer/scan/secure", scan_request)
+            with self.console.status(
+                f"[bold green]Scanning for security issues...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "code-analyzer/scan/secure", scan_request
+                )
 
             if response:
                 content = scan_request.get("content", "")

@@ -53,8 +53,18 @@ class IngestionSourceType(Enum):
     def typical_content_types(self) -> list[str]:
         """Get typical content types for this source."""
         content_types = {
-            IngestionSourceType.GITHUB: ["code", "documentation", "issues", "pull_requests"],
-            IngestionSourceType.GITLAB: ["code", "documentation", "issues", "merge_requests"],
+            IngestionSourceType.GITHUB: [
+                "code",
+                "documentation",
+                "issues",
+                "pull_requests",
+            ],
+            IngestionSourceType.GITLAB: [
+                "code",
+                "documentation",
+                "issues",
+                "merge_requests",
+            ],
             IngestionSourceType.JIRA: ["issues", "epics", "tasks", "bugs"],
             IngestionSourceType.CONFLUENCE: ["documentation", "wiki", "knowledge_base"],
             IngestionSourceType.FILESYSTEM: ["documents", "reports", "data_files"],

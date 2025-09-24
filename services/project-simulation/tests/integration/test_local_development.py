@@ -35,14 +35,20 @@ class TestEnvironmentConfiguration:
             # In test environment, these might not be set, but the code should handle it
             value = os.environ.get(env_var)
             if value is not None:
-                assert isinstance(value, str), f"Environment variable {env_var} should be a string"
-                assert len(value.strip()) > 0, f"Environment variable {env_var} should not be empty"
+                assert isinstance(
+                    value, str
+                ), f"Environment variable {env_var} should be a string"
+                assert (
+                    len(value.strip()) > 0
+                ), f"Environment variable {env_var} should not be empty"
 
         # Check optional environment variables
         for env_var in optional_env_vars:
             value = os.environ.get(env_var)
             if value is not None:
-                assert isinstance(value, str), f"Optional environment variable {env_var} should be a string"
+                assert isinstance(
+                    value, str
+                ), f"Optional environment variable {env_var} should be a string"
 
         print("✅ Environment variable loading validated")
 
@@ -62,17 +68,25 @@ class TestEnvironmentConfiguration:
             assert config_dir.is_dir(), "Config directory should be a directory"
 
             # List config files
-            config_files = list(config_dir.glob("*.yaml")) + list(config_dir.glob("*.yml"))
+            config_files = list(config_dir.glob("*.yaml")) + list(
+                config_dir.glob("*.yml")
+            )
             if config_files:
                 for config_file in config_files:
-                    assert config_file.is_file(), f"Config file {config_file} should be a file"
-                    assert config_file.stat().st_size > 0, f"Config file {config_file} should not be empty"
+                    assert (
+                        config_file.is_file()
+                    ), f"Config file {config_file} should be a file"
+                    assert (
+                        config_file.stat().st_size > 0
+                    ), f"Config file {config_file} should not be empty"
 
         # Check for environment files
         env_files = [path for path in config_paths if path.name.startswith(".env")]
         for env_file in env_files:
             if env_file.exists():
-                assert env_file.is_file(), f"Environment file {env_file} should be a file"
+                assert (
+                    env_file.is_file()
+                ), f"Environment file {env_file} should be a file"
                 # Don't check size for .env files as they might be empty
 
         print("✅ Configuration file loading validated")
@@ -97,15 +111,23 @@ class TestEnvironmentConfiguration:
                     db_path = db_url.split("///")[1]
                     if db_path != ":memory:":
                         # Should be a valid file path
-                        assert len(db_path) > 0, f"SQLite file path should not be empty: {db_path}"
+                        assert (
+                            len(db_path) > 0
+                        ), f"SQLite file path should not be empty: {db_path}"
                 else:
                     # In-memory SQLite
-                    assert ":memory:" in db_url, f"SQLite in-memory URL should contain ':memory:': {db_url}"
+                    assert (
+                        ":memory:" in db_url
+                    ), f"SQLite in-memory URL should contain ':memory:': {db_url}"
 
             elif db_url.startswith("postgresql"):
                 # PostgreSQL URL validation
-                assert "@" in db_url, f"PostgreSQL URL should contain user credentials: {db_url}"
-                assert len(db_url.split("@")[0]) > 0, f"PostgreSQL URL should have credentials: {db_url}"
+                assert (
+                    "@" in db_url
+                ), f"PostgreSQL URL should contain user credentials: {db_url}"
+                assert (
+                    len(db_url.split("@")[0]) > 0
+                ), f"PostgreSQL URL should have credentials: {db_url}"
 
                 # Check for port
                 host_part = db_url.split("@")[1].split("/")[0]
@@ -121,7 +143,9 @@ class TestEnvironmentConfiguration:
         dev_log_levels = ["DEBUG", "INFO", "WARNING"]
 
         # In development, DEBUG should be acceptable
-        assert "DEBUG" in dev_log_levels, "DEBUG level should be available in development"
+        assert (
+            "DEBUG" in dev_log_levels
+        ), "DEBUG level should be available in development"
 
         # Test log format configurations
         dev_log_formats = [
@@ -131,14 +155,20 @@ class TestEnvironmentConfiguration:
         ]
 
         for log_format in dev_log_formats:
-            assert "%(levelname)s" in log_format, f"Log format should include level: {log_format}"
-            assert "%(message)s" in log_format, f"Log format should include message: {log_format}"
+            assert (
+                "%(levelname)s" in log_format
+            ), f"Log format should include level: {log_format}"
+            assert (
+                "%(message)s" in log_format
+            ), f"Log format should include message: {log_format}"
 
         # Test that development logging is more verbose than production
         dev_log_level_value = 10  # DEBUG = 10
         prod_log_level_value = 20  # INFO = 20
 
-        assert dev_log_level_value < prod_log_level_value, "Development logging should be more verbose than production"
+        assert (
+            dev_log_level_value < prod_log_level_value
+        ), "Development logging should be more verbose than production"
 
         print("✅ Logging configuration for development validated")
 
@@ -172,12 +202,32 @@ class TestSQLiteIntegration:
 
             # Insert test data
             test_data = [
-                ("sim_001", "Test Simulation 1", "running", time.time(), '{"type": "web"}'),
-                ("sim_002", "Test Simulation 2", "completed", time.time(), '{"type": "mobile"}'),
-                ("sim_003", "Test Simulation 3", "failed", time.time(), '{"type": "api"}'),
+                (
+                    "sim_001",
+                    "Test Simulation 1",
+                    "running",
+                    time.time(),
+                    '{"type": "web"}',
+                ),
+                (
+                    "sim_002",
+                    "Test Simulation 2",
+                    "completed",
+                    time.time(),
+                    '{"type": "mobile"}',
+                ),
+                (
+                    "sim_003",
+                    "Test Simulation 3",
+                    "failed",
+                    time.time(),
+                    '{"type": "api"}',
+                ),
             ]
 
-            cursor.executemany("INSERT INTO simulations VALUES (?, ?, ?, ?, ?)", test_data)
+            cursor.executemany(
+                "INSERT INTO simulations VALUES (?, ?, ?, ?, ?)", test_data
+            )
             conn.commit()
 
             # Query data
@@ -186,16 +236,22 @@ class TestSQLiteIntegration:
             assert count == 3, f"Expected 3 records, got {count}"
 
             # Query specific records
-            cursor.execute("SELECT name, status FROM simulations WHERE status = ?", ("running",))
+            cursor.execute(
+                "SELECT name, status FROM simulations WHERE status = ?", ("running",)
+            )
             running_sim = cursor.fetchone()
             assert running_sim is not None, "Should find running simulation"
-            assert running_sim[1] == "running", f"Expected status 'running', got {running_sim[1]}"
+            assert (
+                running_sim[1] == "running"
+            ), f"Expected status 'running', got {running_sim[1]}"
 
             # Test parameterized queries
             cursor.execute("SELECT * FROM simulations WHERE id = ?", ("sim_002",))
             sim_002 = cursor.fetchone()
             assert sim_002 is not None, "Should find simulation with ID sim_002"
-            assert sim_002[1] == "Test Simulation 2", f"Unexpected simulation name: {sim_002[1]}"
+            assert (
+                sim_002[1] == "Test Simulation 2"
+            ), f"Unexpected simulation name: {sim_002[1]}"
 
             conn.close()
 
@@ -227,17 +283,25 @@ class TestSQLiteIntegration:
             )
 
             # Insert initial data
-            cursor.execute("INSERT INTO simulations VALUES ('sim_001', 'Initial Sim', 'created')")
+            cursor.execute(
+                "INSERT INTO simulations VALUES ('sim_001', 'Initial Sim', 'created')"
+            )
             conn.commit()
 
             # Migration 1: Add created_at column
             cursor.execute("ALTER TABLE simulations ADD COLUMN created_at REAL")
-            cursor.execute("UPDATE simulations SET created_at = ? WHERE id = ?", (time.time(), "sim_001"))
+            cursor.execute(
+                "UPDATE simulations SET created_at = ? WHERE id = ?",
+                (time.time(), "sim_001"),
+            )
             conn.commit()
 
             # Migration 2: Add config column
             cursor.execute("ALTER TABLE simulations ADD COLUMN config TEXT")
-            cursor.execute("UPDATE simulations SET config = ? WHERE id = ?", ('{"migrated": true}', "sim_001"))
+            cursor.execute(
+                "UPDATE simulations SET config = ? WHERE id = ?",
+                ('{"migrated": true}', "sim_001"),
+            )
             conn.commit()
 
             # Verify migrations
@@ -297,20 +361,28 @@ class TestSQLiteIntegration:
                     record_id = batch * batch_size + i
                     records.append((record_id, f"Test data {record_id}", time.time()))
 
-                cursor.executemany("INSERT INTO performance_test VALUES (?, ?, ?)", records)
+                cursor.executemany(
+                    "INSERT INTO performance_test VALUES (?, ?, ?)", records
+                )
                 conn.commit()
 
             insert_time = time.time() - start_time
 
             # Query performance test
             query_start = time.time()
-            cursor.execute("SELECT COUNT(*) FROM performance_test WHERE id > ?", (5000,))
+            cursor.execute(
+                "SELECT COUNT(*) FROM performance_test WHERE id > ?", (5000,)
+            )
             count = cursor.fetchone()[0]
             query_time = time.time() - query_start
 
             # Validate performance
-            assert insert_time < 5.0, f"SQLite insert performance too slow: {insert_time:.2f}s"
-            assert query_time < 0.1, f"SQLite query performance too slow: {query_time:.3f}s"
+            assert (
+                insert_time < 5.0
+            ), f"SQLite insert performance too slow: {insert_time:.2f}s"
+            assert (
+                query_time < 0.1
+            ), f"SQLite query performance too slow: {query_time:.3f}s"
             assert count == 5000, f"Expected 5000 records, got {count}"
 
             # Test concurrent read/write (simulated)
@@ -319,16 +391,21 @@ class TestSQLiteIntegration:
             # Simulate concurrent operations
             for i in range(100):
                 cursor.execute(
-                    "INSERT INTO performance_test VALUES (?, ?, ?)", (10000 + i, f"Concurrent data {i}", time.time())
+                    "INSERT INTO performance_test VALUES (?, ?, ?)",
+                    (10000 + i, f"Concurrent data {i}", time.time()),
                 )
-                cursor.execute("SELECT * FROM performance_test WHERE id = ?", (10000 + i,))
+                cursor.execute(
+                    "SELECT * FROM performance_test WHERE id = ?", (10000 + i,)
+                )
                 result = cursor.fetchone()
                 assert result is not None
 
             conn.commit()
             concurrent_time = time.time() - concurrent_start
 
-            assert concurrent_time < 2.0, f"Concurrent operations too slow: {concurrent_time:.2f}s"
+            assert (
+                concurrent_time < 2.0
+            ), f"Concurrent operations too slow: {concurrent_time:.2f}s"
 
             conn.close()
 
@@ -452,7 +529,9 @@ class TestPostgreSQLIntegration:
                     time.sleep(retry_delay)
 
         # Validate retry behavior
-        assert connection_attempts == max_retries, f"Expected {max_retries} attempts, got {connection_attempts}"
+        assert (
+            connection_attempts == max_retries
+        ), f"Expected {max_retries} attempts, got {connection_attempts}"
         assert last_error is not None, "Should have encountered an error"
 
         # Test with successful connection on retry
@@ -474,7 +553,9 @@ class TestPostgreSQLIntegration:
                 if attempt == max_retries - 1:
                     last_error = Exception("All retry attempts failed")
 
-        assert connection_attempts == 3, f"Expected 3 attempts for successful retry, got {connection_attempts}"
+        assert (
+            connection_attempts == 3
+        ), f"Expected 3 attempts for successful retry, got {connection_attempts}"
 
         print("✅ PostgreSQL error handling simulation validated")
 
@@ -490,8 +571,16 @@ class TestLocalDevelopmentWorkflow:
             "debug": True,
             "log_level": "DEBUG",
             "database": {"url": "sqlite:///dev.db", "migrate_on_startup": True},
-            "api": {"host": "localhost", "port": 8000, "reload": True, "docs_url": "/docs"},
-            "redis": {"url": "redis://localhost:6379", "required": False},  # Optional for local dev
+            "api": {
+                "host": "localhost",
+                "port": 8000,
+                "reload": True,
+                "docs_url": "/docs",
+            },
+            "redis": {
+                "url": "redis://localhost:6379",
+                "required": False,
+            },  # Optional for local dev
         }
 
         # Validate development configuration
@@ -502,26 +591,43 @@ class TestLocalDevelopmentWorkflow:
         # Validate database config
         db_config = dev_config["database"]
         assert "sqlite" in db_config["url"], "Development should use SQLite by default"
-        assert db_config["migrate_on_startup"] is True, "Migrations should run on startup in dev"
+        assert (
+            db_config["migrate_on_startup"] is True
+        ), "Migrations should run on startup in dev"
 
         # Validate API config
         api_config = dev_config["api"]
         assert api_config["reload"] is True, "API should auto-reload in development"
-        assert api_config["docs_url"] == "/docs", "API docs should be available in development"
+        assert (
+            api_config["docs_url"] == "/docs"
+        ), "API docs should be available in development"
 
         print("✅ Development environment setup validated")
 
     def test_hot_reload_configuration(self):
         """Test hot reload configuration for development."""
         # Test file watching and reload triggers
-        watched_files = ["main.py", "simulation/**/*.py", "config/*.yaml", "requirements.txt"]
+        watched_files = [
+            "main.py",
+            "simulation/**/*.py",
+            "config/*.yaml",
+            "requirements.txt",
+        ]
 
-        reload_triggers = ["file_modified", "file_created", "file_deleted", "config_changed"]
+        reload_triggers = [
+            "file_modified",
+            "file_created",
+            "file_deleted",
+            "config_changed",
+        ]
 
         # Validate watched file patterns
         for pattern in watched_files:
             assert (
-                "*" in pattern or pattern.endswith(".py") or pattern.endswith(".yaml") or pattern.endswith(".txt")
+                "*" in pattern
+                or pattern.endswith(".py")
+                or pattern.endswith(".yaml")
+                or pattern.endswith(".txt")
             ), f"Invalid watched file pattern: {pattern}"
 
         # Test reload trigger logic
@@ -555,7 +661,9 @@ class TestLocalDevelopmentWorkflow:
 
         for change_type, file_path, expected_reload in reload_scenarios:
             should_reload_app = should_reload(change_type, file_path)
-            assert should_reload_app == expected_reload, f"Reload decision incorrect for {change_type}:{file_path}"
+            assert (
+                should_reload_app == expected_reload
+            ), f"Reload decision incorrect for {change_type}:{file_path}"
 
         print("✅ Hot reload configuration validated")
 
@@ -571,12 +679,18 @@ class TestLocalDevelopmentWorkflow:
 
         # Validate migration file naming
         for migration_file in migration_files:
-            assert migration_file.startswith("00"), f"Migration file should start with number: {migration_file}"
-            assert migration_file.endswith(".py"), f"Migration file should be Python: {migration_file}"
+            assert migration_file.startswith(
+                "00"
+            ), f"Migration file should start with number: {migration_file}"
+            assert migration_file.endswith(
+                ".py"
+            ), f"Migration file should be Python: {migration_file}"
 
             # Extract migration number
             migration_num = int(migration_file.split("_")[0])
-            assert migration_num >= 1, f"Migration number should be >= 1: {migration_num}"
+            assert (
+                migration_num >= 1
+            ), f"Migration number should be >= 1: {migration_num}"
 
         # Test migration execution order
         executed_migrations = []
@@ -593,7 +707,9 @@ class TestLocalDevelopmentWorkflow:
 
         # Validate execution order
         assert len(executed_migrations) == len(migration_files)
-        assert executed_migrations == sorted(migration_files), "Migrations should execute in order"
+        assert executed_migrations == sorted(
+            migration_files
+        ), "Migrations should execute in order"
 
         # Test migration rollback (for development)
         rollback_migrations = []
@@ -631,7 +747,9 @@ class TestLocalDevelopmentWorkflow:
         def collect_metric(metric_name, value):
             """Collect a monitoring metric."""
             dev_metrics[metric_name] = value
-            monitoring_data.append({"metric": metric_name, "value": value, "timestamp": time.time()})
+            monitoring_data.append(
+                {"metric": metric_name, "value": value, "timestamp": time.time()}
+            )
 
         # Collect various metrics
         collect_metric("memory_usage", 85.5)  # 85.5 MB

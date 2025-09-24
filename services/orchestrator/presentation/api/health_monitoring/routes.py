@@ -1,6 +1,5 @@
 """Health Monitoring API Routes"""
 
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from .dtos import (
@@ -35,7 +34,9 @@ async def get_system_health(container=Depends(get_health_container)):
         result = await container.get_system_health_use_case.execute(query)
 
         if not result.success:
-            raise HTTPException(status_code=500, detail=result.message or "Unknown error")
+            raise HTTPException(
+                status_code=500, detail=result.message or "Unknown error"
+            )
 
         # Extract data from DomainResult
         system_health = result.data
@@ -47,9 +48,17 @@ async def get_system_health(container=Depends(get_health_container)):
             services={
                 health.service_name: {
                     "status": health.status.value,
-                    "response_time_ms": health.check_result.response_time_ms if health.check_result else None,
+                    "response_time_ms": (
+                        health.check_result.response_time_ms
+                        if health.check_result
+                        else None
+                    ),
                     "last_check": health.last_check.isoformat(),
-                    "error_message": health.check_result.error_message if health.check_result else None,
+                    "error_message": (
+                        health.check_result.error_message
+                        if health.check_result
+                        else None
+                    ),
                 }
                 for health in system_health.service_health
             },
@@ -58,11 +67,15 @@ async def get_system_health(container=Depends(get_health_container)):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get system health: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get system health: {str(e)}"
+        )
 
 
 @router.get("/services/{service_name}", response_model=ServiceHealthResponse)
-async def get_service_health(service_name: str, container=Depends(get_health_container)):
+async def get_service_health(
+    service_name: str, container=Depends(get_health_container)
+):
     """Get health status for a specific service."""
     try:
         # Create query
@@ -91,7 +104,9 @@ async def get_service_health(service_name: str, container=Depends(get_health_con
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get service health: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get service health: {str(e)}"
+        )
 
 
 @router.get("/metrics", response_model=SystemMetricsResponse)
@@ -122,7 +137,9 @@ async def get_system_metrics(container=Depends(get_health_container)):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get system metrics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get system metrics: {str(e)}"
+        )
 
 
 @router.get("/info", response_model=SystemInfoResponse)
@@ -152,7 +169,9 @@ async def get_system_info(container=Depends(get_health_container)):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get system info: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get system info: {str(e)}"
+        )
 
 
 @router.get("/ready", response_model=ReadinessResponse)
@@ -185,25 +204,34 @@ async def check_readiness(container=Depends(get_health_container)):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to check readiness: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to check readiness: {str(e)}"
+        )
 
 
 @router.post("/check")
-async def perform_health_check(request: HealthCheckRequest, container=Depends(get_health_container)):
+async def perform_health_check(
+    request: HealthCheckRequest, container=Depends(get_health_container)
+):
     """Perform a health check (for manual triggering)."""
     try:
         if request.service_name:
             # Service-specific health check
-            from ....application.health_monitoring.commands import CheckServiceHealthCommand
+            from ....application.health_monitoring.commands import (
+                CheckServiceHealthCommand,
+            )
 
             command = CheckServiceHealthCommand(
-                service_name=request.service_name, include_details=request.include_details
+                service_name=request.service_name,
+                include_details=request.include_details,
             )
 
             result = await container.check_service_health_use_case.execute(command)
         else:
             # System-wide health check
-            from ....application.health_monitoring.commands import CheckSystemHealthCommand
+            from ....application.health_monitoring.commands import (
+                CheckSystemHealthCommand,
+            )
 
             command = CheckSystemHealthCommand(include_details=request.include_details)
             result = await container.check_system_health_use_case.execute(command)
@@ -211,7 +239,10 @@ async def perform_health_check(request: HealthCheckRequest, container=Depends(ge
         if not result.success:
             raise HTTPException(status_code=500, detail=result.error_message)
 
-        return {"status": "health_check_completed", "message": "Health check completed successfully"}
+        return {
+            "status": "health_check_completed",
+            "message": "Health check completed successfully",
+        }
 
     except HTTPException:
         raise

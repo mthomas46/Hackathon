@@ -46,7 +46,9 @@ class TestAIInsightsEngine:
     @patch("streamlit.set_page_config")
     @patch("streamlit.sidebar")
     @patch("streamlit.tabs")
-    def test_render_ai_insights_page_structure(self, mock_tabs, mock_sidebar, mock_page_config):
+    def test_render_ai_insights_page_structure(
+        self, mock_tabs, mock_sidebar, mock_page_config
+    ):
         """Test that AI insights page renders with correct structure."""
         mock_tab1, mock_tab2, mock_tab3, mock_tab4 = Mock(), Mock(), Mock(), Mock()
         mock_tabs.return_value = [mock_tab1, mock_tab2, mock_tab3, mock_tab4]
@@ -130,7 +132,9 @@ class TestAIInsightsEngine:
         mock_model = Mock()
         mock_model.fit.return_value = None
         mock_model.decision_function.return_value = np.random.normal(0, 1, 100)
-        mock_model.predict.return_value = np.random.choice([-1, 1], 100)  # -1 for anomalies
+        mock_model.predict.return_value = np.random.choice(
+            [-1, 1], 100
+        )  # -1 for anomalies
         mock_isolation_forest.return_value = mock_model
 
         # Test training
@@ -148,7 +152,9 @@ class TestAIInsightsEngine:
     @patch("sklearn.model_selection.train_test_split")
     @patch("sklearn.metrics.mean_squared_error")
     @patch("sklearn.metrics.r2_score")
-    def test_generate_predictions_with_sklearn(self, mock_r2, mock_mse, mock_train_test_split, mock_rf):
+    def test_generate_predictions_with_sklearn(
+        self, mock_r2, mock_mse, mock_train_test_split, mock_rf
+    ):
         """Test prediction generation with full ML pipeline."""
         # Mock sklearn components
         mock_train_test_split.return_value = (
@@ -241,7 +247,9 @@ class TestAIInsightsEngine:
         )
 
         # Test model update
-        updated_model, update_metrics = update_model_with_new_data(existing_model, new_data, target_column="target")
+        updated_model, update_metrics = update_model_with_new_data(
+            existing_model, new_data, target_column="target"
+        )
 
         assert updated_model is not None
         assert "improvement" in update_metrics
@@ -271,7 +279,9 @@ class TestAnomalyDetection:
         # Mock Isolation Forest
         mock_model = Mock()
         mock_model.fit.return_value = None
-        mock_model.decision_function.return_value = np.random.normal(0, 1, len(self.test_data))
+        mock_model.decision_function.return_value = np.random.normal(
+            0, 1, len(self.test_data)
+        )
         # -1 for anomalies, 1 for normal
         predictions = [1] * len(self.test_data)
         for i in [10, 25, 50, 75, 90]:  # Known anomaly indices
@@ -299,7 +309,10 @@ class TestAnomalyDetection:
         """Helper method to detect anomalies with ML model."""
         # This would call the actual anomaly detection function
         # For testing purposes, return mock anomalies
-        return [{"index": i, "value": self.test_data[i], "score": -0.5} for i in [10, 25, 50, 75, 90]]
+        return [
+            {"index": i, "value": self.test_data[i], "score": -0.5}
+            for i in [10, 25, 50, 75, 90]
+        ]
 
     def _detect_anomalies_statistical(self):
         """Helper method for statistical anomaly detection."""
@@ -330,7 +343,9 @@ class TestPredictiveOptimization:
         seasonal = 5 * np.sin(2 * np.pi * t / 30)
         noise = np.random.normal(0, 1, 100)
 
-        self.time_series_data = pd.DataFrame({"date": dates, "value": trend + seasonal + noise + 100})
+        self.time_series_data = pd.DataFrame(
+            {"date": dates, "value": trend + seasonal + noise + 100}
+        )
 
     @patch("pages.ai_insights.STATSMODELS_AVAILABLE", True)
     @patch("statsmodels.tsa.arima.model.ARIMA")
@@ -421,7 +436,10 @@ class TestPredictiveOptimization:
         return {
             "forecast": np.random.normal(105, 2, 30),
             "forecast_df": pd.DataFrame(
-                {"ds": pd.date_range("2023-04-11", periods=30, freq="D"), "yhat": np.random.normal(105, 2, 30)}
+                {
+                    "ds": pd.date_range("2023-04-11", periods=30, freq="D"),
+                    "yhat": np.random.normal(105, 2, 30),
+                }
             ),
             "model_metrics": {"mse": 4.2, "mae": 1.8},
         }
@@ -433,7 +451,12 @@ class TestPredictiveOptimization:
         mape = np.mean(np.abs((actual - predicted) / actual)) * 100
         accuracy_percentage = 100 - mape
 
-        return {"mae": mae, "rmse": rmse, "mape": mape, "accuracy_percentage": accuracy_percentage}
+        return {
+            "mae": mae,
+            "rmse": rmse,
+            "mape": mape,
+            "accuracy_percentage": accuracy_percentage,
+        }
 
 
 class TestIntegrationScenarios:
@@ -513,7 +536,9 @@ def sample_time_series():
     """Fixture for sample time series data."""
     dates = pd.date_range("2023-01-01", periods=100, freq="D")
     t = np.arange(100)
-    values = 100 + 0.1 * t + 5 * np.sin(2 * np.pi * t / 30) + np.random.normal(0, 1, 100)
+    values = (
+        100 + 0.1 * t + 5 * np.sin(2 * np.pi * t / 30) + np.random.normal(0, 1, 100)
+    )
 
     return pd.DataFrame({"date": dates, "value": values})
 

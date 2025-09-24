@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 
 from ...base.base_manager import BaseManager
 
@@ -18,7 +18,9 @@ from ...base.base_manager import BaseManager
 class OrchestratorManager(BaseManager):
     """Manager for orchestrator power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -35,11 +37,13 @@ class OrchestratorManager(BaseManager):
     async def orchestrator_management_menu(self):
         """Main orchestrator management menu with enhanced interactive experience."""
         menu_items = await self.get_main_menu()
-        await self.run_menu_loop("Orchestrator Management", menu_items, use_interactive=True)
+        await self.run_menu_loop(
+            "Orchestrator Management", menu_items, use_interactive=True
+        )
 
     def get_required_services(self) -> List[str]:
         """Return list of services required by this manager."""
-        return [ServiceNames.ORCHESTRATOR, ServiceNames.DOC_STORE]
+        return ["orchestrator", "doc-store"]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle menu choice selection."""
@@ -125,24 +129,32 @@ class OrchestratorManager(BaseManager):
         """Run a workflow."""
         try:
             workflow_type = Prompt.ask(
-                "[bold cyan]Workflow type[/bold cyan]", choices=["ingest", "analyze", "consolidate", "custom"]
+                "[bold cyan]Workflow type[/bold cyan]",
+                choices=["ingest", "analyze", "consolidate", "custom"],
             )
             workflow_config = {}
 
             if workflow_type == "custom":
                 # Allow custom workflow configuration
-                config_input = Prompt.ask("[bold cyan]Workflow configuration (JSON)[/bold cyan]", default="{}")
+                config_input = Prompt.ask(
+                    "[bold cyan]Workflow configuration (JSON)[/bold cyan]", default="{}"
+                )
                 import json
 
                 workflow_config = json.loads(config_input)
 
-            with self.console.status(f"[bold green]Running {workflow_type} workflow...") as status:
+            with self.console.status(
+                f"[bold green]Running {workflow_type} workflow..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "orchestrator/workflows/run", {"type": workflow_type, "config": workflow_config}
+                    "orchestrator/workflows/run",
+                    {"type": workflow_type, "config": workflow_config},
                 )
 
             if response.get("workflow_id"):
-                self.console.print(f"[green]✅ Workflow started: {response['workflow_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Workflow started: {response['workflow_id']}[/green]"
+                )
                 # Show initial status
                 await self.monitor_workflow_status(response["workflow_id"])
             else:
@@ -154,7 +166,9 @@ class OrchestratorManager(BaseManager):
     async def view_workflow_history(self):
         """View workflow history."""
         try:
-            with self.console.status("[bold green]Fetching workflow history...") as status:
+            with self.console.status(
+                "[bold green]Fetching workflow history..."
+            ) as status:
                 response = await self.clients.get_json("orchestrator/workflows/history")
 
             if response.get("workflows"):
@@ -187,14 +201,21 @@ class OrchestratorManager(BaseManager):
             workflow_id = Prompt.ask("[bold cyan]Workflow ID[/bold cyan]")
 
         try:
-            with self.console.status(f"[bold green]Monitoring workflow {workflow_id}...") as status:
-                response = await self.clients.get_json(f"orchestrator/workflows/{workflow_id}")
+            with self.console.status(
+                f"[bold green]Monitoring workflow {workflow_id}..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"orchestrator/workflows/{workflow_id}"
+                )
 
             if response.get("workflow"):
                 workflow = response["workflow"]
-                status_color = {"running": "yellow", "completed": "green", "failed": "red", "pending": "blue"}.get(
-                    workflow.get("status", "unknown"), "white"
-                )
+                status_color = {
+                    "running": "yellow",
+                    "completed": "green",
+                    "failed": "red",
+                    "pending": "blue",
+                }.get(workflow.get("status", "unknown"), "white")
 
                 content = f"""
 [bold]Workflow Status[/bold]
@@ -252,7 +273,9 @@ Progress: {workflow.get('progress', 'N/A')}%
     async def list_registry(self):
         """List registered services."""
         try:
-            with self.console.status("[bold green]Fetching service registry...") as status:
+            with self.console.status(
+                "[bold green]Fetching service registry..."
+            ) as status:
                 response = await self.clients.get_json("orchestrator/registry")
 
             if response.get("services"):
@@ -283,16 +306,20 @@ Progress: {workflow.get('progress', 'N/A')}%
             service_name = Prompt.ask("[bold cyan]Service name[/bold cyan]")
             service_url = Prompt.ask("[bold cyan]Service URL[/bold cyan]")
             service_type = Prompt.ask(
-                "[bold cyan]Service type[/bold cyan]", choices=["api", "worker", "storage", "other"]
+                "[bold cyan]Service type[/bold cyan]",
+                choices=["api", "worker", "storage", "other"],
             )
 
             with self.console.status("[bold green]Registering service...") as status:
                 response = await self.clients.post_json(
-                    "orchestrator/registry/register", {"name": service_name, "url": service_url, "type": service_type}
+                    "orchestrator/registry/register",
+                    {"name": service_name, "url": service_url, "type": service_type},
                 )
 
             if response.get("registered"):
-                self.console.print(f"[green]✅ Service '{service_name}' registered successfully![/green]")
+                self.console.print(
+                    f"[green]✅ Service '{service_name}' registered successfully![/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to register service[/red]")
 
@@ -305,16 +332,26 @@ Progress: {workflow.get('progress', 'N/A')}%
             service_url = Prompt.ask("[bold cyan]Service URL to poll[/bold cyan]")
 
             with self.console.status("[bold green]Polling OpenAPI spec...") as status:
-                response = await self.clients.post_json("orchestrator/registry/poll-openapi", {"url": service_url})
+                response = await self.clients.post_json(
+                    "orchestrator/registry/poll-openapi", {"url": service_url}
+                )
 
             if response.get("endpoints"):
-                self.console.print(f"[green]✅ Found {len(response['endpoints'])} endpoints:[/green]")
+                self.console.print(
+                    f"[green]✅ Found {len(response['endpoints'])} endpoints:[/green]"
+                )
                 for endpoint in response["endpoints"][:10]:  # Show first 10
-                    self.console.print(f"  {endpoint.get('method', 'GET')} {endpoint.get('path', 'unknown')}")
+                    self.console.print(
+                        f"  {endpoint.get('method', 'GET')} {endpoint.get('path', 'unknown')}"
+                    )
                 if len(response["endpoints"]) > 10:
-                    self.console.print(f"  ... and {len(response['endpoints']) - 10} more")
+                    self.console.print(
+                        f"  ... and {len(response['endpoints']) - 10} more"
+                    )
             else:
-                self.console.print("[yellow]No endpoints found or service unavailable.[/yellow]")
+                self.console.print(
+                    "[yellow]No endpoints found or service unavailable.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error polling OpenAPI: {e}[/red]")
@@ -324,8 +361,12 @@ Progress: {workflow.get('progress', 'N/A')}%
         try:
             service_name = Prompt.ask("[bold cyan]Service name[/bold cyan]")
 
-            with self.console.status(f"[bold green]Fetching details for {service_name}...") as status:
-                response = await self.clients.get_json(f"orchestrator/registry/{service_name}")
+            with self.console.status(
+                f"[bold green]Fetching details for {service_name}..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"orchestrator/registry/{service_name}"
+                )
 
             if response.get("service"):
                 service = response["service"]
@@ -392,13 +433,21 @@ Endpoints: {len(service.get('endpoints', []))}
             )
 
             if confirm:
-                with self.console.status("[bold green]Recalculating document quality...") as status:
-                    response = await self.clients.post_json("orchestrator/jobs/recalc-quality", {})
+                with self.console.status(
+                    "[bold green]Recalculating document quality..."
+                ) as status:
+                    response = await self.clients.post_json(
+                        "orchestrator/jobs/recalc-quality", {}
+                    )
 
                 if response.get("job_id"):
-                    self.console.print(f"[green]✅ Quality recalculation job started: {response['job_id']}[/green]")
+                    self.console.print(
+                        f"[green]✅ Quality recalculation job started: {response['job_id']}[/green]"
+                    )
                 else:
-                    self.console.print("[red]❌ Failed to start quality recalculation[/red]")
+                    self.console.print(
+                        "[red]❌ Failed to start quality recalculation[/red]"
+                    )
             else:
                 self.console.print("[yellow]Quality recalculation cancelled.[/yellow]")
 
@@ -410,15 +459,22 @@ Endpoints: {len(service.get('endpoints', []))}
         try:
             consolidation_id = Prompt.ask("[bold cyan]Consolidation ID[/bold cyan]")
 
-            with self.console.status("[bold green]Notifying consolidation complete...") as status:
+            with self.console.status(
+                "[bold green]Notifying consolidation complete..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "orchestrator/jobs/notify-consolidation", {"consolidation_id": consolidation_id}
+                    "orchestrator/jobs/notify-consolidation",
+                    {"consolidation_id": consolidation_id},
                 )
 
             if response.get("notified"):
-                self.console.print(f"[green]✅ Consolidation notification sent for: {consolidation_id}[/green]")
+                self.console.print(
+                    f"[green]✅ Consolidation notification sent for: {consolidation_id}[/green]"
+                )
             else:
-                self.console.print("[red]❌ Failed to send consolidation notification[/red]")
+                self.console.print(
+                    "[red]❌ Failed to send consolidation notification[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error notifying consolidation: {e}[/red]")
@@ -527,9 +583,15 @@ Last Check: {response.get('timestamp', 'unknown')}
                         status = "✅" if details.get("healthy") else "❌"
                         content += f"  {status} {service}: {details.get('status', 'unknown')}\n"
 
-                print_panel(self.console, content, border_style="green" if response["overall_healthy"] else "red")
+                print_panel(
+                    self.console,
+                    content,
+                    border_style="green" if response["overall_healthy"] else "red",
+                )
             else:
-                self.console.print("[red]Unable to retrieve system health information.[/red]")
+                self.console.print(
+                    "[red]Unable to retrieve system health information.[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error checking system health: {e}[/red]")
@@ -537,7 +599,9 @@ Last Check: {response.get('timestamp', 'unknown')}
     async def orchestrator_metrics(self):
         """Orchestrator metrics."""
         try:
-            with self.console.status("[bold green]Fetching orchestrator metrics...") as status:
+            with self.console.status(
+                "[bold green]Fetching orchestrator metrics..."
+            ) as status:
                 response = await self.clients.get_json("orchestrator/metrics")
 
             if response.get("metrics"):
@@ -626,14 +690,18 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
     async def run_e2e_demo(self):
         """Run full E2E demo."""
         try:
-            confirm = Confirm.ask("[bold yellow]This will run a complete end-to-end demo. Continue?[/bold yellow]")
+            confirm = Confirm.ask(
+                "[bold yellow]This will run a complete end-to-end demo. Continue?[/bold yellow]"
+            )
 
             if confirm:
                 with self.console.status("[bold green]Running E2E demo...") as status:
                     response = await self.clients.post_json("orchestrator/demo/e2e", {})
 
                 if response.get("demo_id"):
-                    self.console.print(f"[green]✅ E2E demo started: {response['demo_id']}[/green]")
+                    self.console.print(
+                        f"[green]✅ E2E demo started: {response['demo_id']}[/green]"
+                    )
 
                     # Monitor progress
                     demo_id = response["demo_id"]
@@ -643,9 +711,13 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
                         await asyncio.sleep(2)
 
                         try:
-                            status_response = await self.clients.get_json(f"orchestrator/demo/{demo_id}/status")
+                            status_response = await self.clients.get_json(
+                                f"orchestrator/demo/{demo_id}/status"
+                            )
                             if status_response.get("completed"):
-                                self.console.print("[green]✅ E2E demo completed successfully![/green]")
+                                self.console.print(
+                                    "[green]✅ E2E demo completed successfully![/green]"
+                                )
                                 break
                             elif status_response.get("failed"):
                                 self.console.print(
@@ -654,7 +726,9 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
                                 break
                             else:
                                 progress = status_response.get("progress", 0)
-                                self.console.print(f"[yellow]⏳ Demo progress: {progress}%[/yellow]")
+                                self.console.print(
+                                    f"[yellow]⏳ Demo progress: {progress}%[/yellow]"
+                                )
                         except Exception:
                             continue
                 else:
@@ -668,25 +742,39 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
     async def run_doc_processing_demo(self):
         """Run document processing demo."""
         try:
-            with self.console.status("[bold green]Running document processing demo...") as status:
-                response = await self.clients.post_json("orchestrator/demo/doc-processing", {})
+            with self.console.status(
+                "[bold green]Running document processing demo..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "orchestrator/demo/doc-processing", {}
+                )
 
             if response.get("demo_id"):
-                self.console.print(f"[green]✅ Document processing demo started: {response['demo_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Document processing demo started: {response['demo_id']}[/green]"
+                )
             else:
-                self.console.print("[red]❌ Failed to start document processing demo[/red]")
+                self.console.print(
+                    "[red]❌ Failed to start document processing demo[/red]"
+                )
 
         except Exception as e:
-            self.console.print(f"[red]Error running document processing demo: {e}[/red]")
+            self.console.print(
+                f"[red]Error running document processing demo: {e}[/red]"
+            )
 
     async def run_analysis_demo(self):
         """Run analysis workflow demo."""
         try:
             with self.console.status("[bold green]Running analysis demo...") as status:
-                response = await self.clients.post_json("orchestrator/demo/analysis", {})
+                response = await self.clients.post_json(
+                    "orchestrator/demo/analysis", {}
+                )
 
             if response.get("demo_id"):
-                self.console.print(f"[green]✅ Analysis demo started: {response['demo_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Analysis demo started: {response['demo_id']}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to start analysis demo[/red]")
 
@@ -696,7 +784,9 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
     async def configuration_menu(self):
         """Orchestrator configuration submenu."""
         while True:
-            menu = create_menu_table("Orchestrator Configuration", ["Option", "Description"])
+            menu = create_menu_table(
+                "Orchestrator Configuration", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -727,14 +817,20 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
     async def view_effective_config(self):
         """View effective configuration."""
         try:
-            with self.console.status("[bold green]Fetching effective configuration...") as status:
+            with self.console.status(
+                "[bold green]Fetching effective configuration..."
+            ) as status:
                 response = await self.clients.get_json("orchestrator/config/effective")
 
             if response.get("config"):
                 import json
 
                 config_str = json.dumps(response["config"], indent=2)
-                print_panel(self.console, f"[bold]Effective Configuration[/bold]\n\n{config_str}", border_style="cyan")
+                print_panel(
+                    self.console,
+                    f"[bold]Effective Configuration[/bold]\n\n{config_str}",
+                    border_style="cyan",
+                )
             else:
                 self.console.print("[yellow]No configuration available.[/yellow]")
 
@@ -744,7 +840,9 @@ Memory Usage: {metrics.get('memory_mb', 0)} MB
     async def view_orchestrator_info(self):
         """View orchestrator info."""
         try:
-            with self.console.status("[bold green]Fetching orchestrator info...") as status:
+            with self.console.status(
+                "[bold green]Fetching orchestrator info..."
+            ) as status:
                 response = await self.clients.get_json("orchestrator/info")
 
             if response.get("info"):
@@ -770,7 +868,9 @@ Features: {', '.join(info.get('features', []))}
     async def view_orchestrator_config(self):
         """View orchestrator config."""
         try:
-            with self.console.status("[bold green]Fetching orchestrator config...") as status:
+            with self.console.status(
+                "[bold green]Fetching orchestrator config..."
+            ) as status:
                 response = await self.clients.get_json("orchestrator/config")
 
             if response.get("config"):

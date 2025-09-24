@@ -17,7 +17,9 @@ from ...base.base_manager import BaseManager
 class InterpreterManager(BaseManager):
     """Manager for interpreter service power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def interpreter_management_menu(self):
@@ -89,8 +91,12 @@ class InterpreterManager(BaseManager):
         try:
             query = Prompt.ask("[bold cyan]Enter query to interpret[/bold cyan]")
 
-            with self.console.status(f"[bold green]Interpreting query...[/bold green]") as status:
-                response = await self.clients.post_json("interpreter/interpret", {"query": query})
+            with self.console.status(
+                f"[bold green]Interpreting query...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "interpreter/interpret", {"query": query}
+                )
 
             if response.get("data"):
                 interpretation = response["data"]
@@ -105,11 +111,17 @@ class InterpreterManager(BaseManager):
         """Interpret query with additional context."""
         try:
             query = Prompt.ask("[bold cyan]Enter query to interpret[/bold cyan]")
-            user_id = Prompt.ask("[bold cyan]User ID (optional)[/bold cyan]", default="")
-            session_id = Prompt.ask("[bold cyan]Session ID (optional)[/bold cyan]", default="")
+            user_id = Prompt.ask(
+                "[bold cyan]User ID (optional)[/bold cyan]", default=""
+            )
+            session_id = Prompt.ask(
+                "[bold cyan]Session ID (optional)[/bold cyan]", default=""
+            )
 
             context = {}
-            context_input = Prompt.ask("[bold cyan]Context (JSON, optional)[/bold cyan]", default="{}")
+            context_input = Prompt.ask(
+                "[bold cyan]Context (JSON, optional)[/bold cyan]", default="{}"
+            )
             try:
                 context = json.loads(context_input)
             except Exception:
@@ -123,19 +135,27 @@ class InterpreterManager(BaseManager):
             if context:
                 query_data["context"] = context
 
-            with self.console.status("[bold green]Interpreting query with context...[/bold green]") as status:
-                response = await self.clients.post_json("interpreter/interpret", query_data)
+            with self.console.status(
+                "[bold green]Interpreting query with context...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "interpreter/interpret", query_data
+                )
 
             if response.get("data"):
                 interpretation = response["data"]
                 await self.display_interpretation_result(interpretation, query)
             else:
-                self.console.print("[red]❌ Failed to interpret query with context[/red]")
+                self.console.print(
+                    "[red]❌ Failed to interpret query with context[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error interpreting query with context: {e}[/red]")
 
-    async def display_interpretation_result(self, interpretation: Dict[str, Any], original_query: str):
+    async def display_interpretation_result(
+        self, interpretation: Dict[str, Any], original_query: str
+    ):
         """Display interpretation result in a formatted way."""
         intent = interpretation.get("intent", "unknown")
         confidence = interpretation.get("confidence", 0.0)
@@ -174,7 +194,9 @@ class InterpreterManager(BaseManager):
     async def test_intent_recognition(self):
         """Test intent recognition with various queries."""
         try:
-            self.console.print("[yellow]Testing intent recognition with various query types...[/yellow]")
+            self.console.print(
+                "[yellow]Testing intent recognition with various query types...[/yellow]"
+            )
 
             test_queries = [
                 "analyze this document for consistency issues",
@@ -187,8 +209,12 @@ class InterpreterManager(BaseManager):
 
             results = []
             for query in test_queries:
-                with self.console.status(f"[dim]Testing: {query[:30]}...[/dim]") as status:
-                    response = await self.clients.post_json("interpreter/interpret", {"query": query})
+                with self.console.status(
+                    f"[dim]Testing: {query[:30]}...[/dim]"
+                ) as status:
+                    response = await self.clients.post_json(
+                        "interpreter/interpret", {"query": query}
+                    )
 
                 if response.get("data"):
                     interp = response["data"]
@@ -208,10 +234,16 @@ class InterpreterManager(BaseManager):
 
             for result in results:
                 confidence_color = (
-                    "green" if result["confidence"] >= 0.8 else "yellow" if result["confidence"] >= 0.5 else "red"
+                    "green"
+                    if result["confidence"] >= 0.8
+                    else "yellow" if result["confidence"] >= 0.5 else "red"
                 )
                 table.add_row(
-                    result["query"][:37] + "..." if len(result["query"]) > 37 else result["query"],
+                    (
+                        result["query"][:37] + "..."
+                        if len(result["query"]) > 37
+                        else result["query"]
+                    ),
                     result["intent"],
                     f"[{confidence_color}]{result['confidence']:.2f}[/{confidence_color}]",
                 )
@@ -224,12 +256,26 @@ class InterpreterManager(BaseManager):
     async def analyze_query_confidence(self):
         """Analyze confidence levels for different query types."""
         try:
-            self.console.print("[yellow]Analyzing confidence levels across query categories...[/yellow]")
+            self.console.print(
+                "[yellow]Analyzing confidence levels across query categories...[/yellow]"
+            )
 
             query_categories = {
-                "Analysis Queries": ["analyze this document", "check consistency", "find issues in code"],
-                "Ingestion Queries": ["ingest from github", "load jira tickets", "import confluence pages"],
-                "Search Queries": ["find security prompts", "search for documentation", "locate code examples"],
+                "Analysis Queries": [
+                    "analyze this document",
+                    "check consistency",
+                    "find issues in code",
+                ],
+                "Ingestion Queries": [
+                    "ingest from github",
+                    "load jira tickets",
+                    "import confluence pages",
+                ],
+                "Search Queries": [
+                    "find security prompts",
+                    "search for documentation",
+                    "locate code examples",
+                ],
                 "Help Queries": ["what can you do", "help me", "show commands"],
             }
 
@@ -238,7 +284,9 @@ class InterpreterManager(BaseManager):
             for category, queries in query_categories.items():
                 confidences = []
                 for query in queries:
-                    response = await self.clients.post_json("interpreter/interpret", {"query": query})
+                    response = await self.clients.post_json(
+                        "interpreter/interpret", {"query": query}
+                    )
                     if response.get("data"):
                         confidence = response["data"].get("confidence", 0.0)
                         confidences.append(confidence)
@@ -260,7 +308,9 @@ class InterpreterManager(BaseManager):
 
             for category, stats in category_stats.items():
                 confidence_color = (
-                    "green" if stats["avg_confidence"] >= 0.8 else "yellow" if stats["avg_confidence"] >= 0.5 else "red"
+                    "green"
+                    if stats["avg_confidence"] >= 0.8
+                    else "yellow" if stats["avg_confidence"] >= 0.5 else "red"
                 )
                 table.add_row(
                     category,
@@ -311,10 +361,16 @@ class InterpreterManager(BaseManager):
     async def execute_single_workflow(self):
         """Execute a single workflow from query."""
         try:
-            query = Prompt.ask("[bold cyan]Enter query to execute as workflow[/bold cyan]")
+            query = Prompt.ask(
+                "[bold cyan]Enter query to execute as workflow[/bold cyan]"
+            )
 
-            with self.console.status("[bold green]Executing workflow...[/bold green]") as status:
-                response = await self.clients.post_json("interpreter/execute", {"query": query})
+            with self.console.status(
+                "[bold green]Executing workflow...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "interpreter/execute", {"query": query}
+                )
 
             if response.get("data"):
                 workflow_result = response["data"]
@@ -325,11 +381,18 @@ class InterpreterManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error executing workflow: {e}[/red]")
 
-    async def display_workflow_result(self, workflow_result: Dict[str, Any], original_query: str):
+    async def display_workflow_result(
+        self, workflow_result: Dict[str, Any], original_query: str
+    ):
         """Display workflow execution result."""
         status = workflow_result.get("status", "unknown")
 
-        status_color = {"completed": "green", "running": "yellow", "failed": "red", "error": "red"}.get(status, "white")
+        status_color = {
+            "completed": "green",
+            "running": "yellow",
+            "failed": "red",
+            "error": "red",
+        }.get(status, "white")
 
         content = f"""
 [bold]Workflow Execution Results[/bold]
@@ -340,7 +403,9 @@ class InterpreterManager(BaseManager):
 """
 
         if workflow_result.get("result"):
-            content += f"\n[bold green]Final Result:[/bold green]\n{workflow_result['result']}"
+            content += (
+                f"\n[bold green]Final Result:[/bold green]\n{workflow_result['result']}"
+            )
 
         if workflow_result.get("results"):
             content += f"\n[bold yellow]Step Results:[/bold yellow]\n"
@@ -351,30 +416,48 @@ class InterpreterManager(BaseManager):
         if workflow_result.get("error"):
             content += f"\n[bold red]Error:[/bold red] {workflow_result['error']}"
 
-        print_panel(self.console, content, border_style="green" if status == "completed" else "red")
+        print_panel(
+            self.console,
+            content,
+            border_style="green" if status == "completed" else "red",
+        )
 
     async def execute_with_full_context(self):
         """Execute workflow with full user context."""
         try:
             query = Prompt.ask("[bold cyan]Enter query to execute[/bold cyan]")
             user_id = Prompt.ask("[bold cyan]User ID[/bold cyan]")
-            session_id = Prompt.ask("[bold cyan]Session ID[/bold cyan]", default=f"cli_session_{user_id}")
+            session_id = Prompt.ask(
+                "[bold cyan]Session ID[/bold cyan]", default=f"cli_session_{user_id}"
+            )
 
             context_input = Prompt.ask(
-                "[bold cyan]Execution context (JSON)[/bold cyan]", default='{"priority": "high"}'
+                "[bold cyan]Execution context (JSON)[/bold cyan]",
+                default='{"priority": "high"}',
             )
             context = json.loads(context_input)
 
-            query_data = {"query": query, "user_id": user_id, "session_id": session_id, "context": context}
+            query_data = {
+                "query": query,
+                "user_id": user_id,
+                "session_id": session_id,
+                "context": context,
+            }
 
-            with self.console.status("[bold green]Executing workflow with full context...[/bold green]") as status:
-                response = await self.clients.post_json("interpreter/execute", query_data)
+            with self.console.status(
+                "[bold green]Executing workflow with full context...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "interpreter/execute", query_data
+                )
 
             if response.get("data"):
                 workflow_result = response["data"]
                 await self.display_workflow_result(workflow_result, query)
             else:
-                self.console.print("[red]❌ Failed to execute workflow with context[/red]")
+                self.console.print(
+                    "[red]❌ Failed to execute workflow with context[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error executing workflow with context: {e}[/red]")
@@ -383,7 +466,9 @@ class InterpreterManager(BaseManager):
         """Monitor workflow execution progress."""
         try:
             # This is a simplified monitoring - in practice would poll for status
-            self.console.print("[yellow]Workflow monitoring would show real-time progress here[/yellow]")
+            self.console.print(
+                "[yellow]Workflow monitoring would show real-time progress here[/yellow]"
+            )
             self.console.print(
                 "[yellow]In a full implementation, this would poll the workflow status endpoint[/yellow]"
             )
@@ -395,8 +480,12 @@ class InterpreterManager(BaseManager):
         """View workflow execution history."""
         try:
             # This would typically fetch from a history endpoint
-            self.console.print("[yellow]Execution history would show recent workflow runs here[/yellow]")
-            self.console.print("[yellow]In a full implementation, this would query execution logs[/yellow]")
+            self.console.print(
+                "[yellow]Execution history would show recent workflow runs here[/yellow]"
+            )
+            self.console.print(
+                "[yellow]In a full implementation, this would query execution logs[/yellow]"
+            )
 
         except Exception as e:
             self.console.print(f"[red]Error viewing execution history: {e}[/red]")
@@ -411,12 +500,16 @@ class InterpreterManager(BaseManager):
                 "check document quality and generate report",
             ]
 
-            self.console.print("[yellow]Testing workflow execution scenarios...[/yellow]")
+            self.console.print(
+                "[yellow]Testing workflow execution scenarios...[/yellow]"
+            )
 
             for scenario in scenarios:
                 self.console.print(f"\n[bold blue]Testing:[/bold blue] {scenario}")
 
-                response = await self.clients.post_json("interpreter/execute", {"query": scenario})
+                response = await self.clients.post_json(
+                    "interpreter/execute", {"query": scenario}
+                )
 
                 if response.get("data"):
                     result = response["data"]
@@ -463,7 +556,9 @@ class InterpreterManager(BaseManager):
     async def list_supported_intents(self):
         """List all supported intents."""
         try:
-            with self.console.status("[bold green]Fetching supported intents...[/bold green]") as status:
+            with self.console.status(
+                "[bold green]Fetching supported intents...[/bold green]"
+            ) as status:
                 response = await self.clients.get_json("interpreter/intents")
 
             if response.get("data") and response["data"].get("intents"):
@@ -482,7 +577,8 @@ class InterpreterManager(BaseManager):
                     table.add_row(
                         intent_name,
                         (
-                            intent_info.get("description", "No description")[:47] + "..."
+                            intent_info.get("description", "No description")[:47]
+                            + "..."
                             if len(intent_info.get("description", "")) > 47
                             else intent_info.get("description", "No description")
                         ),
@@ -527,7 +623,9 @@ class InterpreterManager(BaseManager):
 
                     examples = intent_info.get("examples", [])
                     if examples:
-                        for i, example in enumerate(examples[:5], 1):  # Show first 5 examples
+                        for i, example in enumerate(
+                            examples[:5], 1
+                        ):  # Show first 5 examples
                             content += f'{i}. "{example}"\n'
                         if len(examples) > 5:
                             content += f"... and {len(examples) - 5} more examples\n"
@@ -546,7 +644,9 @@ class InterpreterManager(BaseManager):
     async def test_intent_examples(self):
         """Test all examples for supported intents."""
         try:
-            with self.console.status("[bold green]Testing intent examples...[/bold green]") as status:
+            with self.console.status(
+                "[bold green]Testing intent examples...[/bold green]"
+            ) as status:
                 intents_response = await self.clients.get_json("interpreter/intents")
 
             if intents_response.get("data") and intents_response["data"].get("intents"):
@@ -560,19 +660,25 @@ class InterpreterManager(BaseManager):
                     if not examples:
                         continue
 
-                    self.console.print(f"\n[bold blue]Testing {intent_name} examples:[/bold blue]")
+                    self.console.print(
+                        f"\n[bold blue]Testing {intent_name} examples:[/bold blue]"
+                    )
 
                     for example in examples[:2]:  # Test first 2 examples per intent
                         total_tests += 1
 
-                        response = await self.clients.post_json("interpreter/interpret", {"query": example})
+                        response = await self.clients.post_json(
+                            "interpreter/interpret", {"query": example}
+                        )
 
                         if response.get("data"):
                             recognized_intent = response["data"].get("intent", "")
                             confidence = response["data"].get("confidence", 0.0)
 
-                            if recognized_intent == intent_name and confidence >= intent_info.get(
-                                "confidence_threshold", 0.0
+                            if (
+                                recognized_intent == intent_name
+                                and confidence
+                                >= intent_info.get("confidence_threshold", 0.0)
                             ):
                                 successful_tests += 1
                                 status_icon = "✅"
@@ -583,10 +689,14 @@ class InterpreterManager(BaseManager):
                                 f'  {status_icon} "{example[:50]}..." -> {recognized_intent} ({confidence:.2f})'
                             )
                         else:
-                            self.console.print(f'  ❌ "{example[:50]}..." -> Failed to interpret')
+                            self.console.print(
+                                f'  ❌ "{example[:50]}..." -> Failed to interpret'
+                            )
 
                 # Summary
-                success_rate = (successful_tests / total_tests * 100) if total_tests > 0 else 0
+                success_rate = (
+                    (successful_tests / total_tests * 100) if total_tests > 0 else 0
+                )
                 self.console.print(f"\n[bold]Intent Example Test Summary:[/bold]")
                 self.console.print(f"Total tests: {total_tests}")
                 self.console.print(f"Successful: {successful_tests}")
@@ -601,7 +711,9 @@ class InterpreterManager(BaseManager):
     async def intent_performance_analysis(self):
         """Analyze intent recognition performance."""
         try:
-            self.console.print("[yellow]Analyzing intent recognition performance...[/yellow]")
+            self.console.print(
+                "[yellow]Analyzing intent recognition performance...[/yellow]"
+            )
 
             # This would analyze performance metrics
             # For now, show a placeholder implementation
@@ -656,7 +768,9 @@ class InterpreterManager(BaseManager):
 
                 # Process the query
                 with self.console.status("[dim]Processing...[/dim]") as status:
-                    response = await self.clients.post_json("interpreter/interpret", {"query": query})
+                    response = await self.clients.post_json(
+                        "interpreter/interpret", {"query": query}
+                    )
 
                 if response.get("data"):
                     interpretation = response["data"]
@@ -709,7 +823,9 @@ Session duration: 0s
     async def batch_query_processing(self):
         """Batch query processing interface."""
         try:
-            queries_input = Prompt.ask("[bold cyan]Enter queries (one per line, or path to file)[/bold cyan]")
+            queries_input = Prompt.ask(
+                "[bold cyan]Enter queries (one per line, or path to file)[/bold cyan]"
+            )
 
             queries = []
             if "\n" in queries_input:
@@ -732,12 +848,18 @@ Session duration: 0s
                 self.console.print("[red]No queries to process[/red]")
                 return
 
-            self.console.print(f"[yellow]Processing {len(queries)} queries in batch...[/yellow]")
+            self.console.print(
+                f"[yellow]Processing {len(queries)} queries in batch...[/yellow]"
+            )
 
             results = []
             for i, query in enumerate(queries, 1):
-                with self.console.status(f"[dim]Processing query {i}/{len(queries)}...[/dim]") as status:
-                    response = await self.clients.post_json("interpreter/interpret", {"query": query})
+                with self.console.status(
+                    f"[dim]Processing query {i}/{len(queries)}...[/dim]"
+                ) as status:
+                    response = await self.clients.post_json(
+                        "interpreter/interpret", {"query": query}
+                    )
 
                 if response.get("data"):
                     interpretation = response["data"]
@@ -750,10 +872,19 @@ Session duration: 0s
                         }
                     )
                 else:
-                    results.append({"query": query, "intent": "error", "confidence": 0.0, "success": False})
+                    results.append(
+                        {
+                            "query": query,
+                            "intent": "error",
+                            "confidence": 0.0,
+                            "success": False,
+                        }
+                    )
 
             # Display batch results
-            table = Table(title=f"Batch Query Processing Results ({len(results)} queries)")
+            table = Table(
+                title=f"Batch Query Processing Results ({len(results)} queries)"
+            )
             table.add_column("Query", style="cyan", max_width=40)
             table.add_column("Intent", style="green")
             table.add_column("Confidence", style="yellow")
@@ -763,21 +894,29 @@ Session duration: 0s
             for result in results:
                 status_icon = "✅" if result["success"] else "❌"
                 confidence_color = (
-                    "green" if result["confidence"] >= 0.8 else "yellow" if result["confidence"] >= 0.5 else "red"
+                    "green"
+                    if result["confidence"] >= 0.8
+                    else "yellow" if result["confidence"] >= 0.5 else "red"
                 )
 
                 if result["success"]:
                     successful += 1
 
                 table.add_row(
-                    result["query"][:37] + "..." if len(result["query"]) > 37 else result["query"],
+                    (
+                        result["query"][:37] + "..."
+                        if len(result["query"]) > 37
+                        else result["query"]
+                    ),
                     result["intent"],
                     f"[{confidence_color}]{result['confidence']:.2f}[/{confidence_color}]",
                     status_icon,
                 )
 
             self.console.print(table)
-            self.console.print(f"\n[dim]Batch processing complete: {successful}/{len(results)} successful[/dim]")
+            self.console.print(
+                f"\n[dim]Batch processing complete: {successful}/{len(results)} successful[/dim]"
+            )
 
         except Exception as e:
             self.console.print(f"[red]Error in batch query processing: {e}[/red]")
@@ -824,17 +963,25 @@ Session duration: 0s
             print_panel(self.console, content, border_style="green")
 
         except Exception as e:
-            self.console.print(f"[red]Error fetching interpreter performance stats: {e}[/red]")
+            self.console.print(
+                f"[red]Error fetching interpreter performance stats: {e}[/red]"
+            )
 
     async def interpret_single_query_from_cli(self, query_data: Dict[str, Any]):
         """Interpret a single query for CLI usage (no interactive prompts)."""
         try:
-            with self.console.status(f"[bold green]Interpreting query...[/bold green]") as status:
-                response = await self.clients.post_json("interpreter/interpret", query_data)
+            with self.console.status(
+                f"[bold green]Interpreting query...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "interpreter/interpret", query_data
+                )
 
             if response.get("data"):
                 interpretation = response["data"]
-                await self.display_interpretation_result(interpretation, query_data["query"])
+                await self.display_interpretation_result(
+                    interpretation, query_data["query"]
+                )
             else:
                 self.console.print("[red]❌ Failed to interpret query[/red]")
 
@@ -844,8 +991,12 @@ Session duration: 0s
     async def execute_workflow_from_cli(self, query_data: Dict[str, Any]):
         """Execute a workflow for CLI usage (no interactive prompts)."""
         try:
-            with self.console.status("[bold green]Executing workflow...[/bold green]") as status:
-                response = await self.clients.post_json("interpreter/execute", query_data)
+            with self.console.status(
+                "[bold green]Executing workflow...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "interpreter/execute", query_data
+                )
 
             if response.get("data"):
                 workflow_result = response["data"]

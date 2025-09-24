@@ -19,10 +19,14 @@ class TestControlPanel:
     @patch("pages.controls.st")
     @patch("pages.controls.get_available_simulations")
     @patch("pages.controls.get_simulation_details")
-    def test_control_panel_renders_with_simulations(self, mock_get_details, mock_get_sims, mock_st):
+    def test_control_panel_renders_with_simulations(
+        self, mock_get_details, mock_get_sims, mock_st
+    ):
         """Test that control panel renders correctly with available simulations."""
         # Mock data
-        mock_get_sims.return_value = [{"id": "sim_001", "name": "Test Sim", "status": "running"}]
+        mock_get_sims.return_value = [
+            {"id": "sim_001", "name": "Test Sim", "status": "running"}
+        ]
         mock_get_details.return_value = {
             "id": "sim_001",
             "status": "running",
@@ -111,7 +115,9 @@ class TestControlPanel:
 
         update_simulation_priority("sim_001", "High")
 
-        mock_st.success.assert_called_once_with("✅ Priority updated to High for simulation sim_001")
+        mock_st.success.assert_called_once_with(
+            "✅ Priority updated to High for simulation sim_001"
+        )
 
     @patch("pages.controls.st")
     def test_update_simulation_resources(self, mock_st):
@@ -128,7 +134,14 @@ class TestControlPanel:
         """Test that simulation details return expected structure."""
         details = get_simulation_details("sim_001")
 
-        expected_keys = ["id", "name", "status", "progress", "elapsed_time", "estimated_time_remaining"]
+        expected_keys = [
+            "id",
+            "name",
+            "status",
+            "progress",
+            "elapsed_time",
+            "estimated_time_remaining",
+        ]
 
         for key in expected_keys:
             assert key in details
@@ -168,7 +181,9 @@ class TestControlPanel:
 
         # Verify all major components were rendered
         assert mock_st.markdown.call_count >= 2
-        assert mock_st.columns.call_count >= 3  # Primary controls, advanced controls, status
+        assert (
+            mock_st.columns.call_count >= 3
+        )  # Primary controls, advanced controls, status
         mock_st.metric.assert_called()  # Status metrics
         mock_st.button.assert_called()  # Control buttons
 
@@ -181,7 +196,10 @@ class TestBulkOperations:
     @patch("pages.controls.get_available_simulations")
     def test_bulk_operations_render_without_selection(self, mock_get_sims, mock_st):
         """Test bulk operations interface when no simulations are selected."""
-        mock_get_sims.return_value = [{"id": "sim_001", "name": "Test Sim 1"}, {"id": "sim_002", "name": "Test Sim 2"}]
+        mock_get_sims.return_value = [
+            {"id": "sim_001", "name": "Test Sim 1"},
+            {"id": "sim_002", "name": "Test Sim 2"},
+        ]
 
         mock_st.markdown = Mock()
         mock_st.multiselect = Mock(return_value=[])
@@ -191,13 +209,18 @@ class TestBulkOperations:
 
         render_bulk_operations()
 
-        mock_st.info.assert_called_with("Select one or more simulations to enable bulk operations.")
+        mock_st.info.assert_called_with(
+            "Select one or more simulations to enable bulk operations."
+        )
 
     @patch("pages.controls.st")
     @patch("pages.controls.get_available_simulations")
     def test_bulk_operations_with_selection(self, mock_get_sims, mock_st):
         """Test bulk operations with simulation selection."""
-        mock_get_sims.return_value = [{"id": "sim_001", "name": "Test Sim 1"}, {"id": "sim_002", "name": "Test Sim 2"}]
+        mock_get_sims.return_value = [
+            {"id": "sim_001", "name": "Test Sim 1"},
+            {"id": "sim_002", "name": "Test Sim 2"},
+        ]
 
         mock_st.markdown = Mock()
         mock_st.multiselect = Mock(return_value=["sim_001 - Test Sim 1"])
@@ -239,8 +262,18 @@ class TestStatusMonitor:
     def test_status_monitor_renders_grid(self, mock_get_sims, mock_st):
         """Test status monitor renders simulation grid."""
         mock_get_sims.return_value = [
-            {"id": "sim_001", "name": "Test Sim 1", "status": "running", "progress": 50.0},
-            {"id": "sim_002", "name": "Test Sim 2", "status": "paused", "progress": 25.0},
+            {
+                "id": "sim_001",
+                "name": "Test Sim 1",
+                "status": "running",
+                "progress": 50.0,
+            },
+            {
+                "id": "sim_002",
+                "name": "Test Sim 2",
+                "status": "paused",
+                "progress": 25.0,
+            },
         ]
 
         mock_st.markdown = Mock()
@@ -305,7 +338,12 @@ class TestQueueManagement:
         from pages.controls import save_queue_configuration
 
         save_queue_configuration(
-            {"max_concurrent": 5, "priority_weight": 3, "timeout_minutes": 60, "retry_attempts": 2}
+            {
+                "max_concurrent": 5,
+                "priority_weight": 3,
+                "timeout_minutes": 60,
+                "retry_attempts": 2,
+            }
         )
 
         mock_st.success.assert_called_with("✅ Queue configuration saved successfully")
@@ -346,7 +384,14 @@ class TestUtilityFunctions:
         """Test simulation details data structure."""
         details = get_simulation_details("sim_001")
 
-        required_keys = ["id", "name", "status", "progress", "elapsed_time", "estimated_time_remaining"]
+        required_keys = [
+            "id",
+            "name",
+            "status",
+            "progress",
+            "elapsed_time",
+            "estimated_time_remaining",
+        ]
 
         for key in required_keys:
             assert key in details, f"Missing required key: {key}"

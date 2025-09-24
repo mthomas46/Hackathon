@@ -2,7 +2,11 @@
 
 from typing import List, Optional
 
-from ...domain.service_registry import Service, ServiceDiscoveryService, ServiceRegistrationService
+from ...domain.service_registry import (
+    Service,
+    ServiceDiscoveryService,
+    ServiceRegistrationService,
+)
 from ...shared.application import UseCase
 from ...shared.domain import DomainResult
 from .commands import *
@@ -29,7 +33,9 @@ class RegisterServiceUseCase(UseCase):
                 endpoints=command.endpoints,
                 metadata=command.metadata,
             )
-            return DomainResult.success_result(service, "Service registered successfully")
+            return DomainResult.success_result(
+                service, "Service registered successfully"
+            )
         except Exception as e:
             return DomainResult.single_error(f"Failed to register service: {str(e)}")
 
@@ -45,7 +51,9 @@ class UnregisterServiceUseCase(UseCase):
         try:
             success = self.registration_service.unregister_service(command.service_id)
             if success:
-                return DomainResult.success_result(True, "Service unregistered successfully")
+                return DomainResult.success_result(
+                    True, "Service unregistered successfully"
+                )
             else:
                 return DomainResult.single_error("Service not found")
         except Exception as e:
@@ -61,19 +69,29 @@ class UpdateServiceStatusUseCase(UseCase):
     async def execute(self, command: UpdateServiceStatusCommand) -> DomainResult[bool]:
         """Execute the update service status use case."""
         try:
-            success = self.registration_service.update_service_status(command.service_id, command.status)
+            success = self.registration_service.update_service_status(
+                command.service_id, command.status
+            )
             if success:
-                return DomainResult.success_result(True, "Service status updated successfully")
+                return DomainResult.success_result(
+                    True, "Service status updated successfully"
+                )
             else:
                 return DomainResult.single_error("Service not found")
         except Exception as e:
-            return DomainResult.single_error(f"Failed to update service status: {str(e)}")
+            return DomainResult.single_error(
+                f"Failed to update service status: {str(e)}"
+            )
 
 
 class GetServiceUseCase(UseCase):
     """Use case for getting a service."""
 
-    def __init__(self, discovery_service: ServiceDiscoveryService, registration_service: ServiceRegistrationService):
+    def __init__(
+        self,
+        discovery_service: ServiceDiscoveryService,
+        registration_service: ServiceRegistrationService,
+    ):
         self.discovery_service = discovery_service
         self.registration_service = registration_service
 
@@ -95,7 +113,11 @@ class GetServiceUseCase(UseCase):
 class ListServicesUseCase(UseCase):
     """Use case for listing services."""
 
-    def __init__(self, discovery_service: ServiceDiscoveryService, registration_service: ServiceRegistrationService):
+    def __init__(
+        self,
+        discovery_service: ServiceDiscoveryService,
+        registration_service: ServiceRegistrationService,
+    ):
         self.discovery_service = discovery_service
         self.registration_service = registration_service
 
@@ -109,25 +131,43 @@ class ListServicesUseCase(UseCase):
 
             # Apply filters to static services
             if query.category_filter:
-                static_services = [s for s in static_services if s.category == query.category_filter]
+                static_services = [
+                    s for s in static_services if s.category == query.category_filter
+                ]
 
             if query.capability_filter:
-                static_services = [s for s in static_services if s.has_capability(query.capability_filter)]
+                static_services = [
+                    s
+                    for s in static_services
+                    if s.has_capability(query.capability_filter)
+                ]
 
             services.extend(static_services)
 
             # Get registered service instances
-            registered_services = self.registration_service.get_all_registered_services()
+            registered_services = (
+                self.registration_service.get_all_registered_services()
+            )
 
             # Apply filters to registered services
             if query.category_filter:
-                registered_services = [s for s in registered_services if s.category == query.category_filter]
+                registered_services = [
+                    s
+                    for s in registered_services
+                    if s.category == query.category_filter
+                ]
 
             if query.capability_filter:
-                registered_services = [s for s in registered_services if s.has_capability(query.capability_filter)]
+                registered_services = [
+                    s
+                    for s in registered_services
+                    if s.has_capability(query.capability_filter)
+                ]
 
             if query.status_filter:
-                registered_services = [s for s in registered_services if s.status == query.status_filter]
+                registered_services = [
+                    s for s in registered_services if s.status == query.status_filter
+                ]
 
             services.extend(registered_services)
 
@@ -155,13 +195,17 @@ class GetServiceCategoriesUseCase(UseCase):
     def __init__(self, discovery_service: ServiceDiscoveryService):
         self.discovery_service = discovery_service
 
-    async def execute(self, query: GetServiceCategoriesQuery) -> DomainResult[List[str]]:
+    async def execute(
+        self, query: GetServiceCategoriesQuery
+    ) -> DomainResult[List[str]]:
         """Execute the get service categories use case."""
         try:
             categories = self.discovery_service.get_service_categories()
             return DomainResult.success_result(categories)
         except Exception as e:
-            return DomainResult.single_error(f"Failed to get service categories: {str(e)}")
+            return DomainResult.single_error(
+                f"Failed to get service categories: {str(e)}"
+            )
 
 
 class GetServiceCapabilitiesUseCase(UseCase):
@@ -176,4 +220,6 @@ class GetServiceCapabilitiesUseCase(UseCase):
             capabilities = self.discovery_service.get_service_capabilities_summary()
             return DomainResult.success_result(capabilities)
         except Exception as e:
-            return DomainResult.single_error(f"Failed to get service capabilities: {str(e)}")
+            return DomainResult.single_error(
+                f"Failed to get service capabilities: {str(e)}"
+            )

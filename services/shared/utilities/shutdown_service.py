@@ -78,7 +78,9 @@ class ConnectionDrainer:
     async def wait_for_drain(self) -> bool:
         """Wait for all connections to drain or timeout."""
         try:
-            await asyncio.wait_for(self._drain_event.wait(), timeout=self.max_drain_time)
+            await asyncio.wait_for(
+                self._drain_event.wait(), timeout=self.max_drain_time
+            )
             return True
         except asyncio.TimeoutError:
             logger.warning(f"Connection drain timed out after {self.max_drain_time}s")
@@ -124,7 +126,9 @@ class GracefulShutdownService:
 
     def _signal_handler(self, signum, frame) -> None:
         """Handle shutdown signals."""
-        signal_name = signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
+        signal_name = (
+            signal.Signals(signum).name if hasattr(signal, "Signals") else str(signum)
+        )
         logger.info(f"Received shutdown signal: {signal_name}")
 
         # Determine shutdown phase based on signal
@@ -136,13 +140,17 @@ class GracefulShutdownService:
             phase = ShutdownPhase.FORCE
 
         # Start shutdown in background thread to avoid blocking signal handler
-        threading.Thread(target=self._start_shutdown_sync, args=(phase,), daemon=True).start()
+        threading.Thread(
+            target=self._start_shutdown_sync, args=(phase,), daemon=True
+        ).start()
 
     def _reload_handler(self, signum, frame) -> None:
         """Handle reload signals."""
         logger.info("Received reload signal, triggering graceful restart")
         # For now, treat as normal shutdown
-        threading.Thread(target=self._start_shutdown_sync, args=(ShutdownPhase.NORMAL,), daemon=True).start()
+        threading.Thread(
+            target=self._start_shutdown_sync, args=(ShutdownPhase.NORMAL,), daemon=True
+        ).start()
 
     def _atexit_handler(self) -> None:
         """Handle process exit."""
@@ -166,7 +174,9 @@ class GracefulShutdownService:
             logger.error(f"Error during shutdown: {e}")
             self._force_shutdown()
 
-    async def initiate_shutdown(self, phase: ShutdownPhase = ShutdownPhase.NORMAL) -> None:
+    async def initiate_shutdown(
+        self, phase: ShutdownPhase = ShutdownPhase.NORMAL
+    ) -> None:
         """Initiate graceful shutdown process."""
         with self._lock:
             if self._shutdown_started:
@@ -217,7 +227,9 @@ class GracefulShutdownService:
 
         # Wait for connections to drain
         drain_success = await self._connection_drainer.wait_for_drain()
-        self._metrics.connections_drained = 0 if drain_success else self._connection_drainer.active_connections
+        self._metrics.connections_drained = (
+            0 if drain_success else self._connection_drainer.active_connections
+        )
 
         if not drain_success:
             logger.warning(
@@ -242,10 +254,14 @@ class GracefulShutdownService:
                 await asyncio.wait_for(hook.callback(), timeout=hook.timeout)
                 self._metrics.hooks_executed += 1
             except asyncio.TimeoutError:
-                logger.error(f"Shutdown hook {hook.name} timed out after {hook.timeout}s")
+                logger.error(
+                    f"Shutdown hook {hook.name} timed out after {hook.timeout}s"
+                )
                 self._metrics.hooks_failed += 1
                 if hook.required and phase == ShutdownPhase.NORMAL:
-                    logger.warning(f"Required hook {hook.name} failed, continuing with shutdown")
+                    logger.warning(
+                        f"Required hook {hook.name} failed, continuing with shutdown"
+                    )
             except Exception as e:
                 logger.error(f"Shutdown hook {hook.name} failed: {e}")
                 self._metrics.hooks_failed += 1
@@ -299,7 +315,13 @@ class GracefulShutdownService:
         required: bool = True,
     ) -> None:
         """Register a shutdown hook."""
-        hook = ShutdownHook(name=name, callback=callback, priority=priority, timeout=timeout, required=required)
+        hook = ShutdownHook(
+            name=name,
+            callback=callback,
+            priority=priority,
+            timeout=timeout,
+            required=required,
+        )
         self._hooks.append(hook)
         logger.debug(f"Registered shutdown hook: {name} (priority: {priority})")
 

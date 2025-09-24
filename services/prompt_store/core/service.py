@@ -27,7 +27,9 @@ class BaseService(ABC, Generic[T]):
         """Get entity by ID."""
         return self.repository.get_by_id(entity_id)
 
-    def list_entities(self, limit: int = 50, offset: int = 0, **filters) -> Dict[str, Any]:
+    def list_entities(
+        self, limit: int = 50, offset: int = 0, **filters
+    ) -> Dict[str, Any]:
         """List entities with pagination."""
         result = self.repository.get_all(limit=limit, offset=offset, **filters)
         entities = result.get("items", [])

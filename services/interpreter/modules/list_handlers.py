@@ -24,11 +24,15 @@ class ListHandlers:
             return create_interpreter_success_response(
                 "intents retrieved",
                 {"intents": intents_data},
-                **build_interpreter_context("list_intents", intent_count=len(intents_data))
+                **build_interpreter_context(
+                    "list_intents", intent_count=len(intents_data)
+                )
             )
         except Exception as e:
             return handle_interpreter_error(
-                "list supported intents", e, **build_interpreter_context("list_intents_error")
+                "list supported intents",
+                e,
+                **build_interpreter_context("list_intents_error")
             )
 
 

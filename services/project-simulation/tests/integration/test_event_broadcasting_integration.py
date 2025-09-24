@@ -114,7 +114,12 @@ class TestEventBroadcastingMechanism:
                 client.send_text(message)
 
         # Broadcast test event
-        test_event = {"type": "simulation_progress", "simulation_id": "sim-123", "progress": 75.0, "phase": "execution"}
+        test_event = {
+            "type": "simulation_progress",
+            "simulation_id": "sim-123",
+            "progress": 75.0,
+            "phase": "execution",
+        }
 
         broadcast_event(test_event)
 
@@ -221,7 +226,14 @@ class TestRealTimeEventUpdates:
                 client.send_text(message)
 
         # Simulate progress updates
-        phases = ["initialization", "planning", "design", "development", "testing", "deployment"]
+        phases = [
+            "initialization",
+            "planning",
+            "design",
+            "development",
+            "testing",
+            "deployment",
+        ]
 
         for i, phase in enumerate(phases):
             progress = (i + 1) / len(phases) * 100
@@ -248,7 +260,12 @@ class TestRealTimeEventUpdates:
             if timestamp is None:
                 timestamp = time.time()
 
-            metric_data = {"type": "metric", "name": metric_name, "value": value, "timestamp": timestamp}
+            metric_data = {
+                "type": "metric",
+                "name": metric_name,
+                "value": value,
+                "timestamp": timestamp,
+            }
 
             metrics_buffer.append(metric_data)
             message = json.dumps(metric_data)
@@ -257,7 +274,12 @@ class TestRealTimeEventUpdates:
                 client.send_text(message)
 
         # Stream various metrics
-        metrics = [("cpu_usage", 45.2), ("memory_usage", 78.1), ("request_count", 1250), ("error_rate", 0.05)]
+        metrics = [
+            ("cpu_usage", 45.2),
+            ("memory_usage", 78.1),
+            ("request_count", 1250),
+            ("error_rate", 0.05),
+        ]
 
         for metric_name, value in metrics:
             stream_metric(metric_name, value)
@@ -292,7 +314,9 @@ class TestRealTimeEventUpdates:
             """Replay buffered events to client."""
             replay_events = event_buffer
             if since_timestamp:
-                replay_events = [e for e in event_buffer if e.get("timestamp", 0) > since_timestamp]
+                replay_events = [
+                    e for e in event_buffer if e.get("timestamp", 0) > since_timestamp
+                ]
 
             for event in replay_events:
                 message = json.dumps(event)
@@ -302,7 +326,12 @@ class TestRealTimeEventUpdates:
 
         # Buffer some events
         for i in range(50):
-            event = {"type": "test_event", "id": i, "timestamp": time.time() + i * 0.1, "data": f"event_data_{i}"}
+            event = {
+                "type": "test_event",
+                "id": i,
+                "timestamp": time.time() + i * 0.1,
+                "data": f"event_data_{i}",
+            }
             buffer_event(event)
 
         # Replay to clients
@@ -352,9 +381,16 @@ class TestEventBroadcastingIntegration:
                 await client.send_text(message)
 
         # Create and publish domain events
-        project_event = ProjectCreated(project_id="proj-123", name="Test Project", complexity="complex", team_size=5)
+        project_event = ProjectCreated(
+            project_id="proj-123",
+            name="Test Project",
+            complexity="complex",
+            team_size=5,
+        )
 
-        simulation_event = SimulationStarted(simulation_id="sim-456", project_id="proj-123", estimated_duration_hours=8)
+        simulation_event = SimulationStarted(
+            simulation_id="sim-456", project_id="proj-123", estimated_duration_hours=8
+        )
 
         await publish_event(project_event)
         await publish_event(simulation_event)
@@ -401,7 +437,12 @@ class TestEventBroadcastingIntegration:
         # Test transformation
         from simulation.domain.events import ProjectCreated
 
-        project_event = ProjectCreated(project_id="proj-123", name="Test Project", complexity="complex", team_size=5)
+        project_event = ProjectCreated(
+            project_id="proj-123",
+            name="Test Project",
+            complexity="complex",
+            team_size=5,
+        )
 
         transformed = transform_event(project_event)
 
@@ -505,7 +546,11 @@ class TestBroadcastingPerformance:
         events = []
 
         for i in range(1000):
-            event = {"type": "performance_test", "id": i, "data": [j for j in range(100)]}  # Some payload
+            event = {
+                "type": "performance_test",
+                "id": i,
+                "data": [j for j in range(100)],
+            }  # Some payload
             events.append(event)
 
             # Broadcast to all clients
@@ -544,7 +589,11 @@ class TestBroadcastingPerformance:
             broadcast_time = end_time - start_time
 
             scalability_results.append(
-                {"clients": num_clients, "time": broadcast_time, "time_per_client": broadcast_time / num_clients}
+                {
+                    "clients": num_clients,
+                    "time": broadcast_time,
+                    "time_per_client": broadcast_time / num_clients,
+                }
             )
 
         # Broadcasting time should scale roughly linearly

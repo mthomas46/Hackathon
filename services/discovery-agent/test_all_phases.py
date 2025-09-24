@@ -117,7 +117,12 @@ class TestMonitoringService:
     @pytest.fixture
     def discovery_event(self) -> Dict[str, Any]:
         """Sample discovery event for testing."""
-        return {"service_name": "test-service", "health_status": "healthy", "tools_discovered": 5, "response_time": 1.2}
+        return {
+            "service_name": "test-service",
+            "health_status": "healthy",
+            "tools_discovered": 5,
+            "response_time": 1.2,
+        }
 
     @pytest.mark.asyncio
     async def test_log_discovery_event(self, discovery_event):
@@ -127,7 +132,9 @@ class TestMonitoringService:
             mock_response.status = 200
             mock_client.post.return_value.__aenter__.return_value = mock_response
 
-            await discovery_monitoring_service.log_discovery_event("service_discovery", discovery_event)
+            await discovery_monitoring_service.log_discovery_event(
+                "service_discovery", discovery_event
+            )
 
             # Verify event was logged internally
             assert len(discovery_monitoring_service.events) > 0
@@ -138,9 +145,15 @@ class TestMonitoringService:
     @pytest.mark.asyncio
     async def test_monitor_security_scan(self, discovery_event):
         """Test monitoring security scan results."""
-        scan_result = {"tool_name": "test_tool", "risk_level": "high", "vulnerabilities": ["SQL injection"]}
+        scan_result = {
+            "tool_name": "test_tool",
+            "risk_level": "high",
+            "vulnerabilities": ["SQL injection"],
+        }
 
-        await discovery_monitoring_service.monitor_security_scan("test_tool", scan_result)
+        await discovery_monitoring_service.monitor_security_scan(
+            "test_tool", scan_result
+        )
 
         # Verify security scan was recorded
         assert len(discovery_monitoring_service.security_scans) > 0
@@ -153,10 +166,20 @@ class TestMonitoringService:
         """Test creating comprehensive monitoring dashboard."""
         # Add some test data
         await discovery_monitoring_service.log_discovery_event(
-            "service_discovery", {"service_name": "service1", "health_status": "healthy", "tools_discovered": 3}
+            "service_discovery",
+            {
+                "service_name": "service1",
+                "health_status": "healthy",
+                "tools_discovered": 3,
+            },
         )
         await discovery_monitoring_service.log_discovery_event(
-            "service_discovery", {"service_name": "service2", "health_status": "unhealthy", "tools_discovered": 0}
+            "service_discovery",
+            {
+                "service_name": "service2",
+                "health_status": "unhealthy",
+                "tools_discovered": 0,
+            },
         )
 
         dashboard = await discovery_monitoring_service.create_monitoring_dashboard()
@@ -185,13 +208,30 @@ class TestToolRegistry:
     def sample_tools(self) -> List[Dict[str, Any]]:
         """Sample tools for registry testing."""
         return [
-            {"name": "service1_tool1", "service": "service1", "category": "read", "description": "Read tool"},
-            {"name": "service1_tool2", "service": "service1", "category": "create", "description": "Create tool"},
-            {"name": "service2_tool1", "service": "service2", "category": "analysis", "description": "Analysis tool"},
+            {
+                "name": "service1_tool1",
+                "service": "service1",
+                "category": "read",
+                "description": "Read tool",
+            },
+            {
+                "name": "service1_tool2",
+                "service": "service1",
+                "category": "create",
+                "description": "Create tool",
+            },
+            {
+                "name": "service2_tool1",
+                "service": "service2",
+                "category": "analysis",
+                "description": "Analysis tool",
+            },
         ]
 
     @pytest.mark.asyncio
-    async def test_save_and_load_discovery_results(self, temp_registry_file, sample_tools):
+    async def test_save_and_load_discovery_results(
+        self, temp_registry_file, sample_tools
+    ):
         """Test saving and loading discovery results."""
         registry = tool_registry_storage.__class__(temp_registry_file)
 
@@ -199,7 +239,10 @@ class TestToolRegistry:
             "timestamp": "2025-01-17T21:30:00Z",
             "services_tested": 2,
             "total_tools_discovered": 3,
-            "services": {"service1": {"tools": sample_tools[:2]}, "service2": {"tools": sample_tools[2:]}},
+            "services": {
+                "service1": {"tools": sample_tools[:2]},
+                "service2": {"tools": sample_tools[2:]},
+            },
         }
 
         await registry.save_discovery_results(discovery_results)
@@ -207,7 +250,9 @@ class TestToolRegistry:
         # Load from file and verify
         loaded_registry = tool_registry_storage.__class__(temp_registry_file)
         assert len(loaded_registry.registry["discovery_runs"]) == 1
-        assert loaded_registry.registry["discovery_runs"][0]["total_tools_discovered"] == 3
+        assert (
+            loaded_registry.registry["discovery_runs"][0]["total_tools_discovered"] == 3
+        )
 
     @pytest.mark.asyncio
     async def test_get_tools_for_service(self, temp_registry_file, sample_tools):
@@ -284,12 +329,17 @@ class TestOrchestratorIntegration:
         with patch.object(orchestrator_integration, "service_client") as mock_client:
             mock_response = MagicMock()
             mock_response.status = 200
-            mock_response.json.return_value = {"workflow_id": "wf_123", "tool_id": "tool_456"}
+            mock_response.json.return_value = {
+                "workflow_id": "wf_123",
+                "tool_id": "tool_456",
+            }
             mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
                 mock_response
             )
 
-            result = await orchestrator_integration.register_discovered_tools(sample_tools)
+            result = await orchestrator_integration.register_discovered_tools(
+                sample_tools
+            )
 
             assert result["total_tools"] == 2
             assert result["registered_tools"] == 2
@@ -315,9 +365,13 @@ class TestOrchestratorIntegration:
                 return mock_resp
 
         with patch.object(orchestrator_integration, "service_client") as mock_client:
-            mock_client.session.return_value.__aenter__.return_value.post.side_effect = mock_post
+            mock_client.session.return_value.__aenter__.return_value.post.side_effect = (
+                mock_post
+            )
 
-            result = await orchestrator_integration.register_discovered_tools(sample_tools)
+            result = await orchestrator_integration.register_discovered_tools(
+                sample_tools
+            )
 
             assert result["total_tools"] == 2
             assert result["registered_tools"] == 1
@@ -329,11 +383,16 @@ class TestOrchestratorIntegration:
         workflow_spec = {
             "name": "test_workflow",
             "description": "Test workflow",
-            "steps": [{"step_name": "step1", "tool": "tool1"}, {"step_name": "step2", "tool": "tool2"}],
+            "steps": [
+                {"step_name": "step1", "tool": "tool1"},
+                {"step_name": "step2", "tool": "tool2"},
+            ],
             "required_tools": ["tool1", "tool2"],
         }
 
-        with patch.object(orchestrator_integration, "service_client") as mock_client, patch.object(
+        with patch.object(
+            orchestrator_integration, "service_client"
+        ) as mock_client, patch.object(
             orchestrator_integration, "_check_tool_availability"
         ) as mock_check:
 
@@ -345,12 +404,17 @@ class TestOrchestratorIntegration:
 
             mock_response = MagicMock()
             mock_response.status = 201
-            mock_response.json.return_value = {"workflow_id": "wf_123", "execution_url": "/execute/wf_123"}
+            mock_response.json.return_value = {
+                "workflow_id": "wf_123",
+                "execution_url": "/execute/wf_123",
+            }
             mock_client.session.return_value.__aenter__.return_value.post.return_value.__aenter__.return_value = (
                 mock_response
             )
 
-            result = await orchestrator_integration.create_dynamic_workflow(workflow_spec)
+            result = await orchestrator_integration.create_dynamic_workflow(
+                workflow_spec
+            )
 
             assert result["success"] is True
             assert result["workflow_id"] == "wf_123"
@@ -370,7 +434,9 @@ class TestOrchestratorIntegration:
                 mock_response
             )
 
-            result = await orchestrator_integration.execute_dynamic_workflow("test_workflow", {"param1": "value1"})
+            result = await orchestrator_integration.execute_dynamic_workflow(
+                "test_workflow", {"param1": "value1"}
+            )
 
             assert result["success"] is True
             assert result["execution_id"] == "exec_123"
@@ -420,7 +486,9 @@ class TestAIToolSelector:
                 mock_response
             )
 
-            result = await ai_tool_selector.select_tools_for_task(task_description, available_tools)
+            result = await ai_tool_selector.select_tools_for_task(
+                task_description, available_tools
+            )
 
             assert result["success"] is True
             assert len(result["selected_tools"]) > 0
@@ -437,7 +505,9 @@ class TestAIToolSelector:
                 "AI service unavailable"
             )
 
-            result = await ai_tool_selector.select_tools_for_task(task_description, available_tools)
+            result = await ai_tool_selector.select_tools_for_task(
+                task_description, available_tools
+            )
 
             assert result["success"] is False
             assert "fallback_tools" in result
@@ -507,14 +577,20 @@ class TestSemanticAnalyzer:
         tool = sample_tools[0]
 
         with patch.object(semantic_tool_analyzer, "service_client") as mock_client:
-            mock_client.session.return_value.__aenter__.return_value.post.side_effect = Exception("AI unavailable")
+            mock_client.session.return_value.__aenter__.return_value.post.side_effect = Exception(
+                "AI unavailable"
+            )
 
             result = await semantic_tool_analyzer.analyze_tool_semantics(tool)
 
             # Should fall back to rule-based analysis
             assert "semantic_categories" in result
             assert "primary_category" in result
-            assert result["primary_category"] in ["utility", "analysis", "create"]  # From rule-based
+            assert result["primary_category"] in [
+                "utility",
+                "analysis",
+                "create",
+            ]  # From rule-based
 
     @pytest.mark.asyncio
     async def test_tool_relationship_analysis(self, sample_tools):
@@ -522,11 +598,21 @@ class TestSemanticAnalyzer:
         # Add semantic analysis to tools
         for tool in sample_tools:
             tool["semantic_analysis"] = {
-                "semantic_categories": ["content_analysis" if "analyzer" in tool["name"] else "content_creation"],
-                "capabilities_identified": ["analysis" if "analyzer" in tool["name"] else "creation"],
+                "semantic_categories": [
+                    (
+                        "content_analysis"
+                        if "analyzer" in tool["name"]
+                        else "content_creation"
+                    )
+                ],
+                "capabilities_identified": [
+                    "analysis" if "analyzer" in tool["name"] else "creation"
+                ],
             }
 
-        relationships = await semantic_tool_analyzer.analyze_tool_relationships(sample_tools)
+        relationships = await semantic_tool_analyzer.analyze_tool_relationships(
+            sample_tools
+        )
 
         assert "relationship_graph" in relationships
         assert "relationships_found" in relationships
@@ -535,7 +621,9 @@ class TestSemanticAnalyzer:
     @pytest.mark.asyncio
     async def test_enhance_tool_categorization(self, sample_tools):
         """Test enhancing tool categorization with semantic analysis."""
-        enhanced_tools = await semantic_tool_analyzer.enhance_tool_categorization(sample_tools)
+        enhanced_tools = await semantic_tool_analyzer.enhance_tool_categorization(
+            sample_tools
+        )
 
         assert len(enhanced_tools) == len(sample_tools)
         for tool in enhanced_tools:
@@ -553,19 +641,50 @@ class TestPerformanceOptimizer:
             "healthy_services": 4,
             "total_tools_discovered": 25,
             "performance_metrics": [
-                {"service": "service1", "response_time": 1.2, "tools_found": 8, "endpoints_found": 12},
-                {"service": "service2", "response_time": 0.8, "tools_found": 5, "endpoints_found": 8},
-                {"service": "service3", "response_time": 2.5, "tools_found": 6, "endpoints_found": 10},
-                {"service": "service4", "response_time": 0.6, "tools_found": 3, "endpoints_found": 5},
-                {"service": "service5", "response_time": 1.8, "tools_found": 3, "endpoints_found": 4},
+                {
+                    "service": "service1",
+                    "response_time": 1.2,
+                    "tools_found": 8,
+                    "endpoints_found": 12,
+                },
+                {
+                    "service": "service2",
+                    "response_time": 0.8,
+                    "tools_found": 5,
+                    "endpoints_found": 8,
+                },
+                {
+                    "service": "service3",
+                    "response_time": 2.5,
+                    "tools_found": 6,
+                    "endpoints_found": 10,
+                },
+                {
+                    "service": "service4",
+                    "response_time": 0.6,
+                    "tools_found": 3,
+                    "endpoints_found": 5,
+                },
+                {
+                    "service": "service5",
+                    "response_time": 1.8,
+                    "tools_found": 3,
+                    "endpoints_found": 4,
+                },
             ],
-            "summary": {"services_healthy": 4, "tools_discovered": 25, "avg_tools_per_service": 5.0},
+            "summary": {
+                "services_healthy": 4,
+                "tools_discovered": 25,
+                "avg_tools_per_service": 5.0,
+            },
         }
 
     @pytest.mark.asyncio
     async def test_optimize_discovery_workflow(self, discovery_results):
         """Test discovery workflow optimization."""
-        optimization = await performance_optimizer.optimize_discovery_workflow(discovery_results)
+        optimization = await performance_optimizer.optimize_discovery_workflow(
+            discovery_results
+        )
 
         assert "optimizations" in optimization
         assert "performance_summary" in optimization
@@ -573,15 +692,30 @@ class TestPerformanceOptimizer:
 
         # Should identify slow services and parallelization opportunities
         optimizations = optimization["optimizations"]
-        assert "bottleneck_identification" in optimizations or "parallelization_opportunities" in optimizations
+        assert (
+            "bottleneck_identification" in optimizations
+            or "parallelization_opportunities" in optimizations
+        )
 
     @pytest.mark.asyncio
     async def test_analyze_tool_dependencies(self):
         """Test tool dependency analysis."""
         tools = [
-            {"name": "storage_tool", "category": "storage", "capabilities": ["storage"]},
-            {"name": "analysis_tool", "category": "analysis", "capabilities": ["analysis"]},
-            {"name": "combined_tool", "category": "analysis", "capabilities": ["storage", "analysis"]},
+            {
+                "name": "storage_tool",
+                "category": "storage",
+                "capabilities": ["storage"],
+            },
+            {
+                "name": "analysis_tool",
+                "category": "analysis",
+                "capabilities": ["analysis"],
+            },
+            {
+                "name": "combined_tool",
+                "category": "analysis",
+                "capabilities": ["storage", "analysis"],
+            },
         ]
 
         dependencies = await performance_optimizer.analyze_tool_dependencies(tools)
@@ -593,7 +727,9 @@ class TestPerformanceOptimizer:
     @pytest.mark.asyncio
     async def test_create_performance_baseline(self, discovery_results):
         """Test creating performance baseline."""
-        baseline = await performance_optimizer.create_performance_baseline(discovery_results)
+        baseline = await performance_optimizer.create_performance_baseline(
+            discovery_results
+        )
 
         assert "timestamp" in baseline
         assert "services_tested" in baseline
@@ -605,13 +741,17 @@ class TestPerformanceOptimizer:
     @pytest.mark.asyncio
     async def test_monitor_performance_trends(self, discovery_results):
         """Test performance trend monitoring."""
-        baseline = await performance_optimizer.create_performance_baseline(discovery_results)
+        baseline = await performance_optimizer.create_performance_baseline(
+            discovery_results
+        )
 
         # Simulate current results with some changes
         current_results = discovery_results.copy()
         current_results["performance_metrics"][0]["response_time"] = 1.5  # Slower
 
-        trends = await performance_optimizer.monitor_performance_trends(current_results, baseline)
+        trends = await performance_optimizer.monitor_performance_trends(
+            current_results, baseline
+        )
 
         assert "comparison_timestamp" in trends
         assert "performance_changes" in trends
@@ -677,7 +817,9 @@ class TestAPIEndpoints:
         ) as mock_analyzer:
 
             mock_registry.get_all_tools.return_value = {"service1": [{"name": "tool1"}]}
-            mock_analyzer.enhance_tool_categorization.return_value = [{"name": "tool1", "semantic_analysis": {}}]
+            mock_analyzer.enhance_tool_categorization.return_value = [
+                {"name": "tool1", "semantic_analysis": {}}
+            ]
             mock_analyzer.analyze_tool_relationships.return_value = {
                 "relationships_found": 0,
                 "complementary_pairs": [],
@@ -698,7 +840,10 @@ class TestAPIEndpoints:
         ) as mock_optimizer:
 
             mock_registry.load_discovery_results.return_value = {
-                "run1": {"performance_metrics": [{"response_time": 1.0}], "summary": {"tools_discovered": 10}}
+                "run1": {
+                    "performance_metrics": [{"response_time": 1.0}],
+                    "summary": {"tools_discovered": 10},
+                }
             }
             mock_optimizer.optimize_discovery_workflow.return_value = {
                 "optimizations": {"parallelization_opportunities": []},
@@ -720,7 +865,9 @@ class TestIntegrationScenarios:
     async def test_complete_discovery_to_execution_workflow(self):
         """Test the complete workflow from discovery to tool execution."""
         # Mock the entire ecosystem
-        with patch("modules.tool_discovery.tool_discovery_service") as mock_discovery, patch(
+        with patch(
+            "modules.tool_discovery.tool_discovery_service"
+        ) as mock_discovery, patch(
             "modules.tool_registry.tool_registry_storage"
         ) as mock_registry, patch(
             "modules.orchestrator_integration.orchestrator_integration"
@@ -783,7 +930,9 @@ class TestIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_security_monitoring_integration(self):
         """Test integration between security scanning and monitoring."""
-        with patch("modules.security_scanner.tool_security_scanner") as mock_security, patch(
+        with patch(
+            "modules.security_scanner.tool_security_scanner"
+        ) as mock_security, patch(
             "modules.monitoring_service.discovery_monitoring_service"
         ) as mock_monitoring:
 

@@ -24,7 +24,9 @@ class DomainEvent(ABC):
 
     def __post_init__(self):
         # Set event_id and event_type based on class name
-        object.__setattr__(self, "event_id", f"{self.__class__.__name__}_{datetime.now().timestamp()}")
+        object.__setattr__(
+            self, "event_id", f"{self.__class__.__name__}_{datetime.now().timestamp()}"
+        )
         object.__setattr__(self, "event_type", self.__class__.__name__)
         # Set default values for optional fields
         if not hasattr(self, "event_version"):
@@ -386,7 +388,11 @@ def event_from_dict(data: Dict[str, Any]) -> DomainEvent:
         raise ValueError(f"Unknown event type: {event_type}")
 
     # Remove metadata fields before creating event
-    event_data = {k: v for k, v in data.items() if k not in ["event_id", "event_type", "occurred_at", "event_version"]}
+    event_data = {
+        k: v
+        for k, v in data.items()
+        if k not in ["event_id", "event_type", "occurred_at", "event_version"]
+    }
 
     # Convert occurred_at back to datetime
     if "occurred_at" in data:

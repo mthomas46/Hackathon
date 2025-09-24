@@ -12,18 +12,24 @@ import plotly.express as px
 import streamlit as st
 
 
-
 def render_audit_page():
     """Render the comprehensive audit trail system page."""
     st.markdown("## 🔍 Audit Trail System")
-    st.markdown("Comprehensive auditing, compliance tracking, and security monitoring for simulation operations.")
+    st.markdown(
+        "Comprehensive auditing, compliance tracking, and security monitoring for simulation operations."
+    )
 
     # Initialize session state
     initialize_audit_state()
 
     # Create tabs for different audit aspects
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["📋 Audit Log", "🔍 Event Analysis", "📊 Compliance Reports", "⚙️ Audit Configuration"]
+        [
+            "📋 Audit Log",
+            "🔍 Event Analysis",
+            "📊 Compliance Reports",
+            "⚙️ Audit Configuration",
+        ]
     )
 
     with tab1:
@@ -78,16 +84,26 @@ def render_audit_log():
 
     with col2:
         today_events = len(
-            [e for e in get_audit_events() if e.get("timestamp", "").startswith(datetime.now().strftime("%Y-%m-%d"))]
+            [
+                e
+                for e in get_audit_events()
+                if e.get("timestamp", "").startswith(
+                    datetime.now().strftime("%Y-%m-%d")
+                )
+            ]
         )
         st.metric("Today's Events", today_events)
 
     with col3:
-        critical_events = len([e for e in get_audit_events() if e.get("severity") == "critical"])
+        critical_events = len(
+            [e for e in get_audit_events() if e.get("severity") == "critical"]
+        )
         st.metric("Critical Events", critical_events)
 
     with col4:
-        compliance_events = len([e for e in get_audit_events() if e.get("compliance_category")])
+        compliance_events = len(
+            [e for e in get_audit_events() if e.get("compliance_category")]
+        )
         st.metric("Compliance Events", compliance_events)
 
     # Advanced filters
@@ -149,7 +165,9 @@ def render_event_analysis():
         st.metric("Avg Events/Day", ".1f")
 
     with col4:
-        suspicious_events = len([e for e in events if e.get("severity") in ["high", "critical"]])
+        suspicious_events = len(
+            [e for e in events if e.get("severity") in ["high", "critical"]]
+        )
         st.metric("Suspicious Events", suspicious_events)
 
     # Event type distribution
@@ -217,7 +235,9 @@ def render_compliance_reports():
         "Custom Compliance Report",
     ]
 
-    selected_report = st.selectbox("Select Report Type", options=report_types, key="compliance_report_type")
+    selected_report = st.selectbox(
+        "Select Report Type", options=report_types, key="compliance_report_type"
+    )
 
     if st.button("📋 Generate Compliance Report", key="generate_compliance_report"):
         generate_compliance_report(selected_report)
@@ -242,19 +262,25 @@ def render_audit_configuration():
             st.markdown("**Event Logging**")
             enable_detailed_logging = st.checkbox(
                 "Enable Detailed Event Logging",
-                value=st.session_state.audit_configuration.get("enable_detailed_logging", True),
+                value=st.session_state.audit_configuration.get(
+                    "enable_detailed_logging", True
+                ),
                 key="enable_detailed_logging",
             )
 
             audit_admin_actions = st.checkbox(
                 "Audit Administrative Actions",
-                value=st.session_state.audit_configuration.get("audit_admin_actions", True),
+                value=st.session_state.audit_configuration.get(
+                    "audit_admin_actions", True
+                ),
                 key="audit_admin_actions",
             )
 
             log_failed_authentications = st.checkbox(
                 "Log Failed Authentication Attempts",
-                value=st.session_state.audit_configuration.get("log_failed_authentications", True),
+                value=st.session_state.audit_configuration.get(
+                    "log_failed_authentications", True
+                ),
                 key="log_failed_authentications",
             )
 
@@ -270,7 +296,9 @@ def render_audit_configuration():
 
             compress_old_logs = st.checkbox(
                 "Compress Old Audit Logs",
-                value=st.session_state.audit_configuration.get("compress_old_logs", True),
+                value=st.session_state.audit_configuration.get(
+                    "compress_old_logs", True
+                ),
                 key="compress_old_logs",
             )
 
@@ -280,13 +308,17 @@ def render_audit_configuration():
     with st.expander("Alert Settings", expanded=False):
         alert_on_critical_events = st.checkbox(
             "Alert on Critical Events",
-            value=st.session_state.audit_configuration.get("alert_on_critical_events", True),
+            value=st.session_state.audit_configuration.get(
+                "alert_on_critical_events", True
+            ),
             key="alert_on_critical_events",
         )
 
         alert_on_policy_violations = st.checkbox(
             "Alert on Policy Violations",
-            value=st.session_state.audit_configuration.get("alert_on_policy_violations", True),
+            value=st.session_state.audit_configuration.get(
+                "alert_on_policy_violations", True
+            ),
             key="alert_on_policy_violations",
         )
 
@@ -304,13 +336,17 @@ def render_audit_configuration():
     with st.expander("Compliance Configuration", expanded=False):
         enable_compliance_mode = st.checkbox(
             "Enable Compliance Mode",
-            value=st.session_state.audit_configuration.get("enable_compliance_mode", True),
+            value=st.session_state.audit_configuration.get(
+                "enable_compliance_mode", True
+            ),
             key="enable_compliance_mode",
         )
 
         require_audit_approval = st.checkbox(
             "Require Audit Approval for Critical Operations",
-            value=st.session_state.audit_configuration.get("require_audit_approval", False),
+            value=st.session_state.audit_configuration.get(
+                "require_audit_approval", False
+            ),
             key="require_audit_approval",
         )
 
@@ -321,7 +357,9 @@ def render_audit_configuration():
         )
 
     # Save configuration
-    if st.button("💾 Save Audit Configuration", key="save_audit_config", type="primary"):
+    if st.button(
+        "💾 Save Audit Configuration", key="save_audit_config", type="primary"
+    ):
         save_audit_configuration()
 
 
@@ -366,7 +404,10 @@ def get_audit_events() -> List[Dict[str, Any]]:
                 "ip_address": f"192.168.1.{(i % 255) + 1}",
                 "user_agent": "Mozilla/5.0 (compatible)",
                 "compliance_category": "GDPR" if i % 5 == 0 else None,
-                "metadata": {"session_id": f"session_{i % 10}", "operation_id": f"op_{i+1}"},
+                "metadata": {
+                    "session_id": f"session_{i % 10}",
+                    "operation_id": f"op_{i+1}",
+                },
             }
         )
 
@@ -380,7 +421,13 @@ def render_audit_filters():
     with col1:
         event_types = st.multiselect(
             "Event Types",
-            options=["simulation_created", "simulation_started", "user_login", "security_alert", "all"],
+            options=[
+                "simulation_created",
+                "simulation_started",
+                "user_login",
+                "security_alert",
+                "all",
+            ],
             default=st.session_state.audit_filters.get("event_types", []),
             key="audit_event_types",
         )
@@ -405,7 +452,11 @@ def render_audit_filters():
     col1, col2 = st.columns(2)
 
     with col1:
-        start_date = st.date_input("Start Date", value=datetime.now() - timedelta(days=7), key="audit_start_date")
+        start_date = st.date_input(
+            "Start Date",
+            value=datetime.now() - timedelta(days=7),
+            key="audit_start_date",
+        )
 
     with col2:
         end_date = st.date_input("End Date", value=datetime.now(), key="audit_end_date")
@@ -413,7 +464,12 @@ def render_audit_filters():
     # Apply filters
     if st.button("🔍 Apply Filters", key="apply_audit_filters"):
         st.session_state.audit_filters.update(
-            {"event_types": event_types, "users": users, "severities": severities, "date_range": (start_date, end_date)}
+            {
+                "event_types": event_types,
+                "users": users,
+                "severities": severities,
+                "date_range": (start_date, end_date),
+            }
         )
         st.success("Filters applied successfully!")
         st.rerun()
@@ -428,21 +484,31 @@ def get_filtered_audit_events() -> List[Dict[str, Any]]:
 
     # Filter by event types
     if filters.get("event_types") and "all" not in filters["event_types"]:
-        filtered_events = [e for e in filtered_events if e.get("event_type") in filters["event_types"]]
+        filtered_events = [
+            e for e in filtered_events if e.get("event_type") in filters["event_types"]
+        ]
 
     # Filter by users
     if filters.get("users") and "all" not in filters["users"]:
-        filtered_events = [e for e in filtered_events if e.get("user") in filters["users"]]
+        filtered_events = [
+            e for e in filtered_events if e.get("user") in filters["users"]
+        ]
 
     # Filter by severity
     if filters.get("severities"):
-        filtered_events = [e for e in filtered_events if e.get("severity") in filters["severities"]]
+        filtered_events = [
+            e for e in filtered_events if e.get("severity") in filters["severities"]
+        ]
 
     # Filter by date range
     if filters.get("date_range"):
         start_date, end_date = filters["date_range"]
         filtered_events = [
-            e for e in filtered_events if start_date <= datetime.fromisoformat(e["timestamp"][:10]).date() <= end_date
+            e
+            for e in filtered_events
+            if start_date
+            <= datetime.fromisoformat(e["timestamp"][:10]).date()
+            <= end_date
         ]
 
     return filtered_events
@@ -464,7 +530,9 @@ def render_audit_events_table(events: List[Dict[str, Any]]):
                 "User": event["user"],
                 "Severity": event["severity"].title(),
                 "Description": (
-                    event["description"][:50] + "..." if len(event["description"]) > 50 else event["description"]
+                    event["description"][:50] + "..."
+                    if len(event["description"]) > 50
+                    else event["description"]
                 ),
             }
         )
@@ -489,7 +557,9 @@ def render_event_type_chart(events: List[Dict[str, Any]]):
 
     if event_counts:
         fig = px.pie(
-            values=list(event_counts.values()), names=list(event_counts.keys()), title="Event Type Distribution"
+            values=list(event_counts.values()),
+            names=list(event_counts.keys()),
+            title="Event Type Distribution",
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -500,7 +570,13 @@ def render_event_timeline_chart(events: List[Dict[str, Any]]):
     for event in events[-100:]:  # Last 100 events
         try:
             timestamp = datetime.fromisoformat(event["timestamp"])
-            timeline_data.append({"time": timestamp, "event_type": event["event_type"], "severity": event["severity"]})
+            timeline_data.append(
+                {
+                    "time": timestamp,
+                    "event_type": event["event_type"],
+                    "severity": event["severity"],
+                }
+            )
         except ValueError:
             continue
 
@@ -515,7 +591,12 @@ def render_event_timeline_chart(events: List[Dict[str, Any]]):
             y="event_type",
             color="severity",
             title="Event Timeline",
-            color_discrete_map={"low": "green", "medium": "yellow", "high": "orange", "critical": "red"},
+            color_discrete_map={
+                "low": "green",
+                "medium": "yellow",
+                "high": "orange",
+                "critical": "red",
+            },
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -554,13 +635,23 @@ def render_pattern_analysis(events: List[Dict[str, Any]]):
     for key, count in user_events.items():
         if count > 5:  # More than 5 events of same type from same user
             user, event_type = key.split("_", 1)
-            patterns.append({"pattern": f"High frequency: {user} - {event_type}", "count": count, "severity": "medium"})
+            patterns.append(
+                {
+                    "pattern": f"High frequency: {user} - {event_type}",
+                    "count": count,
+                    "severity": "medium",
+                }
+            )
 
     if patterns:
         st.markdown("**Detected Patterns:**")
         for pattern in patterns:
-            severity_icon = {"low": "🟢", "medium": "🟡", "high": "🔴"}.get(pattern["severity"], "⚪")
-            st.write(f"{severity_icon} {pattern['pattern']} ({pattern['count']} occurrences)")
+            severity_icon = {"low": "🟢", "medium": "🟡", "high": "🔴"}.get(
+                pattern["severity"], "⚪"
+            )
+            st.write(
+                f"{severity_icon} {pattern['pattern']} ({pattern['count']} occurrences)"
+            )
     else:
         st.info("No significant patterns detected.")
 
@@ -599,7 +690,11 @@ def render_anomaly_detection(events: List[Dict[str, Any]]):
     for minute_key, count in events_by_minute.items():
         if count > 10:  # More than 10 events per minute
             anomalies.append(
-                {"type": "High frequency activity", "event": minute_key, "reason": f"{count} events in one minute"}
+                {
+                    "type": "High frequency activity",
+                    "event": minute_key,
+                    "reason": f"{count} events in one minute",
+                }
             )
 
     if anomalies:
@@ -707,7 +802,13 @@ def render_audit_integrity_check():
             st.write(f"**{check.replace('_', ' ').title()}**")
 
         with col2:
-            if status in ["verified", "no_tampering_detected", "intact", "encrypted", "current"]:
+            if status in [
+                "verified",
+                "no_tampering_detected",
+                "intact",
+                "encrypted",
+                "current",
+            ]:
                 st.success("✅")
             else:
                 st.error("❌")
@@ -804,11 +905,19 @@ def save_audit_configuration():
         st.session_state.audit_configuration.update(
             {
                 "retention_days": st.session_state.get("retention_days", 90),
-                "enable_compliance_mode": st.session_state.get("enable_compliance_mode", True),
-                "alert_on_critical_events": st.session_state.get("alert_on_critical_events", True),
-                "alert_on_policy_violations": st.session_state.get("alert_on_policy_violations", True),
+                "enable_compliance_mode": st.session_state.get(
+                    "enable_compliance_mode", True
+                ),
+                "alert_on_critical_events": st.session_state.get(
+                    "alert_on_critical_events", True
+                ),
+                "alert_on_policy_violations": st.session_state.get(
+                    "alert_on_policy_violations", True
+                ),
                 "alert_threshold": st.session_state.get("alert_threshold", 10),
-                "require_audit_approval": st.session_state.get("require_audit_approval", False),
+                "require_audit_approval": st.session_state.get(
+                    "require_audit_approval", False
+                ),
                 "encryption_enabled": st.session_state.get("encryption_enabled", True),
             }
         )

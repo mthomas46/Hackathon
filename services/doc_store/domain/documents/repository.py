@@ -8,15 +8,15 @@ import json
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import Document
-from ...core.repository import BaseRepository
+from services.shared.utilities import SqlRepository
 from ...db.queries import execute_query, search_documents
 
 
-class DocumentRepository(BaseRepository[Document]):
+class DocumentRepository(SqlRepository[Document]):
     """Repository for document data access."""
 
-    def __init__(self):
-        super().__init__("documents")
+    def __init__(self, connection_string: str):
+        super().__init__(Document, connection_string)
 
     def calculate_content_hash(self, content: str) -> str:
         """Calculate SHA-256 hash of content."""
@@ -58,7 +58,11 @@ class DocumentRepository(BaseRepository[Document]):
 
     def get_by_content_hash(self, content_hash: str) -> Optional[Document]:
         """Get document by content hash."""
-        row = execute_query("SELECT * FROM documents WHERE content_hash = ?", (content_hash,), fetch_one=True)
+        row = execute_query(
+            "SELECT * FROM documents WHERE content_hash = ?",
+            (content_hash,),
+            fetch_one=True,
+        )
         return self._row_to_entity(row) if row else None
 
     def search_documents(self, query: str, limit: int = 50) -> List[Dict[str, Any]]:
@@ -87,7 +91,9 @@ class DocumentRepository(BaseRepository[Document]):
 
         return compute_quality_flags(rows)
 
-    def get_documents_by_correlation_id(self, correlation_id: str) -> List[Dict[str, Any]]:
+    def get_documents_by_correlation_id(
+        self, correlation_id: str
+    ) -> List[Dict[str, Any]]:
         """Get documents by correlation ID."""
         return execute_query(
             "SELECT * FROM documents WHERE correlation_id = ? ORDER BY created_at DESC",
@@ -95,7 +101,9 @@ class DocumentRepository(BaseRepository[Document]):
             fetch_all=True,
         )
 
-    def get_by_metadata_field(self, field_name: str, field_value: str) -> List[Document]:
+    def get_by_metadata_field(
+        self, field_name: str, field_value: str
+    ) -> List[Document]:
         """Get documents by a specific metadata field value."""
         # Use JSON_EXTRACT for SQLite JSON queries
         rows = execute_query(

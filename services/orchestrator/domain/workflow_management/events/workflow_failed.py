@@ -1,6 +1,5 @@
 """Workflow Failed Event"""
 
-
 from .base_event import DomainEvent
 
 
@@ -11,5 +10,9 @@ class WorkflowFailedEvent(DomainEvent):
         super().__init__(
             event_type="workflow.failed",
             aggregate_id=execution_id,
-            event_data={"execution_id": execution_id, "workflow_id": workflow_id, "error_message": error_message},
+            event_data={
+                "execution_id": execution_id,
+                "workflow_id": workflow_id,
+                "error_message": error_message,
+            },
         )

@@ -42,7 +42,9 @@ class TestOpenAPISchemaValidation:
                                             "properties": {
                                                 "simulations": {
                                                     "type": "array",
-                                                    "items": {"$ref": "#/components/schemas/Simulation"},
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/Simulation"
+                                                    },
                                                 }
                                             },
                                         }
@@ -91,9 +93,18 @@ class TestOpenAPISchemaValidation:
                 "schemas": {
                     "Simulation": {
                         "type": "object",
-                        "properties": {"id": {"type": "string"}, "team": {"$ref": "#/components/schemas/Team"}},
+                        "properties": {
+                            "id": {"type": "string"},
+                            "team": {"$ref": "#/components/schemas/Team"},
+                        },
                     },
-                    "Team": {"type": "object", "properties": {"name": {"type": "string"}, "size": {"type": "integer"}}},
+                    "Team": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "size": {"type": "integer"},
+                        },
+                    },
                 }
             }
         }
@@ -119,7 +130,9 @@ class TestOpenAPISchemaValidation:
         for ref in refs:
             if ref.startswith("#/components/schemas/"):
                 schema_name = ref.split("/")[-1]
-                assert schema_name in schemas, f"Referenced schema '{schema_name}' not found"
+                assert (
+                    schema_name in schemas
+                ), f"Referenced schema '{schema_name}' not found"
 
         print("✅ OpenAPI schema references validated")
 
@@ -133,13 +146,20 @@ class TestOpenAPISchemaValidation:
                             {
                                 "name": "status",
                                 "in": "query",
-                                "schema": {"type": "string", "enum": ["active", "completed", "failed"]},
+                                "schema": {
+                                    "type": "string",
+                                    "enum": ["active", "completed", "failed"],
+                                },
                                 "description": "Filter by simulation status",
                             },
                             {
                                 "name": "limit",
                                 "in": "query",
-                                "schema": {"type": "integer", "minimum": 1, "maximum": 100},
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 100,
+                                },
                                 "description": "Maximum number of results",
                             },
                         ]
@@ -158,7 +178,9 @@ class TestOpenAPISchemaValidation:
 
             # Validate parameter location
             valid_locations = ["query", "header", "path", "cookie"]
-            assert param["in"] in valid_locations, f"Invalid parameter location: {param['in']}"
+            assert (
+                param["in"] in valid_locations
+            ), f"Invalid parameter location: {param['in']}"
 
             # Validate schema
             schema = param["schema"]
@@ -184,7 +206,10 @@ class TestAPIContractValidation:
                                         "type": "object",
                                         "properties": {
                                             "name": {"type": "string", "minLength": 1},
-                                            "type": {"type": "string", "enum": ["web", "mobile", "api"]},
+                                            "type": {
+                                                "type": "string",
+                                                "enum": ["web", "mobile", "api"],
+                                            },
                                         },
                                         "required": ["name", "type"],
                                     }
@@ -207,7 +232,9 @@ class TestAPIContractValidation:
         ]
 
         # Validate against schema
-        schema = spec["paths"]["/api/v1/simulations"]["post"]["requestBody"]["content"]["application/json"]["schema"]
+        schema = spec["paths"]["/api/v1/simulations"]["post"]["requestBody"]["content"][
+            "application/json"
+        ]["schema"]
 
         try:
             jsonschema.validate(valid_request, schema)
@@ -225,7 +252,9 @@ class TestAPIContractValidation:
             except jsonschema.ValidationError:
                 invalid_count += 1
 
-        assert invalid_count == len(invalid_requests), "All invalid requests should fail validation"
+        assert invalid_count == len(
+            invalid_requests
+        ), "All invalid requests should fail validation"
 
         print("✅ Request validation against OpenAPI spec completed")
 
@@ -250,7 +279,9 @@ class TestAPIContractValidation:
                                                         "properties": {
                                                             "id": {"type": "string"},
                                                             "name": {"type": "string"},
-                                                            "status": {"type": "string"},
+                                                            "status": {
+                                                                "type": "string"
+                                                            },
                                                         },
                                                         "required": ["id", "name"],
                                                     },
@@ -283,9 +314,9 @@ class TestAPIContractValidation:
         ]
 
         # Validate responses
-        response_schema = spec["paths"]["/api/v1/simulations"]["get"]["responses"]["200"]["content"][
-            "application/json"
-        ]["schema"]
+        response_schema = spec["paths"]["/api/v1/simulations"]["get"]["responses"][
+            "200"
+        ]["content"]["application/json"]["schema"]
 
         # Valid response should pass
         try:
@@ -304,7 +335,9 @@ class TestAPIContractValidation:
             except jsonschema.ValidationError:
                 invalid_count += 1
 
-        assert invalid_count == len(invalid_responses), "Invalid responses should fail validation"
+        assert invalid_count == len(
+            invalid_responses
+        ), "Invalid responses should fail validation"
 
         print("✅ Response validation against OpenAPI spec completed")
 
@@ -321,7 +354,9 @@ class TestOpenAPIExamplesValidation:
                         "requestBody": {
                             "content": {
                                 "application/json": {
-                                    "schema": {"$ref": "#/components/schemas/SimulationCreate"},
+                                    "schema": {
+                                        "$ref": "#/components/schemas/SimulationCreate"
+                                    },
                                     "example": {
                                         "name": "E-commerce Platform",
                                         "type": "web_application",
@@ -374,14 +409,23 @@ class TestOpenAPIExamplesValidation:
                                 "description": "Success",
                                 "content": {
                                     "application/json": {
-                                        "example": {"id": "sim_123", "name": "Test Simulation", "status": "active"}
+                                        "example": {
+                                            "id": "sim_123",
+                                            "name": "Test Simulation",
+                                            "status": "active",
+                                        }
                                     }
                                 },
                             },
                             "404": {
                                 "description": "Not found",
                                 "content": {
-                                    "application/json": {"example": {"error": "Simulation not found", "code": 404}}
+                                    "application/json": {
+                                        "example": {
+                                            "error": "Simulation not found",
+                                            "code": 404,
+                                        }
+                                    }
                                 },
                             },
                         }
@@ -390,7 +434,9 @@ class TestOpenAPIExamplesValidation:
             }
         }
 
-        responses = spec_with_examples["paths"]["/api/v1/simulations/{id}"]["get"]["responses"]
+        responses = spec_with_examples["paths"]["/api/v1/simulations/{id}"]["get"][
+            "responses"
+        ]
 
         # Should have examples for different response codes
         example_count = sum(
@@ -398,7 +444,10 @@ class TestOpenAPIExamplesValidation:
             for resp in responses.values()
             if "content" in resp
             and "application/json" in resp["content"]
-            and ("example" in resp["content"]["application/json"] or "examples" in resp["content"]["application/json"])
+            and (
+                "example" in resp["content"]["application/json"]
+                or "examples" in resp["content"]["application/json"]
+            )
         )
 
         assert example_count > 0, "No response examples found"
@@ -410,7 +459,10 @@ class TestOpenAPIExamplesValidation:
             if status.startswith(("4", "5"))
             and "content" in resp
             and "application/json" in resp["content"]
-            and ("example" in resp["content"]["application/json"] or "examples" in resp["content"]["application/json"])
+            and (
+                "example" in resp["content"]["application/json"]
+                or "examples" in resp["content"]["application/json"]
+            )
         )
 
         assert error_responses_with_examples > 0, "No error response examples found"
@@ -426,7 +478,11 @@ class TestOpenAPISecurityValidation:
         spec = {
             "components": {
                 "securitySchemes": {
-                    "bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"},
+                    "bearerAuth": {
+                        "type": "http",
+                        "scheme": "bearer",
+                        "bearerFormat": "JWT",
+                    },
                     "apiKey": {"type": "apiKey", "in": "header", "name": "X-API-Key"},
                 }
             },
@@ -441,10 +497,16 @@ class TestOpenAPISecurityValidation:
 
             scheme_type = scheme_def["type"]
             if scheme_type == "http":
-                assert "scheme" in scheme_def, f"HTTP security scheme {scheme_name} missing scheme"
+                assert (
+                    "scheme" in scheme_def
+                ), f"HTTP security scheme {scheme_name} missing scheme"
             elif scheme_type == "apiKey":
-                assert "in" in scheme_def, f"API key scheme {scheme_name} missing 'in' field"
-                assert "name" in scheme_def, f"API key scheme {scheme_name} missing name"
+                assert (
+                    "in" in scheme_def
+                ), f"API key scheme {scheme_name} missing 'in' field"
+                assert (
+                    "name" in scheme_def
+                ), f"API key scheme {scheme_name} missing name"
 
         # Validate global security requirements
         global_security = spec.get("security", [])
@@ -457,14 +519,20 @@ class TestOpenAPISecurityValidation:
         spec = {
             "paths": {
                 "/api/v1/simulations": {
-                    "get": {"security": [{"bearerAuth": []}], "responses": {"200": {"description": "Success"}}},
+                    "get": {
+                        "security": [{"bearerAuth": []}],
+                        "responses": {"200": {"description": "Success"}},
+                    },
                     "post": {
                         "security": [{"bearerAuth": ["write:simulations"]}],
                         "responses": {"201": {"description": "Created"}},
                     },
                 },
                 "/api/v1/health": {
-                    "get": {"security": [], "responses": {"200": {"description": "OK"}}}  # No authentication required
+                    "get": {
+                        "security": [],
+                        "responses": {"200": {"description": "OK"}},
+                    }  # No authentication required
                 },
             }
         }
@@ -502,11 +570,20 @@ class TestOpenAPILinting:
                 "version": "1.0.0",
                 "description": "API for project simulation and analysis",
                 "contact": {"name": "API Support", "email": "support@example.com"},
-                "license": {"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
+                "license": {
+                    "name": "MIT",
+                    "url": "https://opensource.org/licenses/MIT",
+                },
             },
             "servers": [
-                {"url": "https://api.example.com/v1", "description": "Production server"},
-                {"url": "https://staging.api.example.com/v1", "description": "Staging server"},
+                {
+                    "url": "https://api.example.com/v1",
+                    "description": "Production server",
+                },
+                {
+                    "url": "https://staging.api.example.com/v1",
+                    "description": "Staging server",
+                },
             ],
             "tags": [
                 {"name": "simulations", "description": "Simulation management"},
@@ -523,12 +600,16 @@ class TestOpenAPILinting:
         }
 
         # Count how many best practices are followed
-        followed_practices = sum(1 for followed in best_practice_fields.values() if followed)
+        followed_practices = sum(
+            1 for followed in best_practice_fields.values() if followed
+        )
         total_practices = len(best_practice_fields)
 
         compliance_rate = followed_practices / total_practices
 
-        assert compliance_rate >= 0.75, f"OpenAPI best practices compliance too low: {compliance_rate:.2f}"
+        assert (
+            compliance_rate >= 0.75
+        ), f"OpenAPI best practices compliance too low: {compliance_rate:.2f}"
 
         print("✅ OpenAPI best practices validated")
 
@@ -541,7 +622,11 @@ class TestOpenAPILinting:
                 "/api/v1/health_check": {},  # Non-standard naming
             },
             "components": {
-                "schemas": {"Simulation": {}, "simulationCreate": {}, "HealthCheck": {}}  # Non-standard naming
+                "schemas": {
+                    "Simulation": {},
+                    "simulationCreate": {},
+                    "HealthCheck": {},
+                }  # Non-standard naming
             },
         }
 
@@ -555,7 +640,9 @@ class TestOpenAPILinting:
                 non_standard_paths.append(path)
 
         # Allow some flexibility but flag major issues
-        assert len(non_standard_paths) <= 1, f"Non-standard path naming: {non_standard_paths}"
+        assert (
+            len(non_standard_paths) <= 1
+        ), f"Non-standard path naming: {non_standard_paths}"
 
         # Check schema naming
         schemas = list(spec["components"]["schemas"].keys())
@@ -568,7 +655,9 @@ class TestOpenAPILinting:
             camel_case = [s for s in schemas if s[0].islower()]
 
             # Should not mix cases
-            assert not (len(pascal_case) > 0 and len(camel_case) > 0), "Mixed naming conventions in schemas"
+            assert not (
+                len(pascal_case) > 0 and len(camel_case) > 0
+            ), "Mixed naming conventions in schemas"
 
         print("✅ OpenAPI naming conventions validated")
 
@@ -612,8 +701,19 @@ def mock_openapi_spec():
     """Create a mock OpenAPI specification for testing."""
     return {
         "openapi": "3.0.1",
-        "info": {"title": "Test API", "version": "1.0.0", "description": "Test API for validation"},
-        "paths": {"/test": {"get": {"summary": "Test endpoint", "responses": {"200": {"description": "Success"}}}}},
+        "info": {
+            "title": "Test API",
+            "version": "1.0.0",
+            "description": "Test API for validation",
+        },
+        "paths": {
+            "/test": {
+                "get": {
+                    "summary": "Test endpoint",
+                    "responses": {"200": {"description": "Success"}},
+                }
+            }
+        },
     }
 
 
@@ -621,7 +721,9 @@ def mock_openapi_spec():
 def schema_validator():
     """Create a JSON schema validator for API responses."""
 
-    def validate_response(response_data: Dict[str, Any], schema: Dict[str, Any]) -> bool:
+    def validate_response(
+        response_data: Dict[str, Any], schema: Dict[str, Any]
+    ) -> bool:
         """Validate response data against schema."""
         try:
             jsonschema.validate(response_data, schema)

@@ -4,7 +4,12 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from ...domain.service_registry import Service, ServiceId
-from ...domain.workflow_management import ExecutionId, Workflow, WorkflowExecution, WorkflowId
+from ...domain.workflow_management import (
+    ExecutionId,
+    Workflow,
+    WorkflowExecution,
+    WorkflowId,
+)
 
 
 class WorkflowRepositoryInterface(ABC):

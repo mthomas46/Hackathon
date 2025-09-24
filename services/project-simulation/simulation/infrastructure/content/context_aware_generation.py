@@ -14,12 +14,17 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 # Import simulation domain
 from simulation.infrastructure.integration.service_clients import get_ecosystem_client
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.infrastructure.utilities.simulation_utilities import get_simulation_cache, get_simulation_validator
+from simulation.infrastructure.utilities.simulation_utilities import (
+    get_simulation_cache,
+    get_simulation_validator,
+)
 
 
 class PersonalityTrait(Enum):
@@ -78,7 +83,9 @@ class ContentContext:
         profiles = {}
 
         for member in self.team_members:
-            member_id = member.get("member_id", member.get("id", f"member_{len(profiles)}"))
+            member_id = member.get(
+                "member_id", member.get("id", f"member_{len(profiles)}")
+            )
 
             # Assign personality traits based on role and experience
             personality = self._assign_personality_trait(member)
@@ -120,7 +127,9 @@ class ContentContext:
         elif experience < 3:
             return PersonalityTrait.INNOVATIVE
         else:
-            return random.choice([PersonalityTrait.ANALYTICAL, PersonalityTrait.PRAGMATIC])
+            return random.choice(
+                [PersonalityTrait.ANALYTICAL, PersonalityTrait.PRAGMATIC]
+            )
 
     def _assign_communication_style(self, member: Dict[str, Any]) -> CommunicationStyle:
         """Assign communication style based on member characteristics."""
@@ -134,7 +143,9 @@ class ContentContext:
         elif experience < 3:
             return CommunicationStyle.CASUAL
         else:
-            return random.choice([CommunicationStyle.BUSINESS, CommunicationStyle.CONCISE])
+            return random.choice(
+                [CommunicationStyle.BUSINESS, CommunicationStyle.CONCISE]
+            )
 
     def _calculate_influence_score(self, member: Dict[str, Any]) -> float:
         """Calculate team member influence score."""
@@ -180,13 +191,33 @@ class ContentContext:
         member.get("experience_years", 2)
 
         if "architect" in role:
-            return {"planning_focus": 0.8, "coding_focus": 0.2, "review_focus": 0.9, "meeting_frequency": "daily"}
+            return {
+                "planning_focus": 0.8,
+                "coding_focus": 0.2,
+                "review_focus": 0.9,
+                "meeting_frequency": "daily",
+            }
         elif "developer" in role:
-            return {"planning_focus": 0.3, "coding_focus": 0.8, "review_focus": 0.6, "meeting_frequency": "weekly"}
+            return {
+                "planning_focus": 0.3,
+                "coding_focus": 0.8,
+                "review_focus": 0.6,
+                "meeting_frequency": "weekly",
+            }
         elif "qa" in role:
-            return {"planning_focus": 0.4, "coding_focus": 0.1, "review_focus": 0.8, "meeting_frequency": "bi_weekly"}
+            return {
+                "planning_focus": 0.4,
+                "coding_focus": 0.1,
+                "review_focus": 0.8,
+                "meeting_frequency": "bi_weekly",
+            }
         else:
-            return {"planning_focus": 0.5, "coding_focus": 0.5, "review_focus": 0.5, "meeting_frequency": "weekly"}
+            return {
+                "planning_focus": 0.5,
+                "coding_focus": 0.5,
+                "review_focus": 0.5,
+                "meeting_frequency": "weekly",
+            }
 
     def _generate_collaboration_style(self, member: Dict[str, Any]) -> str:
         """Generate collaboration style for team member."""
@@ -223,7 +254,9 @@ class ContentContext:
 
         # Calculate diversity scores
         role_diversity = len(roles) / max(1, total_members)
-        experience_balance = 1 - (max(experience_levels.values()) / max(1, total_members))
+        experience_balance = 1 - (
+            max(experience_levels.values()) / max(1, total_members)
+        )
 
         return {
             "team_size": total_members,
@@ -242,7 +275,9 @@ class ContentContext:
             collaboration_styles[style] = collaboration_styles.get(style, 0) + 1
 
         dominant_style = (
-            max(collaboration_styles.items(), key=lambda x: x[1])[0] if collaboration_styles else "balanced"
+            max(collaboration_styles.items(), key=lambda x: x[1])[0]
+            if collaboration_styles
+            else "balanced"
         )
 
         return {
@@ -271,22 +306,56 @@ class ContentContext:
 
         # Project complexity factors
         complexity_factors = {
-            "simple": {"technical_debt": 0.2, "requirement_stability": 0.8, "innovation_required": 0.3},
-            "medium": {"technical_debt": 0.4, "requirement_stability": 0.6, "innovation_required": 0.5},
-            "complex": {"technical_debt": 0.7, "requirement_stability": 0.4, "innovation_required": 0.8},
+            "simple": {
+                "technical_debt": 0.2,
+                "requirement_stability": 0.8,
+                "innovation_required": 0.3,
+            },
+            "medium": {
+                "technical_debt": 0.4,
+                "requirement_stability": 0.6,
+                "innovation_required": 0.5,
+            },
+            "complex": {
+                "technical_debt": 0.7,
+                "requirement_stability": 0.4,
+                "innovation_required": 0.8,
+            },
         }
 
         # Project type characteristics
         type_characteristics = {
-            "web_application": {"frontend_focus": 0.6, "backend_focus": 0.7, "database_focus": 0.5},
-            "api_service": {"frontend_focus": 0.1, "backend_focus": 0.9, "database_focus": 0.8},
-            "mobile_application": {"frontend_focus": 0.8, "backend_focus": 0.5, "database_focus": 0.4},
-            "data_science": {"frontend_focus": 0.3, "backend_focus": 0.6, "database_focus": 0.9},
-            "devops_tool": {"frontend_focus": 0.2, "backend_focus": 0.8, "database_focus": 0.3},
+            "web_application": {
+                "frontend_focus": 0.6,
+                "backend_focus": 0.7,
+                "database_focus": 0.5,
+            },
+            "api_service": {
+                "frontend_focus": 0.1,
+                "backend_focus": 0.9,
+                "database_focus": 0.8,
+            },
+            "mobile_application": {
+                "frontend_focus": 0.8,
+                "backend_focus": 0.5,
+                "database_focus": 0.4,
+            },
+            "data_science": {
+                "frontend_focus": 0.3,
+                "backend_focus": 0.6,
+                "database_focus": 0.9,
+            },
+            "devops_tool": {
+                "frontend_focus": 0.2,
+                "backend_focus": 0.8,
+                "database_focus": 0.3,
+            },
         }
 
         factors = complexity_factors.get(complexity, complexity_factors["medium"])
-        characteristics = type_characteristics.get(project_type, type_characteristics["web_application"])
+        characteristics = type_characteristics.get(
+            project_type, type_characteristics["web_application"]
+        )
 
         return {
             "project_type": project_type,
@@ -294,17 +363,25 @@ class ContentContext:
             "duration_weeks": duration_weeks,
             "complexity_factors": factors,
             "type_characteristics": characteristics,
-            "estimated_effort": self._calculate_estimated_effort(duration_weeks, factors),
+            "estimated_effort": self._calculate_estimated_effort(
+                duration_weeks, factors
+            ),
             "risk_factors": self._identify_risk_factors(factors, characteristics),
         }
 
-    def _calculate_estimated_effort(self, duration_weeks: int, factors: Dict[str, float]) -> float:
+    def _calculate_estimated_effort(
+        self, duration_weeks: int, factors: Dict[str, float]
+    ) -> float:
         """Calculate estimated project effort."""
         base_effort = duration_weeks * 40  # 40 hours per week
-        complexity_multiplier = 1 + factors["technical_debt"] + (1 - factors["requirement_stability"])
+        complexity_multiplier = (
+            1 + factors["technical_debt"] + (1 - factors["requirement_stability"])
+        )
         return base_effort * complexity_multiplier
 
-    def _identify_risk_factors(self, factors: Dict[str, float], characteristics: Dict[str, Any]) -> List[str]:
+    def _identify_risk_factors(
+        self, factors: Dict[str, float], characteristics: Dict[str, Any]
+    ) -> List[str]:
         """Identify project risk factors."""
         risks = []
 
@@ -364,13 +441,21 @@ class ContentContext:
         milestones = []
 
         for i, phase in enumerate(phases):
-            if phase.get("name", "").lower() in ["planning", "design", "development", "testing", "deployment"]:
+            if phase.get("name", "").lower() in [
+                "planning",
+                "design",
+                "development",
+                "testing",
+                "deployment",
+            ]:
                 milestones.append(
                     {
                         "phase": phase["name"],
                         "phase_index": i,
                         "due_date": phase.get("end_date"),
-                        "importance": "critical" if i in [0, len(phases) - 1] else "normal",
+                        "importance": (
+                            "critical" if i in [0, len(phases) - 1] else "normal"
+                        ),
                     }
                 )
 
@@ -395,23 +480,50 @@ class ContextAwareDocumentGenerator:
         """Load document templates with context awareness."""
         return {
             "project_requirements": {
-                "structure": ["introduction", "objectives", "scope", "constraints", "acceptance_criteria"],
-                "context_fields": ["team_expertise", "timeline_constraints", "technical_constraints"],
+                "structure": [
+                    "introduction",
+                    "objectives",
+                    "scope",
+                    "constraints",
+                    "acceptance_criteria",
+                ],
+                "context_fields": [
+                    "team_expertise",
+                    "timeline_constraints",
+                    "technical_constraints",
+                ],
                 "personality_influence": {"strategic": 0.8, "detail_oriented": 0.9},
             },
             "architecture_diagram": {
                 "structure": ["overview", "components", "data_flow", "deployment"],
-                "context_fields": ["team_roles", "project_complexity", "technical_stack"],
+                "context_fields": [
+                    "team_roles",
+                    "project_complexity",
+                    "technical_stack",
+                ],
                 "personality_influence": {"strategic": 0.9, "analytical": 0.8},
             },
             "user_story": {
                 "structure": ["role", "goal", "benefit", "acceptance_criteria"],
-                "context_fields": ["user_persona", "business_value", "team_collaboration"],
+                "context_fields": [
+                    "user_persona",
+                    "business_value",
+                    "team_collaboration",
+                ],
                 "personality_influence": {"creative": 0.7, "collaborative": 0.8},
             },
             "technical_design": {
-                "structure": ["problem_statement", "proposed_solution", "implementation_details", "risks"],
-                "context_fields": ["technical_complexity", "team_expertise", "project_constraints"],
+                "structure": [
+                    "problem_statement",
+                    "proposed_solution",
+                    "implementation_details",
+                    "risks",
+                ],
+                "context_fields": [
+                    "technical_complexity",
+                    "team_expertise",
+                    "project_constraints",
+                ],
                 "personality_influence": {"analytical": 0.9, "methodical": 0.8},
             },
         }
@@ -427,33 +539,51 @@ class ContextAwareDocumentGenerator:
         """Generate document with full project context awareness."""
         try:
             # Build content context
-            context = ContentContext(project_config, team_members, timeline, kwargs.get("phase_context"))
+            context = ContentContext(
+                project_config, team_members, timeline, kwargs.get("phase_context")
+            )
 
             # Generate document using context
-            document = await self._generate_with_context(document_type, context, **kwargs)
+            document = await self._generate_with_context(
+                document_type, context, **kwargs
+            )
 
             # Validate generated content
-            validation_result = self.validator.validate_simulation_data("project_config", project_config)
+            validation_result = self.validator.validate_simulation_data(
+                "project_config", project_config
+            )
             if not validation_result.is_valid:
-                self.logger.warning("Project config validation failed", errors=validation_result.errors)
+                self.logger.warning(
+                    "Project config validation failed", errors=validation_result.errors
+                )
 
             return document
 
         except Exception as e:
-            self.logger.error("Context-aware document generation failed", document_type=document_type, error=str(e))
+            self.logger.error(
+                "Context-aware document generation failed",
+                document_type=document_type,
+                error=str(e),
+            )
             raise
 
-    async def _generate_with_context(self, document_type: str, context: ContentContext, **kwargs) -> Dict[str, Any]:
+    async def _generate_with_context(
+        self, document_type: str, context: ContentContext, **kwargs
+    ) -> Dict[str, Any]:
         """Generate document using built context."""
         template = self.templates.get(document_type, self._get_default_template())
 
         # Generate content sections
         content_sections = {}
         for section in template["structure"]:
-            content_sections[section] = await self._generate_section_content(section, template, context, **kwargs)
+            content_sections[section] = await self._generate_section_content(
+                section, template, context, **kwargs
+            )
 
         # Apply personality and team influence
-        influenced_content = self._apply_team_influence(content_sections, context, template)
+        influenced_content = self._apply_team_influence(
+            content_sections, context, template
+        )
 
         # Add metadata and relationships
         metadata = self._build_document_metadata(document_type, context)
@@ -472,7 +602,9 @@ class ContextAwareDocumentGenerator:
                 "personality_traits_considered": len(context.team_profiles),
             },
             "generated_at": datetime.now(),
-            "quality_score": self._calculate_content_quality(influenced_content, context),
+            "quality_score": self._calculate_content_quality(
+                influenced_content, context
+            ),
         }
 
     async def _generate_section_content(
@@ -491,10 +623,16 @@ class ContextAwareDocumentGenerator:
             return self._enhance_with_context(content, section, context)
 
         except Exception as e:
-            self.logger.warning("LLM content generation failed, using fallback", section=section, error=str(e))
+            self.logger.warning(
+                "LLM content generation failed, using fallback",
+                section=section,
+                error=str(e),
+            )
             return self._generate_fallback_content(section, context)
 
-    def _build_section_prompt(self, section: str, template: Dict[str, Any], context: ContentContext) -> str:
+    def _build_section_prompt(
+        self, section: str, template: Dict[str, Any], context: ContentContext
+    ) -> str:
         """Build prompt for section content generation."""
         team_context = self._build_team_context(context)
         project_context = self._build_project_context(context)
@@ -513,9 +651,13 @@ Write in a professional tone that matches the team communication style.
     def _build_team_context(self, context: ContentContext) -> str:
         """Build team context string for prompts."""
         team_size = context.team_dynamics["team_size"]
-        dominant_style = context.team_dynamics["collaboration_patterns"]["dominant_style"]
+        dominant_style = context.team_dynamics["collaboration_patterns"][
+            "dominant_style"
+        ]
 
-        roles = list(context.team_dynamics["role_distribution"].keys())[:3]  # Top 3 roles
+        roles = list(context.team_dynamics["role_distribution"].keys())[
+            :3
+        ]  # Top 3 roles
 
         return f"Team of {team_size} members with {dominant_style} collaboration style. Key roles: {', '.join(roles)}."
 
@@ -533,12 +675,18 @@ Write in a professional tone that matches the team communication style.
         current_phase = context.timeline_awareness.get("current_phase_index")
 
         if current_phase is not None:
-            phase_name = context.timeline["phases"][current_phase].get("name", "current phase")
-            return f"Project is {progress:.1f}% complete, currently in {phase_name} phase."
+            phase_name = context.timeline["phases"][current_phase].get(
+                "name", "current phase"
+            )
+            return (
+                f"Project is {progress:.1f}% complete, currently in {phase_name} phase."
+            )
         else:
             return f"Project is {progress:.1f}% complete."
 
-    def _enhance_with_context(self, content: str, section: str, context: ContentContext) -> str:
+    def _enhance_with_context(
+        self, content: str, section: str, context: ContentContext
+    ) -> str:
         """Enhance generated content with additional context."""
         # Add team-specific references
         if "team" in section.lower():
@@ -574,7 +722,10 @@ Write in a professional tone that matches the team communication style.
             return f"Standard timeline with {progress:.1f}% completion."
 
     def _apply_team_influence(
-        self, content_sections: Dict[str, str], context: ContentContext, template: Dict[str, Any]
+        self,
+        content_sections: Dict[str, str],
+        context: ContentContext,
+        template: Dict[str, Any],
     ) -> Dict[str, str]:
         """Apply team personality and dynamics influence to content."""
         influenced_content = {}
@@ -582,10 +733,14 @@ Write in a professional tone that matches the team communication style.
         for section, content in content_sections.items():
             # Apply personality influence
             personality_weights = template.get("personality_influence", {})
-            dominant_personality = self._find_dominant_personality(context, personality_weights)
+            dominant_personality = self._find_dominant_personality(
+                context, personality_weights
+            )
 
             # Adjust content based on personality
-            adjusted_content = self._adjust_content_for_personality(content, dominant_personality, section)
+            adjusted_content = self._adjust_content_for_personality(
+                content, dominant_personality, section
+            )
             influenced_content[section] = adjusted_content
 
         return influenced_content
@@ -614,7 +769,9 @@ Write in a professional tone that matches the team communication style.
 
         return best_match
 
-    def _adjust_content_for_personality(self, content: str, personality: Optional[str], section: str) -> str:
+    def _adjust_content_for_personality(
+        self, content: str, personality: Optional[str], section: str
+    ) -> str:
         """Adjust content based on personality traits."""
         if not personality:
             return content
@@ -632,21 +789,35 @@ Write in a professional tone that matches the team communication style.
 
     def _add_details(self, content: str) -> str:
         """Add detail-oriented enhancements."""
-        return content + "\n\nDetailed specifications and requirements have been documented separately."
+        return (
+            content
+            + "\n\nDetailed specifications and requirements have been documented separately."
+        )
 
     def _add_creativity(self, content: str) -> str:
         """Add creative enhancements."""
-        return content + "\n\nThis approach includes innovative solutions and creative problem-solving."
+        return (
+            content
+            + "\n\nThis approach includes innovative solutions and creative problem-solving."
+        )
 
     def _add_analysis(self, content: str) -> str:
         """Add analytical enhancements."""
-        return content + "\n\nAnalysis shows optimal resource utilization and risk mitigation."
+        return (
+            content
+            + "\n\nAnalysis shows optimal resource utilization and risk mitigation."
+        )
 
     def _add_structure(self, content: str) -> str:
         """Add methodical structure."""
-        return content + "\n\nImplementation follows established methodologies and best practices."
+        return (
+            content
+            + "\n\nImplementation follows established methodologies and best practices."
+        )
 
-    def _build_document_metadata(self, document_type: str, context: ContentContext) -> Dict[str, Any]:
+    def _build_document_metadata(
+        self, document_type: str, context: ContentContext
+    ) -> Dict[str, Any]:
         """Build comprehensive document metadata."""
         return {
             "document_type": document_type,
@@ -669,9 +840,16 @@ Write in a professional tone that matches the team communication style.
             "version": "1.0",
         }
 
-    def _build_document_relationships(self, document_type: str, context: ContentContext) -> Dict[str, Any]:
+    def _build_document_relationships(
+        self, document_type: str, context: ContentContext
+    ) -> Dict[str, Any]:
         """Build document relationships and cross-references."""
-        relationships = {"parent_documents": [], "child_documents": [], "related_documents": [], "dependencies": []}
+        relationships = {
+            "parent_documents": [],
+            "child_documents": [],
+            "related_documents": [],
+            "dependencies": [],
+        }
 
         # Define relationships based on document type
         if document_type == "project_requirements":
@@ -684,23 +862,35 @@ Write in a professional tone that matches the team communication style.
 
         elif document_type == "user_story":
             relationships["parent_documents"] = ["project_requirements"]
-            relationships["related_documents"] = ["technical_design", "code_review_comments"]
+            relationships["related_documents"] = [
+                "technical_design",
+                "code_review_comments",
+            ]
 
         elif document_type == "technical_design":
-            relationships["parent_documents"] = ["project_requirements", "architecture_diagram"]
+            relationships["parent_documents"] = [
+                "project_requirements",
+                "architecture_diagram",
+            ]
             relationships["child_documents"] = ["test_scenarios", "deployment_guide"]
 
         return relationships
 
-    def _calculate_content_quality(self, content: Dict[str, str], context: ContentContext) -> float:
+    def _calculate_content_quality(
+        self, content: Dict[str, str], context: ContentContext
+    ) -> float:
         """Calculate overall content quality score."""
         # Base quality factors
-        completeness = len(content) / max(1, len(self.templates.get("project_requirements", {}).get("structure", [])))
+        completeness = len(content) / max(
+            1, len(self.templates.get("project_requirements", {}).get("structure", []))
+        )
         context_relevance = 0.9 if len(context.team_profiles) > 0 else 0.6
         team_alignment = 0.85 if context.team_dynamics["team_size"] > 0 else 0.5
 
         # Weighted average
-        quality_score = completeness * 0.4 + context_relevance * 0.3 + team_alignment * 0.3
+        quality_score = (
+            completeness * 0.4 + context_relevance * 0.3 + team_alignment * 0.3
+        )
 
         return min(1.0, max(0.0, quality_score))
 

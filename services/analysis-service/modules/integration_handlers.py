@@ -21,17 +21,24 @@ class IntegrationHandlers:
             service_client = get_analysis_service_client()
 
             # Get prompt from Prompt Store
-            prompt_data = await service_client.get_prompt(prompt_category, prompt_name, **variables)
+            prompt_data = await service_client.get_prompt(
+                prompt_category, prompt_name, **variables
+            )
 
             # Get target document
             if target_id.startswith("doc:"):
-                doc_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{target_id}")
+                doc_response = await service_client.get_json(
+                    f"{service_client.doc_store_url()}/documents/{target_id}"
+                )
                 content = doc_response.get("content", "")
             else:
                 return _create_analysis_error_response(
                     "Unsupported target type",
                     "UNSUPPORTED_TARGET_TYPE",
-                    {"target_type": type(target_id).__name__, "supported_types": ["Document", "str"]},
+                    {
+                        "target_type": type(target_id).__name__,
+                        "supported_types": ["Document", "str"],
+                    },
                 )
 
             # In a real implementation, this would call an LLM with the prompt
@@ -57,7 +64,9 @@ class IntegrationHandlers:
             )
 
     @staticmethod
-    async def handle_natural_language_analysis(request_data: dict = None) -> Dict[str, Any]:
+    async def handle_natural_language_analysis(
+        request_data: dict = None,
+    ) -> Dict[str, Any]:
         """Analyze using natural language query through Interpreter."""
         try:
             service_client = get_analysis_service_client()
@@ -81,10 +90,17 @@ class IntegrationHandlers:
             interpretation = await service_client.interpret_query(query)
 
             # If it's an analysis request, execute it
-            if interpretation.get("intent") in ["analyze_document", "consistency_check"]:
+            if interpretation.get("intent") in [
+                "analyze_document",
+                "consistency_check",
+            ]:
                 if interpretation.get("workflow"):
                     result = await service_client.execute_workflow(query)
-                    return {"interpretation": interpretation, "execution": result, "status": "completed"}
+                    return {
+                        "interpretation": interpretation,
+                        "execution": result,
+                        "status": "completed",
+                    }
 
             return {"interpretation": interpretation, "status": "interpreted_only"}
 
@@ -100,11 +116,15 @@ class IntegrationHandlers:
         """Get available prompt categories for analysis."""
         try:
             service_client = get_analysis_service_client()
-            categories = await service_client.get_json(f"{service_client.prompt_store_url()}/prompts/categories")
+            categories = await service_client.get_json(
+                f"{service_client.prompt_store_url()}/prompts/categories"
+            )
             return categories
         except Exception as e:
             return _create_analysis_error_response(
-                "Failed to retrieve prompt categories", "CATEGORY_RETRIEVAL_FAILED", {"error": str(e), "categories": []}
+                "Failed to retrieve prompt categories",
+                "CATEGORY_RETRIEVAL_FAILED",
+                {"error": str(e), "categories": []},
             )
 
     @staticmethod
@@ -162,10 +182,20 @@ class IntegrationHandlers:
             return {
                 "analysis_service": "healthy",
                 "integrations": health_status,
-                "available_services": ["doc_store", "source-agent", "prompt-store", "interpreter", "orchestrator"],
+                "available_services": [
+                    "doc_store",
+                    "source-agent",
+                    "prompt-store",
+                    "interpreter",
+                    "orchestrator",
+                ],
             }
         except Exception as e:
-            return {"analysis_service": "healthy", "integrations": {"error": str(e)}, "available_services": []}
+            return {
+                "analysis_service": "healthy",
+                "integrations": {"error": str(e)},
+                "available_services": [],
+            }
 
     def get_architecture_analyzer(self, analysis_type: str):
         """Get architecture analyzer for the specified analysis type."""

@@ -8,7 +8,9 @@ from services.shared.integrations.clients.clients import ServiceClients
 from ...utils.display_helpers import print_kv, print_list, save_data
 
 
-def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
+def build_actions(
+    console, clients: ServiceClients
+) -> List[Tuple[str, Callable[[], Any]]]:
     async def list_documents():
         q = Prompt.ask("Query (fts)", default="")
         url = f"{clients.doc_store_url()}/search"
@@ -50,11 +52,16 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         temp_id = f"cli:{int(_t.time())}"
         create_url = f"{clients.doc_store_url()}/documents"
         created = await clients.post_json(
-            create_url, {"id": temp_id, "content": "cli-db-probe", "metadata": {"source": "cli"}}
+            create_url,
+            {"id": temp_id, "content": "cli-db-probe", "metadata": {"source": "cli"}},
         )
         get_url = f"{clients.doc_store_url()}/documents/{created.get('id', temp_id)}"
         fetched = await clients.get_json(get_url)
-        print_kv(console, "DB Probe", {"created": created.get("id"), "fetched": bool(fetched)})
+        print_kv(
+            console,
+            "DB Probe",
+            {"created": created.get("id"), "fetched": bool(fetched)},
+        )
 
     async def download_document():
         doc_id = Prompt.ask("Document ID")
@@ -81,7 +88,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         content_type = Prompt.ask("Content type filter (optional)", default="")
         source_type = Prompt.ask("Source type filter (optional)", default="")
         language = Prompt.ask("Language filter (optional)", default="")
-        has_analysis_input = Prompt.ask("Analysis filter (analyzed/unanalyzed/both)", default="both")
+        has_analysis_input = Prompt.ask(
+            "Analysis filter (analyzed/unanalyzed/both)", default="both"
+        )
 
         # Convert analysis filter
         has_analysis = None
@@ -104,7 +113,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             payload["has_analysis"] = has_analysis
 
         if not payload:
-            console.print("[yellow]No search criteria specified, showing recent documents...[/yellow]")
+            console.print(
+                "[yellow]No search criteria specified, showing recent documents...[/yellow]"
+            )
             payload["limit"] = 10
 
         url = f"{clients.doc_store_url()}/search/advanced"
@@ -124,7 +135,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         changed_by = Prompt.ask("Changed by (optional)", default="cli_user")
 
         url = f"{clients.doc_store_url()}/documents/{doc_id}/rollback"
-        data = await clients.post_json(url, {"version_number": int(version), "changed_by": changed_by})
+        data = await clients.post_json(
+            url, {"version_number": int(version), "changed_by": changed_by}
+        )
         print_kv(console, f"Rollback Result for {doc_id}", data)
 
     async def compare_versions():
@@ -179,8 +192,14 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
     async def search_by_tags():
         tags_input = Prompt.ask("Tags (comma-separated)")
         tags = [tag.strip() for tag in tags_input.split(",") if tag.strip()]
-        categories_input = Prompt.ask("Categories (optional, comma-separated)", default="")
-        categories = [cat.strip() for cat in categories_input.split(",") if cat.strip()] if categories_input else None
+        categories_input = Prompt.ask(
+            "Categories (optional, comma-separated)", default=""
+        )
+        categories = (
+            [cat.strip() for cat in categories_input.split(",") if cat.strip()]
+            if categories_input
+            else None
+        )
 
         payload = {"tags": tags}
         if categories:
@@ -262,7 +281,11 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         user_id = Prompt.ask("User ID (optional)", default="")
         user_id = user_id if user_id else None
 
-        payload = {"event_type": event_type, "entity_type": entity_type, "entity_id": entity_id}
+        payload = {
+            "event_type": event_type,
+            "entity_type": entity_type,
+            "entity_id": entity_id,
+        }
         if user_id:
             payload["user_id"] = user_id
 
@@ -314,11 +337,17 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         except Exception:
             metadata = {}
 
-        labels = [label.strip() for label in labels_input.split(",") if label.strip()] if labels_input else []
+        labels = (
+            [label.strip() for label in labels_input.split(",") if label.strip()]
+            if labels_input
+            else []
+        )
 
         # Send via notification service
         try:
-            result = await clients.notify_via_service(channel, target, title, message, metadata, labels)
+            result = await clients.notify_via_service(
+                channel, target, title, message, metadata, labels
+            )
             print_kv(console, "Notification Sent", result)
         except Exception as e:
             console.print(f"[red]Failed to send notification: {e}[/red]")
@@ -411,7 +440,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
 
     async def warmup_cache():
         """Warm up cache with common operations."""
-        operations_input = Prompt.ask("Operations JSON array", default='[{"type": "search", "query": "*"}]')
+        operations_input = Prompt.ask(
+            "Operations JSON array", default='[{"type": "search", "query": "*"}]'
+        )
 
         try:
             operations = json.loads(operations_input)
@@ -478,13 +509,17 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             return
 
         url = f"{clients.doc_store_url()}/documents/{doc_id}/metadata"
-        data = await clients.patch_json(url, {"metadata": metadata, "update_type": update_type})
+        data = await clients.patch_json(
+            url, {"metadata": metadata, "update_type": update_type}
+        )
         print_kv(console, f"Metadata Updated for {doc_id}", data)
 
     async def delete_document():
         """Delete a document."""
         doc_id = Prompt.ask("Document ID")
-        confirm = Prompt.ask(f"Are you sure you want to delete document {doc_id}? (yes/no)", default="no")
+        confirm = Prompt.ask(
+            f"Are you sure you want to delete document {doc_id}? (yes/no)", default="no"
+        )
 
         if confirm.lower() not in ["yes", "y"]:
             console.print("[yellow]Operation cancelled[/yellow]")

@@ -177,7 +177,9 @@ class LifecyclePolicy(BaseEntity):
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
 
-    def matches_document(self, document: Dict[str, Any], lifecycle: Dict[str, Any]) -> bool:
+    def matches_document(
+        self, document: Dict[str, Any], lifecycle: Dict[str, Any]
+    ) -> bool:
         """Check if policy matches document."""
         try:
             conditions = self.conditions
@@ -252,10 +254,16 @@ class BulkOperation(BaseEntity):
                 "processed": self.processed_items,
                 "successful": self.successful_items,
                 "failed": self.failed_items,
-                "percentage": (self.processed_items / self.total_items * 100) if self.total_items > 0 else 0,
+                "percentage": (
+                    (self.processed_items / self.total_items * 100)
+                    if self.total_items > 0
+                    else 0
+                ),
             },
             "created_at": self.created_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
         }
 
 
@@ -346,7 +354,9 @@ class WebhookDelivery(BaseEntity):
             "response_body": self.response_body,
             "error_message": self.error_message,
             "attempt_count": self.attempt_count,
-            "delivered_at": self.delivered_at.isoformat() if self.delivered_at else None,
+            "delivered_at": (
+                self.delivered_at.isoformat() if self.delivered_at else None
+            ),
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

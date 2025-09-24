@@ -47,10 +47,16 @@ class TestTimelineManagementIntegration:
             "days_into_phase": 3,
             "total_phase_duration": 14,
             "upcoming_events": [
-                {"type": "milestone", "title": "Requirements Complete", "days_until": 5},
+                {
+                    "type": "milestone",
+                    "title": "Requirements Complete",
+                    "days_until": 5,
+                },
                 {"type": "meeting", "title": "Sprint Planning", "days_until": 1},
             ],
-            "recent_events": [{"type": "milestone", "title": "Project Kickoff", "days_ago": 2}],
+            "recent_events": [
+                {"type": "milestone", "title": "Project Kickoff", "days_ago": 2}
+            ],
         }
 
         content_request = {
@@ -60,7 +66,9 @@ class TestTimelineManagementIntegration:
             "project_phase": "planning",
         }
 
-        result = await timeline_generator.generate_timeline_aware_content(content_request)
+        result = await timeline_generator.generate_timeline_aware_content(
+            content_request
+        )
 
         # Verify the generation was called with correct context
         timeline_generator.context_generator.generate_content.assert_called_once()
@@ -94,7 +102,9 @@ class TestTimelineManagementIntegration:
                     "metadata": {"phase": phase, "word_count": 200},
                 }
 
-        timeline_generator.context_generator.generate_content.side_effect = mock_generate
+        timeline_generator.context_generator.generate_content.side_effect = (
+            mock_generate
+        )
 
         # Test planning phase
         planning_request = {
@@ -102,7 +112,9 @@ class TestTimelineManagementIntegration:
             "timeline_context": {"current_phase": "planning", "phase_number": 1},
         }
 
-        planning_result = await timeline_generator.generate_timeline_aware_content(planning_request)
+        planning_result = await timeline_generator.generate_timeline_aware_content(
+            planning_request
+        )
         assert "Requirements Document" in planning_result["content"]
         assert planning_result["metadata"]["phase"] == "planning"
 
@@ -112,7 +124,9 @@ class TestTimelineManagementIntegration:
             "timeline_context": {"current_phase": "development", "phase_number": 2},
         }
 
-        development_result = await timeline_generator.generate_timeline_aware_content(development_request)
+        development_result = await timeline_generator.generate_timeline_aware_content(
+            development_request
+        )
         assert "Architecture Document" in development_result["content"]
         assert development_result["metadata"]["phase"] == "development"
 
@@ -158,7 +172,12 @@ class TestTimelineEventOrdering:
         base_time = datetime.now()
 
         events = [
-            {"event_type": "project_start", "title": "Project Kickoff", "timestamp": base_time, "sequence": 1},
+            {
+                "event_type": "project_start",
+                "title": "Project Kickoff",
+                "timestamp": base_time,
+                "sequence": 1,
+            },
             {
                 "event_type": "milestone",
                 "title": "Requirements Complete",
@@ -204,7 +223,10 @@ class TestTimelineEventOrdering:
         # Define events with dependencies
         events_with_deps = {
             "kickoff": {"title": "Project Kickoff", "depends_on": []},
-            "requirements": {"title": "Requirements Gathering", "depends_on": ["kickoff"]},
+            "requirements": {
+                "title": "Requirements Gathering",
+                "depends_on": ["kickoff"],
+            },
             "design": {"title": "System Design", "depends_on": ["requirements"]},
             "development": {"title": "Development", "depends_on": ["design"]},
             "testing": {"title": "Testing", "depends_on": ["development"]},
@@ -239,7 +261,14 @@ class TestTimelineEventOrdering:
                 break
 
         # Verify correct execution order
-        expected_order = ["kickoff", "requirements", "design", "development", "testing", "deployment"]
+        expected_order = [
+            "kickoff",
+            "requirements",
+            "design",
+            "development",
+            "testing",
+            "deployment",
+        ]
         assert execution_order == expected_order
 
         # Verify all events were executed
@@ -261,14 +290,25 @@ class TestTimelinePhaseProgression:
 
             # Mock content generation for different phase stages
             def mock_content_generation(request):
-                phase_progress = request.get("timeline_context", {}).get("phase_progress", 0)
+                phase_progress = request.get("timeline_context", {}).get(
+                    "phase_progress", 0
+                )
 
                 if phase_progress < 0.25:
-                    return {"content": "# Phase Start\n\nPhase is beginning...", "stage": "start"}
+                    return {
+                        "content": "# Phase Start\n\nPhase is beginning...",
+                        "stage": "start",
+                    }
                 elif phase_progress < 0.75:
-                    return {"content": "# Phase Midpoint\n\nPhase is in progress...", "stage": "midpoint"}
+                    return {
+                        "content": "# Phase Midpoint\n\nPhase is in progress...",
+                        "stage": "midpoint",
+                    }
                 else:
-                    return {"content": "# Phase End\n\nPhase is completing...", "stage": "end"}
+                    return {
+                        "content": "# Phase End\n\nPhase is completing...",
+                        "stage": "end",
+                    }
 
             mock_generator.generate_content.side_effect = mock_content_generation
 
@@ -276,23 +316,36 @@ class TestTimelinePhaseProgression:
 
             # Test phase start
             start_request = {
-                "timeline_context": {"phase_progress": 0.1, "current_phase": "development"},
+                "timeline_context": {
+                    "phase_progress": 0.1,
+                    "current_phase": "development",
+                },
                 "document_type": "progress_report",
             }
-            start_result = await generator.generate_timeline_aware_content(start_request)
+            start_result = await generator.generate_timeline_aware_content(
+                start_request
+            )
             assert "Phase Start" in start_result["content"]
 
             # Test phase midpoint
             midpoint_request = {
-                "timeline_context": {"phase_progress": 0.5, "current_phase": "development"},
+                "timeline_context": {
+                    "phase_progress": 0.5,
+                    "current_phase": "development",
+                },
                 "document_type": "progress_report",
             }
-            midpoint_result = await generator.generate_timeline_aware_content(midpoint_request)
+            midpoint_result = await generator.generate_timeline_aware_content(
+                midpoint_request
+            )
             assert "Phase Midpoint" in midpoint_result["content"]
 
             # Test phase end
             end_request = {
-                "timeline_context": {"phase_progress": 0.9, "current_phase": "development"},
+                "timeline_context": {
+                    "phase_progress": 0.9,
+                    "current_phase": "development",
+                },
                 "document_type": "progress_report",
             }
             end_result = await generator.generate_timeline_aware_content(end_request)
@@ -334,7 +387,9 @@ class TestTimelineEventPersistence:
     @pytest.mark.asyncio
     async def test_timeline_event_persistence(self):
         """Test persistence of timeline events."""
-        with patch("simulation.infrastructure.persistence.redis_event_store.RedisEventStore") as mock_store:
+        with patch(
+            "simulation.infrastructure.persistence.redis_event_store.RedisEventStore"
+        ) as mock_store:
             mock_event_store = AsyncMock()
             mock_store.return_value = mock_event_store
 
@@ -369,7 +424,9 @@ class TestTimelineEventPersistence:
     @pytest.mark.asyncio
     async def test_timeline_event_retrieval(self):
         """Test retrieval of timeline events."""
-        with patch("simulation.infrastructure.persistence.redis_event_store.RedisEventStore") as mock_store:
+        with patch(
+            "simulation.infrastructure.persistence.redis_event_store.RedisEventStore"
+        ) as mock_store:
             mock_event_store = AsyncMock()
             mock_store.return_value = mock_event_store
 
@@ -392,7 +449,9 @@ class TestTimelineEventPersistence:
             ]
 
             # Retrieve events for a timeline
-            events = await mock_event_store.get_events(timeline_id="timeline-101", event_type="milestone")
+            events = await mock_event_store.get_events(
+                timeline_id="timeline-101", event_type="milestone"
+            )
 
             assert len(events) == 2
             assert events[0]["event_type"] == "milestone"
@@ -438,8 +497,16 @@ class TestTemporalRelationshipManagement:
             assert "description" in rel
 
         # Test relationship constraints
-        precedes_rels = [r for r in relationships if r["relationship"] == TemporalRelationship.PRECEDES]
-        concurrent_rels = [r for r in relationships if r["relationship"] == TemporalRelationship.CONCURRENT]
+        precedes_rels = [
+            r
+            for r in relationships
+            if r["relationship"] == TemporalRelationship.PRECEDES
+        ]
+        concurrent_rels = [
+            r
+            for r in relationships
+            if r["relationship"] == TemporalRelationship.CONCURRENT
+        ]
 
         assert len(precedes_rels) == 1
         assert len(concurrent_rels) == 1
@@ -482,7 +549,14 @@ class TestTemporalRelationshipManagement:
         assert len(design_prereqs) == 2
 
         deployment_prereqs = get_prerequisites("deployment", dependencies)
-        expected_prereqs = {"kickoff", "requirements", "design", "design_review", "development", "testing"}
+        expected_prereqs = {
+            "kickoff",
+            "requirements",
+            "design",
+            "design_review",
+            "development",
+            "testing",
+        }
         assert deployment_prereqs == expected_prereqs
 
         project_close_prereqs = get_prerequisites("project_close", dependencies)
@@ -553,8 +627,18 @@ class TestTimelinePerformanceMonitoring:
                 "actual_date": "2024-02-05",
                 "status": "completed",
             },
-            {"name": "MVP Release", "planned_date": "2024-03-15", "actual_date": None, "status": "pending"},
-            {"name": "Final Release", "planned_date": "2024-04-30", "actual_date": None, "status": "pending"},
+            {
+                "name": "MVP Release",
+                "planned_date": "2024-03-15",
+                "actual_date": None,
+                "status": "pending",
+            },
+            {
+                "name": "Final Release",
+                "planned_date": "2024-04-30",
+                "actual_date": None,
+                "status": "pending",
+            },
         ]
 
         # Calculate milestone performance
@@ -581,7 +665,10 @@ class TestTimelinePerformanceMonitoring:
 
         # Calculate average delay
         total_delay = sum(
-            (datetime.fromisoformat(m["actual_date"]) - datetime.fromisoformat(m["planned_date"])).days
+            (
+                datetime.fromisoformat(m["actual_date"])
+                - datetime.fromisoformat(m["planned_date"])
+            ).days
             for m in delayed_milestones
         )
         avg_delay = total_delay / len(delayed_milestones)

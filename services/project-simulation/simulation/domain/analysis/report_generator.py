@@ -12,7 +12,9 @@ from simulation.domain.analysis.analysis_result import AnalysisResult, AnalysisT
 class ReportGenerator:
     """Generator for various types of analysis reports."""
 
-    def generate_summary_report(self, simulation_id: str, analysis_results: List[AnalysisResult]) -> Dict[str, Any]:
+    def generate_summary_report(
+        self, simulation_id: str, analysis_results: List[AnalysisResult]
+    ) -> Dict[str, Any]:
         """Generate a summary report from multiple analysis results."""
         report = {
             "simulation_id": simulation_id,
@@ -53,7 +55,9 @@ class ReportGenerator:
 
         # Process recommendations (remove duplicates and prioritize)
         unique_recommendations = list(set(all_recommendations))
-        report["recommendations"] = self._prioritize_recommendations(unique_recommendations)
+        report["recommendations"] = self._prioritize_recommendations(
+            unique_recommendations
+        )
 
         # Calculate overall confidence
         if analysis_results:
@@ -61,7 +65,9 @@ class ReportGenerator:
 
         return report
 
-    def generate_detailed_report(self, analysis_result: AnalysisResult) -> Dict[str, Any]:
+    def generate_detailed_report(
+        self, analysis_result: AnalysisResult
+    ) -> Dict[str, Any]:
         """Generate a detailed report for a single analysis result."""
         report = {
             "simulation_id": analysis_result.simulation_id,
@@ -87,7 +93,10 @@ class ReportGenerator:
         return report
 
     def generate_executive_summary(
-        self, simulation_id: str, key_metrics: Dict[str, Any], critical_findings: List[str]
+        self,
+        simulation_id: str,
+        key_metrics: Dict[str, Any],
+        critical_findings: List[str],
     ) -> Dict[str, Any]:
         """Generate an executive summary for stakeholders."""
         summary = {
@@ -104,10 +113,16 @@ class ReportGenerator:
         # Generate recommendations based on critical findings
         for finding in critical_findings:
             if "timeline" in finding.lower():
-                summary["recommendations"].append("Review project timeline and milestones")
-                summary["next_steps"].append("Schedule timeline review meeting within 1 week")
+                summary["recommendations"].append(
+                    "Review project timeline and milestones"
+                )
+                summary["next_steps"].append(
+                    "Schedule timeline review meeting within 1 week"
+                )
             elif "resource" in finding.lower():
-                summary["recommendations"].append("Assess resource allocation and capacity")
+                summary["recommendations"].append(
+                    "Assess resource allocation and capacity"
+                )
                 summary["next_steps"].append("Conduct resource capacity analysis")
             elif "documentation" in finding.lower():
                 summary["recommendations"].append("Improve documentation completeness")
@@ -121,14 +136,20 @@ class ReportGenerator:
 
         return summary
 
-    def _prioritize_recommendations(self, recommendations: List[str]) -> List[Dict[str, Any]]:
+    def _prioritize_recommendations(
+        self, recommendations: List[str]
+    ) -> List[Dict[str, Any]]:
         """Prioritize recommendations based on urgency and impact."""
         prioritized = []
 
         for rec in recommendations:
             priority = self._calculate_priority(rec)
             prioritized.append(
-                {"recommendation": rec, "priority": priority, "category": self._categorize_recommendation(rec)}
+                {
+                    "recommendation": rec,
+                    "priority": priority,
+                    "category": self._categorize_recommendation(rec),
+                }
             )
 
         # Sort by priority (high first)
@@ -138,7 +159,9 @@ class ReportGenerator:
         """Calculate priority level for a recommendation."""
         rec_lower = recommendation.lower()
 
-        if any(word in rec_lower for word in ["critical", "urgent", "immediate", "risk"]):
+        if any(
+            word in rec_lower for word in ["critical", "urgent", "immediate", "risk"]
+        ):
             return "high"
         elif any(word in rec_lower for word in ["consider", "review", "monitor"]):
             return "medium"
@@ -168,15 +191,21 @@ class ReportGenerator:
 
         doc_count = analysis_result.metrics.get("document_count", 0)
         if doc_count == 0:
-            insights.append("No documentation exists - consider establishing documentation standards")
+            insights.append(
+                "No documentation exists - consider establishing documentation standards"
+            )
         elif doc_count < 5:
-            insights.append("Limited documentation may impact knowledge transfer and onboarding")
+            insights.append(
+                "Limited documentation may impact knowledge transfer and onboarding"
+            )
         else:
             insights.append("Good documentation foundation established")
 
         doc_types = analysis_result.metrics.get("document_types", {})
         if len(doc_types) < 3:
-            insights.append("Documentation variety could be improved with additional types")
+            insights.append(
+                "Documentation variety could be improved with additional types"
+            )
 
         return insights
 
@@ -186,13 +215,19 @@ class ReportGenerator:
 
         total_duration = analysis_result.metrics.get("total_duration", 0)
         if total_duration < 6:
-            insights.append("Compressed timeline may lead to rushed delivery and quality issues")
+            insights.append(
+                "Compressed timeline may lead to rushed delivery and quality issues"
+            )
         elif total_duration > 20:
-            insights.append("Extended timeline may impact time-to-market and increase costs")
+            insights.append(
+                "Extended timeline may impact time-to-market and increase costs"
+            )
 
         phase_count = analysis_result.metrics.get("phase_count", 0)
         if phase_count < 3:
-            insights.append("Consider breaking project into more phases for better control")
+            insights.append(
+                "Consider breaking project into more phases for better control"
+            )
         elif phase_count > 6:
             insights.append("Many phases may complicate project management")
 
@@ -212,9 +247,13 @@ class ReportGenerator:
         if team_size > 0:
             avg_experience = total_experience / team_size
             if avg_experience < 2:
-                insights.append("Team experience level may benefit from mentorship programs")
+                insights.append(
+                    "Team experience level may benefit from mentorship programs"
+                )
             elif avg_experience > 5:
-                insights.append("Experienced team provides strong foundation for complex work")
+                insights.append(
+                    "Experienced team provides strong foundation for complex work"
+                )
 
         unique_skills = analysis_result.metrics.get("unique_skills_count", 0)
         if unique_skills < 5:

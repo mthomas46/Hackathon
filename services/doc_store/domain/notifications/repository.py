@@ -6,15 +6,15 @@ Handles notification and webhook data operations.
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import NotificationEvent, Webhook
-from ...core.repository import BaseRepository
+from services.shared.utilities import SqlRepository
 from ...db.queries import execute_query
 
 
-class NotificationsRepository(BaseRepository[NotificationEvent]):
+class NotificationsRepository(SqlRepository[NotificationEvent]):
     """Repository for notification data access."""
 
-    def __init__(self):
-        super().__init__("notification_events")
+    def __init__(self, connection_string: str):
+        super().__init__(NotificationEvent, connection_string)
 
     def _row_to_entity(self, row: Dict[str, Any]) -> NotificationEvent:
         """Convert database row to NotificationEvent entity."""

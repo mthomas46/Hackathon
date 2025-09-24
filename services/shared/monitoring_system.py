@@ -35,6 +35,7 @@ from standardized_logger import StandardizedLogger, get_all_loggers
 @dataclass
 class ServiceStatus:
     """Service status information"""
+
     name: str
     status: str  # "healthy", "warning", "critical", "unknown"
     last_check: datetime
@@ -47,10 +48,11 @@ class ServiceStatus:
 @dataclass
 class Alert:
     """Monitoring alert"""
+
     alert_id: str
     service_name: str
     alert_type: str  # "health", "performance", "error_rate", "resource"
-    severity: str    # "info", "warning", "critical"
+    severity: str  # "info", "warning", "critical"
     message: str
     timestamp: datetime = field(default_factory=datetime.now)
     resolved: bool = False
@@ -60,6 +62,7 @@ class Alert:
 @dataclass
 class DashboardMetrics:
     """Dashboard metrics summary"""
+
     total_services: int
     healthy_services: int
     warning_services: int
@@ -93,9 +96,9 @@ class MonitoringDashboard:
         self.check_interval = 30  # seconds
         self.alert_thresholds = {
             "response_time": 2.0,  # seconds
-            "error_rate": 0.05,    # 5%
-            "cpu_usage": 80.0,     # percent
-            "memory_usage": 85.0   # percent
+            "error_rate": 0.05,  # 5%
+            "cpu_usage": 80.0,  # percent
+            "memory_usage": 85.0,  # percent
         }
 
         # Dashboard state
@@ -114,9 +117,7 @@ class MonitoringDashboard:
 
         self.is_running = True
         self.monitoring_thread = threading.Thread(
-            target=self._monitoring_loop,
-            daemon=True,
-            name="monitoring-dashboard"
+            target=self._monitoring_loop, daemon=True, name="monitoring-dashboard"
         )
         self.monitoring_thread.start()
         self.logger.info("📊 Monitoring dashboard started")
@@ -156,7 +157,7 @@ class MonitoringDashboard:
                     last_check=datetime.now(),
                     response_time=health_status["metrics"].get("response_time"),
                     version=health_status.get("version"),
-                    uptime=health_status.get("uptime_seconds")
+                    uptime=health_status.get("uptime_seconds"),
                 )
 
                 self.services[service_name] = service_status
@@ -169,7 +170,7 @@ class MonitoringDashboard:
                     name=service_name,
                     status="unknown",
                     last_check=datetime.now(),
-                    error_message=str(e)
+                    error_message=str(e),
                 )
 
     def _check_alerts(self):
@@ -181,33 +182,41 @@ class MonitoringDashboard:
                     service_name=service_name,
                     alert_type="health",
                     severity="critical",
-                    message=f"Service {service_name} is in critical health state"
+                    message=f"Service {service_name} is in critical health state",
                 )
             elif service_status.status == "warning":
                 self._create_alert(
                     service_name=service_name,
                     alert_type="health",
                     severity="warning",
-                    message=f"Service {service_name} health status is warning"
+                    message=f"Service {service_name} health status is warning",
                 )
 
             # Response time alerts
-            if service_status.response_time and service_status.response_time > self.alert_thresholds["response_time"]:
+            if (
+                service_status.response_time
+                and service_status.response_time
+                > self.alert_thresholds["response_time"]
+            ):
                 self._create_alert(
                     service_name=service_name,
                     alert_type="performance",
                     severity="warning",
-                    message=f"Service {service_name} response time ({service_status.response_time:.2f}s) exceeds threshold"
+                    message=f"Service {service_name} response time ({service_status.response_time:.2f}s) exceeds threshold",
                 )
 
-    def _create_alert(self, service_name: str, alert_type: str, severity: str, message: str):
+    def _create_alert(
+        self, service_name: str, alert_type: str, severity: str, message: str
+    ):
         """Create a new alert"""
         # Check if similar alert already exists and is unresolved
         for alert in self.alerts:
-            if (alert.service_name == service_name and
-                alert.alert_type == alert_type and
-                alert.severity == severity and
-                not alert.resolved):
+            if (
+                alert.service_name == service_name
+                and alert.alert_type == alert_type
+                and alert.severity == severity
+                and not alert.resolved
+            ):
                 # Update existing alert timestamp
                 alert.timestamp = datetime.now()
                 return
@@ -219,15 +228,18 @@ class MonitoringDashboard:
             service_name=service_name,
             alert_type=alert_type,
             severity=severity,
-            message=message
+            message=message,
         )
 
         self.alerts.append(alert)
-        self.logger.warning(f"🚨 Alert created: {message}", extra={
-            "alert_id": alert_id,
-            "alert_type": alert_type,
-            "severity": severity
-        })
+        self.logger.warning(
+            f"🚨 Alert created: {message}",
+            extra={
+                "alert_id": alert_id,
+                "alert_type": alert_type,
+                "severity": severity,
+            },
+        )
 
     def resolve_alert(self, alert_id: str):
         """Resolve an alert"""
@@ -235,10 +247,13 @@ class MonitoringDashboard:
             if alert.alert_id == alert_id and not alert.resolved:
                 alert.resolved = True
                 alert.resolved_at = datetime.now()
-                self.logger.info(f"✅ Alert resolved: {alert.message}", extra={
-                    "alert_id": alert_id,
-                    "resolution_time": alert.resolved_at.isoformat()
-                })
+                self.logger.info(
+                    f"✅ Alert resolved: {alert.message}",
+                    extra={
+                        "alert_id": alert_id,
+                        "resolution_time": alert.resolved_at.isoformat(),
+                    },
+                )
                 break
 
     def _update_dashboard_metrics(self):
@@ -247,16 +262,28 @@ class MonitoringDashboard:
             return
 
         total_services = len(self.services)
-        healthy_services = sum(1 for s in self.services.values() if s.status == "healthy")
-        warning_services = sum(1 for s in self.services.values() if s.status == "warning")
-        critical_services = sum(1 for s in self.services.values() if s.status == "critical")
-        unknown_services = sum(1 for s in self.services.values() if s.status == "unknown")
+        healthy_services = sum(
+            1 for s in self.services.values() if s.status == "healthy"
+        )
+        warning_services = sum(
+            1 for s in self.services.values() if s.status == "warning"
+        )
+        critical_services = sum(
+            1 for s in self.services.values() if s.status == "critical"
+        )
+        unknown_services = sum(
+            1 for s in self.services.values() if s.status == "unknown"
+        )
 
         active_alerts = sum(1 for a in self.alerts if not a.resolved)
 
         # Calculate average response time
-        response_times = [s.response_time for s in self.services.values() if s.response_time]
-        avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+        response_times = [
+            s.response_time for s in self.services.values() if s.response_time
+        ]
+        avg_response_time = (
+            sum(response_times) / len(response_times) if response_times else 0
+        )
 
         # Get total requests and error rate from all loggers
         total_requests = 0
@@ -279,7 +306,7 @@ class MonitoringDashboard:
             active_alerts=active_alerts,
             avg_response_time=avg_response_time,
             total_requests=total_requests,
-            error_rate=error_rate
+            error_rate=error_rate,
         )
 
         self.metrics_history.append(metrics)
@@ -302,37 +329,62 @@ class MonitoringDashboard:
         # Service status summary
         service_summary = []
         for service_name, service_status in self.services.items():
-            service_summary.append({
-                "name": service_name,
-                "status": service_status.status,
-                "last_check": service_status.last_check.isoformat(),
-                "response_time": service_status.response_time,
-                "uptime": service_status.uptime,
-                "version": service_status.version
-            })
+            service_summary.append(
+                {
+                    "name": service_name,
+                    "status": service_status.status,
+                    "last_check": service_status.last_check.isoformat(),
+                    "response_time": service_status.response_time,
+                    "uptime": service_status.uptime,
+                    "version": service_status.version,
+                }
+            )
 
         dashboard_data = {
             "timestamp": datetime.now().isoformat(),
             "services": service_summary,
-            "alerts": [{
-                "id": a.alert_id,
-                "service": a.service_name,
-                "type": a.alert_type,
-                "severity": a.severity,
-                "message": a.message,
-                "timestamp": a.timestamp.isoformat()
-            } for a in active_alerts],
-            "metrics": {
-                "total_services": latest_metrics.total_services if latest_metrics else 0,
-                "healthy_services": latest_metrics.healthy_services if latest_metrics else 0,
-                "warning_services": latest_metrics.warning_services if latest_metrics else 0,
-                "critical_services": latest_metrics.critical_services if latest_metrics else 0,
-                "unknown_services": latest_metrics.unknown_services if latest_metrics else 0,
-                "active_alerts": latest_metrics.active_alerts if latest_metrics else 0,
-                "avg_response_time": latest_metrics.avg_response_time if latest_metrics else 0,
-                "total_requests": latest_metrics.total_requests if latest_metrics else 0,
-                "error_rate": latest_metrics.error_rate if latest_metrics else 0
-            } if latest_metrics else {}
+            "alerts": [
+                {
+                    "id": a.alert_id,
+                    "service": a.service_name,
+                    "type": a.alert_type,
+                    "severity": a.severity,
+                    "message": a.message,
+                    "timestamp": a.timestamp.isoformat(),
+                }
+                for a in active_alerts
+            ],
+            "metrics": (
+                {
+                    "total_services": (
+                        latest_metrics.total_services if latest_metrics else 0
+                    ),
+                    "healthy_services": (
+                        latest_metrics.healthy_services if latest_metrics else 0
+                    ),
+                    "warning_services": (
+                        latest_metrics.warning_services if latest_metrics else 0
+                    ),
+                    "critical_services": (
+                        latest_metrics.critical_services if latest_metrics else 0
+                    ),
+                    "unknown_services": (
+                        latest_metrics.unknown_services if latest_metrics else 0
+                    ),
+                    "active_alerts": (
+                        latest_metrics.active_alerts if latest_metrics else 0
+                    ),
+                    "avg_response_time": (
+                        latest_metrics.avg_response_time if latest_metrics else 0
+                    ),
+                    "total_requests": (
+                        latest_metrics.total_requests if latest_metrics else 0
+                    ),
+                    "error_rate": latest_metrics.error_rate if latest_metrics else 0,
+                }
+                if latest_metrics
+                else {}
+            ),
         }
 
         return dashboard_data
@@ -345,9 +397,9 @@ class MonitoringDashboard:
             print(f"❌ {data['error']}")
             return
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("📊 ECOSYSTEM MONITORING DASHBOARD")
-        print("="*80)
+        print("=" * 80)
 
         # Service status overview
         metrics = data["metrics"]
@@ -360,7 +412,7 @@ class MonitoringDashboard:
         print(f"\n🚨 Active Alerts: {metrics.get('active_alerts', 0)}")
 
         # Performance metrics
-        if metrics.get('avg_response_time', 0) > 0:
+        if metrics.get("avg_response_time", 0) > 0:
             print("\n⚡ Performance:")
             print(".2f")
             print(f"  📊 Total Requests: {metrics.get('total_requests', 0)}")
@@ -372,11 +424,13 @@ class MonitoringDashboard:
                 "healthy": "✅",
                 "warning": "⚠️",
                 "critical": "🔴",
-                "unknown": "❓"
+                "unknown": "❓",
             }.get(service["status"], "❓")
 
             response_time = ".2f" if service["response_time"] else "N/A"
-            print(f"  {status_icon} {service['name']:<20} {service['status']:<8} {response_time}")
+            print(
+                f"  {status_icon} {service['name']:<20} {service['status']:<8} {response_time}"
+            )
 
         # Active alerts
         if data["alerts"]:
@@ -386,7 +440,7 @@ class MonitoringDashboard:
                 print(f"  {severity_icon} [{alert['service']}] {alert['message']}")
 
         print(f"\n📅 Last Updated: {data['timestamp']}")
-        print("="*80)
+        print("=" * 80)
 
     def save_dashboard_report(self, filename: Optional[str] = None) -> Path:
         """Save dashboard report to JSON file"""
@@ -397,13 +451,15 @@ class MonitoringDashboard:
         report_path = self.reports_dir / filename
 
         data = self.get_dashboard_data()
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             json.dump(data, f, indent=2, default=str)
 
         self.logger.info(f"💾 Dashboard report saved: {report_path}")
         return report_path
 
-    def get_service_logs(self, service_name: str, lines: int = 50) -> Optional[List[str]]:
+    def get_service_logs(
+        self, service_name: str, lines: int = 50
+    ) -> Optional[List[str]]:
         """Get recent logs for a specific service"""
         # This would integrate with log aggregation system
         # For now, return a placeholder
@@ -417,8 +473,7 @@ class MonitoringDashboard:
         # Filter metrics for the specified time period
         cutoff_time = datetime.now() - timedelta(hours=hours)
         recent_metrics = [
-            m for m in self.metrics_history
-            if m.last_updated >= cutoff_time
+            m for m in self.metrics_history if m.last_updated >= cutoff_time
         ]
 
         if not recent_metrics:
@@ -428,10 +483,18 @@ class MonitoringDashboard:
         trends = {
             "period_hours": hours,
             "data_points": len(recent_metrics),
-            "avg_response_time_trend": self._calculate_trend([m.avg_response_time for m in recent_metrics]),
-            "error_rate_trend": self._calculate_trend([m.error_rate for m in recent_metrics]),
-            "healthy_services_trend": self._calculate_trend([m.healthy_services for m in recent_metrics]),
-            "active_alerts_trend": self._calculate_trend([m.active_alerts for m in recent_metrics])
+            "avg_response_time_trend": self._calculate_trend(
+                [m.avg_response_time for m in recent_metrics]
+            ),
+            "error_rate_trend": self._calculate_trend(
+                [m.error_rate for m in recent_metrics]
+            ),
+            "healthy_services_trend": self._calculate_trend(
+                [m.healthy_services for m in recent_metrics]
+            ),
+            "active_alerts_trend": self._calculate_trend(
+                [m.active_alerts for m in recent_metrics]
+            ),
         }
 
         return trends
@@ -442,8 +505,8 @@ class MonitoringDashboard:
             return "insufficient_data"
 
         # Simple linear trend calculation
-        first_half = values[:len(values)//2]
-        second_half = values[len(values)//2:]
+        first_half = values[: len(values) // 2]
+        second_half = values[len(values) // 2 :]
 
         first_avg = sum(first_half) / len(first_half) if first_half else 0
         second_avg = sum(second_half) / len(second_half) if second_half else 0

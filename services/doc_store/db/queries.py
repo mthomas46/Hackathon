@@ -10,7 +10,10 @@ from .connection import doc_store_db_connection
 
 
 def execute_query(
-    query: str, params: Optional[Tuple] = None, fetch_one: bool = False, fetch_all: bool = False
+    query: str,
+    params: Optional[Tuple] = None,
+    fetch_one: bool = False,
+    fetch_all: bool = False,
 ) -> Union[None, Dict, List[Dict]]:
     """Execute a database query with proper connection management."""
     with doc_store_db_connection() as conn:
@@ -36,7 +39,9 @@ def execute_query(
 
 def get_document_by_id(document_id: str) -> Optional[Dict[str, Any]]:
     """Get document by ID."""
-    return execute_query("SELECT * FROM documents WHERE id = ?", (document_id,), fetch_one=True)
+    return execute_query(
+        "SELECT * FROM documents WHERE id = ?", (document_id,), fetch_one=True
+    )
 
 
 def get_documents_list(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
@@ -51,7 +56,9 @@ def get_documents_list(limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]
 def search_documents(query: str, limit: int = 50) -> List[Dict[str, Any]]:
     """Full-text search documents."""
     fts_results = execute_query(
-        "SELECT rowid FROM documents_fts WHERE content MATCH ? LIMIT ?", (query, limit), fetch_all=True
+        "SELECT rowid FROM documents_fts WHERE content MATCH ? LIMIT ?",
+        (query, limit),
+        fetch_all=True,
     )
 
     if not fts_results:
@@ -62,11 +69,19 @@ def search_documents(query: str, limit: int = 50) -> List[Dict[str, Any]]:
 
     # Fetch actual documents
     placeholders = ",".join("?" for _ in doc_ids)
-    return execute_query(f"SELECT * FROM documents WHERE rowid IN ({placeholders})", tuple(doc_ids), fetch_all=True)
+    return execute_query(
+        f"SELECT * FROM documents WHERE rowid IN ({placeholders})",
+        tuple(doc_ids),
+        fetch_all=True,
+    )
 
 
 def insert_document(
-    doc_id: str, content: str, content_hash: str, metadata: Dict[str, Any], correlation_id: Optional[str] = None
+    doc_id: str,
+    content: str,
+    content_hash: str,
+    metadata: Dict[str, Any],
+    correlation_id: Optional[str] = None,
 ) -> None:
     """Insert a new document."""
     from services.shared.utilities import utc_now
@@ -136,7 +151,9 @@ def insert_analysis(
     return analysis_id
 
 
-def get_analyses_by_document(document_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+def get_analyses_by_document(
+    document_id: str, limit: int = 100
+) -> List[Dict[str, Any]]:
     """Get analyses for a document."""
     return execute_query(
         "SELECT * FROM analyses WHERE document_id = ? ORDER BY created_at DESC LIMIT ?",
@@ -146,7 +163,10 @@ def get_analyses_by_document(document_id: str, limit: int = 100) -> List[Dict[st
 
 
 def insert_bulk_operation(
-    operation_id: str, operation_type: str, total_items: int, metadata: Optional[Dict[str, Any]] = None
+    operation_id: str,
+    operation_type: str,
+    total_items: int,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Insert bulk operation record."""
     from services.shared.utilities import utc_now
@@ -156,7 +176,13 @@ def insert_bulk_operation(
         INSERT INTO bulk_operations (operation_id, operation_type, total_items, metadata, created_at)
         VALUES (?, ?, ?, ?, ?)
     """,
-        (operation_id, operation_type, total_items, json.dumps(metadata) if metadata else None, utc_now().isoformat()),
+        (
+            operation_id,
+            operation_type,
+            total_items,
+            json.dumps(metadata) if metadata else None,
+            utc_now().isoformat(),
+        ),
     )
 
 
@@ -194,10 +220,16 @@ def update_bulk_operation_status(
 
 def get_bulk_operation_status(operation_id: str) -> Optional[Dict[str, Any]]:
     """Get bulk operation status."""
-    return execute_query("SELECT * FROM bulk_operations WHERE operation_id = ?", (operation_id,), fetch_one=True)
+    return execute_query(
+        "SELECT * FROM bulk_operations WHERE operation_id = ?",
+        (operation_id,),
+        fetch_one=True,
+    )
 
 
-def list_bulk_operations(status: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+def list_bulk_operations(
+    status: Optional[str] = None, limit: int = 50
+) -> List[Dict[str, Any]]:
     """List bulk operations with optional status filter."""
     if status:
         return execute_query(
@@ -206,4 +238,8 @@ def list_bulk_operations(status: Optional[str] = None, limit: int = 50) -> List[
             fetch_all=True,
         )
     else:
-        return execute_query("SELECT * FROM bulk_operations ORDER BY created_at DESC LIMIT ?", (limit,), fetch_all=True)
+        return execute_query(
+            "SELECT * FROM bulk_operations ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+            fetch_all=True,
+        )

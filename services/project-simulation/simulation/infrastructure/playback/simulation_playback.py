@@ -9,7 +9,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from ...application.services.simulation_application_service import SimulationApplicationService
+from ...application.services.simulation_application_service import (
+    SimulationApplicationService,
+)
 from ...infrastructure.logging import SimulationLogger
 
 
@@ -40,19 +42,31 @@ class PlaybackSession:
 class SimulationPlaybackEngine:
     """Engine for replaying simulations using stored data."""
 
-    def __init__(self, application_service: SimulationApplicationService, logger: SimulationLogger):
+    def __init__(
+        self,
+        application_service: SimulationApplicationService,
+        logger: SimulationLogger,
+    ):
         self.application_service = application_service
         self.logger = logger
         self.active_sessions: Dict[str, PlaybackSession] = {}
 
-    async def start_playback(self, simulation_id: str, run_id: str, playback_speed: float = 1.0) -> str:
+    async def start_playback(
+        self, simulation_id: str, run_id: str, playback_speed: float = 1.0
+    ) -> str:
         """Start a new playback session for a simulation run."""
-        session_id = f"playback_{simulation_id}_{run_id}_{int(datetime.now().timestamp())}"
+        session_id = (
+            f"playback_{simulation_id}_{run_id}_{int(datetime.now().timestamp())}"
+        )
 
         # Get run data
-        run_data = await self.application_service.get_simulation_run_data(simulation_id, run_id)
+        run_data = await self.application_service.get_simulation_run_data(
+            simulation_id, run_id
+        )
         if not run_data:
-            raise ValueError(f"Run data not found for simulation {simulation_id}, run {run_id}")
+            raise ValueError(
+                f"Run data not found for simulation {simulation_id}, run {run_id}"
+            )
 
         # Create playback session
         session = PlaybackSession(
@@ -64,14 +78,22 @@ class SimulationPlaybackEngine:
         )
 
         self.active_sessions[session_id] = session
-        self.logger.info("Started simulation playback session", session_id=session_id, simulation_id=simulation_id)
+        self.logger.info(
+            "Started simulation playback session",
+            session_id=session_id,
+            simulation_id=simulation_id,
+        )
 
         return session_id
 
-    async def get_playback_events(self, simulation_id: str, run_id: str) -> List[PlaybackEvent]:
+    async def get_playback_events(
+        self, simulation_id: str, run_id: str
+    ) -> List[PlaybackEvent]:
         """Get all events for a simulation run playback."""
         # Get run data
-        run_data = await self.application_service.get_simulation_run_data(simulation_id, run_id)
+        run_data = await self.application_service.get_simulation_run_data(
+            simulation_id, run_id
+        )
         if not run_data:
             return []
 
@@ -94,7 +116,9 @@ class SimulationPlaybackEngine:
             sequence += 1
 
         # Document generation events
-        documents = await self.application_service.get_simulation_documents(simulation_id)
+        documents = await self.application_service.get_simulation_documents(
+            simulation_id
+        )
         for doc in documents:
             events.append(
                 PlaybackEvent(
@@ -133,10 +157,15 @@ class SimulationPlaybackEngine:
         if "end_time" in run_data:
             events.append(
                 PlaybackEvent(
-                    timestamp=datetime.fromisoformat(run_data.get("end_time", run_data["start_time"])),
+                    timestamp=datetime.fromisoformat(
+                        run_data.get("end_time", run_data["start_time"])
+                    ),
                     event_type="simulation_completed",
                     simulation_id=simulation_id,
-                    data={"run_id": run_id, "final_status": run_data.get("status", "completed")},
+                    data={
+                        "run_id": run_id,
+                        "final_status": run_data.get("status", "completed"),
+                    },
                     sequence_number=sequence,
                 )
             )
@@ -222,22 +251,34 @@ class SimulationPlaybackEngine:
 class SimulationReconstructor:
     """Reconstructs simulation state from stored data."""
 
-    def __init__(self, application_service: SimulationApplicationService, logger: SimulationLogger):
+    def __init__(
+        self,
+        application_service: SimulationApplicationService,
+        logger: SimulationLogger,
+    ):
         self.application_service = application_service
         self.logger = logger
 
-    async def reconstruct_simulation(self, simulation_id: str, run_id: str) -> Dict[str, Any]:
+    async def reconstruct_simulation(
+        self, simulation_id: str, run_id: str
+    ) -> Dict[str, Any]:
         """Reconstruct the complete simulation state from stored data."""
         # Get simulation
-        simulation = await self.application_service._simulation_repository.find_by_id(simulation_id)
+        simulation = await self.application_service._simulation_repository.find_by_id(
+            simulation_id
+        )
         if not simulation:
             raise ValueError(f"Simulation {simulation_id} not found")
 
         # Get run data
-        run_data = await self.application_service.get_simulation_run_data(simulation_id, run_id)
+        run_data = await self.application_service.get_simulation_run_data(
+            simulation_id, run_id
+        )
 
         # Get documents
-        documents = await self.application_service.get_simulation_documents(simulation_id)
+        documents = await self.application_service.get_simulation_documents(
+            simulation_id
+        )
 
         # Get prompts
         prompts = await self.application_service.get_simulation_prompts(simulation_id)
@@ -270,10 +311,16 @@ class SimulationReconstructor:
 
         return reconstructed_state
 
-    async def get_document_content(self, simulation_id: str, document_id: str) -> Optional[Dict[str, Any]]:
+    async def get_document_content(
+        self, simulation_id: str, document_id: str
+    ) -> Optional[Dict[str, Any]]:
         """Get document content from doc-store via simulation linkage."""
-        documents = await self.application_service.get_simulation_documents(simulation_id)
-        doc_info = next((doc for doc in documents if doc["document_id"] == document_id), None)
+        documents = await self.application_service.get_simulation_documents(
+            simulation_id
+        )
+        doc_info = next(
+            (doc for doc in documents if doc["document_id"] == document_id), None
+        )
 
         if not doc_info:
             return None
@@ -291,10 +338,14 @@ class SimulationReconstructor:
             },
         }
 
-    async def get_prompt_content(self, simulation_id: str, prompt_id: str) -> Optional[Dict[str, Any]]:
+    async def get_prompt_content(
+        self, simulation_id: str, prompt_id: str
+    ) -> Optional[Dict[str, Any]]:
         """Get prompt content from prompt-store via simulation linkage."""
         prompts = await self.application_service.get_simulation_prompts(simulation_id)
-        prompt_info = next((prompt for prompt in prompts if prompt["prompt_id"] == prompt_id), None)
+        prompt_info = next(
+            (prompt for prompt in prompts if prompt["prompt_id"] == prompt_id), None
+        )
 
         if not prompt_info:
             return None

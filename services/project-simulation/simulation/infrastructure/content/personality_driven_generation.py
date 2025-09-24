@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.content.context_aware_generation import (
     CommunicationStyle,
@@ -241,8 +243,16 @@ class PersonalityProfile:
         return {
             "preferred_sections": self._get_preferred_sections(),
             "writing_style": self.writing_tone,
-            "detail_level": "high" if self.primary_trait == PersonalityTrait.DETAIL_ORIENTED else "medium",
-            "structure_preference": "hierarchical" if self.primary_trait == PersonalityTrait.STRATEGIC else "logical",
+            "detail_level": (
+                "high"
+                if self.primary_trait == PersonalityTrait.DETAIL_ORIENTED
+                else "medium"
+            ),
+            "structure_preference": (
+                "hierarchical"
+                if self.primary_trait == PersonalityTrait.STRATEGIC
+                else "logical"
+            ),
             "emphasis_areas": self._get_emphasis_areas(),
         }
 
@@ -259,7 +269,9 @@ class PersonalityProfile:
             PersonalityTrait.INNOVATIVE: ["future", "technology", "scalability"],
         }
 
-        return preferences.get(self.primary_trait, ["overview", "details", "conclusion"])
+        return preferences.get(
+            self.primary_trait, ["overview", "details", "conclusion"]
+        )
 
     def _get_emphasis_areas(self) -> List[str]:
         """Get areas of emphasis."""
@@ -309,7 +321,9 @@ class PersonalityDrivenGenerator:
             team_dynamics = self._analyze_team_dynamics()
 
             # Select primary author or determine most influential
-            primary_author = self._select_primary_author(primary_author_id, team_members)
+            primary_author = self._select_primary_author(
+                primary_author_id, team_members
+            )
 
             # Generate base content using context-aware generator
             base_content = self.context_generator.generate_context_aware_document(
@@ -333,7 +347,11 @@ class PersonalityDrivenGenerator:
             return personality_influenced_content
 
         except Exception as e:
-            self.logger.error("Personality-driven generation failed", document_type=document_type, error=str(e))
+            self.logger.error(
+                "Personality-driven generation failed",
+                document_type=document_type,
+                error=str(e),
+            )
             # Fallback to basic generation
             return self.context_generator.generate_context_aware_document(
                 document_type, project_config, team_members, timeline, **kwargs
@@ -344,7 +362,10 @@ class PersonalityDrivenGenerator:
         self.personality_profiles = {}
 
         for member in team_members:
-            member_id = member.get("member_id", member.get("id", f"member_{len(self.personality_profiles)}"))
+            member_id = member.get(
+                "member_id",
+                member.get("id", f"member_{len(self.personality_profiles)}"),
+            )
             self.personality_profiles[member_id] = PersonalityProfile(member_id, member)
 
     def _analyze_team_dynamics(self) -> Dict[str, Any]:
@@ -369,8 +390,12 @@ class PersonalityDrivenGenerator:
         style_diversity = len(style_counts) / max(1, len(self.personality_profiles))
 
         # Identify dominant traits
-        dominant_trait = max(trait_counts.items(), key=lambda x: x[1])[0] if trait_counts else None
-        dominant_style = max(style_counts.items(), key=lambda x: x[1])[0] if style_counts else None
+        dominant_trait = (
+            max(trait_counts.items(), key=lambda x: x[1])[0] if trait_counts else None
+        )
+        dominant_style = (
+            max(style_counts.items(), key=lambda x: x[1])[0] if style_counts else None
+        )
 
         return {
             "trait_distribution": trait_counts,
@@ -379,7 +404,9 @@ class PersonalityDrivenGenerator:
             "dominant_style": dominant_style,
             "trait_diversity_score": trait_diversity,
             "style_diversity_score": style_diversity,
-            "collaboration_effectiveness": self._calculate_collaboration_effectiveness(trait_counts, style_counts),
+            "collaboration_effectiveness": self._calculate_collaboration_effectiveness(
+                trait_counts, style_counts
+            ),
         }
 
     def _calculate_collaboration_effectiveness(
@@ -408,12 +435,18 @@ class PersonalityDrivenGenerator:
 
         # Select most influential team member
         if self.personality_profiles:
-            return max(self.personality_profiles.values(), key=lambda p: p.influence_score * p.expertise_score)
+            return max(
+                self.personality_profiles.values(),
+                key=lambda p: p.influence_score * p.expertise_score,
+            )
 
         return None
 
     def _apply_personality_influence(
-        self, content: Dict[str, Any], primary_author: Optional[PersonalityProfile], team_dynamics: Dict[str, Any]
+        self,
+        content: Dict[str, Any],
+        primary_author: Optional[PersonalityProfile],
+        team_dynamics: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Apply personality influence to generated content."""
         if not primary_author:
@@ -431,12 +464,18 @@ class PersonalityDrivenGenerator:
                     influenced_content["content"][section_name] = influenced_section
 
         # Apply team influence to overall document
-        influenced_content = self._apply_team_influence(influenced_content, team_dynamics)
+        influenced_content = self._apply_team_influence(
+            influenced_content, team_dynamics
+        )
 
         return influenced_content
 
     def _apply_section_personality(
-        self, content: str, section_name: str, author: PersonalityProfile, team_dynamics: Dict[str, Any]
+        self,
+        content: str,
+        section_name: str,
+        author: PersonalityProfile,
+        team_dynamics: Dict[str, Any],
     ) -> str:
         """Apply personality influence to a specific content section."""
         # Get section-specific personality adjustments
@@ -446,10 +485,14 @@ class PersonalityDrivenGenerator:
         content = self._apply_writing_tone(content, author.writing_tone)
 
         # Apply detail level
-        content = self._apply_detail_level(content, author.content_preferences["detail_level"])
+        content = self._apply_detail_level(
+            content, author.content_preferences["detail_level"]
+        )
 
         # Apply structure preference
-        content = self._apply_structure_preference(content, author.content_preferences["structure_preference"])
+        content = self._apply_structure_preference(
+            content, author.content_preferences["structure_preference"]
+        )
 
         # Add personality-specific phrases and perspectives
         content = self._add_personality_phrases(content, author, section_name)
@@ -460,7 +503,9 @@ class PersonalityDrivenGenerator:
 
         return content
 
-    def _get_section_adjustments(self, section_name: str, author: PersonalityProfile) -> List[callable]:
+    def _get_section_adjustments(
+        self, section_name: str, author: PersonalityProfile
+    ) -> List[callable]:
         """Get section-specific adjustments based on author personality."""
         adjustments = []
 
@@ -513,13 +558,21 @@ class PersonalityDrivenGenerator:
     def _apply_detail_level(self, content: str, detail_level: str) -> str:
         """Apply detail level to content."""
         if detail_level == "high":
-            return content + "\n\nDetailed specifications and comprehensive analysis have been documented separately."
+            return (
+                content
+                + "\n\nDetailed specifications and comprehensive analysis have been documented separately."
+            )
         elif detail_level == "low":
-            return content + "\n\nHigh-level overview provided; detailed specifications available upon request."
+            return (
+                content
+                + "\n\nHigh-level overview provided; detailed specifications available upon request."
+            )
         else:
             return content
 
-    def _apply_structure_preference(self, content: str, structure_preference: str) -> str:
+    def _apply_structure_preference(
+        self, content: str, structure_preference: str
+    ) -> str:
         """Apply structure preference to content."""
         if structure_preference == "hierarchical":
             return f"Strategic Overview:\n{content}"
@@ -528,7 +581,9 @@ class PersonalityDrivenGenerator:
         else:
             return content
 
-    def _add_personality_phrases(self, content: str, author: PersonalityProfile, section_name: str) -> str:
+    def _add_personality_phrases(
+        self, content: str, author: PersonalityProfile, section_name: str
+    ) -> str:
         """Add personality-specific phrases to content."""
         phrases = self._get_personality_phrases(author.primary_trait, section_name)
 
@@ -538,7 +593,9 @@ class PersonalityDrivenGenerator:
 
         return content
 
-    def _get_personality_phrases(self, trait: PersonalityTrait, section_name: str) -> List[str]:
+    def _get_personality_phrases(
+        self, trait: PersonalityTrait, section_name: str
+    ) -> List[str]:
         """Get personality-specific phrases for content."""
         phrase_library = {
             PersonalityTrait.STRATEGIC: {
@@ -588,43 +645,71 @@ class PersonalityDrivenGenerator:
 
     def _add_strategic_emphasis(self, content: str) -> str:
         """Add strategic emphasis to content."""
-        return content + "\n\nThis approach positions the project for long-term success and competitive advantage."
+        return (
+            content
+            + "\n\nThis approach positions the project for long-term success and competitive advantage."
+        )
 
     def _add_visionary_perspective(self, content: str) -> str:
         """Add visionary perspective to content."""
-        return content + "\n\nVisionary architecture anticipates future technological trends and business needs."
+        return (
+            content
+            + "\n\nVisionary architecture anticipates future technological trends and business needs."
+        )
 
     def _add_analytical_depth(self, content: str) -> str:
         """Add analytical depth to content."""
-        return content + "\n\nAnalytical framework provides quantitative metrics for decision-making and optimization."
+        return (
+            content
+            + "\n\nAnalytical framework provides quantitative metrics for decision-making and optimization."
+        )
 
     def _add_data_driven_insights(self, content: str) -> str:
         """Add data-driven insights to content."""
-        return content + "\n\nData-driven insights inform risk mitigation strategies and contingency planning."
+        return (
+            content
+            + "\n\nData-driven insights inform risk mitigation strategies and contingency planning."
+        )
 
     def _add_comprehensive_details(self, content: str) -> str:
         """Add comprehensive details to content."""
-        return content + "\n\nComprehensive documentation ensures complete understanding and successful implementation."
+        return (
+            content
+            + "\n\nComprehensive documentation ensures complete understanding and successful implementation."
+        )
 
     def _add_quality_focus(self, content: str) -> str:
         """Add quality focus to content."""
-        return content + "\n\nQuality assurance processes guarantee reliability and user satisfaction."
+        return (
+            content
+            + "\n\nQuality assurance processes guarantee reliability and user satisfaction."
+        )
 
     def _add_innovative_ideas(self, content: str) -> str:
         """Add innovative ideas to content."""
-        return content + "\n\nInnovative concepts push boundaries and create unique value propositions."
+        return (
+            content
+            + "\n\nInnovative concepts push boundaries and create unique value propositions."
+        )
 
     def _add_creative_solutions(self, content: str) -> str:
         """Add creative solutions to content."""
-        return content + "\n\nCreative problem-solving generates breakthrough solutions and competitive advantages."
+        return (
+            content
+            + "\n\nCreative problem-solving generates breakthrough solutions and competitive advantages."
+        )
 
-    def _apply_team_influence(self, content: Dict[str, Any], team_dynamics: Dict[str, Any]) -> Dict[str, Any]:
+    def _apply_team_influence(
+        self, content: Dict[str, Any], team_dynamics: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Apply team-level influence to the overall document."""
         influenced_content = content.copy()
 
         # Add team consensus indicators
         if team_dynamics.get("dominant_trait") == "collaborative":
-            influenced_content["team_consensus"] = "Document reflects team consensus and collaborative decision-making."
+            influenced_content["team_consensus"] = (
+                "Document reflects team consensus and collaborative decision-making."
+            )
 
         # Add diversity indicators
         diversity_score = team_dynamics.get("trait_diversity_score", 0)
@@ -636,9 +721,13 @@ class PersonalityDrivenGenerator:
         # Add communication style indicators
         dominant_style = team_dynamics.get("dominant_style")
         if dominant_style == "formal":
-            influenced_content["communication_style"] = "Professional and formal communication standards maintained."
+            influenced_content["communication_style"] = (
+                "Professional and formal communication standards maintained."
+            )
         elif dominant_style == "technical":
-            influenced_content["communication_style"] = "Technical precision and accuracy emphasized throughout."
+            influenced_content["communication_style"] = (
+                "Technical precision and accuracy emphasized throughout."
+            )
 
         return influenced_content
 

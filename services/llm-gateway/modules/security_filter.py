@@ -95,10 +95,14 @@ class SecurityFilter:
 
         # Try to load from config
         try:
-            config_keywords = get_config_value("SENSITIVE_KEYWORDS", "", section="security")
+            config_keywords = get_config_value(
+                "SENSITIVE_KEYWORDS", "", section="security"
+            )
             if config_keywords:
                 # Parse comma-separated keywords
-                additional_keywords = {kw.strip().lower() for kw in config_keywords.split(",")}
+                additional_keywords = {
+                    kw.strip().lower() for kw in config_keywords.split(",")
+                }
                 default_keywords.update(additional_keywords)
         except Exception:
             pass
@@ -112,17 +116,28 @@ class SecurityFilter:
                 "SECURE_ONLY_MODELS", "ollama,bedrock", section="secure_analyzer"
             ).split(","),
             "all_providers": get_config_value(
-                "ALL_PROVIDERS", "bedrock,ollama,openai,anthropic,grok", section="secure_analyzer"
+                "ALL_PROVIDERS",
+                "bedrock,ollama,openai,anthropic,grok",
+                section="secure_analyzer",
             ).split(","),
-            "sensitivity_threshold": float(get_config_value("SENSITIVITY_THRESHOLD", "0.7", section="security")),
-            "auto_classify": get_config_value("AUTO_CLASSIFY_SENSITIVE", "true", section="security").lower() == "true",
+            "sensitivity_threshold": float(
+                get_config_value("SENSITIVITY_THRESHOLD", "0.7", section="security")
+            ),
+            "auto_classify": get_config_value(
+                "AUTO_CLASSIFY_SENSITIVE", "true", section="security"
+            ).lower()
+            == "true",
         }
 
     async def analyze_content(self, content: str) -> SecurityAnalysis:
         """Analyze content for security sensitivity."""
         if not content:
             return SecurityAnalysis(
-                is_sensitive=False, sensitivity_score=0.0, detected_keywords=[], categories=[], recommendations=[]
+                is_sensitive=False,
+                sensitivity_score=0.0,
+                detected_keywords=[],
+                categories=[],
+                recommendations=[],
             )
 
         content_lower = content.lower()
@@ -144,7 +159,9 @@ class SecurityFilter:
         categories = self._categorize_content(content_lower, detected_keywords)
 
         # Generate recommendations
-        recommendations = self._generate_security_recommendations(is_sensitive, sensitivity_score, categories)
+        recommendations = self._generate_security_recommendations(
+            is_sensitive, sensitivity_score, categories
+        )
 
         # Log security analysis
         if is_sensitive or detected_keywords:
@@ -168,12 +185,16 @@ class SecurityFilter:
             recommendations=recommendations,
         )
 
-    def _categorize_content(self, content: str, detected_keywords: List[str]) -> List[str]:
+    def _categorize_content(
+        self, content: str, detected_keywords: List[str]
+    ) -> List[str]:
         """Categorize content based on detected patterns."""
         categories = []
 
         # Authentication & Security
-        if any(kw in detected_keywords for kw in ["password", "token", "key", "secret"]):
+        if any(
+            kw in detected_keywords for kw in ["password", "token", "key", "secret"]
+        ):
             categories.append("authentication")
 
         # Personal Information
@@ -181,7 +202,9 @@ class SecurityFilter:
             categories.append("personal_data")
 
         # Financial Information
-        if any(kw in detected_keywords for kw in ["credit card", "bank account", "bitcoin"]):
+        if any(
+            kw in detected_keywords for kw in ["credit card", "bank account", "bitcoin"]
+        ):
             categories.append("financial_data")
 
         # Health Information
@@ -189,7 +212,10 @@ class SecurityFilter:
             categories.append("health_data")
 
         # Business Confidential
-        if any(kw in detected_keywords for kw in ["confidential", "internal", "proprietary"]):
+        if any(
+            kw in detected_keywords
+            for kw in ["confidential", "internal", "proprietary"]
+        ):
             categories.append("business_confidential")
 
         # Legal Information
@@ -203,27 +229,39 @@ class SecurityFilter:
 
         return categories
 
-    def _generate_security_recommendations(self, is_sensitive: bool, score: float, categories: List[str]) -> List[str]:
+    def _generate_security_recommendations(
+        self, is_sensitive: bool, score: float, categories: List[str]
+    ) -> List[str]:
         """Generate security recommendations based on analysis."""
         recommendations = []
 
         if is_sensitive:
-            recommendations.append("Content flagged as sensitive - routing to secure providers only")
+            recommendations.append(
+                "Content flagged as sensitive - routing to secure providers only"
+            )
 
             if "authentication" in categories:
-                recommendations.append("Avoid including authentication credentials in prompts")
+                recommendations.append(
+                    "Avoid including authentication credentials in prompts"
+                )
 
             if "personal_data" in categories:
-                recommendations.append("Consider anonymizing personal data before processing")
+                recommendations.append(
+                    "Consider anonymizing personal data before processing"
+                )
 
             if "financial_data" in categories:
-                recommendations.append("Financial data detected - ensure compliance with regulations")
+                recommendations.append(
+                    "Financial data detected - ensure compliance with regulations"
+                )
 
         if score > 0.8:
             recommendations.append("High sensitivity score - consider manual review")
 
         if "code_security" in categories:
-            recommendations.append("Code with security implications detected - review carefully")
+            recommendations.append(
+                "Code with security implications detected - review carefully"
+            )
 
         return recommendations
 

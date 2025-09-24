@@ -33,21 +33,28 @@ class QueryHandlers:
             validate_user_query(query.dict())
 
             # Recognize intent and extract entities
-            intent, confidence, entities = self.intent_recognizer.recognize_intent(query.query)
+            intent, confidence, entities = self.intent_recognizer.recognize_intent(
+                query.query
+            )
 
             # Build workflow if intent is recognized with sufficient confidence
             workflow = None
             if confidence > 0.3:  # Minimum confidence threshold
                 try:
-                    workflow = await self.workflow_builder.build_workflow(intent, entities)
+                    workflow = await self.workflow_builder.build_workflow(
+                        intent, entities
+                    )
                 except Exception as e:
-                    from services.shared.core.constants_new import ServiceNames
                     from services.shared.monitoring.logging import fire_and_forget
 
-                    fire_and_forget("error", f"Workflow build error: {e}", ServiceNames.INTERPRETER)
+                    fire_and_forget(
+                        "error", f"Workflow build error: {e}", "interpreter"
+                    )
 
             # Generate response text
-            response_text = self._generate_response_text(intent, confidence, entities, workflow)
+            response_text = self._generate_response_text(
+                intent, confidence, entities, workflow
+            )
 
             # Log interpretation metrics
             processing_time = time.time() - start_time
@@ -68,7 +75,9 @@ class QueryHandlers:
             from .shared_utils import handle_interpreter_error
 
             raise handle_interpreter_error(
-                "interpret query", e, **build_interpreter_context("interpret", query_length=len(query.query))
+                "interpret query",
+                e,
+                **build_interpreter_context("interpret", query_length=len(query.query)),
             )
 
     async def handle_execute_workflow(self, query) -> Dict[str, Any]:
@@ -98,9 +107,17 @@ class QueryHandlers:
             for step in workflow_data.get("steps", []):
                 try:
                     result = await self._execute_workflow_step(step, clients)
-                    results.append({"step_id": step["step_id"], "status": "success", "result": result})
+                    results.append(
+                        {
+                            "step_id": step["step_id"],
+                            "status": "success",
+                            "result": result,
+                        }
+                    )
                 except Exception as e:
-                    results.append({"step_id": step["step_id"], "status": "error", "error": str(e)})
+                    results.append(
+                        {"step_id": step["step_id"], "status": "error", "error": str(e)}
+                    )
 
             return create_interpreter_success_response(
                 "workflow executed",
@@ -110,13 +127,17 @@ class QueryHandlers:
                     "results": results,
                     "interpretation": interpretation.dict(),
                 },
-                **build_interpreter_context("execute_workflow", step_count=len(results)),
+                **build_interpreter_context(
+                    "execute_workflow", step_count=len(results)
+                ),
             )
 
         except Exception as e:
             from .shared_utils import handle_interpreter_error
 
-            raise handle_interpreter_error("execute workflow", e, **build_interpreter_context("execute_error"))
+            raise handle_interpreter_error(
+                "execute workflow", e, **build_interpreter_context("execute_error")
+            )
 
     async def _execute_workflow_step(self, step: Dict[str, Any], clients=None) -> Any:
         """Execute a single workflow step."""
@@ -151,20 +172,27 @@ class QueryHandlers:
                 # Build query parameters
                 query_params = {}
                 if "categories" in parameters:
-                    query_params["category"] = parameters["categories"][0] if parameters["categories"] else ""
+                    query_params["category"] = (
+                        parameters["categories"][0] if parameters["categories"] else ""
+                    )
                 if "query" in parameters:
                     query_params["q"] = parameters["query"]
 
-                return await clients.get_json("prompt-store/prompts", params=query_params)
+                return await clients.get_json(
+                    "prompt-store/prompts", params=query_params
+                )
 
         # Default: return success for unknown services/actions
-        from services.shared.core.responses.responses import create_success_response
+        from services.shared.presentation.responses import create_success_response
 
         return create_success_response(
-            "Workflow step executed successfully", {"service": service, "action": action, "parameters": parameters}
+            "Workflow step executed successfully",
+            {"service": service, "action": action, "parameters": parameters},
         )
 
-    def _generate_response_text(self, intent: str, confidence: float, entities: Dict[str, Any], workflow) -> str:
+    def _generate_response_text(
+        self, intent: str, confidence: float, entities: Dict[str, Any], workflow
+    ) -> str:
         """Generate human-readable response text based on interpretation."""
         from .shared_utils import generate_response_text
 

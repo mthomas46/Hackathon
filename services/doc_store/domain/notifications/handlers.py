@@ -24,10 +24,15 @@ class NotificationsHandlers(BaseHandler):
         metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Handle event emission."""
-        event = self.service.emit_event(event_type, entity_type, entity_id, user_id, metadata)
+        event = self.service.emit_event(
+            event_type, entity_type, entity_id, user_id, metadata
+        )
 
         return await self._handle_request(
-            lambda: event.to_dict(), operation="emit_event", event_type=event_type, entity_id=entity_id
+            lambda: event.to_dict(),
+            operation="emit_event",
+            event_type=event_type,
+            entity_id=entity_id,
         )
 
     async def handle_get_event_history(
@@ -38,12 +43,18 @@ class NotificationsHandlers(BaseHandler):
         limit: int = 100,
     ) -> Dict[str, Any]:
         """Handle event history retrieval."""
-        result = self.service.get_event_history(event_type, entity_type, entity_id, limit)
+        result = self.service.get_event_history(
+            event_type, entity_type, entity_id, limit
+        )
 
-        return await self._handle_request(lambda: result, operation="get_event_history", total_events=result["total"])
+        return await self._handle_request(
+            lambda: result, operation="get_event_history", total_events=result["total"]
+        )
 
     async def handle_get_notification_stats(self, days_back: int = 7) -> Dict[str, Any]:
         """Handle notification stats request."""
         stats = self.service.get_notification_stats(days_back)
 
-        return await self._handle_request(lambda: stats, operation="get_notification_stats", days_back=days_back)
+        return await self._handle_request(
+            lambda: stats, operation="get_notification_stats", days_back=days_back
+        )

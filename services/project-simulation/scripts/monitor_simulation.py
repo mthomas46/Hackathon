@@ -25,7 +25,9 @@ from simulation.infrastructure.logging import get_simulation_logger
 class SimulationMonitor:
     """Terminal-based simulation monitor."""
 
-    def __init__(self, host: str = "localhost", port: int = 5075, use_color: bool = True):
+    def __init__(
+        self, host: str = "localhost", port: int = 5075, use_color: bool = True
+    ):
         """Initialize the simulation monitor."""
         self.host = host
         self.port = port
@@ -47,7 +49,20 @@ class SimulationMonitor:
                 "reset": "\033[0m",
             }
             if use_color
-            else {k: "" for k in ["red", "green", "yellow", "blue", "magenta", "cyan", "white", "bold", "reset"]}
+            else {
+                k: ""
+                for k in [
+                    "red",
+                    "green",
+                    "yellow",
+                    "blue",
+                    "magenta",
+                    "cyan",
+                    "white",
+                    "bold",
+                    "reset",
+                ]
+            }
         )
 
     def colorize(self, text: str, color: str) -> str:
@@ -87,13 +102,19 @@ class SimulationMonitor:
 
         # Start UI monitoring via API
         print("📡 Starting terminal UI monitoring...")
-        response = self.make_request("POST", f"/api/v1/simulations/{simulation_id}/ui/start")
+        response = self.make_request(
+            "POST", f"/api/v1/simulations/{simulation_id}/ui/start"
+        )
 
         if response.get("success"):
-            print(f"✅ {self.colorize('Terminal monitoring started successfully!', 'green')}")
+            print(
+                f"✅ {self.colorize('Terminal monitoring started successfully!', 'green')}"
+            )
             print("📊 Live progress will be displayed below...\n")
         else:
-            print(f"❌ {self.colorize('Failed to start monitoring', 'red')}: {response.get('error', 'Unknown error')}")
+            print(
+                f"❌ {self.colorize('Failed to start monitoring', 'red')}: {response.get('error', 'Unknown error')}"
+            )
             return
 
         # Monitor simulation status
@@ -110,7 +131,9 @@ class SimulationMonitor:
         try:
             while True:
                 # Get simulation status
-                response = self.make_request("GET", f"/api/v1/simulations/{simulation_id}")
+                response = self.make_request(
+                    "GET", f"/api/v1/simulations/{simulation_id}"
+                )
 
                 if response.get("success"):
                     data = response.get("data", {})
@@ -125,7 +148,9 @@ class SimulationMonitor:
                     self.display_status_update(data, time.time() - start_time)
 
                 else:
-                    print(f"❌ Error getting status: {response.get('error', 'Unknown error')}")
+                    print(
+                        f"❌ Error getting status: {response.get('error', 'Unknown error')}"
+                    )
 
                 time.sleep(2)  # Update every 2 seconds
 
@@ -154,9 +179,13 @@ class SimulationMonitor:
         }
 
         status_color = status_colors.get(status, "white")
-        status_icon = {"running": "🔄", "completed": "✅", "failed": "❌", "pending": "⏳", "paused": "⏸️"}.get(
-            status, "❓"
-        )
+        status_icon = {
+            "running": "🔄",
+            "completed": "✅",
+            "failed": "❌",
+            "pending": "⏳",
+            "paused": "⏸️",
+        }.get(status, "❓")
 
         # Format elapsed time
         minutes, seconds = divmod(int(elapsed_time), 60)
@@ -181,9 +210,13 @@ class SimulationMonitor:
         if status in ["completed", "failed"]:
             print()  # New line
             if status == "completed":
-                print(f"🎉 {self.colorize('Simulation completed successfully!', 'green')}")
+                print(
+                    f"🎉 {self.colorize('Simulation completed successfully!', 'green')}"
+                )
             else:
-                print(f"⚠️  {self.colorize('Simulation failed', 'red')}: {data.get('error', 'Unknown error')}")
+                print(
+                    f"⚠️  {self.colorize('Simulation failed', 'red')}: {data.get('error', 'Unknown error')}"
+                )
 
             # Stop monitoring
             simulation_id = data.get("simulation_id", "")
@@ -197,10 +230,16 @@ class SimulationMonitor:
         """Stop monitoring a simulation."""
         print(f"\n📡 Stopping terminal UI monitoring...")
 
-        response = self.make_request("POST", f"/api/v1/simulations/{simulation_id}/ui/stop", json={"success": True})
+        response = self.make_request(
+            "POST",
+            f"/api/v1/simulations/{simulation_id}/ui/stop",
+            json={"success": True},
+        )
 
         if response.get("success"):
-            print(f"✅ {self.colorize('Terminal monitoring stopped successfully!', 'green')}")
+            print(
+                f"✅ {self.colorize('Terminal monitoring stopped successfully!', 'green')}"
+            )
         else:
             print(
                 f"⚠️  {self.colorize('Warning', 'yellow')}: Could not stop monitoring - {response.get('error', 'Unknown error')}"
@@ -225,7 +264,9 @@ class SimulationMonitor:
         print()
         print("EXAMPLES:")
         print("  python monitor_simulation.py abc-123-def")
-        print("  python monitor_simulation.py abc-123-def --host 192.168.1.100 --port 8080")
+        print(
+            "  python monitor_simulation.py abc-123-def --host 192.168.1.100 --port 8080"
+        )
         print("  python monitor_simulation.py --list --no-color")
         print()
         print(f"🌐 API Documentation: {self.base_url}/docs")
@@ -238,26 +279,36 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python monitor_simulation.py abc-123-def
-  python monitor_simulation.py abc-123-def --host 192.168.1.100 --port 8080
-  python monitor_simulation.py --list --no-color
+    python monitor_simulation.py abc-123-def
+    python monitor_simulation.py abc-123-def --host 192.168.1.100 --port 8080
+    python monitor_simulation.py --list --no-color
         """,
     )
 
     parser.add_argument("simulation_id", nargs="?", help="Simulation ID to monitor")
 
-    parser.add_argument("--host", default="localhost", help="API host (default: localhost)")
+    parser.add_argument(
+        "--host", default="localhost", help="API host (default: localhost)"
+    )
 
-    parser.add_argument("--port", type=int, default=5075, help="API port (default: 5075)")
+    parser.add_argument(
+        "--port", type=int, default=5075, help="API port (default: 5075)"
+    )
 
-    parser.add_argument("--no-color", action="store_true", help="Disable colored output")
+    parser.add_argument(
+        "--no-color", action="store_true", help="Disable colored output"
+    )
 
-    parser.add_argument("--list", action="store_true", help="List available simulations")
+    parser.add_argument(
+        "--list", action="store_true", help="List available simulations"
+    )
 
     args = parser.parse_args()
 
     # Initialize monitor
-    monitor = SimulationMonitor(host=args.host, port=args.port, use_color=not args.no_color)
+    monitor = SimulationMonitor(
+        host=args.host, port=args.port, use_color=not args.no_color
+    )
 
     try:
         if args.list:

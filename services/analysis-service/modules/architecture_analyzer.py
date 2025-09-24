@@ -112,7 +112,10 @@ class ArchitectureAnalyzer:
             }
 
     async def _analyze_consistency(
-        self, components: List[Dict[str, Any]], connections: List[Dict[str, Any]], options: Dict[str, Any]
+        self,
+        components: List[Dict[str, Any]],
+        connections: List[Dict[str, Any]],
+        options: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Analyze consistency of the architecture."""
         issues = []
@@ -165,10 +168,17 @@ class ArchitectureAnalyzer:
                 )
             seen_ids.add(comp_id)
 
-        return {"issues": issues, "issue_count": len(issues), "severity_counts": self._count_severities(issues)}
+        return {
+            "issues": issues,
+            "issue_count": len(issues),
+            "severity_counts": self._count_severities(issues),
+        }
 
     async def _analyze_completeness(
-        self, components: List[Dict[str, Any]], connections: List[Dict[str, Any]], options: Dict[str, Any]
+        self,
+        components: List[Dict[str, Any]],
+        connections: List[Dict[str, Any]],
+        options: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Analyze completeness of the architecture."""
         issues = []
@@ -221,10 +231,17 @@ class ArchitectureAnalyzer:
                     )
                 )
 
-        return {"issues": issues, "issue_count": len(issues), "severity_counts": self._count_severities(issues)}
+        return {
+            "issues": issues,
+            "issue_count": len(issues),
+            "severity_counts": self._count_severities(issues),
+        }
 
     async def _analyze_best_practices(
-        self, components: List[Dict[str, Any]], connections: List[Dict[str, Any]], options: Dict[str, Any]
+        self,
+        components: List[Dict[str, Any]],
+        connections: List[Dict[str, Any]],
+        options: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Analyze architecture against best practices."""
         issues = []
@@ -289,7 +306,11 @@ class ArchitectureAnalyzer:
                     )
                 )
 
-        return {"issues": issues, "issue_count": len(issues), "severity_counts": self._count_severities(issues)}
+        return {
+            "issues": issues,
+            "issue_count": len(issues),
+            "severity_counts": self._count_severities(issues),
+        }
 
     def _count_severities(self, issues: List[ArchitectureIssue]) -> Dict[str, int]:
         """Count issues by severity level."""

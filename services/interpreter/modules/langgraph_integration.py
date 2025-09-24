@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool, tool
 
-from services.shared.core.constants_new import ServiceNames
+# Service name now handled by standardized config system
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import get_service_client
 
@@ -21,7 +21,7 @@ class InterpreterLangGraphIntegration:
     """LangGraph integration for Interpreter Service."""
 
     def __init__(self):
-        self.service_name = ServiceNames.INTERPRETER
+        self.service_name = "interpreter"
         self.service_client = get_service_client()
         self.workflow_conversations = {}
         self.intent_cache = {}
@@ -31,7 +31,9 @@ class InterpreterLangGraphIntegration:
 
         @tool
         async def interpret_query_langgraph(
-            query: str, context: Dict[str, Any], workflow_context: Optional[Dict[str, Any]] = None
+            query: str,
+            context: Dict[str, Any],
+            workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Interpret a natural language query within LangGraph workflow context."""
             try:
@@ -45,7 +47,8 @@ class InterpreterLangGraphIntegration:
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/interpret", {"query": query, "context": enhanced_context}
+                    f"{self.service_name}/api/v1/interpret",
+                    {"query": query, "context": enhanced_context},
                 )
 
                 # Cache interpretation for workflow continuity
@@ -71,12 +74,18 @@ class InterpreterLangGraphIntegration:
                 }
 
             except Exception as e:
-                fire_and_forget("error", f"LangGraph query interpretation failed: {e}", self.service_name)
+                fire_and_forget(
+                    "error",
+                    f"LangGraph query interpretation failed: {e}",
+                    self.service_name,
+                )
                 return {"success": False, "error": str(e)}
 
         @tool
         async def extract_intent_langgraph(
-            text: str, domain: str = "general", workflow_context: Optional[Dict[str, Any]] = None
+            text: str,
+            domain: str = "general",
+            workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Extract intent from text within workflow context."""
             try:
@@ -99,7 +108,8 @@ class InterpreterLangGraphIntegration:
                 }
 
                 result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/intent", {"text": text, "context": enhanced_context}
+                    f"{self.service_name}/api/v1/intent",
+                    {"text": text, "context": enhanced_context},
                 )
 
                 # Cache the result
@@ -112,7 +122,12 @@ class InterpreterLangGraphIntegration:
                         if workflow_id not in self.workflow_conversations:
                             self.workflow_conversations[workflow_id] = []
                         self.workflow_conversations[workflow_id].append(
-                            {"text": text, "intent": result, "domain": domain, "timestamp": datetime.now().isoformat()}
+                            {
+                                "text": text,
+                                "intent": result,
+                                "domain": domain,
+                                "timestamp": datetime.now().isoformat(),
+                            }
                         )
 
                 return {
@@ -123,12 +138,17 @@ class InterpreterLangGraphIntegration:
                 }
 
             except Exception as e:
-                fire_and_forget("error", f"LangGraph intent extraction failed: {e}", self.service_name)
+                fire_and_forget(
+                    "error",
+                    f"LangGraph intent extraction failed: {e}",
+                    self.service_name,
+                )
                 return {"success": False, "error": str(e)}
 
         @tool
         async def get_ecosystem_context_langgraph(
-            query_focus: str = "general", workflow_context: Optional[Dict[str, Any]] = None
+            query_focus: str = "general",
+            workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Get current ecosystem context within workflow."""
             try:
@@ -151,14 +171,20 @@ class InterpreterLangGraphIntegration:
                     "integration_status": "completed",
                 }
 
-                return {"success": True, "ecosystem_context": result, "workflow_integration": "completed"}
+                return {
+                    "success": True,
+                    "ecosystem_context": result,
+                    "workflow_integration": "completed",
+                }
 
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
         @tool
         async def translate_workflow_instruction_langgraph(
-            instruction: str, target_services: List[str], workflow_context: Optional[Dict[str, Any]] = None
+            instruction: str,
+            target_services: List[str],
+            workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Translate natural language instruction into service-specific commands."""
             try:
@@ -172,7 +198,11 @@ class InterpreterLangGraphIntegration:
 
                 result = await self.service_client.post_json(
                     f"{self.service_name}/api/v1/translate/workflow",
-                    {"instruction": instruction, "target_services": target_services, "context": translation_context},
+                    {
+                        "instruction": instruction,
+                        "target_services": target_services,
+                        "context": translation_context,
+                    },
                 )
 
                 # Store translation in workflow context
@@ -198,11 +228,17 @@ class InterpreterLangGraphIntegration:
                 }
 
             except Exception as e:
-                fire_and_forget("error", f"LangGraph instruction translation failed: {e}", self.service_name)
+                fire_and_forget(
+                    "error",
+                    f"LangGraph instruction translation failed: {e}",
+                    self.service_name,
+                )
                 return {"success": False, "error": str(e)}
 
         @tool
-        async def get_workflow_conversation_history_langgraph(workflow_id: str) -> Dict[str, Any]:
+        async def get_workflow_conversation_history_langgraph(
+            workflow_id: str,
+        ) -> Dict[str, Any]:
             """Get conversation history for a workflow."""
             try:
                 if workflow_id in self.workflow_conversations:
@@ -236,21 +272,31 @@ class InterpreterLangGraphIntegration:
             "get_workflow_conversation_history_langgraph": get_workflow_conversation_history_langgraph,
         }
 
-    async def handle_langgraph_workflow_message(self, message: BaseMessage) -> Dict[str, Any]:
+    async def handle_langgraph_workflow_message(
+        self, message: BaseMessage
+    ) -> Dict[str, Any]:
         """Handle incoming LangGraph workflow messages."""
         try:
             if isinstance(message, HumanMessage):
-                return await self._process_interpreter_workflow_instruction(message.content)
+                return await self._process_interpreter_workflow_instruction(
+                    message.content
+                )
             elif isinstance(message, AIMessage):
-                return await self._process_interpreter_workflow_response(message.content)
+                return await self._process_interpreter_workflow_response(
+                    message.content
+                )
             else:
                 return {"status": "ignored", "message_type": type(message).__name__}
 
         except Exception as e:
-            fire_and_forget("error", f"LangGraph message handling failed: {e}", self.service_name)
+            fire_and_forget(
+                "error", f"LangGraph message handling failed: {e}", self.service_name
+            )
             return {"status": "error", "error": str(e)}
 
-    async def _process_interpreter_workflow_instruction(self, instruction: str) -> Dict[str, Any]:
+    async def _process_interpreter_workflow_instruction(
+        self, instruction: str
+    ) -> Dict[str, Any]:
         """Process interpreter-related workflow instructions."""
         instruction_lower = instruction.lower()
 
@@ -259,7 +305,11 @@ class InterpreterLangGraphIntegration:
                 "action": "interpret_query",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["natural_language_processing", "context_awareness", "intent_recognition"],
+                "capabilities": [
+                    "natural_language_processing",
+                    "context_awareness",
+                    "intent_recognition",
+                ],
             }
 
         elif "intent" in instruction_lower or "meaning" in instruction_lower:
@@ -267,7 +317,11 @@ class InterpreterLangGraphIntegration:
                 "action": "extract_intent",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["intent_analysis", "semantic_understanding", "domain_recognition"],
+                "capabilities": [
+                    "intent_analysis",
+                    "semantic_understanding",
+                    "domain_recognition",
+                ],
             }
 
         elif "context" in instruction_lower or "ecosystem" in instruction_lower:
@@ -275,7 +329,11 @@ class InterpreterLangGraphIntegration:
                 "action": "get_context",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["ecosystem_awareness", "service_discovery", "context_management"],
+                "capabilities": [
+                    "ecosystem_awareness",
+                    "service_discovery",
+                    "context_management",
+                ],
             }
 
         elif "translate" in instruction_lower or "convert" in instruction_lower:
@@ -283,7 +341,11 @@ class InterpreterLangGraphIntegration:
                 "action": "translate_instruction",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["instruction_translation", "service_mapping", "workflow_orchestration"],
+                "capabilities": [
+                    "instruction_translation",
+                    "service_mapping",
+                    "workflow_orchestration",
+                ],
             }
 
         else:
@@ -291,10 +353,16 @@ class InterpreterLangGraphIntegration:
                 "action": "general_interpretation",
                 "service": self.service_name,
                 "instruction": instruction,
-                "capabilities": ["natural_language_processing", "workflow_integration", "context_awareness"],
+                "capabilities": [
+                    "natural_language_processing",
+                    "workflow_integration",
+                    "context_awareness",
+                ],
             }
 
-    async def _process_interpreter_workflow_response(self, response: str) -> Dict[str, Any]:
+    async def _process_interpreter_workflow_response(
+        self, response: str
+    ) -> Dict[str, Any]:
         """Process interpreter workflow responses."""
         # Store response context for workflow continuity
         response_context = {
@@ -308,7 +376,10 @@ class InterpreterLangGraphIntegration:
             "status": "processed",
             "service": self.service_name,
             "response_stored": True,
-            "next_actions": ["await_workflow_instructions", "prepare_interpretation_tools"],
+            "next_actions": [
+                "await_workflow_instructions",
+                "prepare_interpretation_tools",
+            ],
         }
 
     def get_langgraph_capabilities(self) -> Dict[str, Any]:
@@ -323,8 +394,18 @@ class InterpreterLangGraphIntegration:
                 "instruction_translation",
                 "conversation_management",
             ],
-            "tool_categories": ["interpretation_tools", "intent_tools", "context_tools", "translation_tools"],
-            "message_types": ["human_instructions", "ai_responses", "workflow_commands", "conversation_messages"],
+            "tool_categories": [
+                "interpretation_tools",
+                "intent_tools",
+                "context_tools",
+                "translation_tools",
+            ],
+            "message_types": [
+                "human_instructions",
+                "ai_responses",
+                "workflow_commands",
+                "conversation_messages",
+            ],
             "integration_features": [
                 "workflow_context_awareness",
                 "conversation_caching",
@@ -340,7 +421,10 @@ class InterpreterLangGraphIntegration:
             "langgraph_integration": "active",
             "active_workflows": len(self.workflow_conversations),
             "cached_intents": len(self.intent_cache),
-            "total_conversation_turns": sum(len(conversation) for conversation in self.workflow_conversations.values()),
+            "total_conversation_turns": sum(
+                len(conversation)
+                for conversation in self.workflow_conversations.values()
+            ),
             "last_activity": datetime.now().isoformat(),
             "capabilities_ready": True,
         }
@@ -349,7 +433,10 @@ class InterpreterLangGraphIntegration:
         """Get summary of interpretation performance."""
         summary = {
             "total_workflows": len(self.workflow_conversations),
-            "total_interactions": sum(len(conversation) for conversation in self.workflow_conversations.values()),
+            "total_interactions": sum(
+                len(conversation)
+                for conversation in self.workflow_conversations.values()
+            ),
             "cache_hit_ratio": 0,  # Would be calculated from actual usage
             "average_response_time": 0,  # Would be tracked from actual calls
             "common_intent_types": {},
@@ -382,17 +469,26 @@ class InterpreterLangGraphIntegration:
 
         return summary
 
-    async def clear_workflow_cache(self, workflow_id: Optional[str] = None) -> Dict[str, Any]:
+    async def clear_workflow_cache(
+        self, workflow_id: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Clear workflow cache to free memory."""
         if workflow_id:
             if workflow_id in self.workflow_conversations:
                 removed_turns = len(self.workflow_conversations[workflow_id])
                 del self.workflow_conversations[workflow_id]
-                return {"cache_cleared": True, "workflow_id": workflow_id, "turns_removed": removed_turns}
+                return {
+                    "cache_cleared": True,
+                    "workflow_id": workflow_id,
+                    "turns_removed": removed_turns,
+                }
             else:
                 return {"cache_cleared": False, "error": "workflow_not_found"}
         else:
-            total_turns = sum(len(conversation) for conversation in self.workflow_conversations.values())
+            total_turns = sum(
+                len(conversation)
+                for conversation in self.workflow_conversations.values()
+            )
             self.workflow_conversations.clear()
             return {"cache_cleared": True, "total_turns_removed": total_turns}
 

@@ -10,7 +10,11 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock
 
-from services.project_simulation.simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType
+from services.project_simulation.simulation.domain.value_objects import (
+    ComplexityLevel,
+    ProjectStatus,
+    ProjectType,
+)
 
 
 class MockLogger:
@@ -54,21 +58,37 @@ class MockMonitoring:
         self.performance_calls = []
         self.health_calls = []
 
-    def record_metric(self, name: str, value: float, tags: Optional[Dict[str, str]] = None):
+    def record_metric(
+        self, name: str, value: float, tags: Optional[Dict[str, str]] = None
+    ):
         """Record a metric."""
         if name not in self.metrics:
             self.metrics[name] = []
-        self.metrics[name].append({"value": value, "tags": tags or {}, "timestamp": datetime.now()})
+        self.metrics[name].append(
+            {"value": value, "tags": tags or {}, "timestamp": datetime.now()}
+        )
 
     def record_performance(self, operation: str, duration_ms: float, **kwargs):
         """Record performance metric."""
         self.performance_calls.append(
-            {"operation": operation, "duration_ms": duration_ms, "kwargs": kwargs, "timestamp": datetime.now()}
+            {
+                "operation": operation,
+                "duration_ms": duration_ms,
+                "kwargs": kwargs,
+                "timestamp": datetime.now(),
+            }
         )
 
     def record_health_check(self, service: str, status: str, **kwargs):
         """Record health check."""
-        self.health_calls.append({"service": service, "status": status, "kwargs": kwargs, "timestamp": datetime.now()})
+        self.health_calls.append(
+            {
+                "service": service,
+                "status": status,
+                "kwargs": kwargs,
+                "timestamp": datetime.now(),
+            }
+        )
 
     def reset(self):
         """Reset all captured data."""
@@ -159,7 +179,9 @@ class MockSimulationApplicationService:
         self.cancelled_simulations.append(simulation_id)
         return {"success": True, "message": "Simulation cancelled"}
 
-    async def list_simulations(self, status: Optional[str] = None, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
+    async def list_simulations(
+        self, status: Optional[str] = None, limit: int = 50, offset: int = 0
+    ) -> Dict[str, Any]:
         """Mock list simulations."""
         if self.delay_seconds > 0:
             await asyncio.sleep(self.delay_seconds)
@@ -219,7 +241,9 @@ class MockDomainService:
         mock_project = MagicMock()
         mock_project.project_id = project_data.get("project_id", "mock_project_001")
         mock_project.name = project_data.get("name", "Mock Project")
-        mock_project.project_type = project_data.get("project_type", ProjectType.WEB_APPLICATION)
+        mock_project.project_type = project_data.get(
+            "project_type", ProjectType.WEB_APPLICATION
+        )
         mock_project.complexity = project_data.get("complexity", ComplexityLevel.MEDIUM)
         mock_project.status = ProjectStatus.PLANNING
         mock_project.events = [MagicMock()]  # Mock domain events
@@ -227,7 +251,9 @@ class MockDomainService:
         self.created_projects[mock_project.project_id] = mock_project
         return mock_project
 
-    async def assign_team_to_project(self, project_id: str, team_members: List[Any]) -> Any:
+    async def assign_team_to_project(
+        self, project_id: str, team_members: List[Any]
+    ) -> Any:
         """Mock team assignment."""
         if self.delay_seconds > 0:
             await asyncio.sleep(self.delay_seconds)
@@ -258,9 +284,15 @@ class MockDomainService:
         # Create mock timeline
         mock_timeline = MagicMock()
         mock_timeline.phases = [
-            MagicMock(name="Planning", start_date=datetime.now(), end_date=datetime.now()),
-            MagicMock(name="Development", start_date=datetime.now(), end_date=datetime.now()),
-            MagicMock(name="Testing", start_date=datetime.now(), end_date=datetime.now()),
+            MagicMock(
+                name="Planning", start_date=datetime.now(), end_date=datetime.now()
+            ),
+            MagicMock(
+                name="Development", start_date=datetime.now(), end_date=datetime.now()
+            ),
+            MagicMock(
+                name="Testing", start_date=datetime.now(), end_date=datetime.now()
+            ),
         ]
 
         self.generated_timelines[project_id] = mock_timeline
@@ -318,7 +350,11 @@ class MockHealthService:
                 "cache": {"status": "healthy", "response_time_ms": 5},
                 "external_services": {"status": "healthy", "response_time_ms": 50},
             },
-            "system_resources": {"cpu_usage": 45.2, "memory_usage": 67.8, "disk_usage": 23.1},
+            "system_resources": {
+                "cpu_usage": 45.2,
+                "memory_usage": 67.8,
+                "disk_usage": 23.1,
+            },
         }
 
     async def system_health_check(self) -> Dict[str, Any]:
@@ -332,7 +368,12 @@ class MockHealthService:
                 "services_checked": 5,
                 "services_healthy": 3,
                 "services_unhealthy": 2,
-                "service_details": {"project-simulation": {"status": "unhealthy", "error": "Mock failure"}},
+                "service_details": {
+                    "project-simulation": {
+                        "status": "unhealthy",
+                        "error": "Mock failure",
+                    }
+                },
             }
 
         return {
@@ -348,7 +389,11 @@ class MockHealthService:
                 "doc-store": {"status": "healthy", "response_time_ms": 8},
                 "llm-gateway": {"status": "healthy", "response_time_ms": 30},
             },
-            "environment_info": {"environment": "testing", "region": "us-east-1", "cluster": "test-cluster"},
+            "environment_info": {
+                "environment": "testing",
+                "region": "us-east-1",
+                "cluster": "test-cluster",
+            },
         }
 
     def reset(self):
@@ -392,7 +437,13 @@ class MockWebSocketHandler:
 
     async def send_message(self, simulation_id: str, message: Dict[str, Any]):
         """Mock sending message to simulation."""
-        self.messages_sent.append({"simulation_id": simulation_id, "message": message, "timestamp": datetime.now()})
+        self.messages_sent.append(
+            {
+                "simulation_id": simulation_id,
+                "message": message,
+                "timestamp": datetime.now(),
+            }
+        )
 
     async def broadcast_message(self, message: Dict[str, Any]):
         """Mock broadcasting message to all connections."""

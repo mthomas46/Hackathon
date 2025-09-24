@@ -23,7 +23,13 @@ from .analysis import (
     TrendAnalysisRequest,
     TrendAnalysisResponse,
 )
-from .base import BaseModel, ErrorDetail, ErrorResponse, SuccessResponse, ValidationErrorDetail
+from .base import (
+    BaseModel,
+    ErrorDetail,
+    ErrorResponse,
+    SuccessResponse,
+    ValidationErrorDetail,
+)
 from .distributed import (
     BatchTasksRequest,
     BatchTasksResponse,

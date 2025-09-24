@@ -111,7 +111,15 @@ class QueryPreprocessor:
 
         # Common action synonyms
         self.action_synonyms = {
-            "analyze": ["examine", "review", "assess", "evaluate", "inspect", "study", "investigate"],
+            "analyze": [
+                "examine",
+                "review",
+                "assess",
+                "evaluate",
+                "inspect",
+                "study",
+                "investigate",
+            ],
             "check": ["verify", "validate", "test", "confirm", "ensure", "audit"],
             "create": ["generate", "make", "build", "produce", "construct", "develop"],
             "find": ["search", "locate", "discover", "identify", "seek", "hunt"],
@@ -159,7 +167,9 @@ class QueryPreprocessor:
             ],
         }
 
-    async def preprocess_query(self, query: str, user_id: str = None, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def preprocess_query(
+        self, query: str, user_id: str = None, context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Main preprocessing method that applies all enhancements."""
         try:
             # Initial normalization
@@ -169,21 +179,33 @@ class QueryPreprocessor:
             # Get conversation context if user provided
             conversation_context = {}
             if user_id:
-                conversation_context = await conversation_memory.get_conversation_context(user_id)
+                conversation_context = (
+                    await conversation_memory.get_conversation_context(user_id)
+                )
 
             # Apply preprocessing steps
             processed_query = await self._expand_abbreviations(processed_query)
             processed_query = await self._normalize_service_references(processed_query)
             processed_query = await self._expand_action_synonyms(processed_query)
-            processed_query = await self._inject_conversation_context(processed_query, conversation_context)
-            processed_query = await self._enhance_with_ecosystem_context(processed_query)
+            processed_query = await self._inject_conversation_context(
+                processed_query, conversation_context
+            )
+            processed_query = await self._enhance_with_ecosystem_context(
+                processed_query
+            )
 
             # Extract enhanced entities and context
-            enhanced_entities = await self._extract_enhanced_entities(processed_query, original_query)
-            query_metadata = await self._extract_query_metadata(processed_query, conversation_context)
+            enhanced_entities = await self._extract_enhanced_entities(
+                processed_query, original_query
+            )
+            query_metadata = await self._extract_query_metadata(
+                processed_query, conversation_context
+            )
 
             # Calculate query complexity and confidence
-            complexity_score = await self._calculate_query_complexity(processed_query, enhanced_entities)
+            complexity_score = await self._calculate_query_complexity(
+                processed_query, enhanced_entities
+            )
             processing_confidence = await self._calculate_processing_confidence(
                 original_query, processed_query, enhanced_entities
             )
@@ -271,7 +293,12 @@ class QueryPreprocessor:
         }
 
         for contraction, expansion in contractions.items():
-            normalized = re.sub(r"\b" + re.escape(contraction) + r"\b", expansion, normalized, flags=re.IGNORECASE)
+            normalized = re.sub(
+                r"\b" + re.escape(contraction) + r"\b",
+                expansion,
+                normalized,
+                flags=re.IGNORECASE,
+            )
 
         return normalized
 
@@ -280,7 +307,9 @@ class QueryPreprocessor:
         expanded = query
 
         # Sort by length (longest first) to avoid partial replacements
-        sorted_abbreviations = sorted(self.abbreviations.items(), key=lambda x: len(x[0]), reverse=True)
+        sorted_abbreviations = sorted(
+            self.abbreviations.items(), key=lambda x: len(x[0]), reverse=True
+        )
 
         for abbrev, expansion in sorted_abbreviations:
             # Use word boundaries to avoid partial matches
@@ -294,11 +323,18 @@ class QueryPreprocessor:
         normalized = query
 
         # Sort by length (longest first) to avoid partial replacements
-        sorted_aliases = sorted(self.service_aliases.items(), key=lambda x: len(x[0]), reverse=True)
+        sorted_aliases = sorted(
+            self.service_aliases.items(), key=lambda x: len(x[0]), reverse=True
+        )
 
         for alias, canonical_name in sorted_aliases:
             pattern = r"\b" + re.escape(alias) + r"\b"
-            normalized = re.sub(pattern, canonical_name.replace("_", " "), normalized, flags=re.IGNORECASE)
+            normalized = re.sub(
+                pattern,
+                canonical_name.replace("_", " "),
+                normalized,
+                flags=re.IGNORECASE,
+            )
 
         return normalized
 
@@ -312,12 +348,19 @@ class QueryPreprocessor:
                 if synonym in words:
                     # Add primary action as alternative interpretation
                     synonym_pattern = r"\b" + re.escape(synonym) + r"\b"
-                    expanded = re.sub(synonym_pattern, f"{synonym} {primary_action}", expanded, flags=re.IGNORECASE)
+                    expanded = re.sub(
+                        synonym_pattern,
+                        f"{synonym} {primary_action}",
+                        expanded,
+                        flags=re.IGNORECASE,
+                    )
                     break  # Only expand first match to avoid over-expansion
 
         return expanded
 
-    async def _inject_conversation_context(self, query: str, conversation_context: Dict[str, Any]) -> str:
+    async def _inject_conversation_context(
+        self, query: str, conversation_context: Dict[str, Any]
+    ) -> str:
         """Inject relevant conversation context into the query."""
         if not conversation_context:
             return query
@@ -337,10 +380,14 @@ class QueryPreprocessor:
 
         # Add recent workflow context if relevant
         recent_workflows = conversation_context.get("recent_workflows", [])
-        if recent_workflows and any(word in query.lower() for word in ["continue", "next", "also", "then"]):
+        if recent_workflows and any(
+            word in query.lower() for word in ["continue", "next", "also", "then"]
+        ):
             last_workflow = recent_workflows[-1] if recent_workflows else ""
             if last_workflow:
-                context_additions.append(f"continuing from {last_workflow.replace('_', ' ')}")
+                context_additions.append(
+                    f"continuing from {last_workflow.replace('_', ' ')}"
+                )
 
         # Combine context additions
         if context_additions:
@@ -374,7 +421,9 @@ class QueryPreprocessor:
         except Exception:
             return query
 
-    async def _extract_enhanced_entities(self, processed_query: str, original_query: str) -> Dict[str, Any]:
+    async def _extract_enhanced_entities(
+        self, processed_query: str, original_query: str
+    ) -> Dict[str, Any]:
         """Extract enhanced entities from processed query."""
         entities = {
             "urls": [],
@@ -429,15 +478,17 @@ class QueryPreprocessor:
         for primary_action, synonyms in self.action_synonyms.items():
             all_actions = [primary_action] + synonyms
             for action in all_actions:
-                if re.search(r"\b" + re.escape(action) + r"\b", processed_query, re.IGNORECASE):
+                if re.search(
+                    r"\b" + re.escape(action) + r"\b", processed_query, re.IGNORECASE
+                ):
                     entities["actions_identified"].append(primary_action)
                     break
 
         # Technical terms (file extensions, protocols, etc.)
-        tech_terms_pattern = (
-            r"\b(?:html|css|js|py|java|cpp|xml|json|yaml|sql|csv|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|tar|gz)\b"
+        tech_terms_pattern = r"\b(?:html|css|js|py|java|cpp|xml|json|yaml|sql|csv|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|tar|gz)\b"
+        entities["technical_terms"] = re.findall(
+            tech_terms_pattern, processed_query, re.IGNORECASE
         )
-        entities["technical_terms"] = re.findall(tech_terms_pattern, processed_query, re.IGNORECASE)
 
         # Numbers and metrics
         number_patterns = [
@@ -447,7 +498,9 @@ class QueryPreprocessor:
             r"\b\d+\s*(?:seconds?|minutes?|hours?|days?)\b",  # Time durations
         ]
         for pattern in number_patterns:
-            entities["numbers_and_metrics"].extend(re.findall(pattern, processed_query, re.IGNORECASE))
+            entities["numbers_and_metrics"].extend(
+                re.findall(pattern, processed_query, re.IGNORECASE)
+            )
 
         # Remove duplicates and empty values
         for key, value_list in entities.items():
@@ -469,21 +522,43 @@ class QueryPreprocessor:
         }
 
         # Determine query type
-        if any(word in processed_query.lower() for word in ["analyze", "check", "review", "examine"]):
+        if any(
+            word in processed_query.lower()
+            for word in ["analyze", "check", "review", "examine"]
+        ):
             metadata["query_type"] = "analysis_request"
-        elif any(word in processed_query.lower() for word in ["find", "search", "locate", "discover"]):
+        elif any(
+            word in processed_query.lower()
+            for word in ["find", "search", "locate", "discover"]
+        ):
             metadata["query_type"] = "search_request"
-        elif any(word in processed_query.lower() for word in ["create", "generate", "make", "build"]):
+        elif any(
+            word in processed_query.lower()
+            for word in ["create", "generate", "make", "build"]
+        ):
             metadata["query_type"] = "creation_request"
-        elif any(word in processed_query.lower() for word in ["help", "how", "what", "explain"]):
+        elif any(
+            word in processed_query.lower()
+            for word in ["help", "how", "what", "explain"]
+        ):
             metadata["query_type"] = "help_request"
-        elif any(word in processed_query.lower() for word in ["optimize", "improve", "enhance", "refine"]):
+        elif any(
+            word in processed_query.lower()
+            for word in ["optimize", "improve", "enhance", "refine"]
+        ):
             metadata["query_type"] = "optimization_request"
 
         # Complexity indicators
         if len(processed_query.split()) > 20:
             metadata["complexity_indicators"].append("long_query")
-        if len(re.findall(r"\band\b|\bor\b|\bthen\b|\balso\b", processed_query, re.IGNORECASE)) > 2:
+        if (
+            len(
+                re.findall(
+                    r"\band\b|\bor\b|\bthen\b|\balso\b", processed_query, re.IGNORECASE
+                )
+            )
+            > 2
+        ):
             metadata["complexity_indicators"].append("multiple_requirements")
         if len(re.findall(r"[?.]", processed_query)) > 1:
             metadata["complexity_indicators"].append("multiple_questions")
@@ -496,7 +571,15 @@ class QueryPreprocessor:
                 metadata["domain_hints"].append(primary_domain)
 
         # Check if clarification needed
-        ambiguous_terms = ["this", "that", "it", "them", "something", "anything", "stuff"]
+        ambiguous_terms = [
+            "this",
+            "that",
+            "it",
+            "them",
+            "something",
+            "anything",
+            "stuff",
+        ]
         if any(term in processed_query.lower().split() for term in ambiguous_terms):
             metadata["requires_clarification"] = True
 
@@ -511,14 +594,19 @@ class QueryPreprocessor:
             confidence_factors.append(0.3)
         if len(metadata["complexity_indicators"]) <= 1:
             confidence_factors.append(0.2)
-        if any(word in processed_query.lower() for word in ["please", "can you", "i need", "i want"]):
+        if any(
+            word in processed_query.lower()
+            for word in ["please", "can you", "i need", "i want"]
+        ):
             confidence_factors.append(0.2)
 
         metadata["user_intent_confidence"] = sum(confidence_factors)
 
         return metadata
 
-    async def _calculate_query_complexity(self, processed_query: str, enhanced_entities: Dict[str, Any]) -> float:
+    async def _calculate_query_complexity(
+        self, processed_query: str, enhanced_entities: Dict[str, Any]
+    ) -> float:
         """Calculate complexity score for the query."""
         complexity_score = 0.0
 
@@ -528,13 +616,19 @@ class QueryPreprocessor:
         complexity_score += length_score
 
         # Entity count factor
-        total_entities = sum(len(entity_list) for entity_list in enhanced_entities.values())
+        total_entities = sum(
+            len(entity_list) for entity_list in enhanced_entities.values()
+        )
         entity_score = min(total_entities / 10.0, 1.0) * 0.2
         complexity_score += entity_score
 
         # Conjunction count (and, or, then, but, etc.)
         conjunctions = len(
-            re.findall(r"\b(?:and|or|but|then|also|however|therefore|thus|meanwhile)\b", processed_query, re.IGNORECASE)
+            re.findall(
+                r"\b(?:and|or|but|then|also|however|therefore|thus|meanwhile)\b",
+                processed_query,
+                re.IGNORECASE,
+            )
         )
         conjunction_score = min(conjunctions / 5.0, 1.0) * 0.2
         complexity_score += conjunction_score
@@ -558,7 +652,10 @@ class QueryPreprocessor:
         return min(complexity_score, 1.0)
 
     async def _calculate_processing_confidence(
-        self, original_query: str, processed_query: str, enhanced_entities: Dict[str, Any]
+        self,
+        original_query: str,
+        processed_query: str,
+        enhanced_entities: Dict[str, Any],
     ) -> float:
         """Calculate confidence in the preprocessing results."""
         confidence_score = 0.5  # Base confidence
@@ -571,7 +668,9 @@ class QueryPreprocessor:
             confidence_score -= 0.1
 
         # If entities were successfully extracted, increase confidence
-        total_entities = sum(len(entity_list) for entity_list in enhanced_entities.values())
+        total_entities = sum(
+            len(entity_list) for entity_list in enhanced_entities.values()
+        )
         if total_entities > 0:
             confidence_score += min(total_entities / 10.0, 0.3)
 
@@ -598,7 +697,9 @@ class QueryPreprocessor:
             "abbreviations_count": len(self.abbreviations),
             "service_aliases_count": len(self.service_aliases),
             "action_synonyms_count": len(self.action_synonyms),
-            "context_patterns_count": sum(len(patterns) for patterns in self.context_patterns.values()),
+            "context_patterns_count": sum(
+                len(patterns) for patterns in self.context_patterns.values()
+            ),
             "supported_features": [
                 "abbreviation_expansion",
                 "service_normalization",

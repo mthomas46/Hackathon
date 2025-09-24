@@ -8,7 +8,11 @@ import pytest
 from fastapi.testclient import TestClient
 
 from ...main import app
-from ...presentation.models.common import FindingResponse, FindingsListResponse, GetFindingsRequest
+from ...presentation.models.common import (
+    FindingResponse,
+    FindingsListResponse,
+    GetFindingsRequest,
+)
 
 
 class TestFindingsEndpoints:
@@ -78,7 +82,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=2, limit=50, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=2,
+                limit=50,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -135,7 +143,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=2, limit=50, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=2,
+                limit=50,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -169,7 +181,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=1, limit=50, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=1,
+                limit=50,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -210,7 +226,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=2, limit=50, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=2,
+                limit=50,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -218,7 +238,9 @@ class TestFindingsEndpoints:
 
             assert response.status_code == 200
             data = response.json()
-            assert len(data["findings"]) == 2  # Both should be returned since we mocked both
+            assert (
+                len(data["findings"]) == 2
+            )  # Both should be returned since we mocked both
 
     @pytest.mark.asyncio
     async def test_get_findings_pagination(self, client):
@@ -242,7 +264,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=25, limit=10, offset=0, has_more=True
+                findings=mock_findings,
+                total_count=25,
+                limit=10,
+                offset=0,
+                has_more=True,
             )
             mock_handler.return_value = mock_response
 
@@ -262,7 +288,9 @@ class TestFindingsEndpoints:
         with patch(
             "services.analysis_service.presentation.controllers.findings_controller.findings_handlers.handle_get_findings"
         ) as mock_handler:
-            mock_response = FindingsListResponse(findings=[], total_count=0, limit=50, offset=0, has_more=False)
+            mock_response = FindingsListResponse(
+                findings=[], total_count=0, limit=50, offset=0, has_more=False
+            )
             mock_handler.return_value = mock_response
 
             response = client.get("/findings?analysis_id=non-existent")
@@ -309,7 +337,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=1, limit=50, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=1,
+                limit=50,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -355,7 +387,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=100, limit=100, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=100,
+                limit=100,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -398,7 +434,11 @@ class TestFindingsEndpoints:
                 ]
 
                 mock_response = FindingsListResponse(
-                    findings=mock_findings, total_count=5, limit=50, offset=0, has_more=False
+                    findings=mock_findings,
+                    total_count=5,
+                    limit=50,
+                    offset=0,
+                    has_more=False,
                 )
                 mock_handler.return_value = mock_response
 
@@ -434,7 +474,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=1, limit=50, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=1,
+                limit=50,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -476,7 +520,9 @@ class TestFindingsEndpoints:
         with patch(
             "services.analysis_service.presentation.controllers.findings_controller.findings_handlers.handle_get_findings"
         ) as mock_handler:
-            mock_response = FindingsListResponse(findings=[], total_count=0, limit=50, offset=0, has_more=False)
+            mock_response = FindingsListResponse(
+                findings=[], total_count=0, limit=50, offset=0, has_more=False
+            )
             mock_handler.return_value = mock_response
 
             # Make many rapid requests
@@ -502,9 +548,15 @@ class TestFindingsEndpoints:
 
         # Check for CORS headers
         headers = response.headers
-        cors_headers = ["access-control-allow-origin", "access-control-allow-methods", "access-control-allow-headers"]
+        cors_headers = [
+            "access-control-allow-origin",
+            "access-control-allow-methods",
+            "access-control-allow-headers",
+        ]
 
-        cors_present = any(header in headers or header.title() in headers for header in cors_headers)
+        cors_present = any(
+            header in headers or header.title() in headers for header in cors_headers
+        )
         assert cors_present, "CORS headers should be present"
 
     def test_findings_endpoint_content_type_validation(self, client):
@@ -554,7 +606,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=2, limit=50, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=2,
+                limit=50,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -588,7 +644,11 @@ class TestFindingsEndpoints:
             ]
 
             mock_response = FindingsListResponse(
-                findings=mock_findings, total_count=1, limit=50, offset=0, has_more=False
+                findings=mock_findings,
+                total_count=1,
+                limit=50,
+                offset=0,
+                has_more=False,
             )
             mock_handler.return_value = mock_response
 
@@ -614,7 +674,11 @@ class TestFindingsEndpoints:
         with patch(
             "services.analysis_service.presentation.controllers.findings_controller.findings_handlers.handle_bulk_update_findings"
         ) as mock_handler:
-            mock_response = {"updated_count": 3, "failed_count": 0, "message": "Bulk update completed successfully"}
+            mock_response = {
+                "updated_count": 3,
+                "failed_count": 0,
+                "message": "Bulk update completed successfully",
+            }
             mock_handler.return_value = mock_response
 
             # This would be a POST/PUT endpoint in a real implementation
@@ -629,8 +693,18 @@ class TestFindingsEndpoints:
         ) as mock_handler:
             mock_analytics = {
                 "total_findings": 150,
-                "severity_distribution": {"critical": 5, "high": 25, "medium": 75, "low": 45},
-                "category_distribution": {"security": 30, "performance": 40, "code_quality": 50, "documentation": 30},
+                "severity_distribution": {
+                    "critical": 5,
+                    "high": 25,
+                    "medium": 75,
+                    "low": 45,
+                },
+                "category_distribution": {
+                    "security": 30,
+                    "performance": 40,
+                    "code_quality": 50,
+                    "documentation": 30,
+                },
                 "trends": {
                     "new_findings_last_7_days": 12,
                     "resolved_findings_last_7_days": 8,

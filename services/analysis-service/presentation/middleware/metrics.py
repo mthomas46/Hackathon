@@ -8,7 +8,6 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 
-
 class MetricsCollector:
     """Collector for API metrics."""
 
@@ -100,7 +99,9 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
             # Record successful request metrics
             duration = time.time() - start_time
-            self.metrics.record_request(request.method, request.url.path, duration, response.status_code)
+            self.metrics.record_request(
+                request.method, request.url.path, duration, response.status_code
+            )
 
             # Add metrics headers
             response.headers["X-Response-Time"] = f"{duration:.3f}s"
@@ -110,7 +111,9 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         except Exception:
             # Record error metrics
             duration = time.time() - start_time
-            self.metrics.record_request(request.method, request.url.path, duration, 500)  # Internal server error
+            self.metrics.record_request(
+                request.method, request.url.path, duration, 500
+            )  # Internal server error
 
             # Re-raise the exception
             raise
@@ -123,7 +126,11 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 class PrometheusMetricsExporter:
     """Exporter for Prometheus metrics format."""
 
-    def __init__(self, metrics_collector: MetricsCollector, service_name: str = "analysis-service"):
+    def __init__(
+        self,
+        metrics_collector: MetricsCollector,
+        service_name: str = "analysis-service",
+    ):
         """Initialize Prometheus exporter."""
         self.metrics = metrics_collector
         self.service_name = service_name
@@ -204,7 +211,9 @@ class MetricsEndpoint:
     def __init__(self, metrics_middleware: MetricsMiddleware):
         """Initialize metrics endpoint."""
         self.middleware = metrics_middleware
-        self.exporter = PrometheusMetricsExporter(self.middleware.get_metrics_collector())
+        self.exporter = PrometheusMetricsExporter(
+            self.middleware.get_metrics_collector()
+        )
 
     async def get_metrics(self) -> str:
         """Get metrics in Prometheus format."""
@@ -213,7 +222,10 @@ class MetricsEndpoint:
     async def get_metrics_json(self) -> Dict[str, Any]:
         """Get metrics as JSON."""
         collector = self.middleware.get_metrics_collector()
-        return {"summary": collector.get_summary(), "system": collector.get_system_metrics()}
+        return {
+            "summary": collector.get_summary(),
+            "system": collector.get_system_metrics(),
+        }
 
 
 # Global metrics instances

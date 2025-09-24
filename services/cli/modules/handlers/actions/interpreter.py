@@ -8,7 +8,9 @@ from services.shared.integrations.clients.clients import ServiceClients
 from ...utils.display_helpers import print_kv, print_list
 
 
-def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[[], Any]]]:
+def build_actions(
+    console, clients: ServiceClients
+) -> List[Tuple[str, Callable[[], Any]]]:
     # ============================================================================
     # QUERY INTERPRETATION
     # ============================================================================
@@ -20,7 +22,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         user_context = Prompt.ask("User context JSON (optional)", default="{}")
 
         try:
-            user_context_parsed = json.loads(user_context) if user_context.strip() else {}
+            user_context_parsed = (
+                json.loads(user_context) if user_context.strip() else {}
+            )
         except Exception:
             user_context_parsed = {}
 
@@ -41,7 +45,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         user_context = Prompt.ask("User context JSON (optional)", default="{}")
 
         try:
-            user_context_parsed = json.loads(user_context) if user_context.strip() else {}
+            user_context_parsed = (
+                json.loads(user_context) if user_context.strip() else {}
+            )
         except Exception:
             user_context_parsed = {}
 
@@ -117,7 +123,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
             query = f"create workflow for {target}"
 
         if filters:
-            filter_str = " with " + " and ".join([f"{f['type']} {f['value']}" for f in filters])
+            filter_str = " with " + " and ".join(
+                [f"{f['type']} {f['value']}" for f in filters]
+            )
             query += filter_str
 
         console.print(f"\n[green]Generated query: {query}[/green]")
@@ -154,21 +162,41 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
         results = []
         for i, query_data in enumerate(queries):
             try:
-                console.print(f"Processing query {i+1}/{count}: {query_data['query'][:50]}...")
+                console.print(
+                    f"Processing query {i+1}/{count}: {query_data['query'][:50]}..."
+                )
                 url = f"{clients.interpreter_url()}/interpret"
                 result = await clients.post_json(url, {"query": query_data["query"]})
-                results.append({"index": i + 1, "query": query_data["query"], "success": True, "result": result})
+                results.append(
+                    {
+                        "index": i + 1,
+                        "query": query_data["query"],
+                        "success": True,
+                        "result": result,
+                    }
+                )
             except Exception as e:
-                results.append({"index": i + 1, "query": query_data["query"], "success": False, "error": str(e)})
+                results.append(
+                    {
+                        "index": i + 1,
+                        "query": query_data["query"],
+                        "success": False,
+                        "error": str(e),
+                    }
+                )
 
         # Display results
-        console.print(f"\n[bold green]Batch Interpretation Results ({len(results)} queries)[/bold green]")
+        console.print(
+            f"\n[bold green]Batch Interpretation Results ({len(results)} queries)[/bold green]"
+        )
         successful = sum(1 for r in results if r["success"])
         console.print(f"Successful: {successful}/{len(results)}")
 
         for result in results:
             status = "✅" if result["success"] else "❌"
-            console.print(f"\n{status} Query {result['index']}: {result['query'][:30]}...")
+            console.print(
+                f"\n{status} Query {result['index']}: {result['query'][:30]}..."
+            )
             if result["success"]:
                 intent = result["result"].get("intent", "unknown")
                 confidence = result["result"].get("confidence", 0)
@@ -239,7 +267,9 @@ def build_actions(console, clients: ServiceClients) -> List[Tuple[str, Callable[
                 )
 
         # Display results
-        console.print(f"\n[bold green]Benchmark Results ({len(results)} queries)[/bold green]")
+        console.print(
+            f"\n[bold green]Benchmark Results ({len(results)} queries)[/bold green]"
+        )
         table_data = []
         for result in results:
             table_data.append(

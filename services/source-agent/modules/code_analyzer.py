@@ -28,7 +28,9 @@ class CodeAnalyzer:
                 "patterns_found": ["FastAPI", "Express", "Flask"],
             }
 
-            context = build_source_agent_context("analyze_code", endpoint_count=len(hints))
+            context = build_source_agent_context(
+                "analyze_code", endpoint_count=len(hints)
+            )
             return create_source_agent_success_response("analyzed", result, **context)
 
         except Exception as e:

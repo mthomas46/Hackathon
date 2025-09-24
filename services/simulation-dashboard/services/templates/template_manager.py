@@ -77,7 +77,9 @@ class TemplateManager:
             categories.add(category)
         return sorted(list(categories))
 
-    def apply_template(self, template_id: str, customizations: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def apply_template(
+        self, template_id: str, customizations: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Apply a template with customizations."""
         template = self.get_template(template_id)
         if not template:
@@ -100,7 +102,9 @@ class TemplateManager:
         logger.info(f"Applied template {template_id} with customizations")
         return applied_config
 
-    def _apply_customizations(self, config: Dict[str, Any], customizations: Dict[str, Any]) -> None:
+    def _apply_customizations(
+        self, config: Dict[str, Any], customizations: Dict[str, Any]
+    ) -> None:
         """Apply customizations to configuration."""
 
         def update_nested_dict(d: Dict[str, Any], updates: Dict[str, Any]) -> None:
@@ -136,7 +140,9 @@ class TemplateManager:
         if base_template_id:
             base_template = self.get_template(base_template_id)
             if base_template:
-                template["configuration"] = base_template.get("configuration", {}).copy()
+                template["configuration"] = base_template.get(
+                    "configuration", {}
+                ).copy()
                 template["based_on"] = base_template_id
 
         # Save to file
@@ -196,7 +202,9 @@ class TemplateManager:
             with open(filepath, "r") as f:
                 template = json.load(f)
 
-            template_id = template.get("id", f"imported_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+            template_id = template.get(
+                "id", f"imported_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            )
             template["imported_at"] = datetime.now().isoformat()
 
             # Save to templates directory
@@ -213,14 +221,19 @@ class TemplateManager:
             return None
 
     def search_templates(
-        self, query: str, category: Optional[str] = None, tags: Optional[List[str]] = None
+        self,
+        query: str,
+        category: Optional[str] = None,
+        tags: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
         """Search templates by query, category, and tags."""
         results = []
 
         for template in self.templates_cache.values():
             # Text search in name and description
-            search_text = f"{template.get('name', '')} {template.get('description', '')}".lower()
+            search_text = (
+                f"{template.get('name', '')} {template.get('description', '')}".lower()
+            )
             if query.lower() not in search_text:
                 continue
 

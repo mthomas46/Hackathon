@@ -6,8 +6,6 @@ These tests are written FIRST (RED phase) and will initially FAIL.
 They define the expected behavior before implementation.
 """
 
-
-
 # Import the modules we'll be testing (these may not exist yet - that's why tests will fail)
 from simulation.infrastructure.mock_data.mock_data_generator import MockDataGenerator
 
@@ -137,11 +135,22 @@ class TestMockDataGenerator:
         """Test generation of comprehensive mock data for simulation."""
         # Arrange
         query = "Create an e-commerce platform with user authentication and payment processing"
-        context = {"project_type": "web_application", "complexity": "high", "budget": 200000}
-        config = {"type": "web_application", "complexity": "high", "duration_weeks": 12, "team_size": 5}
+        context = {
+            "project_type": "web_application",
+            "complexity": "high",
+            "budget": 200000,
+        }
+        config = {
+            "type": "web_application",
+            "complexity": "high",
+            "duration_weeks": 12,
+            "team_size": 5,
+        }
 
         # Act
-        mock_data = self.generator.generate_comprehensive_mock_data(query, context, config)
+        mock_data = self.generator.generate_comprehensive_mock_data(
+            query, context, config
+        )
 
         # Assert
         assert isinstance(mock_data, dict)
@@ -172,7 +181,9 @@ class TestMockDataGenerator:
         # Assert - Should be consistent (same structure, not necessarily same values)
         assert len(data1["team_members"]) == len(data2["team_members"])
         assert len(data1["documents"]) == len(data2["documents"])
-        assert set(data1["technologies"]) == set(data2["technologies"])  # Same technologies
+        assert set(data1["technologies"]) == set(
+            data2["technologies"]
+        )  # Same technologies
 
     def test_empty_query_handling(self):
         """Test handling of empty or minimal queries."""
@@ -182,7 +193,9 @@ class TestMockDataGenerator:
         config = {"team_size": 3}
 
         # Act
-        mock_data = self.generator.generate_comprehensive_mock_data(query, context, config)
+        mock_data = self.generator.generate_comprehensive_mock_data(
+            query, context, config
+        )
 
         # Assert
         assert isinstance(mock_data, dict)
@@ -205,7 +218,9 @@ class TestMockDataGenerator:
 
         for keywords, expected_techs in test_cases:
             # Act
-            technologies = self.generator.infer_technologies_from_query(" ".join(keywords), keywords)
+            technologies = self.generator.infer_technologies_from_query(
+                " ".join(keywords), keywords
+            )
 
             # Assert
             tech_names = [tech.lower() for tech in technologies]

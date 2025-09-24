@@ -35,7 +35,10 @@ async def get_saga_status(saga_id: str):
     return {
         "saga_id": saga_id,
         "status": "completed",
-        "steps": [{"step": "init", "status": "completed"}, {"step": "execute", "status": "completed"}],
+        "steps": [
+            {"step": "init", "status": "completed"},
+            {"step": "execute", "status": "completed"},
+        ],
     }
 
 
@@ -69,7 +72,9 @@ class EventHistoryRequest(BaseModel):
 
 @router.get("/events/history")
 async def get_event_history(
-    correlation_id: Optional[str] = None, event_type: Optional[str] = None, limit: Optional[int] = 100
+    correlation_id: Optional[str] = None,
+    event_type: Optional[str] = None,
+    limit: Optional[int] = 100,
 ):
     """Get event history."""
     if correlation_id and len(correlation_id) > 255:
@@ -156,7 +161,12 @@ class EventClearRequest(BaseModel):
 @router.post("/events/clear")
 async def clear_events(req: EventClearRequest):
     """Clear events."""
-    return {"status": "cleared", "event_type": req.event_type, "correlation_id": req.correlation_id, "cleared_count": 5}
+    return {
+        "status": "cleared",
+        "event_type": req.event_type,
+        "correlation_id": req.correlation_id,
+        "cleared_count": 5,
+    }
 
 
 # Tracing
@@ -165,7 +175,12 @@ async def get_trace(trace_id: str):
     """Get trace information."""
     if len(trace_id) > 255:
         raise HTTPException(status_code=400, detail="Trace ID too long")
-    return {"trace_id": trace_id, "status": "completed", "duration": "2.5s", "spans": []}
+    return {
+        "trace_id": trace_id,
+        "status": "completed",
+        "duration": "2.5s",
+        "spans": [],
+    }
 
 
 @router.get("/tracing/service/{service_name}")

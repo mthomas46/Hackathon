@@ -3,7 +3,6 @@
 Handles the complex logic for different UI pages and endpoints.
 """
 
-
 from fastapi.responses import HTMLResponse
 
 from services.frontend.utils import (
@@ -40,26 +39,34 @@ class UIHandlers:
             html = render_index()
             return create_html_response(html, "LLM Documentation Ecosystem")
         except Exception as e:
-            return handle_frontend_error("render index page", e, **build_frontend_context("render_index"))
+            return handle_frontend_error(
+                "render index page", e, **build_frontend_context("render_index")
+            )
 
     @staticmethod
     def handle_owner_coverage() -> HTMLResponse:
         """Render owner coverage report page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("orchestrator", "/reports/owner_coverage", clients=clients)
+            data = fetch_service_data(
+                "orchestrator", "/reports/owner_coverage", clients=clients
+            )
             cov = data.get("coverage", {})
             html = render_owner_coverage_table(cov)
             return create_html_response(html, "Owner Coverage Report")
         except Exception as e:
-            return handle_frontend_error("fetch owner coverage", e, **build_frontend_context("owner_coverage"))
+            return handle_frontend_error(
+                "fetch owner coverage", e, **build_frontend_context("owner_coverage")
+            )
 
     @staticmethod
     def handle_topics() -> HTMLResponse:
         """Render topics overview page with document freshness analysis."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("doc_store", "/documents/quality", clients=clients)
+            data = fetch_service_data(
+                "doc_store", "/documents/quality", clients=clients
+            )
             items = data.get("items", [])
 
             topics = {
@@ -76,36 +83,53 @@ class UIHandlers:
                 for topic in topics.keys():
                     if topic in title:
                         stale_days = item.get("stale_days", 0)
-                        freshness = "fresh" if stale_days < 60 else ("stale" if stale_days > 180 else "aging")
+                        freshness = (
+                            "fresh"
+                            if stale_days < 60
+                            else ("stale" if stale_days > 180 else "aging")
+                        )
                         topics[topic].append((item.get("id"), freshness))
 
             html = render_topics_html(topics)
             return create_html_response(html, "Topics Overview")
         except Exception as e:
-            return handle_frontend_error("fetch topics data", e, **build_frontend_context("topics"))
+            return handle_frontend_error(
+                "fetch topics data", e, **build_frontend_context("topics")
+            )
 
     @staticmethod
     def handle_confluence_consolidation() -> HTMLResponse:
         """Render Confluence consolidation report page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("orchestrator", "/reports/confluence/consolidation", clients=clients)
+            data = fetch_service_data(
+                "orchestrator", "/reports/confluence/consolidation", clients=clients
+            )
             items = data.get("items", [])
             html = render_consolidation_list(items)
             return create_html_response(html, "Confluence Consolidation Report")
         except Exception as e:
             return handle_frontend_error(
-                "fetch confluence consolidation", e, **build_frontend_context("confluence_consolidation")
+                "fetch confluence consolidation",
+                e,
+                **build_frontend_context("confluence_consolidation"),
             )
 
     @staticmethod
     def handle_jira_staleness(
-        min_confidence: float = 0.0, min_duplicate_confidence: float = 0.0, limit: int = 50, summarize: bool = False
+        min_confidence: float = 0.0,
+        min_duplicate_confidence: float = 0.0,
+        limit: int = 50,
+        summarize: bool = False,
     ) -> HTMLResponse:
         """Render Jira staleness report page with filtering options."""
         try:
             validate_frontend_request(
-                {"min_confidence": min_confidence, "min_duplicate_confidence": min_duplicate_confidence, "limit": limit}
+                {
+                    "min_confidence": min_confidence,
+                    "min_duplicate_confidence": min_duplicate_confidence,
+                    "limit": limit,
+                }
             )
 
             endpoint = "/reports/jira/staleness"
@@ -117,12 +141,16 @@ class UIHandlers:
             }
 
             clients = get_frontend_clients()
-            data = fetch_service_data("orchestrator", endpoint, params=params, clients=clients)
+            data = fetch_service_data(
+                "orchestrator", endpoint, params=params, clients=clients
+            )
             items = data.get("items", [])
             html = render_consolidation_list(items)
             return create_html_response(html, "Jira Staleness Report")
         except Exception as e:
-            context = build_frontend_context("jira_staleness", min_confidence=min_confidence, limit=limit)
+            context = build_frontend_context(
+                "jira_staleness", min_confidence=min_confidence, limit=limit
+            )
             return handle_frontend_error("fetch jira staleness", e, **context)
 
     @staticmethod
@@ -130,12 +158,18 @@ class UIHandlers:
         """Render duplicate clusters report page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("reporting", "/reports/duplicates/clusters", clients=clients)
+            data = fetch_service_data(
+                "reporting", "/reports/duplicates/clusters", clients=clients
+            )
             clusters = data.get("clusters", [])
             html = render_clusters(clusters)
             return create_html_response(html, "Duplicate Clusters Report")
         except Exception as e:
-            return handle_frontend_error("fetch duplicate clusters", e, **build_frontend_context("duplicate_clusters"))
+            return handle_frontend_error(
+                "fetch duplicate clusters",
+                e,
+                **build_frontend_context("duplicate_clusters"),
+            )
 
     @staticmethod
     def handle_search(q: str = "kubernetes") -> HTMLResponse:
@@ -147,7 +181,9 @@ class UIHandlers:
 
             params = {"q": safe_q}
             clients = get_frontend_clients()
-            data = fetch_service_data("doc_store", "/search", params=params, clients=clients)
+            data = fetch_service_data(
+                "doc_store", "/search", params=params, clients=clients
+            )
             items = data.get("items", [])
             html = render_search_results(safe_q, items)
             return create_html_response(html, f"Search Results for '{safe_q}'")
@@ -160,24 +196,32 @@ class UIHandlers:
         """Render document quality analysis page."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("doc_store", "/documents/quality", clients=clients)
+            data = fetch_service_data(
+                "doc_store", "/documents/quality", clients=clients
+            )
             items = data.get("items", [])
             html = render_docs_quality(items)
             return create_html_response(html, "Document Quality Analysis")
         except Exception as e:
-            return handle_frontend_error("fetch document quality", e, **build_frontend_context("docs_quality"))
+            return handle_frontend_error(
+                "fetch document quality", e, **build_frontend_context("docs_quality")
+            )
 
     @staticmethod
     def handle_findings() -> HTMLResponse:
         """Render findings page with all current findings."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data("consistency-engine", "/findings", clients=clients)
+            data = fetch_service_data(
+                "consistency-engine", "/findings", clients=clients
+            )
             items = data.get("findings", [])
             html = render_findings(items)
             return create_html_response(html, "Current Findings")
         except Exception as e:
-            return handle_frontend_error("fetch findings", e, **build_frontend_context("findings"))
+            return handle_frontend_error(
+                "fetch findings", e, **build_frontend_context("findings")
+            )
 
     @staticmethod
     def handle_findings_by_severity() -> HTMLResponse:
@@ -189,7 +233,11 @@ class UIHandlers:
             html = render_counts("Findings by Severity", items)
             return create_html_response(html, "Findings by Severity")
         except Exception as e:
-            return handle_frontend_error("fetch findings by severity", e, **build_frontend_context("findings_severity"))
+            return handle_frontend_error(
+                "fetch findings by severity",
+                e,
+                **build_frontend_context("findings_severity"),
+            )
 
     @staticmethod
     def handle_findings_by_type() -> HTMLResponse:
@@ -201,7 +249,9 @@ class UIHandlers:
             html = render_counts("Findings by Type", items)
             return create_html_response(html, "Findings by Type")
         except Exception as e:
-            return handle_frontend_error("fetch findings by type", e, **build_frontend_context("findings_type"))
+            return handle_frontend_error(
+                "fetch findings by type", e, **build_frontend_context("findings_type")
+            )
 
     @staticmethod
     def handle_report() -> HTMLResponse:
@@ -212,7 +262,9 @@ class UIHandlers:
             html = render_report_page(data)
             return create_html_response(html, "Comprehensive Report")
         except Exception as e:
-            return handle_frontend_error("generate report", e, **build_frontend_context("generate_report"))
+            return handle_frontend_error(
+                "generate report", e, **build_frontend_context("generate_report")
+            )
 
     @staticmethod
     def handle_workflows_status() -> HTMLResponse:
@@ -452,7 +504,9 @@ class UIHandlers:
             return create_html_response(html, "Workflow & Job Status Monitor")
         except Exception as e:
             return handle_frontend_error(
-                "render workflows status page", e, **build_frontend_context("render_workflows_status")
+                "render workflows status page",
+                e,
+                **build_frontend_context("render_workflows_status"),
             )
 
     @staticmethod
@@ -815,7 +869,9 @@ class UIHandlers:
             return create_html_response(html, "Summarizer Hub Status Monitor")
         except Exception as e:
             return handle_frontend_error(
-                "render summarizer status page", e, **build_frontend_context("render_summarizer_status")
+                "render summarizer status page",
+                e,
+                **build_frontend_context("render_summarizer_status"),
             )
 
     @staticmethod
@@ -1492,7 +1548,11 @@ class UIHandlers:
             """
             return create_html_response(html, "Logs Dashboard")
         except Exception as e:
-            return handle_frontend_error("render logs dashboard", e, **build_frontend_context("render_logs_dashboard"))
+            return handle_frontend_error(
+                "render logs dashboard",
+                e,
+                **build_frontend_context("render_logs_dashboard"),
+            )
 
     @staticmethod
     def handle_doc_store_browser() -> HTMLResponse:
@@ -2189,7 +2249,9 @@ class UIHandlers:
             return create_html_response(html, "Doc Store Data Browser")
         except Exception as e:
             return handle_frontend_error(
-                "render doc_store browser", e, **build_frontend_context("render_doc_store_browser")
+                "render doc_store browser",
+                e,
+                **build_frontend_context("render_doc_store_browser"),
             )
 
     @staticmethod
@@ -2802,7 +2864,9 @@ class UIHandlers:
             return create_html_response(html, "Prompt Store Data Browser")
         except Exception as e:
             return handle_frontend_error(
-                "render prompt-store browser", e, **build_frontend_context("render_prompt_store_browser")
+                "render prompt-store browser",
+                e,
+                **build_frontend_context("render_prompt_store_browser"),
             )
 
     @staticmethod
@@ -3469,7 +3533,7 @@ class UIHandlers:
                 html += '<h4>Recent Executions</h4>';
                 data.recent_history.slice(0, 10).forEach(workflow => {
                     const statusClass = workflow.status === 'completed' ? 'success' :
-                                      workflow.status === 'failed' ? 'error' : '';
+                                        workflow.status === 'failed' ? 'error' : '';
                     html += `
                         <div class="workflow-item">
                             <div class="workflow-name ${statusClass}">${workflow.workflow_type || 'Unknown'}</div>
@@ -3500,7 +3564,9 @@ class UIHandlers:
             return create_html_response(html, "Orchestrator Monitor")
         except Exception as e:
             return handle_frontend_error(
-                "render orchestrator monitor", e, **build_frontend_context("render_orchestrator_monitor")
+                "render orchestrator monitor",
+                e,
+                **build_frontend_context("render_orchestrator_monitor"),
             )
 
     @staticmethod
@@ -4482,7 +4548,9 @@ class UIHandlers:
             return create_html_response(html, "Analysis Dashboard")
         except Exception as e:
             return handle_frontend_error(
-                "render analysis dashboard", e, **build_frontend_context("render_analysis_dashboard")
+                "render analysis dashboard",
+                e,
+                **build_frontend_context("render_analysis_dashboard"),
             )
 
     @staticmethod
@@ -4990,7 +5058,9 @@ class UIHandlers:
             return create_html_response(html, "Services Overview")
         except Exception as e:
             return handle_frontend_error(
-                "render services overview", e, **build_frontend_context("render_services_overview")
+                "render services overview",
+                e,
+                **build_frontend_context("render_services_overview"),
             )
 
 

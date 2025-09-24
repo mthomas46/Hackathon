@@ -6,15 +6,29 @@ import pytest
 
 from ...application.cqrs.command_bus import CommandBus
 from ...application.cqrs.query_bus import QueryBus
-from ...application.handlers.command_handlers import CreateDocumentCommandHandler, PerformAnalysisCommandHandler
-from ...application.handlers.commands import CreateDocumentCommand, PerformAnalysisCommand
+from ...application.handlers.command_handlers import (
+    CreateDocumentCommandHandler,
+    PerformAnalysisCommandHandler,
+)
+from ...application.handlers.commands import (
+    CreateDocumentCommand,
+    PerformAnalysisCommand,
+)
 from ...application.handlers.queries import GetDocumentQuery, GetFindingsQuery
-from ...application.handlers.query_handlers import GetDocumentQueryHandler, GetFindingsQueryHandler
-from ...application.services.analysis_application_service import AnalysisApplicationService
+from ...application.handlers.query_handlers import (
+    GetDocumentQueryHandler,
+    GetFindingsQueryHandler,
+)
+from ...application.services.analysis_application_service import (
+    AnalysisApplicationService,
+)
 from ...application.use_cases.create_document_use_case import CreateDocumentUseCase
 from ...application.use_cases.get_document_use_case import GetDocumentUseCase
 from ...application.use_cases.get_findings_use_case import GetFindingsUseCase
-from ...application.use_cases.perform_analysis_use_case import PerformAnalysisCommand, PerformAnalysisUseCase
+from ...application.use_cases.perform_analysis_use_case import (
+    PerformAnalysisCommand,
+    PerformAnalysisUseCase,
+)
 from ...domain.entities.analysis import AnalysisStatus
 from ...domain.entities.document import DocumentStatus
 from ...domain.entities.finding import FindingSeverity
@@ -23,9 +37,15 @@ from ...domain.services.document_service import DocumentService
 from ...domain.services.finding_service import FindingService
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence
-from ...infrastructure.repositories.in_memory.analysis_repository import InMemoryAnalysisRepository
-from ...infrastructure.repositories.in_memory.document_repository import InMemoryDocumentRepository
-from ...infrastructure.repositories.in_memory.finding_repository import InMemoryFindingRepository
+from ...infrastructure.repositories.in_memory.analysis_repository import (
+    InMemoryAnalysisRepository,
+)
+from ...infrastructure.repositories.in_memory.document_repository import (
+    InMemoryDocumentRepository,
+)
+from ...infrastructure.repositories.in_memory.finding_repository import (
+    InMemoryFindingRepository,
+)
 
 
 class TestDomainApplicationIntegration:
@@ -45,7 +65,9 @@ class TestDomainApplicationIntegration:
         """Create domain services with repositories."""
         return {
             "document_service": DocumentService(repositories["document"]),
-            "analysis_service": AnalysisService(repositories["analysis"], repositories["document"]),
+            "analysis_service": AnalysisService(
+                repositories["analysis"], repositories["document"]
+            ),
             "finding_service": FindingService(repositories["finding"]),
         }
 
@@ -74,7 +96,9 @@ class TestDomainApplicationIntegration:
         }
 
     @pytest.mark.asyncio
-    async def test_document_creation_workflow(self, domain_services, repositories, event_bus):
+    async def test_document_creation_workflow(
+        self, domain_services, repositories, event_bus
+    ):
         """Test complete document creation workflow from domain to application."""
         # Setup
         doc_data = {
@@ -101,7 +125,9 @@ class TestDomainApplicationIntegration:
         assert saved_doc.id == document.id
 
     @pytest.mark.asyncio
-    async def test_analysis_workflow_integration(self, domain_services, repositories, event_bus):
+    async def test_analysis_workflow_integration(
+        self, domain_services, repositories, event_bus
+    ):
         """Test complete analysis workflow integration."""
         # Setup - Create document first
         doc_data = {
@@ -114,7 +140,8 @@ class TestDomainApplicationIntegration:
 
         # Setup analysis
         analysis = await domain_services["analysis_service"].start_analysis(
-            document_id=document.id.value, analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+            document_id=document.id.value,
+            analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
         )
 
         assert analysis.document_id == document.id.value
@@ -125,7 +152,9 @@ class TestDomainApplicationIntegration:
         results = {"similarity_score": 0.85, "matched_docs": ["doc-1", "doc-2"]}
         confidence = Confidence(0.85)
 
-        completed_analysis = await domain_services["analysis_service"].complete_analysis(
+        completed_analysis = await domain_services[
+            "analysis_service"
+        ].complete_analysis(
             analysis_id=analysis.id.value, results=results, confidence=confidence
         )
 
@@ -175,7 +204,8 @@ class TestDomainApplicationIntegration:
         analyses = []
         for i in range(3):
             analysis = await domain_services["analysis_service"].start_analysis(
-                document_id=document.id.value, analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+                document_id=document.id.value,
+                analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
             )
             analyses.append(analysis)
 
@@ -203,20 +233,28 @@ class TestDomainApplicationIntegration:
 
         # Verify relationships
         # Document should have 3 analyses
-        doc_analyses = await repositories["analysis"].get_by_document_id(document.id.value)
+        doc_analyses = await repositories["analysis"].get_by_document_id(
+            document.id.value
+        )
         assert len(doc_analyses) == 3
 
         # Each analysis should have 1 finding
         for analysis in analyses:
-            analysis_findings = await repositories["finding"].get_by_analysis_id(analysis.id.value)
+            analysis_findings = await repositories["finding"].get_by_analysis_id(
+                analysis.id.value
+            )
             assert len(analysis_findings) == 1
 
         # Document should have 3 findings
-        doc_findings = await repositories["finding"].get_by_document_id(document.id.value)
+        doc_findings = await repositories["finding"].get_by_document_id(
+            document.id.value
+        )
         assert len(doc_findings) == 3
 
     @pytest.mark.asyncio
-    async def test_domain_service_business_logic_integration(self, domain_services, repositories):
+    async def test_domain_service_business_logic_integration(
+        self, domain_services, repositories
+    ):
         """Test domain service business logic integration."""
         # Test document service business rules
         document = await domain_services["document_service"].create_document(
@@ -228,7 +266,8 @@ class TestDomainApplicationIntegration:
 
         # Test analysis service business rules
         analysis = await domain_services["analysis_service"].start_analysis(
-            document_id=document.id.value, analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+            document_id=document.id.value,
+            analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
         )
 
         # Verify business rules are enforced
@@ -267,7 +306,9 @@ class TestCQRSIntegration:
         # Create domain services
         domain_services = {
             "document_service": DocumentService(repositories["document"]),
-            "analysis_service": AnalysisService(repositories["analysis"], repositories["document"]),
+            "analysis_service": AnalysisService(
+                repositories["analysis"], repositories["document"]
+            ),
             "finding_service": FindingService(repositories["finding"]),
         }
 
@@ -361,7 +402,9 @@ class TestCQRSIntegration:
         document_id = create_result["document_id"]
 
         # Perform analysis
-        analysis_command = PerformAnalysisCommand(document_id=document_id, analysis_type="semantic_similarity")
+        analysis_command = PerformAnalysisCommand(
+            document_id=document_id, analysis_type="semantic_similarity"
+        )
 
         analysis_result = await setup["command_bus"].execute(analysis_command)
 
@@ -432,16 +475,21 @@ class TestApplicationServiceIntegration:
         """Create domain services."""
         return {
             "document_service": DocumentService(repositories["document"]),
-            "analysis_service": AnalysisService(repositories["analysis"], repositories["document"]),
+            "analysis_service": AnalysisService(
+                repositories["analysis"], repositories["document"]
+            ),
             "finding_service": FindingService(repositories["finding"]),
         }
 
     @pytest.mark.asyncio
-    async def test_application_service_orchestration(self, domain_services, repositories, mock_application_services):
+    async def test_application_service_orchestration(
+        self, domain_services, repositories, mock_application_services
+    ):
         """Test application service orchestrating domain services."""
         # Create application service
         app_service = AnalysisApplicationService(
-            domain_services=domain_services, application_services=mock_application_services
+            domain_services=domain_services,
+            application_services=mock_application_services,
         )
 
         # Create document through application service
@@ -469,21 +517,27 @@ class TestApplicationServiceIntegration:
         saved_doc = await repositories["document"].get_by_id(document_id)
         assert saved_doc is not None
 
-        saved_analysis = await repositories["analysis"].get_by_id(analysis_result.analysis.id.value)
+        saved_analysis = await repositories["analysis"].get_by_id(
+            analysis_result.analysis.id.value
+        )
         assert saved_analysis is not None
         assert saved_analysis.document_id == document_id
 
     @pytest.mark.asyncio
-    async def test_application_service_error_handling(self, domain_services, repositories, mock_application_services):
+    async def test_application_service_error_handling(
+        self, domain_services, repositories, mock_application_services
+    ):
         """Test application service error handling integration."""
         app_service = AnalysisApplicationService(
-            domain_services=domain_services, application_services=mock_application_services
+            domain_services=domain_services,
+            application_services=mock_application_services,
         )
 
         # Try to perform analysis on non-existent document
         with pytest.raises(ValueError, match="Document not found"):
             await app_service.perform_analysis_workflow(
-                document_id="non-existent-doc", analysis_type=AnalysisType.SEMANTIC_SIMILARITY
+                document_id="non-existent-doc",
+                analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
             )
 
     @pytest.mark.asyncio
@@ -497,7 +551,8 @@ class TestApplicationServiceIntegration:
         mock_application_services["monitoring_service"]
 
         app_service = AnalysisApplicationService(
-            domain_services=domain_services, application_services=mock_application_services
+            domain_services=domain_services,
+            application_services=mock_application_services,
         )
 
         # Create document (should trigger cross-cutting concerns)
@@ -537,7 +592,9 @@ class TestDomainApplicationWorkflowIntegration:
         # Domain services
         domain_services = {
             "document_service": DocumentService(repositories["document"]),
-            "analysis_service": AnalysisService(repositories["analysis"], repositories["document"]),
+            "analysis_service": AnalysisService(
+                repositories["analysis"], repositories["document"]
+            ),
             "finding_service": FindingService(repositories["finding"]),
         }
 
@@ -601,7 +658,9 @@ class TestDomainApplicationWorkflowIntegration:
 
         # 2. Perform analysis
         analysis_result = await setup["use_cases"]["perform_analysis"].execute(
-            PerformAnalysisCommand(document_id=document_id, analysis_type="semantic_similarity")
+            PerformAnalysisCommand(
+                document_id=document_id, analysis_type="semantic_similarity"
+            )
         )
 
         assert analysis_result.success is True
@@ -618,7 +677,9 @@ class TestDomainApplicationWorkflowIntegration:
         assert saved_analysis.document_id == document_id
 
         # Analysis is linked to document
-        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(document_id)
+        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(
+            document_id
+        )
         assert len(doc_analyses) == 1
         assert doc_analyses[0].id.value == analysis_id
 
@@ -644,7 +705,9 @@ class TestDomainApplicationWorkflowIntegration:
         analyses = []
         for doc in documents:
             analysis_result = await setup["use_cases"]["perform_analysis"].execute(
-                PerformAnalysisCommand(document_id=doc.id.value, analysis_type="semantic_similarity")
+                PerformAnalysisCommand(
+                    document_id=doc.id.value, analysis_type="semantic_similarity"
+                )
             )
             analyses.append(analysis_result.analysis)
 
@@ -656,7 +719,9 @@ class TestDomainApplicationWorkflowIntegration:
             assert saved_doc.title == f"Multi-Doc Test Document {i}"
 
             # Analysis exists and is linked
-            saved_analysis = await setup["repositories"]["analysis"].get_by_id(analysis.id.value)
+            saved_analysis = await setup["repositories"]["analysis"].get_by_id(
+                analysis.id.value
+            )
             assert saved_analysis is not None
             assert saved_analysis.document_id == doc.id.value
 
@@ -670,7 +735,9 @@ class TestDomainApplicationWorkflowIntegration:
         # Verify cross-references
         for analysis in all_analyses:
             # Each analysis should reference an existing document
-            doc = await setup["repositories"]["document"].get_by_id(analysis.document_id)
+            doc = await setup["repositories"]["document"].get_by_id(
+                analysis.document_id
+            )
             assert doc is not None
 
     @pytest.mark.asyncio
@@ -679,9 +746,13 @@ class TestDomainApplicationWorkflowIntegration:
         setup = full_setup
 
         # Try to perform analysis on non-existent document
-        with pytest.raises(Exception):  # Should propagate from domain to application layer
+        with pytest.raises(
+            Exception
+        ):  # Should propagate from domain to application layer
             await setup["use_cases"]["perform_analysis"].execute(
-                PerformAnalysisCommand(document_id="non-existent-doc", analysis_type="semantic_similarity")
+                PerformAnalysisCommand(
+                    document_id="non-existent-doc", analysis_type="semantic_similarity"
+                )
             )
 
     @pytest.mark.asyncio
@@ -704,13 +775,17 @@ class TestDomainApplicationWorkflowIntegration:
         # Perform multiple analyses
         for i in range(3):
             analysis_result = await setup["use_cases"]["perform_analysis"].execute(
-                PerformAnalysisCommand(document_id=document_id, analysis_type="semantic_similarity")
+                PerformAnalysisCommand(
+                    document_id=document_id, analysis_type="semantic_similarity"
+                )
             )
 
             assert analysis_result.success is True
 
         # Verify final state consistency
-        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(document_id)
+        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(
+            document_id
+        )
         assert len(doc_analyses) == 3
 
         # All analyses should reference the same document

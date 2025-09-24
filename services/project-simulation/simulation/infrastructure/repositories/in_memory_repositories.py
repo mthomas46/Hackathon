@@ -10,7 +10,12 @@ from ...domain.entities.project import Project
 from ...domain.entities.simulation import Simulation
 from ...domain.entities.team import Team
 from ...domain.entities.timeline import Timeline
-from ...domain.repositories import IProjectRepository, ISimulationRepository, ITeamRepository, ITimelineRepository
+from ...domain.repositories import (
+    IProjectRepository,
+    ISimulationRepository,
+    ITeamRepository,
+    ITimelineRepository,
+)
 
 
 class InMemoryProjectRepository(IProjectRepository):
@@ -147,7 +152,9 @@ class InMemorySimulationRepository(ISimulationRepository):
 
     def find_recent(self, limit: int = 10) -> List[Simulation]:
         """Find recent simulations."""
-        sorted_simulations = sorted(self._simulations.values(), key=lambda s: s.created_at, reverse=True)
+        sorted_simulations = sorted(
+            self._simulations.values(), key=lambda s: s.created_at, reverse=True
+        )
         return sorted_simulations[:limit]
 
     def delete(self, simulation_id: str) -> bool:

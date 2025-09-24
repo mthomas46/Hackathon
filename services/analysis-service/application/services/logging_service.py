@@ -75,7 +75,9 @@ class StructuredFormatter(logging.Formatter):
 class ApplicationLogger(logging.LoggerAdapter):
     """Application logger with context and correlation tracking."""
 
-    def __init__(self, logger: logging.Logger, context: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, logger: logging.Logger, context: Optional[Dict[str, Any]] = None
+    ):
         """Initialize application logger."""
         super().__init__(logger, context or {})
 
@@ -99,32 +101,51 @@ class ApplicationLogger(logging.LoggerAdapter):
     def log_operation_start(self, operation: str, **kwargs) -> None:
         """Log operation start."""
         self.info(
-            f"Starting operation: {operation}", extra={"operation": operation, "event": "operation_start", **kwargs}
+            f"Starting operation: {operation}",
+            extra={"operation": operation, "event": "operation_start", **kwargs},
         )
 
     def log_operation_end(self, operation: str, duration: float, **kwargs) -> None:
         """Log operation end."""
         self.info(
             f"Completed operation: {operation}",
-            extra={"operation": operation, "duration": duration, "event": "operation_end", **kwargs},
+            extra={
+                "operation": operation,
+                "duration": duration,
+                "event": "operation_end",
+                **kwargs,
+            },
         )
 
     def log_operation_error(self, operation: str, error: str, **kwargs) -> None:
         """Log operation error."""
         self.error(
             f"Operation failed: {operation}",
-            extra={"operation": operation, "error": error, "event": "operation_error", **kwargs},
+            extra={
+                "operation": operation,
+                "error": error,
+                "event": "operation_error",
+                **kwargs,
+            },
         )
 
     def log_business_event(self, event: str, **kwargs) -> None:
         """Log business event."""
-        self.info(f"Business event: {event}", extra={"event_type": "business", "business_event": event, **kwargs})
+        self.info(
+            f"Business event: {event}",
+            extra={"event_type": "business", "business_event": event, **kwargs},
+        )
 
     def log_performance_metric(self, metric: str, value: Any, **kwargs) -> None:
         """Log performance metric."""
         self.info(
             f"Performance metric: {metric} = {value}",
-            extra={"event_type": "performance", "metric": metric, "value": value, **kwargs},
+            extra={
+                "event_type": "performance",
+                "metric": metric,
+                "value": value,
+                **kwargs,
+            },
         )
 
 
@@ -175,7 +196,9 @@ class LoggingService(ApplicationService):
         if self.structured:
             formatter = StructuredFormatter()
         else:
-            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
 
         # Console handler
         if self.enable_console:
@@ -188,7 +211,9 @@ class LoggingService(ApplicationService):
         if self.enable_file:
             # Application log file
             app_log_file = self.log_directory / "analysis_service.log"
-            file_handler = RotatingFileHandler(app_log_file, maxBytes=self.max_file_size, backupCount=self.backup_count)
+            file_handler = RotatingFileHandler(
+                app_log_file, maxBytes=self.max_file_size, backupCount=self.backup_count
+            )
             file_handler.setLevel(self.log_level)
             file_handler.setFormatter(formatter)
             root_logger.addHandler(file_handler)
@@ -196,7 +221,9 @@ class LoggingService(ApplicationService):
             # Error log file (only errors and above)
             error_log_file = self.log_directory / "analysis_service_error.log"
             error_handler = RotatingFileHandler(
-                error_log_file, maxBytes=self.max_file_size, backupCount=self.backup_count
+                error_log_file,
+                maxBytes=self.max_file_size,
+                backupCount=self.backup_count,
             )
             error_handler.setLevel(logging.ERROR)
             error_handler.setFormatter(formatter)
@@ -207,7 +234,9 @@ class LoggingService(ApplicationService):
         logger = logging.getLogger(name)
         return ApplicationLogger(logger, self.app_logger.extra)
 
-    def create_operation_logger(self, operation: str, context: ServiceContext) -> ApplicationLogger:
+    def create_operation_logger(
+        self, operation: str, context: ServiceContext
+    ) -> ApplicationLogger:
         """Create logger for operation with context."""
         return self.app_logger.with_context(
             operation=operation,
@@ -224,11 +253,17 @@ class LoggingService(ApplicationService):
             root_logger = logging.getLogger()
             handler_count = len(root_logger.handlers)
 
-            self.app_logger.log_performance_metric("logging_handlers", handler_count, service="logging_service")
+            self.app_logger.log_performance_metric(
+                "logging_handlers", handler_count, service="logging_service"
+            )
 
             # Log log directory size if file logging is enabled
             if self.enable_file and self.log_directory.exists():
-                total_size = sum(f.stat().st_size for f in self.log_directory.glob("*.log") if f.is_file())
+                total_size = sum(
+                    f.stat().st_size
+                    for f in self.log_directory.glob("*.log")
+                    if f.is_file()
+                )
                 self.app_logger.log_performance_metric(
                     "log_directory_size_bytes", total_size, service="logging_service"
                 )
@@ -327,7 +362,11 @@ class LogAggregator:
 
     def get_logs_by_correlation_id(self, correlation_id: str) -> List[Dict[str, Any]]:
         """Get logs by correlation ID."""
-        return [entry for entry in self.log_entries if entry.get("correlation_id") == correlation_id]
+        return [
+            entry
+            for entry in self.log_entries
+            if entry.get("correlation_id") == correlation_id
+        ]
 
     def get_error_rate(self, time_window_minutes: int = 60) -> float:
         """Calculate error rate in the last time window."""

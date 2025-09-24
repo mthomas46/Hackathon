@@ -45,7 +45,9 @@ class AnalyticsRepository:
         counts = {}
 
         # Document counts
-        result = execute_query("SELECT COUNT(*) as count FROM documents", fetch_one=True)
+        result = execute_query(
+            "SELECT COUNT(*) as count FROM documents", fetch_one=True
+        )
         counts["documents"] = result["count"] if result else 0
 
         # Analysis counts
@@ -53,19 +55,27 @@ class AnalyticsRepository:
         counts["analyses"] = result["count"] if result else 0
 
         # Ensemble counts
-        result = execute_query("SELECT COUNT(*) as count FROM ensembles", fetch_one=True)
+        result = execute_query(
+            "SELECT COUNT(*) as count FROM ensembles", fetch_one=True
+        )
         counts["ensembles"] = result["count"] if result else 0
 
         # Style examples counts
-        result = execute_query("SELECT COUNT(*) as count FROM style_examples", fetch_one=True)
+        result = execute_query(
+            "SELECT COUNT(*) as count FROM style_examples", fetch_one=True
+        )
         counts["style_examples"] = result["count"] if result else 0
 
         # Version counts
-        result = execute_query("SELECT COUNT(*) as count FROM document_versions", fetch_one=True)
+        result = execute_query(
+            "SELECT COUNT(*) as count FROM document_versions", fetch_one=True
+        )
         counts["versions"] = result["count"] if result else 0
 
         # Tag counts
-        result = execute_query("SELECT COUNT(*) as count FROM document_tags", fetch_one=True)
+        result = execute_query(
+            "SELECT COUNT(*) as count FROM document_tags", fetch_one=True
+        )
         counts["tags"] = result["count"] if result else 0
 
         return counts
@@ -220,7 +230,12 @@ class AnalyticsRepository:
 
     def get_content_insights(self) -> Dict[str, Any]:
         """Get content analysis insights."""
-        insights = {"top_languages": {}, "analysis_coverage": 0.0, "popular_tags": {}, "content_patterns": {}}
+        insights = {
+            "top_languages": {},
+            "analysis_coverage": 0.0,
+            "popular_tags": {},
+            "content_patterns": {},
+        }
 
         # Language distribution
         rows = execute_query(
@@ -239,7 +254,9 @@ class AnalyticsRepository:
             insights["top_languages"][row["language"]] = row["count"]
 
         # Analysis coverage
-        total_docs = execute_query("SELECT COUNT(*) as count FROM documents", fetch_one=True)
+        total_docs = execute_query(
+            "SELECT COUNT(*) as count FROM documents", fetch_one=True
+        )
         analyzed_docs = execute_query(
             """
             SELECT COUNT(DISTINCT document_id) as count
@@ -249,7 +266,9 @@ class AnalyticsRepository:
         )
 
         if total_docs and total_docs["count"] > 0:
-            insights["analysis_coverage"] = (analyzed_docs["count"] / total_docs["count"]) * 100
+            insights["analysis_coverage"] = (
+                analyzed_docs["count"] / total_docs["count"]
+            ) * 100
 
         # Popular tags
         rows = execute_query(
@@ -278,7 +297,9 @@ class AnalyticsRepository:
         }
 
         # Relationship counts
-        result = execute_query("SELECT COUNT(*) as count FROM document_relationships", fetch_one=True)
+        result = execute_query(
+            "SELECT COUNT(*) as count FROM document_relationships", fetch_one=True
+        )
         insights["total_relationships"] = result["count"] if result else 0
 
         # Relationship type distribution
@@ -312,7 +333,8 @@ class AnalyticsRepository:
         )
 
         insights["most_connected_documents"] = [
-            {"document_id": row["document_id"], "connections": row["connections"]} for row in rows
+            {"document_id": row["document_id"], "connections": row["connections"]}
+            for row in rows
         ]
 
         return insights

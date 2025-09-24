@@ -9,10 +9,10 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException
 
-from services.shared.core.config.config import get_config_value
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.models.models import Document
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 from services.shared.monitoring.logging import fire_and_forget
 from services.shared.utilities import clean_string, utc_now
 from services.shared.utilities.error_handling import ServiceException
@@ -52,7 +52,10 @@ def _validate_atlassian_url(url: str, service_name: str) -> str:
         if not parsed.netloc or ".." in parsed.netloc:
             return f"https://example.atlassian.net"
         # Allow only reasonable Atlassian domains
-        if not any(domain in parsed.netloc.lower() for domain in ["atlassian.net", "jira.com", "confluence.com"]):
+        if not any(
+            domain in parsed.netloc.lower()
+            for domain in ["atlassian.net", "jira.com", "confluence.com"]
+        ):
             return f"https://example.atlassian.net"
         return url
     except Exception:
@@ -61,12 +64,20 @@ def _validate_atlassian_url(url: str, service_name: str) -> str:
 
 _GITHUB_BASE_URL = "https://api.github.com"  # GitHub is hardcoded for security
 _JIRA_BASE_URL = _validate_atlassian_url(
-    get_config_value("JIRA_BASE_URL", "https://example.atlassian.net", section="services", env_key="JIRA_BASE_URL"),
+    get_config_value(
+        "JIRA_BASE_URL",
+        "https://example.atlassian.net",
+        section="services",
+        env_key="JIRA_BASE_URL",
+    ),
     "jira",
 )
 _CONFLUENCE_BASE_URL = _validate_atlassian_url(
     get_config_value(
-        "CONFLUENCE_BASE_URL", "https://example.atlassian.net", section="services", env_key="CONFLUENCE_BASE_URL"
+        "CONFLUENCE_BASE_URL",
+        "https://example.atlassian.net",
+        section="services",
+        env_key="CONFLUENCE_BASE_URL",
     ),
     "confluence",
 )
@@ -87,18 +98,29 @@ def get_confluence_base_url() -> str:
     return _CONFLUENCE_BASE_URL
 
 
-def handle_source_agent_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
+def handle_source_agent_error(
+    operation: str, error: Exception, **context
+) -> Dict[str, Any]:
     """Standardized error handling for source-agent operations.
 
     Logs the error and returns a standardized error response.
     """
-    fire_and_forget("error", f"Source-agent {operation} error: {error}", ServiceNames.SOURCE_AGENT, context)
+    fire_and_forget(
+        "error",
+        f"Source-agent {operation} error: {error}",
+        ServiceNames.SOURCE_AGENT,
+        context,
+    )
     return create_error_response(
-        f"Failed to {operation}", error_code=ErrorCodes.DOCUMENT_FETCH_FAILED, details={"error": str(error), **context}
+        f"Failed to {operation}",
+        error_code=ErrorCodes.DOCUMENT_FETCH_FAILED,
+        details={"error": str(error), **context},
     )
 
 
-def create_source_agent_success_response(op: str, data: Any, **context) -> Dict[str, Any]:
+def create_source_agent_success_response(
+    op: str, data: Any, **context
+) -> Dict[str, Any]:
     """Standardized success response for source-agent operations.
 
     Merge optional context into the response payload instead of passing
@@ -115,7 +137,10 @@ def create_source_agent_success_response(op: str, data: Any, **context) -> Dict[
 
 
 def build_source_agent_context(
-    operation: str, source_type: Optional[str] = None, doc_id: Optional[str] = None, **additional
+    operation: str,
+    source_type: Optional[str] = None,
+    doc_id: Optional[str] = None,
+    **additional,
 ) -> Dict[str, Any]:
     """Build context dictionary for source-agent operations.
 
@@ -133,7 +158,11 @@ def build_source_agent_context(
 
 
 def create_base_document(
-    source_type: str, id: str, title: str, content: str, metadata: Optional[Dict[str, Any]] = None
+    source_type: str,
+    id: str,
+    title: str,
+    content: str,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> Document:
     """Create a base document with standardized fields."""
     return Document(
@@ -208,7 +237,9 @@ def extract_endpoints_from_code(text: str) -> List[str]:
 
         # Express.js patterns
         match = re.search(
-            r"\b(?:app|router)\.(get|post|put|delete|patch)\(\s*['\"]([^'\"]+)['\"]", line, flags=re.IGNORECASE
+            r"\b(?:app|router)\.(get|post|put|delete|patch)\(\s*['\"]([^'\"]+)['\"]",
+            line,
+            flags=re.IGNORECASE,
         )
         if match:
             endpoints.append(line)

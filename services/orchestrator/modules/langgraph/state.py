@@ -98,7 +98,14 @@ class WorkflowState(BaseModel):
 
     def add_log_entry(self, level: str, message: str, data: Optional[Dict] = None):
         """Add a log entry to the workflow."""
-        self.log_entries.append({"level": level, "message": message, "data": data or {}, "timestamp": utc_now()})
+        self.log_entries.append(
+            {
+                "level": level,
+                "message": message,
+                "data": data or {},
+                "timestamp": utc_now(),
+            }
+        )
 
     def update_metrics(self, metrics: Dict[str, Any]):
         """Update workflow metrics."""
@@ -117,15 +124,24 @@ class WorkflowState(BaseModel):
         """Increment the retry count."""
         self.retry_count += 1
         self.add_log_entry(
-            "INFO", f"Retry attempt {self.retry_count}/{self.max_retries}", {"retry_count": self.retry_count}
+            "INFO",
+            f"Retry attempt {self.retry_count}/{self.max_retries}",
+            {"retry_count": self.retry_count},
         )
 
 
 def create_workflow_state(
-    workflow_type: str, input_data: Dict[str, Any], user_id: Optional[str] = None, tags: Optional[List[str]] = None
+    workflow_type: str,
+    input_data: Dict[str, Any],
+    user_id: Optional[str] = None,
+    tags: Optional[List[str]] = None,
 ) -> WorkflowState:
     """Create a new workflow state instance."""
 
-    metadata = WorkflowMetadata(workflow_type=workflow_type, user_id=user_id, tags=tags or [])
+    metadata = WorkflowMetadata(
+        workflow_type=workflow_type, user_id=user_id, tags=tags or []
+    )
 
-    return WorkflowState(metadata=metadata, input_data=input_data, current_step="created")
+    return WorkflowState(
+        metadata=metadata, input_data=input_data, current_step="created"
+    )

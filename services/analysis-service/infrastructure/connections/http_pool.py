@@ -34,7 +34,10 @@ class HTTPConnectionPool(ConnectionPool[aiohttp.ClientSession]):
     async def create_connection(self) -> aiohttp.ClientSession:
         """Create HTTP client session."""
         return aiohttp.ClientSession(
-            connector=self.connector, timeout=self.timeout, headers=self.default_headers, cookies=self.default_cookies
+            connector=self.connector,
+            timeout=self.timeout,
+            headers=self.default_headers,
+            cookies=self.default_cookies,
         )
 
     async def validate_connection(self, connection: aiohttp.ClientSession) -> bool:
@@ -113,7 +116,9 @@ class AIOHTTPConnectionPool(HTTPConnectionPool):
             return f"{self.base_url}/{url.lstrip('/')}"
         return url
 
-    async def request_with_retry(self, method: str, url: str, **kwargs) -> aiohttp.ClientResponse:
+    async def request_with_retry(
+        self, method: str, url: str, **kwargs
+    ) -> aiohttp.ClientResponse:
         """Make HTTP request with retry logic."""
         url = self._build_url(url)
         max_retries = self.retry_config["max_retries"]
@@ -169,10 +174,14 @@ class HTTPPoolFactory:
 
     @staticmethod
     def create_basic_pool(
-        max_connections: int = 20, timeout_seconds: int = 30, headers: Optional[Dict[str, str]] = None
+        max_connections: int = 20,
+        timeout_seconds: int = 30,
+        headers: Optional[Dict[str, str]] = None,
     ) -> HTTPConnectionPool:
         """Create basic HTTP connection pool."""
-        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=timeout_seconds)
+        config = ConnectionPoolConfig(
+            min_size=1, max_size=max_connections, acquire_timeout=timeout_seconds
+        )
 
         timeout = aiohttp.ClientTimeout(total=timeout_seconds)
 
@@ -187,16 +196,26 @@ class HTTPPoolFactory:
         enable_retries: bool = True,
     ) -> AIOHTTPConnectionPool:
         """Create advanced HTTP connection pool with retry logic."""
-        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=timeout_seconds)
+        config = ConnectionPoolConfig(
+            min_size=1, max_size=max_connections, acquire_timeout=timeout_seconds
+        )
 
         timeout = aiohttp.ClientTimeout(total=timeout_seconds)
 
         retry_config = None
         if enable_retries:
-            retry_config = {"max_retries": 3, "backoff_factor": 0.3, "retry_status_codes": [429, 500, 502, 503, 504]}
+            retry_config = {
+                "max_retries": 3,
+                "backoff_factor": 0.3,
+                "retry_status_codes": [429, 500, 502, 503, 504],
+            }
 
         return AIOHTTPConnectionPool(
-            config=config, base_url=base_url, timeout=timeout, headers=headers, retry_config=retry_config
+            config=config,
+            base_url=base_url,
+            timeout=timeout,
+            headers=headers,
+            retry_config=retry_config,
         )
 
     @staticmethod
@@ -216,7 +235,9 @@ class HTTPPoolFactory:
             }
         )
 
-        return HTTPPoolFactory.create_advanced_pool(base_url=service_url, headers=headers, **kwargs)
+        return HTTPPoolFactory.create_advanced_pool(
+            base_url=service_url, headers=headers, **kwargs
+        )
 
 
 class CircuitBreakerHTTPPool(AIOHTTPConnectionPool):
@@ -240,7 +261,9 @@ class CircuitBreakerHTTPPool(AIOHTTPConnectionPool):
         self.last_failure_time = None
         self.state = "closed"  # closed, open, half-open
 
-    async def request_with_retry(self, method: str, url: str, **kwargs) -> aiohttp.ClientResponse:
+    async def request_with_retry(
+        self, method: str, url: str, **kwargs
+    ) -> aiohttp.ClientResponse:
         """Make request with circuit breaker protection."""
         if self.state == "open":
             if self._should_attempt_reset():
@@ -281,6 +304,8 @@ class CircuitBreakerHTTPPool(AIOHTTPConnectionPool):
             "state": self.state,
             "failure_count": self.failure_count,
             "failure_threshold": self.failure_threshold,
-            "last_failure_time": self.last_failure_time.isoformat() if self.last_failure_time else None,
+            "last_failure_time": (
+                self.last_failure_time.isoformat() if self.last_failure_time else None
+            ),
             "recovery_timeout": self.recovery_timeout,
         }

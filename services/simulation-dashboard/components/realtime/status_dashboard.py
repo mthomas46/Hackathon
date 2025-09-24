@@ -78,7 +78,9 @@ def display_overall_health(status_data: Dict[str, Any]):
     # Calculate health metrics
     total_services = len(services)
     healthy_services = sum(1 for s in services.values() if s.get("status") == "healthy")
-    critical_services = sum(1 for s in services.values() if s.get("status") == "critical")
+    critical_services = sum(
+        1 for s in services.values() if s.get("status") == "critical"
+    )
     warning_services = sum(1 for s in services.values() if s.get("status") == "warning")
 
     # Overall health score
@@ -120,7 +122,9 @@ def display_overall_health(status_data: Dict[str, Any]):
         st.error("🚨 Critical system issues detected")
 
 
-def display_service_status_grid(status_data: Dict[str, Any], on_service_action: Optional[Callable]):
+def display_service_status_grid(
+    status_data: Dict[str, Any], on_service_action: Optional[Callable]
+):
     """Display service status in a grid layout."""
     services = status_data.get("services", {})
 
@@ -142,7 +146,11 @@ def display_service_status_grid(status_data: Dict[str, Any], on_service_action: 
             display_service_card(service_name, service_info, on_service_action)
 
 
-def display_service_card(service_name: str, service_info: Dict[str, Any], on_service_action: Optional[Callable]):
+def display_service_card(
+    service_name: str,
+    service_info: Dict[str, Any],
+    on_service_action: Optional[Callable],
+):
     """Display a single service status card."""
     status = service_info.get("status", "unknown")
     uptime = service_info.get("uptime", 0)
@@ -376,7 +384,9 @@ def display_performance_trends(status_data: Dict[str, Any]):
         st.info("Insufficient trend data for visualization.")
 
 
-def display_system_controls(status_data: Dict[str, Any], on_service_action: Optional[Callable]):
+def display_system_controls(
+    status_data: Dict[str, Any], on_service_action: Optional[Callable]
+):
     """Display system control buttons."""
     st.markdown("#### 🎮 System Controls")
 
@@ -527,7 +537,9 @@ def display_system_settings(status_data: Dict[str, Any]):
     with st.expander("Performance Settings", expanded=False):
         st.slider("CPU Threshold (%)", 50, 95, 80, key="cpu_threshold")
         st.slider("Memory Threshold (%)", 50, 95, 85, key="memory_threshold")
-        st.slider("Response Time Threshold (ms)", 500, 5000, 2000, key="response_threshold")
+        st.slider(
+            "Response Time Threshold (ms)", 500, 5000, 2000, key="response_threshold"
+        )
 
 
 def calculate_overall_health(status_data: Dict[str, Any]) -> float:
@@ -581,7 +593,9 @@ def get_default_status_data() -> Dict[str, Any]:
                 "cpu_usage": 67.3,
                 "memory_usage": 72.1,
                 "connections": 25,
-                "start_time": (datetime.now() - timedelta(days=4)).strftime("%Y-%m-%d %H:%M:%S"),
+                "start_time": (datetime.now() - timedelta(days=4)).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
             },
             "database": {
                 "status": "warning",
@@ -591,7 +605,9 @@ def get_default_status_data() -> Dict[str, Any]:
                 "cpu_usage": 45.8,
                 "memory_usage": 78.9,
                 "connections": 15,
-                "start_time": (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d %H:%M:%S"),
+                "start_time": (datetime.now() - timedelta(days=3)).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
             },
             "api-gateway": {
                 "status": "healthy",
@@ -601,7 +617,9 @@ def get_default_status_data() -> Dict[str, Any]:
                 "cpu_usage": 34.2,
                 "memory_usage": 56.7,
                 "connections": 89,
-                "start_time": (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S"),
+                "start_time": (datetime.now() - timedelta(days=7)).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
             },
             "monitoring-service": {
                 "status": "critical",
@@ -611,7 +629,9 @@ def get_default_status_data() -> Dict[str, Any]:
                 "cpu_usage": 89.5,
                 "memory_usage": 91.2,
                 "connections": 5,
-                "start_time": (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S"),
+                "start_time": (datetime.now() - timedelta(days=1)).strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
             },
         },
         "metrics": {
@@ -649,6 +669,11 @@ def get_default_status_data() -> Dict[str, Any]:
                 "memory_usage": 72.1,
                 "response_time": 148.7,
             },
-            {"timestamp": datetime.now(), "cpu_usage": 67.3, "memory_usage": 72.1, "response_time": 145.8},
+            {
+                "timestamp": datetime.now(),
+                "cpu_usage": 67.3,
+                "memory_usage": 72.1,
+                "response_time": 145.8,
+            },
         ],
     }

@@ -39,9 +39,15 @@ class SQLiteDocumentRepository(DocumentRepository):
             )
 
             # Create indexes for performance
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_documents_author ON documents(author)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_documents_repository ON documents(repository_id)")
-            conn.execute("CREATE INDEX IF NOT EXISTS idx_documents_updated ON documents(updated_at)")
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_documents_author ON documents(author)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_documents_repository ON documents(repository_id)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_documents_updated ON documents(updated_at)"
+            )
 
     async def save(self, document: Document) -> None:
         """Save a document to SQLite."""
@@ -50,7 +56,7 @@ class SQLiteDocumentRepository(DocumentRepository):
                 """
                 INSERT OR REPLACE INTO documents
                 (id, title, content_text, content_format, author, tags,
-                 repository_id, version, created_at, updated_at, metadata)
+                repository_id, version, created_at, updated_at, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
@@ -74,7 +80,7 @@ class SQLiteDocumentRepository(DocumentRepository):
             cursor = conn.execute(
                 """
                 SELECT id, title, content_text, content_format, author, tags,
-                       repository_id, version, created_at, updated_at, metadata
+                        repository_id, version, created_at, updated_at, metadata
                 FROM documents WHERE id = ?
             """,
                 (document_id,),
@@ -92,7 +98,7 @@ class SQLiteDocumentRepository(DocumentRepository):
             cursor = conn.execute(
                 """
                 SELECT id, title, content_text, content_format, author, tags,
-                       repository_id, version, created_at, updated_at, metadata
+                        repository_id, version, created_at, updated_at, metadata
                 FROM documents ORDER BY updated_at DESC
             """
             )
@@ -105,7 +111,7 @@ class SQLiteDocumentRepository(DocumentRepository):
             cursor = conn.execute(
                 """
                 SELECT id, title, content_text, content_format, author, tags,
-                       repository_id, version, created_at, updated_at, metadata
+                        repository_id, version, created_at, updated_at, metadata
                 FROM documents WHERE author = ? ORDER BY updated_at DESC
             """,
                 (author,),
@@ -147,7 +153,11 @@ class SQLiteDocumentRepository(DocumentRepository):
         document_id = DocumentId(id)
         content = Content(text=content_text, format=content_format)
         metadata = Metadata(
-            created_at=created_at, updated_at=updated_at, author=author, tags=tags, properties=properties
+            created_at=created_at,
+            updated_at=updated_at,
+            author=author,
+            tags=tags,
+            properties=properties,
         )
 
         return Document(

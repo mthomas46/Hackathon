@@ -9,7 +9,10 @@ from services.shared.core.config.config import get_config_value, load_yaml_confi
 from services.shared.core.constants_new import ServiceNames
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.utilities.error_handling import install_error_handlers
-from services.shared.utilities.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities.utilities import (
+    attach_self_register,
+    setup_common_middleware,
+)
 
 # API routes
 from .api.routes import router
@@ -68,4 +71,9 @@ if __name__ == "__main__":
     _cfg = load_yaml_config("services/doc_store/config.yaml")
     port = get_config_value("port", 5000, section="doc_store", env_key="DOCSTORE_PORT")
 
-    uvicorn.run("services.doc_store.main_refactored:app", host="0.0.0.0", port=int(port), reload=True)
+    uvicorn.run(
+        "services.doc_store.main_refactored:app",
+        host="0.0.0.0",
+        port=int(port),
+        reload=True,
+    )

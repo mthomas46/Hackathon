@@ -126,7 +126,9 @@ class Service:
         """Update the service status."""
         valid_statuses = ["healthy", "unhealthy", "unknown", "maintenance"]
         if status not in valid_statuses:
-            raise ValueError(f"Invalid status: {status}. Must be one of {valid_statuses}")
+            raise ValueError(
+                f"Invalid status: {status}. Must be one of {valid_statuses}"
+            )
 
         self._status = status
         self._last_seen = datetime.utcnow()

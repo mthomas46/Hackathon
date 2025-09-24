@@ -20,23 +20,42 @@ class HealthStatus(BaseModel):
     service: str = Field(..., description="Service name")
     version: Optional[str] = Field(None, description="Service version")
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat(), description="Health check timestamp"
+        default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+        description="Health check timestamp",
     )
-    uptime_seconds: Optional[float] = Field(None, description="Service uptime in seconds")
+    uptime_seconds: Optional[float] = Field(
+        None, description="Service uptime in seconds"
+    )
     environment: Optional[str] = Field(None, description="Deployment environment")
 
     # Service-specific optional fields
-    workflows_loaded: Optional[bool] = Field(default=None, description="Workflow repository status (orchestrator)")
-    database_connected: Optional[bool] = Field(default=None, description="Database connection status (doc_store)")
-    models_loaded: Optional[bool] = Field(default=None, description="ML models loaded status (analysis-service)")
-    api_connected: Optional[bool] = Field(default=None, description="API connectivity status (frontend)")
-    llm_connected: Optional[bool] = Field(default=None, description="LLM service connectivity (summarizer-hub)")
-    ollama_available: Optional[bool] = Field(default=None, description="Ollama service availability (llm-gateway)")
-    data_sources: Optional[int] = Field(default=None, description="Number of data sources (mock-data-generator)")
+    workflows_loaded: Optional[bool] = Field(
+        default=None, description="Workflow repository status (orchestrator)"
+    )
+    database_connected: Optional[bool] = Field(
+        default=None, description="Database connection status (doc_store)"
+    )
+    models_loaded: Optional[bool] = Field(
+        default=None, description="ML models loaded status (analysis-service)"
+    )
+    api_connected: Optional[bool] = Field(
+        default=None, description="API connectivity status (frontend)"
+    )
+    llm_connected: Optional[bool] = Field(
+        default=None, description="LLM service connectivity (summarizer-hub)"
+    )
+    ollama_available: Optional[bool] = Field(
+        default=None, description="Ollama service availability (llm-gateway)"
+    )
+    data_sources: Optional[int] = Field(
+        default=None, description="Number of data sources (mock-data-generator)"
+    )
     email_configured: Optional[bool] = Field(
         default=None, description="Email service configuration (notification-service)"
     )
-    analysis_ready: Optional[bool] = Field(default=None, description="Analysis capabilities ready (code-analyzer)")
+    analysis_ready: Optional[bool] = Field(
+        default=None, description="Analysis capabilities ready (code-analyzer)"
+    )
 
 
 class HealthCheck(BaseModel):
@@ -55,7 +74,9 @@ class DependencyHealth(BaseModel):
     status: str  # healthy, unhealthy, unknown
     response_time_ms: Optional[float] = None
     error: Optional[str] = None
-    last_checked: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    last_checked: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
 
 
 class SystemHealth(BaseModel):
@@ -65,7 +86,9 @@ class SystemHealth(BaseModel):
     services_checked: int
     services_healthy: int
     services_unhealthy: int
-    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
     service_details: Dict[str, DependencyHealth] = Field(default_factory=dict)
     environment_info: Dict[str, Any] = Field(default_factory=dict)
 
@@ -82,7 +105,9 @@ class HealthManager:
 
     def add_health_check(self, name: str, description: str, critical: bool = True):
         """Add a custom health check."""
-        self.health_checks.append(HealthCheck(name=name, description=description, critical=critical))
+        self.health_checks.append(
+            HealthCheck(name=name, description=description, critical=critical)
+        )
 
     async def basic_health(self) -> HealthStatus:
         """Basic health check for the service."""
@@ -166,7 +191,9 @@ class HealthManager:
 
         return health_status
 
-    async def dependency_health(self, service_name: str, endpoint: str = "/health") -> DependencyHealth:
+    async def dependency_health(
+        self, service_name: str, endpoint: str = "/health"
+    ) -> DependencyHealth:
         """Check health of a service dependency."""
         import time
 
@@ -176,7 +203,9 @@ class HealthManager:
             response_time = (time.time() - start_time) * 1000  # Convert to ms
 
             if response.get("status") == "healthy":
-                return DependencyHealth(name=service_name, status="healthy", response_time_ms=response_time)
+                return DependencyHealth(
+                    name=service_name, status="healthy", response_time_ms=response_time
+                )
             else:
                 return DependencyHealth(
                     name=service_name,
@@ -186,7 +215,12 @@ class HealthManager:
                 )
         except Exception as e:
             response_time = (time.time() - start_time) * 1000
-            return DependencyHealth(name=service_name, status="unhealthy", response_time_ms=response_time, error=str(e))
+            return DependencyHealth(
+                name=service_name,
+                status="unhealthy",
+                response_time_ms=response_time,
+                error=str(e),
+            )
 
     async def system_health(self) -> SystemHealth:
         """Check health of the entire system."""
@@ -228,7 +262,10 @@ class HealthManager:
         for check in self.health_checks:
             # Placeholder for custom check logic
             # In practice, this would run actual health checks
-            results[check.name] = {"status": "healthy", "description": check.description}
+            results[check.name] = {
+                "status": "healthy",
+                "description": check.description,
+            }
         return results
 
 
@@ -242,7 +279,9 @@ def create_health_endpoint(health_manager: HealthManager):
 
     async def health():
         """Standard health check endpoint."""
-        print(f"🚨 SHARED HEALTH ENDPOINT called for service: {health_manager.service_name}")  # Debug logging
+        print(
+            f"🚨 SHARED HEALTH ENDPOINT called for service: {health_manager.service_name}"
+        )  # Debug logging
         health_status = await health_manager.basic_health()
         print(f"📊 Shared health status: {health_status}")  # Debug logging
         print(f"📤 Returning shared health status directly")  # Debug logging
@@ -279,9 +318,13 @@ def create_dependency_health_endpoint(health_manager: HealthManager):
         if service_name not in service_endpoints:
             from fastapi import HTTPException
 
-            raise HTTPException(status_code=404, detail=f"Unknown service: {service_name}")
+            raise HTTPException(
+                status_code=404, detail=f"Unknown service: {service_name}"
+            )
 
-        return await health_manager.dependency_health(service_name, service_endpoints[service_name])
+        return await health_manager.dependency_health(
+            service_name, service_endpoints[service_name]
+        )
 
     return dependency_health
 
@@ -308,7 +351,9 @@ def register_health_endpoints(app, service_name: str, version: str = "1.0.0"):
     app.get("/health/system")(create_system_health_endpoint(health_manager))
 
     # Dependency health check
-    app.get("/health/dependency/{service_name}")(create_dependency_health_endpoint(health_manager))
+    app.get("/health/dependency/{service_name}")(
+        create_dependency_health_endpoint(health_manager)
+    )
 
     return health_manager
 
@@ -318,7 +363,9 @@ def register_health_endpoints(app, service_name: str, version: str = "1.0.0"):
 # ============================================================================
 
 
-def healthy_response(service_name: str, version: str = "1.0.0", **kwargs) -> Dict[str, Any]:
+def healthy_response(
+    service_name: str, version: str = "1.0.0", **kwargs
+) -> Dict[str, Any]:
     """Create a standard healthy response."""
     return {
         "status": "healthy",
@@ -329,7 +376,9 @@ def healthy_response(service_name: str, version: str = "1.0.0", **kwargs) -> Dic
     }
 
 
-def unhealthy_response(service_name: str, error: str, version: str = "1.0.0", **kwargs) -> Dict[str, Any]:
+def unhealthy_response(
+    service_name: str, error: str, version: str = "1.0.0", **kwargs
+) -> Dict[str, Any]:
     """Create a standard unhealthy response."""
     return {
         "status": "unhealthy",
@@ -342,13 +391,19 @@ def unhealthy_response(service_name: str, error: str, version: str = "1.0.0", **
 
 
 def health_response(
-    service_name: str, healthy: bool, version: str = "1.0.0", error: Optional[str] = None, **kwargs
+    service_name: str,
+    healthy: bool,
+    version: str = "1.0.0",
+    error: Optional[str] = None,
+    **kwargs,
 ) -> Dict[str, Any]:
     """Create a health response based on health status."""
     if healthy:
         return healthy_response(service_name, version, **kwargs)
     else:
-        return unhealthy_response(service_name, error or "Service unhealthy", version, **kwargs)
+        return unhealthy_response(
+            service_name, error or "Service unhealthy", version, **kwargs
+        )
 
 
 # ============================================================================

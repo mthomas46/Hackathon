@@ -102,14 +102,18 @@ class PromptStoreCache:
         self.response_times.append(time.time() - start_time)
         return None
 
-    async def set(self, key: str, value: Any, ttl: int = 3600, tags: Optional[List[str]] = None) -> bool:
+    async def set(
+        self, key: str, value: Any, ttl: int = 3600, tags: Optional[List[str]] = None
+    ) -> bool:
         """Set value in cache."""
         entry = CacheEntry(value=value, created_at=utc_now(), ttl=ttl, tags=tags or [])
 
         # Try Redis first
         if self.redis_client:
             try:
-                await self.redis_client.setex(f"prompt_store:{key}", ttl, json.dumps(value))
+                await self.redis_client.setex(
+                    f"prompt_store:{key}", ttl, json.dumps(value)
+                )
                 return True
             except Exception:
                 pass
@@ -181,7 +185,11 @@ class PromptStoreCache:
         total_requests = self.stats.total_hits + self.stats.total_misses
         hit_ratio = self.stats.total_hits / total_requests if total_requests > 0 else 0
 
-        avg_response_time = sum(self.response_times) / len(self.response_times) if self.response_times else 0
+        avg_response_time = (
+            sum(self.response_times) / len(self.response_times)
+            if self.response_times
+            else 0
+        )
 
         return {
             "total_hits": self.stats.total_hits,
@@ -204,7 +212,9 @@ class PromptStoreCache:
             return
 
         oldest_key = min(
-            self.local_cache.keys(), key=lambda k: self.local_cache[k].last_accessed or self.local_cache[k].created_at
+            self.local_cache.keys(),
+            key=lambda k: self.local_cache[k].last_accessed
+            or self.local_cache[k].created_at,
         )
 
         if oldest_key:
@@ -214,7 +224,9 @@ class PromptStoreCache:
     def _calculate_size(self) -> int:
         """Calculate approximate size of local cache."""
         try:
-            return sum(len(json.dumps(entry.value)) for entry in self.local_cache.values())
+            return sum(
+                len(json.dumps(entry.value)) for entry in self.local_cache.values()
+            )
         except Exception:
             return 0
 

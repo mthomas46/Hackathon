@@ -10,13 +10,23 @@ from rich.table import Table
 from ..formatters.display_utils import DisplayManager
 from ..utils.api_utils import APIClient
 from ..utils.cache_utils import CacheManager
-from .mixins import HealthCheckMixin, MenuMixin, OperationMixin, TableMixin, ValidationMixin
+from .mixins import (
+    HealthCheckMixin,
+    MenuMixin,
+    OperationMixin,
+    TableMixin,
+    ValidationMixin,
+)
 
 
-class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, HealthCheckMixin, ABC):
+class BaseManager(
+    MenuMixin, OperationMixin, TableMixin, ValidationMixin, HealthCheckMixin, ABC
+):
     """Base class for all CLI managers providing common functionality."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         self.console = console
         self.clients = clients
         self.cache = cache or {}
@@ -85,13 +95,17 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         """Get user confirmation for an action."""
         return Confirm.ask(f"[yellow]{message}[/yellow]", default=default)
 
-    async def get_user_input(self, prompt: str, default: str = "", password: bool = False) -> str:
+    async def get_user_input(
+        self, prompt: str, default: str = "", password: bool = False
+    ) -> str:
         """Get user input with optional default and password masking."""
         if password:
             return Prompt.ask(prompt, password=True)
         return Prompt.ask(prompt, default=default) if default else Prompt.ask(prompt)
 
-    async def select_from_list(self, items: List[str], prompt: str = "Select item") -> Optional[str]:
+    async def select_from_list(
+        self, items: List[str], prompt: str = "Select item"
+    ) -> Optional[str]:
         """Present a numbered list for user selection."""
         if not items:
             self.display.show_warning("No items available")
@@ -116,7 +130,9 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
 
     async def run_with_progress(self, coro, description: str = "Processing"):
         """Run a coroutine with progress indication."""
-        with self.console.status(f"[bold green]{description}...[/bold green]") as status:
+        with self.console.status(
+            f"[bold green]{description}...[/bold green]"
+        ) as status:
             try:
                 return await coro
             except Exception as e:
@@ -147,7 +163,9 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         """Create a standard workflow table."""
         from ..shared_utils import create_enhanced_table
 
-        return create_enhanced_table(title, ["ID", "Status", "Type", "Progress", "Started"])
+        return create_enhanced_table(
+            title, ["ID", "Status", "Type", "Progress", "Started"]
+        )
 
     def create_service_table(self, title: str = "Services") -> Table:
         """Create a standard service table."""
@@ -159,13 +177,18 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         """Create a standard findings table."""
         from ..shared_utils import create_enhanced_table
 
-        return create_enhanced_table(title, ["ID", "Type", "Severity", "Title", "Target"])
+        return create_enhanced_table(
+            title, ["ID", "Type", "Severity", "Title", "Target"]
+        )
 
     def add_workflow_row(self, table: Table, workflow: Dict[str, Any]) -> None:
         """Add a workflow row to a workflow table."""
-        status_color = {"running": "yellow", "completed": "green", "failed": "red", "pending": "blue"}.get(
-            workflow.get("status", "unknown"), "white"
-        )
+        status_color = {
+            "running": "yellow",
+            "completed": "green",
+            "failed": "red",
+            "pending": "blue",
+        }.get(workflow.get("status", "unknown"), "white")
 
         table.add_row(
             workflow.get("id", "N/A")[:8],
@@ -187,9 +210,13 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
 
     def add_finding_row(self, table: Table, finding: Dict[str, Any]) -> None:
         """Add a finding row to a findings table."""
-        severity_color = {"critical": "red", "high": "red", "medium": "yellow", "low": "green", "info": "blue"}.get(
-            finding.get("severity", "unknown"), "white"
-        )
+        severity_color = {
+            "critical": "red",
+            "high": "red",
+            "medium": "yellow",
+            "low": "green",
+            "info": "blue",
+        }.get(finding.get("severity", "unknown"), "white")
 
         table.add_row(
             finding.get("id", "N/A")[:8],
@@ -200,7 +227,13 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         )
 
     async def monitor_operation(
-        self, operation_id: str, operation_type: str, status_func, success_check, progress_func=None, interval: int = 2
+        self,
+        operation_id: str,
+        operation_type: str,
+        status_func,
+        success_check,
+        progress_func=None,
+        interval: int = 2,
     ) -> bool:
         """Generic monitoring utility for async operations.
 
@@ -217,7 +250,9 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
         """
         import asyncio
 
-        self.console.print(f"[yellow]Monitoring {operation_type} {operation_id}...[/yellow]")
+        self.console.print(
+            f"[yellow]Monitoring {operation_type} {operation_id}...[/yellow]"
+        )
 
         while True:
             try:
@@ -228,7 +263,9 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
                 if success_check(status_data):
                     status = status_data.get("status", "unknown")
                     if status == "success" or status == "completed":
-                        self.display.show_success(f"{operation_type.title()} {operation_id} completed successfully!")
+                        self.display.show_success(
+                            f"{operation_type.title()} {operation_id} completed successfully!"
+                        )
                     else:
                         self.display.show_error(
                             f"{operation_type.title()} {operation_id} failed: {status_data.get('error', 'Unknown error')}"
@@ -246,7 +283,9 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
                     else:
                         progress = status_data.get("progress", 0)
                         current_step = status_data.get("current_step", "processing")
-                        self.console.print(f"[yellow]⏳ Progress: {progress}% - {current_step}[/yellow]")
+                        self.console.print(
+                            f"[yellow]⏳ Progress: {progress}% - {current_step}[/yellow]"
+                        )
 
             except KeyboardInterrupt:
                 self.display.show_warning(f"Stopped monitoring {operation_type}")
@@ -255,9 +294,13 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
                 self.display.show_error(f"Error monitoring {operation_type}: {e}")
                 return False
 
-    async def api_get_with_status(self, endpoint: str, description: str) -> Optional[Dict[str, Any]]:
+    async def api_get_with_status(
+        self, endpoint: str, description: str
+    ) -> Optional[Dict[str, Any]]:
         """Make GET request with status message and error handling."""
-        with self.console.status(f"[bold green]{description}...[/bold green]") as status:
+        with self.console.status(
+            f"[bold green]{description}...[/bold green]"
+        ) as status:
             try:
                 return await self.clients.get_json(endpoint)
             except Exception as e:
@@ -265,10 +308,16 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
                 return None
 
     async def api_post_with_status(
-        self, endpoint: str, data: Dict[str, Any], description: str, success_msg: str = None
+        self,
+        endpoint: str,
+        data: Dict[str, Any],
+        description: str,
+        success_msg: str = None,
     ) -> Optional[Dict[str, Any]]:
         """Make POST request with status message and error handling."""
-        with self.console.status(f"[bold green]{description}...[/bold green]") as status:
+        with self.console.status(
+            f"[bold green]{description}...[/bold green]"
+        ) as status:
             try:
                 result = await self.clients.post_json(endpoint, data)
                 if success_msg:
@@ -279,14 +328,21 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
                 return None
 
     async def api_operation_with_confirm(
-        self, endpoint: str, data: Dict[str, Any], description: str, confirm_msg: str, success_msg: str
+        self,
+        endpoint: str,
+        data: Dict[str, Any],
+        description: str,
+        confirm_msg: str,
+        success_msg: str,
     ) -> bool:
         """Perform API operation with user confirmation."""
         if not await self.confirm_action(confirm_msg):
             self.display.show_info(f"{description} cancelled.")
             return False
 
-        result = await self.api_post_with_status(endpoint, data, description, success_msg)
+        result = await self.api_post_with_status(
+            endpoint, data, description, success_msg
+        )
         return result is not None
 
     async def run_menu_loop(
@@ -314,7 +370,12 @@ class BaseManager(MenuMixin, OperationMixin, TableMixin, ValidationMixin, Health
 
                 overlay = get_interactive_overlay(self.console)
                 await overlay.enhanced_menu_loop(
-                    self, title, items, back_option, enable_shortcuts=True, enable_search=True
+                    self,
+                    title,
+                    items,
+                    back_option,
+                    enable_shortcuts=True,
+                    enable_search=True,
                 )
                 return
             except ImportError:

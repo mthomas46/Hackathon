@@ -23,7 +23,9 @@ def render_header():
         with col1:
             # Main title
             st.title("🚀 Project Simulation Dashboard")
-            st.caption(f"Interactive platform for managing project simulations • v{config.service_version}")
+            st.caption(
+                f"Interactive platform for managing project simulations • v{config.service_version}"
+            )
 
         with col2:
             # Service status

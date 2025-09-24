@@ -33,11 +33,18 @@ class ServiceTool(BaseTool):
 
 # Prompt Store Tools
 @tool
-def create_prompt_tool(name: str, category: str, content: str, variables: List[str]) -> Dict[str, Any]:
+def create_prompt_tool(
+    name: str, category: str, content: str, variables: List[str]
+) -> Dict[str, Any]:
     """Create a new prompt in the Prompt Store."""
     service_client = get_service_client()
 
-    prompt_data = {"name": name, "category": category, "content": content, "variables": variables}
+    prompt_data = {
+        "name": name,
+        "category": category,
+        "content": content,
+        "variables": variables,
+    }
 
     try:
         result = service_client.post_json("prompt-store/api/v1/prompts", prompt_data)
@@ -52,7 +59,9 @@ def get_prompt_tool(name: str, category: str) -> Dict[str, Any]:
     service_client = get_service_client()
 
     try:
-        result = service_client.get_json(f"prompt-store/api/v1/prompts/search/{category}/{name}")
+        result = service_client.get_json(
+            f"prompt-store/api/v1/prompts/search/{category}/{name}"
+        )
         return {"success": True, "data": result}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -65,7 +74,8 @@ def get_optimal_prompt_tool(task_type: str, context: Dict[str, Any]) -> Dict[str
 
     try:
         result = service_client.post_json(
-            "prompt-store/api/v1/orchestration/prompts/select", {"task_type": task_type, "context": context}
+            "prompt-store/api/v1/orchestration/prompts/select",
+            {"task_type": task_type, "context": context},
         )
         return {"success": True, "data": result}
     except Exception as e:
@@ -74,7 +84,9 @@ def get_optimal_prompt_tool(task_type: str, context: Dict[str, Any]) -> Dict[str
 
 # Document Store Tools
 @tool
-def store_document_tool(content: str, metadata: Dict[str, Any], source: str) -> Dict[str, Any]:
+def store_document_tool(
+    content: str, metadata: Dict[str, Any], source: str
+) -> Dict[str, Any]:
     """Store a document in the Document Store."""
     service_client = get_service_client()
 
@@ -88,7 +100,9 @@ def store_document_tool(content: str, metadata: Dict[str, Any], source: str) -> 
 
 
 @tool
-def search_documents_tool(query: str, filters: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def search_documents_tool(
+    query: str, filters: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """Search documents in the Document Store."""
     service_client = get_service_client()
 
@@ -97,7 +111,9 @@ def search_documents_tool(query: str, filters: Optional[Dict[str, Any]] = None) 
         search_params.update(filters)
 
     try:
-        result = service_client.get_json("doc-store/api/v1/search", params=search_params)
+        result = service_client.get_json(
+            "doc-store/api/v1/search", params=search_params
+        )
         return {"success": True, "data": result}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -163,7 +179,9 @@ def extract_key_concepts_tool(content: str) -> Dict[str, Any]:
     service_client = get_service_client()
 
     try:
-        result = service_client.post_json("summarizer-hub/summarize", {"content": content})
+        result = service_client.post_json(
+            "summarizer-hub/summarize", {"content": content}
+        )
         return {"success": True, "data": result.get("key_concepts", [])}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -171,7 +189,9 @@ def extract_key_concepts_tool(content: str) -> Dict[str, Any]:
 
 # Interpreter Tools
 @tool
-def interpret_query_tool(query: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def interpret_query_tool(
+    query: str, context: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
     """Interpret a natural language query using the Interpreter service."""
     service_client = get_service_client()
 
@@ -200,11 +220,17 @@ def execute_workflow_tool(query: str, user_id: Optional[str] = None) -> Dict[str
 
 # Analysis Service Tools
 @tool
-def analyze_document_consistency_tool(doc_ids: List[str], criteria: Dict[str, Any]) -> Dict[str, Any]:
+def analyze_document_consistency_tool(
+    doc_ids: List[str], criteria: Dict[str, Any]
+) -> Dict[str, Any]:
     """Analyze document consistency using the Analysis Service."""
     service_client = get_service_client()
 
-    analysis_data = {"targets": doc_ids, "analysis_type": "consistency", "criteria": criteria}
+    analysis_data = {
+        "targets": doc_ids,
+        "analysis_type": "consistency",
+        "criteria": criteria,
+    }
 
     try:
         result = service_client.post_json("analysis-service/analyze", analysis_data)
@@ -220,7 +246,8 @@ def generate_quality_report_tool(analysis_results: Dict[str, Any]) -> Dict[str, 
 
     try:
         result = service_client.post_json(
-            "analysis-service/reports/generate", {"type": "quality_summary", "data": analysis_results}
+            "analysis-service/reports/generate",
+            {"type": "quality_summary", "data": analysis_results},
         )
         return {"success": True, "data": result}
     except Exception as e:
@@ -229,14 +256,18 @@ def generate_quality_report_tool(analysis_results: Dict[str, Any]) -> Dict[str, 
 
 # Notification Service Tools
 @tool
-def send_notification_tool(message: str, channels: List[str], priority: str) -> Dict[str, Any]:
+def send_notification_tool(
+    message: str, channels: List[str], priority: str
+) -> Dict[str, Any]:
     """Send a notification using the Notification Service."""
     service_client = get_service_client()
 
     notification_data = {"message": message, "channels": channels, "priority": priority}
 
     try:
-        result = service_client.post_json("notification-service/notify", notification_data)
+        result = service_client.post_json(
+            "notification-service/notify", notification_data
+        )
         return {"success": True, "data": result}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -250,7 +281,9 @@ def create_notification_template_tool(name: str, template: str) -> Dict[str, Any
     template_data = {"name": name, "template": template}
 
     try:
-        result = service_client.post_json("notification-service/templates", template_data)
+        result = service_client.post_json(
+            "notification-service/templates", template_data
+        )
         return {"success": True, "data": result}
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -276,7 +309,11 @@ def ingest_jira_issues_tool(project_key: str, query: str) -> Dict[str, Any]:
     """Ingest Jira issues and tickets."""
     service_client = get_service_client()
 
-    ingest_data = {"source_url": f"jira/{project_key}", "source_type": "jira", "query": query}
+    ingest_data = {
+        "source_url": f"jira/{project_key}",
+        "source_type": "jira",
+        "query": query,
+    }
 
     try:
         result = service_client.post_json("source-agent/docs/fetch", ingest_data)
@@ -314,7 +351,9 @@ def sanitize_content_tool(content: str, policies: List[str]) -> Dict[str, Any]:
         return {"success": False, "error": str(e)}
 
 
-async def create_service_tools(service_name: str, service_client: Any) -> Dict[str, BaseTool]:
+async def create_service_tools(
+    service_name: str, service_client: Any
+) -> Dict[str, BaseTool]:
     """Create LangGraph tools for a specific service."""
 
     tools = {}
@@ -322,12 +361,22 @@ async def create_service_tools(service_name: str, service_client: Any) -> Dict[s
     # Map services to their tool functions
     service_tool_map = {
         "prompt_store": [create_prompt_tool, get_prompt_tool, get_optimal_prompt_tool],
-        "document_store": [store_document_tool, search_documents_tool, get_document_tool],
+        "document_store": [
+            store_document_tool,
+            search_documents_tool,
+            get_document_tool,
+        ],
         "code_analyzer": [analyze_codebase_tool, extract_functions_tool],
         "summarizer_hub": [summarize_document_tool, extract_key_concepts_tool],
         "interpreter": [interpret_query_tool, execute_workflow_tool],
-        "analysis_service": [analyze_document_consistency_tool, generate_quality_report_tool],
-        "notification_service": [send_notification_tool, create_notification_template_tool],
+        "analysis_service": [
+            analyze_document_consistency_tool,
+            generate_quality_report_tool,
+        ],
+        "notification_service": [
+            send_notification_tool,
+            create_notification_template_tool,
+        ],
         "source_agent": [ingest_github_repo_tool, ingest_jira_issues_tool],
         "secure_analyzer": [analyze_content_security_tool, sanitize_content_tool],
     }

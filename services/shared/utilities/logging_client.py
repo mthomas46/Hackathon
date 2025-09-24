@@ -14,7 +14,12 @@ logger = logging.getLogger(__name__)
 class LogCollectorClient:
     """Client for sending logs to the log collector service."""
 
-    def __init__(self, collector_url: str = "http://localhost:5080", batch_size: int = 10, flush_interval: float = 5.0):
+    def __init__(
+        self,
+        collector_url: str = "http://localhost:5080",
+        batch_size: int = 10,
+        flush_interval: float = 5.0,
+    ):
         """Initialize the log collector client."""
         self.collector_url = collector_url.rstrip("/")
         self.batch_size = batch_size
@@ -51,7 +56,13 @@ class LogCollectorClient:
             if self._queue:
                 asyncio.create_task(self._flush_logs())
 
-    def log(self, message: str, level: str = "INFO", extra: Optional[Dict[str, Any]] = None, service: str = "unknown"):
+    def log(
+        self,
+        message: str,
+        level: str = "INFO",
+        extra: Optional[Dict[str, Any]] = None,
+        service: str = "unknown",
+    ):
         """Log a message."""
         if not self._running:
             return
@@ -80,7 +91,9 @@ class LogCollectorClient:
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(f"{self.collector_url}/logs/batch", json={"logs": logs_to_send})
+                response = await client.post(
+                    f"{self.collector_url}/logs/batch", json={"logs": logs_to_send}
+                )
                 response.raise_for_status()
                 logger.debug(f"Sent {len(logs_to_send)} logs to collector")
         except Exception as e:
@@ -103,10 +116,14 @@ def get_log_collector_client() -> LogCollectorClient:
 
 
 def init_log_collector_client(
-    collector_url: str = "http://localhost:5080", batch_size: int = 10, flush_interval: float = 5.0
+    collector_url: str = "http://localhost:5080",
+    batch_size: int = 10,
+    flush_interval: float = 5.0,
 ):
     """Initialize the global log collector client."""
     global _log_collector_client
-    _log_collector_client = LogCollectorClient(collector_url, batch_size, flush_interval)
+    _log_collector_client = LogCollectorClient(
+        collector_url, batch_size, flush_interval
+    )
     _log_collector_client.start()
     return _log_collector_client

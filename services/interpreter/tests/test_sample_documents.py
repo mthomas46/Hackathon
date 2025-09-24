@@ -95,7 +95,9 @@ class TestGlobalSampleDocuments:
     def test_global_instance_functionality(self):
         """Test that the global instance works correctly."""
         assert len(sample_documents.get_all_documents()) > 0
-        print(f"✓ Global instance has {len(sample_documents.get_all_documents())} documents")
+        print(
+            f"✓ Global instance has {len(sample_documents.get_all_documents())} documents"
+        )
 
 
 class TestImportFunctionality:

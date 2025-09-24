@@ -17,7 +17,9 @@ if parent_dir not in sys.path:
 from services.orchestrator.modules.langgraph.engine import LangGraphWorkflowEngine
 from services.orchestrator.modules.langgraph.state import create_workflow_state
 from services.orchestrator.modules.langgraph.tools import create_service_tools
-from services.orchestrator.modules.workflows.document_analysis import create_document_analysis_workflow
+from services.orchestrator.modules.workflows.document_analysis import (
+    create_document_analysis_workflow,
+)
 
 
 async def test_langgraph_engine():
@@ -60,7 +62,9 @@ async def test_workflow_state():
     try:
         # Create workflow state
         state = create_workflow_state(
-            workflow_type="test_workflow", input_data={"test_param": "test_value"}, user_id="test_user"
+            workflow_type="test_workflow",
+            input_data={"test_param": "test_value"},
+            user_id="test_user",
         )
         print("✓ Workflow state created")
 
@@ -116,7 +120,9 @@ async def test_workflow_execution():
         await engine.initialize_tools(["logging_service"])
 
         # Create test workflow state
-        test_state = create_workflow_state(workflow_type="test_execution", input_data={"test": True})
+        test_state = create_workflow_state(
+            workflow_type="test_execution", input_data={"test": True}
+        )
 
         print("✓ Basic workflow execution components ready")
 
@@ -145,7 +151,12 @@ async def main():
         return
 
     # Run tests
-    tests = [test_langgraph_engine, test_workflow_state, test_service_tools, test_workflow_execution]
+    tests = [
+        test_langgraph_engine,
+        test_workflow_state,
+        test_service_tools,
+        test_workflow_execution,
+    ]
 
     results = []
     for test_func in tests:

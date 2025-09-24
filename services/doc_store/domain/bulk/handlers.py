@@ -16,11 +16,15 @@ class BulkOperationsHandlers(BaseHandler):
     def __init__(self):
         super().__init__(BulkOperationsService())
 
-    async def handle_bulk_create_documents(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def handle_bulk_create_documents(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Handle bulk document creation."""
         # Validate request data
         if not documents:
-            return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("No documents provided")))
+            return await self._handle_request(
+                lambda: (_ for _ in ()).throw(ValueError("No documents provided"))
+            )
 
         # Convert to BulkDocumentItem objects
         bulk_items = []
@@ -49,30 +53,42 @@ class BulkOperationsHandlers(BaseHandler):
     async def handle_bulk_search(self, queries: List[str]) -> Dict[str, Any]:
         """Handle bulk search operation."""
         if not queries:
-            return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("No queries provided")))
+            return await self._handle_request(
+                lambda: (_ for _ in ()).throw(ValueError("No queries provided"))
+            )
 
         operation = self.service.create_bulk_operation("search_documents", queries)
 
         return await self._handle_request(lambda: operation.to_dict())
 
-    async def handle_bulk_tag_documents(self, document_ids: List[str]) -> Dict[str, Any]:
+    async def handle_bulk_tag_documents(
+        self, document_ids: List[str]
+    ) -> Dict[str, Any]:
         """Handle bulk tagging operation."""
         if not document_ids:
-            return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("No document IDs provided")))
+            return await self._handle_request(
+                lambda: (_ for _ in ()).throw(ValueError("No document IDs provided"))
+            )
 
         operation = self.service.create_bulk_operation("tag_documents", document_ids)
 
         return await self._handle_request(lambda: operation.to_dict())
 
-    async def handle_get_bulk_operation_status(self, operation_id: str) -> Dict[str, Any]:
+    async def handle_get_bulk_operation_status(
+        self, operation_id: str
+    ) -> Dict[str, Any]:
         """Handle operation status request."""
         operation = self.service.get_operation_status(operation_id)
         if not operation:
-            return await self._handle_request(lambda: (_ for _ in ()).throw(ValueError("Operation not found")))
+            return await self._handle_request(
+                lambda: (_ for _ in ()).throw(ValueError("Operation not found"))
+            )
 
         return await self._handle_request(lambda: operation.to_dict())
 
-    async def handle_list_bulk_operations(self, status: str = None, limit: int = 50) -> Dict[str, Any]:
+    async def handle_list_bulk_operations(
+        self, status: str = None, limit: int = 50
+    ) -> Dict[str, Any]:
         """Handle list operations request."""
         result = self.service.list_operations(status, limit)
 
@@ -84,12 +100,18 @@ class BulkOperationsHandlers(BaseHandler):
 
         if not cancelled:
             return await self._handle_request(
-                lambda: (_ for _ in ()).throw(ValueError("Operation could not be cancelled"))
+                lambda: (_ for _ in ()).throw(
+                    ValueError("Operation could not be cancelled")
+                )
             )
 
-        return await self._handle_request(lambda: {"operation_id": operation_id, "cancelled": True})
+        return await self._handle_request(
+            lambda: {"operation_id": operation_id, "cancelled": True}
+        )
 
-    async def handle_cleanup_bulk_operations(self, days_to_keep: int = 30) -> Dict[str, Any]:
+    async def handle_cleanup_bulk_operations(
+        self, days_to_keep: int = 30
+    ) -> Dict[str, Any]:
         """Handle cleanup of old operations."""
         result = self.service.cleanup_old_operations(days_to_keep)
 

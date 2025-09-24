@@ -15,21 +15,24 @@ from ..utilities import utc_now
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')  # Entity type
+T = TypeVar("T")  # Entity type
 
 
 class ServiceError(Exception):
     """Base exception for service operations."""
+
     pass
 
 
 class ValidationError(ServiceError):
     """Raised when entity validation fails."""
+
     pass
 
 
 class BusinessRuleViolationError(ServiceError):
     """Raised when a business rule is violated."""
+
     pass
 
 
@@ -47,7 +50,7 @@ class BaseService(Generic[T], ABC):
             repository: Repository instance for data access
         """
         self.repository = repository
-        self.entity_class = repository.entity_class
+        self.entity_class = repository.entity_class if repository else None
 
     @abstractmethod
     def _validate_entity(self, entity: T) -> None:
@@ -61,7 +64,7 @@ class BaseService(Generic[T], ABC):
         """
         pass
 
-    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> T:
+    async def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> T:
         """Create entity from data dictionary.
 
         Args:
@@ -89,10 +92,10 @@ class BaseService(Generic[T], ABC):
         """
         try:
             # Generate ID if not provided
-            entity_id = data.get('id') or self.entity_class.generate_id()
+            entity_id = data.get("id") or self.entity_class.generate_id()
 
             # Create entity
-            entity = self._create_entity_from_data(entity_id, data)
+            entity = await self._create_entity_from_data(entity_id, data)
 
             # Validate
             self._validate_entity(entity)
@@ -103,21 +106,25 @@ class BaseService(Generic[T], ABC):
             # Save
             saved_entity = await self.repository.save(entity)
 
-            logger.info(f"Created {self.entity_class.__name__}", extra={
-                "entity_id": entity_id,
-                "service": self.__class__.__name__
-            })
+            logger.info(
+                f"Created {self.entity_class.__name__}",
+                extra={"entity_id": entity_id, "service": self.__class__.__name__},
+            )
 
             return saved_entity
 
         except ValidationError:
             raise
         except Exception as e:
-            logger.error(f"Failed to create {self.entity_class.__name__}", extra={
-                "data": data,
-                "error": str(e),
-                "service": self.__class__.__name__
-            }, exc_info=True)
+            logger.error(
+                f"Failed to create {self.entity_class.__name__}",
+                extra={
+                    "data": data,
+                    "error": str(e),
+                    "service": self.__class__.__name__,
+                },
+                exc_info=True,
+            )
             raise ServiceError(f"Failed to create entity: {e}") from e
 
     async def get_by_id(self, entity_id: str) -> T:
@@ -136,18 +143,24 @@ class BaseService(Generic[T], ABC):
         try:
             entity = await self.repository.find_by_id(entity_id)
             if not entity:
-                raise EntityNotFoundError(f"{self.entity_class.__name__} with ID {entity_id} not found")
+                raise EntityNotFoundError(
+                    f"{self.entity_class.__name__} with ID {entity_id} not found"
+                )
 
             return entity
 
         except EntityNotFoundError:
             raise
         except Exception as e:
-            logger.error(f"Failed to get {self.entity_class.__name__} by ID", extra={
-                "entity_id": entity_id,
-                "error": str(e),
-                "service": self.__class__.__name__
-            }, exc_info=True)
+            logger.error(
+                f"Failed to get {self.entity_class.__name__} by ID",
+                extra={
+                    "entity_id": entity_id,
+                    "error": str(e),
+                    "service": self.__class__.__name__,
+                },
+                exc_info=True,
+            )
             raise ServiceError(f"Failed to retrieve entity: {e}") from e
 
     async def update(self, entity_id: str, data: Dict[str, Any]) -> T:
@@ -180,22 +193,26 @@ class BaseService(Generic[T], ABC):
             # Save
             saved_entity = await self.repository.save(updated_entity)
 
-            logger.info(f"Updated {self.entity_class.__name__}", extra={
-                "entity_id": entity_id,
-                "service": self.__class__.__name__
-            })
+            logger.info(
+                f"Updated {self.entity_class.__name__}",
+                extra={"entity_id": entity_id, "service": self.__class__.__name__},
+            )
 
             return saved_entity
 
         except (EntityNotFoundError, ValidationError):
             raise
         except Exception as e:
-            logger.error(f"Failed to update {self.entity_class.__name__}", extra={
-                "entity_id": entity_id,
-                "data": data,
-                "error": str(e),
-                "service": self.__class__.__name__
-            }, exc_info=True)
+            logger.error(
+                f"Failed to update {self.entity_class.__name__}",
+                extra={
+                    "entity_id": entity_id,
+                    "data": data,
+                    "error": str(e),
+                    "service": self.__class__.__name__,
+                },
+                exc_info=True,
+            )
             raise ServiceError(f"Failed to update entity: {e}") from e
 
     async def delete(self, entity_id: str) -> bool:
@@ -214,19 +231,23 @@ class BaseService(Generic[T], ABC):
             deleted = await self.repository.delete_by_id(entity_id)
 
             if deleted:
-                logger.info(f"Deleted {self.entity_class.__name__}", extra={
-                    "entity_id": entity_id,
-                    "service": self.__class__.__name__
-                })
+                logger.info(
+                    f"Deleted {self.entity_class.__name__}",
+                    extra={"entity_id": entity_id, "service": self.__class__.__name__},
+                )
 
             return deleted
 
         except Exception as e:
-            logger.error(f"Failed to delete {self.entity_class.__name__}", extra={
-                "entity_id": entity_id,
-                "error": str(e),
-                "service": self.__class__.__name__
-            }, exc_info=True)
+            logger.error(
+                f"Failed to delete {self.entity_class.__name__}",
+                extra={
+                    "entity_id": entity_id,
+                    "error": str(e),
+                    "service": self.__class__.__name__,
+                },
+                exc_info=True,
+            )
             raise ServiceError(f"Failed to delete entity: {e}") from e
 
     async def list_all(self, limit: int = 100, offset: int = 0) -> List[T]:
@@ -243,12 +264,16 @@ class BaseService(Generic[T], ABC):
             return await self.repository.find_all(limit, offset)
 
         except Exception as e:
-            logger.error(f"Failed to list {self.entity_class.__name__}", extra={
-                "limit": limit,
-                "offset": offset,
-                "error": str(e),
-                "service": self.__class__.__name__
-            }, exc_info=True)
+            logger.error(
+                f"Failed to list {self.entity_class.__name__}",
+                extra={
+                    "limit": limit,
+                    "offset": offset,
+                    "error": str(e),
+                    "service": self.__class__.__name__,
+                },
+                exc_info=True,
+            )
             raise ServiceError(f"Failed to list entities: {e}") from e
 
     async def count(self) -> int:
@@ -261,10 +286,11 @@ class BaseService(Generic[T], ABC):
             return await self.repository.count()
 
         except Exception as e:
-            logger.error(f"Failed to count {self.entity_class.__name__}", extra={
-                "error": str(e),
-                "service": self.__class__.__name__
-            }, exc_info=True)
+            logger.error(
+                f"Failed to count {self.entity_class.__name__}",
+                extra={"error": str(e), "service": self.__class__.__name__},
+                exc_info=True,
+            )
             raise ServiceError(f"Failed to count entities: {e}") from e
 
     async def exists(self, entity_id: str) -> bool:
@@ -280,11 +306,15 @@ class BaseService(Generic[T], ABC):
             return await self.repository.exists(entity_id)
 
         except Exception as e:
-            logger.error(f"Failed to check existence of {self.entity_class.__name__}", extra={
-                "entity_id": entity_id,
-                "error": str(e),
-                "service": self.__class__.__name__
-            }, exc_info=True)
+            logger.error(
+                f"Failed to check existence of {self.entity_class.__name__}",
+                extra={
+                    "entity_id": entity_id,
+                    "error": str(e),
+                    "service": self.__class__.__name__,
+                },
+                exc_info=True,
+            )
             raise ServiceError(f"Failed to check entity existence: {e}") from e
 
     def _check_duplicates(self, entity: T) -> None:
@@ -316,7 +346,7 @@ class CrudService(BaseService[T]):
         Returns:
             Created or updated entity
         """
-        entity_id = data.get('id')
+        entity_id = data.get("id")
         if entity_id and await self.exists(entity_id):
             return await self.update(entity_id, data)
         else:
@@ -365,10 +395,13 @@ class CrudService(BaseService[T]):
                 if await self.delete(entity_id):
                     deleted_count += 1
             except Exception as e:
-                logger.warning(f"Failed to delete {self.entity_class.__name__} {entity_id}", extra={
-                    "entity_id": entity_id,
-                    "error": str(e),
-                    "service": self.__class__.__name__
-                })
+                logger.warning(
+                    f"Failed to delete {self.entity_class.__name__} {entity_id}",
+                    extra={
+                        "entity_id": entity_id,
+                        "error": str(e),
+                        "service": self.__class__.__name__,
+                    },
+                )
 
         return deleted_count

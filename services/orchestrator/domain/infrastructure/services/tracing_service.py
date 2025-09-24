@@ -49,7 +49,10 @@ class TracingService:
             return None
 
         span = TraceSpan(
-            parent_span_id=parent_span_id, service_name=service_name, operation_name=operation_name, tags=tags
+            parent_span_id=parent_span_id,
+            service_name=service_name,
+            operation_name=operation_name,
+            tags=tags,
         )
 
         trace.add_span(span)
@@ -68,7 +71,9 @@ class TracingService:
 
         return False
 
-    def complete_trace(self, trace_id: str, status: TraceStatus = TraceStatus.COMPLETED) -> bool:
+    def complete_trace(
+        self, trace_id: str, status: TraceStatus = TraceStatus.COMPLETED
+    ) -> bool:
         """Complete a distributed trace."""
         trace = self._active_traces.get(trace_id)
         if not trace:
@@ -153,8 +158,12 @@ class TracingService:
         completed_traces = list(self._completed_traces.values())
 
         total_completed = len(completed_traces)
-        successful_traces = len([t for t in completed_traces if t.status == TraceStatus.COMPLETED])
-        failed_traces = len([t for t in completed_traces if t.status == TraceStatus.FAILED])
+        successful_traces = len(
+            [t for t in completed_traces if t.status == TraceStatus.COMPLETED]
+        )
+        failed_traces = len(
+            [t for t in completed_traces if t.status == TraceStatus.FAILED]
+        )
 
         # Calculate average spans per trace
         total_spans = sum(len(t.spans) for t in active_traces + completed_traces)
@@ -162,8 +171,16 @@ class TracingService:
         avg_spans_per_trace = total_spans / total_traces if total_traces > 0 else 0
 
         # Calculate average trace duration
-        completed_durations = [t.duration_microseconds for t in completed_traces if t.duration_microseconds is not None]
-        avg_duration = sum(completed_durations) / len(completed_durations) if completed_durations else None
+        completed_durations = [
+            t.duration_microseconds
+            for t in completed_traces
+            if t.duration_microseconds is not None
+        ]
+        avg_duration = (
+            sum(completed_durations) / len(completed_durations)
+            if completed_durations
+            else None
+        )
 
         return {
             "active_traces": len(active_traces),

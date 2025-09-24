@@ -126,9 +126,13 @@ class DiscoveryAgentMonitor:
             }
 
         total = len(self._discovery_history)
-        successful = sum(1 for d in self._discovery_history if d.get("status") == "completed")
+        successful = sum(
+            1 for d in self._discovery_history if d.get("status") == "completed"
+        )
         failed = total - successful
-        total_endpoints = sum(d.get("endpoints_discovered", 0) for d in self._discovery_history)
+        total_endpoints = sum(
+            d.get("endpoints_discovered", 0) for d in self._discovery_history
+        )
         dry_runs = sum(1 for d in self._discovery_history if d.get("dry_run"))
 
         # Unique services

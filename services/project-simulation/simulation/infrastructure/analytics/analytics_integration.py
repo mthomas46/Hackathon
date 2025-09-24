@@ -12,7 +12,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.content.context_aware_generation import ContentContext
 from simulation.infrastructure.integration.service_clients import get_ecosystem_client
@@ -163,7 +165,10 @@ class AnalyticsIntegrationManager:
             workflow_id="document_quality",
             name="Document Quality Analysis",
             description="Comprehensive analysis of document quality, completeness, and compliance",
-            analysis_types=[AnalysisType.DOCUMENT_QUALITY, AnalysisType.REQUIREMENT_COVERAGE],
+            analysis_types=[
+                AnalysisType.DOCUMENT_QUALITY,
+                AnalysisType.REQUIREMENT_COVERAGE,
+            ],
             input_requirements={
                 "documents": "List of document IDs to analyze",
                 "quality_criteria": "Quality assessment criteria",
@@ -182,7 +187,11 @@ class AnalyticsIntegrationManager:
             workflow_id="project_risks",
             name="Project Risk Assessment",
             description="Comprehensive risk analysis for project success factors",
-            analysis_types=[AnalysisType.PROJECT_RISKS, AnalysisType.TEAM_PRODUCTIVITY, AnalysisType.COST_ANALYSIS],
+            analysis_types=[
+                AnalysisType.PROJECT_RISKS,
+                AnalysisType.TEAM_PRODUCTIVITY,
+                AnalysisType.COST_ANALYSIS,
+            ],
             input_requirements={
                 "project_config": "Project configuration and requirements",
                 "team_data": "Team composition and performance data",
@@ -202,7 +211,11 @@ class AnalyticsIntegrationManager:
             workflow_id="team_performance",
             name="Team Performance Analytics",
             description="Analysis of team productivity, collaboration, and performance metrics",
-            analysis_types=[AnalysisType.TEAM_PRODUCTIVITY, AnalysisType.CODE_COMPLEXITY, AnalysisType.TEST_COVERAGE],
+            analysis_types=[
+                AnalysisType.TEAM_PRODUCTIVITY,
+                AnalysisType.CODE_COMPLEXITY,
+                AnalysisType.TEST_COVERAGE,
+            ],
             input_requirements={
                 "team_members": "Team member data and roles",
                 "performance_metrics": "Individual and team performance data",
@@ -222,7 +235,10 @@ class AnalyticsIntegrationManager:
             workflow_id="architecture_compliance",
             name="Architecture Compliance Analysis",
             description="Analysis of architectural compliance and design quality",
-            analysis_types=[AnalysisType.ARCHITECTURE_COMPLIANCE, AnalysisType.SECURITY_ANALYSIS],
+            analysis_types=[
+                AnalysisType.ARCHITECTURE_COMPLIANCE,
+                AnalysisType.SECURITY_ANALYSIS,
+            ],
             input_requirements={
                 "architecture_docs": "Architecture documentation",
                 "design_documents": "Detailed design specifications",
@@ -239,14 +255,20 @@ class AnalyticsIntegrationManager:
 
         return workflows
 
-    async def execute_analysis_workflow(self, workflow_id: str, context: ContentContext, **kwargs) -> Dict[str, Any]:
+    async def execute_analysis_workflow(
+        self, workflow_id: str, context: ContentContext, **kwargs
+    ) -> Dict[str, Any]:
         """Execute a complete analysis workflow."""
         try:
             if workflow_id not in self.workflows:
                 raise ValueError(f"Analysis workflow {workflow_id} not found")
 
             workflow = self.workflows[workflow_id]
-            self.logger.info("Executing analysis workflow", workflow_id=workflow_id, name=workflow.name)
+            self.logger.info(
+                "Executing analysis workflow",
+                workflow_id=workflow_id,
+                name=workflow.name,
+            )
 
             # Prepare analysis inputs
             analysis_inputs = self._prepare_workflow_inputs(workflow, context, **kwargs)
@@ -257,19 +279,29 @@ class AnalyticsIntegrationManager:
 
             for analysis_type in workflow.analysis_types:
                 try:
-                    result = await self._execute_analysis_component(analysis_type, analysis_inputs, context)
+                    result = await self._execute_analysis_component(
+                        analysis_type, analysis_inputs, context
+                    )
                     analysis_results[analysis_type.value] = result
 
                     # Generate insights from results
-                    component_insights = self._generate_insights_from_analysis(analysis_type, result, context)
+                    component_insights = self._generate_insights_from_analysis(
+                        analysis_type, result, context
+                    )
                     insights.extend(component_insights)
 
                 except Exception as e:
-                    self.logger.warning("Analysis component failed", component=analysis_type.value, error=str(e))
+                    self.logger.warning(
+                        "Analysis component failed",
+                        component=analysis_type.value,
+                        error=str(e),
+                    )
                     analysis_results[analysis_type.value] = {"error": str(e)}
 
             # Aggregate results
-            aggregated_results = self._aggregate_workflow_results(workflow, analysis_results, insights)
+            aggregated_results = self._aggregate_workflow_results(
+                workflow, analysis_results, insights
+            )
 
             # Store insights
             self.insights.extend(insights)
@@ -285,10 +317,16 @@ class AnalyticsIntegrationManager:
             return aggregated_results
 
         except Exception as e:
-            self.logger.error("Analysis workflow execution failed", workflow_id=workflow_id, error=str(e))
+            self.logger.error(
+                "Analysis workflow execution failed",
+                workflow_id=workflow_id,
+                error=str(e),
+            )
             raise
 
-    def _prepare_workflow_inputs(self, workflow: AnalysisWorkflow, context: ContentContext, **kwargs) -> Dict[str, Any]:
+    def _prepare_workflow_inputs(
+        self, workflow: AnalysisWorkflow, context: ContentContext, **kwargs
+    ) -> Dict[str, Any]:
         """Prepare inputs for workflow execution."""
         inputs = {}
 
@@ -318,7 +356,10 @@ class AnalyticsIntegrationManager:
         return inputs
 
     async def _execute_analysis_component(
-        self, analysis_type: AnalysisType, inputs: Dict[str, Any], context: ContentContext
+        self,
+        analysis_type: AnalysisType,
+        inputs: Dict[str, Any],
+        context: ContentContext,
     ) -> Dict[str, Any]:
         """Execute a specific analysis component."""
         try:
@@ -341,24 +382,38 @@ class AnalyticsIntegrationManager:
                 return await self._analyze_architecture_compliance(inputs, context)
 
             else:
-                return {"status": "not_implemented", "message": f"Analysis type {analysis_type.value} not implemented"}
+                return {
+                    "status": "not_implemented",
+                    "message": f"Analysis type {analysis_type.value} not implemented",
+                }
 
         except Exception as e:
-            self.logger.error("Analysis component execution failed", component=analysis_type.value, error=str(e))
+            self.logger.error(
+                "Analysis component execution failed",
+                component=analysis_type.value,
+                error=str(e),
+            )
             return {"status": "error", "error": str(e)}
 
-    async def _analyze_document_quality(self, inputs: Dict[str, Any], context: ContentContext) -> Dict[str, Any]:
+    async def _analyze_document_quality(
+        self, inputs: Dict[str, Any], context: ContentContext
+    ) -> Dict[str, Any]:
         """Analyze document quality using analysis_service patterns."""
         documents = inputs.get("documents", [])
 
         if not documents:
-            return {"quality_score": 0.0, "issues": ["No documents provided for analysis"]}
+            return {
+                "quality_score": 0.0,
+                "issues": ["No documents provided for analysis"],
+            }
 
         try:
             # Use analysis_service for document quality analysis
             quality_analysis = await self.analysis_client.analyze_document_quality(
                 document_ids=documents,
-                criteria=inputs.get("quality_criteria", ["completeness", "clarity", "consistency"]),
+                criteria=inputs.get(
+                    "quality_criteria", ["completeness", "clarity", "consistency"]
+                ),
             )
 
             return {
@@ -369,10 +424,14 @@ class AnalyticsIntegrationManager:
             }
 
         except Exception as e:
-            self.logger.warning("Document quality analysis failed, using fallback", error=str(e))
+            self.logger.warning(
+                "Document quality analysis failed, using fallback", error=str(e)
+            )
             return self._fallback_document_quality_analysis(documents)
 
-    async def _analyze_project_risks(self, inputs: Dict[str, Any], context: ContentContext) -> Dict[str, Any]:
+    async def _analyze_project_risks(
+        self, inputs: Dict[str, Any], context: ContentContext
+    ) -> Dict[str, Any]:
         """Analyze project risks comprehensively."""
         project_config = inputs.get("project_config", {})
         team_data = inputs.get("team_data", {})
@@ -402,7 +461,9 @@ class AnalyticsIntegrationManager:
             "mitigation_strategies": self._generate_risk_mitigation(risk_factors),
         }
 
-    async def _analyze_team_productivity(self, inputs: Dict[str, Any], context: ContentContext) -> Dict[str, Any]:
+    async def _analyze_team_productivity(
+        self, inputs: Dict[str, Any], context: ContentContext
+    ) -> Dict[str, Any]:
         """Analyze team productivity using existing patterns."""
         team_data = inputs.get("team_data", {})
 
@@ -410,21 +471,30 @@ class AnalyticsIntegrationManager:
         productivity_metrics = self._calculate_productivity_metrics(team_data)
 
         # Identify bottlenecks
-        bottlenecks = self._identify_productivity_bottlenecks(team_data, productivity_metrics)
+        bottlenecks = self._identify_productivity_bottlenecks(
+            team_data, productivity_metrics
+        )
 
         # Generate optimization recommendations
-        recommendations = self._generate_productivity_recommendations(bottlenecks, team_data)
+        recommendations = self._generate_productivity_recommendations(
+            bottlenecks, team_data
+        )
 
         return {
             "productivity_score": productivity_metrics["overall_score"],
             "metrics": productivity_metrics,
             "bottlenecks": bottlenecks,
             "recommendations": recommendations,
-            "optimization_opportunities": self._identify_optimization_opportunities(team_data),
+            "optimization_opportunities": self._identify_optimization_opportunities(
+                team_data
+            ),
         }
 
     def _generate_insights_from_analysis(
-        self, analysis_type: AnalysisType, results: Dict[str, Any], context: ContentContext
+        self,
+        analysis_type: AnalysisType,
+        results: Dict[str, Any],
+        context: ContentContext,
     ) -> List[AnalysisInsight]:
         """Generate insights from analysis results."""
         insights = []
@@ -460,13 +530,18 @@ class AnalyticsIntegrationManager:
                     confidence_score=0.85,
                     impact_score=0.7,
                     recommendations=results.get("recommendations", []),
-                    metadata={"quality_score": quality_score, "issues_count": len(results.get("issues", []))},
+                    metadata={
+                        "quality_score": quality_score,
+                        "issues_count": len(results.get("issues", [])),
+                    },
                 )
             )
 
         return insights
 
-    def _generate_risk_insights(self, results: Dict[str, Any], context: ContentContext) -> List[AnalysisInsight]:
+    def _generate_risk_insights(
+        self, results: Dict[str, Any], context: ContentContext
+    ) -> List[AnalysisInsight]:
         """Generate insights from risk analysis."""
         insights = []
 
@@ -484,7 +559,10 @@ class AnalyticsIntegrationManager:
                     confidence_score=0.9,
                     impact_score=0.9,
                     recommendations=results.get("mitigation_strategies", []),
-                    metadata={"risk_score": risk_score, "risk_factors": len(results.get("risk_factors", []))},
+                    metadata={
+                        "risk_score": risk_score,
+                        "risk_factors": len(results.get("risk_factors", [])),
+                    },
                 )
             )
 
@@ -520,7 +598,10 @@ class AnalyticsIntegrationManager:
         return insights
 
     def _aggregate_workflow_results(
-        self, workflow: AnalysisWorkflow, analysis_results: Dict[str, Any], insights: List[AnalysisInsight]
+        self,
+        workflow: AnalysisWorkflow,
+        analysis_results: Dict[str, Any],
+        insights: List[AnalysisInsight],
     ) -> Dict[str, Any]:
         """Aggregate results from all analysis components."""
         # Calculate overall scores
@@ -531,7 +612,10 @@ class AnalyticsIntegrationManager:
             if isinstance(result, dict) and "status" not in result:
                 # Try to extract score from result
                 score = (
-                    result.get("quality_score") or result.get("risk_score") or result.get("productivity_score") or 0.5
+                    result.get("quality_score")
+                    or result.get("risk_score")
+                    or result.get("productivity_score")
+                    or 0.5
                 )
                 overall_score += score
                 component_count += 1
@@ -574,10 +658,14 @@ class AnalyticsIntegrationManager:
         for insight in sorted_insights:
             prioritized_recommendations.extend(insight.recommendations)
 
-        return list(dict.fromkeys(prioritized_recommendations))  # Remove duplicates while preserving order
+        return list(
+            dict.fromkeys(prioritized_recommendations)
+        )  # Remove duplicates while preserving order
 
     # Helper methods for analysis components
-    def _assess_timeline_risks(self, timeline_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _assess_timeline_risks(
+        self, timeline_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Assess timeline-based risks."""
         risks = []
 
@@ -616,7 +704,9 @@ class AnalyticsIntegrationManager:
 
         return risks
 
-    def _assess_complexity_risks(self, project_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _assess_complexity_risks(
+        self, project_config: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Assess complexity-based risks."""
         risks = []
 
@@ -657,33 +747,48 @@ class AnalyticsIntegrationManager:
 
         return min(1.0, total_weighted_risk / max(1.0, total_weight))
 
-    def _fallback_document_quality_analysis(self, documents: List[str]) -> Dict[str, Any]:
+    def _fallback_document_quality_analysis(
+        self, documents: List[str]
+    ) -> Dict[str, Any]:
         """Fallback document quality analysis when service is unavailable."""
         return {
             "quality_score": 0.5,
             "issues": ["Analysis service unavailable - using basic assessment"],
-            "recommendations": ["Verify analysis service connectivity", "Review documents manually"],
+            "recommendations": [
+                "Verify analysis service connectivity",
+                "Review documents manually",
+            ],
         }
 
     def _extract_document_data(self, context: ContentContext, **kwargs) -> List[str]:
         """Extract document data from context."""
         # This would integrate with doc_store to get actual document IDs
         # For now, return mock document IDs
-        return [f"doc_{i}" for i in range(len(context.project_config.get("documents", [])))]
+        return [
+            f"doc_{i}" for i in range(len(context.project_config.get("documents", [])))
+        ]
 
-    def _calculate_productivity_metrics(self, team_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_productivity_metrics(
+        self, team_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Calculate team productivity metrics."""
         return {"overall_score": 0.75, "individual_scores": {}, "team_efficiency": 0.8}
 
-    def _identify_productivity_bottlenecks(self, team_data: Dict[str, Any], metrics: Dict[str, Any]) -> List[str]:
+    def _identify_productivity_bottlenecks(
+        self, team_data: Dict[str, Any], metrics: Dict[str, Any]
+    ) -> List[str]:
         """Identify productivity bottlenecks."""
         return ["Resource allocation", "Communication overhead"]
 
-    def _generate_productivity_recommendations(self, bottlenecks: List[str], team_data: Dict[str, Any]) -> List[str]:
+    def _generate_productivity_recommendations(
+        self, bottlenecks: List[str], team_data: Dict[str, Any]
+    ) -> List[str]:
         """Generate productivity recommendations."""
         return ["Optimize resource allocation", "Improve communication channels"]
 
-    def _identify_optimization_opportunities(self, team_data: Dict[str, Any]) -> List[str]:
+    def _identify_optimization_opportunities(
+        self, team_data: Dict[str, Any]
+    ) -> List[str]:
         """Identify optimization opportunities."""
         return ["Process automation", "Skill development"]
 
@@ -695,9 +800,15 @@ class AnalyticsIntegrationManager:
             categories[category] = categories.get(category, 0) + 1
         return categories
 
-    def _generate_risk_mitigation(self, risk_factors: List[Dict[str, Any]]) -> List[str]:
+    def _generate_risk_mitigation(
+        self, risk_factors: List[Dict[str, Any]]
+    ) -> List[str]:
         """Generate risk mitigation strategies."""
-        return ["Implement risk monitoring", "Develop contingency plans", "Increase resource allocation"]
+        return [
+            "Implement risk monitoring",
+            "Develop contingency plans",
+            "Increase resource allocation",
+        ]
 
 
 # Global analytics integration manager instance

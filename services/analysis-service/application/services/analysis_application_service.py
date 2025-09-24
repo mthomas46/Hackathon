@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Optional
 from ...domain.entities import Analysis
 from ...domain.entities.value_objects import AnalysisConfiguration, AnalysisType
 from ...domain.services import AnalysisService, DocumentService, FindingService
-from ...infrastructure.repositories import AnalysisRepository, DocumentRepository, FindingRepository
+from ...infrastructure.repositories import (
+    AnalysisRepository,
+    DocumentRepository,
+    FindingRepository,
+)
 
 
 class AnalysisApplicationService:
@@ -48,7 +52,9 @@ class AnalysisApplicationService:
                 timeout_seconds=configuration.get("timeout_seconds", 300),
             )
 
-            analysis = self.analysis_service.create_analysis(document, analysis_type_enum, analysis_config)
+            analysis = self.analysis_service.create_analysis(
+                document, analysis_type_enum, analysis_config
+            )
 
             # Save analysis
             await self.analysis_repository.save(analysis)
@@ -65,7 +71,11 @@ class AnalysisApplicationService:
             if "findings" in result:
                 await self._process_findings(analysis, result["findings"])
 
-            return {"analysis_id": analysis.id.value, "status": "completed", "result": result}
+            return {
+                "analysis_id": analysis.id.value,
+                "status": "completed",
+                "result": result,
+            }
 
         except Exception as e:
             # Handle analysis failure
@@ -87,8 +97,12 @@ class AnalysisApplicationService:
             "status": analysis.status.value,
             "result": analysis.result,
             "error_message": analysis.error_message,
-            "started_at": analysis.started_at.isoformat() if analysis.started_at else None,
-            "completed_at": analysis.completed_at.isoformat() if analysis.completed_at else None,
+            "started_at": (
+                analysis.started_at.isoformat() if analysis.started_at else None
+            ),
+            "completed_at": (
+                analysis.completed_at.isoformat() if analysis.completed_at else None
+            ),
             "duration": analysis.duration,
         }
 
@@ -108,7 +122,10 @@ class AnalysisApplicationService:
         ]
 
     async def get_findings(
-        self, document_id: Optional[str] = None, category: Optional[str] = None, severity: Optional[str] = None
+        self,
+        document_id: Optional[str] = None,
+        category: Optional[str] = None,
+        severity: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         """Get findings with optional filtering."""
         findings = await self.finding_repository.get_all()
@@ -135,7 +152,11 @@ class AnalysisApplicationService:
     ) -> Dict[str, Any]:
         """Create a new document."""
         document = self.document_service.create_document(
-            title=title, content_text=content, content_format=content_format, author=author, tags=tags
+            title=title,
+            content_text=content,
+            content_format=content_format,
+            author=author,
+            tags=tags,
         )
 
         # Validate document
@@ -156,7 +177,9 @@ class AnalysisApplicationService:
 
         return document.to_dict()
 
-    async def _process_findings(self, analysis: Analysis, findings_data: List[Dict[str, Any]]) -> None:
+    async def _process_findings(
+        self, analysis: Analysis, findings_data: List[Dict[str, Any]]
+    ) -> None:
         """Process findings from analysis result."""
         for finding_data in findings_data:
             finding = self.finding_service.create_finding(

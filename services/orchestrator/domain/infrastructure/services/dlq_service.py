@@ -80,12 +80,19 @@ class DLQService:
 
     def retry_dlq_events(self, dlq_ids: List[str]) -> Dict[str, Any]:
         """Retry DLQ events. Returns retry results."""
-        results = {"total_requested": len(dlq_ids), "retried": [], "failed": [], "exhausted": []}
+        results = {
+            "total_requested": len(dlq_ids),
+            "retried": [],
+            "failed": [],
+            "exhausted": [],
+        }
 
         for dlq_id in dlq_ids:
             dlq_event = self._dlq_events.get(dlq_id)
             if not dlq_event:
-                results["failed"].append({"dlq_id": dlq_id, "reason": "DLQ event not found"})
+                results["failed"].append(
+                    {"dlq_id": dlq_id, "reason": "DLQ event not found"}
+                )
                 continue
 
             if dlq_event.increment_retry_count():
@@ -134,9 +141,13 @@ class DLQService:
         events_by_service = {}
 
         for event in events:
-            events_by_type[event.event_type] = events_by_type.get(event.event_type, 0) + 1
+            events_by_type[event.event_type] = (
+                events_by_type.get(event.event_type, 0) + 1
+            )
             if event.service_name:
-                events_by_service[event.service_name] = events_by_service.get(event.service_name, 0) + 1
+                events_by_service[event.service_name] = (
+                    events_by_service.get(event.service_name, 0) + 1
+                )
 
         retryable_count = len([e for e in events if e.can_retry])
 

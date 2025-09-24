@@ -35,4 +35,8 @@ def initialize_source_agent_client():
 
 
 # Export key module functions for easier importing
-__all__ = ["get_source_agent_client", "initialize_source_agent_client", "source_agent_client"]
+__all__ = [
+    "get_source_agent_client",
+    "initialize_source_agent_client",
+    "source_agent_client",
+]

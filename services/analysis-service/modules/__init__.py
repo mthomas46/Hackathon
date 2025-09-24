@@ -35,4 +35,8 @@ def initialize_analysis_client():
 
 
 # Export key module functions for easier importing
-__all__ = ["get_analysis_service_client", "initialize_analysis_client", "analysis_client"]
+__all__ = [
+    "get_analysis_service_client",
+    "initialize_analysis_client",
+    "analysis_client",
+]

@@ -66,14 +66,20 @@ class CreateDocumentUseCase:
             validation_result = self.document_validator.validate(document)
             if not validation_result.is_valid:
                 return CreateDocumentResult(
-                    document=document, is_valid=False, validation_errors=[error for error in validation_result.errors]
+                    document=document,
+                    is_valid=False,
+                    validation_errors=[error for error in validation_result.errors],
                 )
 
             # Validate for creation
-            creation_validation = self.document_validator.validate_for_creation(document)
+            creation_validation = self.document_validator.validate_for_creation(
+                document
+            )
             if not creation_validation.is_valid:
                 return CreateDocumentResult(
-                    document=document, is_valid=False, validation_errors=[error for error in creation_validation.errors]
+                    document=document,
+                    is_valid=False,
+                    validation_errors=[error for error in creation_validation.errors],
                 )
 
             # Check business rules
@@ -82,7 +88,9 @@ class CreateDocumentUseCase:
             # Save document
             await self.document_repository.save(document)
 
-            return CreateDocumentResult(document=document, is_valid=True, validation_errors=[])
+            return CreateDocumentResult(
+                document=document, is_valid=True, validation_errors=[]
+            )
 
         except Exception as e:
             # Log error and re-raise
@@ -99,7 +107,8 @@ class CreateDocumentUseCase:
                 and existing_doc.metadata.author == document.metadata.author
             ):
                 raise DocumentValidationException(
-                    document.id.value, ["Document with same title and author already exists"]
+                    document.id.value,
+                    ["Document with same title and author already exists"],
                 )
 
         # Check repository exists if specified

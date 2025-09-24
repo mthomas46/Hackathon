@@ -4,7 +4,6 @@ This module contains prompt-related CLI commands and operations,
 extracted from the main CLI service to improve maintainability.
 """
 
-
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
@@ -172,7 +171,9 @@ class PromptManager:
             # Get updated values
             name = Prompt.ask("New name", default=current.get("name", ""))
             category = Prompt.ask("New category", default=current.get("category", ""))
-            description = Prompt.ask("New description", default=current.get("description", ""))
+            description = Prompt.ask(
+                "New description", default=current.get("description", "")
+            )
             content = Prompt.ask("New content", default=current.get("content", ""))
 
             variables = extract_variables_from_content(content)
@@ -242,9 +243,13 @@ class PromptManager:
             current = response.get("prompt", {})
 
             # Get fork details
-            name = Prompt.ask("New prompt name", default=f"{current.get('name', '')}_fork")
+            name = Prompt.ask(
+                "New prompt name", default=f"{current.get('name', '')}_fork"
+            )
             category = Prompt.ask("New category", default=current.get("category", ""))
-            description = Prompt.ask("New description", default=f"Forked from {current.get('name', '')}")
+            description = Prompt.ask(
+                "New description", default=f"Forked from {current.get('name', '')}"
+            )
 
             # Confirm fork
             confirm = Confirm.ask("Fork this prompt?")
@@ -279,7 +284,9 @@ class PromptManager:
             prompts = response.get("prompts", [])
 
             if not prompts:
-                self.console.print("[yellow]No prompts found matching your query.[/yellow]")
+                self.console.print(
+                    "[yellow]No prompts found matching your query.[/yellow]"
+                )
                 return
 
             table = create_search_results_table(query, prompts)

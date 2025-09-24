@@ -17,8 +17,6 @@ import streamlit as st
 warnings.filterwarnings("ignore")
 
 
-
-
 def render_autonomous_page():
     """Render the autonomous operation system page."""
     st.markdown("## 🤖 Autonomous Operation System")
@@ -31,7 +29,12 @@ def render_autonomous_page():
 
     # Create tabs for different autonomous capabilities
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["⚖️ Auto-Scaling Engine", "🩺 Self-Healing System", "🧠 Intelligent Allocation", "🔄 Optimization Loops"]
+        [
+            "⚖️ Auto-Scaling Engine",
+            "🩺 Self-Healing System",
+            "🧠 Intelligent Allocation",
+            "🔄 Optimization Loops",
+        ]
     )
 
     with tab1:
@@ -97,14 +100,20 @@ def render_auto_scaling_engine():
         )
 
         scaling_mode = st.selectbox(
-            "Scaling Mode", options=["Reactive", "Predictive", "Scheduled", "Hybrid"], key="scaling_mode"
+            "Scaling Mode",
+            options=["Reactive", "Predictive", "Scheduled", "Hybrid"],
+            key="scaling_mode",
         )
 
     with col2:
         st.markdown("#### 📊 Scaling Metrics")
         target_cpu = st.slider("Target CPU Usage (%)", 10, 90, 70, key="target_cpu")
-        target_memory = st.slider("Target Memory Usage (%)", 10, 90, 75, key="target_memory")
-        max_instances = st.slider("Max Simulation Instances", 1, 50, 20, key="max_instances")
+        target_memory = st.slider(
+            "Target Memory Usage (%)", 10, 90, 75, key="target_memory"
+        )
+        max_instances = st.slider(
+            "Max Simulation Instances", 1, 50, 20, key="max_instances"
+        )
 
     # Scaling policies
     st.markdown("#### 📋 Scaling Policies")
@@ -113,22 +122,36 @@ def render_auto_scaling_engine():
         col1, col2 = st.columns(2)
 
         with col1:
-            scale_up_cpu_threshold = st.slider("Scale Up CPU Threshold", 50, 95, 80, key="scale_up_cpu")
-            scale_up_memory_threshold = st.slider("Scale Up Memory Threshold", 50, 95, 85, key="scale_up_memory")
+            scale_up_cpu_threshold = st.slider(
+                "Scale Up CPU Threshold", 50, 95, 80, key="scale_up_cpu"
+            )
+            scale_up_memory_threshold = st.slider(
+                "Scale Up Memory Threshold", 50, 95, 85, key="scale_up_memory"
+            )
 
         with col2:
-            scale_down_cpu_threshold = st.slider("Scale Down CPU Threshold", 10, 50, 30, key="scale_down_cpu")
-            scale_down_memory_threshold = st.slider("Scale Down Memory Threshold", 10, 50, 25, key="scale_down_memory")
+            scale_down_cpu_threshold = st.slider(
+                "Scale Down CPU Threshold", 10, 50, 30, key="scale_down_cpu"
+            )
+            scale_down_memory_threshold = st.slider(
+                "Scale Down Memory Threshold", 10, 50, 25, key="scale_down_memory"
+            )
 
-        cooldown_period = st.slider("Cooldown Period (minutes)", 1, 30, 5, key="cooldown_period")
+        cooldown_period = st.slider(
+            "Cooldown Period (minutes)", 1, 30, 5, key="cooldown_period"
+        )
 
     # Predictive scaling (if enabled)
     if scaling_mode in ["Predictive", "Hybrid"]:
         st.markdown("#### 🔮 Predictive Scaling")
 
         with st.expander("Predictive Configuration", expanded=False):
-            prediction_horizon = st.slider("Prediction Horizon (hours)", 1, 24, 6, key="prediction_horizon")
-            confidence_threshold = st.slider("Confidence Threshold", 0.5, 0.95, 0.8, key="confidence_threshold")
+            prediction_horizon = st.slider(
+                "Prediction Horizon (hours)", 1, 24, 6, key="prediction_horizon"
+            )
+            confidence_threshold = st.slider(
+                "Confidence Threshold", 0.5, 0.95, 0.8, key="confidence_threshold"
+            )
 
             if st.button("🎓 Train Predictive Model", key="train_predictive_scaling"):
                 with st.spinner("Training predictive scaling model..."):
@@ -183,7 +206,9 @@ def render_auto_scaling_engine():
             reset_auto_scaling()
 
     # Apply configuration
-    if st.button("💾 Apply Scaling Configuration", key="apply_scaling_config", type="primary"):
+    if st.button(
+        "💾 Apply Scaling Configuration", key="apply_scaling_config", type="primary"
+    ):
         apply_scaling_configuration(
             {
                 "enabled": auto_scaling_enabled,
@@ -203,7 +228,9 @@ def render_auto_scaling_engine():
 def render_self_healing_system():
     """Render the self-healing system interface."""
     st.markdown("### 🩺 Self-Healing System")
-    st.markdown("Automatic detection and remediation of simulation system issues and failures.")
+    st.markdown(
+        "Automatic detection and remediation of simulation system issues and failures."
+    )
 
     # Self-healing configuration
     col1, col2 = st.columns(2)
@@ -216,12 +243,20 @@ def render_self_healing_system():
             key="self_healing_enabled",
         )
 
-        healing_mode = st.selectbox("Healing Mode", options=["Reactive", "Proactive", "Predictive"], key="healing_mode")
+        healing_mode = st.selectbox(
+            "Healing Mode",
+            options=["Reactive", "Proactive", "Predictive"],
+            key="healing_mode",
+        )
 
     with col2:
         st.markdown("#### 🎯 Healing Thresholds")
-        failure_threshold = st.slider("Failure Threshold (errors/minute)", 1, 100, 10, key="failure_threshold")
-        recovery_timeout = st.slider("Recovery Timeout (seconds)", 30, 300, 120, key="recovery_timeout")
+        failure_threshold = st.slider(
+            "Failure Threshold (errors/minute)", 1, 100, 10, key="failure_threshold"
+        )
+        recovery_timeout = st.slider(
+            "Recovery Timeout (seconds)", 30, 300, 120, key="recovery_timeout"
+        )
 
     # Healing rules
     st.markdown("#### 🛠️ Healing Rules")
@@ -279,7 +314,9 @@ def render_self_healing_system():
 
             # Rule controls
             rule_enabled = st.checkbox(
-                f"Enable {rule['name']}", value=rule["enabled"], key=f"rule_{rule['name'].lower().replace(' ', '_')}"
+                f"Enable {rule['name']}",
+                value=rule["enabled"],
+                key=f"rule_{rule['name'].lower().replace(' ', '_')}",
             )
 
     # Healing history
@@ -311,7 +348,9 @@ def render_self_healing_system():
     ]
 
     for event in healing_history:
-        with st.expander(f"🩺 {event['issue']} - {event['timestamp'].strftime('%H:%M')}"):
+        with st.expander(
+            f"🩺 {event['issue']} - {event['timestamp'].strftime('%H:%M')}"
+        ):
             col1, col2, col3 = st.columns(3)
 
             with col1:
@@ -372,7 +411,9 @@ def render_self_healing_system():
             execute_healing_action("emergency_stop")
 
     # Apply healing configuration
-    if st.button("💾 Apply Healing Configuration", key="apply_healing_config", type="primary"):
+    if st.button(
+        "💾 Apply Healing Configuration", key="apply_healing_config", type="primary"
+    ):
         apply_healing_configuration(
             {
                 "enabled": self_healing_enabled,
@@ -387,7 +428,9 @@ def render_self_healing_system():
 def render_intelligent_allocation():
     """Render the intelligent resource allocation interface."""
     st.markdown("### 🧠 Intelligent Resource Allocation")
-    st.markdown("AI-powered resource allocation optimization based on simulation requirements and system constraints.")
+    st.markdown(
+        "AI-powered resource allocation optimization based on simulation requirements and system constraints."
+    )
 
     # Allocation configuration
     col1, col2 = st.columns(2)
@@ -396,7 +439,9 @@ def render_intelligent_allocation():
         st.markdown("#### ⚙️ Allocation Configuration")
         intelligent_allocation_enabled = st.checkbox(
             "Enable Intelligent Allocation",
-            value=st.session_state.autonomous_config.get("intelligent_allocation_enabled", False),
+            value=st.session_state.autonomous_config.get(
+                "intelligent_allocation_enabled", False
+            ),
             key="intelligent_allocation_enabled",
         )
 
@@ -408,18 +453,48 @@ def render_intelligent_allocation():
 
     with col2:
         st.markdown("#### 📊 Allocation Metrics")
-        fairness_weight = st.slider("Fairness Weight", 0.0, 1.0, 0.3, key="fairness_weight")
-        priority_weight = st.slider("Priority Weight", 0.0, 1.0, 0.4, key="priority_weight")
-        efficiency_weight = st.slider("Efficiency Weight", 0.0, 1.0, 0.3, key="efficiency_weight")
+        fairness_weight = st.slider(
+            "Fairness Weight", 0.0, 1.0, 0.3, key="fairness_weight"
+        )
+        priority_weight = st.slider(
+            "Priority Weight", 0.0, 1.0, 0.4, key="priority_weight"
+        )
+        efficiency_weight = st.slider(
+            "Efficiency Weight", 0.0, 1.0, 0.3, key="efficiency_weight"
+        )
 
     # Resource pools
     st.markdown("#### 🏊 Resource Pools")
 
     resource_pools = [
-        {"name": "CPU Pool", "total": 100, "allocated": 75, "available": 25, "utilization": 75.0},
-        {"name": "Memory Pool", "total": 32768, "allocated": 24576, "available": 8192, "utilization": 75.0},
-        {"name": "Storage Pool", "total": 2048, "allocated": 1536, "available": 512, "utilization": 75.0},
-        {"name": "Network Pool", "total": 1000, "allocated": 600, "available": 400, "utilization": 60.0},
+        {
+            "name": "CPU Pool",
+            "total": 100,
+            "allocated": 75,
+            "available": 25,
+            "utilization": 75.0,
+        },
+        {
+            "name": "Memory Pool",
+            "total": 32768,
+            "allocated": 24576,
+            "available": 8192,
+            "utilization": 75.0,
+        },
+        {
+            "name": "Storage Pool",
+            "total": 2048,
+            "allocated": 1536,
+            "available": 512,
+            "utilization": 75.0,
+        },
+        {
+            "name": "Network Pool",
+            "total": 1000,
+            "allocated": 600,
+            "available": 400,
+            "utilization": 60.0,
+        },
     ]
 
     # Display resource pools
@@ -437,7 +512,11 @@ def render_intelligent_allocation():
                 st.metric("Available", pool["available"])
 
             with col4:
-                "🟢" if pool["utilization"] < 80 else "🟡" if pool["utilization"] < 90 else "🔴"
+                (
+                    "🟢"
+                    if pool["utilization"] < 80
+                    else "🟡" if pool["utilization"] < 90 else "🔴"
+                )
                 st.metric("Utilization", ".1f", pool["utilization"])
 
     # Allocation decisions
@@ -468,7 +547,9 @@ def render_intelligent_allocation():
     ]
 
     for decision in allocation_decisions:
-        with st.expander(f"🧠 {decision['simulation']} - {decision['timestamp'].strftime('%H:%M')}"):
+        with st.expander(
+            f"🧠 {decision['simulation']} - {decision['timestamp'].strftime('%H:%M')}"
+        ):
             col1, col2 = st.columns(2)
 
             with col1:
@@ -501,7 +582,11 @@ def render_intelligent_allocation():
     render_allocation_visualization()
 
     # Apply allocation configuration
-    if st.button("💾 Apply Allocation Configuration", key="apply_allocation_config", type="primary"):
+    if st.button(
+        "💾 Apply Allocation Configuration",
+        key="apply_allocation_config",
+        type="primary",
+    ):
         apply_allocation_configuration(
             {
                 "enabled": intelligent_allocation_enabled,
@@ -516,7 +601,9 @@ def render_intelligent_allocation():
 def render_optimization_loops():
     """Render the optimization loops interface."""
     st.markdown("### 🔄 Optimization Loops")
-    st.markdown("Automated optimization cycles that continuously improve simulation performance and efficiency.")
+    st.markdown(
+        "Automated optimization cycles that continuously improve simulation performance and efficiency."
+    )
 
     # Optimization configuration
     col1, col2 = st.columns(2)
@@ -525,20 +612,32 @@ def render_optimization_loops():
         st.markdown("#### ⚙️ Loop Configuration")
         optimization_loops_enabled = st.checkbox(
             "Enable Optimization Loops",
-            value=st.session_state.autonomous_config.get("optimization_loops_enabled", False),
+            value=st.session_state.autonomous_config.get(
+                "optimization_loops_enabled", False
+            ),
             key="optimization_loops_enabled",
         )
 
         loop_frequency = st.selectbox(
             "Loop Frequency",
-            options=["Every 5 minutes", "Every 15 minutes", "Every hour", "Every 6 hours", "Daily"],
+            options=[
+                "Every 5 minutes",
+                "Every 15 minutes",
+                "Every hour",
+                "Every 6 hours",
+                "Daily",
+            ],
             key="loop_frequency",
         )
 
     with col2:
         st.markdown("#### 🎯 Optimization Targets")
-        performance_target = st.slider("Performance Target (%)", 50, 100, 85, key="performance_target")
-        efficiency_target = st.slider("Efficiency Target (%)", 50, 100, 80, key="efficiency_target")
+        performance_target = st.slider(
+            "Performance Target (%)", 50, 100, 85, key="performance_target"
+        )
+        efficiency_target = st.slider(
+            "Efficiency Target (%)", 50, 100, 80, key="efficiency_target"
+        )
 
     # Active optimization cycles
     st.markdown("#### 🔄 Active Optimization Cycles")
@@ -571,7 +670,12 @@ def render_optimization_loops():
     ]
 
     for cycle in optimization_cycles:
-        status_icon = {"Running": "🔄", "Completed": "✅", "Scheduled": "⏰", "Failed": "❌"}.get(cycle["status"], "❓")
+        status_icon = {
+            "Running": "🔄",
+            "Completed": "✅",
+            "Scheduled": "⏰",
+            "Failed": "❌",
+        }.get(cycle["status"], "❓")
 
         with st.expander(f"{status_icon} {cycle['name']} - {cycle['status']}"):
             col1, col2, col3 = st.columns(3)
@@ -584,7 +688,10 @@ def render_optimization_loops():
                 if cycle["estimated_completion"]:
                     time_remaining = cycle["estimated_completion"] - datetime.now()
                     if time_remaining.total_seconds() > 0:
-                        st.metric("Time Remaining", f"{int(time_remaining.total_seconds() / 60)}m")
+                        st.metric(
+                            "Time Remaining",
+                            f"{int(time_remaining.total_seconds() / 60)}m",
+                        )
                     else:
                         st.metric("Completed", "Done")
 
@@ -677,7 +784,11 @@ def render_optimization_loops():
             st.metric(metric, value)
 
     # Apply optimization configuration
-    if st.button("💾 Apply Optimization Configuration", key="apply_optimization_config", type="primary"):
+    if st.button(
+        "💾 Apply Optimization Configuration",
+        key="apply_optimization_config",
+        type="primary",
+    ):
         apply_optimization_configuration(
             {
                 "enabled": optimization_loops_enabled,
@@ -763,7 +874,11 @@ def apply_scaling_configuration(config: Dict[str, Any]):
     """Apply scaling configuration."""
     try:
         st.session_state.autonomous_config.update(
-            {"auto_scaling_enabled": config["enabled"], "scaling_mode": config["mode"], "scaling_policies": config}
+            {
+                "auto_scaling_enabled": config["enabled"],
+                "scaling_mode": config["mode"],
+                "scaling_policies": config,
+            }
         )
         st.success("✅ Scaling configuration applied successfully!")
     except Exception as e:
@@ -779,7 +894,9 @@ def execute_healing_action(action: str):
             "run_diagnostics": "✅ Diagnostics completed successfully",
             "emergency_stop": "⚠️ Emergency stop initiated",
         }
-        st.success(action_messages.get(action, f"✅ {action.title()} executed successfully"))
+        st.success(
+            action_messages.get(action, f"✅ {action.title()} executed successfully")
+        )
     except Exception as e:
         st.error(f"❌ Healing action failed: {str(e)}")
 
@@ -788,7 +905,11 @@ def apply_healing_configuration(config: Dict[str, Any]):
     """Apply healing configuration."""
     try:
         st.session_state.autonomous_config.update(
-            {"self_healing_enabled": config["enabled"], "healing_mode": config["mode"], "healing_rules": config}
+            {
+                "self_healing_enabled": config["enabled"],
+                "healing_mode": config["mode"],
+                "healing_rules": config,
+            }
         )
         st.success("✅ Healing configuration applied successfully!")
     except Exception as e:
@@ -834,11 +955,28 @@ def render_allocation_visualization():
     df = pd.DataFrame(allocation_data)
 
     fig = go.Figure()
-    fig.add_trace(go.Bar(name="Allocated", x=df["Resource"], y=df["Allocated"], marker_color="lightblue"))
-    fig.add_trace(go.Bar(name="Available", x=df["Resource"], y=df["Available"], marker_color="lightgreen"))
+    fig.add_trace(
+        go.Bar(
+            name="Allocated",
+            x=df["Resource"],
+            y=df["Allocated"],
+            marker_color="lightblue",
+        )
+    )
+    fig.add_trace(
+        go.Bar(
+            name="Available",
+            x=df["Resource"],
+            y=df["Available"],
+            marker_color="lightgreen",
+        )
+    )
 
     fig.update_layout(
-        title="Resource Allocation Overview", barmode="stack", xaxis_title="Resource Type", yaxis_title="Percentage (%)"
+        title="Resource Allocation Overview",
+        barmode="stack",
+        xaxis_title="Resource Type",
+        yaxis_title="Percentage (%)",
     )
 
     st.plotly_chart(fig, use_container_width=True)
@@ -868,7 +1006,9 @@ def run_manual_optimization(optimization_type: str):
             "workload": "Workload Optimization",
             "configuration": "Configuration Optimization",
         }
-        st.success(f"✅ {optimization_names.get(optimization_type, optimization_type.title())} initiated")
+        st.success(
+            f"✅ {optimization_names.get(optimization_type, optimization_type.title())} initiated"
+        )
     except Exception as e:
         st.error(f"❌ Optimization failed: {str(e)}")
 

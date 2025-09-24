@@ -61,7 +61,12 @@ class TestSecurityValidation:
             assert self._is_malicious_input(malicious_input)
 
         # Test valid inputs
-        valid_inputs = ["normal_user_input", "user@example.com", "Test Simulation 2024", "config_value_123"]
+        valid_inputs = [
+            "normal_user_input",
+            "user@example.com",
+            "Test Simulation 2024",
+            "config_value_123",
+        ]
 
         for valid_input in valid_inputs:
             assert not self._is_malicious_input(valid_input)
@@ -86,7 +91,9 @@ class TestSecurityValidation:
     def test_authorization_permissions(self):
         """Test authorization and permissions validation."""
         # Admin user should have all permissions
-        admin_permissions = self._check_permissions("admin", ["read", "write", "delete"])
+        admin_permissions = self._check_permissions(
+            "admin", ["read", "write", "delete"]
+        )
         assert admin_permissions["granted"] is True
         assert admin_permissions["missing_permissions"] == []
 
@@ -198,12 +205,19 @@ class TestSecurityValidation:
 
     def _check_permissions(self, user_role, requested_permissions):
         """Helper method for permission checking."""
-        role_permissions = {"admin": ["read", "write", "delete", "admin"], "user": ["read", "write"], "guest": ["read"]}
+        role_permissions = {
+            "admin": ["read", "write", "delete", "admin"],
+            "user": ["read", "write"],
+            "guest": ["read"],
+        }
 
         user_perms = role_permissions.get(user_role, [])
         missing_perms = [p for p in requested_permissions if p not in user_perms]
 
-        return {"granted": len(missing_perms) == 0, "missing_permissions": missing_perms}
+        return {
+            "granted": len(missing_perms) == 0,
+            "missing_permissions": missing_perms,
+        }
 
     def _check_rate_limit(self, user_id, request_count):
         """Helper method for rate limiting."""
@@ -242,7 +256,9 @@ class TestSecurityValidation:
         logged_event.update(
             {
                 "event_id": event_id,
-                "severity": "high" if event["event_type"] == "failed_login" else "medium",
+                "severity": (
+                    "high" if event["event_type"] == "failed_login" else "medium"
+                ),
                 "logged_at": datetime.now(),
             }
         )
@@ -320,7 +336,9 @@ class TestPerformanceBenchmarking:
         degraded_performance["response_time"] = 250  # Increased by 100ms
         degraded_performance["error_rate"] = 0.08  # Increased error rate
 
-        regression = self._detect_performance_regression(baseline_performance, degraded_performance)
+        regression = self._detect_performance_regression(
+            baseline_performance, degraded_performance
+        )
 
         assert regression["detected"] is True
         assert len(regression["regressions"]) > 0
@@ -331,7 +349,9 @@ class TestPerformanceBenchmarking:
         load_levels = [100, 500, 1000, 1500, 2000, 2500]
         response_times = [120, 145, 180, 250, 400, 800]  # Corresponding response times
 
-        capacity_benchmark = self._calculate_load_capacity_benchmark(load_levels, response_times)
+        capacity_benchmark = self._calculate_load_capacity_benchmark(
+            load_levels, response_times
+        )
 
         assert "max_capacity" in capacity_benchmark
         assert "optimal_load" in capacity_benchmark
@@ -370,7 +390,11 @@ class TestPerformanceBenchmarking:
     def _calculate_error_rate_benchmark(self, error_rates):
         """Helper method for error rate benchmarking."""
         avg_error_rate = np.mean(error_rates)
-        return {"average": avg_error_rate, "peak": np.max(error_rates), "success_rate": 100 - (avg_error_rate * 100)}
+        return {
+            "average": avg_error_rate,
+            "peak": np.max(error_rates),
+            "success_rate": 100 - (avg_error_rate * 100),
+        }
 
     def _detect_performance_regression(self, baseline, current):
         """Helper method for performance regression detection."""
@@ -392,7 +416,11 @@ class TestPerformanceBenchmarking:
                     }
                 )
 
-        return {"detected": len(regressions) > 0, "regressions": regressions, "regression_count": len(regressions)}
+        return {
+            "detected": len(regressions) > 0,
+            "regressions": regressions,
+            "regression_count": len(regressions),
+        }
 
     def _calculate_load_capacity_benchmark(self, load_levels, response_times):
         """Helper method for load capacity benchmarking."""
@@ -420,7 +448,12 @@ class TestLoadTesting:
 
     def setup_method(self):
         """Set up test environment for load testing."""
-        self.test_endpoints = ["/api/simulations", "/api/simulations/123", "/api/metrics", "/api/health"]
+        self.test_endpoints = [
+            "/api/simulations",
+            "/api/simulations/123",
+            "/api/metrics",
+            "/api/health",
+        ]
 
         self.load_profiles = {
             "light": {"users": 10, "duration": 60},
@@ -453,7 +486,9 @@ class TestLoadTesting:
     def test_endpoint_load_testing(self):
         """Test load testing for specific endpoints."""
         for endpoint in self.test_endpoints:
-            results = self._test_endpoint_load(endpoint, 20, 30)  # 20 concurrent users, 30 seconds
+            results = self._test_endpoint_load(
+                endpoint, 20, 30
+            )  # 20 concurrent users, 30 seconds
 
             assert "endpoint" in results
             assert "response_times" in results
@@ -463,7 +498,9 @@ class TestLoadTesting:
     def test_resource_monitoring_under_load(self):
         """Test resource monitoring during load testing."""
         # Simulate load test with resource monitoring
-        with patch("psutil.cpu_percent") as mock_cpu, patch("psutil.virtual_memory") as mock_memory:
+        with patch("psutil.cpu_percent") as mock_cpu, patch(
+            "psutil.virtual_memory"
+        ) as mock_memory:
 
             mock_cpu.return_value = 75.5
             mock_memory.return_value.percent = 82.3
@@ -523,7 +560,9 @@ class TestLoadTesting:
             "metrics": {
                 "throughput": config["users"] * 5,  # 5 req/s per user
                 "response_time": 200 + (config["users"] * 2),  # Increases with load
-                "error_rate": min(0.01 * config["users"] / 10, 0.1),  # Increases with load
+                "error_rate": min(
+                    0.01 * config["users"] / 10, 0.1
+                ),  # Increases with load
             },
         }
 
@@ -556,9 +595,13 @@ class TestLoadTesting:
 
         recommendations = []
         if results["error_rate"] > 0.05:
-            recommendations.append("High error rate detected - investigate system stability")
+            recommendations.append(
+                "High error rate detected - investigate system stability"
+            )
         if results["p95_response_time"] > 1000:
-            recommendations.append("Slow response times - consider performance optimization")
+            recommendations.append(
+                "Slow response times - consider performance optimization"
+            )
 
         return {
             "summary": f"Load test completed with {success_rate:.1%} success rate",
@@ -670,15 +713,21 @@ class TestSecurityMonitoring:
         """Helper method for network traffic simulation."""
         if pattern_type == "normal":
             return {
-                "packets": [{"size": np.random.randint(100, 1500)} for _ in range(packet_count)],
+                "packets": [
+                    {"size": np.random.randint(100, 1500)} for _ in range(packet_count)
+                ],
                 "protocols": ["HTTP", "HTTPS"] * (packet_count // 2),
                 "ports": [80, 443] * (packet_count // 2),
             }
         else:  # suspicious
             return {
-                "packets": [{"size": np.random.choice([64, 1500, 9000])} for _ in range(packet_count)],
+                "packets": [
+                    {"size": np.random.choice([64, 1500, 9000])}
+                    for _ in range(packet_count)
+                ],
                 "protocols": ["UNKNOWN", "TCP", "UDP"] * (packet_count // 3),
-                "ports": [22, 3389, 445, 1433] * (packet_count // 4),  # Suspicious ports
+                "ports": [22, 3389, 445, 1433]
+                * (packet_count // 4),  # Suspicious ports
             }
 
     def _analyze_intrusion_patterns(self, traffic):
@@ -693,7 +742,11 @@ class TestSecurityMonitoring:
             if traffic["protocols"][i] in suspicious_protocols:
                 suspicious_count += 1
 
-        threat_level = "low" if suspicious_count < 5 else "medium" if suspicious_count < 15 else "high"
+        threat_level = (
+            "low"
+            if suspicious_count < 5
+            else "medium" if suspicious_count < 15 else "high"
+        )
 
         return {
             "threat_level": threat_level,
@@ -706,16 +759,26 @@ class TestSecurityMonitoring:
         if behavior_type == "normal":
             return {
                 "login_times": np.random.normal(9, 1, event_count),  # 9 AM ± 1 hour
-                "session_duration": np.random.normal(480, 60, event_count),  # 8 hours ± 1 hour
+                "session_duration": np.random.normal(
+                    480, 60, event_count
+                ),  # 8 hours ± 1 hour
                 "failed_logins": np.random.poisson(0.1, event_count),  # Rare failures
-                "resource_access": np.random.choice(["dashboard", "reports", "settings"], event_count),
+                "resource_access": np.random.choice(
+                    ["dashboard", "reports", "settings"], event_count
+                ),
             }
         else:  # anomalous
             return {
-                "login_times": np.random.choice([2, 3, 4, 14, 15, 16], event_count),  # Unusual hours
-                "session_duration": np.random.exponential(120, event_count),  # Very short sessions
+                "login_times": np.random.choice(
+                    [2, 3, 4, 14, 15, 16], event_count
+                ),  # Unusual hours
+                "session_duration": np.random.exponential(
+                    120, event_count
+                ),  # Very short sessions
                 "failed_logins": np.random.poisson(3, event_count),  # Frequent failures
-                "resource_access": np.random.choice(["admin", "system", "config"], event_count, p=[0.7, 0.2, 0.1]),
+                "resource_access": np.random.choice(
+                    ["admin", "system", "config"], event_count, p=[0.7, 0.2, 0.1]
+                ),
             }
 
     def _calculate_security_anomaly_score(self, behavior):
@@ -773,7 +836,11 @@ class TestSecurityMonitoring:
             "high_vulnerabilities": 1,
             "medium_vulnerabilities": 1,
             "scan_duration": 45.2,
-            "recommendations": ["Update SSL certificate", "Patch known vulnerabilities", "Implement rate limiting"],
+            "recommendations": [
+                "Update SSL certificate",
+                "Patch known vulnerabilities",
+                "Implement rate limiting",
+            ],
         }
 
     def _simulate_incident_response(self, incident):
@@ -794,7 +861,9 @@ class TestSecurityMonitoring:
             "response_actions": response_actions,
             "estimated_resolution_time": 120,  # minutes
             "containment_status": "in_progress",
-            "escalation_level": "high" if incident["severity"] == "critical" else "medium",
+            "escalation_level": (
+                "high" if incident["severity"] == "critical" else "medium"
+            ),
         }
 
 

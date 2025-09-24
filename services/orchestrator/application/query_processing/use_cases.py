@@ -10,7 +10,9 @@ from .queries import GetQueryResultQuery, ListQueriesQuery
 class ProcessNaturalLanguageQueryUseCase(UseCase):
     """Use case for processing natural language queries."""
 
-    async def execute(self, command: ProcessNaturalLanguageQueryCommand) -> Dict[str, Any]:
+    async def execute(
+        self, command: ProcessNaturalLanguageQueryCommand
+    ) -> Dict[str, Any]:
         """Execute the process natural language query use case."""
         # Placeholder implementation
         return {
@@ -27,7 +29,11 @@ class GetQueryResultUseCase(UseCase):
     async def execute(self, query: GetQueryResultQuery) -> Optional[Dict[str, Any]]:
         """Execute the get query result use case."""
         # Placeholder implementation
-        return {"query_id": query.query_id, "status": "completed", "results": ["result1", "result2"]}
+        return {
+            "query_id": query.query_id,
+            "status": "completed",
+            "results": ["result1", "result2"],
+        }
 
 
 class ListQueriesUseCase(UseCase):
@@ -36,4 +42,10 @@ class ListQueriesUseCase(UseCase):
     async def execute(self, query: ListQueriesQuery) -> List[Dict[str, Any]]:
         """Execute the list queries use case."""
         # Placeholder implementation
-        return [{"query_id": "query-1", "query_text": "find documentation", "status": "completed"}]
+        return [
+            {
+                "query_id": "query-1",
+                "query_text": "find documentation",
+                "status": "completed",
+            }
+        ]

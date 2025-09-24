@@ -108,11 +108,17 @@ class RealTimeEventTimeline:
 
             # Create timeline event
             event = TimelineEvent(
-                event_id=event_data.get("event_id", f"evt_{int(time.time())}_{len(self.events)}"),
+                event_id=event_data.get(
+                    "event_id", f"evt_{int(time.time())}_{len(self.events)}"
+                ),
                 timestamp=timestamp,
                 event_type=event_data.get("event_type", "unknown"),
-                title=event_data.get("title", event_data.get("event_type", "Unknown Event")),
-                description=event_data.get("description", event_data.get("message", "")),
+                title=event_data.get(
+                    "title", event_data.get("event_type", "Unknown Event")
+                ),
+                description=event_data.get(
+                    "description", event_data.get("message", "")
+                ),
                 severity=event_data.get("severity", "info"),
                 source=event_data.get("source", "system"),
                 simulation_id=event_data.get("simulation_id"),
@@ -128,7 +134,9 @@ class RealTimeEventTimeline:
         except Exception as e:
             print(f"Error adding event to timeline: {e}")
 
-    def render_timeline(self, title: str = "📅 Real-Time Event Timeline", height: Optional[int] = None) -> None:
+    def render_timeline(
+        self, title: str = "📅 Real-Time Event Timeline", height: Optional[int] = None
+    ) -> None:
         """Render the main event timeline component."""
         st.markdown(f"### {title}")
         st.markdown("*Live event streaming with interactive timeline visualization*")
@@ -171,7 +179,9 @@ class RealTimeEventTimeline:
 
             with col2:
                 # Severity filter
-                available_severities = list(set(event.severity for event in self.events))
+                available_severities = list(
+                    set(event.severity for event in self.events)
+                )
                 if available_severities:
                     self.filters.severities = st.multiselect(
                         "Severity",
@@ -300,7 +310,9 @@ class RealTimeEventTimeline:
                 with col2:
                     # Description and metadata
                     st.markdown(
-                        f"*{event.description[:100]}...*" if len(event.description) > 100 else f"*{event.description}*"
+                        f"*{event.description[:100]}...*"
+                        if len(event.description) > 100
+                        else f"*{event.description}*"
                     )
                     if event.simulation_id:
                         st.caption(f"Sim: {event.simulation_id[:8]}")
@@ -345,10 +357,14 @@ class RealTimeEventTimeline:
                 st.markdown(f"**Source:** {self.selected_event.source}")
 
             with col2:
-                st.markdown(f"**Timestamp:** {self.selected_event.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
+                st.markdown(
+                    f"**Timestamp:** {self.selected_event.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+                )
                 st.markdown(f"**Severity:** {self.selected_event.severity.title()}")
                 if self.selected_event.duration_ms:
-                    st.markdown(f"**Duration:** {self.selected_event.duration_ms:.2f}ms")
+                    st.markdown(
+                        f"**Duration:** {self.selected_event.duration_ms:.2f}ms"
+                    )
 
             # Simulation and workflow context
             if self.selected_event.simulation_id or self.selected_event.workflow_id:
@@ -380,7 +396,9 @@ class RealTimeEventTimeline:
 
         # Calculate statistics
         total_events = len(self.events)
-        time_range = datetime.now() - self.events[0].timestamp if self.events else timedelta(0)
+        time_range = (
+            datetime.now() - self.events[0].timestamp if self.events else timedelta(0)
+        )
 
         # Event type distribution
         event_types = {}
@@ -413,11 +431,16 @@ class RealTimeEventTimeline:
         # Event type breakdown
         if len(event_types) > 1:
             with st.expander("Event Type Distribution", expanded=False):
-                type_df = pd.DataFrame(list(event_types.items()), columns=["Event Type", "Count"]).sort_values(
-                    "Count", ascending=False
-                )
+                type_df = pd.DataFrame(
+                    list(event_types.items()), columns=["Event Type", "Count"]
+                ).sort_values("Count", ascending=False)
 
-                fig = px.pie(type_df, values="Count", names="Event Type", title="Event Types Distribution")
+                fig = px.pie(
+                    type_df,
+                    values="Count",
+                    names="Event Type",
+                    title="Event Types Distribution",
+                )
                 st.plotly_chart(fig, use_container_width=True)
 
     def _render_export_options(self) -> None:
@@ -464,24 +487,36 @@ class RealTimeEventTimeline:
 
         # Time range filter
         if self.filters.time_range_hours > 0:
-            cutoff_time = datetime.now() - timedelta(hours=self.filters.time_range_hours)
+            cutoff_time = datetime.now() - timedelta(
+                hours=self.filters.time_range_hours
+            )
             filtered_events = [e for e in filtered_events if e.timestamp >= cutoff_time]
 
         # Event type filter
         if self.filters.event_types:
-            filtered_events = [e for e in filtered_events if e.event_type in self.filters.event_types]
+            filtered_events = [
+                e for e in filtered_events if e.event_type in self.filters.event_types
+            ]
 
         # Severity filter
         if self.filters.severities:
-            filtered_events = [e for e in filtered_events if e.severity in self.filters.severities]
+            filtered_events = [
+                e for e in filtered_events if e.severity in self.filters.severities
+            ]
 
         # Source filter
         if self.filters.sources:
-            filtered_events = [e for e in filtered_events if e.source in self.filters.sources]
+            filtered_events = [
+                e for e in filtered_events if e.source in self.filters.sources
+            ]
 
         # Simulation ID filter
         if self.filters.simulation_ids:
-            filtered_events = [e for e in filtered_events if e.simulation_id in self.filters.simulation_ids]
+            filtered_events = [
+                e
+                for e in filtered_events
+                if e.simulation_id in self.filters.simulation_ids
+            ]
 
         # Search query filter
         if self.filters.search_query:
@@ -522,7 +557,12 @@ class RealTimeEventTimeline:
 
     def _get_severity_color(self, severity: str) -> str:
         """Get color for severity level."""
-        colors = {"info": "#17a2b8", "warning": "#ffc107", "error": "#fd7e14", "critical": "#dc3545"}
+        colors = {
+            "info": "#17a2b8",
+            "warning": "#ffc107",
+            "error": "#fd7e14",
+            "critical": "#dc3545",
+        }
         return colors.get(severity.lower(), "#6c757d")
 
     def export_timeline_data(self, format: str = "json") -> str:
@@ -572,7 +612,10 @@ class RealTimeEventTimeline:
         summary = {
             "export_timestamp": datetime.now().isoformat(),
             "total_events": len(self.events),
-            "time_range": {"start": self.events[0].timestamp.isoformat(), "end": self.events[-1].timestamp.isoformat()},
+            "time_range": {
+                "start": self.events[0].timestamp.isoformat(),
+                "end": self.events[-1].timestamp.isoformat(),
+            },
             "event_types": {},
             "severities": {},
             "sources": {},
@@ -581,13 +624,21 @@ class RealTimeEventTimeline:
 
         for event in self.events:
             # Count by type
-            summary["event_types"][event.event_type] = summary["event_types"].get(event.event_type, 0) + 1
-            summary["severities"][event.severity] = summary["severities"].get(event.severity, 0) + 1
-            summary["sources"][event.source] = summary["sources"].get(event.source, 0) + 1
+            summary["event_types"][event.event_type] = (
+                summary["event_types"].get(event.event_type, 0) + 1
+            )
+            summary["severities"][event.severity] = (
+                summary["severities"].get(event.severity, 0) + 1
+            )
+            summary["sources"][event.source] = (
+                summary["sources"].get(event.source, 0) + 1
+            )
 
             # Hourly distribution
             hour = event.timestamp.strftime("%Y-%m-%d %H:00")
-            summary["hourly_distribution"][hour] = summary["hourly_distribution"].get(hour, 0) + 1
+            summary["hourly_distribution"][hour] = (
+                summary["hourly_distribution"].get(hour, 0) + 1
+            )
 
         return json.dumps(summary, indent=2)
 
@@ -620,9 +671,16 @@ class RealTimeEventTimeline:
 
         stats = {
             "total_events": len(self.events),
-            "time_span_hours": (self.events[-1].timestamp - self.events[0].timestamp).total_seconds() / 3600,
+            "time_span_hours": (
+                self.events[-1].timestamp - self.events[0].timestamp
+            ).total_seconds()
+            / 3600,
             "events_per_hour": len(self.events)
-            / max(1, (self.events[-1].timestamp - self.events[0].timestamp).total_seconds() / 3600),
+            / max(
+                1,
+                (self.events[-1].timestamp - self.events[0].timestamp).total_seconds()
+                / 3600,
+            ),
             "event_types_count": len(set(e.event_type for e in self.events)),
             "severities_count": len(set(e.severity for e in self.events)),
             "sources_count": len(set(e.source for e in self.events)),
@@ -633,13 +691,17 @@ class RealTimeEventTimeline:
         for event in self.events:
             event_types[event.event_type] = event_types.get(event.event_type, 0) + 1
 
-        stats["most_common_event_types"] = sorted(event_types.items(), key=lambda x: x[1], reverse=True)[:5]
+        stats["most_common_event_types"] = sorted(
+            event_types.items(), key=lambda x: x[1], reverse=True
+        )[:5]
 
         return stats
 
 
 # Convenience functions for easy integration
-def create_event_timeline(config: Optional[TimelineConfig] = None) -> RealTimeEventTimeline:
+def create_event_timeline(
+    config: Optional[TimelineConfig] = None,
+) -> RealTimeEventTimeline:
     """Create a new event timeline instance."""
     return RealTimeEventTimeline(config)
 
@@ -652,7 +714,9 @@ def render_realtime_event_timeline(
     timeline.render_timeline(title=title)
 
 
-def add_sample_events_to_timeline(timeline: RealTimeEventTimeline, count: int = 20) -> None:
+def add_sample_events_to_timeline(
+    timeline: RealTimeEventTimeline, count: int = 20
+) -> None:
     """Add sample events to timeline for demonstration."""
     base_time = datetime.now() - timedelta(minutes=30)
 
@@ -666,7 +730,12 @@ def add_sample_events_to_timeline(timeline: RealTimeEventTimeline, count: int = 
     ]
 
     severities = ["info", "warning", "error", "critical"]
-    sources = ["simulation_engine", "workflow_orchestrator", "document_service", "monitoring"]
+    sources = [
+        "simulation_engine",
+        "workflow_orchestrator",
+        "document_service",
+        "monitoring",
+    ]
 
     for i in range(count):
         event_data = {

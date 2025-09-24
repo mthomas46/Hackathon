@@ -13,7 +13,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
 from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.core.responses.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 # ============================================================================
 # SHARED MODULES
@@ -39,9 +42,15 @@ class DiscoverRequest(BaseModel):
 class BulkDiscoverRequest(BaseModel):
     """Request model for bulk service discovery"""
 
-    services: List[Dict[str, str]] = Field(..., description="List of services to discover")
-    auto_detect: bool = Field(False, description="Auto-detect services in Docker network")
-    include_health_check: bool = Field(True, description="Check service health before discovery")
+    services: List[Dict[str, str]] = Field(
+        ..., description="List of services to discover"
+    )
+    auto_detect: bool = Field(
+        False, description="Auto-detect services in Docker network"
+    )
+    include_health_check: bool = Field(
+        True, description="Check service health before discovery"
+    )
     dry_run: bool = Field(False, description="Dry run mode for testing")
 
 
@@ -105,7 +114,9 @@ def extract_endpoints_from_spec(spec: Dict[str, Any]) -> List[Dict[str, Any]]:
     return endpoints
 
 
-async def fetch_openapi_spec_with_fallback(base_url: str, openapi_url: str = None) -> Optional[Dict[str, Any]]:
+async def fetch_openapi_spec_with_fallback(
+    base_url: str, openapi_url: str = None
+) -> Optional[Dict[str, Any]]:
     """Fetch OpenAPI spec with fallback to common endpoints"""
     urls_to_try = []
 
@@ -150,7 +161,9 @@ async def discover_service(request: DiscoverRequest):
         original_base_url = request.base_url
         normalized_base_url = normalize_service_url(request.base_url, request.name)
         normalized_openapi_url = (
-            normalize_service_url(request.openapi_url, request.name) if request.openapi_url else None
+            normalize_service_url(request.openapi_url, request.name)
+            if request.openapi_url
+            else None
         )
 
         print(f"🔗 URL normalization: {original_base_url} → {normalized_base_url}")
@@ -158,7 +171,9 @@ async def discover_service(request: DiscoverRequest):
         # Fetch OpenAPI spec with fallback
         spec = None
         if normalized_openapi_url:
-            spec = await fetch_openapi_spec_with_fallback(normalized_base_url, normalized_openapi_url)
+            spec = await fetch_openapi_spec_with_fallback(
+                normalized_base_url, normalized_openapi_url
+            )
         else:
             spec = await fetch_openapi_spec_with_fallback(normalized_base_url)
 
@@ -208,7 +223,11 @@ async def discover_service(request: DiscoverRequest):
         return create_error_response(
             message="Failed to discover endpoints",
             error_code=ErrorCodes.INTERNAL_ERROR,
-            details={"error": str(e), "service": ServiceNames.DISCOVERY_AGENT, "service_name": request.name},
+            details={
+                "error": str(e),
+                "service": ServiceNames.DISCOVERY_AGENT,
+                "service_name": request.name,
+            },
         )
 
 
@@ -245,14 +264,20 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                 if request.include_health_check:
                     # Check if service is healthy before adding
                     try:
-                        health_url = f"http://{service['name']}:{service['port']}/health"
+                        health_url = (
+                            f"http://{service['name']}:{service['port']}/health"
+                        )
                         async with httpx.AsyncClient(timeout=5.0) as client:
                             response = await client.get(health_url)
                             if response.status_code == 200:
                                 services_to_discover.append(service_data)
-                                print(f"✅ {service['name']} is healthy, adding to discovery list")
+                                print(
+                                    f"✅ {service['name']} is healthy, adding to discovery list"
+                                )
                             else:
-                                print(f"❌ {service['name']} health check failed: {response.status_code}")
+                                print(
+                                    f"❌ {service['name']} health check failed: {response.status_code}"
+                                )
                     except Exception as e:
                         print(f"❌ {service['name']} health check error: {e}")
                         continue
@@ -263,10 +288,14 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
         for service in request.services:
             service_data = {
                 "name": service.get("name"),
-                "base_url": normalize_service_url(service.get("base_url"), service.get("name")),
+                "base_url": normalize_service_url(
+                    service.get("base_url"), service.get("name")
+                ),
             }
             if "openapi_url" in service:
-                service_data["openapi_url"] = normalize_service_url(service["openapi_url"], service.get("name"))
+                service_data["openapi_url"] = normalize_service_url(
+                    service["openapi_url"], service.get("name")
+                )
             services_to_discover.append(service_data)
 
         print(f"🎯 Will attempt to discover {len(services_to_discover)} services")
@@ -298,18 +327,29 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                     total_endpoints += service_result.get("endpoints_count", 0)
                     total_tools += service_result.get("tools_count", 0)
                     successful_discoveries += 1
-                    print(f"✅ {service_data['name']}: {service_result.get('endpoints_count', 0)} endpoints")
+                    print(
+                        f"✅ {service_data['name']}: {service_result.get('endpoints_count', 0)} endpoints"
+                    )
                 else:
                     failed_discoveries.append(
-                        {"service": service_data["name"], "error": result.get("message", "Unknown error")}
+                        {
+                            "service": service_data["name"],
+                            "error": result.get("message", "Unknown error"),
+                        }
                     )
-                    print(f"❌ {service_data['name']}: {result.get('message', 'Failed')}")
+                    print(
+                        f"❌ {service_data['name']}: {result.get('message', 'Failed')}"
+                    )
 
             except Exception as e:
-                failed_discoveries.append({"service": service_data["name"], "error": str(e)})
+                failed_discoveries.append(
+                    {"service": service_data["name"], "error": str(e)}
+                )
                 print(f"❌ {service_data['name']}: {e}")
 
-        print(f"🎉 Ecosystem discovery complete: {successful_discoveries}/{len(services_to_discover)} successful")
+        print(
+            f"🎉 Ecosystem discovery complete: {successful_discoveries}/{len(services_to_discover)} successful"
+        )
 
         return create_success_response(
             {
@@ -367,7 +407,9 @@ async def get_registry_stats():
 
     except Exception as e:
         return create_error_response(
-            message="Failed to get registry stats", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(e)}
+            message="Failed to get registry stats",
+            error_code=ErrorCodes.INTERNAL_ERROR,
+            details={"error": str(e)},
         )
 
 
@@ -380,7 +422,11 @@ async def get_monitoring_dashboard():
             "service_status": "active",
             "discovery_events_count": 0,
             "recent_discoveries": [],
-            "performance_metrics": {"avg_discovery_time": 2.5, "success_rate": 85, "total_endpoints_discovered": 0},
+            "performance_metrics": {
+                "avg_discovery_time": 2.5,
+                "success_rate": 85,
+                "total_endpoints_discovered": 0,
+            },
             "network_status": {
                 "docker_network": "accessible",
                 "localhost_conversion": "enabled",

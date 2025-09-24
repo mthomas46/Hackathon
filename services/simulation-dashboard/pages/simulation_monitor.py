@@ -63,7 +63,9 @@ class SimulationMonitor:
     def render_monitor_page(self):
         """Render the main simulation monitor page."""
         st.markdown("## 📊 Simulation Monitor Dashboard")
-        st.markdown("Real-time monitoring and visualization of simulation execution progress.")
+        st.markdown(
+            "Real-time monitoring and visualization of simulation execution progress."
+        )
 
         # Initialize session state
         if "selected_simulation" not in st.session_state:
@@ -97,17 +99,22 @@ class SimulationMonitor:
 
                     if simulations:
                         simulation_options = ["Select a simulation..."] + [
-                            f"{sim['id'][:8]} - {sim.get('name', 'Unknown')}" for sim in simulations
+                            f"{sim['id'][:8]} - {sim.get('name', 'Unknown')}"
+                            for sim in simulations
                         ]
                         selected_option = st.selectbox(
-                            "Available Simulations", options=simulation_options, key="simulation_selector"
+                            "Available Simulations",
+                            options=simulation_options,
+                            key="simulation_selector",
                         )
 
                         if selected_option != "Select a simulation...":
                             selected_sim_id = selected_option.split(" - ")[0]
                             st.session_state.selected_simulation = selected_sim_id
                     else:
-                        st.info("No simulations found. Create a simulation to begin monitoring.")
+                        st.info(
+                            "No simulations found. Create a simulation to begin monitoring."
+                        )
                 else:
                     st.error("Failed to load simulations list.")
             except Exception as e:
@@ -118,7 +125,9 @@ class SimulationMonitor:
                 st.rerun()
 
         with col3:
-            auto_refresh = st.checkbox("Auto-refresh", value=True, key="auto_refresh_monitor")
+            auto_refresh = st.checkbox(
+                "Auto-refresh", value=True, key="auto_refresh_monitor"
+            )
 
     def render_welcome_screen(self):
         """Render welcome screen when no simulation is selected."""
@@ -233,7 +242,10 @@ class SimulationMonitor:
                     status = sim_data.get("status", "unknown")
                     status_color = self.get_status_color(status)
                     st.metric("Status", status.title(), delta=None)
-                    st.markdown(f"<span style='color:{status_color}'>●</span> {status.title()}", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<span style='color:{status_color}'>●</span> {status.title()}",
+                        unsafe_allow_html=True,
+                    )
 
                 with col2:
                     progress = sim_data.get("progress_percentage", 0)
@@ -261,7 +273,12 @@ class SimulationMonitor:
         """Render active monitoring dashboard with real-time updates."""
         # Create tabs for different monitoring views
         tab1, tab2, tab3, tab4 = st.tabs(
-            ["📊 Live Progress", "🔄 Workflow Monitor", "📄 Document Tracker", "📈 Performance"]
+            [
+                "📊 Live Progress",
+                "🔄 Workflow Monitor",
+                "📄 Document Tracker",
+                "📈 Performance",
+            ]
         )
 
         with tab1:
@@ -306,7 +323,11 @@ class SimulationMonitor:
                                     {"range": [50, 80], "color": "gray"},
                                     {"range": [80, 100], "color": "darkgray"},
                                 ],
-                                "threshold": {"line": {"color": "red", "width": 4}, "thickness": 0.75, "value": 90},
+                                "threshold": {
+                                    "line": {"color": "red", "width": 4},
+                                    "thickness": 0.75,
+                                    "value": 90,
+                                },
                             },
                         )
                     )
@@ -339,7 +360,9 @@ class SimulationMonitor:
         self._add_sample_workflows()
 
         # Render the real-time workflow visualizer
-        self.workflow_visualizer.render_workflow_visualizer(title="🔄 Real-Time Workflow Monitor", height=600)
+        self.workflow_visualizer.render_workflow_visualizer(
+            title="🔄 Real-Time Workflow Monitor", height=600
+        )
 
         # Additional workflow controls
         st.markdown("---")
@@ -411,7 +434,11 @@ class SimulationMonitor:
                 for doc in docs_generated[-10:]:  # Last 10 documents
                     quality_data.append(
                         {
-                            "Document": doc["title"][:30] + "..." if len(doc["title"]) > 30 else doc["title"],
+                            "Document": (
+                                doc["title"][:30] + "..."
+                                if len(doc["title"]) > 30
+                                else doc["title"]
+                            ),
                             "Quality_Score": doc.get("quality_score", 0),
                             "Word_Count": doc.get("word_count", 0),
                             "Generation_Time": doc.get("generation_time", 0),
@@ -435,10 +462,14 @@ class SimulationMonitor:
 
             # Event Timeline Integration
             st.markdown("#### 📅 Document Generation Events")
-            st.markdown("*Real-time event timeline showing document generation activities*")
+            st.markdown(
+                "*Real-time event timeline showing document generation activities*"
+            )
 
             # Render event timeline with document-related events
-            self.event_timeline.render_timeline(title="📅 Document Events Timeline", height=400)
+            self.event_timeline.render_timeline(
+                title="📅 Document Events Timeline", height=400
+            )
 
         else:
             st.warning("Unable to load document data")
@@ -496,7 +527,11 @@ class SimulationMonitor:
 
             fig.add_trace(
                 go.Scatter(
-                    x=df["timestamp"], y=df["cpu_usage"], mode="lines", name="CPU Usage (%)", line=dict(color="red")
+                    x=df["timestamp"],
+                    y=df["cpu_usage"],
+                    mode="lines",
+                    name="CPU Usage (%)",
+                    line=dict(color="red"),
                 )
             )
 
@@ -510,7 +545,11 @@ class SimulationMonitor:
                 )
             )
 
-            fig.update_layout(title="Resource Usage Trends", xaxis_title="Time", yaxis_title="Usage (%)")
+            fig.update_layout(
+                title="Resource Usage Trends",
+                xaxis_title="Time",
+                yaxis_title="Usage (%)",
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
@@ -531,21 +570,39 @@ class SimulationMonitor:
         """Render phase timeline visualization."""
         # Create sample phase data (in real implementation, this would come from the simulation)
         phases = [
-            {"name": "Planning", "status": "completed", "duration": 7, "start_date": progress_data.start_time},
+            {
+                "name": "Planning",
+                "status": "completed",
+                "duration": 7,
+                "start_date": progress_data.start_time,
+            },
             {
                 "name": "Design",
                 "status": "completed",
                 "duration": 10,
-                "start_date": progress_data.start_time + timedelta(days=7) if progress_data.start_time else None,
+                "start_date": (
+                    progress_data.start_time + timedelta(days=7)
+                    if progress_data.start_time
+                    else None
+                ),
             },
             {
                 "name": "Development",
                 "status": "in_progress",
                 "duration": 21,
-                "start_date": progress_data.start_time + timedelta(days=17) if progress_data.start_time else None,
+                "start_date": (
+                    progress_data.start_time + timedelta(days=17)
+                    if progress_data.start_time
+                    else None
+                ),
             },
             {"name": "Testing", "status": "pending", "duration": 7, "start_date": None},
-            {"name": "Deployment", "status": "pending", "duration": 3, "start_date": None},
+            {
+                "name": "Deployment",
+                "status": "pending",
+                "duration": 3,
+                "start_date": None,
+            },
         ]
 
         # Create timeline data for visualization
@@ -554,7 +611,12 @@ class SimulationMonitor:
             if phase["start_date"]:
                 end_date = phase["start_date"] + timedelta(days=phase["duration"])
                 timeline_data.append(
-                    {"Phase": phase["name"], "Start": phase["start_date"], "End": end_date, "Status": phase["status"]}
+                    {
+                        "Phase": phase["name"],
+                        "Start": phase["start_date"],
+                        "End": end_date,
+                        "Status": phase["status"],
+                    }
                 )
 
         if timeline_data:
@@ -566,7 +628,11 @@ class SimulationMonitor:
                 x_end="End",
                 y="Phase",
                 color="Status",
-                color_discrete_map={"completed": "green", "in_progress": "blue", "pending": "gray"},
+                color_discrete_map={
+                    "completed": "green",
+                    "in_progress": "blue",
+                    "pending": "gray",
+                },
                 title="Project Phase Timeline",
             )
             fig.update_yaxes(autorange="reversed")
@@ -694,7 +760,9 @@ class SimulationMonitor:
         except Exception as e:
             st.error(f"Error stopping simulation: {e}")
 
-    def get_simulation_progress_data(self, simulation_id: str) -> Optional[SimulationProgress]:
+    def get_simulation_progress_data(
+        self, simulation_id: str
+    ) -> Optional[SimulationProgress]:
         """Get simulation progress data."""
         try:
             response = self.client.get_simulation_status(simulation_id)
@@ -708,7 +776,11 @@ class SimulationMonitor:
                     current_phase=data.get("current_phase", ""),
                     documents_generated=data.get("documents_generated", 0),
                     workflows_executed=data.get("workflows_executed", 0),
-                    start_time=datetime.fromisoformat(data["start_time"]) if data.get("start_time") else None,
+                    start_time=(
+                        datetime.fromisoformat(data["start_time"])
+                        if data.get("start_time")
+                        else None
+                    ),
                     estimated_completion=(
                         datetime.fromisoformat(data["estimated_completion"])
                         if data.get("estimated_completion")
@@ -723,15 +795,27 @@ class SimulationMonitor:
 
         return None
 
-    def get_workflow_progress_data(self, simulation_id: str) -> Optional[Dict[str, Any]]:
+    def get_workflow_progress_data(
+        self, simulation_id: str
+    ) -> Optional[Dict[str, Any]]:
         """Get workflow progress data."""
         # This would typically fetch from the simulation service
         # For now, return mock data
         return {
             "total_workflows": 8,
             "active_workflows": [
-                {"name": "Document Generation", "progress": 75, "status": "running", "elapsed_time": 45.2},
-                {"name": "Quality Analysis", "progress": 30, "status": "running", "elapsed_time": 12.8},
+                {
+                    "name": "Document Generation",
+                    "progress": 75,
+                    "status": "running",
+                    "elapsed_time": 45.2,
+                },
+                {
+                    "name": "Quality Analysis",
+                    "progress": 30,
+                    "status": "running",
+                    "elapsed_time": 12.8,
+                },
             ],
             "completed_workflows": [
                 {
@@ -758,7 +842,9 @@ class SimulationMonitor:
             ],
         }
 
-    def get_document_progress_data(self, simulation_id: str) -> Optional[Dict[str, Any]]:
+    def get_document_progress_data(
+        self, simulation_id: str
+    ) -> Optional[Dict[str, Any]]:
         """Get document progress data."""
         # This would typically fetch from the simulation service
         return {
@@ -786,8 +872,18 @@ class SimulationMonitor:
                 },
             ],
             "queued_documents": [
-                {"title": "Test Plan Document", "type": "testing", "progress": 60, "estimated_completion": "2 min"},
-                {"title": "Deployment Guide", "type": "deployment", "progress": 25, "estimated_completion": "5 min"},
+                {
+                    "title": "Test Plan Document",
+                    "type": "testing",
+                    "progress": 60,
+                    "estimated_completion": "2 min",
+                },
+                {
+                    "title": "Deployment Guide",
+                    "type": "deployment",
+                    "progress": 25,
+                    "estimated_completion": "5 min",
+                },
             ],
         }
 
@@ -803,7 +899,11 @@ class SimulationMonitor:
                 "error_rate": 0.02,
                 "disk_usage": 45.6,
             },
-            "trends": {"cpu_trend": -2.1, "memory_trend": 1.8, "response_time_trend": -5.3},
+            "trends": {
+                "cpu_trend": -2.1,
+                "memory_trend": 1.8,
+                "response_time_trend": -5.3,
+            },
         }
 
     def get_status_color(self, status: str) -> str:

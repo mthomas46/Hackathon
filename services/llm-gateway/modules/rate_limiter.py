@@ -58,11 +58,31 @@ class RateLimiter:
 
         # Default rate limit rules
         self.default_rule = RateLimitRule(
-            requests_per_minute=int(get_config_value("RATE_LIMIT_REQUESTS_PER_MINUTE", "60", section="rate_limiting")),
-            requests_per_hour=int(get_config_value("RATE_LIMIT_REQUESTS_PER_HOUR", "1000", section="rate_limiting")),
-            tokens_per_minute=int(get_config_value("RATE_LIMIT_TOKENS_PER_MINUTE", "50000", section="rate_limiting")),
-            burst_limit=int(get_config_value("RATE_LIMIT_BURST_LIMIT", "10", section="rate_limiting")),
-            cooldown_seconds=int(get_config_value("RATE_LIMIT_COOLDOWN_SECONDS", "60", section="rate_limiting")),
+            requests_per_minute=int(
+                get_config_value(
+                    "RATE_LIMIT_REQUESTS_PER_MINUTE", "60", section="rate_limiting"
+                )
+            ),
+            requests_per_hour=int(
+                get_config_value(
+                    "RATE_LIMIT_REQUESTS_PER_HOUR", "1000", section="rate_limiting"
+                )
+            ),
+            tokens_per_minute=int(
+                get_config_value(
+                    "RATE_LIMIT_TOKENS_PER_MINUTE", "50000", section="rate_limiting"
+                )
+            ),
+            burst_limit=int(
+                get_config_value(
+                    "RATE_LIMIT_BURST_LIMIT", "10", section="rate_limiting"
+                )
+            ),
+            cooldown_seconds=int(
+                get_config_value(
+                    "RATE_LIMIT_COOLDOWN_SECONDS", "60", section="rate_limiting"
+                )
+            ),
         )
 
         # Provider-specific rate limits
@@ -111,7 +131,9 @@ class RateLimiter:
             ),
         }
 
-    async def check_rate_limit(self, user_id: str, provider: str = "default", tokens_requested: int = 0) -> bool:
+    async def check_rate_limit(
+        self, user_id: str, provider: str = "default", tokens_requested: int = 0
+    ) -> bool:
         """Check if a request should be allowed based on rate limits."""
         try:
             # Get applicable rule
@@ -132,7 +154,11 @@ class RateLimiter:
                     "llm_gateway_rate_limit_cooldown",
                     f"User {user_id} in cooldown for {remaining_cooldown} seconds",
                     ServiceNames.LLM_GATEWAY,
-                    {"user_id": user_id, "remaining_cooldown": remaining_cooldown, "provider": provider},
+                    {
+                        "user_id": user_id,
+                        "remaining_cooldown": remaining_cooldown,
+                        "provider": provider,
+                    },
                 )
                 return False
 
@@ -163,18 +189,26 @@ class RateLimiter:
                 user_limit.burst_count = 1
 
             # Check per-minute request limit
-            recent_requests = [t for t in user_limit.request_times if current_time - t < 60]
+            recent_requests = [
+                t for t in user_limit.request_times if current_time - t < 60
+            ]
             if len(recent_requests) >= rule.requests_per_minute:
                 return False
 
             # Check per-hour request limit
-            hourly_requests = [t for t in user_limit.request_times if current_time - t < 3600]
+            hourly_requests = [
+                t for t in user_limit.request_times if current_time - t < 3600
+            ]
             if len(hourly_requests) >= rule.requests_per_hour:
                 return False
 
             # Check token limits
             if tokens_requested > 0:
-                recent_tokens = sum(tokens for _, tokens in user_limit.token_usage if current_time - _ < 60)
+                recent_tokens = sum(
+                    tokens
+                    for _, tokens in user_limit.token_usage
+                    if current_time - _ < 60
+                )
                 if recent_tokens + tokens_requested > rule.tokens_per_minute:
                     return False
 
@@ -217,11 +251,17 @@ class RateLimiter:
     def _clean_old_entries(self, user_limit: UserRateLimit, current_time: float):
         """Clean old entries from sliding windows."""
         # Clean request times (keep only last hour)
-        while user_limit.request_times and current_time - user_limit.request_times[0] > 3600:
+        while (
+            user_limit.request_times
+            and current_time - user_limit.request_times[0] > 3600
+        ):
             user_limit.request_times.popleft()
 
         # Clean token usage (keep only last hour)
-        while user_limit.token_usage and current_time - user_limit.token_usage[0][0] > 3600:
+        while (
+            user_limit.token_usage
+            and current_time - user_limit.token_usage[0][0] > 3600
+        ):
             user_limit.token_usage.popleft()
 
     def _check_global_limits(self, current_time: float) -> bool:
@@ -314,10 +354,14 @@ class RateLimiter:
         current_time = time.time()
 
         # Calculate current usage
-        requests_this_minute = sum(1 for t in user_limit.request_times if current_time - t < 60)
+        requests_this_minute = sum(
+            1 for t in user_limit.request_times if current_time - t < 60
+        )
         requests_this_hour = len(user_limit.request_times)  # Already limited to 1 hour
 
-        tokens_this_minute = sum(tokens for _, tokens in user_limit.token_usage if current_time - _ < 60)
+        tokens_this_minute = sum(
+            tokens for _, tokens in user_limit.token_usage if current_time - _ < 60
+        )
 
         cooldown_remaining = max(0, int(user_limit.cooldown_until - current_time))
 
@@ -351,7 +395,9 @@ class RateLimiter:
             },
             "limits": {
                 "cooldown_remaining": cooldown_remaining,
-                "next_request_allowed": user_limit.cooldown_until if cooldown_remaining > 0 else 0,
+                "next_request_allowed": (
+                    user_limit.cooldown_until if cooldown_remaining > 0 else 0
+                ),
             },
         }
 
@@ -365,14 +411,19 @@ class RateLimiter:
 
             return {
                 "global_requests_last_minute": len(self.global_requests),
-                "global_tokens_last_minute": sum(tokens for _, tokens in self.global_tokens),
+                "global_tokens_last_minute": sum(
+                    tokens for _, tokens in self.global_tokens
+                ),
                 "active_users": len(self.user_limits),
                 "special_rules_count": len(self.special_rules),
                 "timestamp": current_time,
             }
 
         except Exception as e:
-            return {"error": f"Failed to get status: {str(e)}", "timestamp": time.time()}
+            return {
+                "error": f"Failed to get status: {str(e)}",
+                "timestamp": time.time(),
+            }
 
     def reset_user_limits(self, user_id: Optional[str] = None):
         """Reset rate limits for a user or all users."""
@@ -388,7 +439,11 @@ class RateLimiter:
         else:
             self.user_limits.clear()
             self.special_rules.clear()
-            fire_and_forget("llm_gateway_all_limits_reset", "All user rate limits reset", ServiceNames.LLM_GATEWAY)
+            fire_and_forget(
+                "llm_gateway_all_limits_reset",
+                "All user rate limits reset",
+                ServiceNames.LLM_GATEWAY,
+            )
 
     def get_rate_limit_violations(self, hours: int = 24) -> List[Dict[str, Any]]:
         """Get rate limit violations from the last N hours."""

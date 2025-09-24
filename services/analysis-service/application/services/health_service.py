@@ -71,15 +71,27 @@ class DatabaseHealthCheck(HealthCheck):
                 conn.close()
                 response_time = time.time() - start_time
 
-                return {"status": "healthy", "response_time_seconds": response_time, "database_type": "sqlite"}
+                return {
+                    "status": "healthy",
+                    "response_time_seconds": response_time,
+                    "database_type": "sqlite",
+                }
             else:
                 # For other databases, we'd need proper connection pooling
                 # This is a placeholder for more complex database health checks
                 response_time = time.time() - start_time
-                return {"status": "healthy", "response_time_seconds": response_time, "database_type": "external"}
+                return {
+                    "status": "healthy",
+                    "response_time_seconds": response_time,
+                    "database_type": "external",
+                }
 
         except Exception as e:
-            return {"status": "unhealthy", "error": str(e), "error_type": type(e).__name__}
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            }
 
 
 class CacheHealthCheck(HealthCheck):
@@ -122,7 +134,11 @@ class CacheHealthCheck(HealthCheck):
                 }
 
         except Exception as e:
-            return {"status": "unhealthy", "error": str(e), "error_type": type(e).__name__}
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            }
 
 
 class ExternalServiceHealthCheck(HealthCheck):
@@ -130,7 +146,10 @@ class ExternalServiceHealthCheck(HealthCheck):
 
     def __init__(self, service_name: str, service_url: str, timeout_seconds: int = 5):
         """Initialize external service health check."""
-        super().__init__(f"external_{service_name}", f"External service {service_name} availability check")
+        super().__init__(
+            f"external_{service_name}",
+            f"External service {service_name} availability check",
+        )
         self.service_name = service_name
         self.service_url = service_url
         self.timeout_seconds = timeout_seconds
@@ -144,7 +163,8 @@ class ExternalServiceHealthCheck(HealthCheck):
                 start_time = time.time()
 
                 async with session.get(
-                    self.service_url, timeout=aiohttp.ClientTimeout(total=self.timeout_seconds)
+                    self.service_url,
+                    timeout=aiohttp.ClientTimeout(total=self.timeout_seconds),
                 ) as response:
                     response_time = time.time() - start_time
 
@@ -231,7 +251,11 @@ class SystemHealthCheck(HealthCheck):
             }
 
         except Exception as e:
-            return {"status": "unhealthy", "error": str(e), "error_type": type(e).__name__}
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "error_type": type(e).__name__,
+            }
 
 
 class ApplicationHealth:
@@ -276,7 +300,11 @@ class ApplicationHealth:
                     degraded_services.append(health_check.name)
 
             except Exception as e:
-                results[health_check.name] = {"name": health_check.name, "status": "error", "error": str(e)}
+                results[health_check.name] = {
+                    "name": health_check.name,
+                    "status": "error",
+                    "error": str(e),
+                }
                 if health_check.critical:
                     critical_issues.append(health_check.name)
 
@@ -299,7 +327,9 @@ class ApplicationHealth:
                 "total_checks": len(self.health_checks),
                 "critical_issues": len(critical_issues),
                 "degraded_services": len(degraded_services),
-                "healthy_checks": len([r for r in results.values() if r["status"] == "healthy"]),
+                "healthy_checks": len(
+                    [r for r in results.values() if r["status"] == "healthy"]
+                ),
             },
         }
 
@@ -431,7 +461,11 @@ class HealthService(ApplicationService):
         """Remove a health check."""
         async with self.operation_context("remove_health_check"):
             original_count = len(self.app_health.health_checks)
-            self.app_health.health_checks = [hc for hc in self.app_health.health_checks if hc.name != health_check_name]
+            self.app_health.health_checks = [
+                hc
+                for hc in self.app_health.health_checks
+                if hc.name != health_check_name
+            ]
 
             removed = len(self.app_health.health_checks) < original_count
             if removed:
@@ -470,7 +504,11 @@ class ServiceHealthCheck(HealthCheck):
 
     def __init__(self, service_name: str, health_data: Dict[str, Any]):
         """Initialize service health check."""
-        super().__init__(f"service_{service_name}", f"Service {service_name} health check", critical=True)
+        super().__init__(
+            f"service_{service_name}",
+            f"Service {service_name} health check",
+            critical=True,
+        )
         self.service_name = service_name
         self.health_data = health_data
 
@@ -480,7 +518,11 @@ class ServiceHealthCheck(HealthCheck):
         # In a real implementation, this would query the service
         status = self.health_data.get("status", "unknown")
 
-        return {"status": status, "service_name": self.service_name, "details": self.health_data}
+        return {
+            "status": status,
+            "service_name": self.service_name,
+            "details": self.health_data,
+        }
 
 
 class DependencyHealthCheck(HealthCheck):
@@ -501,26 +543,46 @@ class DependencyHealthCheck(HealthCheck):
                 import aiohttp
 
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as response:
+                    async with session.get(
+                        url, timeout=aiohttp.ClientTimeout(total=5)
+                    ) as response:
                         dependency_status[name] = {
-                            "status": "healthy" if response.status == 200 else "degraded",
+                            "status": (
+                                "healthy" if response.status == 200 else "degraded"
+                            ),
                             "http_status": response.status,
                             "url": url,
                         }
 
             except Exception as e:
-                dependency_status[name] = {"status": "unhealthy", "error": str(e), "url": url}
+                dependency_status[name] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                    "url": url,
+                }
 
         # Determine overall status
-        unhealthy_deps = [name for name, status in dependency_status.items() if status["status"] == "unhealthy"]
+        unhealthy_deps = [
+            name
+            for name, status in dependency_status.items()
+            if status["status"] == "unhealthy"
+        ]
 
         if unhealthy_deps:
             overall_status = "unhealthy"
         else:
-            degraded_deps = [name for name, status in dependency_status.items() if status["status"] == "degraded"]
+            degraded_deps = [
+                name
+                for name, status in dependency_status.items()
+                if status["status"] == "degraded"
+            ]
             overall_status = "degraded" if degraded_deps else "healthy"
 
-        return {"status": overall_status, "dependencies": dependency_status, "unhealthy_count": len(unhealthy_deps)}
+        return {
+            "status": overall_status,
+            "dependencies": dependency_status,
+            "unhealthy_count": len(unhealthy_deps),
+        }
 
 
 # Global health service instance

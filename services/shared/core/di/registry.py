@@ -108,12 +108,16 @@ class ServiceRegistry:
         """Register repository services."""
 
         # Analysis Repository
-        from ...infrastructure.repositories.analysis_repository import AnalysisRepository
+        from ...infrastructure.repositories.analysis_repository import (
+            AnalysisRepository,
+        )
 
         self._container.register_scoped(IAnalysisRepository, AnalysisRepository)
 
         # Document Repository
-        from ...infrastructure.repositories.document_repository import DocumentRepository
+        from ...infrastructure.repositories.document_repository import (
+            DocumentRepository,
+        )
 
         self._container.register_scoped(IDocumentRepository, DocumentRepository)
 
@@ -126,17 +130,23 @@ class ServiceRegistry:
         """Register external service adapters."""
 
         # Semantic Analyzer
-        from ...infrastructure.external.semantic_analyzer_adapter import SemanticAnalyzerAdapter
+        from ...infrastructure.external.semantic_analyzer_adapter import (
+            SemanticAnalyzerAdapter,
+        )
 
         self._container.register_singleton(ISemanticAnalyzer, SemanticAnalyzerAdapter)
 
         # Sentiment Analyzer
-        from ...infrastructure.external.sentiment_analyzer_adapter import SentimentAnalyzerAdapter
+        from ...infrastructure.external.sentiment_analyzer_adapter import (
+            SentimentAnalyzerAdapter,
+        )
 
         self._container.register_singleton(ISentimentAnalyzer, SentimentAnalyzerAdapter)
 
         # Quality Analyzer
-        from ...infrastructure.external.quality_analyzer_adapter import QualityAnalyzerAdapter
+        from ...infrastructure.external.quality_analyzer_adapter import (
+            QualityAnalyzerAdapter,
+        )
 
         self._container.register_singleton(IQualityAnalyzer, QualityAnalyzerAdapter)
 
@@ -149,12 +159,19 @@ class ServiceRegistry:
         self._container.register_singleton(Type[HandlerFactory], HandlerFactory)
 
         # Register validators
-        from ...application.validators.business_rule_validator import BusinessRuleValidator
+        from ...application.validators.business_rule_validator import (
+            BusinessRuleValidator,
+        )
 
-        self._container.register_singleton(Type[BusinessRuleValidator], BusinessRuleValidator)
+        self._container.register_singleton(
+            Type[BusinessRuleValidator], BusinessRuleValidator
+        )
 
     def register_custom_service(
-        self, interface: Type, implementation: Type, lifetime: ServiceLifetime = ServiceLifetime.SINGLETON
+        self,
+        interface: Type,
+        implementation: Type,
+        lifetime: ServiceLifetime = ServiceLifetime.SINGLETON,
     ) -> None:
         """Register a custom service."""
         if lifetime == ServiceLifetime.SINGLETON:
@@ -169,7 +186,10 @@ class ServiceRegistry:
         self._container.register_instance(interface, instance)
 
     def register_factory(
-        self, interface: Type, factory_func, lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT
+        self,
+        interface: Type,
+        factory_func,
+        lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT,
     ) -> None:
         """Register a service factory."""
         self._container.register_factory(interface, factory_func, lifetime)

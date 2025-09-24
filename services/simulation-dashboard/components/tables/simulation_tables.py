@@ -52,7 +52,11 @@ def render_simulation_table(
     required_columns = ["id", "name", "status", "created_at", "progress", "duration"]
     for col in required_columns:
         if col not in df.columns:
-            df[col] = "N/A" if col in ["name", "status"] else 0 if col in ["progress", "duration"] else datetime.now()
+            df[col] = (
+                "N/A"
+                if col in ["name", "status"]
+                else 0 if col in ["progress", "duration"] else datetime.now()
+            )
 
     # Add derived columns
     df["created_date"] = pd.to_datetime(df["created_at"]).dt.strftime("%Y-%m-%d %H:%M")
@@ -68,23 +72,36 @@ def render_simulation_table(
         with filter_col1:
             status_filter = st.multiselect(
                 "Status",
-                options=["pending", "running", "completed", "failed", "paused", "cancelled"],
+                options=[
+                    "pending",
+                    "running",
+                    "completed",
+                    "failed",
+                    "paused",
+                    "cancelled",
+                ],
                 default=[],
                 key="simulation_status_filter",
             )
 
         with filter_col2:
             name_search = st.text_input(
-                "Search by Name", placeholder="Enter simulation name...", key="simulation_name_search"
+                "Search by Name",
+                placeholder="Enter simulation name...",
+                key="simulation_name_search",
             )
 
         with filter_col3:
             date_from = st.date_input(
-                "Created From", value=datetime.now() - timedelta(days=30), key="simulation_date_from"
+                "Created From",
+                value=datetime.now() - timedelta(days=30),
+                key="simulation_date_from",
             )
 
         with filter_col4:
-            date_to = st.date_input("Created To", value=datetime.now(), key="simulation_date_to")
+            date_to = st.date_input(
+                "Created To", value=datetime.now(), key="simulation_date_to"
+            )
 
         # Apply filters
         filtered_df = df.copy()
@@ -93,7 +110,9 @@ def render_simulation_table(
             filtered_df = filtered_df[filtered_df["status"].isin(status_filter)]
 
         if name_search:
-            filtered_df = filtered_df[filtered_df["name"].str.contains(name_search, case=False, na=False)]
+            filtered_df = filtered_df[
+                filtered_df["name"].str.contains(name_search, case=False, na=False)
+            ]
 
         if date_from and date_to:
             filtered_df = filtered_df[
@@ -116,7 +135,11 @@ def render_simulation_table(
             )
 
         with sort_col2:
-            sort_order = st.selectbox("Order", options=["descending", "ascending"], key="simulation_sort_order")
+            sort_order = st.selectbox(
+                "Order",
+                options=["descending", "ascending"],
+                key="simulation_sort_order",
+            )
 
         ascending = sort_order == "ascending"
         filtered_df = filtered_df.sort_values(sort_by, ascending=ascending)
@@ -132,7 +155,9 @@ def render_simulation_table(
             select_all = st.checkbox("Select All", key="simulation_select_all")
 
         with select_col2:
-            if st.button("🗑️ Delete Selected", key="simulation_delete_selected", type="secondary"):
+            if st.button(
+                "🗑️ Delete Selected", key="simulation_delete_selected", type="secondary"
+            ):
                 if selected_simulations and on_delete:
                     on_delete(selected_simulations)
 
@@ -146,7 +171,14 @@ def render_simulation_table(
     st.markdown(f"#### 📋 Simulations ({len(filtered_df)} total)")
 
     # Create display DataFrame
-    display_columns = ["status_icon", "name", "created_date", "progress_display", "duration_display", "status"]
+    display_columns = [
+        "status_icon",
+        "name",
+        "created_date",
+        "progress_display",
+        "duration_display",
+        "status",
+    ]
     display_df = filtered_df[display_columns].copy()
     display_df.columns = ["Status", "Name", "Created", "Progress", "Duration", "State"]
 
@@ -190,10 +222,13 @@ def render_simulation_table(
         for status, group in status_groups:
             if len(group) > 0:
                 with st.expander(
-                    f"{get_status_icon(status)} {status.title()} Simulations ({len(group)})", expanded=False
+                    f"{get_status_icon(status)} {status.title()} Simulations ({len(group)})",
+                    expanded=False,
                 ):
                     for _, row in group.iterrows():
-                        render_simulation_row_actions(row, on_status_change, on_delete, on_view_details)
+                        render_simulation_row_actions(
+                            row, on_status_change, on_delete, on_view_details
+                        )
 
     # Table statistics
     st.markdown("#### 📊 Table Statistics")
@@ -284,7 +319,14 @@ def render_simulation_row_actions(
 
 def get_status_icon(status: str) -> str:
     """Get status icon for display."""
-    icons = {"pending": "⏳", "running": "🔄", "completed": "✅", "failed": "❌", "paused": "⏸️", "cancelled": "🚫"}
+    icons = {
+        "pending": "⏳",
+        "running": "🔄",
+        "completed": "✅",
+        "failed": "❌",
+        "paused": "⏸️",
+        "cancelled": "🚫",
+    }
     return icons.get(status, "❓")
 
 
@@ -307,7 +349,9 @@ def format_duration(seconds: float) -> str:
 
 
 def render_simulation_summary_table(
-    simulations_data: List[Dict[str, Any]], group_by: str = "status", title: str = "📈 Simulation Summary"
+    simulations_data: List[Dict[str, Any]],
+    group_by: str = "status",
+    title: str = "📈 Simulation Summary",
 ) -> Dict[str, Any]:
     """Render a summary table grouped by specified criteria.
 
@@ -329,21 +373,34 @@ def render_simulation_summary_table(
 
     # Group and aggregate
     if group_by == "status":
-        summary = df.groupby("status").agg({"id": "count", "progress": "mean", "duration": "mean"}).round(2)
+        summary = (
+            df.groupby("status")
+            .agg({"id": "count", "progress": "mean", "duration": "mean"})
+            .round(2)
+        )
 
         summary.columns = ["Count", "Avg Progress", "Avg Duration"]
         summary["Avg Duration"] = summary["Avg Duration"].apply(format_duration)
 
     elif group_by == "created_date":
         df["date"] = pd.to_datetime(df["created_at"]).dt.date
-        summary = df.groupby("date").agg({"id": "count", "progress": "mean", "duration": "mean"}).round(2)
+        summary = (
+            df.groupby("date")
+            .agg({"id": "count", "progress": "mean", "duration": "mean"})
+            .round(2)
+        )
 
         summary.columns = ["Count", "Avg Progress", "Avg Duration"]
         summary["Avg Duration"] = summary["Avg Duration"].apply(format_duration)
 
     else:
         # Default summary
-        summary = df.agg({"id": "count", "progress": "mean", "duration": "mean"}).round(2).to_frame().T
+        summary = (
+            df.agg({"id": "count", "progress": "mean", "duration": "mean"})
+            .round(2)
+            .to_frame()
+            .T
+        )
         summary.columns = ["Total Count", "Avg Progress", "Avg Duration"]
         summary["Avg Duration"] = summary["Avg Duration"].apply(format_duration)
 
@@ -380,8 +437,14 @@ def generate_sample_simulation_data(count: int = 10) -> List[Dict[str, Any]]:
             "name": np.random.choice(names),
             "status": status,
             "created_at": created_at,
-            "progress": np.random.uniform(0, 100) if status in ["running", "completed"] else 0,
-            "duration": np.random.uniform(0, 3600) if status == "completed" else np.random.uniform(0, 1800),
+            "progress": (
+                np.random.uniform(0, 100) if status in ["running", "completed"] else 0
+            ),
+            "duration": (
+                np.random.uniform(0, 3600)
+                if status == "completed"
+                else np.random.uniform(0, 1800)
+            ),
             "description": f"Sample simulation {i+1}",
         }
         simulations.append(simulation)

@@ -119,8 +119,16 @@ PAGES = {
         "function": render_overview_page,
         "description": "Main dashboard with simulation status and key metrics",
     },
-    "wizard": {"name": "🧙‍♂️ Wizard", "function": render_wizard_page, "description": "Guided simulation setup wizard"},
-    "create": {"name": "➕ Create", "function": render_create_page, "description": "Create new project simulations"},
+    "wizard": {
+        "name": "🧙‍♂️ Wizard",
+        "function": render_wizard_page,
+        "description": "Guided simulation setup wizard",
+    },
+    "create": {
+        "name": "➕ Create",
+        "function": render_create_page,
+        "description": "Create new project simulations",
+    },
     "controls": {
         "name": "🎮 Controls",
         "function": render_controls_page,
@@ -166,7 +174,11 @@ PAGES = {
         "function": render_analytics_page,
         "description": "Advanced analytics and insights",
     },
-    "config": {"name": "⚙️ Configure", "function": render_config_page, "description": "Configuration and settings"},
+    "config": {
+        "name": "⚙️ Configure",
+        "function": render_config_page,
+        "description": "Configuration and settings",
+    },
 }
 
 

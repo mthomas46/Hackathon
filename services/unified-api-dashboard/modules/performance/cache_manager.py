@@ -22,7 +22,6 @@ from typing import Any, Callable, Dict, List, Optional
 import redis.asyncio as redis
 
 
-
 @dataclass
 class CacheEntry:
     """Cache entry with metadata."""
@@ -111,8 +110,12 @@ class MemoryCache(BaseCache):
         # Decompress if needed
         value = entry.value
         if entry.compressed:
-            value = await asyncio.get_event_loop().run_in_executor(self.executor, zlib.decompress, value)
-            value = pickle.loads(value)  # nosec: Safe fallback after JSON attempt for complex objects
+            value = await asyncio.get_event_loop().run_in_executor(
+                self.executor, zlib.decompress, value
+            )
+            value = pickle.loads(
+                value
+            )  # nosec: Safe fallback after JSON attempt for complex objects
 
         return value
 
@@ -120,7 +123,9 @@ class MemoryCache(BaseCache):
         """Set value in memory cache."""
         try:
             # Serialize and potentially compress
-            serialized = pickle.dumps(value)  # nosec: Used only for complex objects not serializable by JSON
+            serialized = pickle.dumps(
+                value
+            )  # nosec: Used only for complex objects not serializable by JSON
             compressed = False
             final_value = serialized
 
@@ -133,15 +138,28 @@ class MemoryCache(BaseCache):
                     final_value = compressed_value
                     compressed = True
                     self.stats.compression_ratio = (
-                        self.stats.compression_ratio + len(compressed_value) / len(serialized)
+                        self.stats.compression_ratio
+                        + len(compressed_value) / len(serialized)
                     ) / 2
 
-            entry = CacheEntry(key=key, value=final_value, ttl=ttl, compressed=compressed, size_bytes=len(final_value))
+            entry = CacheEntry(
+                key=key,
+                value=final_value,
+                ttl=ttl,
+                compressed=compressed,
+                size_bytes=len(final_value),
+            )
 
             # Evict if at capacity (simple LRU)
             if len(self.cache) >= self.max_size and key not in self.cache:
                 # Find least recently used
-                lru_key = min(self.cache.keys(), key=lambda k: (self.cache[k].accessed_at, self.cache[k].access_count))
+                lru_key = min(
+                    self.cache.keys(),
+                    key=lambda k: (
+                        self.cache[k].accessed_at,
+                        self.cache[k].access_count,
+                    ),
+                )
                 await self.delete(lru_key)
                 self.stats.evictions += 1
 
@@ -184,13 +202,17 @@ class MemoryCache(BaseCache):
     async def get_stats(self) -> CacheStats:
         """Get memory cache statistics."""
         self.stats.hit_ratio = (
-            self.stats.hits / (self.stats.hits + self.stats.misses) if (self.stats.hits + self.stats.misses) > 0 else 0
+            self.stats.hits / (self.stats.hits + self.stats.misses)
+            if (self.stats.hits + self.stats.misses) > 0
+            else 0
         )
         return self.stats
 
     def _update_memory_usage(self):
         """Update memory usage statistics."""
-        self.stats.memory_usage_bytes = sum(entry.size_bytes for entry in self.cache.values())
+        self.stats.memory_usage_bytes = sum(
+            entry.size_bytes for entry in self.cache.values()
+        )
 
 
 class RedisCache(BaseCache):
@@ -204,7 +226,11 @@ class RedisCache(BaseCache):
         password: Optional[str] = None,
         max_connections: int = 10,
     ):
-        self.redis_url = f"redis://:{password}@{host}:{port}/{db}" if password else f"redis://{host}:{port}/{db}"
+        self.redis_url = (
+            f"redis://:{password}@{host}:{port}/{db}"
+            if password
+            else f"redis://{host}:{port}/{db}"
+        )
         self.max_connections = max_connections
         self._pool = None
         self.stats = CacheStats()
@@ -213,7 +239,9 @@ class RedisCache(BaseCache):
         """Get Redis connection."""
         if self._pool is None:
             self._pool = redis.ConnectionPool.from_url(
-                self.redis_url, max_connections=self.max_connections, decode_responses=False
+                self.redis_url,
+                max_connections=self.max_connections,
+                decode_responses=False,
             )
         return redis.Redis(connection_pool=self._pool)
 
@@ -229,7 +257,9 @@ class RedisCache(BaseCache):
 
             # Deserialize
             try:
-                deserialized = pickle.loads(value)  # nosec: Safe fallback after JSON attempt for complex objects
+                deserialized = pickle.loads(
+                    value
+                )  # nosec: Safe fallback after JSON attempt for complex objects
                 self.stats.hits += 1
                 return deserialized
             except Exception:
@@ -252,7 +282,9 @@ class RedisCache(BaseCache):
             if isinstance(value, (dict, list, str, int, float, bool)):
                 serialized = json.dumps(value).encode("utf-8")
             else:
-                serialized = pickle.dumps(value)  # nosec: Used only for complex objects not serializable by JSON
+                serialized = pickle.dumps(
+                    value
+                )  # nosec: Used only for complex objects not serializable by JSON
 
             success = await redis_client.set(key, serialized, ex=ttl)
             if success:
@@ -298,7 +330,8 @@ class RedisCache(BaseCache):
 
             self.stats.memory_usage_bytes = info.get("used_memory", 0)
             self.stats.hit_ratio = (
-                info.get("keyspace_hits", 0) / (info.get("keyspace_hits", 0) + info.get("keyspace_misses", 0))
+                info.get("keyspace_hits", 0)
+                / (info.get("keyspace_hits", 0) + info.get("keyspace_misses", 0))
                 if (info.get("keyspace_hits", 0) + info.get("keyspace_misses", 0)) > 0
                 else 0
             )
@@ -318,7 +351,10 @@ class TieredCache(BaseCache):
     """
 
     def __init__(
-        self, l1_cache: MemoryCache, l2_cache: Optional[RedisCache] = None, l3_callback: Optional[Callable] = None
+        self,
+        l1_cache: MemoryCache,
+        l2_cache: Optional[RedisCache] = None,
+        l3_callback: Optional[Callable] = None,
     ):
         self.l1_cache = l1_cache
         self.l2_cache = l2_cache
@@ -364,7 +400,9 @@ class TieredCache(BaseCache):
         success = True
 
         # Set in L1
-        if not await self.l1_cache.set(key, value, ttl=min(ttl or 300, 60)):  # Max 1 min in L1
+        if not await self.l1_cache.set(
+            key, value, ttl=min(ttl or 300, 60)
+        ):  # Max 1 min in L1
             success = False
 
         # Set in L2
@@ -468,9 +506,13 @@ class CacheManager:
     def generate_key(self, *parts) -> str:
         """Generate cache key from parts."""
         key_content = ":".join(str(part) for part in parts)
-        return f"{self.key_prefix}:{hashlib.sha256(key_content.encode()).hexdigest()[:16]}"
+        return (
+            f"{self.key_prefix}:{hashlib.sha256(key_content.encode()).hexdigest()[:16]}"
+        )
 
-    async def get_or_compute(self, key: str, compute_func: Callable, ttl: Optional[int] = None) -> Any:
+    async def get_or_compute(
+        self, key: str, compute_func: Callable, ttl: Optional[int] = None
+    ) -> Any:
         """Get from cache or compute and cache."""
         value = await self.cache.get(key)
         if value is not None:

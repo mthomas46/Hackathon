@@ -22,10 +22,13 @@ from typing import Any, Dict, List, Optional, Set
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from services.shared.core.constants_new import ServiceNames  # type: ignore
-from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
-from services.shared.utilities import attach_self_register, setup_common_middleware  # type: ignore
-from services.shared.utilities.middleware import RequestIdMiddleware, RequestMetricsMiddleware  # type: ignore
+from services.shared.infrastructure.config import load_service_config
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.utilities import attach_self_register, setup_common_middleware
+from services.shared.utilities.middleware import (
+    RequestIdMiddleware,
+    RequestMetricsMiddleware,
+)
 
 try:
     from .modules.config import config
@@ -45,11 +48,17 @@ except ImportError:
     from modules.real_implementations import real_implementations
     from modules.tool_registry import ToolDescription, tool_registry
 
-# Service configuration constants
-SERVICE_NAME = "github-mcp"
-SERVICE_TITLE = "GitHub MCP"
-SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 5072
+# Load standardized configuration
+config = load_service_config(
+    service_type="github-mcp",
+    config_file="./config.yaml",  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "GitHub MCP"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Timeout and configuration defaults
 DEFAULT_UPSTREAM_TIMEOUT_SECONDS = 60
@@ -59,9 +68,13 @@ app = FastAPI(
     title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Local GitHub Model Context Protocol server with mock and real implementations",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
-setup_common_middleware(app, ServiceNames.GITHUB if hasattr(ServiceNames, "GITHUB") else SERVICE_NAME)
-attach_self_register(app, ServiceNames.GITHUB if hasattr(ServiceNames, "GITHUB") else SERVICE_NAME)
+
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=config.service_name)
+attach_self_register(app, config.service_name)
 
 
 class InvokeRequest(BaseModel):
@@ -162,11 +175,16 @@ async def invoke(tool: str, payload: InvokeRequest):
     Supports correlation ID tracking and flexible mock/real execution modes.
     """
     # Determine execution mode (mock vs real)
-    use_mock_mode = payload.mock if payload.mock is not None else config.is_mock_default()
+    use_mock_mode = (
+        payload.mock if payload.mock is not None else config.is_mock_default()
+    )
 
     # Gate write operations when in read-only mode
     if config.is_read_only() and payload.write:
-        raise HTTPException(status_code=403, detail="Read-only mode enabled - write operations not allowed")
+        raise HTTPException(
+            status_code=403,
+            detail="Read-only mode enabled - write operations not allowed",
+        )
 
     # Optional proxy to official GitHub MCP server
     if config.should_use_official_mcp():
@@ -178,14 +196,21 @@ async def invoke(tool: str, payload: InvokeRequest):
             )
             return InvokeResponse(tool=tool, success=True, result=upstream_response)
         except Exception as upstream_error:
-            raise HTTPException(status_code=502, detail=f"Upstream GitHub MCP server error: {upstream_error}")
+            raise HTTPException(
+                status_code=502,
+                detail=f"Upstream GitHub MCP server error: {upstream_error}",
+            )
 
     # Execute tool using local implementations
     try:
         if use_mock_mode:
-            tool_result = await mock_implementations.invoke_tool(tool, payload.arguments)
+            tool_result = await mock_implementations.invoke_tool(
+                tool, payload.arguments
+            )
         else:
-            tool_result = await real_implementations.invoke_tool(tool, payload.arguments)
+            tool_result = await real_implementations.invoke_tool(
+                tool, payload.arguments
+            )
 
         # Optional downstream event emission for integrations
         await event_system.maybe_emit_events(tool, tool_result)
@@ -197,7 +222,9 @@ async def invoke(tool: str, payload: InvokeRequest):
         raise
     except Exception as execution_error:
         # Wrap other exceptions in 500 error
-        raise HTTPException(status_code=500, detail=f"Tool execution failed: {execution_error}")
+        raise HTTPException(
+            status_code=500, detail=f"Tool execution failed: {execution_error}"
+        )
 
 
 if __name__ == "__main__":

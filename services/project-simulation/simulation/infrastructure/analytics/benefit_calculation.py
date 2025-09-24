@@ -13,7 +13,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.content.context_aware_generation import ContentContext
 from simulation.infrastructure.integration.service_clients import get_ecosystem_client
@@ -72,13 +74,19 @@ class BenefitMetric:
         self.unit = unit
         self.description = description
 
-    def calculate_benefit(self, current_value: float, context: Dict[str, Any]) -> Dict[str, Any]:
+    def calculate_benefit(
+        self, current_value: float, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Calculate benefit for this metric."""
         if self.baseline_value is None:
             return {"benefit_value": 0.0, "benefit_percentage": 0.0, "confidence": 0.0}
 
         benefit_value = current_value - self.baseline_value
-        benefit_percentage = (benefit_value / self.baseline_value) * 100 if self.baseline_value != 0 else 0.0
+        benefit_percentage = (
+            (benefit_value / self.baseline_value) * 100
+            if self.baseline_value != 0
+            else 0.0
+        )
 
         # Calculate confidence based on data quality and sample size
         confidence = self._calculate_confidence(context)
@@ -275,7 +283,10 @@ class BenefitCalculator:
         return metrics
 
     async def calculate_project_benefits(
-        self, project_context: ContentContext, analysis_results: Dict[str, Any], time_period_days: int = 90
+        self,
+        project_context: ContentContext,
+        analysis_results: Dict[str, Any],
+        time_period_days: int = 90,
     ) -> Dict[str, Any]:
         """Calculate comprehensive benefits for a project."""
         try:
@@ -286,7 +297,9 @@ class BenefitCalculator:
             )
 
             # Collect relevant metrics from analysis results
-            collected_metrics = await self._collect_ecosystem_metrics(project_context, time_period_days)
+            collected_metrics = await self._collect_ecosystem_metrics(
+                project_context, time_period_days
+            )
 
             # Calculate benefits for each metric
             benefit_calculations = {}
@@ -295,20 +308,31 @@ class BenefitCalculator:
                     current_value = collected_metrics[metric_id]["value"]
                     context_data = collected_metrics[metric_id]["context"]
 
-                    benefit_result = metric.calculate_benefit(current_value, context_data)
-                    benefit_calculations[metric_id] = {"metric": metric, "calculation": benefit_result}
+                    benefit_result = metric.calculate_benefit(
+                        current_value, context_data
+                    )
+                    benefit_calculations[metric_id] = {
+                        "metric": metric,
+                        "calculation": benefit_result,
+                    }
 
             # Aggregate benefits by category
-            category_benefits = self._aggregate_benefits_by_category(benefit_calculations)
+            category_benefits = self._aggregate_benefits_by_category(
+                benefit_calculations
+            )
 
             # Calculate total ROI
             total_roi = self._calculate_total_roi(benefit_calculations, project_context)
 
             # Calculate benefit realization timeline
-            realization_timeline = self._calculate_benefit_realization_timeline(benefit_calculations)
+            realization_timeline = self._calculate_benefit_realization_timeline(
+                benefit_calculations
+            )
 
             # Generate benefit insights
-            benefit_insights = self._generate_benefit_insights(benefit_calculations, category_benefits)
+            benefit_insights = self._generate_benefit_insights(
+                benefit_calculations, category_benefits
+            )
 
             result = {
                 "project_id": project_context.project_config.get("id"),
@@ -318,7 +342,9 @@ class BenefitCalculator:
                 "individual_metrics": benefit_calculations,
                 "realization_timeline": realization_timeline,
                 "benefit_insights": benefit_insights,
-                "confidence_score": self._calculate_overall_confidence(benefit_calculations),
+                "confidence_score": self._calculate_overall_confidence(
+                    benefit_calculations
+                ),
                 "generated_at": datetime.now(),
                 "methodology": "ecosystem_metrics_based_calculation",
             }
@@ -330,7 +356,11 @@ class BenefitCalculator:
 
         except Exception as e:
             self.logger.error("Benefit calculation failed", error=str(e))
-            return {"error": str(e), "status": "calculation_failed", "generated_at": datetime.now()}
+            return {
+                "error": str(e),
+                "status": "calculation_failed",
+                "generated_at": datetime.now(),
+            }
 
     async def _collect_ecosystem_metrics(
         self, project_context: ContentContext, time_period_days: int
@@ -340,23 +370,33 @@ class BenefitCalculator:
 
         try:
             # Collect productivity metrics
-            productivity_data = await self._collect_productivity_metrics(project_context, time_period_days)
+            productivity_data = await self._collect_productivity_metrics(
+                project_context, time_period_days
+            )
             collected_metrics.update(productivity_data)
 
             # Collect quality metrics
-            quality_data = await self._collect_quality_metrics(project_context, time_period_days)
+            quality_data = await self._collect_quality_metrics(
+                project_context, time_period_days
+            )
             collected_metrics.update(quality_data)
 
             # Collect risk metrics
-            risk_data = await self._collect_risk_metrics(project_context, time_period_days)
+            risk_data = await self._collect_risk_metrics(
+                project_context, time_period_days
+            )
             collected_metrics.update(risk_data)
 
             # Collect time efficiency metrics
-            time_data = await self._collect_time_efficiency_metrics(project_context, time_period_days)
+            time_data = await self._collect_time_efficiency_metrics(
+                project_context, time_period_days
+            )
             collected_metrics.update(time_data)
 
             # Collect knowledge metrics
-            knowledge_data = await self._collect_knowledge_metrics(project_context, time_period_days)
+            knowledge_data = await self._collect_knowledge_metrics(
+                project_context, time_period_days
+            )
             collected_metrics.update(knowledge_data)
 
         except Exception as e:
@@ -380,7 +420,8 @@ class BenefitCalculator:
         # Code quality score from analysis service
         try:
             quality_analysis = await self.analysis_client.get_code_quality_metrics(
-                project_id=project_context.project_config.get("id"), time_period_days=time_period_days
+                project_id=project_context.project_config.get("id"),
+                time_period_days=time_period_days,
             )
             metrics["code_quality_score"] = {
                 "value": quality_analysis.get("overall_score", 8.0),
@@ -394,7 +435,9 @@ class BenefitCalculator:
 
         return metrics
 
-    async def _collect_quality_metrics(self, project_context: ContentContext, time_period_days: int) -> Dict[str, Any]:
+    async def _collect_quality_metrics(
+        self, project_context: ContentContext, time_period_days: int
+    ) -> Dict[str, Any]:
         """Collect quality-related metrics."""
         metrics = {}
 
@@ -406,7 +449,9 @@ class BenefitCalculator:
 
         return metrics
 
-    async def _collect_risk_metrics(self, project_context: ContentContext, time_period_days: int) -> Dict[str, Any]:
+    async def _collect_risk_metrics(
+        self, project_context: ContentContext, time_period_days: int
+    ) -> Dict[str, Any]:
         """Collect risk-related metrics."""
         metrics = {}
 
@@ -470,7 +515,9 @@ class BenefitCalculator:
 
         return metrics
 
-    def _aggregate_benefits_by_category(self, benefit_calculations: Dict[str, Any]) -> Dict[str, Any]:
+    def _aggregate_benefits_by_category(
+        self, benefit_calculations: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Aggregate benefits by category."""
         category_aggregates = {}
 
@@ -491,7 +538,9 @@ class BenefitCalculator:
 
             category_data = category_aggregates[category]
             category_data["total_benefit_value"] += calculation["benefit_value"]
-            category_data["total_benefit_percentage"] += calculation["benefit_percentage"]
+            category_data["total_benefit_percentage"] += calculation[
+                "benefit_percentage"
+            ]
             category_data["average_confidence"] += calculation["confidence"]
             category_data["metric_count"] += 1
             category_data["metrics"].append(
@@ -507,7 +556,9 @@ class BenefitCalculator:
         for category_data in category_aggregates.values():
             if category_data["metric_count"] > 0:
                 category_data["average_confidence"] /= category_data["metric_count"]
-                category_data["total_benefit_percentage"] /= category_data["metric_count"]
+                category_data["total_benefit_percentage"] /= category_data[
+                    "metric_count"
+                ]
 
         return category_aggregates
 
@@ -530,12 +581,16 @@ class BenefitCalculator:
         # Estimate implementation costs
         project_duration_weeks = project_context.project_config.get("duration_weeks", 8)
         team_size = len(project_context.team_members)
-        total_costs = self._estimate_implementation_costs(project_duration_weeks, team_size)
+        total_costs = self._estimate_implementation_costs(
+            project_duration_weeks, team_size
+        )
 
         # Calculate ROI
         if total_costs > 0:
             roi_percentage = ((total_benefits - total_costs) / total_costs) * 100
-            payback_period_months = (total_costs / (total_benefits / 12)) if total_benefits > 0 else 0
+            payback_period_months = (
+                (total_costs / (total_benefits / 12)) if total_benefits > 0 else 0
+            )
         else:
             roi_percentage = 0.0
             payback_period_months = 0
@@ -546,21 +601,29 @@ class BenefitCalculator:
             "net_benefits": total_benefits - total_costs,
             "roi_percentage": roi_percentage,
             "payback_period_months": payback_period_months,
-            "benefit_cost_ratio": total_benefits / total_costs if total_costs > 0 else 0,
+            "benefit_cost_ratio": (
+                total_benefits / total_costs if total_costs > 0 else 0
+            ),
         }
 
-    def _convert_benefit_to_monetary(self, calculation: Dict[str, Any], metric: BenefitMetric) -> float:
+    def _convert_benefit_to_monetary(
+        self, calculation: Dict[str, Any], metric: BenefitMetric
+    ) -> float:
         """Convert benefit calculation to monetary value."""
         benefit_value = calculation["benefit_value"]
 
         # Apply category-specific multipliers
         if metric.category == BenefitCategory.PRODUCTIVITY:
             # Productivity improvements save developer time
-            return benefit_value * self.cost_assumptions["developer_hourly_rate"] * 8  # 8 hours per day
+            return (
+                benefit_value * self.cost_assumptions["developer_hourly_rate"] * 8
+            )  # 8 hours per day
 
         elif metric.category == BenefitCategory.QUALITY:
             # Quality improvements reduce defect fixing costs
-            return benefit_value * self.cost_assumptions["developer_hourly_rate"] * 4  # 4 hours to fix defect
+            return (
+                benefit_value * self.cost_assumptions["developer_hourly_rate"] * 4
+            )  # 4 hours to fix defect
 
         elif metric.category == BenefitCategory.RISK_REDUCTION:
             # Risk reduction saves incident response costs
@@ -568,28 +631,50 @@ class BenefitCalculator:
 
         elif metric.category == BenefitCategory.TIME_EFFICIENCY:
             # Time efficiency saves project management time
-            return benefit_value * self.cost_assumptions["project_manager_hourly_rate"] * 8
+            return (
+                benefit_value * self.cost_assumptions["project_manager_hourly_rate"] * 8
+            )
 
         elif metric.category == BenefitCategory.KNOWLEDGE_VALUE:
             # Knowledge value has long-term benefits
-            return benefit_value * self.cost_assumptions["knowledge_value_multiplier"] * 1000
+            return (
+                benefit_value
+                * self.cost_assumptions["knowledge_value_multiplier"]
+                * 1000
+            )
 
         elif metric.category == BenefitCategory.INNOVATION_IMPACT:
             # Innovation creates significant value
-            return benefit_value * self.cost_assumptions["innovation_value_multiplier"] * 10000
+            return (
+                benefit_value
+                * self.cost_assumptions["innovation_value_multiplier"]
+                * 10000
+            )
 
         else:
             # Default conversion
             return benefit_value * 100  # Generic conversion
 
-    def _estimate_implementation_costs(self, duration_weeks: int, team_size: int) -> float:
+    def _estimate_implementation_costs(
+        self, duration_weeks: int, team_size: int
+    ) -> float:
         """Estimate implementation costs."""
         # Developer costs
-        developer_costs = duration_weeks * 5 * 8 * self.cost_assumptions["developer_hourly_rate"] * team_size
+        developer_costs = (
+            duration_weeks
+            * 5
+            * 8
+            * self.cost_assumptions["developer_hourly_rate"]
+            * team_size
+        )
 
         # Infrastructure costs
         infrastructure_costs = (
-            duration_weeks * 5 * 8 * self.cost_assumptions["infrastructure_cost_per_hour"] * team_size
+            duration_weeks
+            * 5
+            * 8
+            * self.cost_assumptions["infrastructure_cost_per_hour"]
+            * team_size
         )
 
         # Training and adoption costs (20% of total)
@@ -597,7 +682,9 @@ class BenefitCalculator:
 
         return developer_costs + infrastructure_costs + training_costs
 
-    def _calculate_benefit_realization_timeline(self, benefit_calculations: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_benefit_realization_timeline(
+        self, benefit_calculations: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Calculate when benefits will be realized."""
         timeline = {
             "immediate_benefits": [],  # Within 1 month
@@ -615,7 +702,9 @@ class BenefitCalculator:
                     "metric_id": metric_id,
                     "name": metric.name,
                     "benefit_value": calculation["benefit_value"],
-                    "realization_time": self._estimate_realization_time(metric.category),
+                    "realization_time": self._estimate_realization_time(
+                        metric.category
+                    ),
                 }
 
                 realization_time = benefit_item["realization_time"]
@@ -652,7 +741,11 @@ class BenefitCalculator:
         insights = []
 
         # Find top benefit categories
-        sorted_categories = sorted(category_benefits.items(), key=lambda x: x[1]["total_benefit_value"], reverse=True)
+        sorted_categories = sorted(
+            category_benefits.items(),
+            key=lambda x: x[1]["total_benefit_value"],
+            reverse=True,
+        )
 
         if sorted_categories:
             top_category = sorted_categories[0]
@@ -671,7 +764,10 @@ class BenefitCalculator:
         for calc_data in benefit_calculations.values():
             metric = calc_data["metric"]
             calculation = calc_data["calculation"]
-            if calculation["benefit_value"] > 0 and self._estimate_realization_time(metric.category) <= 30:
+            if (
+                calculation["benefit_value"] > 0
+                and self._estimate_realization_time(metric.category) <= 30
+            ):
                 immediate_benefits.append(calc_data)
 
         if immediate_benefits:
@@ -681,13 +777,17 @@ class BenefitCalculator:
                     "title": f"Quick Wins Available ({len(immediate_benefits)})",
                     "description": "Benefits that can be realized within 30 days",
                     "count": len(immediate_benefits),
-                    "total_value": sum(c["calculation"]["benefit_value"] for c in immediate_benefits),
+                    "total_value": sum(
+                        c["calculation"]["benefit_value"] for c in immediate_benefits
+                    ),
                 }
             )
 
         # Check for high-confidence benefits
         high_confidence_benefits = [
-            calc for calc in benefit_calculations.values() if calc["calculation"]["confidence"] > 0.8
+            calc
+            for calc in benefit_calculations.values()
+            if calc["calculation"]["confidence"] > 0.8
         ]
 
         if high_confidence_benefits:
@@ -697,22 +797,31 @@ class BenefitCalculator:
                     "title": f"High-Confidence Benefits ({len(high_confidence_benefits)})",
                     "description": "Benefits with high confidence in realization",
                     "count": len(high_confidence_benefits),
-                    "total_value": sum(c["calculation"]["benefit_value"] for c in high_confidence_benefits),
+                    "total_value": sum(
+                        c["calculation"]["benefit_value"]
+                        for c in high_confidence_benefits
+                    ),
                 }
             )
 
         return insights
 
-    def _calculate_overall_confidence(self, benefit_calculations: Dict[str, Any]) -> float:
+    def _calculate_overall_confidence(
+        self, benefit_calculations: Dict[str, Any]
+    ) -> float:
         """Calculate overall confidence in benefit calculations."""
         if not benefit_calculations:
             return 0.0
 
-        confidences = [calc["calculation"]["confidence"] for calc in benefit_calculations.values()]
+        confidences = [
+            calc["calculation"]["confidence"] for calc in benefit_calculations.values()
+        ]
 
         return statistics.mean(confidences) if confidences else 0.0
 
-    def get_benefit_trends(self, project_id: Optional[str] = None, months: int = 6) -> Dict[str, Any]:
+    def get_benefit_trends(
+        self, project_id: Optional[str] = None, months: int = 6
+    ) -> Dict[str, Any]:
         """Get benefit trends over time."""
         cutoff_date = datetime.now() - timedelta(days=months * 30)
 
@@ -735,7 +844,10 @@ class BenefitCalculator:
 
         for entry in sorted_history:
             trends["total_roi_trend"].append(
-                {"date": entry["generated_at"].isoformat(), "roi": entry["total_roi"]["roi_percentage"]}
+                {
+                    "date": entry["generated_at"].isoformat(),
+                    "roi": entry["total_roi"]["roi_percentage"],
+                }
             )
 
         return {
@@ -755,11 +867,23 @@ class BenefitCalculator:
             last_roi = roi_trend[-1]["roi"]
 
             if last_roi > first_roi:
-                improvement = ((last_roi - first_roi) / abs(first_roi)) * 100 if first_roi != 0 else 0
-                insights.append(f"ROI improved by {improvement:.1f}% over the analysis period")
+                improvement = (
+                    ((last_roi - first_roi) / abs(first_roi)) * 100
+                    if first_roi != 0
+                    else 0
+                )
+                insights.append(
+                    f"ROI improved by {improvement:.1f}% over the analysis period"
+                )
             else:
-                decline = ((first_roi - last_roi) / abs(first_roi)) * 100 if first_roi != 0 else 0
-                insights.append(f"ROI declined by {decline:.1f}% over the analysis period")
+                decline = (
+                    ((first_roi - last_roi) / abs(first_roi)) * 100
+                    if first_roi != 0
+                    else 0
+                )
+                insights.append(
+                    f"ROI declined by {decline:.1f}% over the analysis period"
+                )
 
         return insights
 
@@ -776,4 +900,10 @@ def get_benefit_calculator() -> BenefitCalculator:
     return _benefit_calculator
 
 
-__all__ = ["BenefitCategory", "BenefitType", "BenefitMetric", "BenefitCalculator", "get_benefit_calculator"]
+__all__ = [
+    "BenefitCategory",
+    "BenefitType",
+    "BenefitMetric",
+    "BenefitCalculator",
+    "get_benefit_calculator",
+]

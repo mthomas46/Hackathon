@@ -26,7 +26,9 @@ def extract_variables_from_template(content: str) -> List[str]:
     return list(set(matches))  # Remove duplicates
 
 
-def validate_template_variables(content: str, declared_variables: List[str]) -> Dict[str, Any]:
+def validate_template_variables(
+    content: str, declared_variables: List[str]
+) -> Dict[str, Any]:
     """Validate that template uses only declared variables."""
     used_variables = extract_variables_from_template(content)
     declared_set = set(declared_variables)
@@ -54,7 +56,9 @@ def validate_template_variables(content: str, declared_variables: List[str]) -> 
     }
 
 
-def calculate_prompt_complexity(content: str, variables: Optional[List[str]] = None) -> float:
+def calculate_prompt_complexity(
+    content: str, variables: Optional[List[str]] = None
+) -> float:
     """Calculate complexity score for a prompt (0.0 to 1.0)."""
     score = 0.0
 
@@ -77,11 +81,15 @@ def calculate_prompt_complexity(content: str, variables: Optional[List[str]] = N
         score += 0.1
 
     # Template complexity (presence of conditionals, loops, etc.)
-    if any(keyword in content.lower() for keyword in ["if", "then", "else", "for", "while"]):
+    if any(
+        keyword in content.lower() for keyword in ["if", "then", "else", "for", "while"]
+    ):
         score += 0.2
 
     # Code-like content
-    if any(keyword in content.lower() for keyword in ["function", "class", "def", "import"]):
+    if any(
+        keyword in content.lower() for keyword in ["function", "class", "def", "import"]
+    ):
         score += 0.2
 
     return min(score, 1.0)
@@ -114,10 +122,22 @@ def sanitize_prompt_content(content: str) -> str:
 
 def categorize_prompt_tags(tags: List[str]) -> Dict[str, List[str]]:
     """Categorize tags by type (system, domain, quality, etc.)."""
-    categories = {"system": [], "domain": [], "quality": [], "language": [], "other": []}
+    categories = {
+        "system": [],
+        "domain": [],
+        "quality": [],
+        "language": [],
+        "other": [],
+    }
 
     system_tags = {"draft", "published", "deprecated", "archived", "template", "active"}
-    quality_tags = {"high_quality", "needs_review", "experimental", "stable", "production"}
+    quality_tags = {
+        "high_quality",
+        "needs_review",
+        "experimental",
+        "stable",
+        "production",
+    }
     language_tags = {
         "english",
         "spanish",
@@ -139,7 +159,10 @@ def categorize_prompt_tags(tags: List[str]) -> Dict[str, List[str]]:
             categories["quality"].append(tag)
         elif tag_lower in language_tags:
             categories["language"].append(tag)
-        elif any(domain in tag_lower for domain in ["ai", "ml", "nlp", "chat", "code", "writing"]):
+        elif any(
+            domain in tag_lower
+            for domain in ["ai", "ml", "nlp", "chat", "code", "writing"]
+        ):
             categories["domain"].append(tag)
         else:
             categories["other"].append(tag)
@@ -162,8 +185,12 @@ def calculate_usage_metrics(usage_records: List[Dict[str, Any]]) -> Dict[str, An
     successful_requests = sum(1 for r in usage_records if r.get("success", False))
     success_rate = successful_requests / total_requests if total_requests > 0 else 0
 
-    response_times = [r.get("response_time_ms", 0) for r in usage_records if r.get("response_time_ms")]
-    avg_response_time = sum(response_times) / len(response_times) if response_times else 0
+    response_times = [
+        r.get("response_time_ms", 0) for r in usage_records if r.get("response_time_ms")
+    ]
+    avg_response_time = (
+        sum(response_times) / len(response_times) if response_times else 0
+    )
 
     total_input_tokens = sum(r.get("input_tokens", 0) for r in usage_records)
     total_output_tokens = sum(r.get("output_tokens", 0) for r in usage_records)
@@ -182,7 +209,9 @@ def calculate_usage_metrics(usage_records: List[Dict[str, Any]]) -> Dict[str, An
 
 
 def detect_prompt_drift(
-    current_content: str, historical_versions: List[Dict[str, Any]], threshold: float = 0.7
+    current_content: str,
+    historical_versions: List[Dict[str, Any]],
+    threshold: float = 0.7,
 ) -> Dict[str, Any]:
     """Detect significant changes (drift) in prompt content over time."""
     if not historical_versions:
@@ -211,7 +240,10 @@ def detect_prompt_drift(
             )
 
     drift_score = (
-        1 - (sum(c["similarity"] for c in significant_changes) / len(significant_changes)) if significant_changes else 0
+        1
+        - (sum(c["similarity"] for c in significant_changes) / len(significant_changes))
+        if significant_changes
+        else 0
     )
 
     return {
@@ -221,19 +253,27 @@ def detect_prompt_drift(
     }
 
 
-def generate_prompt_suggestions(category: str, existing_prompts: List[Dict[str, Any]]) -> List[str]:
+def generate_prompt_suggestions(
+    category: str, existing_prompts: List[Dict[str, Any]]
+) -> List[str]:
     """Generate prompt improvement suggestions based on category and existing prompts."""
     suggestions = []
 
     if not existing_prompts:
-        suggestions.append("Consider adding more specific instructions for better results")
+        suggestions.append(
+            "Consider adding more specific instructions for better results"
+        )
         return suggestions
 
     # Analyze common patterns
-    avg_length = sum(len(p.get("content", "")) for p in existing_prompts) / len(existing_prompts)
+    avg_length = sum(len(p.get("content", "")) for p in existing_prompts) / len(
+        existing_prompts
+    )
 
     if avg_length < 50:
-        suggestions.append("Prompts in this category tend to be short - consider adding more context")
+        suggestions.append(
+            "Prompts in this category tend to be short - consider adding more context"
+        )
 
     # Category-specific suggestions
     if category.lower() == "code":
@@ -246,11 +286,19 @@ def generate_prompt_suggestions(category: str, existing_prompts: List[Dict[str, 
         )
     elif category.lower() == "writing":
         suggestions.extend(
-            ["Specify target audience and tone", "Include length and format requirements", "Consider style guidelines"]
+            [
+                "Specify target audience and tone",
+                "Include length and format requirements",
+                "Consider style guidelines",
+            ]
         )
     elif category.lower() == "analysis":
         suggestions.extend(
-            ["Define expected output format", "Include evaluation criteria", "Specify confidence levels"]
+            [
+                "Define expected output format",
+                "Include evaluation criteria",
+                "Specify confidence levels",
+            ]
         )
 
     return suggestions[:5]  # Limit to 5 suggestions

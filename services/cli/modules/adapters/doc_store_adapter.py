@@ -24,13 +24,29 @@ class DocStoreAdapter(BaseServiceAdapter):
             name="doc_store",
             version="1.0.0",
             description="Document storage and retrieval service",
-            endpoints=["/health", "/documents", "/documents/{doc_id}", "/search", "/collections", "/status"],
+            endpoints=[
+                "/health",
+                "/documents",
+                "/documents/{doc_id}",
+                "/search",
+                "/collections",
+                "/status",
+            ],
             dependencies=["redis", "filesystem"],
         )
 
     def get_available_commands(self) -> List[str]:
         """Return list of available commands for this service"""
-        return ["status", "documents", "collections", "search", "upload", "get", "delete", "stats"]
+        return [
+            "status",
+            "documents",
+            "collections",
+            "search",
+            "upload",
+            "get",
+            "delete",
+            "stats",
+        ]
 
     async def execute_command(self, command: str, **kwargs) -> CommandResult:
         """Execute a command against the DocStore service"""
@@ -69,7 +85,9 @@ class DocStoreAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get DocStore status: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get DocStore status: {str(e)}"
+            )
 
     async def _list_documents(self, limit: int = 10, offset: int = 0) -> CommandResult:
         """List documents in the store"""
@@ -87,7 +105,9 @@ class DocStoreAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list documents: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list documents: {str(e)}"
+            )
 
     async def _list_collections(self) -> CommandResult:
         """List document collections"""
@@ -104,9 +124,13 @@ class DocStoreAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to list collections: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to list collections: {str(e)}"
+            )
 
-    async def _search_documents(self, query: str, collection: Optional[str] = None) -> CommandResult:
+    async def _search_documents(
+        self, query: str, collection: Optional[str] = None
+    ) -> CommandResult:
         """Search for documents"""
         try:
             start_time = time.time()
@@ -125,9 +149,13 @@ class DocStoreAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to search documents: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to search documents: {str(e)}"
+            )
 
-    async def _upload_document(self, content: str, title: str, collection: Optional[str] = None) -> CommandResult:
+    async def _upload_document(
+        self, content: str, title: str, collection: Optional[str] = None
+    ) -> CommandResult:
         """Upload a document to the store"""
         try:
             start_time = time.time()
@@ -146,7 +174,9 @@ class DocStoreAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to upload document: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to upload document: {str(e)}"
+            )
 
     async def _get_document(self, doc_id: str) -> CommandResult:
         """Retrieve a specific document"""
@@ -157,10 +187,15 @@ class DocStoreAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message=f"Document retrieved: {doc_id}", execution_time=execution_time
+                success=True,
+                data=response,
+                message=f"Document retrieved: {doc_id}",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get document {doc_id}: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get document {doc_id}: {str(e)}"
+            )
 
     async def _delete_document(self, doc_id: str) -> CommandResult:
         """Delete a specific document"""
@@ -171,10 +206,15 @@ class DocStoreAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message=f"Document deleted: {doc_id}", execution_time=execution_time
+                success=True,
+                data=response,
+                message=f"Document deleted: {doc_id}",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to delete document {doc_id}: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to delete document {doc_id}: {str(e)}"
+            )
 
     async def _get_stats(self) -> CommandResult:
         """Get DocStore statistics and metrics"""
@@ -185,12 +225,20 @@ class DocStoreAdapter(BaseServiceAdapter):
             status_response = await self.clients.get_json(f"{self.base_url}/status")
 
             # Try to get document count
-            docs_response = await self.clients.get_json(f"{self.base_url}/documents", params={"limit": 1})
+            docs_response = await self.clients.get_json(
+                f"{self.base_url}/documents", params={"limit": 1}
+            )
             doc_count = docs_response.get("total", 0) if docs_response else 0
 
             # Try to get collections count
-            collections_response = await self.clients.get_json(f"{self.base_url}/collections")
-            collection_count = len(collections_response.get("collections", [])) if collections_response else 0
+            collections_response = await self.clients.get_json(
+                f"{self.base_url}/collections"
+            )
+            collection_count = (
+                len(collections_response.get("collections", []))
+                if collections_response
+                else 0
+            )
 
             execution_time = time.time() - start_time
 
@@ -198,7 +246,11 @@ class DocStoreAdapter(BaseServiceAdapter):
                 "status": status_response,
                 "document_count": doc_count,
                 "collection_count": collection_count,
-                "service_uptime": status_response.get("uptime", "unknown") if status_response else "unknown",
+                "service_uptime": (
+                    status_response.get("uptime", "unknown")
+                    if status_response
+                    else "unknown"
+                ),
             }
 
             return CommandResult(
@@ -208,7 +260,9 @@ class DocStoreAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get DocStore stats: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get DocStore stats: {str(e)}"
+            )
 
     def format_response(self, result: CommandResult, command: str) -> None:
         """Format and display the command result"""
@@ -231,10 +285,14 @@ class DocStoreAdapter(BaseServiceAdapter):
             # Generic formatting
             self.console.print(f"[green]✅ {result.message}[/green]")
             if result.data:
-                self.console.print(Panel(str(result.data), title="Response Data", border_style="blue"))
+                self.console.print(
+                    Panel(str(result.data), title="Response Data", border_style="blue")
+                )
 
         if result.execution_time:
-            self.console.print(f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]")
+            self.console.print(
+                f"[dim]⏱️  Execution time: {result.execution_time:.3f}s[/dim]"
+            )
 
     def _format_status_response(self, data: Dict[str, Any]) -> None:
         """Format status response"""

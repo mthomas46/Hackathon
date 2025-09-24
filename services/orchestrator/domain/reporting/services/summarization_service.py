@@ -20,7 +20,13 @@ class SummarizationService:
             "openai_gpt4": {
                 "name": "OpenAI GPT-4",
                 "max_tokens": 8192,
-                "supported_styles": ["neutral", "formal", "casual", "technical", "executive"],
+                "supported_styles": [
+                    "neutral",
+                    "formal",
+                    "casual",
+                    "technical",
+                    "executive",
+                ],
                 "cost_per_token": 0.03,
             },
             "anthropic_claude": {
@@ -37,7 +43,9 @@ class SummarizationService:
             },
         }
 
-    def suggest_summarization_providers(self, request: SummarizationRequest) -> Dict[str, Any]:
+    def suggest_summarization_providers(
+        self, request: SummarizationRequest
+    ) -> Dict[str, Any]:
         """
         Suggest appropriate AI providers for summarization based on content and policies.
 
@@ -48,7 +56,9 @@ class SummarizationService:
             Dict containing provider suggestions and policy information
         """
         content_analysis = self._analyze_content(request)
-        policy_compliant_providers = self._get_policy_compliant_providers(request, content_analysis)
+        policy_compliant_providers = self._get_policy_compliant_providers(
+            request, content_analysis
+        )
 
         # If override policy is set, include all providers
         if request.override_policy:
@@ -57,9 +67,13 @@ class SummarizationService:
         return {
             "content_analysis": content_analysis,
             "allowed_providers": policy_compliant_providers,
-            "recommended_provider": self._select_best_provider(policy_compliant_providers, request),
+            "recommended_provider": self._select_best_provider(
+                policy_compliant_providers, request
+            ),
             "policy_override_used": request.override_policy,
-            "rationale": self._generate_provider_rationale(policy_compliant_providers, content_analysis),
+            "rationale": self._generate_provider_rationale(
+                policy_compliant_providers, content_analysis
+            ),
         }
 
     def _analyze_content(self, request: SummarizationRequest) -> Dict[str, Any]:
@@ -69,7 +83,9 @@ class SummarizationService:
         # Basic content metrics
         word_count = len(content.split())
         sentence_count = len(re.split(r"[.!?]+", content))
-        avg_words_per_sentence = word_count / sentence_count if sentence_count > 0 else 0
+        avg_words_per_sentence = (
+            word_count / sentence_count if sentence_count > 0 else 0
+        )
 
         # Content type detection
         content_type = self._detect_content_type(content)
@@ -95,16 +111,37 @@ class SummarizationService:
         content_lower = content.lower()
 
         # Technical content indicators
-        technical_indicators = ["api", "function", "class", "method", "algorithm", "database", "server"]
-        technical_score = sum(1 for indicator in technical_indicators if indicator in content_lower)
+        technical_indicators = [
+            "api",
+            "function",
+            "class",
+            "method",
+            "algorithm",
+            "database",
+            "server",
+        ]
+        technical_score = sum(
+            1 for indicator in technical_indicators if indicator in content_lower
+        )
 
         # Business content indicators
-        business_indicators = ["strategy", "revenue", "customer", "market", "product", "sales"]
-        business_score = sum(1 for indicator in business_indicators if indicator in content_lower)
+        business_indicators = [
+            "strategy",
+            "revenue",
+            "customer",
+            "market",
+            "product",
+            "sales",
+        ]
+        business_score = sum(
+            1 for indicator in business_indicators if indicator in content_lower
+        )
 
         # Code indicators
         code_indicators = ["import ", "def ", "class ", "function(", "const ", "let "]
-        code_score = sum(1 for indicator in code_indicators if indicator in content_lower)
+        code_score = sum(
+            1 for indicator in code_indicators if indicator in content_lower
+        )
 
         # Determine content type
         if code_score > business_score and code_score > technical_score:
@@ -121,11 +158,23 @@ class SummarizationService:
         # Simple heuristics for complexity assessment
         word_count = len(content.split())
         unique_words = len(set(content.lower().split()))
-        avg_word_length = sum(len(word) for word in content.split()) / word_count if word_count > 0 else 0
+        avg_word_length = (
+            sum(len(word) for word in content.split()) / word_count
+            if word_count > 0
+            else 0
+        )
 
         # Technical terms (rough approximation)
-        technical_terms = ["algorithm", "infrastructure", "architecture", "implementation", "optimization"]
-        technical_density = sum(1 for term in technical_terms if term in content.lower()) / len(technical_terms)
+        technical_terms = [
+            "algorithm",
+            "infrastructure",
+            "architecture",
+            "implementation",
+            "optimization",
+        ]
+        technical_density = sum(
+            1 for term in technical_terms if term in content.lower()
+        ) / len(technical_terms)
 
         # Complexity score (0-1)
         complexity = min(
@@ -139,7 +188,9 @@ class SummarizationService:
 
         return complexity
 
-    def _estimate_summary_tokens(self, content: str, request: SummarizationRequest) -> int:
+    def _estimate_summary_tokens(
+        self, content: str, request: SummarizationRequest
+    ) -> int:
         """Estimate the number of tokens needed for summary."""
         content_tokens = len(content.split()) * 1.3  # Rough token estimation
 
@@ -182,7 +233,9 @@ class SummarizationService:
 
         return compliant_providers
 
-    def _select_best_provider(self, allowed_providers: List[str], request: SummarizationRequest) -> Optional[str]:
+    def _select_best_provider(
+        self, allowed_providers: List[str], request: SummarizationRequest
+    ) -> Optional[str]:
         """Select the best provider from allowed list."""
         if not allowed_providers:
             return None
@@ -201,10 +254,14 @@ class SummarizationService:
 
         return allowed_providers[0]
 
-    def _generate_provider_rationale(self, providers: List[str], content_analysis: Dict[str, Any]) -> str:
+    def _generate_provider_rationale(
+        self, providers: List[str], content_analysis: Dict[str, Any]
+    ) -> str:
         """Generate rationale for provider selection."""
         if not providers:
-            return "No providers available that meet policy and capability requirements."
+            return (
+                "No providers available that meet policy and capability requirements."
+            )
 
         content_type = content_analysis["content_type"]
         complexity = content_analysis["complexity_score"]
@@ -212,25 +269,35 @@ class SummarizationService:
         rationales = []
 
         if content_type == "code":
-            rationales.append("Content appears to be code-related, prioritizing local models for security.")
+            rationales.append(
+                "Content appears to be code-related, prioritizing local models for security."
+            )
         elif complexity > 0.7:
             rationales.append("High complexity content requires capable AI models.")
         elif "local_llm" in providers:
             rationales.append("Local model preferred for cost and privacy reasons.")
 
         if not rationales:
-            rationales.append("Standard provider selection based on availability and policies.")
+            rationales.append(
+                "Standard provider selection based on availability and policies."
+            )
 
         return " ".join(rationales)
 
-    def validate_summarization_request(self, request: SummarizationRequest) -> List[str]:
+    def validate_summarization_request(
+        self, request: SummarizationRequest
+    ) -> List[str]:
         """Validate summarization request and return list of validation errors."""
         errors = []
 
         if not request.content or len(request.content.strip()) < 10:
             errors.append("Content must be at least 10 characters long")
 
-        if request.max_length and request.min_length and request.max_length <= request.min_length:
+        if (
+            request.max_length
+            and request.min_length
+            and request.max_length <= request.min_length
+        ):
             errors.append("Maximum length must be greater than minimum length")
 
         if request.keywords and len(request.keywords) > 50:
@@ -238,22 +305,32 @@ class SummarizationService:
 
         return errors
 
-    def generate_summarization_prompt(self, request: SummarizationRequest, provider: str) -> str:
+    def generate_summarization_prompt(
+        self, request: SummarizationRequest, provider: str
+    ) -> str:
         """Generate a summarization prompt for the specified provider."""
         self._ai_providers.get(provider, {})
 
-        prompt_parts = [f"Please provide a {request.style} summary of the following content:"]
+        prompt_parts = [
+            f"Please provide a {request.style} summary of the following content:"
+        ]
 
         if request.max_length:
             prompt_parts.append(f"Keep the summary under {request.max_length} words.")
         elif request.min_length:
-            prompt_parts.append(f"Ensure the summary is at least {request.min_length} words.")
+            prompt_parts.append(
+                f"Ensure the summary is at least {request.min_length} words."
+            )
 
         if request.keywords:
-            prompt_parts.append(f"Focus on these key terms: {', '.join(request.keywords)}")
+            prompt_parts.append(
+                f"Focus on these key terms: {', '.join(request.keywords)}"
+            )
 
         if request.keyword_document:
-            prompt_parts.append(f"Use this context for terminology: {request.keyword_document}")
+            prompt_parts.append(
+                f"Use this context for terminology: {request.keyword_document}"
+            )
 
         prompt_parts.append(f"\nContent to summarize:\n{request.content}")
 

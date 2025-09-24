@@ -13,17 +13,20 @@ import plotly.graph_objects as go
 import streamlit as st
 
 
-
 def render_events_page():
     """Render the events timeline and replay page."""
     st.markdown("## 📅 Event Timeline & Replay")
-    st.markdown("Explore simulation events chronologically and replay event sequences for analysis.")
+    st.markdown(
+        "Explore simulation events chronologically and replay event sequences for analysis."
+    )
 
     # Initialize session state
     initialize_events_state()
 
     # Create tabs for different event views
-    tab1, tab2, tab3 = st.tabs(["📊 Event Timeline", "🎬 Event Replay", "📈 Event Analytics"])
+    tab1, tab2, tab3 = st.tabs(
+        ["📊 Event Timeline", "🎬 Event Replay", "📈 Event Analytics"]
+    )
 
     with tab1:
         render_event_timeline()
@@ -41,7 +44,12 @@ def initialize_events_state():
         st.session_state.selected_simulation_events = None
 
     if "event_filters" not in st.session_state:
-        st.session_state.event_filters = {"event_types": [], "start_date": None, "end_date": None, "tags": []}
+        st.session_state.event_filters = {
+            "event_types": [],
+            "start_date": None,
+            "end_date": None,
+            "tags": [],
+        }
 
     if "replay_config" not in st.session_state:
         st.session_state.replay_config = {
@@ -64,11 +72,14 @@ def render_event_timeline():
 
         if simulations:
             simulation_options = ["Select a simulation..."] + [
-                f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}" for sim in simulations
+                f"{sim.get('id', 'Unknown')} - {sim.get('name', 'Unnamed')}"
+                for sim in simulations
             ]
 
             selected_sim_option = st.selectbox(
-                "Select Simulation for Timeline", options=simulation_options, key="timeline_simulation_selector"
+                "Select Simulation for Timeline",
+                options=simulation_options,
+                key="timeline_simulation_selector",
             )
 
             if selected_sim_option and selected_sim_option != "Select a simulation...":
@@ -163,7 +174,9 @@ def render_event_replay():
         st.success("🎬 Replay in progress...")
         render_replay_progress()
     else:
-        st.info("Ready to start replay. Configure settings above and click Start Replay.")
+        st.info(
+            "Ready to start replay. Configure settings above and click Start Replay."
+        )
 
     # Replay visualization area
     st.markdown("---")
@@ -211,11 +224,14 @@ def render_event_filters(events: List[Dict[str, Any]]):
 
     # Event type filter
     with col1:
-        available_event_types = list(set(event.get("event_type", "Unknown") for event in events))
+        available_event_types = list(
+            set(event.get("event_type", "Unknown") for event in events)
+        )
         selected_event_types = st.multiselect(
             "Event Types",
             options=available_event_types,
-            default=st.session_state.event_filters["event_types"] or available_event_types[:5],
+            default=st.session_state.event_filters["event_types"]
+            or available_event_types[:5],
             help="Filter events by type",
         )
         st.session_state.event_filters["event_types"] = selected_event_types
@@ -224,9 +240,15 @@ def render_event_filters(events: List[Dict[str, Any]]):
     with col2:
         # Get date range from events
         if events:
-            timestamps = [event.get("timestamp", "") for event in events if event.get("timestamp")]
+            timestamps = [
+                event.get("timestamp", "") for event in events if event.get("timestamp")
+            ]
             if timestamps:
-                dates = [datetime.fromisoformat(ts.replace("Z", "+00:00")) for ts in timestamps if ts]
+                dates = [
+                    datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    for ts in timestamps
+                    if ts
+                ]
                 if dates:
                     min_date = min(dates).date()
                     max_date = max(dates).date()
@@ -273,7 +295,10 @@ def apply_event_filters(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         ]
 
     # Date range filter
-    if st.session_state.event_filters["start_date"] and st.session_state.event_filters["end_date"]:
+    if (
+        st.session_state.event_filters["start_date"]
+        and st.session_state.event_filters["end_date"]
+    ):
         start_date = st.session_state.event_filters["start_date"]
         end_date = st.session_state.event_filters["end_date"]
 
@@ -281,7 +306,9 @@ def apply_event_filters(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             event
             for event in filtered_events
             if event.get("timestamp")
-            and start_date <= datetime.fromisoformat(event["timestamp"].replace("Z", "+00:00")).date() <= end_date
+            and start_date
+            <= datetime.fromisoformat(event["timestamp"].replace("Z", "+00:00")).date()
+            <= end_date
         ]
 
     # Tags filter
@@ -289,7 +316,10 @@ def apply_event_filters(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         filtered_events = [
             event
             for event in filtered_events
-            if any(tag in event.get("tags", []) for tag in st.session_state.event_filters["tags"])
+            if any(
+                tag in event.get("tags", [])
+                for tag in st.session_state.event_filters["tags"]
+            )
         ]
 
     return filtered_events
@@ -422,7 +452,11 @@ def render_event_type_distribution(events: List[Dict[str, Any]]):
         st.plotly_chart(fig, use_container_width=True)
 
         # Summary table
-        summary_data = {"Event Type": labels, "Count": values, "Percentage": [".1f" for v in values]}
+        summary_data = {
+            "Event Type": labels,
+            "Count": values,
+            "Percentage": [".1f" for v in values],
+        }
 
         st.table(pd.DataFrame(summary_data))
 
@@ -467,7 +501,10 @@ def render_event_frequency_chart(events: List[Dict[str, Any]]):
         )
 
         fig.update_layout(
-            title="Event Frequency Over Time", xaxis_title="Time", yaxis_title="Number of Events", height=400
+            title="Event Frequency Over Time",
+            xaxis_title="Time",
+            yaxis_title="Number of Events",
+            height=400,
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -558,7 +595,10 @@ def generate_mock_events(simulation_id: str) -> List[Dict[str, Any]]:
                 "simulation_id": simulation_id,
                 "correlation_id": f"corr_{i+1}",
                 "tags": ["simulation", "development"],
-                "data": {"description": get_event_description({"event_type": event_type}), "sequence_number": i + 1},
+                "data": {
+                    "description": get_event_description({"event_type": event_type}),
+                    "sequence_number": i + 1,
+                },
             }
         )
 
@@ -666,21 +706,30 @@ def generate_event_insights(events: List[Dict[str, Any]]) -> List[Dict[str, Any]
     # Success pattern analysis
     if "SimulationCompleted" in event_types:
         insights.append(
-            {"type": "success", "message": "Simulation completed successfully with comprehensive event tracking"}
+            {
+                "type": "success",
+                "message": "Simulation completed successfully with comprehensive event tracking",
+            }
         )
 
     # Frequency analysis
     document_events = sum(1 for e in event_types if "Document" in e)
     if document_events > total_events * 0.3:
         insights.append(
-            {"type": "info", "message": "High document generation activity indicates productive simulation"}
+            {
+                "type": "info",
+                "message": "High document generation activity indicates productive simulation",
+            }
         )
 
     # Error analysis
     error_events = sum(1 for e in event_types if "Failed" in e)
     if error_events > 0:
         insights.append(
-            {"type": "warning", "message": f"Detected {error_events} error events - review simulation configuration"}
+            {
+                "type": "warning",
+                "message": f"Detected {error_events} error events - review simulation configuration",
+            }
         )
 
     # Timeline analysis
@@ -705,7 +754,11 @@ def get_available_simulations() -> List[Dict[str, Any]]:
     """Get list of available simulations."""
     # Mock data - in real implementation, this would call the simulation service
     return [
-        {"id": "sim_001", "name": "E-commerce Platform Development", "status": "completed"},
+        {
+            "id": "sim_001",
+            "name": "E-commerce Platform Development",
+            "status": "completed",
+        },
         {"id": "sim_002", "name": "Mobile App Development", "status": "running"},
         {"id": "sim_003", "name": "API Service Implementation", "status": "completed"},
     ]

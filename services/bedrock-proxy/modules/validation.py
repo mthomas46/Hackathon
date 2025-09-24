@@ -10,7 +10,6 @@ class ValidationError(ValueError):
     """Custom validation error for bedrock proxy."""
 
 
-
 def validate_prompt(prompt: Optional[str]) -> Optional[str]:
     """Validate and sanitize prompt field."""
     if prompt is not None and not isinstance(prompt, str):
@@ -23,7 +22,9 @@ def validate_template(template: Optional[str]) -> Optional[str]:
     if template is not None:
         valid_templates = VALID_TEMPLATES
         if template.lower() not in valid_templates and template.strip():
-            raise ValidationError(f"Invalid template: {template}. Must be one of {valid_templates}")
+            raise ValidationError(
+                f"Invalid template: {template}. Must be one of {valid_templates}"
+            )
     return template
 
 
@@ -32,7 +33,9 @@ def validate_format(fmt: Optional[str]) -> str:
     if fmt is not None:
         valid_formats = VALID_FORMATS
         if fmt.lower() not in valid_formats:
-            raise ValidationError(f"Invalid format: {fmt}. Must be one of {valid_formats}")
+            raise ValidationError(
+                f"Invalid format: {fmt}. Must be one of {valid_formats}"
+            )
     return (fmt or "md").lower()
 
 

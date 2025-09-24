@@ -35,7 +35,11 @@ class WorkflowDispatcher:
             "document_analysis": {
                 "description": "Comprehensive document analysis and quality assessment",
                 "services": ["doc_store", "analysis_service", "summarizer_hub"],
-                "capabilities": ["retrieve_documents", "analyze_quality", "generate_summary"],
+                "capabilities": [
+                    "retrieve_documents",
+                    "analyze_quality",
+                    "generate_summary",
+                ],
                 "orchestrator_endpoint": "/workflows/document-analysis",
                 "langgraph_workflow": "document-analysis",
                 "triggers": [
@@ -48,7 +52,10 @@ class WorkflowDispatcher:
                 ],
                 "parameters": {
                     "doc_id": {"type": "string", "required": True},
-                    "analysis_types": {"type": "array", "default": ["quality", "consistency", "security"]},
+                    "analysis_types": {
+                        "type": "array",
+                        "default": ["quality", "consistency", "security"],
+                    },
                     "include_summary": {"type": "boolean", "default": True},
                     "generate_report": {"type": "boolean", "default": True},
                 },
@@ -56,8 +63,18 @@ class WorkflowDispatcher:
             },
             "code_documentation": {
                 "description": "Automated code documentation generation and analysis",
-                "services": ["source_agent", "code_analyzer", "doc_store", "summarizer_hub"],
-                "capabilities": ["ingest_repository", "analyze_code", "generate_docs", "store_documents"],
+                "services": [
+                    "source_agent",
+                    "code_analyzer",
+                    "doc_store",
+                    "summarizer_hub",
+                ],
+                "capabilities": [
+                    "ingest_repository",
+                    "analyze_code",
+                    "generate_docs",
+                    "store_documents",
+                ],
                 "orchestrator_endpoint": "/workflows/code-documentation",
                 "langgraph_workflow": "code-documentation",
                 "triggers": [
@@ -70,7 +87,10 @@ class WorkflowDispatcher:
                 ],
                 "parameters": {
                     "repo_url": {"type": "string", "required": True},
-                    "doc_types": {"type": "array", "default": ["api", "readme", "architecture"]},
+                    "doc_types": {
+                        "type": "array",
+                        "default": ["api", "readme", "architecture"],
+                    },
                     "include_examples": {"type": "boolean", "default": True},
                     "auto_commit": {"type": "boolean", "default": False},
                 },
@@ -78,8 +98,17 @@ class WorkflowDispatcher:
             },
             "security_audit": {
                 "description": "Comprehensive security vulnerability assessment",
-                "services": ["secure_analyzer", "code_analyzer", "analysis_service", "notification_service"],
-                "capabilities": ["scan_vulnerabilities", "analyze_security", "generate_alerts"],
+                "services": [
+                    "secure_analyzer",
+                    "code_analyzer",
+                    "analysis_service",
+                    "notification_service",
+                ],
+                "capabilities": [
+                    "scan_vulnerabilities",
+                    "analyze_security",
+                    "generate_alerts",
+                ],
                 "orchestrator_endpoint": "/workflows/security-audit",
                 "langgraph_workflow": "security-audit",
                 "triggers": [
@@ -92,7 +121,10 @@ class WorkflowDispatcher:
                 ],
                 "parameters": {
                     "target_type": {"type": "string", "default": "full_system"},
-                    "scan_types": {"type": "array", "default": ["vulnerabilities", "compliance", "data_safety"]},
+                    "scan_types": {
+                        "type": "array",
+                        "default": ["vulnerabilities", "compliance", "data_safety"],
+                    },
                     "severity_threshold": {"type": "string", "default": "medium"},
                     "send_notifications": {"type": "boolean", "default": True},
                 },
@@ -101,7 +133,11 @@ class WorkflowDispatcher:
             "content_processing": {
                 "description": "Advanced content processing and summarization",
                 "services": ["doc_store", "summarizer_hub", "analysis_service"],
-                "capabilities": ["retrieve_content", "summarize_content", "analyze_sentiment"],
+                "capabilities": [
+                    "retrieve_content",
+                    "summarize_content",
+                    "analyze_sentiment",
+                ],
                 "orchestrator_endpoint": "/workflows/content-processing",
                 "langgraph_workflow": "content-processing",
                 "triggers": [
@@ -123,7 +159,11 @@ class WorkflowDispatcher:
             "data_ingestion": {
                 "description": "Multi-source data ingestion and processing",
                 "services": ["source_agent", "github_mcp", "doc_store"],
-                "capabilities": ["ingest_github", "ingest_confluence", "store_documents"],
+                "capabilities": [
+                    "ingest_github",
+                    "ingest_confluence",
+                    "store_documents",
+                ],
                 "orchestrator_endpoint": "/workflows/data-ingestion",
                 "langgraph_workflow": "data-ingestion",
                 "triggers": [
@@ -158,7 +198,10 @@ class WorkflowDispatcher:
                 ],
                 "parameters": {
                     "prompt_id": {"type": "string", "required": True},
-                    "optimization_goals": {"type": "array", "default": ["performance", "clarity", "effectiveness"]},
+                    "optimization_goals": {
+                        "type": "array",
+                        "default": ["performance", "clarity", "effectiveness"],
+                    },
                     "test_scenarios": {"type": "array", "default": ["default"]},
                     "auto_save": {"type": "boolean", "default": True},
                 },
@@ -166,8 +209,18 @@ class WorkflowDispatcher:
             },
             "quality_assurance": {
                 "description": "Comprehensive quality assurance workflow",
-                "services": ["analysis_service", "secure_analyzer", "code_analyzer", "doc_store"],
-                "capabilities": ["quality_analysis", "security_check", "code_review", "compliance_check"],
+                "services": [
+                    "analysis_service",
+                    "secure_analyzer",
+                    "code_analyzer",
+                    "doc_store",
+                ],
+                "capabilities": [
+                    "quality_analysis",
+                    "security_check",
+                    "code_review",
+                    "compliance_check",
+                ],
                 "orchestrator_endpoint": "/workflows/quality-assurance",
                 "langgraph_workflow": "quality-assurance",
                 "triggers": [
@@ -180,7 +233,10 @@ class WorkflowDispatcher:
                 ],
                 "parameters": {
                     "target_type": {"type": "string", "required": True},
-                    "qa_checks": {"type": "array", "default": ["quality", "security", "compliance"]},
+                    "qa_checks": {
+                        "type": "array",
+                        "default": ["quality", "security", "compliance"],
+                    },
                     "generate_report": {"type": "boolean", "default": True},
                     "severity_threshold": {"type": "string", "default": "low"},
                 },
@@ -188,8 +244,17 @@ class WorkflowDispatcher:
             },
             "research_assistance": {
                 "description": "AI-powered research and information gathering",
-                "services": ["doc_store", "analysis_service", "summarizer_hub", "memory_agent"],
-                "capabilities": ["search_documents", "analyze_content", "synthesize_information"],
+                "services": [
+                    "doc_store",
+                    "analysis_service",
+                    "summarizer_hub",
+                    "memory_agent",
+                ],
+                "capabilities": [
+                    "search_documents",
+                    "analyze_content",
+                    "synthesize_information",
+                ],
                 "orchestrator_endpoint": "/workflows/research-assistance",
                 "langgraph_workflow": "research-assistance",
                 "triggers": [
@@ -215,12 +280,21 @@ class WorkflowDispatcher:
         self.workflow_performance = {}
 
     async def dispatch_query(
-        self, query: str, intent: str, entities: Dict[str, Any], user_id: str = None, context: Dict[str, Any] = None
+        self,
+        query: str,
+        intent: str,
+        entities: Dict[str, Any],
+        user_id: str = None,
+        context: Dict[str, Any] = None,
     ) -> Dict[str, Any]:
         """Main dispatch method - routes query to appropriate workflow."""
         try:
             # Get conversation context
-            conversation_context = await conversation_memory.get_conversation_context(user_id) if user_id else {}
+            conversation_context = (
+                await conversation_memory.get_conversation_context(user_id)
+                if user_id
+                else {}
+            )
 
             # Preprocess query for better matching
             processed_query = await self._preprocess_query(query, conversation_context)
@@ -231,13 +305,19 @@ class WorkflowDispatcher:
             )
 
             if not workflow_match:
-                return await self._handle_no_workflow_match(query, intent, entities, user_id)
+                return await self._handle_no_workflow_match(
+                    query, intent, entities, user_id
+                )
 
             # Prepare workflow execution
-            execution_plan = await self._prepare_workflow_execution(workflow_match, entities, context or {}, user_id)
+            execution_plan = await self._prepare_workflow_execution(
+                workflow_match, entities, context or {}, user_id
+            )
 
             # Execute workflow through orchestrator
-            execution_result = await self._execute_workflow_with_orchestrator(execution_plan, user_id)
+            execution_result = await self._execute_workflow_with_orchestrator(
+                execution_plan, user_id
+            )
 
             # Update conversation memory and learning
             if user_id:
@@ -280,11 +360,17 @@ class WorkflowDispatcher:
             return {
                 "status": "error",
                 "error": str(e),
-                "fallback_suggestion": await self._generate_fallback_suggestion(query, intent),
+                "fallback_suggestion": await self._generate_fallback_suggestion(
+                    query, intent
+                ),
             }
 
     async def _find_best_workflow_match(
-        self, query: str, intent: str, entities: Dict[str, Any], conversation_context: Dict[str, Any]
+        self,
+        query: str,
+        intent: str,
+        entities: Dict[str, Any],
+        conversation_context: Dict[str, Any],
     ) -> Optional[Dict[str, Any]]:
         """Find the best matching workflow for the query."""
         best_match = None
@@ -294,7 +380,12 @@ class WorkflowDispatcher:
 
         for workflow_name, workflow_info in self.main_workflows.items():
             score = await self._calculate_workflow_score(
-                query_lower, intent, entities, workflow_name, workflow_info, conversation_context
+                query_lower,
+                intent,
+                entities,
+                workflow_name,
+                workflow_info,
+                conversation_context,
             )
 
             if score > best_score and score >= workflow_info["confidence_threshold"]:
@@ -303,7 +394,9 @@ class WorkflowDispatcher:
                     "workflow_name": workflow_name,
                     "workflow_info": workflow_info,
                     "confidence": score,
-                    "match_reasons": await self._get_match_reasons(query_lower, intent, workflow_name, workflow_info),
+                    "match_reasons": await self._get_match_reasons(
+                        query_lower, intent, workflow_name, workflow_info
+                    ),
                 }
 
         return best_match
@@ -332,7 +425,9 @@ class WorkflowDispatcher:
         # 2. Intent-based matching (25% weight)
         intent_score = 0.0
         workflow_keywords = workflow_name.replace("_", " ").split()
-        if intent in workflow_name or any(keyword in intent for keyword in workflow_keywords):
+        if intent in workflow_name or any(
+            keyword in intent for keyword in workflow_keywords
+        ):
             intent_score = 0.9
         elif any(keyword in query for keyword in workflow_keywords):
             intent_score = 0.7
@@ -347,11 +442,15 @@ class WorkflowDispatcher:
         score += capability_score * 0.2
 
         # 4. Entity compatibility (10% weight)
-        entity_score = await self._calculate_entity_compatibility(entities, workflow_info)
+        entity_score = await self._calculate_entity_compatibility(
+            entities, workflow_info
+        )
         score += entity_score * 0.1
 
         # 5. Conversation context boost (5% weight)
-        context_score = await self._calculate_context_boost(workflow_name, conversation_context)
+        context_score = await self._calculate_context_boost(
+            workflow_name, conversation_context
+        )
         score += context_score * 0.05
 
         return min(score, 1.0)
@@ -370,13 +469,17 @@ class WorkflowDispatcher:
 
         return mentioned
 
-    async def _calculate_entity_compatibility(self, entities: Dict[str, Any], workflow_info: Dict[str, Any]) -> float:
+    async def _calculate_entity_compatibility(
+        self, entities: Dict[str, Any], workflow_info: Dict[str, Any]
+    ) -> float:
         """Calculate how well entities match workflow parameters."""
         if not entities:
             return 0.5  # Neutral score for no entities
 
         workflow_params = workflow_info.get("parameters", {})
-        required_params = [k for k, v in workflow_params.items() if v.get("required", False)]
+        required_params = [
+            k for k, v in workflow_params.items() if v.get("required", False)
+        ]
 
         if not required_params:
             return 0.7  # Good score if no required params
@@ -405,9 +508,15 @@ class WorkflowDispatcher:
                             satisfied_params += 1
                             break
 
-        return min(satisfied_params / len(required_params), 1.0) if required_params else 0.7
+        return (
+            min(satisfied_params / len(required_params), 1.0)
+            if required_params
+            else 0.7
+        )
 
-    async def _calculate_context_boost(self, workflow_name: str, conversation_context: Dict[str, Any]) -> float:
+    async def _calculate_context_boost(
+        self, workflow_name: str, conversation_context: Dict[str, Any]
+    ) -> float:
         """Calculate boost based on conversation context."""
         if not conversation_context:
             return 0.0
@@ -463,12 +572,18 @@ class WorkflowDispatcher:
             reasons.append(f"Mentioned services: {', '.join(common_services)}")
 
         # Add capability match
-        reasons.append(f"Workflow capabilities: {', '.join(workflow_info['capabilities'][:3])}")
+        reasons.append(
+            f"Workflow capabilities: {', '.join(workflow_info['capabilities'][:3])}"
+        )
 
         return reasons
 
     async def _prepare_workflow_execution(
-        self, workflow_match: Dict[str, Any], entities: Dict[str, Any], context: Dict[str, Any], user_id: str = None
+        self,
+        workflow_match: Dict[str, Any],
+        entities: Dict[str, Any],
+        context: Dict[str, Any],
+        user_id: str = None,
     ) -> Dict[str, Any]:
         """Prepare workflow execution plan with parameters."""
         workflow_info = workflow_match["workflow_info"]
@@ -478,7 +593,9 @@ class WorkflowDispatcher:
         execution_params = {}
 
         # Map entities to workflow parameters
-        param_mapping = await self._map_entities_to_parameters(entities, workflow_info["parameters"])
+        param_mapping = await self._map_entities_to_parameters(
+            entities, workflow_info["parameters"]
+        )
         execution_params.update(param_mapping)
 
         # Add default parameters
@@ -497,7 +614,9 @@ class WorkflowDispatcher:
             "workflow_type": workflow_info.get("langgraph_workflow", workflow_name),
             "orchestrator_endpoint": workflow_info["orchestrator_endpoint"],
             "execution_method": (
-                "orchestrator_langgraph" if "langgraph_workflow" in workflow_info else "orchestrator_standard"
+                "orchestrator_langgraph"
+                if "langgraph_workflow" in workflow_info
+                else "orchestrator_standard"
             ),
             "parameters": execution_params,
             "services_involved": workflow_info["services"],
@@ -529,7 +648,9 @@ class WorkflowDispatcher:
                 continue
 
             # Take first value for single-value parameters
-            entity_value = entity_values[0] if isinstance(entity_values, list) else entity_values
+            entity_value = (
+                entity_values[0] if isinstance(entity_values, list) else entity_values
+            )
 
             # Direct parameter match
             if entity_type in workflow_params:
@@ -560,10 +681,14 @@ class WorkflowDispatcher:
                 )
             else:
                 # Execute through standard orchestrator workflow
-                result = await orchestrator_integration.execute_workflow(workflow_name, parameters, user_id)
+                result = await orchestrator_integration.execute_workflow(
+                    workflow_name, parameters, user_id
+                )
 
             # Enhanced result processing
-            enhanced_result = await self._enhance_execution_result(result, execution_plan)
+            enhanced_result = await self._enhance_execution_result(
+                result, execution_plan
+            )
 
             return enhanced_result
 
@@ -576,7 +701,9 @@ class WorkflowDispatcher:
                 "suggested_action": "Retry with simplified parameters or manual execution",
             }
 
-    async def _enhance_execution_result(self, result: Dict[str, Any], execution_plan: Dict[str, Any]) -> Dict[str, Any]:
+    async def _enhance_execution_result(
+        self, result: Dict[str, Any], execution_plan: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Enhance execution result with additional context and suggestions."""
         enhanced_result = result.copy()
 
@@ -585,21 +712,29 @@ class WorkflowDispatcher:
             "workflow_name": execution_plan["workflow_name"],
             "services_used": execution_plan["services_involved"],
             "execution_time": datetime.utcnow().isoformat(),
-            "interpreter_confidence": execution_plan["parameters"].get("interpreter_confidence", 0.0),
+            "interpreter_confidence": execution_plan["parameters"].get(
+                "interpreter_confidence", 0.0
+            ),
         }
 
         # Add follow-up suggestions based on workflow type
         if result.get("status") == "success":
-            enhanced_result["follow_up_suggestions"] = await self._generate_follow_up_suggestions(
-                execution_plan["workflow_name"], result
+            enhanced_result["follow_up_suggestions"] = (
+                await self._generate_follow_up_suggestions(
+                    execution_plan["workflow_name"], result
+                )
             )
 
         # Add related workflows
-        enhanced_result["related_workflows"] = await self._get_related_workflows(execution_plan["workflow_name"])
+        enhanced_result["related_workflows"] = await self._get_related_workflows(
+            execution_plan["workflow_name"]
+        )
 
         return enhanced_result
 
-    async def _generate_follow_up_suggestions(self, workflow_name: str, result: Dict[str, Any]) -> List[str]:
+    async def _generate_follow_up_suggestions(
+        self, workflow_name: str, result: Dict[str, Any]
+    ) -> List[str]:
         """Generate follow-up action suggestions based on workflow execution."""
         suggestions = []
 
@@ -629,7 +764,11 @@ class WorkflowDispatcher:
             )
         elif workflow_name == "content_processing":
             suggestions.extend(
-                ["Share summary with relevant stakeholders", "Archive processed content", "Set up content monitoring"]
+                [
+                    "Share summary with relevant stakeholders",
+                    "Archive processed content",
+                    "Set up content monitoring",
+                ]
             )
 
         return suggestions
@@ -672,7 +811,9 @@ class WorkflowDispatcher:
         suggestions = await self._generate_workflow_suggestions(query, intent, entities)
 
         # Check if we can provide partial assistance
-        partial_assistance = await self._check_partial_assistance(query, intent, entities)
+        partial_assistance = await self._check_partial_assistance(
+            query, intent, entities
+        )
 
         return {
             "status": "no_match",
@@ -712,7 +853,9 @@ class WorkflowDispatcher:
 
         return suggestions[:3]  # Top 3 suggestions
 
-    async def _check_partial_assistance(self, query: str, intent: str, entities: Dict[str, Any]) -> Dict[str, Any]:
+    async def _check_partial_assistance(
+        self, query: str, intent: str, entities: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Check if we can provide partial assistance without full workflow."""
         assistance = {"available": False, "actions": []}
 
@@ -741,7 +884,9 @@ class WorkflowDispatcher:
 
         return assistance
 
-    async def _update_workflow_performance(self, workflow_match: Dict[str, Any], execution_result: Dict[str, Any]):
+    async def _update_workflow_performance(
+        self, workflow_match: Dict[str, Any], execution_result: Dict[str, Any]
+    ):
         """Update workflow performance metrics for learning."""
         workflow_name = workflow_match["workflow_name"]
 
@@ -762,12 +907,15 @@ class WorkflowDispatcher:
         # Update average confidence
         current_confidence = workflow_match["confidence"]
         perf["average_confidence"] = (
-            perf["average_confidence"] * (perf["total_executions"] - 1) + current_confidence
+            perf["average_confidence"] * (perf["total_executions"] - 1)
+            + current_confidence
         ) / perf["total_executions"]
 
         perf["last_executed"] = datetime.utcnow().isoformat()
 
-    async def _generate_fallback_suggestion(self, query: str, intent: str) -> Dict[str, Any]:
+    async def _generate_fallback_suggestion(
+        self, query: str, intent: str
+    ) -> Dict[str, Any]:
         """Generate fallback suggestion when dispatch fails."""
         return {
             "suggestion": "Try using more specific terms or mention the service you want to use",
@@ -781,7 +929,9 @@ class WorkflowDispatcher:
             "contact_support": "For complex requests, contact system administrator",
         }
 
-    async def _preprocess_query(self, query: str, conversation_context: Dict[str, Any]) -> str:
+    async def _preprocess_query(
+        self, query: str, conversation_context: Dict[str, Any]
+    ) -> str:
         """Preprocess query for better workflow matching."""
         # Basic normalization
         processed = query.lower().strip()
@@ -813,7 +963,12 @@ class WorkflowDispatcher:
         return {
             "workflows": self.main_workflows,
             "total_count": len(self.main_workflows),
-            "categories": list(set(self._get_workflow_domain(name) for name in self.main_workflows.keys())),
+            "categories": list(
+                set(
+                    self._get_workflow_domain(name)
+                    for name in self.main_workflows.keys()
+                )
+            ),
             "performance_metrics": self.workflow_performance,
         }
 
@@ -822,7 +977,10 @@ class WorkflowDispatcher:
         try:
             return await orchestrator_integration.get_workflow_status(execution_id)
         except Exception as e:
-            return {"status": "error", "error": f"Failed to get workflow status: {str(e)}"}
+            return {
+                "status": "error",
+                "error": f"Failed to get workflow status: {str(e)}",
+            }
 
 
 # Create singleton instance

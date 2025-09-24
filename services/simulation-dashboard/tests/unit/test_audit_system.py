@@ -96,7 +96,9 @@ class TestAuditFiltering:
     def test_get_filtered_audit_events_by_event_type(self):
         """Test filtering by event type."""
         with patch("pages.audit.st") as mock_st:
-            mock_st.session_state = {"audit_filters": {"event_types": ["simulation_started"]}}
+            mock_st.session_state = {
+                "audit_filters": {"event_types": ["simulation_started"]}
+            }
 
             filtered_events = get_filtered_audit_events()
 
@@ -118,7 +120,9 @@ class TestAuditFiltering:
     def test_get_filtered_audit_events_by_severity(self):
         """Test filtering by severity level."""
         with patch("pages.audit.st") as mock_st:
-            mock_st.session_state = {"audit_filters": {"severities": ["high", "critical"]}}
+            mock_st.session_state = {
+                "audit_filters": {"severities": ["high", "critical"]}
+            }
 
             filtered_events = get_filtered_audit_events()
 
@@ -132,7 +136,9 @@ class TestAuditFiltering:
         end_date = datetime.now() + timedelta(days=1)
 
         with patch("pages.audit.st") as mock_st:
-            mock_st.session_state = {"audit_filters": {"date_range": (start_date.date(), end_date.date())}}
+            mock_st.session_state = {
+                "audit_filters": {"date_range": (start_date.date(), end_date.date())}
+            }
 
             filtered_events = get_filtered_audit_events()
 
@@ -257,7 +263,13 @@ class TestComplianceData:
         """Test compliance data structure."""
         compliance_data = get_compliance_data()
 
-        required_keys = ["overall_score", "policies_enforced", "violations", "last_audit", "categories"]
+        required_keys = [
+            "overall_score",
+            "policies_enforced",
+            "violations",
+            "last_audit",
+            "categories",
+        ]
 
         for key in required_keys:
             assert key in compliance_data

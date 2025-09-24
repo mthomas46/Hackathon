@@ -22,20 +22,26 @@ class TestCLIScriptExecution:
 
     def test_manage_events_script_exists(self):
         """Test that manage_events.py script exists and is executable."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        )
         assert script_path.exists()
         assert script_path.is_file()
 
     def test_monitor_simulation_script_exists(self):
         """Test that monitor_simulation.py script exists and is executable."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        )
         assert script_path.exists()
         assert script_path.is_file()
 
     @patch("subprocess.run")
     def test_run_tests_script_can_be_called(self, mock_subprocess):
         """Test that run_tests.py script can be executed."""
-        mock_subprocess.return_value = Mock(returncode=0, stdout="Tests completed", stderr="")
+        mock_subprocess.return_value = Mock(
+            returncode=0, stdout="Tests completed", stderr=""
+        )
 
         # Test script execution (would normally call: python scripts/run_tests.py --help)
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
@@ -50,7 +56,9 @@ class TestCLIScriptExecution:
     @patch("subprocess.run")
     def test_cli_script_help_output(self, mock_subprocess):
         """Test that CLI scripts provide help output."""
-        mock_subprocess.return_value = Mock(returncode=0, stdout="--help output here", stderr="")
+        mock_subprocess.return_value = Mock(
+            returncode=0, stdout="--help output here", stderr=""
+        )
 
         # Scripts should provide help when called with --help
         script_path = Path(__file__).parent.parent.parent / "scripts" / "run_tests.py"
@@ -100,7 +108,9 @@ class TestManageEventsCLI:
 
     def test_manage_events_script_structure(self):
         """Test basic structure of manage_events.py script."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -112,7 +122,9 @@ class TestManageEventsCLI:
 
     def test_manage_events_command_parsing(self):
         """Test command parsing in manage_events.py."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "manage_events.py"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -126,7 +138,9 @@ class TestMonitorSimulationCLI:
 
     def test_monitor_script_functionality(self):
         """Test basic functionality of monitor_simulation.py."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        script_path = (
+            Path(__file__).parent.parent.parent / "scripts" / "monitor_simulation.py"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -171,12 +185,20 @@ class TestDockerIntegrationCLI:
 
     def test_docker_integration_script_exists(self):
         """Test that test-docker-integration.sh script exists."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "test-docker-integration.sh"
+        script_path = (
+            Path(__file__).parent.parent.parent
+            / "scripts"
+            / "test-docker-integration.sh"
+        )
         assert script_path.exists()
 
     def test_docker_integration_script_content(self):
         """Test content of test-docker-integration.sh script."""
-        script_path = Path(__file__).parent.parent.parent / "scripts" / "test-docker-integration.sh"
+        script_path = (
+            Path(__file__).parent.parent.parent
+            / "scripts"
+            / "test-docker-integration.sh"
+        )
 
         with open(script_path, "r") as f:
             content = f.read()
@@ -318,5 +340,7 @@ if __name__ == "__main__":
 def mock_subprocess():
     """Mock subprocess for testing CLI execution."""
     with patch("subprocess.run") as mock_run:
-        mock_run.return_value = Mock(returncode=0, stdout="Command executed successfully", stderr="")
+        mock_run.return_value = Mock(
+            returncode=0, stdout="Command executed successfully", stderr=""
+        )
         yield mock_run

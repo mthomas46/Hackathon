@@ -16,11 +16,25 @@ import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-# Service configuration
-SERVICE_NAME = "mock-data-generator"
-SERVICE_TITLE = "Enhanced Mock Data Generator"
-SERVICE_VERSION = "2.0.0"
-DEFAULT_PORT = 5065
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="mock-data-generator",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Enhanced Mock Data Generator"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Environment configuration
 LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")
@@ -113,10 +127,19 @@ class BulkCollectionResponse(BaseModel):
 class EcosystemScenarioRequest(BaseModel):
     """Request model for ecosystem scenario generation."""
 
-    scenario_type: str = Field(..., description="Type of scenario (e.g., 'code_review', 'documentation', 'analysis')")
-    complexity: str = Field(default="medium", description="Complexity level (simple, medium, complex)")
-    scale: str = Field(default="small", description="Scale of data (small, medium, large)")
-    include_relationships: bool = Field(default=True, description="Include data relationships")
+    scenario_type: str = Field(
+        ...,
+        description="Type of scenario (e.g., 'code_review', 'documentation', 'analysis')",
+    )
+    complexity: str = Field(
+        default="medium", description="Complexity level (simple, medium, complex)"
+    )
+    scale: str = Field(
+        default="small", description="Scale of data (small, medium, large)"
+    )
+    include_relationships: bool = Field(
+        default=True, description="Include data relationships"
+    )
     store_in_doc_store: bool = True
 
 
@@ -130,32 +153,53 @@ class SimulationProjectDocsRequest(BaseModel):
 
     project_name: str = Field(..., description="Name of the project")
     project_type: str = Field(
-        default="web_application", description="Type of project (web_application, api_service, mobile_application)"
+        default="web_application",
+        description="Type of project (web_application, api_service, mobile_application)",
     )
     team_size: int = Field(default=5, ge=1, le=20, description="Number of team members")
-    complexity: str = Field(default="medium", description="Project complexity (simple, medium, complex)")
-    duration_weeks: int = Field(default=8, ge=1, le=52, description="Project duration in weeks")
-    team_members: Optional[List[Dict[str, Any]]] = Field(None, description="Team member profiles")
+    complexity: str = Field(
+        default="medium", description="Project complexity (simple, medium, complex)"
+    )
+    duration_weeks: int = Field(
+        default=8, ge=1, le=52, description="Project duration in weeks"
+    )
+    team_members: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Team member profiles"
+    )
     document_types: List[str] = Field(
-        default_factory=lambda: ["project_requirements", "architecture_diagram", "user_story"],
+        default_factory=lambda: [
+            "project_requirements",
+            "architecture_diagram",
+            "user_story",
+        ],
         description="Types of documents to generate",
     )
-    store_in_doc_store: bool = Field(default=True, description="Store generated documents in doc_store")
+    store_in_doc_store: bool = Field(
+        default=True, description="Store generated documents in doc_store"
+    )
 
 
 class SimulationTimelineEventsRequest(BaseModel):
     """Request model for generating timeline-based content."""
 
     project_name: str = Field(..., description="Name of the project")
-    timeline_phases: List[Dict[str, Any]] = Field(..., description="Project timeline phases")
+    timeline_phases: List[Dict[str, Any]] = Field(
+        ..., description="Project timeline phases"
+    )
     current_phase: Optional[str] = Field(None, description="Current active phase")
-    include_past_events: bool = Field(default=True, description="Include past phase events")
-    include_future_events: bool = Field(default=False, description="Include future phase events")
+    include_past_events: bool = Field(
+        default=True, description="Include past phase events"
+    )
+    include_future_events: bool = Field(
+        default=False, description="Include future phase events"
+    )
     event_types: List[str] = Field(
         default_factory=lambda: ["document_creation", "team_activity", "milestone"],
         description="Types of events to generate",
     )
-    store_in_doc_store: bool = Field(default=True, description="Store generated content in doc_store")
+    store_in_doc_store: bool = Field(
+        default=True, description="Store generated content in doc_store"
+    )
 
 
 class SimulationTeamActivitiesRequest(BaseModel):
@@ -164,12 +208,23 @@ class SimulationTeamActivitiesRequest(BaseModel):
     project_name: str = Field(..., description="Name of the project")
     team_members: List[Dict[str, Any]] = Field(..., description="Team member profiles")
     activity_types: List[str] = Field(
-        default_factory=lambda: ["code_commit", "document_update", "meeting_notes", "design_decision"],
+        default_factory=lambda: [
+            "code_commit",
+            "document_update",
+            "meeting_notes",
+            "design_decision",
+        ],
         description="Types of activities to generate",
     )
-    time_range_days: int = Field(default=30, ge=1, le=365, description="Time range for activities in days")
-    activity_count: int = Field(default=50, ge=1, le=500, description="Number of activities to generate")
-    store_in_doc_store: bool = Field(default=True, description="Store generated activities in doc_store")
+    time_range_days: int = Field(
+        default=30, ge=1, le=365, description="Time range for activities in days"
+    )
+    activity_count: int = Field(
+        default=50, ge=1, le=500, description="Number of activities to generate"
+    )
+    store_in_doc_store: bool = Field(
+        default=True, description="Store generated activities in doc_store"
+    )
 
 
 class SimulationPhaseDocumentsRequest(BaseModel):
@@ -179,23 +234,37 @@ class SimulationPhaseDocumentsRequest(BaseModel):
     phase_name: str = Field(..., description="Name of the project phase")
     phase_details: Dict[str, Any] = Field(..., description="Details about the phase")
     document_types: List[str] = Field(
-        default_factory=lambda: ["technical_design", "test_scenarios", "deployment_guide"],
+        default_factory=lambda: [
+            "technical_design",
+            "test_scenarios",
+            "deployment_guide",
+        ],
         description="Types of documents to generate for this phase",
     )
-    team_members: Optional[List[Dict[str, Any]]] = Field(None, description="Team members involved in this phase")
-    store_in_doc_store: bool = Field(default=True, description="Store generated documents in doc_store")
+    team_members: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Team members involved in this phase"
+    )
+    store_in_doc_store: bool = Field(
+        default=True, description="Store generated documents in doc_store"
+    )
 
 
 class SimulationEcosystemScenarioRequest(BaseModel):
     """Request model for generating complete ecosystem scenarios."""
 
     scenario_name: str = Field(..., description="Name of the scenario")
-    project_config: Dict[str, Any] = Field(..., description="Complete project configuration")
-    include_full_ecosystem: bool = Field(default=True, description="Include all ecosystem services")
+    project_config: Dict[str, Any] = Field(
+        ..., description="Complete project configuration"
+    )
+    include_full_ecosystem: bool = Field(
+        default=True, description="Include all ecosystem services"
+    )
     generate_relationships: bool = Field(
         default=True, description="Generate document relationships and cross-references"
     )
-    store_in_doc_store: bool = Field(default=True, description="Store all generated content in doc_store")
+    store_in_doc_store: bool = Field(
+        default=True, description="Store all generated content in doc_store"
+    )
 
 
 class SimulationResponse(BaseModel):
@@ -217,7 +286,15 @@ app = FastAPI(
     title=SERVICE_TITLE,
     description="Enhanced mock data generator for LLM ecosystem testing. Creates representative data collections, bulk datasets, and complete ecosystem scenarios for comprehensive testing and development.",
     version=SERVICE_VERSION,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
+
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=SERVICE_NAME)
+
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 
 class MockDataGenerator:
@@ -268,7 +345,11 @@ class MockDataGenerator:
                 "title": "Code Quality Analysis Report",
                 "summary": "Comprehensive analysis of codebase quality metrics and recommendations",
                 "issues_found": 15,
-                "recommendations": ["Improve error handling", "Add input validation", "Update dependencies"],
+                "recommendations": [
+                    "Improve error handling",
+                    "Add input validation",
+                    "Update dependencies",
+                ],
                 "severity_breakdown": {"high": 3, "medium": 7, "low": 5},
             },
             MockDataType.SOURCE_CODE: {
@@ -280,7 +361,12 @@ class MockDataGenerator:
             },
             MockDataType.DOCUMENT_COLLECTION: {
                 "name": "API Documentation Suite",
-                "documents": ["overview.md", "authentication.md", "endpoints.md", "examples.md"],
+                "documents": [
+                    "overview.md",
+                    "authentication.md",
+                    "endpoints.md",
+                    "examples.md",
+                ],
                 "total_pages": 25,
                 "last_updated": "2024-01-15",
                 "version": "2.1.0",
@@ -323,7 +409,9 @@ class MockDataGenerator:
             },
         }
 
-    async def generate_with_llm(self, data_type: MockDataType, context: str = None) -> Dict[str, Any]:
+    async def generate_with_llm(
+        self, data_type: MockDataType, context: str = None
+    ) -> Dict[str, Any]:
         """Generate content using LLM Gateway."""
         try:
             template = self.templates.get(data_type, {})
@@ -332,7 +420,12 @@ class MockDataGenerator:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     f"{LLM_GATEWAY_URL}/query",
-                    json={"prompt": prompt, "provider": "ollama", "model": "llama2", "max_tokens": 500},
+                    json={
+                        "prompt": prompt,
+                        "provider": "ollama",
+                        "model": "llama2",
+                        "max_tokens": 500,
+                    },
                 )
 
                 if response.status_code == 200:
@@ -352,13 +445,17 @@ class MockDataGenerator:
             print(f"LLM generation failed: {e}")
             return self.generate_fallback(data_type, context)
 
-    def generate_fallback(self, data_type: MockDataType, context: str = None) -> Dict[str, Any]:
+    def generate_fallback(
+        self, data_type: MockDataType, context: str = None
+    ) -> Dict[str, Any]:
         """Fallback generation without LLM."""
         template = self.templates.get(data_type, {}).copy()
         template["id"] = str(uuid.uuid4())
         template["generation_timestamp"] = datetime.now().isoformat()
         template["context"] = context
-        template["generated_content"] = f"Mock {data_type.value} generated at {datetime.now()}"
+        template["generated_content"] = (
+            f"Mock {data_type.value} generated at {datetime.now()}"
+        )
 
         # Add some variation based on data type
         if data_type == MockDataType.CONFLUENCE_PAGE:
@@ -376,7 +473,9 @@ class MockDataGenerator:
 
         return template
 
-    async def generate_bulk_collection(self, request: BulkCollectionRequest) -> BulkCollectionResponse:
+    async def generate_bulk_collection(
+        self, request: BulkCollectionRequest
+    ) -> BulkCollectionResponse:
         """Generate a bulk collection of mock data."""
         start_time = time.time()
         collection_id = str(uuid.uuid4())
@@ -418,7 +517,9 @@ class MockDataGenerator:
 
                     # Store in doc store if requested
                     if request.store_in_doc_store:
-                        doc_id = await self.store_in_doc_store(data, f"{request.collection_name}_{data_type_str}")
+                        doc_id = await self.store_in_doc_store(
+                            data, f"{request.collection_name}_{data_type_str}"
+                        )
                         if doc_id:
                             stored_documents.append(doc_id)
 
@@ -442,9 +543,13 @@ class MockDataGenerator:
             )
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to generate bulk collection: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Failed to generate bulk collection: {str(e)}"
+            )
 
-    async def generate_ecosystem_scenario(self, request: EcosystemScenarioRequest) -> EcosystemScenarioResponse:
+    async def generate_ecosystem_scenario(
+        self, request: EcosystemScenarioRequest
+    ) -> EcosystemScenarioResponse:
         """Generate a complete ecosystem scenario with related data."""
         start_time = time.time()
         scenario_id = str(uuid.uuid4())
@@ -485,11 +590,17 @@ class MockDataGenerator:
                 },
             }
 
-            scenario_config = scenarios.get(request.scenario_type, scenarios["documentation"])
+            scenario_config = scenarios.get(
+                request.scenario_type, scenarios["documentation"]
+            )
 
             # Adjust scale
-            scale_multiplier = {"small": 0.5, "medium": 1.0, "large": 2.0}.get(request.scale, 1.0)
-            complexity_multiplier = {"simple": 0.6, "medium": 1.0, "complex": 1.5}.get(request.complexity, 1.0)
+            scale_multiplier = {"small": 0.5, "medium": 1.0, "large": 2.0}.get(
+                request.scale, 1.0
+            )
+            complexity_multiplier = {"simple": 0.6, "medium": 1.0, "complex": 1.5}.get(
+                request.complexity, 1.0
+            )
             multiplier = scale_multiplier * complexity_multiplier
 
             # Generate collections
@@ -519,7 +630,9 @@ class MockDataGenerator:
                     )
 
                     # Generate collection
-                    collection_response = await self.generate_bulk_collection(collection_request)
+                    collection_response = await self.generate_bulk_collection(
+                        collection_request
+                    )
                     stored_collections.extend(collection_response.stored_documents)
 
             generation_time = time.time() - start_time
@@ -545,7 +658,10 @@ class MockDataGenerator:
             )
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Failed to generate ecosystem scenario: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to generate ecosystem scenario: {str(e)}",
+            )
 
     def get_available_scenarios(self) -> Dict[str, Any]:
         """Get available ecosystem scenarios."""
@@ -553,19 +669,32 @@ class MockDataGenerator:
             "scenarios": {
                 "code_review": {
                     "description": "Complete code review workflow with source code, analysis, and PRs",
-                    "typical_data_types": ["source_code", "llm_prompt", "analysis_report", "github_pr"],
+                    "typical_data_types": [
+                        "source_code",
+                        "llm_prompt",
+                        "analysis_report",
+                        "github_pr",
+                    ],
                     "complexity_levels": ["simple", "medium", "complex"],
                     "scale_options": ["small", "medium", "large"],
                 },
                 "documentation": {
                     "description": "Documentation generation and management workflow",
-                    "typical_data_types": ["confluence_page", "api_docs", "document_collection"],
+                    "typical_data_types": [
+                        "confluence_page",
+                        "api_docs",
+                        "document_collection",
+                    ],
                     "complexity_levels": ["simple", "medium", "complex"],
                     "scale_options": ["small", "medium", "large"],
                 },
                 "analysis": {
                     "description": "Data analysis and reporting workflow",
-                    "typical_data_types": ["analysis_report", "source_code", "log_entry"],
+                    "typical_data_types": [
+                        "analysis_report",
+                        "source_code",
+                        "log_entry",
+                    ],
                     "complexity_levels": ["simple", "medium", "complex"],
                     "scale_options": ["small", "medium", "large"],
                 },
@@ -579,9 +708,13 @@ class MockDataGenerator:
 
     # NEW: Simulation-specific generation methods
 
-    async def generate_project_requirements(self, request: SimulationProjectDocsRequest) -> Dict[str, Any]:
+    async def generate_project_requirements(
+        self, request: SimulationProjectDocsRequest
+    ) -> Dict[str, Any]:
         """Generate project requirements document."""
-        complexity_multiplier = {"simple": 0.7, "medium": 1.0, "complex": 1.4}[request.complexity]
+        complexity_multiplier = {"simple": 0.7, "medium": 1.0, "complex": 1.4}[
+            request.complexity
+        ]
 
         requirements = {
             "title": f"{request.project_name} - Project Requirements",
@@ -590,7 +723,12 @@ class MockDataGenerator:
             "version": "1.0",
             "created_date": datetime.now().isoformat(),
             "author": "Project Manager",
-            "stakeholders": ["Product Owner", "Development Team", "QA Team", "DevOps Team"],
+            "stakeholders": [
+                "Product Owner",
+                "Development Team",
+                "QA Team",
+                "DevOps Team",
+            ],
             "overview": {
                 "description": f"Requirements for {request.project_name}, a {request.project_type} project",
                 "objectives": [
@@ -600,8 +738,17 @@ class MockDataGenerator:
                     "Implement security best practices",
                 ],
                 "scope": {
-                    "in_scope": ["Core functionality", "User interface", "API development", "Testing"],
-                    "out_of_scope": ["Legacy system migration", "Third-party integrations", "Mobile applications"],
+                    "in_scope": [
+                        "Core functionality",
+                        "User interface",
+                        "API development",
+                        "Testing",
+                    ],
+                    "out_of_scope": [
+                        "Legacy system migration",
+                        "Third-party integrations",
+                        "Mobile applications",
+                    ],
                 },
             },
             "functional_requirements": [
@@ -619,13 +766,21 @@ class MockDataGenerator:
                     "id": "FR-002",
                     "description": "Data management and CRUD operations",
                     "priority": "High",
-                    "acceptance_criteria": ["Create, read, update, delete data", "Data validation", "Error handling"],
+                    "acceptance_criteria": [
+                        "Create, read, update, delete data",
+                        "Data validation",
+                        "Error handling",
+                    ],
                 },
                 {
                     "id": "FR-003",
                     "description": "User interface and user experience",
                     "priority": "Medium",
-                    "acceptance_criteria": ["Responsive design", "Intuitive navigation", "Accessibility compliance"],
+                    "acceptance_criteria": [
+                        "Responsive design",
+                        "Intuitive navigation",
+                        "Accessibility compliance",
+                    ],
                 },
             ],
             "non_functional_requirements": {
@@ -646,7 +801,11 @@ class MockDataGenerator:
                 },
             },
             "constraints": {
-                "technical": ["Must use Python/FastAPI backend", "PostgreSQL database", "Docker containerization"],
+                "technical": [
+                    "Must use Python/FastAPI backend",
+                    "PostgreSQL database",
+                    "Docker containerization",
+                ],
                 "business": [
                     f"Project timeline: {request.duration_weeks} weeks",
                     f"Team size: {request.team_size} members",
@@ -684,7 +843,9 @@ class MockDataGenerator:
 
         return requirements
 
-    async def generate_architecture_diagram(self, request: SimulationProjectDocsRequest) -> Dict[str, Any]:
+    async def generate_architecture_diagram(
+        self, request: SimulationProjectDocsRequest
+    ) -> Dict[str, Any]:
         """Generate architecture diagram document."""
         architecture = {
             "title": f"{request.project_name} - System Architecture",
@@ -788,7 +949,9 @@ class MockDataGenerator:
 
         return architecture
 
-    async def generate_user_story(self, request: SimulationProjectDocsRequest, story_index: int) -> Dict[str, Any]:
+    async def generate_user_story(
+        self, request: SimulationProjectDocsRequest, story_index: int
+    ) -> Dict[str, Any]:
         """Generate a user story document."""
         story_templates = [
             {
@@ -888,7 +1051,13 @@ class MockDataGenerator:
 
         # Generate team activity events
         if phase.get("team_activities", 0) > 0:
-            activity_types = ["code_commit", "design_review", "meeting", "testing", "deployment"]
+            activity_types = [
+                "code_commit",
+                "design_review",
+                "meeting",
+                "testing",
+                "deployment",
+            ]
             for i in range(min(phase["team_activities"], 10)):
                 activity_type = activity_types[i % len(activity_types)]
                 event = {
@@ -927,17 +1096,29 @@ class MockDataGenerator:
             "code_commit": {
                 "title": "Code Changes Committed",
                 "description": "Team member committed code changes to repository",
-                "details": ["Fixed bug in authentication logic", "Added input validation", "Updated documentation"],
+                "details": [
+                    "Fixed bug in authentication logic",
+                    "Added input validation",
+                    "Updated documentation",
+                ],
             },
             "document_update": {
                 "title": "Documentation Updated",
                 "description": "Technical documentation was reviewed and updated",
-                "details": ["Updated API documentation", "Added code examples", "Fixed typos and formatting"],
+                "details": [
+                    "Updated API documentation",
+                    "Added code examples",
+                    "Fixed typos and formatting",
+                ],
             },
             "meeting_notes": {
                 "title": "Team Meeting Held",
                 "description": "Sprint planning meeting with development team",
-                "details": ["Discussed sprint goals", "Assigned user stories", "Identified blockers"],
+                "details": [
+                    "Discussed sprint goals",
+                    "Assigned user stories",
+                    "Identified blockers",
+                ],
             },
             "design_decision": {
                 "title": "Architecture Decision Made",
@@ -972,7 +1153,11 @@ class MockDataGenerator:
             "details": activity_template["details"],
             "impact": "Medium",
             "category": "development",
-            "tags": [activity_key, "team", request.project_name.lower().replace(" ", "_")],
+            "tags": [
+                activity_key,
+                "team",
+                request.project_name.lower().replace(" ", "_"),
+            ],
             "metadata": {
                 "activity_index": activity_index,
                 "team_size": len(request.team_members),
@@ -982,7 +1167,9 @@ class MockDataGenerator:
 
         return activity
 
-    async def generate_technical_design(self, request: SimulationPhaseDocumentsRequest) -> Dict[str, Any]:
+    async def generate_technical_design(
+        self, request: SimulationPhaseDocumentsRequest
+    ) -> Dict[str, Any]:
         """Generate technical design document for a phase."""
         design_doc = {
             "title": f"Technical Design: {request.phase_name} Phase",
@@ -1004,7 +1191,10 @@ class MockDataGenerator:
                 {
                     "decision": "Database Schema Design",
                     "rationale": "Normalized schema for data integrity and performance",
-                    "alternatives_considered": ["Denormalized schema", "Document database"],
+                    "alternatives_considered": [
+                        "Denormalized schema",
+                        "Document database",
+                    ],
                     "consequences": "Better data consistency, slightly more complex queries",
                 },
                 {
@@ -1023,17 +1213,29 @@ class MockDataGenerator:
             "component_design": {
                 "api_layer": {
                     "technology": "FastAPI with Pydantic models",
-                    "responsibilities": ["Request validation", "Response formatting", "Error handling"],
+                    "responsibilities": [
+                        "Request validation",
+                        "Response formatting",
+                        "Error handling",
+                    ],
                     "design_patterns": ["Dependency injection", "Middleware pipeline"],
                 },
                 "business_logic": {
                     "technology": "Python service classes",
-                    "responsibilities": ["Business rules", "Data processing", "Workflow orchestration"],
+                    "responsibilities": [
+                        "Business rules",
+                        "Data processing",
+                        "Workflow orchestration",
+                    ],
                     "design_patterns": ["Strategy pattern", "Factory pattern"],
                 },
                 "data_layer": {
                     "technology": "SQLAlchemy ORM with PostgreSQL",
-                    "responsibilities": ["Data persistence", "Query optimization", "Transaction management"],
+                    "responsibilities": [
+                        "Data persistence",
+                        "Query optimization",
+                        "Transaction management",
+                    ],
                     "design_patterns": ["Repository pattern", "Unit of Work"],
                 },
             },
@@ -1041,12 +1243,25 @@ class MockDataGenerator:
                 "entities": [
                     {
                         "name": "User",
-                        "attributes": ["id", "email", "name", "role", "created_at", "updated_at"],
+                        "attributes": [
+                            "id",
+                            "email",
+                            "name",
+                            "role",
+                            "created_at",
+                            "updated_at",
+                        ],
                         "relationships": ["has_many: sessions", "has_many: activities"],
                     },
                     {
                         "name": "Project",
-                        "attributes": ["id", "name", "description", "status", "created_at"],
+                        "attributes": [
+                            "id",
+                            "name",
+                            "description",
+                            "status",
+                            "created_at",
+                        ],
                         "relationships": ["belongs_to: owner", "has_many: tasks"],
                     },
                 ],
@@ -1102,7 +1317,9 @@ class MockDataGenerator:
 
         return design_doc
 
-    async def generate_test_scenarios(self, request: SimulationPhaseDocumentsRequest) -> Dict[str, Any]:
+    async def generate_test_scenarios(
+        self, request: SimulationPhaseDocumentsRequest
+    ) -> Dict[str, Any]:
         """Generate test scenarios document for a phase."""
         test_scenarios = {
             "title": f"Test Scenarios: {request.phase_name} Phase",
@@ -1138,7 +1355,10 @@ class MockDataGenerator:
                         "scenario_id": "FT-002",
                         "title": "Data CRUD Operations",
                         "description": "Test create, read, update, delete operations",
-                        "preconditions": ["User is logged in", "Has create permissions"],
+                        "preconditions": [
+                            "User is logged in",
+                            "Has create permissions",
+                        ],
                         "test_steps": [
                             "Navigate to data management page",
                             "Create new data entry",
@@ -1157,7 +1377,10 @@ class MockDataGenerator:
                         "scenario_id": "IT-001",
                         "title": "API-Service Integration",
                         "description": "Test API communication with backend services",
-                        "preconditions": ["API service is running", "Database is available"],
+                        "preconditions": [
+                            "API service is running",
+                            "Database is available",
+                        ],
                         "test_steps": [
                             "Send API request to create resource",
                             "Verify backend service processes request",
@@ -1175,7 +1398,10 @@ class MockDataGenerator:
                         "scenario_id": "PT-001",
                         "title": "Concurrent User Load",
                         "description": "Test system performance under concurrent user load",
-                        "preconditions": ["Load testing tools configured", "Monitoring enabled"],
+                        "preconditions": [
+                            "Load testing tools configured",
+                            "Monitoring enabled",
+                        ],
                         "test_steps": [
                             "Set up load testing scenario (100 concurrent users)",
                             "Execute test for 5 minutes",
@@ -1248,7 +1474,9 @@ class MockDataGenerator:
 
         return test_scenarios
 
-    async def generate_deployment_guide(self, request: SimulationPhaseDocumentsRequest) -> Dict[str, Any]:
+    async def generate_deployment_guide(
+        self, request: SimulationPhaseDocumentsRequest
+    ) -> Dict[str, Any]:
         """Generate deployment guide document for a phase."""
         deployment_guide = {
             "title": f"Deployment Guide: {request.phase_name} Phase",
@@ -1260,7 +1488,11 @@ class MockDataGenerator:
             "overview": {
                 "purpose": f"Complete deployment instructions for {request.phase_name} phase",
                 "scope": "Development, staging, and production environments",
-                "target_audience": ["Developers", "DevOps engineers", "System administrators"],
+                "target_audience": [
+                    "Developers",
+                    "DevOps engineers",
+                    "System administrators",
+                ],
             },
             "prerequisites": {
                 "system_requirements": {
@@ -1439,7 +1671,9 @@ class MockDataGenerator:
 
         return deployment_guide
 
-    async def generate_ecosystem_scenario(self, request: SimulationEcosystemScenarioRequest) -> List[Dict[str, Any]]:
+    async def generate_ecosystem_scenario(
+        self, request: SimulationEcosystemScenarioRequest
+    ) -> List[Dict[str, Any]]:
         """Generate a complete ecosystem scenario with multiple interconnected documents."""
         scenario_documents = []
 
@@ -1483,7 +1717,9 @@ class MockDataGenerator:
         scenario_documents.append(architecture_doc)
 
         # 3. Generate multiple user stories
-        for i in range(min(5, len(project_config.get("user_stories", [1, 2, 3, 4, 5])))):
+        for i in range(
+            min(5, len(project_config.get("user_stories", [1, 2, 3, 4, 5])))
+        ):
             user_story_doc = {
                 "type": "user_story",
                 "title": f"User Story {i+1}: {request.scenario_name}",
@@ -1566,7 +1802,9 @@ class MockDataGenerator:
         # Add cross-references if requested
         if request.generate_relationships:
             for doc in scenario_documents:
-                doc["relationships"] = self._generate_document_relationships(doc, scenario_documents)
+                doc["relationships"] = self._generate_document_relationships(
+                    doc, scenario_documents
+                )
 
         return scenario_documents
 
@@ -1587,26 +1825,50 @@ class MockDataGenerator:
                     "target_type": "architecture_diagram",
                     "description": "Defines system requirements",
                 },
-                {"type": "references", "target_type": "user_story", "description": "Basis for user stories"},
-                {"type": "validated_by", "target_type": "test_scenarios", "description": "Requirements validation"},
+                {
+                    "type": "references",
+                    "target_type": "user_story",
+                    "description": "Basis for user stories",
+                },
+                {
+                    "type": "validated_by",
+                    "target_type": "test_scenarios",
+                    "description": "Requirements validation",
+                },
             ],
             "architecture_diagram": [
-                {"type": "implements", "target_type": "technical_design", "description": "Technical implementation"},
+                {
+                    "type": "implements",
+                    "target_type": "technical_design",
+                    "description": "Technical implementation",
+                },
                 {
                     "type": "references",
                     "target_type": "project_requirements",
                     "description": "Architecture requirements",
                 },
-                {"type": "deployed_via", "target_type": "deployment_guide", "description": "Deployment architecture"},
+                {
+                    "type": "deployed_via",
+                    "target_type": "deployment_guide",
+                    "description": "Deployment architecture",
+                },
             ],
             "user_story": [
-                {"type": "derived_from", "target_type": "project_requirements", "description": "Requirements basis"},
+                {
+                    "type": "derived_from",
+                    "target_type": "project_requirements",
+                    "description": "Requirements basis",
+                },
                 {
                     "type": "implemented_in",
                     "target_type": "technical_design",
                     "description": "Technical implementation",
                 },
-                {"type": "validated_by", "target_type": "test_scenarios", "description": "Acceptance testing"},
+                {
+                    "type": "validated_by",
+                    "target_type": "test_scenarios",
+                    "description": "Acceptance testing",
+                },
             ],
             "technical_design": [
                 {
@@ -1614,18 +1876,50 @@ class MockDataGenerator:
                     "target_type": "architecture_diagram",
                     "description": "Architecture implementation",
                 },
-                {"type": "references", "target_type": "user_story", "description": "Feature implementation"},
-                {"type": "deployed_via", "target_type": "deployment_guide", "description": "Deployment configuration"},
+                {
+                    "type": "references",
+                    "target_type": "user_story",
+                    "description": "Feature implementation",
+                },
+                {
+                    "type": "deployed_via",
+                    "target_type": "deployment_guide",
+                    "description": "Deployment configuration",
+                },
             ],
             "test_scenarios": [
-                {"type": "validates", "target_type": "project_requirements", "description": "Requirements validation"},
-                {"type": "tests", "target_type": "technical_design", "description": "Implementation testing"},
-                {"type": "references", "target_type": "user_story", "description": "Acceptance criteria testing"},
+                {
+                    "type": "validates",
+                    "target_type": "project_requirements",
+                    "description": "Requirements validation",
+                },
+                {
+                    "type": "tests",
+                    "target_type": "technical_design",
+                    "description": "Implementation testing",
+                },
+                {
+                    "type": "references",
+                    "target_type": "user_story",
+                    "description": "Acceptance criteria testing",
+                },
             ],
             "deployment_guide": [
-                {"type": "deploys", "target_type": "architecture_diagram", "description": "Architecture deployment"},
-                {"type": "configures", "target_type": "technical_design", "description": "Technical configuration"},
-                {"type": "references", "target_type": "test_scenarios", "description": "Deployment testing"},
+                {
+                    "type": "deploys",
+                    "target_type": "architecture_diagram",
+                    "description": "Architecture deployment",
+                },
+                {
+                    "type": "configures",
+                    "target_type": "technical_design",
+                    "description": "Technical configuration",
+                },
+                {
+                    "type": "references",
+                    "target_type": "test_scenarios",
+                    "description": "Deployment testing",
+                },
             ],
         }
 
@@ -1634,7 +1928,10 @@ class MockDataGenerator:
             for pattern in relationship_patterns[doc_type]:
                 # Find matching target documents
                 for target_doc in all_documents:
-                    if target_doc["type"] == pattern["target_type"] and target_doc != document:
+                    if (
+                        target_doc["type"] == pattern["target_type"]
+                        and target_doc != document
+                    ):
                         relationship = {
                             "type": pattern["type"],
                             "target_document": target_doc["title"],
@@ -1646,7 +1943,9 @@ class MockDataGenerator:
 
         return relationships
 
-    async def store_in_doc_store(self, data: Dict[str, Any], data_type: str) -> Optional[str]:
+    async def store_in_doc_store(
+        self, data: Dict[str, Any], data_type: str
+    ) -> Optional[str]:
         """Store generated data in doc store."""
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -1655,7 +1954,11 @@ class MockDataGenerator:
                     json={
                         "title": f"Mock {data_type}: {data.get('title', data.get('name', data.get('summary', 'Generated Data')))}",
                         "content": json.dumps(data, indent=2),
-                        "metadata": {"data_type": data_type, "generated": True, "service": SERVICE_NAME},
+                        "metadata": {
+                            "data_type": data_type,
+                            "generated": True,
+                            "service": SERVICE_NAME,
+                        },
                     },
                 )
 
@@ -1737,7 +2040,10 @@ async def get_data_types():
     """Get available mock data types."""
     return {
         "data_types": [
-            {"type": data_type.value, "description": f"Generate mock {data_type.value.replace('_', ' ')} data"}
+            {
+                "type": data_type.value,
+                "description": f"Generate mock {data_type.value.replace('_', ' ')} data",
+            }
             for data_type in MockDataType
         ]
     }
@@ -1764,7 +2070,9 @@ async def generate_mock_data(request: GenerationRequest):
 
             # Store in doc store if requested
             if request.store_in_doc_store:
-                doc_id = await generator.store_in_doc_store(data, request.data_type.value)
+                doc_id = await generator.store_in_doc_store(
+                    data, request.data_type.value
+                )
                 if doc_id:
                     stored_documents.append(doc_id)
 
@@ -1780,7 +2088,9 @@ async def generate_mock_data(request: GenerationRequest):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate mock data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate mock data: {str(e)}"
+        )
 
 
 @app.post("/generate/batch")
@@ -1807,7 +2117,9 @@ async def generate_batch_data(requests: List[GenerationRequest]):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to generate batch data: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to generate batch data: {str(e)}"
+        )
 
 
 @app.get("/test/llm-connection")
@@ -1819,7 +2131,10 @@ async def test_llm_connection():
             if response.status_code == 200:
                 return {"llm_gateway_status": "connected", "response": response.json()}
             else:
-                return {"llm_gateway_status": "error", "status_code": response.status_code}
+                return {
+                    "llm_gateway_status": "error",
+                    "status_code": response.status_code,
+                }
     except Exception as e:
         return {"llm_gateway_status": "unreachable", "error": str(e)}
 
@@ -1833,7 +2148,10 @@ async def test_doc_store_connection():
             if response.status_code == 200:
                 return {"doc_store_status": "connected", "response": response.json()}
             else:
-                return {"doc_store_status": "error", "status_code": response.status_code}
+                return {
+                    "doc_store_status": "error",
+                    "status_code": response.status_code,
+                }
     except Exception as e:
         return {"doc_store_status": "unreachable", "error": str(e)}
 
@@ -1854,7 +2172,13 @@ async def get_collection_templates():
         "templates": {
             "code_review_workflow": {
                 "description": "Complete code review scenario with source code, analysis, and PRs",
-                "data_types": ["source_code", "llm_prompt", "analysis_report", "github_pr", "log_entry"],
+                "data_types": [
+                    "source_code",
+                    "llm_prompt",
+                    "analysis_report",
+                    "github_pr",
+                    "log_entry",
+                ],
                 "suggested_distribution": {
                     "source_code": 50,
                     "llm_prompt": 10,
@@ -1866,7 +2190,12 @@ async def get_collection_templates():
             },
             "documentation_suite": {
                 "description": "Comprehensive documentation collection",
-                "data_types": ["confluence_page", "api_docs", "document_collection", "user_profile"],
+                "data_types": [
+                    "confluence_page",
+                    "api_docs",
+                    "document_collection",
+                    "user_profile",
+                ],
                 "suggested_distribution": {
                     "confluence_page": 15,
                     "api_docs": 8,
@@ -1877,7 +2206,13 @@ async def get_collection_templates():
             },
             "analysis_workbench": {
                 "description": "Data analysis and reporting environment",
-                "data_types": ["analysis_report", "source_code", "log_entry", "configuration", "notification"],
+                "data_types": [
+                    "analysis_report",
+                    "source_code",
+                    "log_entry",
+                    "configuration",
+                    "notification",
+                ],
                 "suggested_distribution": {
                     "analysis_report": 10,
                     "source_code": 30,
@@ -1912,7 +2247,14 @@ async def get_collection_templates():
         },
         "customization_options": {
             "total_items_range": [10, 10000],
-            "supported_tags": ["testing", "development", "documentation", "analysis", "integration", "production"],
+            "supported_tags": [
+                "testing",
+                "development",
+                "documentation",
+                "analysis",
+                "integration",
+                "production",
+            ],
             "storage_options": ["doc_store_only", "memory_only", "both"],
         },
     }
@@ -1931,7 +2273,9 @@ async def get_available_scenarios():
 
 
 @app.post("/scenarios/quick-start/{scenario_type}")
-async def quick_start_scenario(scenario_type: str, complexity: str = "medium", scale: str = "small"):
+async def quick_start_scenario(
+    scenario_type: str, complexity: str = "medium", scale: str = "small"
+):
     """Quick start a predefined scenario with default settings."""
     request = EcosystemScenarioRequest(
         scenario_type=scenario_type,
@@ -1985,7 +2329,10 @@ async def get_collection_details(collection_id: str):
         "total_items": 25,
         "items_by_type": {"source_code": 15, "llm_prompt": 10},
         "stored_documents": [f"doc_{i}" for i in range(25)],
-        "metadata": {"tags": ["testing", "development"], "context": "Mock data generation"},
+        "metadata": {
+            "tags": ["testing", "development"],
+            "context": "Mock data generation",
+        },
     }
 
 
@@ -1993,7 +2340,11 @@ async def get_collection_details(collection_id: str):
 async def delete_collection(collection_id: str):
     """Delete a collection and its associated documents."""
     # Mock response - in real implementation, this would delete from database and doc store
-    return {"success": True, "message": f"Collection {collection_id} deleted successfully", "deleted_documents": 25}
+    return {
+        "success": True,
+        "message": f"Collection {collection_id} deleted successfully",
+        "deleted_documents": 25,
+    }
 
 
 @app.get("/data/ecosystem-overview")
@@ -2028,7 +2379,11 @@ async def get_ecosystem_data_overview():
                 "items_count": 50,
             },
         ],
-        "storage_usage": {"doc_store_documents": 200, "memory_cache": 50, "total_size_mb": 45.2},
+        "storage_usage": {
+            "doc_store_documents": 200,
+            "memory_cache": 50,
+            "total_size_mb": 45.2,
+        },
     }
 
 
@@ -2038,7 +2393,10 @@ async def export_collection_data(collection_id: str, format: str = "json"):
     supported_formats = ["json", "csv", "xml", "yaml"]
 
     if format not in supported_formats:
-        raise HTTPException(status_code=400, detail=f"Unsupported format: {format}. Supported: {supported_formats}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported format: {format}. Supported: {supported_formats}",
+        )
 
     # Mock export response
     return {
@@ -2069,7 +2427,9 @@ async def generate_project_documents(request: SimulationProjectDocsRequest):
             req_doc = await generator.generate_project_requirements(request)
             documents_created.append(req_doc)
             if request.store_in_doc_store:
-                doc_id = await generator.store_in_doc_store(req_doc, "project_requirements")
+                doc_id = await generator.store_in_doc_store(
+                    req_doc, "project_requirements"
+                )
                 if doc_id:
                     stored_documents.append(doc_id)
 
@@ -2078,13 +2438,17 @@ async def generate_project_documents(request: SimulationProjectDocsRequest):
             arch_doc = await generator.generate_architecture_diagram(request)
             documents_created.append(arch_doc)
             if request.store_in_doc_store:
-                doc_id = await generator.store_in_doc_store(arch_doc, "architecture_diagram")
+                doc_id = await generator.store_in_doc_store(
+                    arch_doc, "architecture_diagram"
+                )
                 if doc_id:
                     stored_documents.append(doc_id)
 
         # Generate user stories
         if "user_story" in request.document_types:
-            for i in range(min(10, request.team_size * 3)):  # Generate multiple user stories
+            for i in range(
+                min(10, request.team_size * 3)
+            ):  # Generate multiple user stories
                 story_doc = await generator.generate_user_story(request, i)
                 documents_created.append(story_doc)
                 if request.store_in_doc_store:
@@ -2142,7 +2506,9 @@ async def generate_timeline_events(request: SimulationTimelineEventsRequest):
 
                 if request.store_in_doc_store:
                     for event in phase_events:
-                        doc_id = await generator.store_in_doc_store(event, "timeline_event")
+                        doc_id = await generator.store_in_doc_store(
+                            event, "timeline_event"
+                        )
                         if doc_id:
                             stored_documents.append(doc_id)
 
@@ -2268,7 +2634,9 @@ async def generate_phase_documents(request: SimulationPhaseDocumentsRequest):
             generation_time=generation_time,
             metadata={
                 "phase_name": request.phase_name,
-                "team_members_involved": len(request.team_members) if request.team_members else 0,
+                "team_members_involved": (
+                    len(request.team_members) if request.team_members else 0
+                ),
             },
         )
 
@@ -2300,7 +2668,9 @@ async def generate_ecosystem_scenario(request: SimulationEcosystemScenarioReques
 
         if request.store_in_doc_store:
             for doc in scenario_docs:
-                doc_id = await generator.store_in_doc_store(doc, doc.get("type", "ecosystem_scenario"))
+                doc_id = await generator.store_in_doc_store(
+                    doc, doc.get("type", "ecosystem_scenario")
+                )
                 if doc_id:
                     stored_documents.append(doc_id)
 
@@ -2345,7 +2715,9 @@ if __name__ == "__main__":
     print("")
     print("✨ Enhanced Features Available:")
     print("  🏗️  Bulk Collections - Generate large datasets with custom distributions")
-    print("  🎭 Ecosystem Scenarios - Complete testing environments (code_review, documentation, analysis)")
+    print(
+        "  🎭 Ecosystem Scenarios - Complete testing environments (code_review, documentation, analysis)"
+    )
     print("  📋 Collection Templates - Pre-configured data generation templates")
     print("  🔗 Data Relationships - Interconnected data with realistic dependencies")
     print("  📤 Export Formats - JSON, CSV, XML, YAML export capabilities")

@@ -82,7 +82,9 @@ class TestLoadDistributionAlgorithms:
             # Simulate connection completion (random timing)
             if random.random() < 0.3:  # 30% chance to complete a connection
                 # Find a random endpoint with active connections and reduce it
-                active_endpoints = [ep for ep in endpoints.values() if ep["active_connections"] > 0]
+                active_endpoints = [
+                    ep for ep in endpoints.values() if ep["active_connections"] > 0
+                ]
                 if active_endpoints:
                     random.choice(active_endpoints)["active_connections"] -= 1
 
@@ -112,7 +114,10 @@ class TestLoadDistributionAlgorithms:
         expected_per_endpoint = total_calls / len(endpoints)
 
         for endpoint in endpoints:
-            deviation = abs(call_counts[endpoint] - expected_per_endpoint) / expected_per_endpoint
+            deviation = (
+                abs(call_counts[endpoint] - expected_per_endpoint)
+                / expected_per_endpoint
+            )
             assert deviation < 0.2  # Allow 20% deviation for randomness
 
 
@@ -132,8 +137,12 @@ class TestLoadBalancerHealthChecks:
             return endpoints[endpoint_name]["healthy"]
 
         # Test health check filtering
-        available_endpoints = [ep for ep in endpoints.keys() if is_endpoint_available(ep)]
-        unhealthy_endpoints = [ep for ep in endpoints.keys() if not is_endpoint_available(ep)]
+        available_endpoints = [
+            ep for ep in endpoints.keys() if is_endpoint_available(ep)
+        ]
+        unhealthy_endpoints = [
+            ep for ep in endpoints.keys() if not is_endpoint_available(ep)
+        ]
 
         assert len(available_endpoints) == 2
         assert len(unhealthy_endpoints) == 2
@@ -218,7 +227,9 @@ class TestLoadBalancerFailover:
             available = [ep for ep in active_endpoints if ep not in failed_endpoints]
             if not available:
                 # Failover to backup
-                available = [ep for ep in backup_endpoints if ep not in failed_endpoints]
+                available = [
+                    ep for ep in backup_endpoints if ep not in failed_endpoints
+                ]
                 if available:
                     active_endpoints.extend(backup_endpoints)
             return available[0] if available else None
@@ -330,7 +341,9 @@ class TestLoadBalancerPerformance:
         # Should be very fast
         assert routing_time < 0.5, f"Routing too slow: {routing_time}s"
         avg_routing_time = routing_time / 10000
-        assert avg_routing_time < 0.00005, f"Average routing time too high: {avg_routing_time}s"
+        assert (
+            avg_routing_time < 0.00005
+        ), f"Average routing time too high: {avg_routing_time}s"
 
     def test_concurrent_load_handling(self):
         """Test load balancer under concurrent load."""
@@ -381,7 +394,11 @@ class TestLoadBalancerPerformance:
         # Simulate load
         requests = []
         for i in range(10000):
-            request = {"id": i, "endpoint": f"endpoint_{i % 10}", "data": [j for j in range(100)]}  # Some data
+            request = {
+                "id": i,
+                "endpoint": f"endpoint_{i % 10}",
+                "data": [j for j in range(100)],
+            }  # Some data
             requests.append(request)
 
         # Memory after load
@@ -407,7 +424,9 @@ class TestLoadBalancerConfiguration:
             config = {
                 "algorithm": algorithm,
                 "endpoints": ["ep1", "ep2", "ep3"],
-                "weights": {"ep1": 2, "ep2": 1, "ep3": 1} if algorithm == "weighted" else None,
+                "weights": (
+                    {"ep1": 2, "ep2": 1, "ep3": 1} if algorithm == "weighted" else None
+                ),
             }
 
             # Validate configuration
@@ -513,12 +532,19 @@ class TestLoadBalancerMonitoring:
             assert len(metrics["endpoint_response_times"][endpoint]) > 0
 
             # Calculate average response time
-            avg_response_time = statistics.mean(metrics["endpoint_response_times"][endpoint])
+            avg_response_time = statistics.mean(
+                metrics["endpoint_response_times"][endpoint]
+            )
             assert 0.1 <= avg_response_time <= 0.5
 
     def test_performance_monitoring(self):
         """Test performance monitoring capabilities."""
-        performance_metrics = {"throughput": [], "latency": [], "error_rate": [], "timestamps": []}
+        performance_metrics = {
+            "throughput": [],
+            "latency": [],
+            "error_rate": [],
+            "timestamps": [],
+        }
 
         # Simulate performance over time
         start_time = time.time()
@@ -553,7 +579,9 @@ class TestLoadBalancerMonitoring:
     def test_health_status_monitoring(self):
         """Test endpoint health status monitoring."""
         endpoints = ["ep1", "ep2", "ep3"]
-        health_status = {ep: {"healthy": True, "last_check": None, "uptime": 0} for ep in endpoints}
+        health_status = {
+            ep: {"healthy": True, "last_check": None, "uptime": 0} for ep in endpoints
+        }
 
         def update_health_status(endpoint, is_healthy):
             status = health_status[endpoint]
@@ -599,6 +627,11 @@ def load_balancer_config():
 def performance_monitor():
     """Create performance monitor for testing."""
     return {
-        "metrics": {"requests_total": 0, "requests_per_second": 0, "average_response_time": 0, "error_rate": 0},
+        "metrics": {
+            "requests_total": 0,
+            "requests_per_second": 0,
+            "average_response_time": 0,
+            "error_rate": 0,
+        },
         "start_time": time.time(),
     }

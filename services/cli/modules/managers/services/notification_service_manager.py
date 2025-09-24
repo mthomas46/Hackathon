@@ -18,12 +18,18 @@ from ...shared_utils import add_menu_rows, create_menu_table, print_panel
 class NotificationServiceManager(BaseManager):
     """Manager for notification service power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for notification service operations."""
-        return [("1", "Notification Management"), ("2", "Template Configuration"), ("3", "Delivery Monitoring")]
+        return [
+            ("1", "Notification Management"),
+            ("2", "Template Configuration"),
+            ("3", "Delivery Monitoring"),
+        ]
 
     async def handle_choice(self, choice: str) -> bool:
         """Handle a menu choice. Return True to continue, False to exit."""
@@ -33,14 +39,22 @@ class NotificationServiceManager(BaseManager):
     async def notification_service_menu(self):
         """Main notification service menu."""
         while True:
-            menu = create_menu_table("Notification Service Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Notification Service Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
                     ("1", "Owner Management (Update, resolve, and manage ownership)"),
-                    ("2", "Notification Delivery (Send notifications via various channels)"),
+                    (
+                        "2",
+                        "Notification Delivery (Send notifications via various channels)",
+                    ),
                     ("3", "Dead Letter Queue (Manage failed notification delivery)"),
-                    ("4", "Notification Monitoring (Track delivery status and analytics)"),
+                    (
+                        "4",
+                        "Notification Monitoring (Track delivery status and analytics)",
+                    ),
                     ("5", "Channel Configuration (Configure notification channels)"),
                     ("6", "Notification Service Health & Configuration"),
                     ("b", "Back to Main Menu"),
@@ -105,8 +119,12 @@ class NotificationServiceManager(BaseManager):
         """Update owner information in the system."""
         try:
             entity_id = Prompt.ask("[bold cyan]Entity ID[/bold cyan]")
-            owner_name = Prompt.ask("[bold cyan]Owner name (optional)[/bold cyan]", default="")
-            team_name = Prompt.ask("[bold cyan]Team name (optional)[/bold cyan]", default="")
+            owner_name = Prompt.ask(
+                "[bold cyan]Owner name (optional)[/bold cyan]", default=""
+            )
+            team_name = Prompt.ask(
+                "[bold cyan]Team name (optional)[/bold cyan]", default=""
+            )
 
             update_request = {
                 "id": entity_id,
@@ -114,13 +132,23 @@ class NotificationServiceManager(BaseManager):
                 "team": team_name if team_name else None,
             }
 
-            response = await self.clients.post_json("notification-service/owners/update", update_request)
+            response = await self.clients.post_json(
+                "notification-service/owners/update", update_request
+            )
 
             if response:
-                self.console.print("[green]✅ Owner information updated successfully[/green]")
-                self.console.print(f"[green]Entity: {response.get('id', 'N/A')}[/green]")
-                self.console.print(f"[green]Owner: {response.get('owner', 'N/A')}[/green]")
-                self.console.print(f"[green]Team: {response.get('team', 'N/A')}[/green]")
+                self.console.print(
+                    "[green]✅ Owner information updated successfully[/green]"
+                )
+                self.console.print(
+                    f"[green]Entity: {response.get('id', 'N/A')}[/green]"
+                )
+                self.console.print(
+                    f"[green]Owner: {response.get('owner', 'N/A')}[/green]"
+                )
+                self.console.print(
+                    f"[green]Team: {response.get('team', 'N/A')}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to update owner information[/red]")
 
@@ -130,9 +158,13 @@ class NotificationServiceManager(BaseManager):
     async def resolve_owners_to_targets(self):
         """Resolve owners to their notification targets."""
         try:
-            owners_input = Prompt.ask("[bold cyan]Owner names (comma-separated)[/bold cyan]")
+            owners_input = Prompt.ask(
+                "[bold cyan]Owner names (comma-separated)[/bold cyan]"
+            )
 
-            owners = [owner.strip() for owner in owners_input.split(",") if owner.strip()]
+            owners = [
+                owner.strip() for owner in owners_input.split(",") if owner.strip()
+            ]
 
             if not owners:
                 self.console.print("[red]No owners specified[/red]")
@@ -140,8 +172,12 @@ class NotificationServiceManager(BaseManager):
 
             resolve_request = {"owners": owners}
 
-            with self.console.status("[bold green]Resolving owners to notification targets...[/bold green]") as status:
-                response = await self.clients.post_json("notification-service/owners/resolve", resolve_request)
+            with self.console.status(
+                "[bold green]Resolving owners to notification targets...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "notification-service/owners/resolve", resolve_request
+                )
 
             if response and "resolved" in response:
                 await self.display_owner_resolutions(response["resolved"], owners)
@@ -151,7 +187,9 @@ class NotificationServiceManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error resolving owners: {e}[/red]")
 
-    async def display_owner_resolutions(self, resolved_targets: Dict[str, Any], requested_owners: List[str]):
+    async def display_owner_resolutions(
+        self, resolved_targets: Dict[str, Any], requested_owners: List[str]
+    ):
         """Display owner resolution results."""
         content = f"""
 [bold]Owner Resolution Results[/bold]
@@ -172,7 +210,9 @@ class NotificationServiceManager(BaseManager):
         for owner in requested_owners:
             targets = resolved_targets.get(owner, [])
             if targets:
-                target_types = list(set(target.get("channel", "unknown") for target in targets))
+                target_types = list(
+                    set(target.get("channel", "unknown") for target in targets)
+                )
                 status = "✅ Resolved"
                 status_style = "green"
             else:
@@ -181,7 +221,10 @@ class NotificationServiceManager(BaseManager):
                 status_style = "red"
 
             table.add_row(
-                owner, f"[{status_style}]{status}[/{status_style}]", str(len(targets)), ", ".join(target_types)
+                owner,
+                f"[{status_style}]{status}[/{status_style}]",
+                str(len(targets)),
+                ", ".join(target_types),
             )
 
         self.console.print(table)
@@ -201,7 +244,9 @@ class NotificationServiceManager(BaseManager):
     async def bulk_owner_resolution(self):
         """Perform bulk owner resolution."""
         try:
-            self.console.print("[yellow]Bulk owner resolution allows processing multiple owners from file[/yellow]")
+            self.console.print(
+                "[yellow]Bulk owner resolution allows processing multiple owners from file[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -210,7 +255,9 @@ class NotificationServiceManager(BaseManager):
     async def view_owner_registry(self):
         """View the owner registry."""
         try:
-            self.console.print("[yellow]Owner registry viewing would show current owner-to-entity mappings[/yellow]")
+            self.console.print(
+                "[yellow]Owner registry viewing would show current owner-to-entity mappings[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -219,7 +266,9 @@ class NotificationServiceManager(BaseManager):
     async def owner_resolution_testing(self):
         """Test owner resolution functionality."""
         try:
-            self.console.print("[yellow]Owner resolution testing would validate resolution accuracy[/yellow]")
+            self.console.print(
+                "[yellow]Owner resolution testing would validate resolution accuracy[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -263,23 +312,36 @@ class NotificationServiceManager(BaseManager):
         """Send a notification through various channels."""
         try:
             # Get notification details
-            channel = Prompt.ask("[bold cyan]Channel (webhook/email/slack)[/bold cyan]", default="webhook")
+            channel = Prompt.ask(
+                "[bold cyan]Channel (webhook/email/slack)[/bold cyan]",
+                default="webhook",
+            )
             target = Prompt.ask("[bold cyan]Target (URL/email/channel)[/bold cyan]")
             title = Prompt.ask("[bold cyan]Title[/bold cyan]")
             message = Prompt.ask("[bold cyan]Message[/bold cyan]")
 
             # Optional metadata and labels
-            add_metadata = Confirm.ask("[bold cyan]Add metadata?[/bold cyan]", default=False)
+            add_metadata = Confirm.ask(
+                "[bold cyan]Add metadata?[/bold cyan]", default=False
+            )
             metadata = {}
             if add_metadata:
-                metadata_input = Prompt.ask("[bold cyan]Metadata (JSON)[/bold cyan]", default="{}")
+                metadata_input = Prompt.ask(
+                    "[bold cyan]Metadata (JSON)[/bold cyan]", default="{}"
+                )
                 try:
                     metadata = json.loads(metadata_input)
                 except json.JSONDecodeError:
-                    self.console.print("[yellow]Invalid JSON, using empty metadata[/yellow]")
+                    self.console.print(
+                        "[yellow]Invalid JSON, using empty metadata[/yellow]"
+                    )
 
-            labels_input = Prompt.ask("[bold cyan]Labels (comma-separated, optional)[/bold cyan]", default="")
-            labels = [label.strip() for label in labels_input.split(",") if label.strip()]
+            labels_input = Prompt.ask(
+                "[bold cyan]Labels (comma-separated, optional)[/bold cyan]", default=""
+            )
+            labels = [
+                label.strip() for label in labels_input.split(",") if label.strip()
+            ]
 
             notification_request = {
                 "channel": channel,
@@ -290,8 +352,12 @@ class NotificationServiceManager(BaseManager):
                 "labels": labels,
             }
 
-            with self.console.status(f"[bold green]Sending {channel} notification...[/bold green]") as status:
-                response = await self.clients.post_json("notification-service/notify", notification_request)
+            with self.console.status(
+                f"[bold green]Sending {channel} notification...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "notification-service/notify", notification_request
+                )
 
             if response:
                 await self.display_notification_result(response, channel, target)
@@ -301,7 +367,9 @@ class NotificationServiceManager(BaseManager):
         except Exception as e:
             self.console.print(f"[red]Error sending notification: {e}[/red]")
 
-    async def display_notification_result(self, result: Dict[str, Any], channel: str, target: str):
+    async def display_notification_result(
+        self, result: Dict[str, Any], channel: str, target: str
+    ):
         """Display notification delivery result."""
         status = result.get("status", "unknown")
 
@@ -360,7 +428,10 @@ class NotificationServiceManager(BaseManager):
     async def test_channel_connectivity(self):
         """Test connectivity to notification channels."""
         try:
-            channel = Prompt.ask("[bold cyan]Channel to test (webhook/email/slack)[/bold cyan]", default="webhook")
+            channel = Prompt.ask(
+                "[bold cyan]Channel to test (webhook/email/slack)[/bold cyan]",
+                default="webhook",
+            )
             target = Prompt.ask("[bold cyan]Test target[/bold cyan]")
 
             # Send a test notification
@@ -373,17 +444,27 @@ class NotificationServiceManager(BaseManager):
                 "labels": ["test", "connectivity"],
             }
 
-            with self.console.status(f"[bold green]Testing {channel} connectivity...[/bold green]") as status:
-                response = await self.clients.post_json("notification-service/notify", test_request)
+            with self.console.status(
+                f"[bold green]Testing {channel} connectivity...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "notification-service/notify", test_request
+                )
 
             if response:
                 status = response.get("status", "unknown")
                 if status == "sent":
-                    self.console.print(f"[green]✅ {channel.upper()} channel connectivity successful[/green]")
+                    self.console.print(
+                        f"[green]✅ {channel.upper()} channel connectivity successful[/green]"
+                    )
                 else:
-                    self.console.print(f"[yellow]⚠️  {channel.upper()} channel responded with status: {status}[/yellow]")
+                    self.console.print(
+                        f"[yellow]⚠️  {channel.upper()} channel responded with status: {status}[/yellow]"
+                    )
             else:
-                self.console.print(f"[red]❌ {channel.upper()} channel connectivity failed[/red]")
+                self.console.print(
+                    f"[red]❌ {channel.upper()} channel connectivity failed[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error testing channel connectivity: {e}[/red]")
@@ -412,7 +493,9 @@ class NotificationServiceManager(BaseManager):
 
             print_panel(self.console, content, border_style="blue")
 
-            send_now = Confirm.ask("[bold cyan]Send this notification now?[/bold cyan]", default=False)
+            send_now = Confirm.ask(
+                "[bold cyan]Send this notification now?[/bold cyan]", default=False
+            )
 
             if send_now:
                 await self.send_notification()
@@ -423,7 +506,9 @@ class NotificationServiceManager(BaseManager):
     async def notification_templates(self):
         """Manage notification templates."""
         try:
-            self.console.print("[yellow]Notification templates would provide reusable message formats[/yellow]")
+            self.console.print(
+                "[yellow]Notification templates would provide reusable message formats[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -432,7 +517,9 @@ class NotificationServiceManager(BaseManager):
     async def dead_letter_queue_menu(self):
         """Dead letter queue management submenu."""
         while True:
-            menu = create_menu_table("Dead Letter Queue Management", ["Option", "Description"])
+            menu = create_menu_table(
+                "Dead Letter Queue Management", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -466,22 +553,32 @@ class NotificationServiceManager(BaseManager):
     async def view_failed_notifications(self):
         """View failed notifications from DLQ."""
         try:
-            limit = int(Prompt.ask("[bold cyan]Number of entries to retrieve[/bold cyan]", default="20"))
+            limit = int(
+                Prompt.ask(
+                    "[bold cyan]Number of entries to retrieve[/bold cyan]", default="20"
+                )
+            )
 
             params = {"limit": limit}
 
-            response = await self.clients.get_json("notification-service/dlq", params=params)
+            response = await self.clients.get_json(
+                "notification-service/dlq", params=params
+            )
 
             if response and "items" in response:
                 failed_items = response["items"]
                 await self.display_dlq_entries(failed_items, limit)
             else:
-                self.console.print("[green]No failed notifications in dead letter queue[/green]")
+                self.console.print(
+                    "[green]No failed notifications in dead letter queue[/green]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error viewing failed notifications: {e}[/red]")
 
-    async def display_dlq_entries(self, entries: List[Dict[str, Any]], requested_limit: int):
+    async def display_dlq_entries(
+        self, entries: List[Dict[str, Any]], requested_limit: int
+    ):
         """Display dead letter queue entries."""
         if not entries:
             self.console.print("[green]✅ Dead letter queue is empty[/green]")
@@ -520,7 +617,11 @@ class NotificationServiceManager(BaseManager):
             timestamp = entry.get("timestamp", "Unknown")
 
             table.add_row(
-                str(entry.get("id", "N/A")), notification.get("channel", "unknown"), title, error_short, timestamp
+                str(entry.get("id", "N/A")),
+                notification.get("channel", "unknown"),
+                title,
+                error_short,
+                timestamp,
             )
 
         self.console.print(table)
@@ -540,7 +641,9 @@ class NotificationServiceManager(BaseManager):
     async def retry_failed_notifications(self):
         """Retry failed notifications from DLQ."""
         try:
-            self.console.print("[yellow]Failed notification retry would attempt redelivery[/yellow]")
+            self.console.print(
+                "[yellow]Failed notification retry would attempt redelivery[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -550,7 +653,8 @@ class NotificationServiceManager(BaseManager):
         """Clear the dead letter queue."""
         try:
             confirm = Confirm.ask(
-                "[bold red]Clear all entries from dead letter queue? This cannot be undone.[/bold red]", default=False
+                "[bold red]Clear all entries from dead letter queue? This cannot be undone.[/bold red]",
+                default=False,
             )
 
             if confirm:
@@ -559,7 +663,9 @@ class NotificationServiceManager(BaseManager):
                 )
                 Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
             else:
-                self.console.print("[green]Dead letter queue clearing cancelled[/green]")
+                self.console.print(
+                    "[green]Dead letter queue clearing cancelled[/green]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error clearing DLQ: {e}[/red]")
@@ -567,7 +673,9 @@ class NotificationServiceManager(BaseManager):
     async def analyze_failure_patterns(self):
         """Analyze failure patterns in DLQ."""
         try:
-            response = await self.clients.get_json("notification-service/dlq", params={"limit": 1000})
+            response = await self.clients.get_json(
+                "notification-service/dlq", params={"limit": 1000}
+            )
 
             if response and "items" in response:
                 entries = response["items"]
@@ -589,7 +697,9 @@ class NotificationServiceManager(BaseManager):
 
                     # Time distribution (simplified)
                     timestamp = entry.get("timestamp", "")
-                    hour = timestamp.split("T")[1][:2] if "T" in timestamp else "unknown"
+                    hour = (
+                        timestamp.split("T")[1][:2] if "T" in timestamp else "unknown"
+                    )
                     time_distribution[hour] = time_distribution.get(hour, 0) + 1
 
                 # Display analysis
@@ -601,11 +711,15 @@ class NotificationServiceManager(BaseManager):
 [bold green]Failures by Channel:[/bold green]
 """
 
-                for channel, count in sorted(channel_failures.items(), key=lambda x: x[1], reverse=True):
+                for channel, count in sorted(
+                    channel_failures.items(), key=lambda x: x[1], reverse=True
+                ):
                     content += f"• {channel}: {count} failures\n"
 
                 content += f"\n[bold yellow]Common Error Patterns:[/bold yellow]\n"
-                for error, count in sorted(error_patterns.items(), key=lambda x: x[1], reverse=True)[:5]:
+                for error, count in sorted(
+                    error_patterns.items(), key=lambda x: x[1], reverse=True
+                )[:5]:
                     content += f"• {error}: {count} occurrences\n"
 
                 print_panel(self.console, content, border_style="yellow")
@@ -616,7 +730,9 @@ class NotificationServiceManager(BaseManager):
     async def export_dlq_data(self):
         """Export DLQ data."""
         try:
-            self.console.print("[yellow]DLQ data export would save failed notification details to file[/yellow]")
+            self.console.print(
+                "[yellow]DLQ data export would save failed notification details to file[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -625,7 +741,9 @@ class NotificationServiceManager(BaseManager):
     async def notification_monitoring_menu(self):
         """Notification monitoring submenu."""
         while True:
-            menu = create_menu_table("Notification Monitoring", ["Option", "Description"])
+            menu = create_menu_table(
+                "Notification Monitoring", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -703,7 +821,9 @@ class NotificationServiceManager(BaseManager):
     async def alert_configuration(self):
         """Configure notification alerts."""
         try:
-            self.console.print("[yellow]Alert configuration would set up notifications for system events[/yellow]")
+            self.console.print(
+                "[yellow]Alert configuration would set up notifications for system events[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -757,7 +877,9 @@ class NotificationServiceManager(BaseManager):
     async def configure_email_channels(self):
         """Configure email channels."""
         try:
-            self.console.print("[yellow]Email channel configuration would set up SMTP settings and templates[/yellow]")
+            self.console.print(
+                "[yellow]Email channel configuration would set up SMTP settings and templates[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -799,7 +921,9 @@ class NotificationServiceManager(BaseManager):
     async def notification_service_health_menu(self):
         """Notification service health and configuration submenu."""
         while True:
-            menu = create_menu_table("Notification Service Health & Configuration", ["Option", "Description"])
+            menu = create_menu_table(
+                "Notification Service Health & Configuration", ["Option", "Description"]
+            )
             add_menu_rows(
                 menu,
                 [
@@ -867,7 +991,9 @@ class NotificationServiceManager(BaseManager):
     async def configuration_management(self):
         """Manage notification service configuration."""
         try:
-            self.console.print("[yellow]Configuration management would allow editing service settings[/yellow]")
+            self.console.print(
+                "[yellow]Configuration management would allow editing service settings[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -887,7 +1013,9 @@ class NotificationServiceManager(BaseManager):
     async def service_logs(self):
         """View notification service logs."""
         try:
-            self.console.print("[yellow]Service logs would show recent notification service operations[/yellow]")
+            self.console.print(
+                "[yellow]Service logs would show recent notification service operations[/yellow]"
+            )
             Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")
 
         except Exception as e:
@@ -896,11 +1024,17 @@ class NotificationServiceManager(BaseManager):
     async def update_owner_from_cli(self, update_request: Dict[str, Any]):
         """Update owner information for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Updating owner information...[/bold green]") as status:
-                response = await self.clients.post_json("notification-service/owners/update", update_request)
+            with self.console.status(
+                f"[bold green]Updating owner information...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "notification-service/owners/update", update_request
+                )
 
             if response:
-                self.console.print("[green]✅ Owner information updated successfully[/green]")
+                self.console.print(
+                    "[green]✅ Owner information updated successfully[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to update owner information[/red]")
 
@@ -910,8 +1044,12 @@ class NotificationServiceManager(BaseManager):
     async def resolve_owners_from_cli(self, resolve_request: Dict[str, Any]):
         """Resolve owners for CLI usage."""
         try:
-            with self.console.status(f"[bold green]Resolving owners...[/bold green]") as status:
-                response = await self.clients.post_json("notification-service/owners/resolve", resolve_request)
+            with self.console.status(
+                f"[bold green]Resolving owners...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "notification-service/owners/resolve", resolve_request
+                )
 
             if response and "resolved" in response:
                 owners = resolve_request.get("owners", [])
@@ -928,8 +1066,12 @@ class NotificationServiceManager(BaseManager):
             channel = notification_request.get("channel", "unknown")
             target = notification_request.get("target", "unknown")
 
-            with self.console.status(f"[bold green]Sending {channel} notification...[/bold green]") as status:
-                response = await self.clients.post_json("notification-service/notify", notification_request)
+            with self.console.status(
+                f"[bold green]Sending {channel} notification...[/bold green]"
+            ) as status:
+                response = await self.clients.post_json(
+                    "notification-service/notify", notification_request
+                )
 
             if response:
                 await self.display_notification_result(response, channel, target)

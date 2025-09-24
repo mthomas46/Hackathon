@@ -22,7 +22,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.domain.entities.project import Project
 from simulation.domain.entities.simulation import Simulation
@@ -34,11 +36,21 @@ from simulation.domain.repositories import (
     ITeamRepository,
     ITimelineRepository,
 )
-from simulation.domain.value_objects import DocumentType, SimulationMetrics, SimulationStatus
+from simulation.domain.value_objects import (
+    DocumentType,
+    SimulationMetrics,
+    SimulationStatus,
+)
 from simulation.infrastructure.clients.ecosystem_clients import EcosystemServiceRegistry
-from simulation.infrastructure.content.content_generation_pipeline import ContentGenerationPipeline
-from simulation.infrastructure.monitoring.simulation_monitoring import SimulationMonitoringService
-from simulation.infrastructure.workflows.workflow_orchestrator import SimulationWorkflowOrchestrator
+from simulation.infrastructure.content.content_generation_pipeline import (
+    ContentGenerationPipeline,
+)
+from simulation.infrastructure.monitoring.simulation_monitoring import (
+    SimulationMonitoringService,
+)
+from simulation.infrastructure.workflows.workflow_orchestrator import (
+    SimulationWorkflowOrchestrator,
+)
 
 
 class SimulationExecutionEngine:
@@ -76,7 +88,9 @@ class SimulationExecutionEngine:
     async def execute_simulation(self, simulation_id: str) -> Dict[str, Any]:
         """Execute a simulation using the domain model and ecosystem integration."""
         try:
-            self.logger.info(f"Starting simulation execution", simulation_id=simulation_id)
+            self.logger.info(
+                f"Starting simulation execution", simulation_id=simulation_id
+            )
 
             # Load simulation from repository
             simulation = await self._load_simulation(simulation_id)
@@ -84,12 +98,16 @@ class SimulationExecutionEngine:
                 raise ValueError(f"Simulation {simulation_id} not found")
 
             # Start execution in background task
-            execution_task = asyncio.create_task(self._execute_simulation_async(simulation))
+            execution_task = asyncio.create_task(
+                self._execute_simulation_async(simulation)
+            )
             self.execution_tasks[simulation_id] = execution_task
 
             # Wait for completion or return status
             try:
-                result = await asyncio.wait_for(execution_task, timeout=300)  # 5 minute timeout
+                result = await asyncio.wait_for(
+                    execution_task, timeout=300
+                )  # 5 minute timeout
                 return result
             except asyncio.TimeoutError:
                 return {
@@ -100,7 +118,11 @@ class SimulationExecutionEngine:
                 }
 
         except Exception as e:
-            self.logger.error(f"Failed to execute simulation", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                f"Failed to execute simulation",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             return {"success": False, "error": str(e), "simulation_id": simulation_id}
 
     async def _load_simulation(self, simulation_id: str) -> Optional[Simulation]:
@@ -114,19 +136,29 @@ class SimulationExecutionEngine:
         simulation_id = str(simulation.id.value)
 
         try:
-            self.logger.info(f"Executing simulation phases", simulation_id=simulation_id)
+            self.logger.info(
+                f"Executing simulation phases", simulation_id=simulation_id
+            )
 
             # Mark simulation as running
             simulation.start_simulation()
             await self._save_simulation(simulation)
 
             # Start terminal UI monitoring
-            from simulation.infrastructure.ui.terminal_progress_visualizer import start_simulation_monitoring
+            from simulation.infrastructure.ui.terminal_progress_visualizer import (
+                start_simulation_monitoring,
+            )
 
             estimated_duration_minutes = max(
-                60, int(simulation.configuration.get_max_execution_time().total_seconds() / 60)
+                60,
+                int(
+                    simulation.configuration.get_max_execution_time().total_seconds()
+                    / 60
+                ),
             )
-            start_simulation_monitoring(str(simulation.id.value), estimated_duration_minutes)
+            start_simulation_monitoring(
+                str(simulation.id.value), estimated_duration_minutes
+            )
 
             # Publish simulation started event
             await self._publish_simulation_event(
@@ -169,11 +201,15 @@ class SimulationExecutionEngine:
             )
 
             # Stop terminal UI monitoring
-            from simulation.infrastructure.ui.terminal_progress_visualizer import stop_simulation_monitoring
+            from simulation.infrastructure.ui.terminal_progress_visualizer import (
+                stop_simulation_monitoring,
+            )
 
             stop_simulation_monitoring(str(simulation.id.value), success=True)
 
-            self.logger.info(f"Simulation completed successfully", simulation_id=simulation_id)
+            self.logger.info(
+                f"Simulation completed successfully", simulation_id=simulation_id
+            )
 
             return {
                 "success": True,
@@ -193,21 +229,34 @@ class SimulationExecutionEngine:
             }
 
         except Exception as e:
-            self.logger.error(f"Simulation execution failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                f"Simulation execution failed",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
             simulation.fail_simulation(str(e))
             await self._save_simulation(simulation)
 
             # Publish simulation failure event
             await self._publish_simulation_event(
-                simulation, "simulation_failed", {"error_message": str(e), "failure_time": datetime.now().isoformat()}
+                simulation,
+                "simulation_failed",
+                {"error_message": str(e), "failure_time": datetime.now().isoformat()},
             )
 
             # Stop terminal UI monitoring
-            from simulation.infrastructure.ui.terminal_progress_visualizer import stop_simulation_monitoring
+            from simulation.infrastructure.ui.terminal_progress_visualizer import (
+                stop_simulation_monitoring,
+            )
 
             stop_simulation_monitoring(str(simulation.id.value), success=False)
 
-            return {"success": False, "simulation_id": simulation_id, "status": "failed", "error": str(e)}
+            return {
+                "success": False,
+                "simulation_id": simulation_id,
+                "status": "failed",
+                "error": str(e),
+            }
 
     async def _execute_simulation_phases(self, simulation: Simulation) -> None:
         """Execute all phases of the simulation."""
@@ -223,7 +272,9 @@ class SimulationExecutionEngine:
         for phase in timeline.phases:
             await self._execute_phase(simulation, phase, project, team)
 
-    async def _execute_phase(self, simulation: Simulation, phase: Any, project: Project, team: Team) -> None:
+    async def _execute_phase(
+        self, simulation: Simulation, phase: Any, project: Project, team: Team
+    ) -> None:
         """Execute a single simulation phase."""
         phase_name = getattr(phase, "name", str(phase))
         simulation_id = str(simulation.id.value)
@@ -254,7 +305,11 @@ class SimulationExecutionEngine:
                             {
                                 "id": str(member.id),
                                 "name": member.name,
-                                "role": member.role.value if hasattr(member.role, "value") else str(member.role),
+                                "role": (
+                                    member.role.value
+                                    if hasattr(member.role, "value")
+                                    else str(member.role)
+                                ),
                                 "expertise_level": (
                                     member.expertise_level.value
                                     if hasattr(member.expertise_level, "value")
@@ -297,12 +352,12 @@ class SimulationExecutionEngine:
                 "metadata": {
                     "document_type": "timeline",
                     "phase": phase_name,
-                    "timeline_awareness_score": timeline_content.get("temporal_metadata", {}).get(
-                        "timeline_awareness_score", 0
-                    ),
-                    "temporal_relationships": timeline_content.get("temporal_metadata", {}).get(
-                        "temporal_relationships", 0
-                    ),
+                    "timeline_awareness_score": timeline_content.get(
+                        "temporal_metadata", {}
+                    ).get("timeline_awareness_score", 0),
+                    "temporal_relationships": timeline_content.get(
+                        "temporal_metadata", {}
+                    ).get("temporal_relationships", 0),
                 },
             }
         ]
@@ -320,7 +375,9 @@ class SimulationExecutionEngine:
             "simulation_config": simulation.configuration.__dict__,
         }
 
-        additional_documents = await self.content_pipeline.execute_document_generation(phase_config)
+        additional_documents = await self.content_pipeline.execute_document_generation(
+            phase_config
+        )
         documents.extend(additional_documents)
 
         # Store documents in ecosystem and broadcast events
@@ -334,7 +391,9 @@ class SimulationExecutionEngine:
             elif "github" in doc.get("type", "").lower():
                 doc_type = DocumentType.GITHUB_PR
 
-            simulation.record_document_generation(doc_type, doc.get("title", "Untitled"), len(doc.get("content", "")))
+            simulation.record_document_generation(
+                doc_type, doc.get("title", "Untitled"), len(doc.get("content", ""))
+            )
 
             # Publish document generation event
             await self._publish_simulation_event(
@@ -356,11 +415,15 @@ class SimulationExecutionEngine:
             "team": team.to_dict() if team else {},
         }
 
-        workflow_result = await self.workflow_orchestrator.execute_phase_workflow(workflow_config)
+        workflow_result = await self.workflow_orchestrator.execute_phase_workflow(
+            workflow_config
+        )
 
         # Record workflow execution
         simulation.record_workflow_execution(
-            f"{phase_name}_workflow", workflow_result.get("execution_time", 0.0), workflow_result.get("success", False)
+            f"{phase_name}_workflow",
+            workflow_result.get("execution_time", 0.0),
+            workflow_result.get("success", False),
         )
 
         # Publish workflow execution event
@@ -404,7 +467,9 @@ class SimulationExecutionEngine:
         simulation_id = str(simulation.id.value)
 
         try:
-            self.logger.info(f"Running phase analysis for {phase_name}", simulation_id=simulation_id)
+            self.logger.info(
+                f"Running phase analysis for {phase_name}", simulation_id=simulation_id
+            )
 
             # Analyze phase documents for quality and consistency
             if self.workflow_orchestrator:
@@ -441,10 +506,17 @@ class SimulationExecutionEngine:
                     phase_analysis.get("success", True),
                 )
 
-                self.logger.info(f"Phase analysis completed for {phase_name}", simulation_id=simulation_id)
+                self.logger.info(
+                    f"Phase analysis completed for {phase_name}",
+                    simulation_id=simulation_id,
+                )
 
         except Exception as e:
-            self.logger.error(f"Phase analysis failed for {phase_name}", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                f"Phase analysis failed for {phase_name}",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
 
     async def _run_final_analysis(self, simulation: Simulation) -> Dict[str, Any]:
         """Run final analysis on the completed simulation."""
@@ -471,23 +543,35 @@ class SimulationExecutionEngine:
         simulation_id = str(simulation.id.value)
 
         try:
-            self.logger.info(f"Running document quality analysis", simulation_id=simulation_id)
+            self.logger.info(
+                f"Running document quality analysis", simulation_id=simulation_id
+            )
 
             # Get all simulation documents
             documents = await self._get_all_simulation_documents(simulation_id)
 
             if not documents:
-                self.logger.warning(f"No documents found for quality analysis", simulation_id=simulation_id)
+                self.logger.warning(
+                    f"No documents found for quality analysis",
+                    simulation_id=simulation_id,
+                )
                 return
 
             # Analyze document quality using analysis service
             if self.workflow_orchestrator:
-                quality_analysis = await self.workflow_orchestrator.run_analysis_workflow(
-                    {
-                        "simulation_id": simulation_id,
-                        "documents": documents,
-                        "analysis_types": ["quality", "consistency", "insights", "patterns"],
-                    }
+                quality_analysis = (
+                    await self.workflow_orchestrator.run_analysis_workflow(
+                        {
+                            "simulation_id": simulation_id,
+                            "documents": documents,
+                            "analysis_types": [
+                                "quality",
+                                "consistency",
+                                "insights",
+                                "patterns",
+                            ],
+                        }
+                    )
                 )
 
                 # Store analysis results
@@ -520,25 +604,41 @@ class SimulationExecutionEngine:
                     {
                         "analysis_type": "document_quality",
                         "documents_analyzed": len(documents),
-                        "quality_score": quality_analysis.get("analysis_result", {}).get("quality_score", 0),
-                        "issues_found": len(quality_analysis.get("analysis_result", {}).get("issues", [])),
+                        "quality_score": quality_analysis.get(
+                            "analysis_result", {}
+                        ).get("quality_score", 0),
+                        "issues_found": len(
+                            quality_analysis.get("analysis_result", {}).get(
+                                "issues", []
+                            )
+                        ),
                     },
                 )
 
-                self.logger.info(f"Document quality analysis completed", simulation_id=simulation_id)
+                self.logger.info(
+                    f"Document quality analysis completed", simulation_id=simulation_id
+                )
 
         except Exception as e:
-            self.logger.error(f"Document quality analysis failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                f"Document quality analysis failed",
+                error=str(e),
+                simulation_id=simulation_id,
+            )
 
     async def _generate_simulation_reports(self, simulation: Simulation) -> None:
         """Generate comprehensive reports for the completed simulation."""
         simulation_id = str(simulation.id.value)
 
         try:
-            self.logger.info(f"Generating comprehensive reports", simulation_id=simulation_id)
+            self.logger.info(
+                f"Generating comprehensive reports", simulation_id=simulation_id
+            )
 
             # Import reporting system
-            from ..reporting.comprehensive_reporting_system import get_comprehensive_reporting_system
+            from ..reporting.comprehensive_reporting_system import (
+                get_comprehensive_reporting_system,
+            )
 
             reporting_system = get_comprehensive_reporting_system()
 
@@ -563,7 +663,11 @@ class SimulationExecutionEngine:
                     "Early issue detection prevents costly rework",
                 ],
                 "issues": [
-                    {"type": "consistency", "severity": "medium", "description": "Inconsistent naming conventions"},
+                    {
+                        "type": "consistency",
+                        "severity": "medium",
+                        "description": "Inconsistent naming conventions",
+                    },
                     {
                         "type": "quality",
                         "severity": "low",
@@ -580,8 +684,16 @@ class SimulationExecutionEngine:
             ]
 
             document_data = [
-                {"type": "requirements", "title": "Project Requirements", "quality_score": 0.88},
-                {"type": "architecture", "title": "System Architecture", "quality_score": 0.92},
+                {
+                    "type": "requirements",
+                    "title": "Project Requirements",
+                    "quality_score": 0.88,
+                },
+                {
+                    "type": "architecture",
+                    "title": "System Architecture",
+                    "quality_score": 0.92,
+                },
                 {"type": "testing", "title": "Test Plan", "quality_score": 0.85},
             ]
 
@@ -614,27 +726,42 @@ class SimulationExecutionEngine:
                     },
                 )
 
-                self.logger.info(f"Comprehensive reports generated successfully", simulation_id=simulation_id)
+                self.logger.info(
+                    f"Comprehensive reports generated successfully",
+                    simulation_id=simulation_id,
+                )
             else:
                 self.logger.error(
-                    f"Failed to generate reports", simulation_id=simulation_id, error=report_result.get("error")
+                    f"Failed to generate reports",
+                    simulation_id=simulation_id,
+                    error=report_result.get("error"),
                 )
 
         except Exception as e:
-            self.logger.error(f"Report generation failed", error=str(e), simulation_id=simulation_id)
+            self.logger.error(
+                f"Report generation failed", error=str(e), simulation_id=simulation_id
+            )
 
-    async def _calculate_simulation_metrics(self, simulation: Simulation) -> SimulationMetrics:
+    async def _calculate_simulation_metrics(
+        self, simulation: Simulation
+    ) -> SimulationMetrics:
         """Calculate comprehensive simulation metrics."""
         # This would calculate actual metrics based on simulation results
         return SimulationMetrics(
             total_documents=(
-                simulation.progress.documents_generated if hasattr(simulation.progress, "documents_generated") else 0
+                simulation.progress.documents_generated
+                if hasattr(simulation.progress, "documents_generated")
+                else 0
             ),
             total_workflows=(
-                simulation.progress.workflows_executed if hasattr(simulation.progress, "workflows_executed") else 0
+                simulation.progress.workflows_executed
+                if hasattr(simulation.progress, "workflows_executed")
+                else 0
             ),
             execution_time_seconds=0.0,
-            success_rate=1.0 if simulation.status == SimulationStatus.COMPLETED else 0.0,
+            success_rate=(
+                1.0 if simulation.status == SimulationStatus.COMPLETED else 0.0
+            ),
             average_response_time=0.0,
             ecosystem_services_used=5,  # Mock value
             data_processed_mb=0.0,
@@ -669,13 +796,17 @@ class SimulationExecutionEngine:
             doc_store = self.ecosystem_clients.get_client("doc_store")
             if doc_store:
                 return await doc_store.store_document(
-                    document.get("title", "Untitled"), document.get("content", ""), document.get("metadata", {})
+                    document.get("title", "Untitled"),
+                    document.get("content", ""),
+                    document.get("metadata", {}),
                 )
         except Exception as e:
             self.logger.error(f"Failed to store document", error=str(e))
         return None
 
-    async def _get_all_simulation_documents(self, simulation_id: str) -> List[Dict[str, Any]]:
+    async def _get_all_simulation_documents(
+        self, simulation_id: str
+    ) -> List[Dict[str, Any]]:
         """Get all documents for a simulation."""
         try:
             doc_store = self.ecosystem_clients.get_client("doc_store")
@@ -690,18 +821,28 @@ class SimulationExecutionEngine:
         """Publish simulation progress event."""
         try:
             # Publish to WebSocket if available
-            from simulation.infrastructure.ui.terminal_progress_visualizer import update_simulation_ui
-            from simulation.presentation.websockets.simulation_websocket import notify_simulation_progress
+            from simulation.infrastructure.ui.terminal_progress_visualizer import (
+                update_simulation_ui,
+            )
+            from simulation.presentation.websockets.simulation_websocket import (
+                notify_simulation_progress,
+            )
 
             progress_data = {
                 "simulation_id": str(simulation.id.value),
                 "progress_percentage": simulation.get_progress_percentage(),
                 "current_phase": (
-                    simulation.progress.current_phase if hasattr(simulation.progress, "current_phase") else None
+                    simulation.progress.current_phase
+                    if hasattr(simulation.progress, "current_phase")
+                    else None
                 ),
                 "status": simulation.status.value,
-                "documents_generated": getattr(simulation.progress, "documents_generated", 0),
-                "workflows_executed": getattr(simulation.progress, "workflows_executed", 0),
+                "documents_generated": getattr(
+                    simulation.progress, "documents_generated", 0
+                ),
+                "workflows_executed": getattr(
+                    simulation.progress, "workflows_executed", 0
+                ),
                 "timestamp": datetime.now().isoformat(),
             }
 
@@ -724,8 +865,12 @@ class SimulationExecutionEngine:
                 SimulationEvent,
                 get_event_store,
             )
-            from simulation.infrastructure.ui.terminal_progress_visualizer import update_simulation_ui
-            from simulation.presentation.websockets.simulation_websocket import notify_simulation_event_dict
+            from simulation.infrastructure.ui.terminal_progress_visualizer import (
+                update_simulation_ui,
+            )
+            from simulation.presentation.websockets.simulation_websocket import (
+                notify_simulation_event_dict,
+            )
 
             event_payload = {
                 "simulation_id": str(simulation.id.value),
@@ -748,7 +893,11 @@ class SimulationExecutionEngine:
                 tags=[
                     event_type,
                     "simulation",
-                    f"phase_{event_data.get('phase', 'unknown')}" if event_data else "general",
+                    (
+                        f"phase_{event_data.get('phase', 'unknown')}"
+                        if event_data
+                        else "general"
+                    ),
                 ],
             )
 
@@ -762,9 +911,15 @@ class SimulationExecutionEngine:
             update_simulation_ui(str(simulation.id.value), event_payload)
 
         except Exception as e:
-            self.logger.error(f"Failed to publish simulation event", error=str(e), event_type=event_type)
+            self.logger.error(
+                f"Failed to publish simulation event",
+                error=str(e),
+                event_type=event_type,
+            )
 
-    async def get_simulation_status(self, simulation_id: str) -> Optional[Dict[str, Any]]:
+    async def get_simulation_status(
+        self, simulation_id: str
+    ) -> Optional[Dict[str, Any]]:
         """Get current simulation status."""
         simulation = self.active_simulations.get(simulation_id)
         if simulation:

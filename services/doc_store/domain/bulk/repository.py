@@ -7,18 +7,16 @@ import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import validate_sql_identifier
+from services.shared.utilities import validate_sql_identifier, SqlRepository
 
 from ...core.entities import BulkOperation
-from ...core.repository import BaseRepository
-from ...db.queries import execute_query
 
 
-class BulkOperationsRepository(BaseRepository[BulkOperation]):
+class BulkOperationsRepository(SqlRepository[BulkOperation]):
     """Repository for bulk operation data access."""
 
-    def __init__(self):
-        super().__init__("bulk_operations")
+    def __init__(self, connection_string: str):
+        super().__init__(BulkOperation, connection_string)
 
         # Validate table name to prevent SQL injection
         if not validate_sql_identifier(self.table_name):
@@ -69,14 +67,25 @@ class BulkOperationsRepository(BaseRepository[BulkOperation]):
             "metadata": json.dumps(entity.metadata),
             "results": json.dumps(entity.results),
             "created_at": entity.created_at.isoformat(),
-            "completed_at": entity.completed_at.isoformat() if entity.completed_at else None,
+            "completed_at": (
+                entity.completed_at.isoformat() if entity.completed_at else None
+            ),
         }
 
     def update_operation_progress(
-        self, operation_id: str, processed: int, successful: int, failed: int, errors: List[Dict[str, Any]] = None
+        self,
+        operation_id: str,
+        processed: int,
+        successful: int,
+        failed: int,
+        errors: List[Dict[str, Any]] = None,
     ) -> None:
         """Update operation progress."""
-        update_data = {"processed_items": processed, "successful_items": successful, "failed_items": failed}
+        update_data = {
+            "processed_items": processed,
+            "successful_items": successful,
+            "failed_items": failed,
+        }
 
         if errors:
             # Get current errors and append new ones
@@ -88,9 +97,13 @@ class BulkOperationsRepository(BaseRepository[BulkOperation]):
         set_clause = ", ".join([f"{k} = ?" for k in update_data.keys()])
         values = list(update_data.values()) + [operation_id]
 
-        execute_query(f"UPDATE {self.table_name} SET {set_clause} WHERE operation_id = ?", values)
+        execute_query(
+            f"UPDATE {self.table_name} SET {set_clause} WHERE operation_id = ?", values
+        )
 
-    def complete_operation(self, operation_id: str, results: List[Dict[str, Any]] = None) -> None:
+    def complete_operation(
+        self, operation_id: str, results: List[Dict[str, Any]] = None
+    ) -> None:
         """Mark operation as completed."""
         update_data = {"status": "completed"}
         if results:
@@ -101,7 +114,9 @@ class BulkOperationsRepository(BaseRepository[BulkOperation]):
         set_clause = ", ".join([f"{k} = ?" for k in update_data.keys()])
         values = list(update_data.values()) + [operation_id]
 
-        execute_query(f"UPDATE {self.table_name} SET {set_clause} WHERE operation_id = ?", values)
+        execute_query(
+            f"UPDATE {self.table_name} SET {set_clause} WHERE operation_id = ?", values
+        )
 
     def fail_operation(self, operation_id: str, errors: List[Dict[str, Any]]) -> None:
         """Mark operation as failed."""
@@ -125,7 +140,9 @@ class BulkOperationsRepository(BaseRepository[BulkOperation]):
             (operation_id,),
         )
 
-    def get_operations_by_status(self, status: str, limit: int = 50) -> List[BulkOperation]:
+    def get_operations_by_status(
+        self, status: str, limit: int = 50
+    ) -> List[BulkOperation]:
         """Get operations by status."""
         rows = execute_query(
             f"SELECT * FROM {self.table_name} WHERE status = ? ORDER BY created_at DESC LIMIT ?",

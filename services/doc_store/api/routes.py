@@ -13,7 +13,7 @@ from services.shared.presentation.responses import (
     create_error_response,
     create_paginated_response,
     create_list_response,
-    APIResponse
+    APIResponse,
 )
 
 from ..core.models import (
@@ -30,6 +30,7 @@ from ..core.models import (
     QualityResponse,
     SearchRequest,
     SearchResponse,
+    SuccessResponse,
     TagRequest,
     TagSearchRequest,
     VersionRollbackRequest,
@@ -60,33 +61,35 @@ notifications_handlers = NotificationsHandlers()
 
 
 # Document endpoints
-@router.post("/documents", response_model=DocumentResponse)
+@router.post("/documents")
 async def create_document(request: DocumentRequest):
     """Create a new document."""
-    return await document_handlers.handle_create_document(request)
+    result = await document_handlers.handle_create_document(request)
+    return create_success_response(data=result, message="Document created successfully")
 
 
-@router.get("/documents/{document_id}", response_model=DocumentResponse)
+@router.get("/documents/{document_id}")
 async def get_document(document_id: str):
     """Get document by ID."""
-    return await document_handlers.handle_get_document(document_id)
+    result = await document_handlers.handle_get_document(document_id)
+    return create_success_response(
+        data=result, message="Document retrieved successfully"
+    )
 
 
-@router.get("/documents", response_model=DocumentListResponse)
-async def list_documents(limit: int = Query(50, ge=1, le=1000), offset: int = Query(0, ge=0)):
+@router.get("/documents")
+async def list_documents(
+    limit: int = Query(50, ge=1, le=1000), offset: int = Query(0, ge=0)
+):
     """List documents with pagination."""
     result = await document_handlers.handle_list_documents(limit, offset)
-
-    # Extract the data from the success response wrapper
-    if isinstance(result, dict) and "data" in result:
-        data = result["data"]
-        if isinstance(data, dict):
-            return DocumentListResponse(
-                items=data.get("items", []), total=data.get("total", 0), has_more=data.get("has_more", False)
-            )
-
-    # Fallback: return result as-is if it doesn't match expected structure
-    return result
+    return create_paginated_response(
+        items=result.get("items", []),
+        total=result.get("total", 0),
+        page=(offset // limit) + 1,
+        page_size=limit,
+        message="Documents retrieved successfully",
+    )
 
 
 @router.patch("/documents/{document_id}/metadata")
@@ -117,7 +120,9 @@ async def get_quality_metrics(limit: int = Query(1000, ge=1, le=10000)):
 
 # Analytics endpoints
 @router.get("/analytics/summary")
-async def get_analytics_summary(start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def get_analytics_summary(
+    start_date: Optional[str] = None, end_date: Optional[str] = None
+):
     """Get analytics summary."""
     result = await analytics_handlers.handle_get_analytics_summary()
     return create_success_response(data=result, message="Analytics summary retrieved")
@@ -125,17 +130,31 @@ async def get_analytics_summary(start_date: Optional[str] = None, end_date: Opti
 
 # Versioning endpoints
 @router.get("/documents/{document_id}/versions")
-async def get_document_versions(document_id: str, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)):
+async def get_document_versions(
+    document_id: str, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)
+):
     """Get document version history."""
-    result = await versioning_handlers.handle_get_document_versions(document_id, limit, offset)
-    return create_paginated_response(result["items"], result["total"], 1, limit, message="Document versions retrieved")
+    result = await versioning_handlers.handle_get_document_versions(
+        document_id, limit, offset
+    )
+    return create_paginated_response(
+        result["items"],
+        result["total"],
+        1,
+        limit,
+        message="Document versions retrieved",
+    )
 
 
 @router.post("/documents/{document_id}/versions/rollback")
 async def rollback_document_version(document_id: str, request: VersionRollbackRequest):
     """Rollback document to previous version."""
-    result = await versioning_handlers.handle_rollback_to_version(document_id, request.version_number, request.reason)
-    return create_success_response(data=result, message="Document rolled back successfully")
+    result = await versioning_handlers.handle_rollback_to_version(
+        document_id, request.version_number, request.reason
+    )
+    return create_success_response(
+        data=result, message="Document rolled back successfully"
+    )
 
 
 # Relationship endpoints
@@ -185,7 +204,9 @@ async def tag_document(document_id: str, request: TagRequest):
 @router.get("/tags/search", response_model=SuccessResponse)
 async def search_by_tags(request: TagSearchRequest):
     """Search documents by tags."""
-    return await tagging_handlers.handle_search_by_tags(request.tags, request.limit, request.offset)
+    return await tagging_handlers.handle_search_by_tags(
+        request.tags, request.limit, request.offset
+    )
 
 
 # Lifecycle endpoints
@@ -193,19 +214,27 @@ async def search_by_tags(request: TagSearchRequest):
 async def create_lifecycle_policy(request: LifecyclePolicyRequest):
     """Create lifecycle policy."""
     return await lifecycle_handlers.handle_create_policy(
-        request.name, request.description, request.conditions, request.actions, request.priority
+        request.name,
+        request.description,
+        request.conditions,
+        request.actions,
+        request.priority,
     )
 
 
 @router.post("/documents/{document_id}/lifecycle/transition")
-async def transition_document_phase(document_id: str, request: LifecycleTransitionRequest):
+async def transition_document_phase(
+    document_id: str, request: LifecycleTransitionRequest
+):
     """Transition document to new lifecycle phase."""
     return await lifecycle_handlers.handle_apply_lifecycle_policies(
         {"id": document_id, "new_phase": request.new_phase, "reason": request.reason}
     )
 
 
-@router.get("/documents/{document_id}/lifecycle", response_model=LifecycleStatusResponse)
+@router.get(
+    "/documents/{document_id}/lifecycle", response_model=LifecycleStatusResponse
+)
 async def get_document_lifecycle(document_id: str):
     """Get document lifecycle status."""
     return await lifecycle_handlers.handle_get_document_lifecycle(document_id)
@@ -246,7 +275,9 @@ async def create_documents_bulk(request: BulkDocumentRequest):
 
 
 @router.get("/bulk/operations", response_model=SuccessResponse)
-async def list_bulk_operations(status: Optional[str] = None, limit: int = Query(50, ge=1, le=100)):
+async def list_bulk_operations(
+    status: Optional[str] = None, limit: int = Query(50, ge=1, le=100)
+):
     """List bulk operations."""
     return await bulk_handlers.handle_list_bulk_operations(status, limit)
 

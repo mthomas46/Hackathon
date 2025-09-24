@@ -65,7 +65,11 @@ class AutomatedRemediator:
         return {
             "formatting_consistency": {
                 "description": "Fix inconsistent formatting and markdown syntax",
-                "issues": ["heading_inconsistency", "list_formatting", "code_block_formatting"],
+                "issues": [
+                    "heading_inconsistency",
+                    "list_formatting",
+                    "code_block_formatting",
+                ],
                 "automated_fixes": True,
                 "confidence_threshold": 0.9,
                 "rollback_safe": True,
@@ -126,7 +130,11 @@ class AutomatedRemediator:
         return {
             "content_preservation": {
                 "description": "Ensure original meaning is preserved",
-                "checks": ["semantic_similarity", "keyword_preservation", "context_integrity"],
+                "checks": [
+                    "semantic_similarity",
+                    "keyword_preservation",
+                    "context_integrity",
+                ],
                 "threshold": 0.8,
             },
             "structural_integrity": {
@@ -174,7 +182,9 @@ class AutomatedRemediator:
             if line.strip().startswith("#"):
                 level = len(line) - len(line.lstrip("#"))
                 title = line.strip("#").strip()
-                analysis["headings"].append({"level": level, "title": title, "line": i + 1})
+                analysis["headings"].append(
+                    {"level": level, "title": title, "line": i + 1}
+                )
 
         # Check heading hierarchy
         if analysis["headings"]:
@@ -182,7 +192,9 @@ class AutomatedRemediator:
             for i in range(1, len(levels)):
                 if levels[i] > levels[i - 1] + 1:
                     analysis["heading_hierarchy"] = False
-                    analysis["issues"].append(f"Heading hierarchy broken at line {analysis['headings'][i]['line']}")
+                    analysis["issues"].append(
+                        f"Heading hierarchy broken at line {analysis['headings'][i]['line']}"
+                    )
                     break
 
         # Find code blocks
@@ -198,7 +210,8 @@ class AutomatedRemediator:
                         {
                             "start": code_start,
                             "end": i + 1,
-                            "language": lines[code_start - 1].strip("```").strip() or "text",
+                            "language": lines[code_start - 1].strip("```").strip()
+                            or "text",
                         }
                     )
                     in_code_block = False
@@ -206,11 +219,19 @@ class AutomatedRemediator:
         # Find links
         link_pattern = r"\[([^\]]+)\]\(([^)]+)\)"
         for match in re.finditer(link_pattern, content):
-            analysis["links"].append({"text": match.group(1), "url": match.group(2), "position": match.start()})
+            analysis["links"].append(
+                {
+                    "text": match.group(1),
+                    "url": match.group(2),
+                    "position": match.start(),
+                }
+            )
 
         return analysis
 
-    def _fix_formatting_issues(self, content: str, issues: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
+    def _fix_formatting_issues(
+        self, content: str, issues: List[Dict[str, Any]]
+    ) -> Tuple[str, List[str]]:
         """Fix common formatting issues."""
         fixed_content = content
         applied_fixes = []
@@ -228,7 +249,9 @@ class AutomatedRemediator:
 
         # Fix list formatting
         # Ensure consistent bullet points
-        fixed_content = re.sub(r"^[\s]*[-\*\+]\s*", "- ", fixed_content, flags=re.MULTILINE)
+        fixed_content = re.sub(
+            r"^[\s]*[-\*\+]\s*", "- ", fixed_content, flags=re.MULTILINE
+        )
         if "- " in fixed_content:
             applied_fixes.append("Standardized bullet point formatting")
 
@@ -242,13 +265,17 @@ class AutomatedRemediator:
             return f"```{language}\n{code}\n```"
 
         original_content = fixed_content
-        fixed_content = re.sub(code_block_pattern, fix_code_block, fixed_content, flags=re.DOTALL)
+        fixed_content = re.sub(
+            code_block_pattern, fix_code_block, fixed_content, flags=re.DOTALL
+        )
         if fixed_content != original_content:
             applied_fixes.append("Fixed code block formatting")
 
         return fixed_content, applied_fixes
 
-    def _fix_grammar_spelling(self, content: str, issues: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
+    def _fix_grammar_spelling(
+        self, content: str, issues: List[Dict[str, Any]]
+    ) -> Tuple[str, List[str]]:
         """Fix grammar and spelling issues."""
         fixed_content = content
         applied_fixes = []
@@ -258,7 +285,9 @@ class AutomatedRemediator:
             matches = self.grammar_tool.check(fixed_content)
 
             # Filter for high-confidence fixes only
-            confident_matches = [match for match in matches if match.rule.confidence > 0.8]
+            confident_matches = [
+                match for match in matches if match.rule.confidence > 0.8
+            ]
 
             # Sort by position (reverse order to avoid offset issues)
             confident_matches.sort(key=lambda x: x.offset, reverse=True)
@@ -271,16 +300,22 @@ class AutomatedRemediator:
                     # Apply the fix
                     start = match.offset
                     end = match.offset + match.errorlength
-                    fixed_content = fixed_content[:start] + replacement + fixed_content[end:]
+                    fixed_content = (
+                        fixed_content[:start] + replacement + fixed_content[end:]
+                    )
 
-                    applied_fixes.append(f"Fixed '{match.matchedText}' → '{replacement}'")
+                    applied_fixes.append(
+                        f"Fixed '{match.matchedText}' → '{replacement}'"
+                    )
 
         except Exception as e:
             logger.warning(f"Grammar check failed: {e}")
 
         return fixed_content, applied_fixes
 
-    def _fix_terminology_consistency(self, content: str, issues: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
+    def _fix_terminology_consistency(
+        self, content: str, issues: List[Dict[str, Any]]
+    ) -> Tuple[str, List[str]]:
         """Fix terminology consistency issues."""
         fixed_content = content
         applied_fixes = []
@@ -308,16 +343,22 @@ class AutomatedRemediator:
             original_content = fixed_content
 
             if callable(replacement):
-                fixed_content = re.sub(pattern, replacement, fixed_content, flags=re.IGNORECASE)
+                fixed_content = re.sub(
+                    pattern, replacement, fixed_content, flags=re.IGNORECASE
+                )
             else:
-                fixed_content = re.sub(pattern, replacement, fixed_content, flags=re.IGNORECASE)
+                fixed_content = re.sub(
+                    pattern, replacement, fixed_content, flags=re.IGNORECASE
+                )
 
             if fixed_content != original_content:
                 applied_fixes.append(f"Standardized terminology: {pattern}")
 
         return fixed_content, applied_fixes
 
-    def _fix_link_issues(self, content: str, issues: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
+    def _fix_link_issues(
+        self, content: str, issues: List[Dict[str, Any]]
+    ) -> Tuple[str, List[str]]:
         """Fix link-related issues."""
         fixed_content = content
         applied_fixes = []
@@ -342,11 +383,15 @@ class AutomatedRemediator:
         images_without_alt = len(re.findall(image_pattern, fixed_content))
 
         if images_without_alt > 0:
-            applied_fixes.append(f"Found {images_without_alt} images without alt text (requires manual review)")
+            applied_fixes.append(
+                f"Found {images_without_alt} images without alt text (requires manual review)"
+            )
 
         return fixed_content, applied_fixes
 
-    def _fix_structure_issues(self, content: str, issues: List[Dict[str, Any]]) -> Tuple[str, List[str]]:
+    def _fix_structure_issues(
+        self, content: str, issues: List[Dict[str, Any]]
+    ) -> Tuple[str, List[str]]:
         """Fix document structure issues."""
         fixed_content = content
         applied_fixes = []
@@ -366,7 +411,9 @@ class AutomatedRemediator:
         fixed_content = "\n".join(lines)
 
         # Add missing table of contents for long documents
-        if len(lines) > 50 and not re.search(r"table of contents|contents", fixed_content, re.IGNORECASE):
+        if len(lines) > 50 and not re.search(
+            r"table of contents|contents", fixed_content, re.IGNORECASE
+        ):
             # Find all headings
             headings = []
             for i, line in enumerate(lines):
@@ -379,7 +426,9 @@ class AutomatedRemediator:
                 toc_lines = ["## Table of Contents", ""]
                 for level, title, line_num in headings:
                     indent = "  " * (level - 1)
-                    toc_lines.append(f'{indent}- [{title}](#{title.lower().replace(" ", "-")})')
+                    toc_lines.append(
+                        f'{indent}- [{title}](#{title.lower().replace(" ", "-")})'
+                    )
 
                 toc_content = "\n".join(toc_lines) + "\n\n"
                 fixed_content = toc_content + fixed_content
@@ -387,7 +436,9 @@ class AutomatedRemediator:
 
         return fixed_content, applied_fixes
 
-    def _check_safety(self, original_content: str, modified_content: str) -> Dict[str, Any]:
+    def _check_safety(
+        self, original_content: str, modified_content: str
+    ) -> Dict[str, Any]:
         """Perform safety checks on automated modifications."""
         safety_results = {
             "safe": True,
@@ -413,7 +464,9 @@ class AutomatedRemediator:
         if len(original_structure["headings"]) != len(modified_structure["headings"]):
             safety_results["safe"] = False
             safety_results["checks_failed"].append("structural_integrity")
-            safety_results["warnings"].append("Heading structure changed - review required")
+            safety_results["warnings"].append(
+                "Heading structure changed - review required"
+            )
         else:
             safety_results["checks_passed"].append("structural_integrity")
 
@@ -422,11 +475,15 @@ class AutomatedRemediator:
         modified_links = len(re.findall(r"\[([^\]]+)\]\(([^)]+)\)", modified_content))
 
         if original_links != modified_links:
-            safety_results["warnings"].append("Link count changed - verify link functionality")
+            safety_results["warnings"].append(
+                "Link count changed - verify link functionality"
+            )
 
         # Calculate overall confidence
         passed_checks = len(safety_results["checks_passed"])
-        total_checks = len(safety_results["checks_passed"]) + len(safety_results["checks_failed"])
+        total_checks = len(safety_results["checks_passed"]) + len(
+            safety_results["checks_failed"]
+        )
 
         if total_checks > 0:
             safety_results["confidence_score"] = passed_checks / total_checks
@@ -463,17 +520,25 @@ class AutomatedRemediator:
                 "final_length": len(final_content),
                 "changes_made": len(applied_fixes),
                 "processing_time": processing_time,
-                "safety_status": "safe" if safety_results["safe"] else "requires_review",
+                "safety_status": (
+                    "safe" if safety_results["safe"] else "requires_review"
+                ),
             },
             "applied_fixes": applied_fixes,
             "safety_assessment": safety_results,
-            "quality_improvements": self._assess_quality_improvements(original_content, final_content),
-            "recommendations": self._generate_followup_recommendations(safety_results, applied_fixes),
+            "quality_improvements": self._assess_quality_improvements(
+                original_content, final_content
+            ),
+            "recommendations": self._generate_followup_recommendations(
+                safety_results, applied_fixes
+            ),
         }
 
         return report
 
-    def _assess_quality_improvements(self, original_content: str, final_content: str) -> Dict[str, Any]:
+    def _assess_quality_improvements(
+        self, original_content: str, final_content: str
+    ) -> Dict[str, Any]:
         """Assess quality improvements made by remediation."""
         improvements = {
             "readability_score": 0.0,
@@ -487,20 +552,28 @@ class AutomatedRemediator:
         final_sentences = len(sent_tokenize(final_content))
 
         if final_sentences > 0 and original_sentences > 0:
-            improvements["readability_score"] = min(1.0, final_sentences / original_sentences)
+            improvements["readability_score"] = min(
+                1.0, final_sentences / original_sentences
+            )
 
         # Structure improvement assessment
-        original_headings = len(re.findall(r"^#{1,6}\s+.+", original_content, re.MULTILINE))
+        original_headings = len(
+            re.findall(r"^#{1,6}\s+.+", original_content, re.MULTILINE)
+        )
         final_headings = len(re.findall(r"^#{1,6}\s+.+", final_content, re.MULTILINE))
 
         if final_headings > 0:
-            improvements["structure_score"] = min(1.0, final_headings / max(original_headings, 1))
+            improvements["structure_score"] = min(
+                1.0, final_headings / max(original_headings, 1)
+            )
 
         # Consistency improvement (simplified)
         original_links = len(re.findall(r"\[([^\]]+)\]\(([^)]+)\)", original_content))
         final_links = len(re.findall(r"\[([^\]]+)\]\(([^)]+)\)", final_content))
 
-        improvements["consistency_score"] = 1.0 if final_links >= original_links else 0.8
+        improvements["consistency_score"] = (
+            1.0 if final_links >= original_links else 0.8
+        )
 
         # Overall improvement score
         improvements["overall_improvement"] = (
@@ -511,27 +584,43 @@ class AutomatedRemediator:
 
         return improvements
 
-    def _generate_followup_recommendations(self, safety_results: Dict[str, Any], applied_fixes: List[str]) -> List[str]:
+    def _generate_followup_recommendations(
+        self, safety_results: Dict[str, Any], applied_fixes: List[str]
+    ) -> List[str]:
         """Generate follow-up recommendations based on remediation results."""
         recommendations = []
 
         if not safety_results["safe"]:
-            recommendations.append("⚠️ Review all automated changes manually due to safety concerns")
-            recommendations.append("Consider reverting changes if semantic meaning was altered")
+            recommendations.append(
+                "⚠️ Review all automated changes manually due to safety concerns"
+            )
+            recommendations.append(
+                "Consider reverting changes if semantic meaning was altered"
+            )
 
         if safety_results.get("warnings"):
-            recommendations.extend([f"⚠️ {warning}" for warning in safety_results["warnings"]])
+            recommendations.extend(
+                [f"⚠️ {warning}" for warning in safety_results["warnings"]]
+            )
 
         if len(applied_fixes) > 10:
-            recommendations.append("📊 Large number of fixes applied - conduct thorough review")
-            recommendations.append("Consider testing documentation functionality after changes")
+            recommendations.append(
+                "📊 Large number of fixes applied - conduct thorough review"
+            )
+            recommendations.append(
+                "Consider testing documentation functionality after changes"
+            )
 
         if "content_preservation" in safety_results.get("checks_failed", []):
-            recommendations.append("🔍 Verify that automated changes preserved original meaning")
+            recommendations.append(
+                "🔍 Verify that automated changes preserved original meaning"
+            )
             recommendations.append("Check for any unintended semantic changes")
 
         if not applied_fixes:
-            recommendations.append("ℹ️ No automated fixes were applied - review manually for improvement opportunities")
+            recommendations.append(
+                "ℹ️ No automated fixes were applied - review manually for improvement opportunities"
+            )
 
         return recommendations[:5]  # Limit to 5 recommendations
 
@@ -560,7 +649,9 @@ class AutomatedRemediator:
                 backup = self._create_backup(content, metadata or {})
 
             # Determine confidence threshold based on level
-            self.confidence_thresholds.get(confidence_level, self.confidence_thresholds["medium"])
+            self.confidence_thresholds.get(
+                confidence_level, self.confidence_thresholds["medium"]
+            )
 
             # Analyze document structure
             structure_analysis = self._analyze_document_structure(content)
@@ -583,7 +674,9 @@ class AutomatedRemediator:
             all_fixes.extend(grammar_fixes)
 
             # Fix terminology consistency
-            fixed_content, terminology_fixes = self._fix_terminology_consistency(fixed_content, [])
+            fixed_content, terminology_fixes = self._fix_terminology_consistency(
+                fixed_content, []
+            )
             applied_fixes.extend(terminology_fixes)
             all_fixes.extend(terminology_fixes)
 
@@ -614,7 +707,9 @@ class AutomatedRemediator:
                 "backup": backup,
                 "report": report,
                 "changes_applied": len(all_fixes),
-                "safety_status": "safe" if safety_results["safe"] else "requires_review",
+                "safety_status": (
+                    "safe" if safety_results["safe"] else "requires_review"
+                ),
                 "processing_time": processing_time,
                 "remediation_timestamp": time.time(),
             }
@@ -655,7 +750,9 @@ class AutomatedRemediator:
             preview_fixes = []
 
             # Preview formatting fixes
-            _, formatting_fixes = self._fix_formatting_issues(content, structure_analysis.get("issues", []))
+            _, formatting_fixes = self._fix_formatting_issues(
+                content, structure_analysis.get("issues", [])
+            )
             preview_fixes.extend([f"Formatting: {fix}" for fix in formatting_fixes])
 
             # Preview grammar fixes
@@ -667,7 +764,9 @@ class AutomatedRemediator:
             preview_fixes.extend([f"Terminology: {fix}" for fix in terminology_fixes])
 
             # Preview structure fixes
-            _, structure_fixes = self._fix_structure_issues(content, structure_analysis.get("issues", []))
+            _, structure_fixes = self._fix_structure_issues(
+                content, structure_analysis.get("issues", [])
+            )
             preview_fixes.extend([f"Structure: {fix}" for fix in structure_fixes])
 
             processing_time = time.time() - start_time
@@ -676,7 +775,8 @@ class AutomatedRemediator:
                 "preview_available": True,
                 "proposed_fixes": preview_fixes,
                 "fix_count": len(preview_fixes),
-                "estimated_processing_time": processing_time * 2,  # Estimate for actual remediation
+                "estimated_processing_time": processing_time
+                * 2,  # Estimate for actual remediation
                 "preview_timestamp": time.time(),
             }
 
@@ -733,7 +833,11 @@ async def remediate_document(
         Remediation results with fixed content and report
     """
     return await automated_remediator.remediate_document(
-        content=content, issues=issues, doc_type=doc_type, metadata=metadata, confidence_level=confidence_level
+        content=content,
+        issues=issues,
+        doc_type=doc_type,
+        metadata=metadata,
+        confidence_level=confidence_level,
     )
 
 

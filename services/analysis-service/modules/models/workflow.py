@@ -12,7 +12,9 @@ class WorkflowEventRequest(BaseModel):
 
     event_type: str = Field(..., description="Type of workflow event")
     event_data: Dict[str, Any] = Field(..., description="Event data payload")
-    trigger_conditions: Optional[Dict[str, Any]] = Field(None, description="Trigger conditions")
+    trigger_conditions: Optional[Dict[str, Any]] = Field(
+        None, description="Trigger conditions"
+    )
     options: Optional[Dict[str, Any]] = Field(None, description="Additional options")
 
 
@@ -21,18 +23,26 @@ class WorkflowEventResponse(BaseModel):
 
     analysis_id: str = Field(..., description="Unique analysis identifier")
     event_type: str = Field(..., description="Type of event processed")
-    triggered_analyses: List[str] = Field(default_factory=list, description="Triggered analysis IDs")
+    triggered_analyses: List[str] = Field(
+        default_factory=list, description="Triggered analysis IDs"
+    )
     notifications_sent: int = Field(..., description="Number of notifications sent")
     workflow_status: str = Field(..., description="Workflow processing status")
-    execution_time_seconds: float = Field(..., description="Time taken to process event")
-    error_message: Optional[str] = Field(None, description="Error message if processing failed")
+    execution_time_seconds: float = Field(
+        ..., description="Time taken to process event"
+    )
+    error_message: Optional[str] = Field(
+        None, description="Error message if processing failed"
+    )
 
 
 class WorkflowStatusRequest(BaseModel):
     """Request for workflow status."""
 
     workflow_id: str = Field(..., description="Workflow ID to check")
-    include_history: Optional[bool] = Field(False, description="Include workflow history")
+    include_history: Optional[bool] = Field(
+        False, description="Include workflow history"
+    )
 
 
 class WorkflowStatusResponse(BaseModel):
@@ -43,10 +53,18 @@ class WorkflowStatusResponse(BaseModel):
     status: str = Field(..., description="Workflow status")
     progress: float = Field(..., ge=0.0, le=1.0, description="Workflow progress")
     current_step: str = Field(..., description="Current workflow step")
-    steps_completed: List[str] = Field(default_factory=list, description="Completed steps")
-    steps_remaining: List[str] = Field(default_factory=list, description="Remaining steps")
-    estimated_completion_time_seconds: float = Field(..., description="Estimated completion time")
-    error_message: Optional[str] = Field(None, description="Error message if workflow failed")
+    steps_completed: List[str] = Field(
+        default_factory=list, description="Completed steps"
+    )
+    steps_remaining: List[str] = Field(
+        default_factory=list, description="Remaining steps"
+    )
+    estimated_completion_time_seconds: float = Field(
+        ..., description="Estimated completion time"
+    )
+    error_message: Optional[str] = Field(
+        None, description="Error message if workflow failed"
+    )
 
 
 class WorkflowQueueStatusResponse(BaseModel):
@@ -56,9 +74,13 @@ class WorkflowQueueStatusResponse(BaseModel):
     queue_length: int = Field(..., description="Current queue length")
     processing_rate_per_minute: float = Field(..., description="Processing rate")
     average_wait_time_seconds: float = Field(..., description="Average wait time")
-    priority_distribution: Dict[str, int] = Field(default_factory=dict, description="Priority distribution")
+    priority_distribution: Dict[str, int] = Field(
+        default_factory=dict, description="Priority distribution"
+    )
     oldest_item_age_seconds: float = Field(..., description="Age of oldest item")
-    error_message: Optional[str] = Field(None, description="Error message if queue check failed")
+    error_message: Optional[str] = Field(
+        None, description="Error message if queue check failed"
+    )
 
 
 class WebhookConfigRequest(BaseModel):
@@ -79,4 +101,6 @@ class WebhookConfigResponse(BaseModel):
     events: List[str] = Field(..., description="Configured events")
     secret_configured: bool = Field(..., description="Whether secret is configured")
     status: str = Field(..., description="Configuration status")
-    error_message: Optional[str] = Field(None, description="Error message if configuration failed")
+    error_message: Optional[str] = Field(
+        None, description="Error message if configuration failed"
+    )

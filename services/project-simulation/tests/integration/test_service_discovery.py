@@ -42,7 +42,10 @@ class TestServiceDiscoveryInitialization:
             "orchestrator": "http://orchestrator:5000",
         }
 
-        with patch("simulation.infrastructure.config.discovery.get_config", return_value=mock_config):
+        with patch(
+            "simulation.infrastructure.config.discovery.get_config",
+            return_value=mock_config,
+        ):
             discovery = LocalServiceDiscovery()
 
             assert len(discovery.services) == 3
@@ -52,7 +55,10 @@ class TestServiceDiscoveryInitialization:
 
             # Verify service URLs
             assert discovery.services["doc_store"].url == "http://doc_store:5010"
-            assert discovery.services["mock_data_generator"].url == "http://mock_data_generator:5065"
+            assert (
+                discovery.services["mock_data_generator"].url
+                == "http://mock_data_generator:5065"
+            )
 
 
 class TestServiceHealthChecking:
@@ -222,7 +228,12 @@ class TestServiceAvailabilityChecking:
         discovery = LocalServiceDiscovery()
 
         # Add mix of healthy and unhealthy services
-        services = [("healthy1", True), ("healthy2", True), ("unhealthy1", False), ("unhealthy2", False)]
+        services = [
+            ("healthy1", True),
+            ("healthy2", True),
+            ("unhealthy1", False),
+            ("unhealthy2", False),
+        ]
 
         for name, is_healthy in services:
             service = ServiceHealth(name, f"http://{name}.com")
@@ -355,7 +366,9 @@ class TestFallbackServiceClient:
     async def test_fallback_client_error_handling(self, fallback_client):
         """Test error handling in fallback client."""
         # Request to non-existent endpoint
-        response = await fallback_client.make_request("GET", "/non-existent-endpoint-12345")
+        response = await fallback_client.make_request(
+            "GET", "/non-existent-endpoint-12345"
+        )
         assert response is None
 
     @pytest.mark.asyncio
@@ -414,7 +427,12 @@ class TestServiceDiscoveryIntegration:
         discovery = LocalServiceDiscovery()
 
         # Add services with different health states
-        services = [("healthy1", True), ("healthy2", True), ("unhealthy1", False), ("unhealthy2", False)]
+        services = [
+            ("healthy1", True),
+            ("healthy2", True),
+            ("unhealthy1", False),
+            ("unhealthy2", False),
+        ]
 
         for name, is_healthy in services:
             service = ServiceHealth(name, f"http://{name}.com")

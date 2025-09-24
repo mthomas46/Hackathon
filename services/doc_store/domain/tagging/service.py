@@ -7,7 +7,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 from ...core.entities import DocumentTag, SemanticEntity, TaxonomyNode
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from .repository import TaggingRepository
 
 
@@ -15,7 +15,9 @@ class TaggingService(BaseService[DocumentTag]):
     """Service for tagging business logic."""
 
     def __init__(self):
-        super().__init__(TaggingRepository())
+        from ...db.connection import get_document_connection_string
+
+        super().__init__(TaggingRepository(get_document_connection_string()))
 
     def _validate_entity(self, entity: DocumentTag) -> None:
         """Validate document tag."""
@@ -28,10 +30,15 @@ class TaggingService(BaseService[DocumentTag]):
         if not (0 <= entity.confidence <= 1):
             raise ValueError("Confidence must be between 0 and 1")
 
-    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> DocumentTag:
+    def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> DocumentTag:
         """Create document tag from data."""
         return DocumentTag(
-            id=entity_id, document_id=data["document_id"], tag=data["tag"], confidence=data.get("confidence", 1.0)
+            id=entity_id,
+            document_id=data["document_id"],
+            tag=data["tag"],
+            confidence=data.get("confidence", 1.0),
         )
 
     def tag_document(
@@ -43,7 +50,11 @@ class TaggingService(BaseService[DocumentTag]):
         tags = []
         for entity in entities:
             tag = self._create_entity(
-                {"document_id": document_id, "tag": entity.entity_value.lower(), "confidence": entity.confidence}
+                {
+                    "document_id": document_id,
+                    "tag": entity.entity_value.lower(),
+                    "confidence": entity.confidence,
+                }
             )
 
             # Apply taxonomy categorization
@@ -57,7 +68,9 @@ class TaggingService(BaseService[DocumentTag]):
                 if category:
                     self.repository.save_taxonomy_node(
                         TaxonomyNode(
-                            tag=tag.tag, category=category, description=f"Auto-categorized {entity.entity_type}"
+                            tag=tag.tag,
+                            category=category,
+                            description=f"Auto-categorized {entity.entity_type}",
                         )
                     )
 
@@ -65,7 +78,9 @@ class TaggingService(BaseService[DocumentTag]):
 
         return tags
 
-    def _analyze_content(self, content: str, metadata: Dict[str, Any]) -> List[SemanticEntity]:
+    def _analyze_content(
+        self, content: str, metadata: Dict[str, Any]
+    ) -> List[SemanticEntity]:
         """Analyze content for semantic entities."""
         entities = []
 
@@ -92,7 +107,13 @@ class TaggingService(BaseService[DocumentTag]):
 
         for lang in languages:
             if re.search(r"\b" + re.escape(lang) + r"\b", content, re.IGNORECASE):
-                entities.append(SemanticEntity(entity_type="programming_language", entity_value=lang, confidence=0.9))
+                entities.append(
+                    SemanticEntity(
+                        entity_type="programming_language",
+                        entity_value=lang,
+                        confidence=0.9,
+                    )
+                )
 
         # Framework detection
         frameworks = {
@@ -113,17 +134,31 @@ class TaggingService(BaseService[DocumentTag]):
 
         for framework in frameworks:
             if re.search(r"\b" + re.escape(framework) + r"\b", content, re.IGNORECASE):
-                entities.append(SemanticEntity(entity_type="framework", entity_value=framework, confidence=0.8))
+                entities.append(
+                    SemanticEntity(
+                        entity_type="framework", entity_value=framework, confidence=0.8
+                    )
+                )
 
         # Content type detection from metadata
         content_type = metadata.get("type", "")
         if content_type:
-            entities.append(SemanticEntity(entity_type="content_type", entity_value=content_type, confidence=1.0))
+            entities.append(
+                SemanticEntity(
+                    entity_type="content_type",
+                    entity_value=content_type,
+                    confidence=1.0,
+                )
+            )
 
         # Source type detection
         source_type = metadata.get("source_type", "")
         if source_type:
-            entities.append(SemanticEntity(entity_type="source_type", entity_value=source_type, confidence=1.0))
+            entities.append(
+                SemanticEntity(
+                    entity_type="source_type", entity_value=source_type, confidence=1.0
+                )
+            )
 
         return entities
 
@@ -137,7 +172,9 @@ class TaggingService(BaseService[DocumentTag]):
         }
         return type_to_category.get(entity.entity_type)
 
-    def get_document_tags(self, document_id: str, category: Optional[str] = None) -> List[DocumentTag]:
+    def get_document_tags(
+        self, document_id: str, category: Optional[str] = None
+    ) -> List[DocumentTag]:
         """Get tags for a document with optional category filtering."""
         tags = self.repository.get_tags_for_document(document_id)
 
@@ -153,7 +190,11 @@ class TaggingService(BaseService[DocumentTag]):
         return tags
 
     def search_by_tags(
-        self, tags: List[str], categories: Optional[List[str]] = None, min_confidence: float = 0.0, limit: int = 50
+        self,
+        tags: List[str],
+        categories: Optional[List[str]] = None,
+        min_confidence: float = 0.0,
+        limit: int = 50,
     ) -> Dict[str, Any]:
         """Search documents by tags."""
         results = []
@@ -190,7 +231,12 @@ class TaggingService(BaseService[DocumentTag]):
             if len(results) >= limit:
                 break
 
-        return {"results": results[:limit], "total": len(results), "searched_tags": tags, "categories": categories}
+        return {
+            "results": results[:limit],
+            "total": len(results),
+            "searched_tags": tags,
+            "categories": categories,
+        }
 
     def create_taxonomy_node(
         self,
@@ -202,7 +248,11 @@ class TaggingService(BaseService[DocumentTag]):
     ) -> TaxonomyNode:
         """Create a taxonomy node."""
         node = TaxonomyNode(
-            tag=tag, category=category, description=description, parent_tag=parent_tag, synonyms=synonyms or []
+            tag=tag,
+            category=category,
+            description=description,
+            parent_tag=parent_tag,
+            synonyms=synonyms or [],
         )
 
         self.repository.save_taxonomy_node(node)
@@ -216,11 +266,15 @@ class TaggingService(BaseService[DocumentTag]):
         """Get comprehensive tag statistics."""
         return self.repository.get_tag_statistics()
 
-    def remove_document_tags(self, document_id: str, tags: Optional[List[str]] = None) -> int:
+    def remove_document_tags(
+        self, document_id: str, tags: Optional[List[str]] = None
+    ) -> int:
         """Remove tags from a document."""
         return self.repository.remove_tags_from_document(document_id, tags)
 
-    def update_tag_confidence(self, document_id: str, tag: str, confidence: float) -> None:
+    def update_tag_confidence(
+        self, document_id: str, tag: str, confidence: float
+    ) -> None:
         """Update confidence score for a document tag."""
         # Find the tag
         tags = self.repository.get_tags_for_document(document_id)

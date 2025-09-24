@@ -11,7 +11,9 @@ import streamlit as st
 
 
 def render_risk_assessment_form(
-    risk_key: str = "risk_config", title: str = "⚠️ Risk Assessment", project_config: Optional[Dict[str, Any]] = None
+    risk_key: str = "risk_config",
+    title: str = "⚠️ Risk Assessment",
+    project_config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Render risk assessment form for project risk evaluation.
 
@@ -24,7 +26,9 @@ def render_risk_assessment_form(
         Dictionary containing risk assessment results
     """
     st.markdown(f"### {title}")
-    st.markdown("Assess project risks and calculate success probability with mitigation strategies.")
+    st.markdown(
+        "Assess project risks and calculate success probability with mitigation strategies."
+    )
 
     # Initialize risk configuration
     if risk_key not in st.session_state:
@@ -38,18 +42,43 @@ def render_risk_assessment_form(
     risk_factors = {
         "team_experience": {
             "question": "How familiar is your team with the required technology stack?",
-            "options": ["Very Experienced", "Somewhat Experienced", "Limited Experience", "New Technology"],
-            "weights": {"Very Experienced": 0, "Somewhat Experienced": 1, "Limited Experience": 2, "New Technology": 3},
+            "options": [
+                "Very Experienced",
+                "Somewhat Experienced",
+                "Limited Experience",
+                "New Technology",
+            ],
+            "weights": {
+                "Very Experienced": 0,
+                "Somewhat Experienced": 1,
+                "Limited Experience": 2,
+                "New Technology": 3,
+            },
         },
         "requirement_stability": {
             "question": "How stable are your project requirements?",
-            "options": ["Very Stable", "Mostly Stable", "Some Changes Expected", "High Uncertainty"],
-            "weights": {"Very Stable": 0, "Mostly Stable": 1, "Some Changes Expected": 2, "High Uncertainty": 3},
+            "options": [
+                "Very Stable",
+                "Mostly Stable",
+                "Some Changes Expected",
+                "High Uncertainty",
+            ],
+            "weights": {
+                "Very Stable": 0,
+                "Mostly Stable": 1,
+                "Some Changes Expected": 2,
+                "High Uncertainty": 3,
+            },
         },
         "timeline_realism": {
             "question": "How realistic is your project timeline?",
             "options": ["Very Realistic", "Reasonable", "Aggressive", "Unrealistic"],
-            "weights": {"Very Realistic": 0, "Reasonable": 1, "Aggressive": 2, "Unrealistic": 3},
+            "weights": {
+                "Very Realistic": 0,
+                "Reasonable": 1,
+                "Aggressive": 2,
+                "Unrealistic": 3,
+            },
         },
         "budget_contingency": {
             "question": "Do you have adequate budget contingency?",
@@ -68,22 +97,52 @@ def render_risk_assessment_form(
         },
         "stakeholder_alignment": {
             "question": "How aligned are stakeholders on project goals?",
-            "options": ["Fully Aligned", "Mostly Aligned", "Some Misalignment", "Significant Misalignment"],
-            "weights": {"Fully Aligned": 0, "Mostly Aligned": 1, "Some Misalignment": 2, "Significant Misalignment": 3},
+            "options": [
+                "Fully Aligned",
+                "Mostly Aligned",
+                "Some Misalignment",
+                "Significant Misalignment",
+            ],
+            "weights": {
+                "Fully Aligned": 0,
+                "Mostly Aligned": 1,
+                "Some Misalignment": 2,
+                "Significant Misalignment": 3,
+            },
         },
         "technical_complexity": {
             "question": "What is the technical complexity level?",
             "options": ["Straightforward", "Moderate", "Complex", "Highly Complex"],
-            "weights": {"Straightforward": 0, "Moderate": 1, "Complex": 2, "Highly Complex": 3},
+            "weights": {
+                "Straightforward": 0,
+                "Moderate": 1,
+                "Complex": 2,
+                "Highly Complex": 3,
+            },
         },
         "team_size_adequacy": {
             "question": "Is your team size adequate for the project scope?",
-            "options": ["Well-sized", "Slightly Small", "Too Small", "Critically Understaffed"],
-            "weights": {"Well-sized": 0, "Slightly Small": 1, "Too Small": 2, "Critically Understaffed": 3},
+            "options": [
+                "Well-sized",
+                "Slightly Small",
+                "Too Small",
+                "Critically Understaffed",
+            ],
+            "weights": {
+                "Well-sized": 0,
+                "Slightly Small": 1,
+                "Too Small": 2,
+                "Critically Understaffed": 3,
+            },
         },
         "vendor_dependencies": {
             "question": "How dependent is the project on external vendors?",
-            "options": ["No Dependencies", "Minor Dependencies", "Significant Dependencies", "Critical Dependencies"],
+            "options": [
+                "No Dependencies",
+                "Minor Dependencies",
+                "Significant Dependencies",
+                "Critical Dependencies",
+            ],
             "weights": {
                 "No Dependencies": 0,
                 "Minor Dependencies": 1,
@@ -111,7 +170,10 @@ def render_risk_assessment_form(
             key=f"{risk_key}_{factor_key}",
         )
 
-        risk_scores[factor_key] = {"option": selected_option, "score": factor_config["weights"][selected_option]}
+        risk_scores[factor_key] = {
+            "option": selected_option,
+            "score": factor_config["weights"][selected_option],
+        }
 
     # Calculate risk assessment
     total_score = sum(score["score"] for score in risk_scores.values())
@@ -164,7 +226,11 @@ def render_risk_assessment_form(
     # Create risk factor visualization
     risk_factors_df = pd.DataFrame(
         [
-            {"Factor": factor_key.replace("_", " ").title(), "Score": score["score"], "Max_Score": 3}
+            {
+                "Factor": factor_key.replace("_", " ").title(),
+                "Score": score["score"],
+                "Max_Score": 3,
+            }
             for factor_key, score in risk_scores.items()
         ]
     )
@@ -181,7 +247,12 @@ def render_risk_assessment_form(
             color="Score",
             color_continuous_scale="Reds",
         )
-        fig.add_hline(y=1.5, line_dash="dash", line_color="orange", annotation_text="Medium Risk Threshold")
+        fig.add_hline(
+            y=1.5,
+            line_dash="dash",
+            line_color="orange",
+            annotation_text="Medium Risk Threshold",
+        )
         st.plotly_chart(fig, use_container_width=True)
 
     except ImportError:
@@ -193,8 +264,15 @@ def render_risk_assessment_form(
     mitigation_strategies = generate_mitigation_strategies(risk_scores, risk_percentage)
 
     for strategy in mitigation_strategies:
-        priority_icon = "🔴" if strategy["priority"] == "High" else "🟡" if strategy["priority"] == "Medium" else "🟢"
-        with st.expander(f"{priority_icon} {strategy['title']} ({strategy['priority']} Priority)", expanded=False):
+        priority_icon = (
+            "🔴"
+            if strategy["priority"] == "High"
+            else "🟡" if strategy["priority"] == "Medium" else "🟢"
+        )
+        with st.expander(
+            f"{priority_icon} {strategy['title']} ({strategy['priority']} Priority)",
+            expanded=False,
+        ):
             st.write(f"**Description:** {strategy['description']}")
             st.write(f"**Implementation:** {strategy['implementation']}")
             st.write(f"**Expected Impact:** {strategy['impact']}")
@@ -232,13 +310,17 @@ def render_risk_assessment_form(
 
         # Display success probability prominently
         if success_probability >= 70:
-            st.success(f"🎉 High success probability ({success_probability:.1f}%) - project appears well-positioned!")
+            st.success(
+                f"🎉 High success probability ({success_probability:.1f}%) - project appears well-positioned!"
+            )
         elif success_probability >= 50:
             st.warning(
                 f"⚠️ Moderate success probability ({success_probability:.1f}%) - consider mitigation strategies above."
             )
         else:
-            st.error(f"🚨 Low success probability ({success_probability:.1f}%) - significant risk mitigation required.")
+            st.error(
+                f"🚨 Low success probability ({success_probability:.1f}%) - significant risk mitigation required."
+            )
 
     return risk_config
 
@@ -293,7 +375,9 @@ def calculate_confidence_level(risk_scores: Dict[str, Any]) -> float:
     return min(confidence, 95)  # Cap at 95%
 
 
-def generate_mitigation_strategies(risk_scores: Dict[str, Any], risk_percentage: float) -> List[Dict[str, Any]]:
+def generate_mitigation_strategies(
+    risk_scores: Dict[str, Any], risk_percentage: float
+) -> List[Dict[str, Any]]:
     """Generate mitigation strategies based on risk assessment."""
 
     strategies = []
@@ -409,7 +493,9 @@ def generate_mitigation_strategies(risk_scores: Dict[str, Any], risk_percentage:
     return strategies[:6]  # Return top 6 strategies
 
 
-def generate_monitoring_plan(risk_scores: Dict[str, Any], risk_level: str) -> List[Dict[str, Any]]:
+def generate_monitoring_plan(
+    risk_scores: Dict[str, Any], risk_level: str
+) -> List[Dict[str, Any]]:
     """Generate risk monitoring plan based on assessment."""
 
     base_plan = [

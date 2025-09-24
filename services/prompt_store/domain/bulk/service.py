@@ -7,7 +7,7 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import BulkOperation
-from services.prompt_store.core.service import BaseService
+from services.shared.utilities import BaseService
 from services.prompt_store.domain.bulk.repository import BulkOperationRepository
 from services.prompt_store.domain.prompts.service import PromptService
 from services.shared.utilities import generate_id, utc_now
@@ -17,25 +17,38 @@ class BulkOperationService(BaseService[BulkOperation]):
     """Service for bulk operations business logic."""
 
     def __init__(self):
-        super().__init__(BulkOperationRepository())
+        from ...db.connection import get_prompt_store_connection_string
+
+        super().__init__(BulkOperationRepository(get_prompt_store_connection_string()))
         self.prompt_service = PromptService()
 
-    def create_entity(self, data: Dict[str, Any], entity_id: Optional[str] = None) -> BulkOperation:
-        """Create a new bulk operation with validation."""
+    def _validate_entity(self, entity: BulkOperation) -> None:
+        """Validate bulk operation entity."""
         # Validate required fields
-        required_fields = ["operation_type", "created_by"]
-        missing = [field for field in required_fields if field not in data]
-        if missing:
-            raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        if not entity.operation_type or not entity.operation_type.strip():
+            raise ValueError("Operation type is required")
+        if not entity.created_by or not entity.created_by.strip():
+            raise ValueError("Created by is required")
 
         # Validate operation type
-        valid_operations = ["create_prompts", "update_prompts", "delete_prompts", "tag_prompts"]
-        if data["operation_type"] not in valid_operations:
-            raise ValueError(f"Invalid operation type. Must be one of: {', '.join(valid_operations)}")
+        valid_operations = [
+            "create_prompts",
+            "update_prompts",
+            "delete_prompts",
+            "tag_prompts",
+        ]
+        if entity.operation_type not in valid_operations:
+            raise ValueError(
+                f"Invalid operation type. Must be one of: {', '.join(valid_operations)}"
+            )
 
+    async def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> BulkOperation:
+        """Create bulk operation entity from data."""
         # Create bulk operation entity
         operation = BulkOperation(
-            id=entity_id or generate_id(),
+            id=entity_id,
             operation_type=data["operation_type"],
             status="pending",
             total_items=data.get("total_items", 0),
@@ -43,21 +56,15 @@ class BulkOperationService(BaseService[BulkOperation]):
             created_by=data["created_by"],
         )
 
-        # Save to database
-        saved_operation = self.repository.save(operation)
-
-        # Start processing asynchronously
+        # Start processing asynchronously if auto_start is enabled
         if data.get("auto_start", True):
-            # Only create task if event loop is running (for tests and async contexts)
-            try:
-                asyncio.create_task(self._process_operation_async(saved_operation.id))
-            except RuntimeError:
-                # No event loop running, skip async processing
-                pass
+            asyncio.create_task(self._start_processing_async(operation))
 
-        return saved_operation
+        return operation
 
-    def create_bulk_create_operation(self, prompts_data: List[Dict[str, Any]], created_by: str) -> BulkOperation:
+    def create_bulk_create_operation(
+        self, prompts_data: List[Dict[str, Any]], created_by: str
+    ) -> BulkOperation:
         """Create a bulk create prompts operation."""
         return self.create_entity(
             {
@@ -68,7 +75,9 @@ class BulkOperationService(BaseService[BulkOperation]):
             }
         )
 
-    def create_bulk_update_operation(self, updates: List[Dict[str, Any]], created_by: str) -> BulkOperation:
+    def create_bulk_update_operation(
+        self, updates: List[Dict[str, Any]], created_by: str
+    ) -> BulkOperation:
         """Create a bulk update prompts operation."""
         return self.create_entity(
             {
@@ -79,7 +88,9 @@ class BulkOperationService(BaseService[BulkOperation]):
             }
         )
 
-    def create_bulk_delete_operation(self, prompt_ids: List[str], created_by: str) -> BulkOperation:
+    def create_bulk_delete_operation(
+        self, prompt_ids: List[str], created_by: str
+    ) -> BulkOperation:
         """Create a bulk delete prompts operation."""
         return self.create_entity(
             {
@@ -120,7 +131,9 @@ class BulkOperationService(BaseService[BulkOperation]):
         # Calculate progress percentage
         progress_percentage = 0.0
         if operation.total_items > 0:
-            progress_percentage = (operation.processed_items / operation.total_items) * 100
+            progress_percentage = (
+                operation.processed_items / operation.total_items
+            ) * 100
 
         # Estimate time remaining (simple implementation)
         time_estimate = self._estimate_time_remaining(operation)
@@ -151,7 +164,9 @@ class BulkOperationService(BaseService[BulkOperation]):
             raise ValueError(f"Bulk operation {operation_id} not found")
 
         if operation.status != "failed":
-            raise ValueError(f"Can only retry failed operations. Current status: {operation.status}")
+            raise ValueError(
+                f"Can only retry failed operations. Current status: {operation.status}"
+            )
 
         # Reset progress counters
         updates = {
@@ -209,17 +224,23 @@ class BulkOperationService(BaseService[BulkOperation]):
             try:
                 # Create prompt
                 created_prompt = self.prompt_service.create_entity(prompt_data)
-                results.append({"index": i, "prompt_id": created_prompt.id, "status": "success"})
+                results.append(
+                    {"index": i, "prompt_id": created_prompt.id, "status": "success"}
+                )
 
                 # Update progress
-                await self._update_progress_async(operation.id, i + 1, len(results), len(errors), errors)
+                await self._update_progress_async(
+                    operation.id, i + 1, len(results), len(errors), errors
+                )
 
             except Exception as e:
                 error_msg = f"Failed to create prompt at index {i}: {str(e)}"
                 errors.append(error_msg)
                 results.append({"index": i, "status": "failed", "error": str(e)})
 
-                await self._update_progress_async(operation.id, i + 1, len(results) - len(errors), len(errors), errors)
+                await self._update_progress_async(
+                    operation.id, i + 1, len(results) - len(errors), len(errors), errors
+                )
 
         # Mark as completed
         if errors:
@@ -239,14 +260,18 @@ class BulkOperationService(BaseService[BulkOperation]):
                 self.prompt_service.update_entity(prompt_id, update_data)
                 results.append({"prompt_id": prompt_id, "status": "success"})
 
-                await self._update_progress_async(operation.id, i + 1, len(results), len(errors), errors)
+                await self._update_progress_async(
+                    operation.id, i + 1, len(results), len(errors), errors
+                )
 
             except Exception as e:
                 error_msg = f"Failed to update prompt: {str(e)}"
                 errors.append(error_msg)
                 results.append({"status": "failed", "error": str(e)})
 
-                await self._update_progress_async(operation.id, i + 1, len(results) - len(errors), len(errors), errors)
+                await self._update_progress_async(
+                    operation.id, i + 1, len(results) - len(errors), len(errors), errors
+                )
 
         # Mark as completed
         if errors:
@@ -263,16 +288,27 @@ class BulkOperationService(BaseService[BulkOperation]):
         for i, prompt_id in enumerate(prompt_ids):
             try:
                 deleted = self.prompt_service.delete_entity(prompt_id)
-                results.append({"prompt_id": prompt_id, "status": "success" if deleted else "not_found"})
+                results.append(
+                    {
+                        "prompt_id": prompt_id,
+                        "status": "success" if deleted else "not_found",
+                    }
+                )
 
-                await self._update_progress_async(operation.id, i + 1, len(results), len(errors), errors)
+                await self._update_progress_async(
+                    operation.id, i + 1, len(results), len(errors), errors
+                )
 
             except Exception as e:
                 error_msg = f"Failed to delete prompt {prompt_id}: {str(e)}"
                 errors.append(error_msg)
-                results.append({"prompt_id": prompt_id, "status": "failed", "error": str(e)})
+                results.append(
+                    {"prompt_id": prompt_id, "status": "failed", "error": str(e)}
+                )
 
-                await self._update_progress_async(operation.id, i + 1, len(results) - len(errors), len(errors), errors)
+                await self._update_progress_async(
+                    operation.id, i + 1, len(results) - len(errors), len(errors), errors
+                )
 
         # Mark as completed
         if errors:
@@ -286,7 +322,9 @@ class BulkOperationService(BaseService[BulkOperation]):
         tags_to_add = operation.metadata.get("tags_to_add", [])
         tags_to_remove = operation.metadata.get("tags_to_remove", [])
 
-        updated_count = self.prompt_service.bulk_update_tags(prompt_ids, tags_to_add, tags_to_remove)
+        updated_count = self.prompt_service.bulk_update_tags(
+            prompt_ids, tags_to_add, tags_to_remove
+        )
 
         results = [
             {
@@ -301,11 +339,18 @@ class BulkOperationService(BaseService[BulkOperation]):
         self.repository.mark_completed(operation.id, results)
 
     async def _update_progress_async(
-        self, operation_id: str, processed: int, successful: int, failed: int, errors: List[str]
+        self,
+        operation_id: str,
+        processed: int,
+        successful: int,
+        failed: int,
+        errors: List[str],
     ) -> None:
         """Update operation progress asynchronously."""
         try:
-            self.repository.update_progress(operation_id, processed, successful, failed, errors)
+            self.repository.update_progress(
+                operation_id, processed, successful, failed, errors
+            )
         except Exception as e:
             print(f"Failed to update progress for operation {operation_id}: {e}")
 

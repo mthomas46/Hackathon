@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.core.models.models import Document  # type: ignore
+from services.doc_store.core.entities import Document
 from services.shared.envelopes import DocumentEnvelope  # type: ignore
 from services.shared.utilities import stable_hash  # type: ignore
 
@@ -25,7 +25,10 @@ def create_analysis_result(
     # Prepare metadata, handling source_link specially
     final_metadata = metadata or {}
     if "source_link" not in final_metadata:
-        final_metadata["source_link"] = {"repo": repo, **({"path": path} if path else {})}
+        final_metadata["source_link"] = {
+            "repo": repo,
+            **({"path": path} if path else {}),
+        }
 
     # Create document
     doc = Document(
@@ -134,7 +137,11 @@ def process_files_analysis(
     style_meta["files_analyzed"] = len(files)
 
     # Create result with files in source_link metadata to match test expectations
-    metadata = {**style_meta, "files_analyzed": len(files), "source_link": {"repo": repo, "files": paths}}
+    metadata = {
+        **style_meta,
+        "files_analyzed": len(files),
+        "source_link": {"repo": repo, "files": paths},
+    }
 
     return create_analysis_result(
         source_type="files",

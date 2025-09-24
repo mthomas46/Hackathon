@@ -142,7 +142,9 @@ def display_live_metrics_dashboard():
 
     # Display metrics by category
     for category, category_metrics in metric_categories.items():
-        with st.expander(f"📈 {category} Metrics ({len(category_metrics)})", expanded=True):
+        with st.expander(
+            f"📈 {category} Metrics ({len(category_metrics)})", expanded=True
+        ):
             display_category_metrics(category_metrics)
 
 
@@ -210,7 +212,10 @@ def display_metric_card(metric: Dict[str, Any]):
             trend_icon = "➡️"
             trend_color = "gray"
 
-        st.markdown(f"<span style='color: {trend_color};'>{trend_icon} {trend:+.1f}%</span>", unsafe_allow_html=True)
+        st.markdown(
+            f"<span style='color: {trend_color};'>{trend_icon} {trend:+.1f}%</span>",
+            unsafe_allow_html=True,
+        )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -256,7 +261,11 @@ def display_alerts_section(thresholds: Optional[Dict[str, float]]):
             alerts_df = pd.DataFrame(alerts)
             csv_data = alerts_df.to_csv(index=False)
             st.download_button(
-                label="Download CSV", data=csv_data, file_name="alerts.csv", mime="text/csv", key="download_alerts_csv"
+                label="Download CSV",
+                data=csv_data,
+                file_name="alerts.csv",
+                mime="text/csv",
+                key="download_alerts_csv",
             )
 
 
@@ -292,7 +301,9 @@ def display_metrics_summary():
 
     # Health score
     if total_metrics > 0:
-        health_score = ((healthy_count * 1.0 + warning_count * 0.5) / total_metrics) * 100
+        health_score = (
+            (healthy_count * 1.0 + warning_count * 0.5) / total_metrics
+        ) * 100
 
         if health_score >= 90:
             st.success(f"🎉 System Health: {health_score:.1f}%")
@@ -328,7 +339,9 @@ def update_live_metrics():
         # Keep only recent history
         max_history = 50
         if len(st.session_state.metrics_history[name]) > max_history:
-            st.session_state.metrics_history[name] = st.session_state.metrics_history[name][-max_history:]
+            st.session_state.metrics_history[name] = st.session_state.metrics_history[
+                name
+            ][-max_history:]
 
         # Simulate value changes
         if "CPU" in name:
@@ -336,11 +349,17 @@ def update_live_metrics():
         elif "Memory" in name:
             metric["value"] = max(0, min(100, metric["value"] + np.random.normal(0, 1)))
         elif "Response" in name:
-            metric["value"] = max(10, min(2000, metric["value"] + np.random.normal(0, 20)))
+            metric["value"] = max(
+                10, min(2000, metric["value"] + np.random.normal(0, 20))
+            )
         elif "Error" in name:
-            metric["value"] = max(0, min(10, metric["value"] + np.random.normal(0, 0.1)))
+            metric["value"] = max(
+                0, min(10, metric["value"] + np.random.normal(0, 0.1))
+            )
         elif "Throughput" in name:
-            metric["value"] = max(50, min(2000, metric["value"] + np.random.normal(0, 10)))
+            metric["value"] = max(
+                50, min(2000, metric["value"] + np.random.normal(0, 10))
+            )
 
         # Update status based on value and threshold
         threshold = metric.get("threshold")
@@ -485,7 +504,13 @@ class MetricsWebSocketSimulator:
 
     def _generate_update(self) -> Dict[str, Any]:
         """Generate a simulated metric update."""
-        metrics = ["CPU Utilization", "Memory Usage", "Response Time", "Error Rate", "Throughput"]
+        metrics = [
+            "CPU Utilization",
+            "Memory Usage",
+            "Response Time",
+            "Error Rate",
+            "Throughput",
+        ]
         metric_name = np.random.choice(metrics)
 
         if "CPU" in metric_name or "Memory" in metric_name:
@@ -497,7 +522,12 @@ class MetricsWebSocketSimulator:
         else:  # Throughput
             value = np.random.uniform(800, 1500)
 
-        return {"metric": metric_name, "value": round(value, 2), "timestamp": datetime.now(), "source": "websocket"}
+        return {
+            "metric": metric_name,
+            "value": round(value, 2),
+            "timestamp": datetime.now(),
+            "source": "websocket",
+        }
 
     def get_updates(self) -> List[Dict[str, Any]]:
         """Get pending updates."""

@@ -58,10 +58,14 @@ class ToolSecurityScanner:
         security_analysis["vulnerabilities"] = vulnerabilities
 
         # Determine overall risk level
-        security_analysis["risk_level"] = self._calculate_risk_level(vulnerabilities, secure_analyzer_result)
+        security_analysis["risk_level"] = self._calculate_risk_level(
+            vulnerabilities, secure_analyzer_result
+        )
 
         # Generate recommendations
-        security_analysis["recommendations"] = self._generate_security_recommendations(vulnerabilities, tool)
+        security_analysis["recommendations"] = self._generate_security_recommendations(
+            vulnerabilities, tool
+        )
 
         return security_analysis
 
@@ -100,7 +104,9 @@ class ToolSecurityScanner:
         for param in tool.get("parameters", {}).get("properties", {}):
             param_name = param.lower()
 
-            if any(word in param_name for word in ["query", "command", "script", "code"]):
+            if any(
+                word in param_name for word in ["query", "command", "script", "code"]
+            ):
                 vulnerabilities.append(
                     {
                         "type": "parameter_injection_risk",
@@ -135,7 +141,9 @@ class ToolSecurityScanner:
         for param in tool.get("parameters", {}).get("properties", {}):
             param_name = param.lower()
 
-            if any(word in param_name for word in ["token", "password", "key", "secret"]):
+            if any(
+                word in param_name for word in ["token", "password", "key", "secret"]
+            ):
                 # Check if parameter is in query string (insecure)
                 if param in tool.get("parameters", {}).get("query", []):
                     vulnerabilities.append(
@@ -150,7 +158,9 @@ class ToolSecurityScanner:
 
         return vulnerabilities
 
-    def _analyze_data_exposure_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _analyze_data_exposure_risks(
+        self, tool: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Analyze tool for data exposure risks"""
         vulnerabilities = []
 
@@ -172,7 +182,9 @@ class ToolSecurityScanner:
         for param in tool.get("parameters", {}).get("properties", {}):
             param_name = param.lower()
 
-            if any(word in param_name for word in ["user", "email", "private", "internal"]):
+            if any(
+                word in param_name for word in ["user", "email", "private", "internal"]
+            ):
                 vulnerabilities.append(
                     {
                         "type": "parameter_data_exposure",
@@ -185,7 +197,9 @@ class ToolSecurityScanner:
 
         return vulnerabilities
 
-    def _analyze_file_operation_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _analyze_file_operation_risks(
+        self, tool: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Analyze tool for file operation risks"""
         vulnerabilities = []
 
@@ -207,7 +221,9 @@ class ToolSecurityScanner:
         for param in tool.get("parameters", {}).get("properties", {}):
             param_name = param.lower()
 
-            if any(word in param_name for word in ["path", "file", "directory", "folder"]):
+            if any(
+                word in param_name for word in ["path", "file", "directory", "folder"]
+            ):
                 vulnerabilities.append(
                     {
                         "type": "path_traversal_risk",
@@ -229,7 +245,11 @@ class ToolSecurityScanner:
                 "content": str(tool),  # Convert tool dict to string for analysis
                 "type": "tool_definition",
                 "service": tool.get("service"),
-                "metadata": {"tool_name": tool.get("name"), "method": tool.get("method"), "path": tool.get("path")},
+                "metadata": {
+                    "tool_name": tool.get("name"),
+                    "method": tool.get("method"),
+                    "path": tool.get("path"),
+                },
             }
 
             async with self.service_client.session() as session:
@@ -239,20 +259,34 @@ class ToolSecurityScanner:
                 async with session.post(url, json=scan_data, timeout=10) as response:
                     if response.status == 200:
                         result = await response.json()
-                        return {"success": True, "analysis": result, "response_time": 0.1}  # Placeholder
+                        return {
+                            "success": True,
+                            "analysis": result,
+                            "response_time": 0.1,
+                        }  # Placeholder
                     else:
                         error_text = await response.text()
-                        return {"success": False, "error": f"Secure-analyzer returned {response.status}: {error_text}"}
+                        return {
+                            "success": False,
+                            "error": f"Secure-analyzer returned {response.status}: {error_text}",
+                        }
 
         except Exception as e:
-            return {"success": False, "error": f"Failed to connect to secure-analyzer: {str(e)}"}
+            return {
+                "success": False,
+                "error": f"Failed to connect to secure-analyzer: {str(e)}",
+            }
 
-    def _calculate_risk_level(self, vulnerabilities: List[Dict], secure_analyzer_result: Dict) -> str:
+    def _calculate_risk_level(
+        self, vulnerabilities: List[Dict], secure_analyzer_result: Dict
+    ) -> str:
         """Calculate overall risk level for a tool"""
 
         # Count vulnerabilities by severity
         high_count = len([v for v in vulnerabilities if v.get("severity") == "high"])
-        medium_count = len([v for v in vulnerabilities if v.get("severity") == "medium"])
+        medium_count = len(
+            [v for v in vulnerabilities if v.get("severity") == "medium"]
+        )
         low_count = len([v for v in vulnerabilities if v.get("severity") == "low"])
 
         # Factor in secure-analyzer results
@@ -272,7 +306,9 @@ class ToolSecurityScanner:
         else:
             return "low"
 
-    def _generate_security_recommendations(self, vulnerabilities: List[Dict], tool: Dict) -> List[str]:
+    def _generate_security_recommendations(
+        self, vulnerabilities: List[Dict], tool: Dict
+    ) -> List[str]:
         """Generate security recommendations based on vulnerabilities"""
 
         recommendations = []
@@ -281,11 +317,15 @@ class ToolSecurityScanner:
         vuln_types = [v.get("type") for v in vulnerabilities]
 
         if any("injection" in vt for vt in vuln_types):
-            recommendations.append("Implement comprehensive input validation and sanitization")
+            recommendations.append(
+                "Implement comprehensive input validation and sanitization"
+            )
             recommendations.append("Use parameterized queries for database operations")
 
         if any("auth" in vt or "credential" in vt for vt in vuln_types):
-            recommendations.append("Implement proper authentication and authorization controls")
+            recommendations.append(
+                "Implement proper authentication and authorization controls"
+            )
             recommendations.append("Use secure credential storage and transmission")
 
         if any("file" in vt or "path" in vt for vt in vuln_types):
@@ -298,14 +338,20 @@ class ToolSecurityScanner:
 
         # Tool-specific recommendations
         if tool.get("method") == "DELETE":
-            recommendations.append("Implement confirmation mechanisms for destructive operations")
+            recommendations.append(
+                "Implement confirmation mechanisms for destructive operations"
+            )
 
         if tool.get("category") == "admin":
-            recommendations.append("Require elevated privileges for administrative operations")
+            recommendations.append(
+                "Require elevated privileges for administrative operations"
+            )
 
         # Default recommendations
         if not recommendations:
-            recommendations.append("Review tool implementation for security best practices")
+            recommendations.append(
+                "Review tool implementation for security best practices"
+            )
             recommendations.append("Implement logging and monitoring for tool usage")
 
         return list(set(recommendations))  # Remove duplicates
@@ -345,11 +391,19 @@ class ToolSecurityScanner:
                 scan_results["security_summary"]["secure_analyzer_failures"] += 1
 
             # Collect critical findings
-            high_vulns = [v for v in tool_security["vulnerabilities"] if v.get("severity") == "high"]
+            high_vulns = [
+                v
+                for v in tool_security["vulnerabilities"]
+                if v.get("severity") == "high"
+            ]
             if high_vulns:
                 for vuln in high_vulns:
                     scan_results["critical_findings"].append(
-                        {"tool": tool["name"], "service": tool["service"], "vulnerability": vuln}
+                        {
+                            "tool": tool["name"],
+                            "service": tool["service"],
+                            "vulnerability": vuln,
+                        }
                     )
 
         # Generate overall assessment
@@ -358,11 +412,17 @@ class ToolSecurityScanner:
         medium_risk = scan_results["security_summary"]["medium_risk"]
 
         if high_risk > total_tools * 0.3:
-            scan_results["overall_assessment"] = "CRITICAL - Many high-risk tools detected"
+            scan_results["overall_assessment"] = (
+                "CRITICAL - Many high-risk tools detected"
+            )
         elif high_risk > 0 or medium_risk > total_tools * 0.5:
-            scan_results["overall_assessment"] = "WARNING - Security issues require attention"
+            scan_results["overall_assessment"] = (
+                "WARNING - Security issues require attention"
+            )
         else:
-            scan_results["overall_assessment"] = "ACCEPTABLE - Low security risk overall"
+            scan_results["overall_assessment"] = (
+                "ACCEPTABLE - Low security risk overall"
+            )
 
         return scan_results
 

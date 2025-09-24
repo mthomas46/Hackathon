@@ -83,7 +83,9 @@ def render_system_info():
         st.code(status_info, language="text")
 
     except ImportError:
-        st.code("- System metrics unavailable\n- Status: ✅ Operational", language="text")
+        st.code(
+            "- System metrics unavailable\n- Status: ✅ Operational", language="text"
+        )
 
 
 def render_links():

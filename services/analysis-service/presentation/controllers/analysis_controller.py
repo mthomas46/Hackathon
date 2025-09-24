@@ -1,6 +1,5 @@
 """Analysis Controller - Handles core document analysis endpoints."""
 
-
 from fastapi import APIRouter
 
 from ...application.dto import ErrorResponse, PerformAnalysisRequest
@@ -159,7 +158,9 @@ class AnalysisController:
             return await analysis_handlers.handle_portfolio_risk_assessment(req)
 
         @self.router.post("/analyze/maintenance/forecast")
-        async def analyze_maintenance_forecast_endpoint(req: MaintenanceForecastRequest):
+        async def analyze_maintenance_forecast_endpoint(
+            req: MaintenanceForecastRequest,
+        ):
             """Forecast maintenance needs and schedule for documentation.
 
             Predicts when documentation will require updates based on multiple
@@ -168,7 +169,9 @@ class AnalysisController:
             return await analysis_handlers.handle_maintenance_forecast(req)
 
         @self.router.post("/analyze/maintenance/forecast/portfolio")
-        async def analyze_maintenance_forecast_portfolio_endpoint(req: PortfolioMaintenanceForecastRequest):
+        async def analyze_maintenance_forecast_portfolio_endpoint(
+            req: PortfolioMaintenanceForecastRequest,
+        ):
             """Forecast maintenance needs across a portfolio of documents.
 
             Provides comprehensive maintenance forecasting across multiple documents
@@ -177,7 +180,9 @@ class AnalysisController:
             return await analysis_handlers.handle_portfolio_maintenance_forecast(req)
 
         @self.router.post("/analyze/quality/degradation")
-        async def analyze_quality_degradation_endpoint(req: QualityDegradationDetectionRequest):
+        async def analyze_quality_degradation_endpoint(
+            req: QualityDegradationDetectionRequest,
+        ):
             """Detect quality degradation in documentation over time.
 
             Monitors documentation quality metrics over time to identify
@@ -186,7 +191,9 @@ class AnalysisController:
             return await analysis_handlers.handle_quality_degradation_detection(req)
 
         @self.router.post("/analyze/quality/degradation/portfolio")
-        async def analyze_quality_degradation_portfolio_endpoint(req: PortfolioQualityDegradationRequest):
+        async def analyze_quality_degradation_portfolio_endpoint(
+            req: PortfolioQualityDegradationRequest,
+        ):
             """Monitor quality degradation across a portfolio of documents.
 
             Provides comprehensive quality monitoring across multiple documents
@@ -204,7 +211,9 @@ class AnalysisController:
             return await analysis_handlers.handle_change_impact_analysis(req)
 
         @self.router.post("/analyze/change/impact/portfolio")
-        async def analyze_change_impact_portfolio_endpoint(req: PortfolioChangeImpactRequest):
+        async def analyze_change_impact_portfolio_endpoint(
+            req: PortfolioChangeImpactRequest,
+        ):
             """Analyze the impact of changes across a document portfolio.
 
             Performs comprehensive change impact analysis across multiple documents

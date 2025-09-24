@@ -8,8 +8,13 @@ from ...domain.entities.analysis import Analysis, AnalysisStatus
 from ...domain.value_objects.analysis_type import AnalysisType
 from ...domain.value_objects.confidence import Confidence
 from ...domain.value_objects.metrics import AnalysisMetrics
-from ...infrastructure.repositories.analysis_repository import AnalysisRepository, InMemoryAnalysisRepository
-from ...infrastructure.repositories.sqlite_analysis_repository import SQLiteAnalysisRepository
+from ...infrastructure.repositories.analysis_repository import (
+    AnalysisRepository,
+    InMemoryAnalysisRepository,
+)
+from ...infrastructure.repositories.sqlite_analysis_repository import (
+    SQLiteAnalysisRepository,
+)
 
 
 class TestAnalysisRepositoryInterface:
@@ -17,7 +22,9 @@ class TestAnalysisRepositoryInterface:
 
     def test_repository_interface_definition(self):
         """Test that AnalysisRepository defines the expected interface."""
-        repo_methods = [method for method in dir(AnalysisRepository) if not method.startswith("_")]
+        repo_methods = [
+            method for method in dir(AnalysisRepository) if not method.startswith("_")
+        ]
 
         expected_methods = [
             "save",
@@ -30,7 +37,9 @@ class TestAnalysisRepositoryInterface:
         ]
 
         for method in expected_methods:
-            assert method in repo_methods, f"Method {method} should be defined in AnalysisRepository"
+            assert (
+                method in repo_methods
+            ), f"Method {method} should be defined in AnalysisRepository"
 
 
 class TestInMemoryAnalysisRepository:
@@ -106,7 +115,12 @@ class TestInMemoryAnalysisRepository:
     async def test_get_by_document_id(self, repository):
         """Test getting analyses by document ID."""
         # Create analyses for different documents
-        doc_ids = ["doc-1", "doc-2", "doc-1", "doc-3"]  # 2 for doc-1, 1 for doc-2, 1 for doc-3
+        doc_ids = [
+            "doc-1",
+            "doc-2",
+            "doc-1",
+            "doc-3",
+        ]  # 2 for doc-1, 1 for doc-2, 1 for doc-3
 
         for i, doc_id in enumerate(doc_ids):
             analysis = Analysis(
@@ -126,11 +140,19 @@ class TestInMemoryAnalysisRepository:
     @pytest.mark.asyncio
     async def test_get_by_status(self, repository):
         """Test getting analyses by status."""
-        statuses = [AnalysisStatus.PENDING, AnalysisStatus.RUNNING, AnalysisStatus.COMPLETED, AnalysisStatus.FAILED]
+        statuses = [
+            AnalysisStatus.PENDING,
+            AnalysisStatus.RUNNING,
+            AnalysisStatus.COMPLETED,
+            AnalysisStatus.FAILED,
+        ]
 
         for i, status in enumerate(statuses):
             analysis = Analysis(
-                id=f"analysis-{i}", document_id="doc-123", analysis_type=AnalysisType.SEMANTIC_SIMILARITY, status=status
+                id=f"analysis-{i}",
+                document_id="doc-123",
+                analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
+                status=status,
             )
             await repository.save(analysis)
 
@@ -156,12 +178,17 @@ class TestInMemoryAnalysisRepository:
 
         for i, analysis_type in enumerate(types):
             analysis = Analysis(
-                id=f"analysis-{i}", document_id="doc-123", analysis_type=analysis_type, status=AnalysisStatus.COMPLETED
+                id=f"analysis-{i}",
+                document_id="doc-123",
+                analysis_type=analysis_type,
+                status=AnalysisStatus.COMPLETED,
             )
             await repository.save(analysis)
 
         # Get semantic similarity analyses
-        semantic_analyses = await repository.get_by_analysis_type(AnalysisType.SEMANTIC_SIMILARITY)
+        semantic_analyses = await repository.get_by_analysis_type(
+            AnalysisType.SEMANTIC_SIMILARITY
+        )
         assert len(semantic_analyses) == 2
         for analysis in semantic_analyses:
             assert analysis.analysis_type == AnalysisType.SEMANTIC_SIMILARITY
@@ -189,7 +216,9 @@ class TestInMemoryAnalysisRepository:
     @pytest.mark.asyncio
     async def test_analysis_with_metrics(self, repository):
         """Test analysis with performance metrics."""
-        metrics = AnalysisMetrics(processing_time_seconds=2.5, memory_usage_mb=150.0, confidence_score=0.88)
+        metrics = AnalysisMetrics(
+            processing_time_seconds=2.5, memory_usage_mb=150.0, confidence_score=0.88
+        )
 
         analysis = Analysis(
             id="metrics-analysis",
@@ -306,9 +335,14 @@ class TestSQLiteAnalysisRepository:
     @pytest.mark.asyncio
     async def test_get_by_status_sqlite(self, repository):
         """Test getting analyses by status with SQLite."""
-        for i, status in enumerate([AnalysisStatus.PENDING, AnalysisStatus.COMPLETED, AnalysisStatus.FAILED]):
+        for i, status in enumerate(
+            [AnalysisStatus.PENDING, AnalysisStatus.COMPLETED, AnalysisStatus.FAILED]
+        ):
             analysis = Analysis(
-                id=f"analysis-{i}", document_id="doc-123", analysis_type=AnalysisType.SEMANTIC_SIMILARITY, status=status
+                id=f"analysis-{i}",
+                document_id="doc-123",
+                analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
+                status=status,
             )
             await repository.save(analysis)
 
@@ -319,15 +353,24 @@ class TestSQLiteAnalysisRepository:
     @pytest.mark.asyncio
     async def test_get_by_analysis_type_sqlite(self, repository):
         """Test getting analyses by analysis type with SQLite."""
-        types = [AnalysisType.SEMANTIC_SIMILARITY, AnalysisType.CODE_QUALITY, AnalysisType.SEMANTIC_SIMILARITY]
+        types = [
+            AnalysisType.SEMANTIC_SIMILARITY,
+            AnalysisType.CODE_QUALITY,
+            AnalysisType.SEMANTIC_SIMILARITY,
+        ]
 
         for i, analysis_type in enumerate(types):
             analysis = Analysis(
-                id=f"analysis-{i}", document_id="doc-123", analysis_type=analysis_type, status=AnalysisStatus.COMPLETED
+                id=f"analysis-{i}",
+                document_id="doc-123",
+                analysis_type=analysis_type,
+                status=AnalysisStatus.COMPLETED,
             )
             await repository.save(analysis)
 
-        semantic_analyses = await repository.get_by_analysis_type(AnalysisType.SEMANTIC_SIMILARITY)
+        semantic_analyses = await repository.get_by_analysis_type(
+            AnalysisType.SEMANTIC_SIMILARITY
+        )
         assert len(semantic_analyses) == 2
         for analysis in semantic_analyses:
             assert analysis.analysis_type == AnalysisType.SEMANTIC_SIMILARITY
@@ -350,7 +393,9 @@ class TestAnalysisRepositoryIntegration:
     @pytest.mark.asyncio
     async def test_analysis_repository_with_document_repository(self):
         """Test analysis repository integration with document repository."""
-        from ...infrastructure.repositories.document_repository import InMemoryDocumentRepository
+        from ...infrastructure.repositories.document_repository import (
+            InMemoryDocumentRepository,
+        )
 
         doc_repo = InMemoryDocumentRepository()
         analysis_repo = InMemoryAnalysisRepository()
@@ -431,7 +476,9 @@ class TestAnalysisRepositoryIntegration:
                 document_id="bulk-doc",
                 analysis_type=AnalysisType.SEMANTIC_SIMILARITY,
                 status=AnalysisStatus.COMPLETED,
-                confidence=Confidence(0.8 + (i % 20) * 0.01),  # Vary confidence slightly
+                confidence=Confidence(
+                    0.8 + (i % 20) * 0.01
+                ),  # Vary confidence slightly
             )
             analyses.append(analysis)
             await repo.save(analysis)
@@ -455,9 +502,21 @@ class TestAnalysisRepositoryIntegration:
 
         # Create analyses with various performance metrics
         performance_scenarios = [
-            {"time": 0.5, "memory": 50.0, "confidence": 0.95},  # Fast, low memory, high confidence
-            {"time": 5.0, "memory": 200.0, "confidence": 0.85},  # Slow, high memory, medium confidence
-            {"time": 15.0, "memory": 500.0, "confidence": 0.75},  # Very slow, very high memory, low confidence
+            {
+                "time": 0.5,
+                "memory": 50.0,
+                "confidence": 0.95,
+            },  # Fast, low memory, high confidence
+            {
+                "time": 5.0,
+                "memory": 200.0,
+                "confidence": 0.85,
+            },  # Slow, high memory, medium confidence
+            {
+                "time": 15.0,
+                "memory": 500.0,
+                "confidence": 0.75,
+            },  # Very slow, very high memory, low confidence
         ]
 
         for i, scenario in enumerate(performance_scenarios):
@@ -566,7 +625,9 @@ class TestAnalysisRepositoryEdgeCases:
         status_analyses = await repo.get_by_status(AnalysisStatus.PENDING)
         assert len(status_analyses) == 0
 
-        type_analyses = await repo.get_by_analysis_type(AnalysisType.SEMANTIC_SIMILARITY)
+        type_analyses = await repo.get_by_analysis_type(
+            AnalysisType.SEMANTIC_SIMILARITY
+        )
         assert len(type_analyses) == 0
 
         delete_result = await repo.delete("non-existent")
@@ -586,7 +647,10 @@ class TestAnalysisRepositoryEdgeCases:
             results={
                 "special_field": "value with @#$%^&*()",
                 "unicode_content": "🚀 Analysis complete 📊",
-                "nested_data": {"array": [1, "string", {"key": "value"}], "special_chars": "ñáéíóú"},
+                "nested_data": {
+                    "array": [1, "string", {"key": "value"}],
+                    "special_chars": "ñáéíóú",
+                },
             },
         )
 
@@ -605,12 +669,18 @@ class TestAnalysisRepositoryEdgeCases:
 
         # Create analyses with large result data
         large_results = {
-            "similarity_matrix": [[0.8 + i * 0.01] * 1000 for i in range(100)],  # 100x1000 matrix
+            "similarity_matrix": [
+                [0.8 + i * 0.01] * 1000 for i in range(100)
+            ],  # 100x1000 matrix
             "matched_documents": [f"doc-{i}" for i in range(1000)],  # 1000 matches
-            "detailed_scores": {f"doc-{i}": 0.5 + (i % 50) * 0.01 for i in range(500)},  # 500 detailed scores
+            "detailed_scores": {
+                f"doc-{i}": 0.5 + (i % 50) * 0.01 for i in range(500)
+            },  # 500 detailed scores
             "processing_metadata": {
                 "algorithm_steps": [f"step-{i}" for i in range(100)],
-                "intermediate_results": [{"step": i, "data": "x" * 1000} for i in range(50)],
+                "intermediate_results": [
+                    {"step": i, "data": "x" * 1000} for i in range(50)
+                ],
             },
         }
 

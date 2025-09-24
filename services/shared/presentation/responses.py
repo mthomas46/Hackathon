@@ -18,22 +18,21 @@ class APIResponse(BaseModel):
     success: bool = Field(..., description="Whether the operation was successful")
     data: Optional[Any] = Field(None, description="Response data payload")
     message: Optional[str] = Field(None, description="Human-readable message")
-    errors: Optional[List[Dict[str, Any]]] = Field(None, description="Error details if applicable")
+    errors: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Error details if applicable"
+    )
     request_id: Optional[str] = Field(None, description="Request correlation ID")
     timestamp: str = Field(..., description="Response timestamp in ISO format")
 
     class Config:
         """Pydantic configuration."""
+
         allow_population_by_field_name = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 def create_success_response(
-    data: Any = None,
-    message: str = "",
-    request_id: Optional[str] = None
+    data: Any = None, message: str = "", request_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """Create standardized success response.
 
@@ -50,7 +49,7 @@ def create_success_response(
         data=data,
         message=message or "Operation completed successfully",
         request_id=request_id,
-        timestamp=datetime.utcnow().isoformat()
+        timestamp=datetime.utcnow().isoformat(),
     ).dict()
 
 
@@ -59,7 +58,7 @@ def create_error_response(
     error_code: Optional[str] = None,
     status_code: int = 500,
     request_id: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None
+    details: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Create standardized error response.
 
@@ -76,20 +75,25 @@ def create_error_response(
     return APIResponse(
         success=False,
         message=message,
-        errors=[{
-            "code": error_code,
-            "message": message,
-            "details": details,
-            "status_code": status_code
-        }] if error_code else None,
+        errors=(
+            [
+                {
+                    "code": error_code,
+                    "message": message,
+                    "details": details,
+                    "status_code": status_code,
+                }
+            ]
+            if error_code
+            else None
+        ),
         request_id=request_id,
-        timestamp=datetime.utcnow().isoformat()
+        timestamp=datetime.utcnow().isoformat(),
     ).dict()
 
 
 def create_validation_error_response(
-    errors: Dict[str, List[str]],
-    request_id: Optional[str] = None
+    errors: Dict[str, List[str]], request_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """Create validation error response.
 
@@ -102,17 +106,14 @@ def create_validation_error_response(
     """
     error_details = []
     for field, messages in errors.items():
-        error_details.append({
-            "field": field,
-            "messages": messages
-        })
+        error_details.append({"field": field, "messages": messages})
 
     return APIResponse(
         success=False,
         message="Validation failed",
         errors=error_details,
         request_id=request_id,
-        timestamp=datetime.utcnow().isoformat()
+        timestamp=datetime.utcnow().isoformat(),
     ).dict()
 
 
@@ -121,7 +122,7 @@ def create_paginated_response(
     total: int,
     page: int,
     page_size: int,
-    request_id: Optional[str] = None
+    request_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Create paginated response.
 
@@ -144,17 +145,15 @@ def create_paginated_response(
                 "page_size": page_size,
                 "total_pages": (total + page_size - 1) // page_size,
                 "has_next": page * page_size < total,
-                "has_prev": page > 1
-            }
+                "has_prev": page > 1,
+            },
         },
-        request_id=request_id
+        request_id=request_id,
     )
 
 
 def create_list_response(
-    items: List[Any],
-    count: Optional[int] = None,
-    request_id: Optional[str] = None
+    items: List[Any], count: Optional[int] = None, request_id: Optional[str] = None
 ) -> Dict[str, Any]:
     """Create list response for simple collections.
 
@@ -167,11 +166,8 @@ def create_list_response(
         Standardized list response
     """
     return create_success_response(
-        data={
-            "items": items,
-            "count": count if count is not None else len(items)
-        },
-        request_id=request_id
+        data={"items": items, "count": count if count is not None else len(items)},
+        request_id=request_id,
     )
 
 
@@ -181,7 +177,7 @@ def create_crud_response(
     message: str = "",
     data: Any = None,
     request_id: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> Dict[str, Any]:
     """Create CRUD operation response.
 
@@ -196,11 +192,7 @@ def create_crud_response(
     Returns:
         Standardized CRUD response
     """
-    response_data = {
-        "operation": operation,
-        "resource_id": resource_id,
-        **kwargs
-    }
+    response_data = {"operation": operation, "resource_id": resource_id, **kwargs}
 
     if data is not None:
         response_data["data"] = data
@@ -208,23 +200,29 @@ def create_crud_response(
     default_messages = {
         "create": f"Resource created successfully{' with ID ' + resource_id if resource_id else ''}",
         "read": "Resource retrieved successfully",
-        "update": f"Resource {resource_id} updated successfully" if resource_id else "Resource updated successfully",
-        "delete": f"Resource {resource_id} deleted successfully" if resource_id else "Resource deleted successfully"
+        "update": (
+            f"Resource {resource_id} updated successfully"
+            if resource_id
+            else "Resource updated successfully"
+        ),
+        "delete": (
+            f"Resource {resource_id} deleted successfully"
+            if resource_id
+            else "Resource deleted successfully"
+        ),
     }
 
     return create_success_response(
         data=response_data,
-        message=message or default_messages.get(operation, "Operation completed successfully"),
-        request_id=request_id
+        message=message
+        or default_messages.get(operation, "Operation completed successfully"),
+        request_id=request_id,
     )
 
 
 # Service-specific response helpers
 def create_service_success_response(
-    service_name: str,
-    operation: str,
-    data: Any = None,
-    **context
+    service_name: str, operation: str, data: Any = None, **context
 ) -> Dict[str, Any]:
     """Create service-specific success response.
 
@@ -238,20 +236,13 @@ def create_service_success_response(
         Service-specific success response
     """
     return create_success_response(
-        data={
-            "service": service_name,
-            "operation": operation,
-            "data": data,
-            **context
-        },
-        message=f"{service_name} operation '{operation}' completed successfully"
+        data={"service": service_name, "operation": operation, "data": data, **context},
+        message=f"{service_name} operation '{operation}' completed successfully",
     )
 
 
 def create_memory_agent_success_response(
-    operation: str,
-    data: Any = None,
-    **context
+    operation: str, data: Any = None, **context
 ) -> Dict[str, Any]:
     """Create memory agent specific success response.
 
@@ -264,15 +255,13 @@ def create_memory_agent_success_response(
         Memory agent response
     """
     return create_service_success_response(
-        service_name="memory-agent",
-        operation=operation,
-        data=data,
-        **context
+        service_name="memory-agent", operation=operation, data=data, **context
     )
 
 
 # Legacy compatibility aliases
 # These maintain backward compatibility while encouraging migration to unified functions
+
 
 def success_response(*args, **kwargs) -> Dict[str, Any]:
     """Legacy alias for create_success_response."""

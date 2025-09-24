@@ -29,8 +29,22 @@ class MockDataGenerator:
         self.tech_mapping = {
             "api": ["REST", "GraphQL", "Swagger", "OpenAPI", "FastAPI"],
             "database": ["PostgreSQL", "Redis", "MongoDB", "MySQL", "SQLite"],
-            "frontend": ["React", "Vue.js", "Angular", "Next.js", "JavaScript", "TypeScript"],
-            "backend": ["Node.js", "Express", "Django", "Flask", "Spring Boot", "FastAPI"],
+            "frontend": [
+                "React",
+                "Vue.js",
+                "Angular",
+                "Next.js",
+                "JavaScript",
+                "TypeScript",
+            ],
+            "backend": [
+                "Node.js",
+                "Express",
+                "Django",
+                "Flask",
+                "Spring Boot",
+                "FastAPI",
+            ],
             "react": ["React", "Redux", "React Router", "Next.js"],
             "node": ["Node.js", "Express", "npm", "yarn"],
             "postgres": ["PostgreSQL", "PostGIS", "pgAdmin", "Database"],
@@ -53,7 +67,17 @@ class MockDataGenerator:
                 keywords.append(keyword)
 
         # Extract technology names from query (e.g., "React", "Node.js", "PostgreSQL")
-        tech_indicators = ["react", "vue", "angular", "node", "python", "java", "postgres", "mysql", "mongodb"]
+        tech_indicators = [
+            "react",
+            "vue",
+            "angular",
+            "node",
+            "python",
+            "java",
+            "postgres",
+            "mysql",
+            "mongodb",
+        ]
         for tech in tech_indicators:
             if tech in query_lower:
                 keywords.append(tech)
@@ -71,7 +95,9 @@ class MockDataGenerator:
 
         return keywords[:10]  # Limit to 10 keywords
 
-    def generate_mock_team_members(self, keywords: List[str], team_size: int) -> List[Dict[str, Any]]:
+    def generate_mock_team_members(
+        self, keywords: List[str], team_size: int
+    ) -> List[Dict[str, Any]]:
         """Generate mock team members based on keywords."""
         roles = ["developer", "qa_engineer", "product_owner", "designer", "architect"]
         team_members = []
@@ -82,7 +108,11 @@ class MockDataGenerator:
         for i in range(actual_team_size):
             role = roles[i]
             # Use keywords as skills, limited to 3 per member
-            skills = keywords[:3] if len(keywords) >= 3 else keywords + ["general"] * (3 - len(keywords))
+            skills = (
+                keywords[:3]
+                if len(keywords) >= 3
+                else keywords + ["general"] * (3 - len(keywords))
+            )
 
             team_members.append(
                 {
@@ -91,15 +121,24 @@ class MockDataGenerator:
                     "role": role,
                     "skills": skills,
                     "experience_years": 3 + i,  # 3, 4, 5, 6, 7 years
-                    "productivity_factor": round(0.8 + (i * 0.1), 1),  # 0.8, 0.9, 1.0, 1.1, 1.2
+                    "productivity_factor": round(
+                        0.8 + (i * 0.1), 1
+                    ),  # 0.8, 0.9, 1.0, 1.1, 1.2
                 }
             )
 
         return team_members
 
-    def generate_mock_documents(self, keywords: List[str], context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def generate_mock_documents(
+        self, keywords: List[str], context: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Generate mock documents based on keywords and context."""
-        doc_types = ["api_documentation", "architecture_diagram", "requirements_spec", "user_manual"]
+        doc_types = [
+            "api_documentation",
+            "architecture_diagram",
+            "requirements_spec",
+            "user_manual",
+        ]
         documents = []
 
         for i, doc_type in enumerate(doc_types):
@@ -116,7 +155,9 @@ class MockDataGenerator:
 
         return documents
 
-    def infer_technologies_from_query(self, query: str, keywords: List[str]) -> List[str]:
+    def infer_technologies_from_query(
+        self, query: str, keywords: List[str]
+    ) -> List[str]:
         """Infer technology stack from query and keywords."""
         base_technologies = ["Python", "FastAPI"]
         inferred_tech = []
@@ -130,7 +171,9 @@ class MockDataGenerator:
         all_tech = base_technologies + list(set(inferred_tech))
         return all_tech[:7]  # Base + 5 inferred
 
-    def generate_mock_timeline(self, duration_weeks: int, keywords: List[str]) -> List[Dict[str, Any]]:
+    def generate_mock_timeline(
+        self, duration_weeks: int, keywords: List[str]
+    ) -> List[Dict[str, Any]]:
         """Generate mock project timeline."""
         phases = ["Planning", "Development", "Testing", "Deployment", "Maintenance"]
         timeline = []

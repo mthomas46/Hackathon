@@ -175,7 +175,9 @@ class AuditLogger:
             event.hash_chain = hashlib.sha256(chain_data).hexdigest()
 
         # Sign the event
-        event.signature = hmac.new(self.secret_key.encode(), data_str.encode(), hashlib.sha256).hexdigest()
+        event.signature = hmac.new(
+            self.secret_key.encode(), data_str.encode(), hashlib.sha256
+        ).hexdigest()
 
         self.events.append(event)
         self.last_hash = current_hash
@@ -242,26 +244,39 @@ class AuditLogger:
             calculated_hash = hashlib.sha256(data_str.encode()).hexdigest()
 
             # Verify signature
-            expected_signature = hmac.new(self.secret_key.encode(), data_str.encode(), hashlib.sha256).hexdigest()
+            expected_signature = hmac.new(
+                self.secret_key.encode(), data_str.encode(), hashlib.sha256
+            ).hexdigest()
 
             if event.signature != expected_signature:
-                violations.append(f"Event {event.event_id}: signature verification failed")
+                violations.append(
+                    f"Event {event.event_id}: signature verification failed"
+                )
 
             # Verify hash chain
             if current_hash and event.hash_chain:
-                expected_chain = hashlib.sha256(f"{current_hash}:{calculated_hash}".encode()).hexdigest()
+                expected_chain = hashlib.sha256(
+                    f"{current_hash}:{calculated_hash}".encode()
+                ).hexdigest()
                 if event.hash_chain != expected_chain:
-                    violations.append(f"Event {event.event_id}: hash chain verification failed")
+                    violations.append(
+                        f"Event {event.event_id}: hash chain verification failed"
+                    )
 
             current_hash = calculated_hash
 
         return len(violations) == 0, violations
 
     async def export_audit_log(
-        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None, format: str = "json"
+        self,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        format: str = "json",
     ) -> str:
         """Export audit log for compliance or backup."""
-        events = await self.get_events(start_date=start_date, end_date=end_date, limit=10000)  # Large limit for export
+        events = await self.get_events(
+            start_date=start_date, end_date=end_date, limit=10000
+        )  # Large limit for export
 
         if format == "json":
             return json.dumps(
@@ -360,7 +375,10 @@ class ComplianceMonitor:
                 description="Security incidents must be reported within 24 hours",
                 standard=ComplianceStandard.ISO_27001,
                 severity="high",
-                conditions={"event_types": ["security.alert"], "max_reporting_hours": 24},
+                conditions={
+                    "event_types": ["security.alert"],
+                    "max_reporting_hours": 24,
+                },
             ),
         }
 
@@ -379,7 +397,9 @@ class ComplianceMonitor:
 
         return violations
 
-    async def _check_rule_violation(self, rule: ComplianceRule, event: AuditEvent) -> Optional[ComplianceViolation]:
+    async def _check_rule_violation(
+        self, rule: ComplianceRule, event: AuditEvent
+    ) -> Optional[ComplianceViolation]:
         """Check if event violates a specific compliance rule."""
         conditions = rule.conditions
 
@@ -394,7 +414,10 @@ class ComplianceMonitor:
                 return None
 
         # Check role authorization for HIPAA
-        if "authorized_roles_only" in conditions and rule.standard == ComplianceStandard.HIPAA:
+        if (
+            "authorized_roles_only" in conditions
+            and rule.standard == ComplianceStandard.HIPAA
+        ):
             # In production, this would check user's actual role
             # For now, assume violation if accessing protected resources
             pass
@@ -409,7 +432,11 @@ class ComplianceMonitor:
                 "rule_name": rule.name,
                 "standard": rule.standard.value,
                 "conditions": conditions,
-                "event_details": {"type": event.event_type.value, "resource": event.resource, "action": event.action},
+                "event_details": {
+                    "type": event.event_type.value,
+                    "resource": event.resource,
+                    "action": event.action,
+                },
             },
             severity=rule.severity,
             timestamp=datetime.now(),
@@ -418,13 +445,18 @@ class ComplianceMonitor:
         return violation
 
     async def get_violations(
-        self, standard: Optional[ComplianceStandard] = None, resolved: Optional[bool] = None, limit: int = 100
+        self,
+        standard: Optional[ComplianceStandard] = None,
+        resolved: Optional[bool] = None,
+        limit: int = 100,
     ) -> List[ComplianceViolation]:
         """Get compliance violations with filtering."""
         violations = list(self.violations.values())
 
         if standard:
-            violations = [v for v in violations if self.rules[v.rule_id].standard == standard]
+            violations = [
+                v for v in violations if self.rules[v.rule_id].standard == standard
+            ]
 
         if resolved is not None:
             violations = [v for v in violations if v.resolved == resolved]
@@ -454,11 +486,16 @@ class ComplianceMonitor:
 
         report = {
             "standard": standard.value,
-            "period": {"start_date": start_date.isoformat(), "end_date": end_date.isoformat()},
+            "period": {
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+            },
             "summary": {
                 "total_violations": len(violations),
                 "severity_breakdown": {
-                    "critical": len([v for v in violations if v.severity == "critical"]),
+                    "critical": len(
+                        [v for v in violations if v.severity == "critical"]
+                    ),
                     "high": len([v for v in violations if v.severity == "high"]),
                     "medium": len([v for v in violations if v.severity == "medium"]),
                     "low": len([v for v in violations if v.severity == "low"]),
@@ -476,7 +513,9 @@ class ComplianceMonitor:
                 }
                 for v in violations
             ],
-            "compliance_status": "compliant" if len(violations) == 0 else "non_compliant",
+            "compliance_status": (
+                "compliant" if len(violations) == 0 else "non_compliant"
+            ),
             "generated_at": datetime.now().isoformat(),
         }
 
@@ -488,7 +527,9 @@ class ComplianceMonitor:
 
         for standard in ComplianceStandard:
             violations = await self.get_violations(standard=standard, resolved=False)
-            critical_violations = len([v for v in violations if v.severity == "critical"])
+            critical_violations = len(
+                [v for v in violations if v.severity == "critical"]
+            )
 
             status[standard.value] = {
                 "total_violations": len(violations),

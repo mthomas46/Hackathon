@@ -26,7 +26,7 @@ class ServiceClient:
         timeout: int = 30,
         retry_service: Optional[RetryService] = None,
         circuit_breaker: Optional[CircuitBreakerService] = None,
-        headers: Optional[Dict[str, str]] = None
+        headers: Optional[Dict[str, str]] = None,
     ):
         """Initialize service client with resilience patterns.
 
@@ -39,7 +39,7 @@ class ServiceClient:
             headers: Additional headers to include in requests
         """
         self.service_name = service_name
-        self.base_url = base_url.rstrip('/')
+        self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.retry_service = retry_service or RetryService()
         self.circuit_breaker = circuit_breaker
@@ -48,7 +48,7 @@ class ServiceClient:
         default_headers = {
             "User-Agent": f"service-client/{service_name}",
             "Accept": "application/json",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
         if headers:
             default_headers.update(headers)
@@ -56,7 +56,7 @@ class ServiceClient:
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(timeout),
             headers=default_headers,
-            follow_redirects=True
+            follow_redirects=True,
         )
 
     async def get(
@@ -64,7 +64,7 @@ class ServiceClient:
         path: str,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Perform GET request with resilience patterns.
 
@@ -77,7 +77,9 @@ class ServiceClient:
         Returns:
             JSON response data
         """
-        return await self._request("GET", path, params=params, headers=headers, **kwargs)
+        return await self._request(
+            "GET", path, params=params, headers=headers, **kwargs
+        )
 
     async def post(
         self,
@@ -85,7 +87,7 @@ class ServiceClient:
         data: Optional[Any] = None,
         json: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Perform POST request with resilience patterns.
 
@@ -99,7 +101,9 @@ class ServiceClient:
         Returns:
             JSON response data
         """
-        return await self._request("POST", path, data=data, json=json, headers=headers, **kwargs)
+        return await self._request(
+            "POST", path, data=data, json=json, headers=headers, **kwargs
+        )
 
     async def put(
         self,
@@ -107,10 +111,12 @@ class ServiceClient:
         data: Optional[Any] = None,
         json: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Perform PUT request with resilience patterns."""
-        return await self._request("PUT", path, data=data, json=json, headers=headers, **kwargs)
+        return await self._request(
+            "PUT", path, data=data, json=json, headers=headers, **kwargs
+        )
 
     async def patch(
         self,
@@ -118,26 +124,20 @@ class ServiceClient:
         data: Optional[Any] = None,
         json: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Perform PATCH request with resilience patterns."""
-        return await self._request("PATCH", path, data=data, json=json, headers=headers, **kwargs)
+        return await self._request(
+            "PATCH", path, data=data, json=json, headers=headers, **kwargs
+        )
 
     async def delete(
-        self,
-        path: str,
-        headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        self, path: str, headers: Optional[Dict[str, str]] = None, **kwargs
     ) -> Dict[str, Any]:
         """Perform DELETE request with resilience patterns."""
         return await self._request("DELETE", path, headers=headers, **kwargs)
 
-    async def _request(
-        self,
-        method: str,
-        path: str,
-        **kwargs
-    ) -> Dict[str, Any]:
+    async def _request(self, method: str, path: str, **kwargs) -> Dict[str, Any]:
         """Execute HTTP request with resilience patterns.
 
         Args:
@@ -177,8 +177,8 @@ class ServiceClient:
                         "method": method,
                         "url": url,
                         "status_code": e.response.status_code,
-                        "error": str(e)
-                    }
+                        "error": str(e),
+                    },
                 )
                 raise
 
@@ -190,10 +190,12 @@ class ServiceClient:
                         "method": method,
                         "url": url,
                         "error": str(e),
-                        "error_type": type(e).__name__
-                    }
+                        "error_type": type(e).__name__,
+                    },
                 )
-                raise ServiceClientError(f"Error calling {self.service_name}: {str(e)}") from e
+                raise ServiceClientError(
+                    f"Error calling {self.service_name}: {str(e)}"
+                ) from e
 
         # Execute with retry logic
         return await self.retry_service.execute_with_retry(_execute_request)
@@ -233,7 +235,7 @@ class ServiceClientFactory:
         service_name: str,
         timeout: int = 30,
         retry_service: Optional[RetryService] = None,
-        circuit_breaker: Optional[CircuitBreakerService] = None
+        circuit_breaker: Optional[CircuitBreakerService] = None,
     ) -> ServiceClient:
         """Get or create service client.
 
@@ -261,7 +263,7 @@ class ServiceClientFactory:
                 base_url=self.service_registry[service_name],
                 timeout=timeout,
                 retry_service=retry_service,
-                circuit_breaker=circuit_breaker
+                circuit_breaker=circuit_breaker,
             )
 
         return self.clients[service_name]
@@ -300,6 +302,7 @@ class ServiceClientFactory:
 
 class ServiceClientError(Exception):
     """Exception raised for service client errors."""
+
     pass
 
 
@@ -317,10 +320,7 @@ def initialize_service_clients(service_registry: Dict[str, str]):
     _service_client_factory = ServiceClientFactory(service_registry)
 
 
-def get_service_client(
-    service_name: str,
-    timeout: int = 30
-) -> ServiceClient:
+def get_service_client(service_name: str, timeout: int = 30) -> ServiceClient:
     """Get service client from global factory.
 
     Args:
@@ -334,7 +334,9 @@ def get_service_client(
         RuntimeError: If service clients not initialized
     """
     if not _service_client_factory:
-        raise RuntimeError("Service clients not initialized. Call initialize_service_clients() first.")
+        raise RuntimeError(
+            "Service clients not initialized. Call initialize_service_clients() first."
+        )
     return _service_client_factory.get_client(service_name, timeout=timeout)
 
 

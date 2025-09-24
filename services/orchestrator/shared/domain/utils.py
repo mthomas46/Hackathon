@@ -9,13 +9,17 @@ from typing import Any, Dict, List, Optional
 
 def validate_request_data(data: Dict[str, Any], required_fields: list) -> Optional[str]:
     """Validate that required fields are present in request data."""
-    missing_fields = [field for field in required_fields if field not in data or data[field] is None]
+    missing_fields = [
+        field for field in required_fields if field not in data or data[field] is None
+    ]
     if missing_fields:
         return f"Missing required fields: {', '.join(missing_fields)}"
     return None
 
 
-def validate_string_length(value: str, min_length: int = 0, max_length: int = 1000) -> Optional[str]:
+def validate_string_length(
+    value: str, min_length: int = 0, max_length: int = 1000
+) -> Optional[str]:
     """Validate string length constraints."""
     if len(value) < min_length:
         return f"String too short (minimum {min_length} characters)"
@@ -35,7 +39,9 @@ def validate_numeric_range(
     return None
 
 
-def validate_list_length(items: List, min_length: int = 0, max_length: int = 1000) -> Optional[str]:
+def validate_list_length(
+    items: List, min_length: int = 0, max_length: int = 1000
+) -> Optional[str]:
     """Validate list length constraints."""
     if len(items) < min_length:
         return f"List too short (minimum {min_length} items)"

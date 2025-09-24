@@ -20,7 +20,9 @@ class MockEcosystemClient:
         self.delay_seconds = 0
         self.response_override: Optional[Dict[str, Any]] = None
 
-    async def _make_request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
+    async def _make_request(
+        self, method: str, endpoint: str, **kwargs
+    ) -> Dict[str, Any]:
         """Mock request implementation."""
         if self.delay_seconds > 0:
             await asyncio.sleep(self.delay_seconds)
@@ -29,7 +31,14 @@ class MockEcosystemClient:
             raise Exception(f"Mock {self.service_name} client failure")
 
         # Record the call
-        self.calls.append({"method": method, "endpoint": endpoint, "kwargs": kwargs, "timestamp": datetime.now()})
+        self.calls.append(
+            {
+                "method": method,
+                "endpoint": endpoint,
+                "kwargs": kwargs,
+                "timestamp": datetime.now(),
+            }
+        )
 
         # Return override if set, otherwise default response
         if self.response_override:
@@ -51,9 +60,13 @@ class MockAnalysisServiceClient(MockEcosystemClient):
     def __init__(self):
         super().__init__("analysis-service")
 
-    async def analyze_document_quality(self, document_ids: List[str], **kwargs) -> Dict[str, Any]:
+    async def analyze_document_quality(
+        self, document_ids: List[str], **kwargs
+    ) -> Dict[str, Any]:
         """Mock document quality analysis."""
-        return await self._make_request("POST", "/analyze/quality", document_ids=document_ids, **kwargs)
+        return await self._make_request(
+            "POST", "/analyze/quality", document_ids=document_ids, **kwargs
+        )
 
     async def analyze_code_complexity(self, **kwargs) -> Dict[str, Any]:
         """Mock code complexity analysis."""
@@ -63,10 +76,14 @@ class MockAnalysisServiceClient(MockEcosystemClient):
         """Mock semantic similarity analysis."""
         return await self._make_request("POST", "/analyze/similarity", **kwargs)
 
-    async def get_code_quality_metrics(self, project_id: str, time_period_days: int) -> Dict[str, Any]:
+    async def get_code_quality_metrics(
+        self, project_id: str, time_period_days: int
+    ) -> Dict[str, Any]:
         """Mock code quality metrics retrieval."""
         return await self._make_request(
-            "GET", f"/projects/{project_id}/metrics/quality", time_period_days=time_period_days
+            "GET",
+            f"/projects/{project_id}/metrics/quality",
+            time_period_days=time_period_days,
         )
 
 
@@ -76,7 +93,9 @@ class MockInterpreterClient(MockEcosystemClient):
     def __init__(self):
         super().__init__("interpreter")
 
-    async def generate_insight_content(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def generate_insight_content(
+        self, request_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Mock insight content generation."""
         return await self._make_request("POST", "/insights/generate", **request_data)
 
@@ -105,9 +124,13 @@ class MockDocStoreClient(MockEcosystemClient):
 
     async def search_documents(self, query: str, **kwargs) -> Dict[str, Any]:
         """Mock document search."""
-        return await self._make_request("GET", "/documents/search", query=query, **kwargs)
+        return await self._make_request(
+            "GET", "/documents/search", query=query, **kwargs
+        )
 
-    async def update_document(self, document_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_document(
+        self, document_id: str, updates: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Mock document update."""
         return await self._make_request("PUT", f"/documents/{document_id}", **updates)
 
@@ -128,11 +151,15 @@ class MockLLMGatewayClient(MockEcosystemClient):
 
     async def analyze_sentiment(self, text: str, **kwargs) -> Dict[str, Any]:
         """Mock sentiment analysis."""
-        return await self._make_request("POST", "/analyze/sentiment", text=text, **kwargs)
+        return await self._make_request(
+            "POST", "/analyze/sentiment", text=text, **kwargs
+        )
 
     async def extract_keywords(self, text: str, **kwargs) -> Dict[str, Any]:
         """Mock keyword extraction."""
-        return await self._make_request("POST", "/extract/keywords", text=text, **kwargs)
+        return await self._make_request(
+            "POST", "/extract/keywords", text=text, **kwargs
+        )
 
     async def summarize_text(self, text: str, **kwargs) -> Dict[str, Any]:
         """Mock text summarization."""
@@ -145,17 +172,29 @@ class MockNotificationServiceClient(MockEcosystemClient):
     def __init__(self):
         super().__init__("notification-service")
 
-    async def send_notification(self, recipient: str, message: str, **kwargs) -> Dict[str, Any]:
+    async def send_notification(
+        self, recipient: str, message: str, **kwargs
+    ) -> Dict[str, Any]:
         """Mock notification sending."""
-        return await self._make_request("POST", "/notifications", recipient=recipient, message=message, **kwargs)
+        return await self._make_request(
+            "POST", "/notifications", recipient=recipient, message=message, **kwargs
+        )
 
-    async def send_email(self, to: str, subject: str, body: str, **kwargs) -> Dict[str, Any]:
+    async def send_email(
+        self, to: str, subject: str, body: str, **kwargs
+    ) -> Dict[str, Any]:
         """Mock email sending."""
-        return await self._make_request("POST", "/email", to=to, subject=subject, body=body, **kwargs)
+        return await self._make_request(
+            "POST", "/email", to=to, subject=subject, body=body, **kwargs
+        )
 
-    async def create_webhook(self, url: str, events: List[str], **kwargs) -> Dict[str, Any]:
+    async def create_webhook(
+        self, url: str, events: List[str], **kwargs
+    ) -> Dict[str, Any]:
         """Mock webhook creation."""
-        return await self._make_request("POST", "/webhooks", url=url, events=events, **kwargs)
+        return await self._make_request(
+            "POST", "/webhooks", url=url, events=events, **kwargs
+        )
 
 
 class MockMockDataGeneratorClient(MockEcosystemClient):
@@ -164,24 +203,42 @@ class MockMockDataGeneratorClient(MockEcosystemClient):
     def __init__(self):
         super().__init__("mock-data-generator")
 
-    async def generate_project_docs(self, project_config: Dict[str, Any], **kwargs) -> Dict[str, Any]:
+    async def generate_project_docs(
+        self, project_config: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
         """Mock project documentation generation."""
-        return await self._make_request("POST", "/simulation/project-docs", project_config=project_config, **kwargs)
-
-    async def generate_timeline_events(self, timeline_config: Dict[str, Any], **kwargs) -> Dict[str, Any]:
-        """Mock timeline events generation."""
         return await self._make_request(
-            "POST", "/simulation/timeline-events", timeline_config=timeline_config, **kwargs
+            "POST", "/simulation/project-docs", project_config=project_config, **kwargs
         )
 
-    async def generate_team_activities(self, team_config: Dict[str, Any], **kwargs) -> Dict[str, Any]:
-        """Mock team activities generation."""
-        return await self._make_request("POST", "/simulation/team-activities", team_config=team_config, **kwargs)
+    async def generate_timeline_events(
+        self, timeline_config: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        """Mock timeline events generation."""
+        return await self._make_request(
+            "POST",
+            "/simulation/timeline-events",
+            timeline_config=timeline_config,
+            **kwargs,
+        )
 
-    async def generate_ecosystem_scenario(self, scenario_config: Dict[str, Any], **kwargs) -> Dict[str, Any]:
+    async def generate_team_activities(
+        self, team_config: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        """Mock team activities generation."""
+        return await self._make_request(
+            "POST", "/simulation/team-activities", team_config=team_config, **kwargs
+        )
+
+    async def generate_ecosystem_scenario(
+        self, scenario_config: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
         """Mock ecosystem scenario generation."""
         return await self._make_request(
-            "POST", "/simulation/ecosystem-scenario", scenario_config=scenario_config, **kwargs
+            "POST",
+            "/simulation/ecosystem-scenario",
+            scenario_config=scenario_config,
+            **kwargs,
         )
 
 
@@ -318,7 +375,10 @@ MOCK_RESPONSES = {
         "recommendations": ["Good quality documentation"],
     },
     "failed_analysis": {"status": "error", "error": "Analysis service unavailable"},
-    "successful_generation": {"content": "Mock generated content", "metadata": {"quality_score": 0.9}},
+    "successful_generation": {
+        "content": "Mock generated content",
+        "metadata": {"quality_score": 0.9},
+    },
     "successful_storage": {"document_id": "mock_doc_001", "status": "stored"},
     "successful_notification": {"notification_id": "mock_notif_001", "status": "sent"},
 }

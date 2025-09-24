@@ -43,7 +43,9 @@ class ServicesOverviewMonitor:
             return False
         return (utc_now() - cache_time).total_seconds() < self._cache_ttl
 
-    async def get_services_overview(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_services_overview(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get comprehensive overview of all services in the ecosystem."""
         if not force_refresh and self.is_cache_fresh("overview"):
             return getattr(self, "_overview_cache", {})
@@ -53,22 +55,62 @@ class ServicesOverviewMonitor:
 
             # Define all services and their health endpoints
             services = {
-                "orchestrator": {"url_func": get_orchestrator_url, "endpoint": "/health"},
+                "orchestrator": {
+                    "url_func": get_orchestrator_url,
+                    "endpoint": "/health",
+                },
                 "doc_store": {"url_func": get_doc_store_url, "endpoint": "/health"},
-                "prompt-store": {"url_func": get_prompt_store_url, "endpoint": "/health"},
-                "analysis-service": {"url_func": get_analysis_service_url, "endpoint": "/health"},
-                "summarizer-hub": {"url_func": get_summarizer_hub_url, "endpoint": "/health"},
-                "log-collector": {"url_func": get_log_collector_url, "endpoint": "/health"},
-                "bedrock-proxy": {"url_func": get_bedrock_proxy_url, "endpoint": "/health"},
-                "code-analyzer": {"url_func": get_code_analyzer_url, "endpoint": "/health"},
-                "discovery-agent": {"url_func": get_discovery_agent_url, "endpoint": "/health"},
+                "prompt-store": {
+                    "url_func": get_prompt_store_url,
+                    "endpoint": "/health",
+                },
+                "analysis-service": {
+                    "url_func": get_analysis_service_url,
+                    "endpoint": "/health",
+                },
+                "summarizer-hub": {
+                    "url_func": get_summarizer_hub_url,
+                    "endpoint": "/health",
+                },
+                "log-collector": {
+                    "url_func": get_log_collector_url,
+                    "endpoint": "/health",
+                },
+                "bedrock-proxy": {
+                    "url_func": get_bedrock_proxy_url,
+                    "endpoint": "/health",
+                },
+                "code-analyzer": {
+                    "url_func": get_code_analyzer_url,
+                    "endpoint": "/health",
+                },
+                "discovery-agent": {
+                    "url_func": get_discovery_agent_url,
+                    "endpoint": "/health",
+                },
                 "github-mcp": {"url_func": get_github_mcp_url, "endpoint": "/health"},
                 "interpreter": {"url_func": get_interpreter_url, "endpoint": "/health"},
-                "memory-agent": {"url_func": get_memory_agent_url, "endpoint": "/health"},
-                "notification-service": {"url_func": get_notification_service_url, "endpoint": "/health"},
-                "secure-analyzer": {"url_func": get_secure_analyzer_url, "endpoint": "/health"},
-                "source-agent": {"url_func": get_source_agent_url, "endpoint": "/health"},
-                "frontend": {"status": "healthy", "version": "2.0.0", "description": "Frontend service is operational"},
+                "memory-agent": {
+                    "url_func": get_memory_agent_url,
+                    "endpoint": "/health",
+                },
+                "notification-service": {
+                    "url_func": get_notification_service_url,
+                    "endpoint": "/health",
+                },
+                "secure-analyzer": {
+                    "url_func": get_secure_analyzer_url,
+                    "endpoint": "/health",
+                },
+                "source-agent": {
+                    "url_func": get_source_agent_url,
+                    "endpoint": "/health",
+                },
+                "frontend": {
+                    "status": "healthy",
+                    "version": "2.0.0",
+                    "description": "Frontend service is operational",
+                },
             }
 
             # Collect status from all services
@@ -92,7 +134,9 @@ class ServicesOverviewMonitor:
                         "name": service_name,
                         "status": status_data.get("status", "unknown"),
                         "version": status_data.get("version", "unknown"),
-                        "description": status_data.get("description", f"{service_name} service status"),
+                        "description": status_data.get(
+                            "description", f"{service_name} service status"
+                        ),
                         "last_checked": utc_now().isoformat(),
                         "response": status_data,
                     }
@@ -118,7 +162,9 @@ class ServicesOverviewMonitor:
             system_health = (
                 "healthy"
                 if unhealthy_count == 0
-                else ("degraded" if unhealthy_count < total_services * 0.5 else "critical")
+                else (
+                    "degraded" if unhealthy_count < total_services * 0.5 else "critical"
+                )
             )
 
             system_metrics = {
@@ -126,31 +172,63 @@ class ServicesOverviewMonitor:
                 "healthy_services": healthy_count,
                 "unhealthy_services": unhealthy_count,
                 "system_health": system_health,
-                "uptime_percentage": round((healthy_count / total_services) * 100, 1) if total_services > 0 else 0,
+                "uptime_percentage": (
+                    round((healthy_count / total_services) * 100, 1)
+                    if total_services > 0
+                    else 0
+                ),
                 "last_updated": utc_now().isoformat(),
             }
 
             # Group services by category
             service_categories = {
-                "core_infrastructure": ["orchestrator", "doc_store", "prompt-store", "frontend"],
-                "analysis_services": ["analysis-service", "code-analyzer", "secure-analyzer"],
+                "core_infrastructure": [
+                    "orchestrator",
+                    "doc_store",
+                    "prompt-store",
+                    "frontend",
+                ],
+                "analysis_services": [
+                    "analysis-service",
+                    "code-analyzer",
+                    "secure-analyzer",
+                ],
                 "ai_ml_services": ["summarizer-hub", "bedrock-proxy", "interpreter"],
-                "integration_services": ["discovery-agent", "github-mcp", "source-agent"],
-                "operational_services": ["log-collector", "memory-agent", "notification-service"],
+                "integration_services": [
+                    "discovery-agent",
+                    "github-mcp",
+                    "source-agent",
+                ],
+                "operational_services": [
+                    "log-collector",
+                    "memory-agent",
+                    "notification-service",
+                ],
             }
 
             categorized_services = {}
             for category, service_list in service_categories.items():
                 categorized_services[category] = {
-                    "services": [service_statuses.get(s, {}) for s in service_list if s in service_statuses],
+                    "services": [
+                        service_statuses.get(s, {})
+                        for s in service_list
+                        if s in service_statuses
+                    ],
                     "healthy_count": sum(
-                        1 for s in service_list if service_statuses.get(s, {}).get("status") == "healthy"
+                        1
+                        for s in service_list
+                        if service_statuses.get(s, {}).get("status") == "healthy"
                     ),
                     "total_count": len(service_list),
                     "health_percentage": (
                         round(
                             (
-                                sum(1 for s in service_list if service_statuses.get(s, {}).get("status") == "healthy")
+                                sum(
+                                    1
+                                    for s in service_list
+                                    if service_statuses.get(s, {}).get("status")
+                                    == "healthy"
+                                )
                                 / len(service_list)
                             )
                             * 100,
@@ -224,7 +302,11 @@ class ServicesOverviewMonitor:
             }
 
         except Exception as e:
-            return {"service_name": service_name, "error": str(e), "last_checked": utc_now().isoformat()}
+            return {
+                "service_name": service_name,
+                "error": str(e),
+                "last_checked": utc_now().isoformat(),
+            }
 
 
 # Global instance

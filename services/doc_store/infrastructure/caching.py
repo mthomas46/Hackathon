@@ -73,7 +73,9 @@ class DocStoreCache:
             try:
                 self.redis_client = aioredis.from_url(self.redis_url)
                 # Configure Redis for caching
-                await self.redis_client.config_set("maxmemory", f"{self.max_memory_mb}mb")
+                await self.redis_client.config_set(
+                    "maxmemory", f"{self.max_memory_mb}mb"
+                )
                 await self.redis_client.config_set("maxmemory-policy", "allkeys-lru")
                 self.stats.connections = 1
                 return True
@@ -106,7 +108,9 @@ class DocStoreCache:
         else:
             return len(str(value).encode("utf-8"))
 
-    async def get(self, operation: str, params: Dict[str, Any], tags: Optional[List[str]] = None) -> Optional[Any]:
+    async def get(
+        self, operation: str, params: Dict[str, Any], tags: Optional[List[str]] = None
+    ) -> Optional[Any]:
         """Get cached value with performance monitoring."""
         start_time = time.time()
         cache_key = self._generate_cache_key(operation, params)
@@ -119,7 +123,9 @@ class DocStoreCache:
                     if cached_data:
                         # Update access time and hit count
                         await self.redis_client.hincrby(f"{cache_key}:meta", "hits", 1)
-                        await self.redis_client.hset(f"{cache_key}:meta", "last_accessed", utc_now().isoformat())
+                        await self.redis_client.hset(
+                            f"{cache_key}:meta", "last_accessed", utc_now().isoformat()
+                        )
 
                         self.stats.total_hits += 1
                         response_time = (time.time() - start_time) * 1000
@@ -151,7 +157,12 @@ class DocStoreCache:
             return None
 
     async def set(
-        self, operation: str, params: Dict[str, Any], value: Any, ttl: int = 300, tags: Optional[List[str]] = None
+        self,
+        operation: str,
+        params: Dict[str, Any],
+        value: Any,
+        ttl: int = 300,
+        tags: Optional[List[str]] = None,
     ) -> bool:
         """Set cached value with metadata."""
         cache_key = self._generate_cache_key(operation, params)
@@ -184,27 +195,40 @@ class DocStoreCache:
                 # Add to tag index
                 if tags:
                     for tag in tags:
-                        await self.redis_client.sadd(f"{self.cache_prefix}tag:{tag}", cache_key)
-                        await self.redis_client.expire(f"{self.cache_prefix}tag:{tag}", ttl)
+                        await self.redis_client.sadd(
+                            f"{self.cache_prefix}tag:{tag}", cache_key
+                        )
+                        await self.redis_client.expire(
+                            f"{self.cache_prefix}tag:{tag}", ttl
+                        )
             except Exception:
                 redis_success = False
 
         # Always store in local cache as backup
         try:
             self.local_cache[cache_key] = CacheEntry(
-                key=cache_key, value=value, ttl=ttl, created_at=utc_now(), size_bytes=size_bytes, tags=tags or []
+                key=cache_key,
+                value=value,
+                ttl=ttl,
+                created_at=utc_now(),
+                size_bytes=size_bytes,
+                tags=tags or [],
             )
 
             # Update stats
             self.stats.total_entries = len(self.local_cache)
-            self.stats.total_size_bytes = sum(entry.size_bytes for entry in self.local_cache.values())
+            self.stats.total_size_bytes = sum(
+                entry.size_bytes for entry in self.local_cache.values()
+            )
 
             return True
         except Exception:
             # If even local cache fails, only return False if Redis also failed
             return redis_success
 
-    async def invalidate(self, operation: Optional[str] = None, tags: Optional[List[str]] = None) -> int:
+    async def invalidate(
+        self, operation: Optional[str] = None, tags: Optional[List[str]] = None
+    ) -> int:
         """Invalidate cache entries by operation or tags."""
         try:
             invalidated = 0
@@ -263,17 +287,27 @@ class DocStoreCache:
                 info = await self.redis_client.info()
                 redis_stats = {
                     "redis_used_memory": info.get("used_memory", 0),
-                    "redis_total_connections": info.get("total_connections_received", 0),
+                    "redis_total_connections": info.get(
+                        "total_connections_received", 0
+                    ),
                     "redis_connected_clients": info.get("connected_clients", 0),
                     "redis_keys_count": await self.redis_client.dbsize(),
                 }
 
             # Calculate hit rate
             total_requests = self.stats.total_hits + self.stats.total_misses
-            hit_rate = (self.stats.total_hits / total_requests * 100) if total_requests > 0 else 0
+            hit_rate = (
+                (self.stats.total_hits / total_requests * 100)
+                if total_requests > 0
+                else 0
+            )
 
             # Calculate average response time
-            avg_response_time = sum(self.response_times) / len(self.response_times) if self.response_times else 0
+            avg_response_time = (
+                sum(self.response_times) / len(self.response_times)
+                if self.response_times
+                else 0
+            )
 
             # Keep only last 100 response times
             self.response_times = self.response_times[-100:]
@@ -322,7 +356,9 @@ class DocStoreCache:
                 del self.local_cache[key]
 
             if expired_keys:
-                optimizations.append(f"Cleaned {len(expired_keys)} expired local cache entries")
+                optimizations.append(
+                    f"Cleaned {len(expired_keys)} expired local cache entries"
+                )
 
             # Redis optimizations would go here
             if self.redis_client:
@@ -330,7 +366,10 @@ class DocStoreCache:
                 await self.redis_client.memory_purge()
                 optimizations.append("Triggered Redis memory optimization")
 
-            return {"optimizations_applied": optimizations, "local_cache_entries_after": len(self.local_cache)}
+            return {
+                "optimizations_applied": optimizations,
+                "local_cache_entries_after": len(self.local_cache),
+            }
 
         except Exception as e:
             return {"error": str(e)}

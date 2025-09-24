@@ -10,8 +10,9 @@ Provides integration between the Summarizer Hub and LLM Gateway for:
 from datetime import datetime
 from typing import Any, Dict
 
-from services.shared.core.config.config import get_config_value
-from services.shared.core.constants_new import ServiceNames
+# Config now handled by standardized config system in main.py
+# Service name now handled by standardized config system
+import os
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
 
@@ -21,7 +22,7 @@ class LLMGatewayIntegration:
 
     def __init__(self):
         self.clients = ServiceClients()
-        self.llm_gateway_url = get_config_value("LLM_GATEWAY_URL", "http://llm-gateway:5055", section="services")
+        self.llm_gateway_url = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")
 
     async def enhance_summarization_with_llm(
         self, text: str, original_summary: str, summarization_metadata: Dict[str, Any]
@@ -58,7 +59,9 @@ Return only the enhanced summary, no additional explanation.
                 "temperature": 0.3,
             }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 enhanced_summary = response["data"]["response"].strip()
@@ -66,7 +69,9 @@ Return only the enhanced summary, no additional explanation.
                 # Compare original vs enhanced
                 original_length = len(original_summary)
                 enhanced_length = len(enhanced_summary)
-                improvement_ratio = enhanced_length / original_length if original_length > 0 else 1.0
+                improvement_ratio = (
+                    enhanced_length / original_length if original_length > 0 else 1.0
+                )
 
                 return {
                     "enhanced_summary": enhanced_summary,
@@ -92,10 +97,18 @@ Return only the enhanced summary, no additional explanation.
             fire_and_forget(
                 "summarizer_llm_enhancement_error",
                 f"LLM enhancement error: {str(e)}",
-                ServiceNames.SUMMARIZER_HUB,
-                {"text_length": len(text), "original_summary_length": len(original_summary), "error": str(e)},
+                "summarizer-hub",
+                {
+                    "text_length": len(text),
+                    "original_summary_length": len(original_summary),
+                    "error": str(e),
+                },
             )
-            return {"enhanced_summary": original_summary, "error": str(e), "enhancement_method": "error_fallback"}
+            return {
+                "enhanced_summary": original_summary,
+                "error": str(e),
+                "enhancement_method": "error_fallback",
+            }
 
     async def intelligent_provider_selection_for_summary(
         self, text: str, summary_requirements: Dict[str, Any]
@@ -148,7 +161,9 @@ Return a JSON object with keys: recommended_provider, reasoning, confidence_scor
                 "temperature": 0.2,
             }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -191,7 +206,7 @@ Return a JSON object with keys: recommended_provider, reasoning, confidence_scor
             fire_and_forget(
                 "summarizer_provider_selection_error",
                 f"Provider selection error: {str(e)}",
-                ServiceNames.SUMMARIZER_HUB,
+                "summarizer-hub",
                 {"text_length": text_length, "error": str(e)},
             )
             return {
@@ -234,9 +249,16 @@ Provide a comprehensive quality assessment including:
 Return your assessment as a JSON object with keys: completeness, accuracy, clarity, conciseness, overall_score, strengths, improvements, suggestions
             """.strip()
 
-            llm_request = {"prompt": assessment_prompt, "provider": "ollama", "max_tokens": 1000, "temperature": 0.2}
+            llm_request = {
+                "prompt": assessment_prompt,
+                "provider": "ollama",
+                "max_tokens": 1000,
+                "temperature": 0.2,
+            }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -246,12 +268,20 @@ Return your assessment as a JSON object with keys: completeness, accuracy, clari
                     quality_assessment = json.loads(llm_response)
 
                     # Calculate weighted overall score
-                    weights = {"completeness": 0.3, "accuracy": 0.3, "clarity": 0.2, "conciseness": 0.2}
+                    weights = {
+                        "completeness": 0.3,
+                        "accuracy": 0.3,
+                        "clarity": 0.2,
+                        "conciseness": 0.2,
+                    }
                     weighted_score = sum(
-                        quality_assessment.get(metric, 5) * weight for metric, weight in weights.items()
+                        quality_assessment.get(metric, 5) * weight
+                        for metric, weight in weights.items()
                     )
 
-                    quality_assessment["weighted_overall_score"] = round(weighted_score, 1)
+                    quality_assessment["weighted_overall_score"] = round(
+                        weighted_score, 1
+                    )
 
                     return {
                         "quality_assessment": quality_assessment,
@@ -292,8 +322,12 @@ Return your assessment as a JSON object with keys: completeness, accuracy, clari
             fire_and_forget(
                 "summarizer_quality_assessment_error",
                 f"Quality assessment error: {str(e)}",
-                ServiceNames.SUMMARIZER_HUB,
-                {"text_length": len(text), "summary_length": len(summary), "error": str(e)},
+                "summarizer-hub",
+                {
+                    "text_length": len(text),
+                    "summary_length": len(summary),
+                    "error": str(e),
+                },
             )
             return {
                 "quality_assessment": {
@@ -307,7 +341,9 @@ Return your assessment as a JSON object with keys: completeness, accuracy, clari
                 "assessment_method": "error_fallback",
             }
 
-    async def generate_summary_metadata_with_llm(self, text: str, summary: str) -> Dict[str, Any]:
+    async def generate_summary_metadata_with_llm(
+        self, text: str, summary: str
+    ) -> Dict[str, Any]:
         """Use LLM Gateway to generate rich metadata for summaries."""
         try:
             metadata_prompt = f"""
@@ -332,9 +368,16 @@ Generate metadata including:
 Return the metadata as a JSON object with keys: topics, entities, document_type, technical_complexity, target_audience, key_takeaways, related_domains, confidence_score
             """.strip()
 
-            llm_request = {"prompt": metadata_prompt, "provider": "ollama", "max_tokens": 800, "temperature": 0.3}
+            llm_request = {
+                "prompt": metadata_prompt,
+                "provider": "ollama",
+                "max_tokens": 800,
+                "temperature": 0.3,
+            }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -392,8 +435,12 @@ Return the metadata as a JSON object with keys: topics, entities, document_type,
             fire_and_forget(
                 "summarizer_metadata_generation_error",
                 f"Metadata generation error: {str(e)}",
-                ServiceNames.SUMMARIZER_HUB,
-                {"text_length": len(text), "summary_length": len(summary), "error": str(e)},
+                "summarizer-hub",
+                {
+                    "text_length": len(text),
+                    "summary_length": len(summary),
+                    "error": str(e),
+                },
             )
             return {
                 "summary_metadata": {

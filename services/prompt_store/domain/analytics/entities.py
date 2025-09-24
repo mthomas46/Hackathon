@@ -38,7 +38,11 @@ class PromptPerformanceMetrics(BaseEntity):
             "total_requests": self.total_requests,
             "successful_requests": self.successful_requests,
             "failed_requests": self.failed_requests,
-            "success_rate": (self.successful_requests / self.total_requests) if self.total_requests > 0 else 0,
+            "success_rate": (
+                (self.successful_requests / self.total_requests)
+                if self.total_requests > 0
+                else 0
+            ),
             "average_response_time_ms": self.average_response_time_ms,
             "median_response_time_ms": self.median_response_time_ms,
             "p95_response_time_ms": self.p95_response_time_ms,
@@ -80,7 +84,11 @@ class PromptPerformanceMetrics(BaseEntity):
                 if isinstance(data.get("created_at"), str)
                 else datetime.utcnow()
             ),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if isinstance(data.get("updated_at"), str)
+                else None
+            ),
         )
 
 
@@ -137,7 +145,11 @@ class UserSatisfactionScore(BaseEntity):
                 if isinstance(data.get("created_at"), str)
                 else datetime.utcnow()
             ),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if isinstance(data.get("updated_at"), str)
+                else None
+            ),
         )
 
 
@@ -174,7 +186,9 @@ class PromptOptimizationSuggestion(BaseEntity):
             "expected_impact": self.expected_impact,
             "llm_service_used": self.llm_service_used,
             "implemented": self.implemented,
-            "implemented_at": self.implemented_at.isoformat() if self.implemented_at else None,
+            "implemented_at": (
+                self.implemented_at.isoformat() if self.implemented_at else None
+            ),
             "implementation_result": self.implementation_result,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
@@ -197,7 +211,9 @@ class PromptOptimizationSuggestion(BaseEntity):
             llm_service_used=data["llm_service_used"],
             implemented=data.get("implemented", False),
             implemented_at=(
-                datetime.fromisoformat(data["implemented_at"]) if isinstance(data.get("implemented_at"), str) else None
+                datetime.fromisoformat(data["implemented_at"])
+                if isinstance(data.get("implemented_at"), str)
+                else None
             ),
             implementation_result=data.get("implementation_result"),
             created_at=(
@@ -205,7 +221,11 @@ class PromptOptimizationSuggestion(BaseEntity):
                 if isinstance(data.get("created_at"), str)
                 else datetime.utcnow()
             ),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if isinstance(data.get("updated_at"), str)
+                else None
+            ),
         )
 
 
@@ -265,7 +285,11 @@ class PromptEvolutionMetrics(BaseEntity):
                 if isinstance(data.get("created_at"), str)
                 else datetime.utcnow()
             ),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if isinstance(data.get("updated_at"), str)
+                else None
+            ),
         )
 
 
@@ -322,7 +346,11 @@ class CostOptimizationMetrics(BaseEntity):
                 if isinstance(data.get("created_at"), str)
                 else datetime.utcnow()
             ),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if isinstance(data.get("updated_at"), str)
+                else None
+            ),
         )
 
 
@@ -376,14 +404,20 @@ class BiasDetectionResult(BaseEntity):
             analysis_method=data["analysis_method"],
             resolved=data.get("resolved", False),
             resolved_at=(
-                datetime.fromisoformat(data["resolved_at"]) if isinstance(data.get("resolved_at"), str) else None
+                datetime.fromisoformat(data["resolved_at"])
+                if isinstance(data.get("resolved_at"), str)
+                else None
             ),
             created_at=(
                 datetime.fromisoformat(data["created_at"])
                 if isinstance(data.get("created_at"), str)
                 else datetime.utcnow()
             ),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if isinstance(data.get("updated_at"), str)
+                else None
+            ),
         )
 
 
@@ -449,5 +483,9 @@ class PromptTestingResult(BaseEntity):
                 if isinstance(data.get("created_at"), str)
                 else datetime.utcnow()
             ),
-            updated_at=datetime.fromisoformat(data["updated_at"]) if isinstance(data.get("updated_at"), str) else None,
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"])
+                if isinstance(data.get("updated_at"), str)
+                else None
+            ),
         )

@@ -8,10 +8,9 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from services.shared.core.di.services import ILoggerService
-from services.shared.core.logging.logger import get_logger
-from services.shared.core.performance.cache_manager import get_cache_manager
-from services.shared.core.performance.profiler import profile_async_operation
+# Using standardized shared services
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.intelligent_caching import get_service_cache
 
 
 @dataclass
@@ -33,7 +32,11 @@ class EmbeddingResult:
         """Convert to dictionary for serialization."""
         return {
             "text": self.text,
-            "embedding": self.embedding.tolist() if isinstance(self.embedding, np.ndarray) else self.embedding,
+            "embedding": (
+                self.embedding.tolist()
+                if isinstance(self.embedding, np.ndarray)
+                else self.embedding
+            ),
             "model_name": self.model_name,
             "dimensions": self.dimensions,
             "created_at": self.created_at.isoformat(),
@@ -82,7 +85,10 @@ class EmbeddingCalculator:
     """Calculates text embeddings using various models."""
 
     def __init__(
-        self, logger: Optional[ILoggerService] = None, cache: Optional[Any] = None, model_name: str = "all-MiniLM-L6-v2"
+        self,
+        logger: Optional[ILoggerService] = None,
+        cache: Optional[Any] = None,
+        model_name: str = "all-MiniLM-L6-v2",
     ):
         """Initialize embedding calculator.
 
@@ -109,12 +115,15 @@ class EmbeddingCalculator:
             self._dimensions = self._model.get_sentence_embedding_dimension()
 
             await self._logger.info(
-                f"Loaded semantic model: {self._model_name}", model_name=self._model_name, dimensions=self._dimensions
+                f"Loaded semantic model: {self._model_name}",
+                model_name=self._model_name,
+                dimensions=self._dimensions,
             )
 
         except ImportError:
             await self._logger.warning(
-                "SentenceTransformers not available, using fallback", model_name=self._model_name
+                "SentenceTransformers not available, using fallback",
+                model_name=self._model_name,
             )
             # Fallback implementation
             self._model = "fallback"
@@ -130,17 +139,25 @@ class EmbeddingCalculator:
             EmbeddingResult with the calculated embedding
         """
         # Check cache first
-        cache_key = f"embedding:{self._model_name}:{hashlib.sha256(text.encode()).hexdigest()}"
+        cache_key = (
+            f"embedding:{self._model_name}:{hashlib.sha256(text.encode()).hexdigest()}"
+        )
         cached_result = await self._cache.get(cache_key)
 
         if cached_result:
-            await self._logger.debug("Using cached embedding", text_length=len(text), model_name=self._model_name)
+            await self._logger.debug(
+                "Using cached embedding",
+                text_length=len(text),
+                model_name=self._model_name,
+            )
             return EmbeddingResult.from_dict(cached_result)
 
         # Load model if needed
         await self._load_model()
 
-        async with profile_async_operation("calculate_embedding", model=self._model_name):
+        async with profile_async_operation(
+            "calculate_embedding", model=self._model_name
+        ):
             if self._model == "fallback":
                 # Simple fallback embedding
                 embedding = self._calculate_fallback_embedding(text)
@@ -149,14 +166,20 @@ class EmbeddingCalculator:
                 embedding = self._model.encode(text, convert_to_numpy=True)
 
             result = EmbeddingResult(
-                text=text, embedding=embedding, model_name=self._model_name, dimensions=self._dimensions
+                text=text,
+                embedding=embedding,
+                model_name=self._model_name,
+                dimensions=self._dimensions,
             )
 
             # Cache the result
             await self._cache.set(cache_key, result.to_dict(), ttl=3600)  # 1 hour TTL
 
             await self._logger.debug(
-                "Calculated embedding", text_length=len(text), model_name=self._model_name, dimensions=self._dimensions
+                "Calculated embedding",
+                text_length=len(text),
+                model_name=self._model_name,
+                dimensions=self._dimensions,
             )
 
             return result
@@ -173,11 +196,15 @@ class EmbeddingCalculator:
         # Add some text statistics
         embedding[self._dimensions - 3] = len(text) / 1000.0  # Text length
         embedding[self._dimensions - 2] = len(set(chars)) / 100.0  # Unique chars
-        embedding[self._dimensions - 1] = sum(ord(c) for c in chars) / (255 * len(chars))  # Average char value
+        embedding[self._dimensions - 1] = sum(ord(c) for c in chars) / (
+            255 * len(chars)
+        )  # Average char value
 
         return embedding.astype(np.float32)
 
-    async def calculate_batch_embeddings(self, texts: List[str]) -> List[EmbeddingResult]:
+    async def calculate_batch_embeddings(
+        self, texts: List[str]
+    ) -> List[EmbeddingResult]:
         """Calculate embeddings for multiple texts.
 
         Args:
@@ -194,7 +221,9 @@ class EmbeddingCalculator:
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 await self._logger.error(
-                    f"Failed to calculate embedding for text {i}", error=str(result), text_preview=texts[i][:100]
+                    f"Failed to calculate embedding for text {i}",
+                    error=str(result),
+                    text_preview=texts[i][:100],
                 )
             else:
                 valid_results.append(result)
@@ -205,7 +234,9 @@ class EmbeddingCalculator:
 class SimilarityCalculator:
     """Calculates similarity between embeddings."""
 
-    def __init__(self, logger: Optional[ILoggerService] = None, cache: Optional[Any] = None):
+    def __init__(
+        self, logger: Optional[ILoggerService] = None, cache: Optional[Any] = None
+    ):
         """Initialize similarity calculator.
 
         Args:
@@ -229,7 +260,9 @@ class SimilarityCalculator:
             Similarity score between 0 and 1
         """
         if embedding1.shape != embedding2.shape:
-            raise ValueError(f"Embedding shapes don't match: {embedding1.shape} vs {embedding2.shape}")
+            raise ValueError(
+                f"Embedding shapes don't match: {embedding1.shape} vs {embedding2.shape}"
+            )
 
         async with profile_async_operation("calculate_similarity", metric=metric):
             if metric == "cosine":
@@ -270,7 +303,9 @@ class SimilarityCalculator:
         """Calculate dot product similarity."""
         return np.dot(vec1, vec2)
 
-    async def calculate_pairwise_similarities(self, embeddings: List[np.ndarray], metric: str = "cosine") -> np.ndarray:
+    async def calculate_pairwise_similarities(
+        self, embeddings: List[np.ndarray], metric: str = "cosine"
+    ) -> np.ndarray:
         """Calculate pairwise similarities between all embeddings.
 
         Args:
@@ -283,11 +318,15 @@ class SimilarityCalculator:
         n = len(embeddings)
         similarity_matrix = np.zeros((n, n))
 
-        async with profile_async_operation("calculate_pairwise_similarities", num_embeddings=n, metric=metric):
+        async with profile_async_operation(
+            "calculate_pairwise_similarities", num_embeddings=n, metric=metric
+        ):
             # Calculate similarities for upper triangle
             for i in range(n):
                 for j in range(i + 1, n):
-                    similarity = await self.calculate_similarity(embeddings[i], embeddings[j], metric)
+                    similarity = await self.calculate_similarity(
+                        embeddings[i], embeddings[j], metric
+                    )
                     similarity_matrix[i, j] = similarity
                     similarity_matrix[j, i] = similarity  # Symmetric
 
@@ -319,8 +358,12 @@ class SimilarityCalculator:
         if len(embeddings) != len(texts):
             raise ValueError("Embeddings and texts lists must have the same length")
 
-        async with profile_async_operation("find_similar_pairs", num_texts=len(texts), threshold=threshold):
-            similarity_matrix = await self.calculate_pairwise_similarities(embeddings, metric)
+        async with profile_async_operation(
+            "find_similar_pairs", num_texts=len(texts), threshold=threshold
+        ):
+            similarity_matrix = await self.calculate_pairwise_similarities(
+                embeddings, metric
+            )
 
             similar_pairs = []
             n = len(texts)
@@ -348,8 +391,14 @@ class SimilarityCalculator:
                         similarity_score=similarity_score,
                         distance_metric=metric,
                         model_name="unknown",  # Will be set by caller
-                        confidence=min(1.0, similarity_score + 0.1),  # Simple confidence calculation
-                        metadata={"source_index": i, "target_index": j, "rank": len(similar_pairs) + 1},
+                        confidence=min(
+                            1.0, similarity_score + 0.1
+                        ),  # Simple confidence calculation
+                        metadata={
+                            "source_index": i,
+                            "target_index": j,
+                            "rank": len(similar_pairs) + 1,
+                        },
                     )
                     similar_pairs.append(result)
 
@@ -385,7 +434,11 @@ class SemanticAnalyzer:
         self._logger = logger or get_logger()
 
     async def analyze_semantic_similarity(
-        self, texts: List[str], threshold: float = 0.8, metric: str = "cosine", top_k: Optional[int] = None
+        self,
+        texts: List[str],
+        threshold: float = 0.8,
+        metric: str = "cosine",
+        top_k: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Perform complete semantic similarity analysis.
 
@@ -398,13 +451,19 @@ class SemanticAnalyzer:
         Returns:
             Dictionary containing analysis results
         """
-        async with profile_async_operation("analyze_semantic_similarity", num_texts=len(texts), threshold=threshold):
+        async with profile_async_operation(
+            "analyze_semantic_similarity", num_texts=len(texts), threshold=threshold
+        ):
             start_time = datetime.now(timezone.utc)
 
             try:
                 # Calculate embeddings
-                await self._logger.info("Starting semantic similarity analysis", num_texts=len(texts))
-                embedding_results = await self._embedding_calculator.calculate_batch_embeddings(texts)
+                await self._logger.info(
+                    "Starting semantic similarity analysis", num_texts=len(texts)
+                )
+                embedding_results = (
+                    await self._embedding_calculator.calculate_batch_embeddings(texts)
+                )
 
                 if not embedding_results:
                     return {
@@ -415,7 +474,9 @@ class SemanticAnalyzer:
 
                 # Extract embeddings and model info
                 embeddings = [result.embedding for result in embedding_results]
-                model_name = embedding_results[0].model_name if embedding_results else "unknown"
+                model_name = (
+                    embedding_results[0].model_name if embedding_results else "unknown"
+                )
 
                 # Find similar pairs
                 similar_pairs = await self._similarity_calculator.find_similar_pairs(
@@ -427,8 +488,10 @@ class SemanticAnalyzer:
                     pair.model_name = model_name
 
                 # Calculate pairwise similarities for matrix
-                similarity_matrix = await self._similarity_calculator.calculate_pairwise_similarities(
-                    embeddings, metric
+                similarity_matrix = (
+                    await self._similarity_calculator.calculate_pairwise_similarities(
+                        embeddings, metric
+                    )
                 )
 
                 # Prepare summary statistics
@@ -440,9 +503,21 @@ class SemanticAnalyzer:
                     "similarity_threshold": threshold,
                     "metric_used": metric,
                     "model_used": model_name,
-                    "average_similarity": float(np.mean(similarity_matrix)) if len(similarity_matrix) > 0 else 0.0,
-                    "max_similarity": float(np.max(similarity_matrix)) if len(similarity_matrix) > 0 else 0.0,
-                    "min_similarity": float(np.min(similarity_matrix)) if len(similarity_matrix) > 0 else 0.0,
+                    "average_similarity": (
+                        float(np.mean(similarity_matrix))
+                        if len(similarity_matrix) > 0
+                        else 0.0
+                    ),
+                    "max_similarity": (
+                        float(np.max(similarity_matrix))
+                        if len(similarity_matrix) > 0
+                        else 0.0
+                    ),
+                    "min_similarity": (
+                        float(np.min(similarity_matrix))
+                        if len(similarity_matrix) > 0
+                        else 0.0
+                    ),
                 }
 
                 result = {
@@ -471,7 +546,10 @@ class SemanticAnalyzer:
                 error_msg = f"Semantic similarity analysis failed: {str(e)}"
 
                 await self._logger.error(
-                    error_msg, error=str(e), num_texts=len(texts), execution_time_seconds=execution_time.total_seconds()
+                    error_msg,
+                    error=str(e),
+                    num_texts=len(texts),
+                    execution_time_seconds=execution_time.total_seconds(),
                 )
 
                 return {
@@ -482,7 +560,11 @@ class SemanticAnalyzer:
                 }
 
     async def find_most_similar(
-        self, target_text: str, candidate_texts: List[str], top_k: int = 5, metric: str = "cosine"
+        self,
+        target_text: str,
+        candidate_texts: List[str],
+        top_k: int = 5,
+        metric: str = "cosine",
     ) -> Dict[str, Any]:
         """Find most similar texts to a target text.
 
@@ -496,7 +578,9 @@ class SemanticAnalyzer:
             Dictionary containing similarity results
         """
         async with profile_async_operation(
-            "find_most_similar", target_length=len(target_text), num_candidates=len(candidate_texts)
+            "find_most_similar",
+            target_length=len(target_text),
+            num_candidates=len(candidate_texts),
         ):
             all_texts = [target_text] + candidate_texts
             analysis_result = await self.analyze_semantic_similarity(
@@ -561,6 +645,10 @@ async def analyze_semantic_similarity(texts: List[str], **kwargs) -> Dict[str, A
     return await get_semantic_analyzer().analyze_semantic_similarity(texts, **kwargs)
 
 
-async def find_most_similar(target_text: str, candidate_texts: List[str], **kwargs) -> Dict[str, Any]:
+async def find_most_similar(
+    target_text: str, candidate_texts: List[str], **kwargs
+) -> Dict[str, Any]:
     """Convenience function to find most similar texts."""
-    return await get_semantic_analyzer().find_most_similar(target_text, candidate_texts, **kwargs)
+    return await get_semantic_analyzer().find_most_similar(
+        target_text, candidate_texts, **kwargs
+    )

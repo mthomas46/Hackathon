@@ -6,14 +6,21 @@ These functions handle common presentation concerns like response formatting and
 
 from typing import Any, Dict
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 from services.shared.monitoring.logging import fire_and_forget
 
 
 def handle_service_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
     """Standardized error handling for service operations."""
-    fire_and_forget("error", f"Service {operation} error: {error}", ServiceNames.ORCHESTRATOR, context)
+    fire_and_forget(
+        "error",
+        f"Service {operation} error: {error}",
+        ServiceNames.ORCHESTRATOR,
+        context,
+    )
     return create_error_response(
         f"Failed to {operation}",
         error_code=ErrorCodes.SERVICE_COMMUNICATION_FAILED,
@@ -21,10 +28,19 @@ def handle_service_error(operation: str, error: Exception, **context) -> Dict[st
     )
 
 
-def create_service_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
+def create_service_success_response(
+    operation: str, data: Any, **context
+) -> Dict[str, Any]:
     """Standardized success response creation for service operations."""
-    fire_and_forget("info", f"Service {operation} completed successfully", ServiceNames.ORCHESTRATOR, context)
-    return create_success_response(f"Service {operation} completed successfully", data, **context)
+    fire_and_forget(
+        "info",
+        f"Service {operation} completed successfully",
+        ServiceNames.ORCHESTRATOR,
+        context,
+    )
+    return create_success_response(
+        f"Service {operation} completed successfully", data, **context
+    )
 
 
 def build_operation_context(operation: str, **kwargs) -> Dict[str, Any]:
@@ -34,7 +50,9 @@ def build_operation_context(operation: str, **kwargs) -> Dict[str, Any]:
     return context
 
 
-def extract_pagination_params(page: int = 1, limit: int = 50, max_limit: int = 1000) -> tuple[int, int]:
+def extract_pagination_params(
+    page: int = 1, limit: int = 50, max_limit: int = 1000
+) -> tuple[int, int]:
     """Extract and validate pagination parameters."""
     page = max(1, page)
     limit = max(1, min(limit, max_limit))
@@ -42,7 +60,9 @@ def extract_pagination_params(page: int = 1, limit: int = 50, max_limit: int = 1
     return offset, limit
 
 
-def format_paginated_response(items: list, total: int, offset: int, limit: int, **metadata) -> Dict[str, Any]:
+def format_paginated_response(
+    items: list, total: int, offset: int, limit: int, **metadata
+) -> Dict[str, Any]:
     """Format a paginated response."""
     return {
         "items": items,

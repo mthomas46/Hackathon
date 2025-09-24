@@ -99,7 +99,9 @@ class ServiceDiscoveryService:
             return None
 
         # Look for health endpoints
-        health_endpoints = [ep for ep in service.endpoints if "health" in ep.path.lower()]
+        health_endpoints = [
+            ep for ep in service.endpoints if "health" in ep.path.lower()
+        ]
         if health_endpoints:
             return f"{service.base_url or ''}{health_endpoints[0].path}"
 

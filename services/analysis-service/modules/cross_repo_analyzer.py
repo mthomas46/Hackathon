@@ -2,7 +2,8 @@
 
 from typing import Any, Dict, List
 
-from services.shared.core.logging.logger import get_logger
+# Using standardized logging service
+from services.shared.monitoring.logging import fire_and_forget
 
 
 class CrossRepositoryAnalyzer:
@@ -11,7 +12,9 @@ class CrossRepositoryAnalyzer:
     def __init__(self):
         self._logger = get_logger()
 
-    async def analyze_repositories(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_repositories(
+        self, repositories: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze repositories."""
         self._logger.info(f"Analyzing {len(repositories)} repositories")
 

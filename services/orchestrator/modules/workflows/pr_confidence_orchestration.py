@@ -53,7 +53,10 @@ class PRConfidenceOrchestrationWorkflow:
         state["context"]["pr_data"] = pr_data
 
         state["messages"].append(
-            {"role": "assistant", "content": f"Extracted PR context for {pr_data.get('id', 'unknown PR')}"}
+            {
+                "role": "assistant",
+                "content": f"Extracted PR context for {pr_data.get('id', 'unknown PR')}",
+            }
         )
 
         return state
@@ -68,15 +71,22 @@ class PRConfidenceOrchestrationWorkflow:
         if jira_ticket:
             # In production, this would call the source-agent service
             # For now, we'll use the provided jira_data or create mock data
-            jira_data = state["parameters"].get("jira_data", self._create_mock_jira_data(jira_ticket))
+            jira_data = state["parameters"].get(
+                "jira_data", self._create_mock_jira_data(jira_ticket)
+            )
             state["context"]["jira_data"] = jira_data
 
             state["messages"].append(
-                {"role": "assistant", "content": f"Fetched Jira requirements for ticket {jira_ticket}"}
+                {
+                    "role": "assistant",
+                    "content": f"Fetched Jira requirements for ticket {jira_ticket}",
+                }
             )
         else:
             state["context"]["jira_data"] = {}
-            state["messages"].append({"role": "assistant", "content": "No Jira ticket specified"})
+            state["messages"].append(
+                {"role": "assistant", "content": "No Jira ticket specified"}
+            )
 
         return state
 
@@ -94,7 +104,10 @@ class PRConfidenceOrchestrationWorkflow:
         state["context"]["confluence_docs"] = confluence_docs
 
         state["messages"].append(
-            {"role": "assistant", "content": f"Fetched {len(confluence_docs)} Confluence documentation pages"}
+            {
+                "role": "assistant",
+                "content": f"Fetched {len(confluence_docs)} Confluence documentation pages",
+            }
         )
 
         return state
@@ -113,15 +126,20 @@ class PRConfidenceOrchestrationWorkflow:
             "pr_data": state["context"]["pr_data"],
             "jira_data": state["context"]["jira_data"],
             "confluence_docs": state["context"]["confluence_docs"],
-            "analysis_scope": state["parameters"].get("analysis_scope", "comprehensive"),
+            "analysis_scope": state["parameters"].get(
+                "analysis_scope", "comprehensive"
+            ),
             "include_recommendations": True,
-            "confidence_threshold": state["parameters"].get("confidence_threshold", 0.7),
+            "confidence_threshold": state["parameters"].get(
+                "confidence_threshold", 0.7
+            ),
         }
 
         try:
             # Call analysis service
             analysis_response = await service_client.post_json(
-                f"{service_client.analysis_service_url()}/pr-confidence/analyze", analysis_request
+                f"{service_client.analysis_service_url()}/pr-confidence/analyze",
+                analysis_request,
             )
 
             if analysis_response and "data" in analysis_response:
@@ -137,7 +155,9 @@ class PRConfidenceOrchestrationWorkflow:
                         "pr_id": analysis_results.get("pr_id"),
                         "confidence_score": analysis_results.get("confidence_score"),
                         "confidence_level": analysis_results.get("confidence_level"),
-                        "approval_recommendation": analysis_results.get("approval_recommendation"),
+                        "approval_recommendation": analysis_results.get(
+                            "approval_recommendation"
+                        ),
                     },
                     source="orchestrator",
                 )
@@ -154,9 +174,14 @@ class PRConfidenceOrchestrationWorkflow:
         except Exception as e:
             print(f"Analysis coordination failed: {e}")
             # Create fallback analysis results
-            state["context"]["analysis_results"] = self._create_fallback_analysis_results(state)
+            state["context"]["analysis_results"] = (
+                self._create_fallback_analysis_results(state)
+            )
             state["messages"].append(
-                {"role": "assistant", "content": f"Analysis coordination failed, using fallback: {e}"}
+                {
+                    "role": "assistant",
+                    "content": f"Analysis coordination failed, using fallback: {e}",
+                }
             )
 
         return state
@@ -186,8 +211,12 @@ class PRConfidenceOrchestrationWorkflow:
                 (object,),
                 {
                     "overall_score": analysis_results.get("confidence_score", 0),
-                    "confidence_level": analysis_results.get("confidence_level", "medium"),
-                    "approval_recommendation": analysis_results.get("approval_recommendation", "review_required"),
+                    "confidence_level": analysis_results.get(
+                        "confidence_level", "medium"
+                    ),
+                    "approval_recommendation": analysis_results.get(
+                        "approval_recommendation", "review_required"
+                    ),
                     "component_scores": analysis_results.get("component_scores", {}),
                     "critical_concerns": analysis_results.get("critical_concerns", []),
                     "risk_factors": [],
@@ -195,7 +224,10 @@ class PRConfidenceOrchestrationWorkflow:
                     "improvement_areas": analysis_results.get("improvement_areas", []),
                 },
             ),
-            [type("obj", (object,), gap) for gap in analysis_results.get("detected_gaps", [])],
+            [
+                type("obj", (object,), gap)
+                for gap in analysis_results.get("detected_gaps", [])
+            ],
             analysis_results.get("analysis_duration", 0.0),
         )
 
@@ -206,7 +238,10 @@ class PRConfidenceOrchestrationWorkflow:
         state["context"]["report_files"] = saved_files
 
         state["messages"].append(
-            {"role": "assistant", "content": f"Final report generated and saved to {saved_files['html_report']}"}
+            {
+                "role": "assistant",
+                "content": f"Final report generated and saved to {saved_files['html_report']}",
+            }
         )
 
         return state
@@ -222,7 +257,9 @@ class PRConfidenceOrchestrationWorkflow:
         # Prepare notification content
         confidence_score = analysis_results.get("confidence_score", 0)
         confidence_level = analysis_results.get("confidence_level", "medium")
-        approval_rec = analysis_results.get("approval_recommendation", "review_required")
+        approval_rec = analysis_results.get(
+            "approval_recommendation", "review_required"
+        )
 
         html_report_url = report_files.get("html_report", "N/A")
 
@@ -234,13 +271,18 @@ class PRConfidenceOrchestrationWorkflow:
         ]
 
         if analysis_results.get("critical_concerns"):
-            message_parts.append(f"⚠️ {len(analysis_results['critical_concerns'])} critical concerns identified")
+            message_parts.append(
+                f"⚠️ {len(analysis_results['critical_concerns'])} critical concerns identified"
+            )
 
         message = "\\n".join(message_parts)
 
         # Determine notification urgency
         urgency = (
-            "high" if confidence_level in ["low", "critical"] or analysis_results.get("critical_concerns") else "normal"
+            "high"
+            if confidence_level in ["low", "critical"]
+            or analysis_results.get("critical_concerns")
+            else "normal"
         )
 
         # Send notification to PR author
@@ -258,13 +300,25 @@ class PRConfidenceOrchestrationWorkflow:
         )
 
         # Send notification to tech lead for low confidence or critical issues
-        if confidence_level in ["low", "critical"] or analysis_results.get("critical_concerns"):
-            lead_message = f"ATTENTION REQUIRED: PR {pr_data.get('id')} needs review\\n{message}"
+        if confidence_level in ["low", "critical"] or analysis_results.get(
+            "critical_concerns"
+        ):
+            lead_message = (
+                f"ATTENTION REQUIRED: PR {pr_data.get('id')} needs review\\n{message}"
+            )
             await send_notification_tool(
-                message=lead_message, recipient="tech_lead", urgency="high", additional_data=analysis_results
+                message=lead_message,
+                recipient="tech_lead",
+                urgency="high",
+                additional_data=analysis_results,
             )
 
-        state["messages"].append({"role": "assistant", "content": f"Notifications sent with urgency: {urgency}"})
+        state["messages"].append(
+            {
+                "role": "assistant",
+                "content": f"Notifications sent with urgency: {urgency}",
+            }
+        )
 
         return state
 
@@ -283,7 +337,9 @@ class PRConfidenceOrchestrationWorkflow:
             "priority": "High",
         }
 
-    def _create_mock_confluence_docs(self, pr_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _create_mock_confluence_docs(
+        self, pr_data: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Create mock Confluence docs for testing."""
         return [
             {
@@ -294,7 +350,9 @@ class PRConfidenceOrchestrationWorkflow:
             }
         ]
 
-    def _create_fallback_analysis_results(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    def _create_fallback_analysis_results(
+        self, state: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create fallback analysis results when service call fails."""
         return {
             "workflow_id": state["run_id"],
@@ -327,10 +385,14 @@ class PRConfidenceOrchestrationWorkflow:
                 "documentation_consistency": 0.5,
                 "security_compliance": 0.5,
             },
-            "recommendations": ["Manual review recommended due to analysis service unavailability"],
+            "recommendations": [
+                "Manual review recommended due to analysis service unavailability"
+            ],
             "critical_concerns": [],
             "strengths": ["Basic PR structure appears sound"],
-            "improvement_areas": ["Complete automated analysis when service is available"],
+            "improvement_areas": [
+                "Complete automated analysis when service is available"
+            ],
             "risk_assessment": "medium",
             "analysis_duration": 0.1,
         }

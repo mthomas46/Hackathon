@@ -43,7 +43,15 @@ def render_resource_table(
     df = pd.DataFrame(resources_data)
 
     # Ensure required columns exist
-    required_columns = ["id", "name", "type", "allocated", "capacity", "utilization", "status"]
+    required_columns = [
+        "id",
+        "name",
+        "type",
+        "allocated",
+        "capacity",
+        "utilization",
+        "status",
+    ]
     for col in required_columns:
         if col not in df.columns:
             df[col] = "N/A" if col in ["name", "type", "status"] else 0
@@ -57,7 +65,10 @@ def render_resource_table(
     # Resource type filter
     resource_types = df["type"].unique().tolist()
     selected_types = st.multiselect(
-        "Filter by Resource Type", options=resource_types, default=resource_types, key="resource_type_filter"
+        "Filter by Resource Type",
+        options=resource_types,
+        default=resource_types,
+        key="resource_type_filter",
     )
 
     filtered_df = df[df["type"].isin(selected_types)] if selected_types else df
@@ -123,7 +134,16 @@ def render_resource_table(
         "utilization_display",
         "status",
     ]
-    display_names = ["Status", "Name", "Type", "Allocated", "Capacity", "Available", "Utilization", "State"]
+    display_names = [
+        "Status",
+        "Name",
+        "Type",
+        "Allocated",
+        "Capacity",
+        "Available",
+        "Utilization",
+        "State",
+    ]
 
     display_df = filtered_df[display_columns].copy()
     display_df.columns = display_names
@@ -142,7 +162,9 @@ def render_resource_table(
 
     # Display table
     st.dataframe(
-        display_df.style.applymap(color_utilization, subset=["Utilization"]), use_container_width=True, hide_index=True
+        display_df.style.applymap(color_utilization, subset=["Utilization"]),
+        use_container_width=True,
+        hide_index=True,
     )
 
     # Individual resource actions
@@ -156,26 +178,34 @@ def render_resource_table(
         if len(critical_resources) > 0:
             with st.expander("🚨 Critical Resources", expanded=True):
                 for _, row in critical_resources.iterrows():
-                    render_resource_actions(row, on_allocation_change, on_capacity_adjust)
+                    render_resource_actions(
+                        row, on_allocation_change, on_capacity_adjust
+                    )
 
         if len(warning_resources) > 0:
             with st.expander("⚠️ Warning Resources", expanded=False):
                 for _, row in warning_resources.iterrows():
-                    render_resource_actions(row, on_allocation_change, on_capacity_adjust)
+                    render_resource_actions(
+                        row, on_allocation_change, on_capacity_adjust
+                    )
 
         # Healthy resources
         healthy_resources = filtered_df[filtered_df["status"] == "healthy"]
         if len(healthy_resources) > 0:
             with st.expander("✅ Healthy Resources", expanded=False):
                 for _, row in healthy_resources.iterrows():
-                    render_resource_actions(row, on_allocation_change, on_capacity_adjust)
+                    render_resource_actions(
+                        row, on_allocation_change, on_capacity_adjust
+                    )
 
     # Capacity planning
     if show_capacity:
         st.markdown("#### 📅 Capacity Planning")
 
         # Forecast future utilization
-        forecast_days = st.slider("Forecast Period (days)", 7, 90, 30, key="capacity_forecast_days")
+        forecast_days = st.slider(
+            "Forecast Period (days)", 7, 90, 30, key="capacity_forecast_days"
+        )
 
         forecast_data = forecast_resource_utilization(filtered_df, forecast_days)
 
@@ -187,9 +217,13 @@ def render_resource_table(
                 )
 
                 if forecast["projected"] > 90:
-                    st.warning(f"⚠️ {resource_type} projected to exceed 90% utilization!")
+                    st.warning(
+                        f"⚠️ {resource_type} projected to exceed 90% utilization!"
+                    )
                 elif forecast["projected"] < 30:
-                    st.info(f"💡 {resource_type} has low projected utilization - consider consolidation.")
+                    st.info(
+                        f"💡 {resource_type} has low projected utilization - consider consolidation."
+                    )
 
     # Resource allocation recommendations
     st.markdown("#### 💡 Recommendations")
@@ -228,7 +262,9 @@ def render_resource_table(
 
 
 def render_resource_actions(
-    resource_row: pd.Series, on_allocation_change: Optional[Callable], on_capacity_adjust: Optional[Callable]
+    resource_row: pd.Series,
+    on_allocation_change: Optional[Callable],
+    on_capacity_adjust: Optional[Callable],
 ):
     """Render action buttons for a single resource."""
     resource_id = resource_row["id"]
@@ -242,7 +278,9 @@ def render_resource_actions(
 
     with col1:
         st.write(f"**{resource_name}**")
-        st.write(f"Utilization: {utilization:.1f}% | Available: {capacity - current_allocation}")
+        st.write(
+            f"Utilization: {utilization:.1f}% | Available: {capacity - current_allocation}"
+        )
 
     with col2:
         # Allocation adjustment
@@ -294,7 +332,9 @@ def render_resource_actions(
     with col4:
         # Quick actions based on status
         if utilization > 80:
-            if st.button("🛑 Throttle", key=f"throttle_{resource_id}", type="secondary"):
+            if st.button(
+                "🛑 Throttle", key=f"throttle_{resource_id}", type="secondary"
+            ):
                 st.info(f"Throttling resource {resource_name}...")
         elif utilization < 30:
             if st.button("⚡ Scale Down", key=f"scale_down_{resource_id}"):
@@ -303,17 +343,28 @@ def render_resource_actions(
     with col5:
         # Monitoring toggle
         monitoring_enabled = st.checkbox(
-            "Monitor", value=True, key=f"monitor_{resource_id}", help="Enable real-time monitoring for this resource"
+            "Monitor",
+            value=True,
+            key=f"monitor_{resource_id}",
+            help="Enable real-time monitoring for this resource",
         )
 
 
 def get_resource_status_icon(status: str) -> str:
     """Get status icon for resource display."""
-    icons = {"healthy": "✅", "warning": "⚠️", "critical": "🚨", "unknown": "❓", "maintenance": "🔧"}
+    icons = {
+        "healthy": "✅",
+        "warning": "⚠️",
+        "critical": "🚨",
+        "unknown": "❓",
+        "maintenance": "🔧",
+    }
     return icons.get(status, "❓")
 
 
-def forecast_resource_utilization(df: pd.DataFrame, days: int) -> Dict[str, Dict[str, float]]:
+def forecast_resource_utilization(
+    df: pd.DataFrame, days: int
+) -> Dict[str, Dict[str, float]]:
     """Forecast future resource utilization."""
     forecast_data = {}
 
@@ -325,7 +376,9 @@ def forecast_resource_utilization(df: pd.DataFrame, days: int) -> Dict[str, Dict
 
             # Simple forecasting based on current trends
             # In a real implementation, this would use more sophisticated forecasting
-            growth_rate = np.random.uniform(-0.02, 0.05)  # Random growth between -2% and +5%
+            growth_rate = np.random.uniform(
+                -0.02, 0.05
+            )  # Random growth between -2% and +5%
             projected = min(100, current_avg * (1 + growth_rate * (days / 30)))
 
             forecast_data[resource_type] = {
@@ -372,7 +425,9 @@ def generate_resource_recommendations(df: pd.DataFrame) -> List[Dict[str, str]]:
         )
 
     # Check for capacity bottlenecks
-    low_capacity = df[df["available"] < (df["capacity"] * 0.1)]  # Less than 10% available
+    low_capacity = df[
+        df["available"] < (df["capacity"] * 0.1)
+    ]  # Less than 10% available
     if len(low_capacity) > 0:
         recommendations.append(
             {
@@ -385,11 +440,17 @@ def generate_resource_recommendations(df: pd.DataFrame) -> List[Dict[str, str]]:
     total_utilization = df["utilization"].mean()
     if total_utilization > 70:
         recommendations.append(
-            {"message": "Overall resource utilization is high. Consider capacity planning.", "priority": "medium"}
+            {
+                "message": "Overall resource utilization is high. Consider capacity planning.",
+                "priority": "medium",
+            }
         )
     elif total_utilization < 40:
         recommendations.append(
-            {"message": "Overall resource utilization is low. Look for optimization opportunities.", "priority": "low"}
+            {
+                "message": "Overall resource utilization is low. Look for optimization opportunities.",
+                "priority": "low",
+            }
         )
 
     return recommendations
@@ -424,7 +485,8 @@ def generate_sample_resource_data(count: int = 8) -> List[Dict[str, Any]]:
             "utilization": round(utilization, 1),
             "status": status,
             "description": f"Sample resource {i+1}",
-            "last_updated": datetime.now() - timedelta(minutes=np.random.randint(0, 60)),
+            "last_updated": datetime.now()
+            - timedelta(minutes=np.random.randint(0, 60)),
         }
         resources.append(resource)
 

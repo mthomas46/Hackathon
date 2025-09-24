@@ -47,7 +47,11 @@ try:
     from .lazy_loader import DataStreamer, LazyLoader, ProgressiveLoader
     from .performance_monitor import BottleneckDetector, PerformanceMonitor
     from .query_optimizer import AsyncQueryExecutor, ConnectionPool, QueryOptimizer
-    from .response_optimizer import CompressionHandler, ContentNegotiator, ResponseOptimizer
+    from .response_optimizer import (
+        CompressionHandler,
+        ContentNegotiator,
+        ResponseOptimizer,
+    )
 except ImportError:
     # Fallback to stubs if actual modules don't exist
     pass

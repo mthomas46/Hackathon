@@ -12,16 +12,24 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.integration.service_clients import get_ecosystem_client
 from simulation.infrastructure.logging import get_simulation_logger
-from simulation.infrastructure.monitoring.simulation_monitoring import get_simulation_monitoring_service
+from simulation.infrastructure.monitoring.simulation_monitoring import (
+    get_simulation_monitoring_service,
+)
 
 # Import orchestrator patterns (with fallbacks)
 try:
     from services.orchestrator.event_publisher import EventPublisher
-    from services.orchestrator.state_manager import StateManager, StateTransition, WorkflowState
+    from services.orchestrator.state_manager import (
+        StateManager,
+        StateTransition,
+        WorkflowState,
+    )
     from services.orchestrator.workflow_engine import WorkflowEngine
 except ImportError:
     # Fallback implementations
@@ -72,7 +80,12 @@ except ImportError:
 
             # Record transition
             self.state_history.append(
-                {"from_state": old_state, "to_state": to_state, "timestamp": datetime.now(), "metadata": kwargs}
+                {
+                    "from_state": old_state,
+                    "to_state": to_state,
+                    "timestamp": datetime.now(),
+                    "metadata": kwargs,
+                }
             )
 
             # Execute transition actions
@@ -131,7 +144,9 @@ class OrchestratorStateManager:
         """Initialize orchestrator state manager."""
         self.logger = get_simulation_logger()
         self.monitoring = get_simulation_monitoring_service()
-        self.orchestrator_client = orchestrator_client or get_ecosystem_client("orchestrator")
+        self.orchestrator_client = orchestrator_client or get_ecosystem_client(
+            "orchestrator"
+        )
 
         # Core state management components
         self.state_manager = StateManager()
@@ -181,25 +196,47 @@ class OrchestratorStateManager:
         )
 
         self.state_manager.add_transition(
-            StateTransition(WorkflowState.RUNNING, WorkflowState.PAUSED, action=self._on_simulation_paused)
+            StateTransition(
+                WorkflowState.RUNNING,
+                WorkflowState.PAUSED,
+                action=self._on_simulation_paused,
+            )
         )
 
         self.state_manager.add_transition(
-            StateTransition(WorkflowState.PAUSED, WorkflowState.RUNNING, action=self._on_simulation_resumed)
+            StateTransition(
+                WorkflowState.PAUSED,
+                WorkflowState.RUNNING,
+                action=self._on_simulation_resumed,
+            )
         )
 
         self.state_manager.add_transition(
-            StateTransition(WorkflowState.RUNNING, WorkflowState.CANCELLED, action=self._on_simulation_cancelled)
+            StateTransition(
+                WorkflowState.RUNNING,
+                WorkflowState.CANCELLED,
+                action=self._on_simulation_cancelled,
+            )
         )
 
     def _setup_event_subscriptions(self):
         """Setup event subscriptions for state management."""
-        self.event_publisher.subscribe("simulation_started", self._handle_simulation_started_event)
-        self.event_publisher.subscribe("phase_completed", self._handle_phase_completed_event)
-        self.event_publisher.subscribe("document_generated", self._handle_document_generated_event)
-        self.event_publisher.subscribe("workflow_executed", self._handle_workflow_executed_event)
+        self.event_publisher.subscribe(
+            "simulation_started", self._handle_simulation_started_event
+        )
+        self.event_publisher.subscribe(
+            "phase_completed", self._handle_phase_completed_event
+        )
+        self.event_publisher.subscribe(
+            "document_generated", self._handle_document_generated_event
+        )
+        self.event_publisher.subscribe(
+            "workflow_executed", self._handle_workflow_executed_event
+        )
 
-    async def create_simulation_workflow(self, simulation_id: str, config: Dict[str, Any]) -> str:
+    async def create_simulation_workflow(
+        self, simulation_id: str, config: Dict[str, Any]
+    ) -> str:
         """Create a simulation workflow using orchestrator patterns."""
         try:
             # Create workflow definition
@@ -208,7 +245,11 @@ class OrchestratorStateManager:
                 "description": f"Simulation workflow for {simulation_id}",
                 "steps": [
                     {"name": "initialize", "type": "init", "config": config},
-                    {"name": "execute_phases", "type": "parallel", "config": {"phases": config.get("phases", [])}},
+                    {
+                        "name": "execute_phases",
+                        "type": "parallel",
+                        "config": {"phases": config.get("phases", [])},
+                    },
                     {"name": "generate_reports", "type": "report", "config": {}},
                     {"name": "cleanup", "type": "cleanup", "config": {}},
                 ],
@@ -218,10 +259,14 @@ class OrchestratorStateManager:
 
             # Use orchestrator client to create workflow
             if hasattr(self.orchestrator_client, "create_workflow"):
-                workflow_id = await self.orchestrator_client.create_workflow(workflow_definition)
+                workflow_id = await self.orchestrator_client.create_workflow(
+                    workflow_definition
+                )
             else:
                 # Fallback to local workflow engine
-                workflow_id = self.workflow_engine.create_workflow(simulation_id, workflow_definition)
+                workflow_id = self.workflow_engine.create_workflow(
+                    simulation_id, workflow_definition
+                )
 
             # Track workflow state
             self.workflow_states[simulation_id] = {
@@ -231,11 +276,19 @@ class OrchestratorStateManager:
                 "config": config,
             }
 
-            self.logger.info("Simulation workflow created", simulation_id=simulation_id, workflow_id=workflow_id)
+            self.logger.info(
+                "Simulation workflow created",
+                simulation_id=simulation_id,
+                workflow_id=workflow_id,
+            )
             return workflow_id
 
         except Exception as e:
-            self.logger.error("Failed to create simulation workflow", simulation_id=simulation_id, error=str(e))
+            self.logger.error(
+                "Failed to create simulation workflow",
+                simulation_id=simulation_id,
+                error=str(e),
+            )
             raise
 
     async def execute_simulation_workflow(self, simulation_id: str) -> Dict[str, Any]:
@@ -246,14 +299,20 @@ class OrchestratorStateManager:
                 raise ValueError(f"No workflow found for simulation {simulation_id}")
 
             # Update simulation state
-            self.state_manager.transition_to(WorkflowState.RUNNING, simulation_id=simulation_id)
+            self.state_manager.transition_to(
+                WorkflowState.RUNNING, simulation_id=simulation_id
+            )
 
             # Execute workflow
             if hasattr(self.orchestrator_client, "execute_workflow"):
-                result = await self.orchestrator_client.execute_workflow(workflow_state["workflow_id"], {})
+                result = await self.orchestrator_client.execute_workflow(
+                    workflow_state["workflow_id"], {}
+                )
             else:
                 # Fallback to local workflow engine
-                result = self.workflow_engine.execute_workflow(workflow_state["workflow_id"])
+                result = self.workflow_engine.execute_workflow(
+                    workflow_state["workflow_id"]
+                )
 
             # Track execution
             workflow_state["state"] = WorkflowState.RUNNING
@@ -262,12 +321,20 @@ class OrchestratorStateManager:
             # Record monitoring event
             self.monitoring.record_simulation_event("workflow_started", simulation_id)
 
-            self.logger.info("Simulation workflow execution started", simulation_id=simulation_id)
+            self.logger.info(
+                "Simulation workflow execution started", simulation_id=simulation_id
+            )
             return result
 
         except Exception as e:
-            self.logger.error("Failed to execute simulation workflow", simulation_id=simulation_id, error=str(e))
-            self.state_manager.transition_to(WorkflowState.FAILED, simulation_id=simulation_id, error=str(e))
+            self.logger.error(
+                "Failed to execute simulation workflow",
+                simulation_id=simulation_id,
+                error=str(e),
+            )
+            self.state_manager.transition_to(
+                WorkflowState.FAILED, simulation_id=simulation_id, error=str(e)
+            )
             raise
 
     async def get_simulation_state(self, simulation_id: str) -> Dict[str, Any]:
@@ -283,7 +350,9 @@ class OrchestratorStateManager:
             combined_state = {
                 "simulation_id": simulation_id,
                 "current_state": self.state_manager.current_state.value,
-                "workflow_state": workflow_state.get("state", WorkflowState.CREATED).value,
+                "workflow_state": workflow_state.get(
+                    "state", WorkflowState.CREATED
+                ).value,
                 "created_at": workflow_state.get("created_at"),
                 "started_at": workflow_state.get("started_at"),
                 "completed_at": workflow_state.get("completed_at"),
@@ -296,11 +365,24 @@ class OrchestratorStateManager:
             return combined_state
 
         except Exception as e:
-            self.logger.error("Failed to get simulation state", simulation_id=simulation_id, error=str(e))
-            return {"simulation_id": simulation_id, "error": str(e), "state": "unknown", "last_updated": datetime.now()}
+            self.logger.error(
+                "Failed to get simulation state",
+                simulation_id=simulation_id,
+                error=str(e),
+            )
+            return {
+                "simulation_id": simulation_id,
+                "error": str(e),
+                "state": "unknown",
+                "last_updated": datetime.now(),
+            }
 
     async def update_simulation_progress(
-        self, simulation_id: str, phase_name: str, progress: float, details: Dict[str, Any] = None
+        self,
+        simulation_id: str,
+        phase_name: str,
+        progress: float,
+        details: Dict[str, Any] = None,
     ):
         """Update simulation progress using orchestrator state management."""
         try:
@@ -323,7 +405,9 @@ class OrchestratorStateManager:
             }
 
             # Calculate overall progress
-            overall_progress = sum(simulation_state["progress"].values()) / len(simulation_state["progress"])
+            overall_progress = sum(simulation_state["progress"].values()) / len(
+                simulation_state["progress"]
+            )
             simulation_state["overall_progress"] = overall_progress
 
             # Update metrics
@@ -332,25 +416,42 @@ class OrchestratorStateManager:
 
             # Publish progress event
             self.event_publisher.publish(
-                "simulation_progress_updated", simulation_id=simulation_id, phase=phase_name, progress=progress
+                "simulation_progress_updated",
+                simulation_id=simulation_id,
+                phase=phase_name,
+                progress=progress,
             )
 
             self.logger.debug(
-                "Simulation progress updated", simulation_id=simulation_id, phase=phase_name, progress=progress
+                "Simulation progress updated",
+                simulation_id=simulation_id,
+                phase=phase_name,
+                progress=progress,
             )
 
         except Exception as e:
-            self.logger.error("Failed to update simulation progress", simulation_id=simulation_id, error=str(e))
+            self.logger.error(
+                "Failed to update simulation progress",
+                simulation_id=simulation_id,
+                error=str(e),
+            )
 
-    async def complete_simulation_phase(self, simulation_id: str, phase_name: str, results: Dict[str, Any]):
+    async def complete_simulation_phase(
+        self, simulation_id: str, phase_name: str, results: Dict[str, Any]
+    ):
         """Complete a simulation phase using orchestrator patterns."""
         try:
             # Update phase state
-            await self.update_simulation_progress(simulation_id, phase_name, 100.0, results)
+            await self.update_simulation_progress(
+                simulation_id, phase_name, 100.0, results
+            )
 
             # Publish phase completion event
             self.event_publisher.publish(
-                "phase_completed", simulation_id=simulation_id, phase_name=phase_name, results=results
+                "phase_completed",
+                simulation_id=simulation_id,
+                phase_name=phase_name,
+                results=results,
             )
 
             # Check if all phases are complete
@@ -360,7 +461,9 @@ class OrchestratorStateManager:
             if all(p >= 100.0 for p in progress.values()):
                 # All phases complete - transition to completed
                 self.state_manager.transition_to(
-                    WorkflowState.COMPLETED, simulation_id=simulation_id, completion_time=datetime.now()
+                    WorkflowState.COMPLETED,
+                    simulation_id=simulation_id,
+                    completion_time=datetime.now(),
                 )
 
                 # Update workflow state
@@ -370,11 +473,18 @@ class OrchestratorStateManager:
 
                 self.logger.info("Simulation completed", simulation_id=simulation_id)
 
-            self.logger.info("Simulation phase completed", simulation_id=simulation_id, phase=phase_name)
+            self.logger.info(
+                "Simulation phase completed",
+                simulation_id=simulation_id,
+                phase=phase_name,
+            )
 
         except Exception as e:
             self.logger.error(
-                "Failed to complete simulation phase", simulation_id=simulation_id, phase=phase_name, error=str(e)
+                "Failed to complete simulation phase",
+                simulation_id=simulation_id,
+                phase=phase_name,
+                error=str(e),
             )
 
     def get_state_history(self, simulation_id: str) -> List[Dict[str, Any]]:
@@ -384,16 +494,30 @@ class OrchestratorStateManager:
     def get_workflow_statistics(self) -> Dict[str, Any]:
         """Get workflow execution statistics."""
         total_workflows = len(self.workflow_states)
-        active_workflows = sum(1 for w in self.workflow_states.values() if w.get("state") == WorkflowState.RUNNING)
-        completed_workflows = sum(1 for w in self.workflow_states.values() if w.get("state") == WorkflowState.COMPLETED)
-        failed_workflows = sum(1 for w in self.workflow_states.values() if w.get("state") == WorkflowState.FAILED)
+        active_workflows = sum(
+            1
+            for w in self.workflow_states.values()
+            if w.get("state") == WorkflowState.RUNNING
+        )
+        completed_workflows = sum(
+            1
+            for w in self.workflow_states.values()
+            if w.get("state") == WorkflowState.COMPLETED
+        )
+        failed_workflows = sum(
+            1
+            for w in self.workflow_states.values()
+            if w.get("state") == WorkflowState.FAILED
+        )
 
         return {
             "total_workflows": total_workflows,
             "active_workflows": active_workflows,
             "completed_workflows": completed_workflows,
             "failed_workflows": failed_workflows,
-            "success_rate": completed_workflows / total_workflows if total_workflows > 0 else 0,
+            "success_rate": (
+                completed_workflows / total_workflows if total_workflows > 0 else 0
+            ),
         }
 
     # Transition condition methods
@@ -407,7 +531,10 @@ class OrchestratorStateManager:
 
     def _can_fail_simulation(self) -> bool:
         """Check if simulation can fail."""
-        return self.state_manager.current_state in [WorkflowState.RUNNING, WorkflowState.PAUSED]
+        return self.state_manager.current_state in [
+            WorkflowState.RUNNING,
+            WorkflowState.PAUSED,
+        ]
 
     # Transition action methods
     def _on_simulation_started(self, **kwargs):
@@ -420,7 +547,9 @@ class OrchestratorStateManager:
         """Handle simulation completed transition."""
         simulation_id = kwargs.get("simulation_id")
         if simulation_id:
-            self.monitoring.record_simulation_event("simulation_completed", simulation_id)
+            self.monitoring.record_simulation_event(
+                "simulation_completed", simulation_id
+            )
 
     def _on_simulation_failed(self, **kwargs):
         """Handle simulation failed transition."""
@@ -444,7 +573,9 @@ class OrchestratorStateManager:
         """Handle simulation cancelled transition."""
         simulation_id = kwargs.get("simulation_id")
         if simulation_id:
-            self.monitoring.record_simulation_event("simulation_cancelled", simulation_id)
+            self.monitoring.record_simulation_event(
+                "simulation_cancelled", simulation_id
+            )
 
     # Event handlers
     def _handle_simulation_started_event(self, **kwargs):
@@ -500,10 +631,14 @@ async def update_simulation_progress(
 ):
     """Update simulation progress."""
     manager = get_orchestrator_state_manager()
-    return await manager.update_simulation_progress(simulation_id, phase_name, progress, details)
+    return await manager.update_simulation_progress(
+        simulation_id, phase_name, progress, details
+    )
 
 
-async def complete_simulation_phase(simulation_id: str, phase_name: str, results: Dict[str, Any]):
+async def complete_simulation_phase(
+    simulation_id: str, phase_name: str, results: Dict[str, Any]
+):
     """Complete a simulation phase."""
     manager = get_orchestrator_state_manager()
     return await manager.complete_simulation_phase(simulation_id, phase_name, results)

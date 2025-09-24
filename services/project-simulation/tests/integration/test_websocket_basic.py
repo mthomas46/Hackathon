@@ -20,7 +20,12 @@ class TestWebSocketEndpoints:
     def test_simulation_websocket_support(self, test_client: TestClient):
         """Test simulation endpoints that support WebSocket updates."""
         # Create a simulation
-        sim_data = {"project_type": "WEB_APPLICATION", "complexity": "MEDIUM", "team_size": 5, "duration_days": 30}
+        sim_data = {
+            "project_type": "WEB_APPLICATION",
+            "complexity": "MEDIUM",
+            "team_size": 5,
+            "duration_days": 30,
+        }
 
         response = test_client.post("/api/v1/simulations", json=sim_data)
         if response.status_code == 201:

@@ -5,7 +5,9 @@ from typing import Any, Dict, List, Optional
 from ..integrations.clients import ServiceClients  # type: ignore
 
 
-def extract_owner_from_metadata(meta: Dict[str, Any] | None) -> Dict[str, Optional[str]]:
+def extract_owner_from_metadata(
+    meta: Dict[str, Any] | None,
+) -> Dict[str, Optional[str]]:
     """Extract owner hints from a document metadata dictionary.
 
     Looks for keys like owner, code_owner, repo_owner, jira_assignee, jira_reporter,
@@ -17,11 +19,21 @@ def extract_owner_from_metadata(meta: Dict[str, Any] | None) -> Dict[str, Option
         "owner": (meta.get("owner") if isinstance(meta, dict) else None),
         "code_owner": (meta.get("code_owner") if isinstance(meta, dict) else None),
         "repo_owner": (sl.get("repo_owner") if isinstance(sl, dict) else None),
-        "jira_assignee": (meta.get("jira_assignee") if isinstance(meta, dict) else None),
-        "jira_reporter": (meta.get("jira_reporter") if isinstance(meta, dict) else None),
-        "confluence_last_updated_by": (meta.get("updated_by") or meta.get("last_updated_by")),
-        "confluence_created_by": (meta.get("created_by") if isinstance(meta, dict) else None),
-        "confluence_space_owner": (meta.get("space_owner") if isinstance(meta, dict) else None),
+        "jira_assignee": (
+            meta.get("jira_assignee") if isinstance(meta, dict) else None
+        ),
+        "jira_reporter": (
+            meta.get("jira_reporter") if isinstance(meta, dict) else None
+        ),
+        "confluence_last_updated_by": (
+            meta.get("updated_by") or meta.get("last_updated_by")
+        ),
+        "confluence_created_by": (
+            meta.get("created_by") if isinstance(meta, dict) else None
+        ),
+        "confluence_space_owner": (
+            meta.get("space_owner") if isinstance(meta, dict) else None
+        ),
     }
 
 
@@ -70,7 +82,9 @@ def parse_codeowners(text: str) -> Dict[str, List[str]]:
     return mapping
 
 
-def owners_for_path_from_codeowners(mapping: Dict[str, List[str]], path: str) -> List[str]:
+def owners_for_path_from_codeowners(
+    mapping: Dict[str, List[str]], path: str
+) -> List[str]:
     """Naive glob matching: supports '*' simple wildcard.
     Picks the last matching pattern (CODEOWNERS precedence)."""
     selected: List[str] = []
@@ -82,7 +96,9 @@ def owners_for_path_from_codeowners(mapping: Dict[str, List[str]], path: str) ->
     return selected
 
 
-async def try_fetch_codeowners(owner: str, repo: str, branch: str = "main") -> Optional[str]:
+async def try_fetch_codeowners(
+    owner: str, repo: str, branch: str = "main"
+) -> Optional[str]:
     """Try to fetch CODEOWNERS via raw URL if configured.
 
     Environment overrides:

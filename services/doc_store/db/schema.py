@@ -10,13 +10,13 @@ def create_documents_table() -> str:
     """Create documents table schema."""
     return """
         CREATE TABLE IF NOT EXISTS documents (
-          id TEXT PRIMARY KEY,
-          content TEXT NOT NULL,
-          content_hash TEXT,
-          metadata TEXT,
-          correlation_id TEXT,
-          created_at TEXT NOT NULL,
-          updated_at TEXT
+        id TEXT PRIMARY KEY,
+        content TEXT NOT NULL,
+        content_hash TEXT,
+        metadata TEXT,
+        correlation_id TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT
         )
     """
 
@@ -25,16 +25,16 @@ def create_analyses_table() -> str:
     """Create analyses table schema."""
     return """
         CREATE TABLE IF NOT EXISTS analyses (
-          id TEXT PRIMARY KEY,
-          document_id TEXT NOT NULL,
-          analyzer TEXT,
-          model TEXT,
-          prompt_hash TEXT,
-          result TEXT NOT NULL,
-          score REAL,
-          metadata TEXT,
-          created_at TEXT NOT NULL,
-          FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        analyzer TEXT,
+        model TEXT,
+        prompt_hash TEXT,
+        result TEXT NOT NULL,
+        score REAL,
+        metadata TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
         )
     """
 
@@ -43,13 +43,13 @@ def create_ensembles_table() -> str:
     """Create ensembles table schema."""
     return """
         CREATE TABLE IF NOT EXISTS ensembles (
-          id TEXT PRIMARY KEY,
-          document_id TEXT NOT NULL,
-          config TEXT,
-          results TEXT,
-          analysis TEXT,
-          created_at TEXT NOT NULL,
-          FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        config TEXT,
+        results TEXT,
+        analysis TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
         )
     """
 
@@ -58,12 +58,12 @@ def create_style_examples_table() -> str:
     """Create style examples table schema."""
     return """
         CREATE TABLE IF NOT EXISTS style_examples (
-          id TEXT PRIMARY KEY,
-          language TEXT NOT NULL,
-          pattern TEXT NOT NULL,
-          example TEXT NOT NULL,
-          explanation TEXT,
-          created_at TEXT NOT NULL
+        id TEXT PRIMARY KEY,
+        language TEXT NOT NULL,
+        pattern TEXT NOT NULL,
+        example TEXT NOT NULL,
+        explanation TEXT,
+        created_at TEXT NOT NULL
         )
     """
 
@@ -72,16 +72,16 @@ def create_document_versions_table() -> str:
     """Create document versions table schema."""
     return """
         CREATE TABLE IF NOT EXISTS document_versions (
-          id TEXT PRIMARY KEY,
-          document_id TEXT NOT NULL,
-          version_number INTEGER NOT NULL,
-          content TEXT,
-          content_hash TEXT,
-          metadata TEXT,
-          change_summary TEXT,
-          created_by TEXT,
-          created_at TEXT NOT NULL,
-          FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        version_number INTEGER NOT NULL,
+        content TEXT,
+        content_hash TEXT,
+        metadata TEXT,
+        change_summary TEXT,
+        created_by TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
         )
     """
 
@@ -90,16 +90,16 @@ def create_document_relationships_table() -> str:
     """Create document relationships table schema."""
     return """
         CREATE TABLE IF NOT EXISTS document_relationships (
-          id TEXT PRIMARY KEY,
-          source_document_id TEXT NOT NULL,
-          target_document_id TEXT NOT NULL,
-          relationship_type TEXT NOT NULL,
-          strength REAL DEFAULT 1.0,
-          metadata TEXT,
-          created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          FOREIGN KEY(source_document_id) REFERENCES documents(id) ON DELETE CASCADE,
-          FOREIGN KEY(target_document_id) REFERENCES documents(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        source_document_id TEXT NOT NULL,
+        target_document_id TEXT NOT NULL,
+        relationship_type TEXT NOT NULL,
+        strength REAL DEFAULT 1.0,
+        metadata TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY(source_document_id) REFERENCES documents(id) ON DELETE CASCADE,
+        FOREIGN KEY(target_document_id) REFERENCES documents(id) ON DELETE CASCADE
         )
     """
 
@@ -108,12 +108,12 @@ def create_document_tags_table() -> str:
     """Create document tags table schema."""
     return """
         CREATE TABLE IF NOT EXISTS document_tags (
-          id TEXT PRIMARY KEY,
-          document_id TEXT NOT NULL,
-          tag TEXT NOT NULL,
-          confidence REAL DEFAULT 1.0,
-          created_at TEXT NOT NULL,
-          FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        tag TEXT NOT NULL,
+        confidence REAL DEFAULT 1.0,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
         )
     """
 
@@ -122,14 +122,14 @@ def create_semantic_metadata_table() -> str:
     """Create semantic metadata table schema."""
     return """
         CREATE TABLE IF NOT EXISTS semantic_metadata (
-          id TEXT PRIMARY KEY,
-          document_id TEXT NOT NULL,
-          entity_type TEXT,
-          entity_value TEXT,
-          confidence REAL,
-          metadata TEXT,
-          created_at TEXT NOT NULL,
-          FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        entity_type TEXT,
+        entity_value TEXT,
+        confidence REAL,
+        metadata TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
         )
     """
 
@@ -138,12 +138,12 @@ def create_tag_taxonomy_table() -> str:
     """Create tag taxonomy table schema."""
     return """
         CREATE TABLE IF NOT EXISTS tag_taxonomy (
-          id TEXT PRIMARY KEY,
-          tag TEXT UNIQUE NOT NULL,
-          parent_tag TEXT,
-          description TEXT,
-          created_at TEXT NOT NULL,
-          FOREIGN KEY(parent_tag) REFERENCES tag_taxonomy(tag) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        tag TEXT UNIQUE NOT NULL,
+        parent_tag TEXT,
+        description TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(parent_tag) REFERENCES tag_taxonomy(tag) ON DELETE CASCADE
         )
     """
 
@@ -152,15 +152,15 @@ def create_lifecycle_policies_table() -> str:
     """Create lifecycle policies table schema."""
     return """
         CREATE TABLE IF NOT EXISTS lifecycle_policies (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          description TEXT,
-          conditions TEXT NOT NULL,
-          actions TEXT NOT NULL,
-          priority INTEGER DEFAULT 0,
-          enabled INTEGER DEFAULT 1,
-          created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT,
+        conditions TEXT NOT NULL,
+        actions TEXT NOT NULL,
+        priority INTEGER DEFAULT 0,
+        enabled INTEGER DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
         )
     """
 
@@ -169,19 +169,19 @@ def create_document_lifecycle_table() -> str:
     """Create document lifecycle table schema."""
     return """
         CREATE TABLE IF NOT EXISTS document_lifecycle (
-          id TEXT PRIMARY KEY,
-          document_id TEXT UNIQUE NOT NULL,
-          current_phase TEXT DEFAULT 'active',
-          retention_period_days INTEGER,
-          archival_date TEXT,
-          deletion_date TEXT,
-          last_reviewed TEXT,
-          compliance_status TEXT DEFAULT 'compliant',
-          applied_policies TEXT,
-          metadata TEXT,
-          created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        document_id TEXT UNIQUE NOT NULL,
+        current_phase TEXT DEFAULT 'active',
+        retention_period_days INTEGER,
+        archival_date TEXT,
+        deletion_date TEXT,
+        last_reviewed TEXT,
+        compliance_status TEXT DEFAULT 'compliant',
+        applied_policies TEXT,
+        metadata TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
         )
     """
 
@@ -190,16 +190,16 @@ def create_lifecycle_events_table() -> str:
     """Create lifecycle events table schema."""
     return """
         CREATE TABLE IF NOT EXISTS lifecycle_events (
-          id TEXT PRIMARY KEY,
-          document_id TEXT NOT NULL,
-          event_type TEXT NOT NULL,
-          policy_id TEXT,
-          old_phase TEXT,
-          new_phase TEXT,
-          details TEXT,
-          performed_by TEXT DEFAULT 'system',
-          created_at TEXT NOT NULL,
-          FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        document_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        policy_id TEXT,
+        old_phase TEXT,
+        new_phase TEXT,
+        details TEXT,
+        performed_by TEXT DEFAULT 'system',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(document_id) REFERENCES documents(id) ON DELETE CASCADE
         )
     """
 
@@ -208,15 +208,15 @@ def create_webhooks_table() -> str:
     """Create webhooks table schema."""
     return """
         CREATE TABLE IF NOT EXISTS webhooks (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          url TEXT NOT NULL,
-          secret TEXT,
-          headers TEXT,
-          events TEXT NOT NULL,
-          is_active INTEGER DEFAULT 1,
-          created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        url TEXT NOT NULL,
+        secret TEXT,
+        headers TEXT,
+        events TEXT NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
         )
     """
 
@@ -225,19 +225,19 @@ def create_webhook_deliveries_table() -> str:
     """Create webhook deliveries table schema."""
     return """
         CREATE TABLE IF NOT EXISTS webhook_deliveries (
-          id TEXT PRIMARY KEY,
-          webhook_id TEXT NOT NULL,
-          event_type TEXT NOT NULL,
-          event_id TEXT NOT NULL,
-          payload TEXT NOT NULL,
-          status TEXT DEFAULT 'pending',
-          response_code INTEGER,
-          error_message TEXT,
-          attempt_count INTEGER DEFAULT 0,
-          delivered_at TEXT,
-          created_at TEXT NOT NULL,
-          updated_at TEXT NOT NULL,
-          FOREIGN KEY(webhook_id) REFERENCES webhooks(id) ON DELETE CASCADE
+        id TEXT PRIMARY KEY,
+        webhook_id TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        event_id TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        response_code INTEGER,
+        error_message TEXT,
+        attempt_count INTEGER DEFAULT 0,
+        delivered_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY(webhook_id) REFERENCES webhooks(id) ON DELETE CASCADE
         )
     """
 
@@ -246,13 +246,13 @@ def create_notification_events_table() -> str:
     """Create notification events table schema."""
     return """
         CREATE TABLE IF NOT EXISTS notification_events (
-          id TEXT PRIMARY KEY,
-          event_type TEXT NOT NULL,
-          entity_type TEXT,
-          entity_id TEXT,
-          user_id TEXT,
-          data TEXT,
-          created_at TEXT NOT NULL
+        id TEXT PRIMARY KEY,
+        event_type TEXT NOT NULL,
+        entity_type TEXT,
+        entity_id TEXT,
+        user_id TEXT,
+        data TEXT,
+        created_at TEXT NOT NULL
         )
     """
 
@@ -261,18 +261,18 @@ def create_bulk_operations_table() -> str:
     """Create bulk operations table schema."""
     return """
         CREATE TABLE IF NOT EXISTS bulk_operations (
-          operation_id TEXT PRIMARY KEY,
-          operation_type TEXT NOT NULL,
-          status TEXT DEFAULT 'pending',
-          total_items INTEGER DEFAULT 0,
-          processed_items INTEGER DEFAULT 0,
-          successful_items INTEGER DEFAULT 0,
-          failed_items INTEGER DEFAULT 0,
-          errors TEXT,
-          results TEXT,
-          metadata TEXT,
-          created_at TEXT NOT NULL,
-          completed_at TEXT
+        operation_id TEXT PRIMARY KEY,
+        operation_type TEXT NOT NULL,
+        status TEXT DEFAULT 'pending',
+        total_items INTEGER DEFAULT 0,
+        processed_items INTEGER DEFAULT 0,
+        successful_items INTEGER DEFAULT 0,
+        failed_items INTEGER DEFAULT 0,
+        errors TEXT,
+        results TEXT,
+        metadata TEXT,
+        created_at TEXT NOT NULL,
+        completed_at TEXT
         )
     """
 

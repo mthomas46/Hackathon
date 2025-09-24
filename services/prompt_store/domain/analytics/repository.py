@@ -3,52 +3,28 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from ...core.repository import BaseRepository
-from ...db.queries import execute_query
+from services.shared.utilities import SqlRepository, validate_sql_identifier
 from .entities import PromptPerformanceMetrics
 
 
-class AnalyticsRepository(BaseRepository[PromptPerformanceMetrics]):
+class AnalyticsRepository(SqlRepository[PromptPerformanceMetrics]):
     """Repository for analytics data access."""
 
-    def __init__(self):
-        super().__init__("prompt_performance_metrics")
+    def __init__(self, connection_string: str):
+        from ...db.connection import get_prompt_store_connection_string
 
-    def save(self, entity: PromptPerformanceMetrics) -> PromptPerformanceMetrics:
-        """Save entity to database."""
-        row = self._entity_to_row(entity)
-        execute_query(
-            f"""
-            INSERT OR REPLACE INTO {self.table_name}
-            (id, prompt_id, version, total_requests, successful_requests, failed_requests,
-             average_response_time_ms, median_response_time_ms, p95_response_time_ms, p99_response_time_ms,
-             total_tokens_used, average_tokens_per_request, cost_estimate_usd, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-            (
-                row["id"],
-                row["prompt_id"],
-                row["version"],
-                row["total_requests"],
-                row["successful_requests"],
-                row["failed_requests"],
-                row["average_response_time_ms"],
-                row["median_response_time_ms"],
-                row["p95_response_time_ms"],
-                row["p99_response_time_ms"],
-                row["total_tokens_used"],
-                row["average_tokens_per_request"],
-                row["cost_estimate_usd"],
-                row["created_at"],
-                row["updated_at"],
-            ),
+        super().__init__(
+            PromptPerformanceMetrics,
+            connection_string or get_prompt_store_connection_string(),
         )
-        return entity
 
-    def get_by_id(self, entity_id: str) -> Optional[PromptPerformanceMetrics]:
-        """Get entity by ID."""
-        row = execute_query(f"SELECT * FROM {self.table_name} WHERE id = ?", (entity_id,), fetch_one=True)
-        return self._row_to_entity(row) if row else None
+        # Validate table name to prevent SQL injection
+        if not validate_sql_identifier(self.table_name):
+            raise ValueError(f"Invalid table name: {self.table_name}")
+
+    def _dict_to_entity(self, data: Dict[str, Any]) -> PromptPerformanceMetrics:
+        """Convert database row to PromptPerformanceMetrics entity."""
+        return PromptPerformanceMetrics.from_dict(data)
 
     def get_all(self, limit: int = 50, offset: int = 0, **filters) -> Dict[str, Any]:
         """Get all entities with pagination and filters."""
@@ -72,33 +48,18 @@ class AnalyticsRepository(BaseRepository[PromptPerformanceMetrics]):
 
         # Get total count
         count_result = execute_query(
-            f"SELECT COUNT(*) as count FROM {self.table_name} {where_clause}", params, fetch_one=True
+            f"SELECT COUNT(*) as count FROM {self.table_name} {where_clause}",
+            params,
+            fetch_one=True,
         )
         total_count = count_result["count"] if count_result else 0
 
-        return {"items": entities, "total": total_count, "limit": limit, "offset": offset}
-
-    def update(self, entity_id: str, updates: Dict[str, Any]) -> Optional[PromptPerformanceMetrics]:
-        """Update entity."""
-        if not updates:
-            return self.get_by_id(entity_id)
-
-        set_clause = ", ".join(f"{key} = ?" for key in updates.keys())
-        params = list(updates.values()) + [entity_id]
-
-        execute_query(f"UPDATE {self.table_name} SET {set_clause}, updated_at = datetime('now') WHERE id = ?", params)
-
-        return self.get_by_id(entity_id)
-
-    def delete(self, entity_id: str) -> bool:
-        """Delete entity."""
-        result = execute_query(f"DELETE FROM {self.table_name} WHERE id = ?", (entity_id,))
-        return result is not None
-
-    def exists(self, entity_id: str) -> bool:
-        """Check if entity exists."""
-        result = execute_query(f"SELECT 1 FROM {self.table_name} WHERE id = ? LIMIT 1", (entity_id,), fetch_one=True)
-        return result is not None
+        return {
+            "items": entities,
+            "total": total_count,
+            "limit": limit,
+            "offset": offset,
+        }
 
     def count(self, **filters) -> int:
         """Count entities with filters."""
@@ -113,7 +74,9 @@ class AnalyticsRepository(BaseRepository[PromptPerformanceMetrics]):
             where_clause = f"WHERE {' AND '.join(conditions)}"
 
         result = execute_query(
-            f"SELECT COUNT(*) as count FROM {self.table_name} {where_clause}", params, fetch_one=True
+            f"SELECT COUNT(*) as count FROM {self.table_name} {where_clause}",
+            params,
+            fetch_one=True,
         )
         return result["count"] if result else 0
 
@@ -137,7 +100,9 @@ class AnalyticsRepository(BaseRepository[PromptPerformanceMetrics]):
             cost_estimate_usd=row["cost_estimate_usd"],
             created_at=datetime.fromisoformat(row["created_at"].replace("Z", "+00:00")),
             updated_at=(
-                datetime.fromisoformat(row["updated_at"].replace("Z", "+00:00")) if row.get("updated_at") else None
+                datetime.fromisoformat(row["updated_at"].replace("Z", "+00:00"))
+                if row.get("updated_at")
+                else None
             ),
         )
 
@@ -161,7 +126,9 @@ class AnalyticsRepository(BaseRepository[PromptPerformanceMetrics]):
             "updated_at": entity.updated_at.isoformat() if entity.updated_at else None,
         }
 
-    def get_metrics_by_prompt_version(self, prompt_id: str, version: int) -> Optional[PromptPerformanceMetrics]:
+    def get_metrics_by_prompt_version(
+        self, prompt_id: str, version: int
+    ) -> Optional[PromptPerformanceMetrics]:
         """Get metrics for a specific prompt version."""
         row = execute_query(
             "SELECT * FROM prompt_performance_metrics WHERE prompt_id = ? AND version = ?",

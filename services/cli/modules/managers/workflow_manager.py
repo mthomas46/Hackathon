@@ -17,12 +17,23 @@ from ..base.base_manager import BaseManager
 class WorkflowManager(BaseManager):
     """Handle workflow orchestration CLI operations."""
 
-    def __init__(self, console: Console, clients: ServiceClients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        console: Console,
+        clients: ServiceClients,
+        cache: Optional[Dict[str, Any]] = None,
+    ):
         super().__init__(console, clients, cache)
 
     async def get_required_services(self) -> List[str]:
         """Return list of required services for this manager."""
-        return ["orchestrator", "interpreter", "architecture-digitizer", "analysis-service", "doc_store"]
+        return [
+            "orchestrator",
+            "interpreter",
+            "architecture-digitizer",
+            "analysis-service",
+            "doc_store",
+        ]
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for workflow management."""
@@ -64,7 +75,9 @@ class WorkflowManager(BaseManager):
         try:
             payload = {"targets": [doc_id], "analysis_type": "consistency"}
 
-            with self.console.status("[bold green]Running document analysis...[/bold green]"):
+            with self.console.status(
+                "[bold green]Running document analysis...[/bold green]"
+            ):
                 url = f"{self.clients.analysis_service_url()}/analyze"
                 response = await self.clients.post_json(url, payload)
 
@@ -85,11 +98,15 @@ class WorkflowManager(BaseManager):
         try:
             payload = {"source_type": source_type, "source_url": source_url}
 
-            with self.console.status("[bold green]Triggering data ingestion...[/bold green]"):
+            with self.console.status(
+                "[bold green]Triggering data ingestion...[/bold green]"
+            ):
                 url = f"{self.clients.source_agent_url()}/ingest"
                 response = await self.clients.post_json(url, payload)
 
-            self.console.print("[green]✅ Data ingestion triggered successfully![/green]")
+            self.console.print(
+                "[green]✅ Data ingestion triggered successfully![/green]"
+            )
             self.console.print(f"Ingestion status: {response}")
 
         except Exception as e:
@@ -101,7 +118,9 @@ class WorkflowManager(BaseManager):
     async def run_consistency_check(self):
         """Run consistency check."""
         try:
-            with self.console.status("[bold green]Running consistency check...[/bold green]"):
+            with self.console.status(
+                "[bold green]Running consistency check...[/bold green]"
+            ):
                 url = f"{self.clients.analysis_service_url()}/consistency/check"
                 response = await self.clients.get_json(url)
 
@@ -110,7 +129,9 @@ class WorkflowManager(BaseManager):
 
         except Exception as e:
             self.console.print(f"[red]❌ Error running consistency check: {e}[/red]")
-            self.console.print("[yellow]💡 Tip: Ensure the analysis service is running and accessible[/yellow]")
+            self.console.print(
+                "[yellow]💡 Tip: Ensure the analysis service is running and accessible[/yellow]"
+            )
 
     async def generate_reports(self):
         """Generate reports."""
@@ -128,7 +149,9 @@ class WorkflowManager(BaseManager):
 
         except Exception as e:
             self.console.print(f"[red]❌ Error generating report: {e}[/red]")
-            self.console.print("[yellow]💡 Tip: Check report type and ensure analysis service is running[/yellow]")
+            self.console.print(
+                "[yellow]💡 Tip: Check report type and ensure analysis service is running[/yellow]"
+            )
 
     async def view_workflow_status(self):
         """View workflow status."""
@@ -154,16 +177,22 @@ class WorkflowManager(BaseManager):
                 else:
                     status_display = f"[yellow]{status}[/yellow]"
 
-                self.console.print(f"Workflow {workflow.get('id', 'N/A')}: {status_display}")
+                self.console.print(
+                    f"Workflow {workflow.get('id', 'N/A')}: {status_display}"
+                )
 
         except Exception as e:
             self.console.print(f"[red]❌ Error viewing workflow status: {e}[/red]")
-            self.console.print("[yellow]💡 Tip: Ensure the orchestrator service is running[/yellow]")
+            self.console.print(
+                "[yellow]💡 Tip: Ensure the orchestrator service is running[/yellow]"
+            )
 
     async def execute_custom_workflow(self):
         """Execute a custom workflow."""
         self.console.print("\n[bold yellow]Custom Workflow Execution[/bold yellow]")
-        self.console.print("This feature allows you to execute custom workflows defined in JSON format.")
+        self.console.print(
+            "This feature allows you to execute custom workflows defined in JSON format."
+        )
 
         workflow_json = Prompt.ask("Enter workflow JSON")
 
@@ -174,15 +203,21 @@ class WorkflowManager(BaseManager):
 
             # Validate workflow structure
             if not isinstance(workflow, dict) or "steps" not in workflow:
-                self.console.print("[red]Invalid workflow format. Must contain 'steps' array.[/red]")
+                self.console.print(
+                    "[red]Invalid workflow format. Must contain 'steps' array.[/red]"
+                )
                 return
 
             # Execute workflow
-            with self.console.status("[bold green]Executing custom workflow...") as status:
+            with self.console.status(
+                "[bold green]Executing custom workflow..."
+            ) as status:
                 url = f"{self.clients.orchestrator_url()}/workflows/execute"
                 response = await self.clients.post_json(url, workflow)
 
-            self.console.print("[green]✅ Custom workflow executed successfully![/green]")
+            self.console.print(
+                "[green]✅ Custom workflow executed successfully![/green]"
+            )
             self.console.print(f"Results: {response}")
 
         except json.JSONDecodeError:
@@ -213,7 +248,9 @@ class WorkflowManager(BaseManager):
 
             # If there's a workflow, offer to execute it
             if response.get("workflow"):
-                execute = Prompt.ask("Execute the generated workflow? (y/n)", default="n")
+                execute = Prompt.ask(
+                    "Execute the generated workflow? (y/n)", default="n"
+                )
                 if execute.lower() in ["y", "yes"]:
                     url = f"{self.clients.interpreter_url()}/execute"
                     await self.clients.post_json(url, payload)
@@ -234,8 +271,16 @@ class WorkflowManager(BaseManager):
             table.add_column("Workflow", style="white")
             table.add_column("Description", style="dim white")
 
-            table.add_row("1", "Diagram → Doc Store", "Normalize diagram and store in document store")
-            table.add_row("2", "Diagram → Analysis", "Normalize diagram and run architecture analysis")
+            table.add_row(
+                "1",
+                "Diagram → Doc Store",
+                "Normalize diagram and store in document store",
+            )
+            table.add_row(
+                "2",
+                "Diagram → Analysis",
+                "Normalize diagram and run architecture analysis",
+            )
             table.add_row("3", "Full Pipeline", "Normalize → Store → Analyze → Report")
             table.add_row("4", "Batch Processing", "Process multiple diagrams in batch")
             table.add_row("b", "Back", "Return to workflow menu")
@@ -260,31 +305,48 @@ class WorkflowManager(BaseManager):
     async def _diagram_to_docstore_workflow(self):
         """Workflow: Normalize diagram and store in doc_store."""
         self.console.print("\n[bold green]🏗️ Diagram → Doc Store Workflow[/bold green]")
-        self.console.print("This workflow will normalize an architecture diagram and store it in the document store.")
+        self.console.print(
+            "This workflow will normalize an architecture diagram and store it in the document store."
+        )
 
         # Get diagram source
         system = Prompt.ask("System (miro/figjam/lucid/confluence)")
         board_id = Prompt.ask("Board/Document ID")
         token = Prompt.ask("API Token", password=True)
 
-        if not Prompt.ask("Proceed with workflow? (y/n)", default="n").lower().startswith("y"):
+        if (
+            not Prompt.ask("Proceed with workflow? (y/n)", default="n")
+            .lower()
+            .startswith("y")
+        ):
             return
 
         try:
-            with self.console.status("[bold green]Processing diagram...[/bold green]") as status:
+            with self.console.status(
+                "[bold green]Processing diagram...[/bold green]"
+            ) as status:
                 # Step 1: Normalize diagram
                 normalize_result = await self.clients.post_json(
-                    "architecture-digitizer/normalize", {"system": system, "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize",
+                    {"system": system, "board_id": board_id, "token": token},
                 )
 
                 if not normalize_result.get("success"):
-                    self.console.print(f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]")
+                    self.console.print(
+                        f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]"
+                    )
                     return
 
                 # The normalized data is automatically stored in doc_store via the architecture-digitizer service
-                self.console.print("[green]✅ Diagram normalized and stored in document store![/green]")
-                self.console.print(f"Components: {len(normalize_result.get('data', {}).get('components', []))}")
-                self.console.print(f"Connections: {len(normalize_result.get('data', {}).get('connections', []))}")
+                self.console.print(
+                    "[green]✅ Diagram normalized and stored in document store![/green]"
+                )
+                self.console.print(
+                    f"Components: {len(normalize_result.get('data', {}).get('components', []))}"
+                )
+                self.console.print(
+                    f"Connections: {len(normalize_result.get('data', {}).get('connections', []))}"
+                )
 
         except Exception as e:
             self.console.print(f"[red]❌ Workflow failed: {e}[/red]")
@@ -292,28 +354,40 @@ class WorkflowManager(BaseManager):
     async def _diagram_to_analysis_workflow(self):
         """Workflow: Normalize diagram and run architecture analysis."""
         self.console.print("\n[bold green]🏗️ Diagram → Analysis Workflow[/bold green]")
-        self.console.print("This workflow will normalize a diagram and run comprehensive architecture analysis.")
+        self.console.print(
+            "This workflow will normalize a diagram and run comprehensive architecture analysis."
+        )
 
         # Get diagram source
         system = Prompt.ask("System (miro/figjam/lucid/confluence)")
         board_id = Prompt.ask("Board/Document ID")
         token = Prompt.ask("API Token", password=True)
         analysis_type = Prompt.ask(
-            "Analysis type (consistency/completeness/best_practices/combined)", default="combined"
+            "Analysis type (consistency/completeness/best_practices/combined)",
+            default="combined",
         )
 
-        if not Prompt.ask("Proceed with workflow? (y/n)", default="n").lower().startswith("y"):
+        if (
+            not Prompt.ask("Proceed with workflow? (y/n)", default="n")
+            .lower()
+            .startswith("y")
+        ):
             return
 
         try:
-            with self.console.status("[bold green]Processing and analyzing diagram...[/bold green]") as status:
+            with self.console.status(
+                "[bold green]Processing and analyzing diagram...[/bold green]"
+            ) as status:
                 # Step 1: Normalize diagram
                 normalize_result = await self.clients.post_json(
-                    "architecture-digitizer/normalize", {"system": system, "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize",
+                    {"system": system, "board_id": board_id, "token": token},
                 )
 
                 if not normalize_result.get("success"):
-                    self.console.print(f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]")
+                    self.console.print(
+                        f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]"
+                    )
                     return
 
                 # Step 2: Run architecture analysis
@@ -322,7 +396,11 @@ class WorkflowManager(BaseManager):
 
                 analysis_result = await self.clients.post_json(
                     "analysis-service/architecture/analyze",
-                    {"components": components, "connections": connections, "analysis_type": analysis_type},
+                    {
+                        "components": components,
+                        "connections": connections,
+                        "analysis_type": analysis_type,
+                    },
                 )
 
                 # Display results
@@ -347,9 +425,13 @@ class WorkflowManager(BaseManager):
                     self.console.print(issue_table)
 
                     if len(issues) > 10:
-                        self.console.print(f"[dim]... and {len(issues) - 10} more issues[/dim]")
+                        self.console.print(
+                            f"[dim]... and {len(issues) - 10} more issues[/dim]"
+                        )
                 else:
-                    self.console.print("[green]No issues found - architecture looks good![/green]")
+                    self.console.print(
+                        "[green]No issues found - architecture looks good![/green]"
+                    )
 
         except Exception as e:
             self.console.print(f"[red]❌ Workflow failed: {e}[/red]")
@@ -357,25 +439,36 @@ class WorkflowManager(BaseManager):
     async def _full_architecture_pipeline(self):
         """Complete architecture processing pipeline."""
         self.console.print("\n[bold green]🏗️ Full Architecture Pipeline[/bold green]")
-        self.console.print("Complete workflow: Normalize → Store → Analyze → Generate Report")
+        self.console.print(
+            "Complete workflow: Normalize → Store → Analyze → Generate Report"
+        )
 
         # Get diagram source
         system = Prompt.ask("System (miro/figjam/lucid/confluence)")
         board_id = Prompt.ask("Board/Document ID")
         token = Prompt.ask("API Token", password=True)
 
-        if not Prompt.ask("Proceed with full pipeline? (y/n)", default="n").lower().startswith("y"):
+        if (
+            not Prompt.ask("Proceed with full pipeline? (y/n)", default="n")
+            .lower()
+            .startswith("y")
+        ):
             return
 
         try:
-            with self.console.status("[bold green]Running full architecture pipeline...[/bold green]") as status:
+            with self.console.status(
+                "[bold green]Running full architecture pipeline...[/bold green]"
+            ) as status:
                 # Step 1: Normalize (which also stores in doc_store)
                 normalize_result = await self.clients.post_json(
-                    "architecture-digitizer/normalize", {"system": system, "board_id": board_id, "token": token}
+                    "architecture-digitizer/normalize",
+                    {"system": system, "board_id": board_id, "token": token},
                 )
 
                 if not normalize_result.get("success"):
-                    self.console.print(f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]")
+                    self.console.print(
+                        f"[red]❌ Normalization failed: {normalize_result.get('message')}[/red]"
+                    )
                     return
 
                 # Step 2: Run comprehensive analysis
@@ -384,7 +477,11 @@ class WorkflowManager(BaseManager):
 
                 analysis_result = await self.clients.post_json(
                     "analysis-service/architecture/analyze",
-                    {"components": components, "connections": connections, "analysis_type": "combined"},
+                    {
+                        "components": components,
+                        "connections": connections,
+                        "analysis_type": "combined",
+                    },
                 )
 
                 # Step 3: Generate report and store in doc_store
@@ -411,9 +508,13 @@ class WorkflowManager(BaseManager):
                     },
                 )
 
-                self.console.print("[green]✅ Full architecture pipeline completed![/green]")
+                self.console.print(
+                    "[green]✅ Full architecture pipeline completed![/green]"
+                )
                 self.console.print("📊 Report generated and stored in document store")
-                self.console.print(f"🔍 Issues found: {len(analysis_result.get('issues', []))}")
+                self.console.print(
+                    f"🔍 Issues found: {len(analysis_result.get('issues', []))}"
+                )
 
         except Exception as e:
             self.console.print(f"[red]❌ Pipeline failed: {e}[/red]")
@@ -422,6 +523,8 @@ class WorkflowManager(BaseManager):
         """Batch process multiple diagrams."""
         self.console.print("\n[bold green]🏗️ Batch Diagram Processing[/bold green]")
         self.console.print("Process multiple architecture diagrams in batch mode.")
-        self.console.print("[yellow]Feature coming soon! This will support CSV input of diagram URLs/tokens.[/yellow]")
+        self.console.print(
+            "[yellow]Feature coming soon! This will support CSV input of diagram URLs/tokens.[/yellow]"
+        )
 
         Prompt.ask("\n[bold cyan]Press Enter to continue...[/bold cyan]")

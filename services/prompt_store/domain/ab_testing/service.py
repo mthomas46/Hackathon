@@ -7,8 +7,11 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from services.prompt_store.core.entities import ABTest, ABTestResult
-from services.prompt_store.core.service import BaseService
-from services.prompt_store.domain.ab_testing.repository import ABTestRepository, ABTestResultRepository
+from services.shared.utilities import BaseService
+from services.prompt_store.domain.ab_testing.repository import (
+    ABTestRepository,
+    ABTestResultRepository,
+)
 from services.prompt_store.domain.prompts.service import PromptService
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.utilities import generate_id, utc_now
@@ -18,21 +21,26 @@ class ABTestService(BaseService[ABTest]):
     """Service for A/B testing business logic."""
 
     def __init__(self):
-        super().__init__(ABTestRepository())
-        self.result_repository = ABTestResultRepository()
+        from ...db.connection import get_prompt_store_connection_string
+
+        super().__init__(ABTestRepository(get_prompt_store_connection_string()))
+        self.result_repository = ABTestResultRepository(
+            get_prompt_store_connection_string()
+        )
         self.prompt_service = PromptService()
 
-    def create_entity(self, data: Dict[str, Any], entity_id: Optional[str] = None) -> ABTest:
-        """Create a new A/B test with validation."""
+    def _validate_entity(self, entity: ABTest) -> None:
+        """Validate A/B test entity."""
         # Validate required fields
-        required_fields = ["name", "prompt_a_id", "prompt_b_id"]
-        missing = [field for field in required_fields if field not in data]
-        if missing:
-            raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        if not entity.name or not entity.name.strip():
+            raise ValueError("A/B test name is required")
+
+        if not entity.prompt_a_id or not entity.prompt_b_id:
+            raise ValueError("Both prompt A and prompt B IDs are required")
 
         # Validate prompts exist and are different
-        prompt_a = self.prompt_service.get_entity(data["prompt_a_id"])
-        prompt_b = self.prompt_service.get_entity(data["prompt_b_id"])
+        prompt_a = self.prompt_service.get_entity(entity.prompt_a_id)
+        prompt_b = self.prompt_service.get_entity(entity.prompt_b_id)
 
         if not prompt_a or not prompt_b:
             raise ValueError("Both prompts must exist")
@@ -41,18 +49,26 @@ class ABTestService(BaseService[ABTest]):
             raise ValueError("Prompt A and Prompt B must be different")
 
         # Validate traffic split
-        traffic_split = data.get("traffic_split", 0.5)
-        if not (0.0 < traffic_split < 1.0):
+        if not (0.0 < entity.traffic_split < 1.0):
             raise ValueError("Traffic split must be between 0.0 and 1.0")
 
+    async def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> ABTest:
+        """Create A/B test entity from data."""
         # Check for duplicate test name
         existing = self._get_by_name(data["name"])
         if existing:
             raise ValueError(f"A/B test with name '{data['name']}' already exists")
 
+        # Validate traffic split
+        traffic_split = data.get("traffic_split", 0.5)
+        if not (0.0 < traffic_split < 1.0):
+            raise ValueError("Traffic split must be between 0.0 and 1.0")
+
         # Create A/B test entity
         ab_test = ABTest(
-            id=entity_id or generate_id(),
+            id=entity_id,
             name=data["name"],
             description=data.get("description", ""),
             prompt_a_id=data["prompt_a_id"],
@@ -63,16 +79,16 @@ class ABTestService(BaseService[ABTest]):
             created_by=data.get("created_by", "api_user"),
         )
 
-        # Save to database
-        saved_test = self.repository.save(ab_test)
+        # Cache the test (async operation)
+        asyncio.create_task(self._cache_test(ab_test))
 
-        # Cache the test
-        asyncio.create_task(self._cache_test(saved_test))
-
-        return saved_test
+        return ab_test
 
     def select_prompt_for_test(
-        self, test_id: str, user_id: Optional[str] = None, session_id: Optional[str] = None
+        self,
+        test_id: str,
+        user_id: Optional[str] = None,
+        session_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Select a prompt variant for A/B testing."""
         test = self.get_entity(test_id)
@@ -91,7 +107,9 @@ class ABTestService(BaseService[ABTest]):
             return None
 
         # Record the selection for analytics
-        asyncio.create_task(self._record_test_usage(test_id, selected_prompt_id, user_id, session_id))
+        asyncio.create_task(
+            self._record_test_usage(test_id, selected_prompt_id, user_id, session_id)
+        )
 
         return {
             "test_id": test_id,
@@ -220,7 +238,9 @@ class ABTestService(BaseService[ABTest]):
                 return test
         return None
 
-    def _determine_winner(self, test: ABTest, aggregated_results: Dict[str, Any]) -> Optional[str]:
+    def _determine_winner(
+        self, test: ABTest, aggregated_results: Dict[str, Any]
+    ) -> Optional[str]:
         """Determine the winner of an A/B test based on results."""
         if len(aggregated_results) < 2:
             return None
@@ -248,7 +268,9 @@ class ABTestService(BaseService[ABTest]):
         else:
             return "A" if a_metric > b_metric else "B"
 
-    def _calculate_confidence_level(self, metric_value: float, sample_size: int) -> float:
+    def _calculate_confidence_level(
+        self, metric_value: float, sample_size: int
+    ) -> float:
         """Calculate confidence level for a metric (simplified implementation)."""
         # This is a simplified confidence calculation
         # In a real implementation, you'd use proper statistical methods
@@ -269,12 +291,17 @@ class ABTestService(BaseService[ABTest]):
     def _assess_confidence(self, aggregated_results: Dict[str, Any]) -> Dict[str, Any]:
         """Assess overall confidence in test results."""
         if not aggregated_results:
-            return {"level": "insufficient_data", "description": "Not enough data to assess confidence"}
+            return {
+                "level": "insufficient_data",
+                "description": "Not enough data to assess confidence",
+            }
 
-        total_samples = sum(r.get("total_samples", 0) for r in aggregated_results.values())
-        avg_confidence = sum(r.get("average_confidence", 0) for r in aggregated_results.values()) / len(
-            aggregated_results
+        total_samples = sum(
+            r.get("total_samples", 0) for r in aggregated_results.values()
         )
+        avg_confidence = sum(
+            r.get("average_confidence", 0) for r in aggregated_results.values()
+        ) / len(aggregated_results)
 
         if total_samples < 100:
             return {
@@ -309,7 +336,11 @@ class ABTestService(BaseService[ABTest]):
         await prompt_store_cache.delete(cache_key)
 
     async def _record_test_usage(
-        self, test_id: str, prompt_id: str, user_id: Optional[str], session_id: Optional[str]
+        self,
+        test_id: str,
+        prompt_id: str,
+        user_id: Optional[str],
+        session_id: Optional[str],
     ) -> None:
         """Record test usage for analytics."""
         # This would integrate with the usage tracking system
@@ -324,7 +355,9 @@ class ABTestService(BaseService[ABTest]):
         """Get A/B test by ID (alias for get_entity)."""
         return self.get_entity(test_id)
 
-    def select_prompt_variant(self, test_id: str, user_id: Optional[str] = None) -> Optional[str]:
+    def select_prompt_variant(
+        self, test_id: str, user_id: Optional[str] = None
+    ) -> Optional[str]:
         """Select a prompt variant for A/B testing (convenience method)."""
         result = self.select_prompt_for_test(test_id, user_id)
         return result.get("selected_prompt", {}).get("id") if result else None

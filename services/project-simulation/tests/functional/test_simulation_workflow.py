@@ -9,7 +9,9 @@ from uuid import uuid4
 
 import pytest
 from simulation.infrastructure.di_container import get_simulation_container
-from simulation.infrastructure.repositories.in_memory_repositories import get_repository_registry
+from simulation.infrastructure.repositories.in_memory_repositories import (
+    get_repository_registry,
+)
 
 
 class TestSimulationWorkflowFunctional:
@@ -105,7 +107,9 @@ class TestSimulationWorkflowFunctional:
         asyncio.run(app_service.execute_simulation(simulation_id))
 
         # Check status after execution
-        post_execution_status = asyncio.run(app_service.get_simulation_status(simulation_id))
+        post_execution_status = asyncio.run(
+            app_service.get_simulation_status(simulation_id)
+        )
 
         # Then - Verify status progression
         assert initial_status["success"] is True
@@ -221,7 +225,9 @@ class TestSimulationWorkflowFunctional:
         assert "system_health" in health_result["health"]
         assert "simulation_specific" in health_result["health"]
 
-    @pytest.mark.parametrize("project_type", ["web_application", "api_service", "mobile_application"])
+    @pytest.mark.parametrize(
+        "project_type", ["web_application", "api_service", "mobile_application"]
+    )
     def test_different_project_types_workflow(self, app_service, project_type):
         """Test simulation workflow with different project types."""
         # Given
@@ -235,7 +241,9 @@ class TestSimulationWorkflowFunctional:
 
         # When
         create_result = asyncio.run(app_service.create_simulation(simulation_data))
-        execution_result = asyncio.run(app_service.execute_simulation(create_result["simulation_id"]))
+        execution_result = asyncio.run(
+            app_service.execute_simulation(create_result["simulation_id"])
+        )
 
         # Then
         assert create_result["success"] is True
@@ -249,14 +257,20 @@ class TestSimulationWorkflowFunctional:
         simulation_data = {
             "name": f"{complexity.title()} Complexity Test",
             "type": "web_application",
-            "team_size": 3 if complexity == "simple" else 5 if complexity == "medium" else 7,
+            "team_size": (
+                3 if complexity == "simple" else 5 if complexity == "medium" else 7
+            ),
             "complexity": complexity,
-            "duration_weeks": 4 if complexity == "simple" else 8 if complexity == "medium" else 12,
+            "duration_weeks": (
+                4 if complexity == "simple" else 8 if complexity == "medium" else 12
+            ),
         }
 
         # When
         create_result = asyncio.run(app_service.create_simulation(simulation_data))
-        execution_result = asyncio.run(app_service.execute_simulation(create_result["simulation_id"]))
+        execution_result = asyncio.run(
+            app_service.execute_simulation(create_result["simulation_id"])
+        )
 
         # Then
         assert create_result["success"] is True
@@ -268,9 +282,15 @@ class TestSimulationWorkflowFunctional:
         invalid_simulation_id = str(uuid4())
 
         # When
-        execution_result = asyncio.run(app_service.execute_simulation(invalid_simulation_id))
-        status_result = asyncio.run(app_service.get_simulation_status(invalid_simulation_id))
-        results_result = asyncio.run(app_service.get_simulation_results(invalid_simulation_id))
+        execution_result = asyncio.run(
+            app_service.execute_simulation(invalid_simulation_id)
+        )
+        status_result = asyncio.run(
+            app_service.get_simulation_status(invalid_simulation_id)
+        )
+        results_result = asyncio.run(
+            app_service.get_simulation_results(invalid_simulation_id)
+        )
 
         # Then - Should handle errors gracefully
         assert execution_result["success"] is False
@@ -334,7 +354,9 @@ class TestSimulationWorkflowFunctional:
         # Then - Data should remain consistent
         assert status1["simulation_id"] == simulation_id
         assert status2["simulation_id"] == simulation_id
-        assert status1["created_at"] == status2["created_at"]  # Creation time shouldn't change
+        assert (
+            status1["created_at"] == status2["created_at"]
+        )  # Creation time shouldn't change
 
         # Status should progress logically
         initial_status = status1["status"]

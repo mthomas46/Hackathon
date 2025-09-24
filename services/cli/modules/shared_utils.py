@@ -11,8 +11,10 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from services.shared.core.constants_new import ErrorCodes, ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 # Import shared utilities
 from services.shared.integrations.clients.clients import ServiceClients
@@ -47,9 +49,13 @@ def handle_cli_error(operation: str, error: Exception, **context) -> Dict[str, A
 
     Logs the error and returns a standardized error response.
     """
-    fire_and_forget("error", f"CLI {operation} error: {error}", ServiceNames.CLI, context)
+    fire_and_forget(
+        "error", f"CLI {operation} error: {error}", ServiceNames.CLI, context
+    )
     return create_error_response(
-        f"Failed to {operation}", error_code=ErrorCodes.INTERNAL_ERROR, details={"error": str(error), **context}
+        f"Failed to {operation}",
+        error_code=ErrorCodes.INTERNAL_ERROR,
+        details={"error": str(error), **context},
     )
 
 
@@ -88,7 +94,9 @@ def add_menu_rows(table: Table, rows: List[Tuple[str, str]]) -> None:
         table.add_row(option, description)
 
 
-def print_panel(console: Console, content: str, title: str = "", border_style: str = "blue") -> None:
+def print_panel(
+    console: Console, content: str, title: str = "", border_style: str = "blue"
+) -> None:
     """Print a formatted panel to the console."""
     panel = Panel.fit(content, title=title, border_style=border_style)
     console.print(panel)
@@ -110,7 +118,11 @@ def get_service_health_url(clients: ServiceClients, service_name: str) -> str:
 
     # For services not in the enum, construct URL
     if service_name not in url_map:
-        base_url = getattr(clients, f"{service_name.replace('-', '_')}_url", lambda: "http://localhost:5000")()
+        base_url = getattr(
+            clients,
+            f"{service_name.replace('-', '_')}_url",
+            lambda: "http://localhost:5000",
+        )()
         return f"{base_url}/health"
 
     return url_map.get(service_name, f"http://localhost:5000/health")
@@ -170,7 +182,11 @@ def create_search_results_table(query: str, prompts: List[Dict[str, Any]]) -> Ta
     table.add_column("Description", style="dim white")
 
     for prompt in prompts:
-        table.add_row(prompt.get("name", ""), prompt.get("category", ""), prompt.get("description", "")[:50])
+        table.add_row(
+            prompt.get("name", ""),
+            prompt.get("category", ""),
+            prompt.get("description", "")[:50],
+        )
 
     return table
 
@@ -211,26 +227,36 @@ def validate_prompt_data(name: str, category: str, content: str) -> None:
 
     if not safe_name:
         raise ValidationException(
-            "Prompt name is required", {"name": ["Cannot be empty or contain invalid characters"]}
+            "Prompt name is required",
+            {"name": ["Cannot be empty or contain invalid characters"]},
         )
 
     if not safe_category:
         raise ValidationException(
-            "Prompt category is required", {"category": ["Cannot be empty or contain invalid characters"]}
+            "Prompt category is required",
+            {"category": ["Cannot be empty or contain invalid characters"]},
         )
 
     if not safe_content:
         raise ValidationException(
-            "Prompt content is required", {"content": ["Cannot be empty or contain invalid characters"]}
+            "Prompt content is required",
+            {"content": ["Cannot be empty or contain invalid characters"]},
         )
 
     # Length validation to prevent DoS attacks
     if len(safe_name) > 100:
-        raise ValidationException("Prompt name too long", {"name": ["Maximum 100 characters allowed"]})
+        raise ValidationException(
+            "Prompt name too long", {"name": ["Maximum 100 characters allowed"]}
+        )
     if len(safe_category) > 50:
-        raise ValidationException("Prompt category too long", {"category": ["Maximum 50 characters allowed"]})
+        raise ValidationException(
+            "Prompt category too long", {"category": ["Maximum 50 characters allowed"]}
+        )
     if len(safe_content) > 10000:
-        raise ValidationException("Prompt content too long", {"content": ["Maximum 10,000 characters allowed"]})
+        raise ValidationException(
+            "Prompt content too long",
+            {"content": ["Maximum 10,000 characters allowed"]},
+        )
 
 
 def extract_variables_from_content(content: str) -> List[str]:
@@ -272,7 +298,9 @@ def parse_tags_input(tags_input: str) -> List[str]:
     return [tag.strip() for tag in tags_input.split(",") if tag.strip()]
 
 
-def create_health_status_display(service_name: str, health_data: Dict[str, Any]) -> Tuple[str, str]:
+def create_health_status_display(
+    service_name: str, health_data: Dict[str, Any]
+) -> Tuple[str, str]:
     """Create display strings for health status."""
     status = health_data.get("status", "unknown")
 
@@ -289,11 +317,20 @@ def create_health_status_display(service_name: str, health_data: Dict[str, Any])
     return status_display, details
 
 
-def log_cli_metrics(operation: str, duration: float, success: bool, **additional) -> None:
+def log_cli_metrics(
+    operation: str, duration: float, success: bool, **additional
+) -> None:
     """Log CLI operation metrics."""
-    context = {"operation": operation, "duration_ms": duration * 1000, "success": success, "service": ServiceNames.CLI}
+    context = {
+        "operation": operation,
+        "duration_ms": duration * 1000,
+        "success": success,
+        "service": ServiceNames.CLI,
+    }
     context.update(additional)
-    fire_and_forget("info", f"CLI operation completed: {operation}", ServiceNames.CLI, context)
+    fire_and_forget(
+        "info", f"CLI operation completed: {operation}", ServiceNames.CLI, context
+    )
 
 
 # Enhanced visual feedback utilities
@@ -336,26 +373,39 @@ def is_cache_valid(cache_item: Dict[str, Any], ttl_seconds: int = 300) -> bool:
 
 
 # Graceful error handling utilities
-def handle_graceful_error(console: Console, error: Exception, operation: str, show_details: bool = False):
+def handle_graceful_error(
+    console: Console, error: Exception, operation: str, show_details: bool = False
+):
     """Handle errors gracefully with user-friendly messages."""
-    from services.shared.utilities.error_handling import ServiceException, ValidationException
+    from services.shared.utilities.error_handling import (
+        ServiceException,
+        ValidationException,
+    )
 
     if isinstance(error, ServiceException):
-        create_error_message(console, f"Service error during {operation}: {error.message}")
+        create_error_message(
+            console, f"Service error during {operation}: {error.message}"
+        )
         if show_details and error.details:
             console.print(f"[dim]Details: {error.details}[/dim]")
     elif isinstance(error, ValidationException):
-        create_error_message(console, f"Validation error during {operation}: {error.message}")
+        create_error_message(
+            console, f"Validation error during {operation}: {error.message}"
+        )
     elif isinstance(error, KeyboardInterrupt):
         create_warning_message(console, f"Operation '{operation}' interrupted by user")
     elif isinstance(error, asyncio.TimeoutError):
         create_error_message(console, f"Operation '{operation}' timed out")
     else:
-        create_error_message(console, f"Unexpected error during {operation}: {str(error)}")
+        create_error_message(
+            console, f"Unexpected error during {operation}: {str(error)}"
+        )
 
 
 # Enhanced table creation utilities
-def create_enhanced_table(title: str, columns: List[str], styles: List[str] = None) -> Table:
+def create_enhanced_table(
+    title: str, columns: List[str], styles: List[str] = None
+) -> Table:
     """Create an enhanced table with better styling."""
     table = Table(title=title)
 
@@ -378,4 +428,6 @@ def add_table_rows_enhanced(table: Table, rows: List[List[str]], max_rows: int =
 
     if max_rows and len(rows) > max_rows:
         table.add_row(*["[dim]...[/dim]"] * len(rows[0]))
-        table.add_row(*[f"[dim]+{len(rows) - max_rows} more[/dim]"] + [""] * (len(rows[0]) - 1))
+        table.add_row(
+            *[f"[dim]+{len(rows) - max_rows} more[/dim]"] + [""] * (len(rows[0]) - 1)
+        )

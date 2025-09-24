@@ -28,7 +28,10 @@ class CreateWorkflowUseCase(UseCase):
         try:
             # Create workflow entity
             workflow = Workflow(
-                name=command.name, description=command.description, created_by=command.created_by, tags=command.tags
+                name=command.name,
+                description=command.description,
+                created_by=command.created_by,
+                tags=command.tags,
             )
 
             # Add parameters
@@ -60,11 +63,15 @@ class CreateWorkflowUseCase(UseCase):
             # Validate workflow
             is_valid, validation_errors = WorkflowValidator.validate_workflow(workflow)
             if not is_valid:
-                return DomainResult.failure_result(validation_errors, "Workflow validation failed")
+                return DomainResult.failure_result(
+                    validation_errors, "Workflow validation failed"
+                )
 
             # Save workflow
             if self.workflow_repository.save_workflow(workflow):
-                return DomainResult.success_result(workflow, "Workflow created successfully")
+                return DomainResult.success_result(
+                    workflow, "Workflow created successfully"
+                )
             else:
                 return DomainResult.single_error("Failed to save workflow")
 
@@ -80,7 +87,9 @@ class ExecuteWorkflowUseCase(UseCase):
         self.execution_repository = execution_repository
         self.workflow_executor = workflow_executor
 
-    async def execute(self, command: ExecuteWorkflowCommand) -> Tuple[bool, str, Optional[WorkflowExecution]]:
+    async def execute(
+        self, command: ExecuteWorkflowCommand
+    ) -> Tuple[bool, str, Optional[WorkflowExecution]]:
         """Execute the workflow execution use case."""
         try:
             # Get workflow
@@ -95,12 +104,16 @@ class ExecuteWorkflowUseCase(UseCase):
 
             # Create execution
             execution = WorkflowExecution(
-                workflow_id=command.workflow_id, correlation_id=command.correlation_id, trace_id=command.trace_id
+                workflow_id=command.workflow_id,
+                correlation_id=command.correlation_id,
+                trace_id=command.trace_id,
             )
 
             # Start execution
             execution.start(
-                parameters=command.parameters, correlation_id=command.correlation_id, trace_id=command.trace_id
+                parameters=command.parameters,
+                correlation_id=command.correlation_id,
+                trace_id=command.trace_id,
             )
 
             # Save execution
@@ -110,7 +123,9 @@ class ExecuteWorkflowUseCase(UseCase):
             # Execute workflow asynchronously
             # In a real implementation, this would be handled by a background task
             # For now, we'll execute synchronously
-            executed_execution = await self.workflow_executor.execute_workflow(workflow, execution)
+            executed_execution = await self.workflow_executor.execute_workflow(
+                workflow, execution
+            )
 
             # Update execution in repository
             self.execution_repository.update_execution(executed_execution)
@@ -156,7 +171,9 @@ class ListWorkflowExecutionsUseCase(UseCase):
     def __init__(self, execution_repository):
         self.execution_repository = execution_repository
 
-    async def execute(self, query: ListWorkflowExecutionsQuery) -> List[WorkflowExecution]:
+    async def execute(
+        self, query: ListWorkflowExecutionsQuery
+    ) -> List[WorkflowExecution]:
         """Execute the list workflow executions use case."""
         return self.execution_repository.list_executions(
             workflow_id=query.workflow_id,
@@ -174,6 +191,8 @@ class GetWorkflowExecutionUseCase(UseCase):
     def __init__(self, execution_repository):
         self.execution_repository = execution_repository
 
-    async def execute(self, query: GetWorkflowExecutionQuery) -> Optional[WorkflowExecution]:
+    async def execute(
+        self, query: GetWorkflowExecutionQuery
+    ) -> Optional[WorkflowExecution]:
         """Execute the get workflow execution use case."""
         return self.execution_repository.get_execution(query.execution_id)

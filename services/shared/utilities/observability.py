@@ -102,11 +102,22 @@ class DistributedTracer:
             span.tags.update(tags)
         del self._active_spans[span_id]
 
-    def add_span_log(self, span_id: str, message: str, level: str = "info", fields: Optional[Dict[str, Any]] = None):
+    def add_span_log(
+        self,
+        span_id: str,
+        message: str,
+        level: str = "info",
+        fields: Optional[Dict[str, Any]] = None,
+    ):
         if span_id not in self._active_spans:
             return
         span = self._active_spans[span_id]
-        log_entry = {"timestamp": time.time(), "message": message, "level": level, "fields": fields or {}}
+        log_entry = {
+            "timestamp": time.time(),
+            "message": message,
+            "level": level,
+            "fields": fields or {},
+        }
         span.logs.append(log_entry)
 
     def add_span_tag(self, span_id: str, key: str, value: Any):
@@ -135,13 +146,17 @@ class TraceContext:
         self.span: Optional[TraceSpan] = None
 
     def __enter__(self) -> TraceSpan:
-        self.span = self.tracer.start_span(self.operation_name, self.trace_id, self.parent_span_id, self.tags)
+        self.span = self.tracer.start_span(
+            self.operation_name, self.trace_id, self.parent_span_id, self.tags
+        )
         return self.span
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.span:
             if exc_type:
-                self.tracer.finish_span(self.span.span_id, TraceStatus.FAILED, str(exc_val))
+                self.tracer.finish_span(
+                    self.span.span_id, TraceStatus.FAILED, str(exc_val)
+                )
             else:
                 self.tracer.finish_span(self.span.span_id)
 
@@ -156,12 +171,16 @@ class CorrelationIDMiddleware:
         correlation_id = request.headers.get("X-Correlation-ID")
         if not correlation_id:
             correlation_id = str(uuid.uuid4())
-        span = self.tracer.start_span(f"{request.method} {request.url.path}", correlation_id)
+        span = self.tracer.start_span(
+            f"{request.method} {request.url.path}", correlation_id
+        )
         self.tracer.add_span_tag(span.span_id, "http.method", request.method)
         self.tracer.add_span_tag(span.span_id, "http.url", str(request.url))
         try:
             response = await call_next(request)
-            self.tracer.add_span_tag(span.span_id, "http.status_code", response.status_code)
+            self.tracer.add_span_tag(
+                span.span_id, "http.status_code", response.status_code
+            )
             self.tracer.finish_span(span.span_id)
             return response
         except Exception as e:

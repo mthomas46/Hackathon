@@ -86,10 +86,18 @@ class HealthCheckResult:
 
     @classmethod
     def success(
-        cls, message: str, details: Optional[Dict[str, Any]] = None, response_time_ms: Optional[float] = None
+        cls,
+        message: str,
+        details: Optional[Dict[str, Any]] = None,
+        response_time_ms: Optional[float] = None,
     ) -> "HealthCheckResult":
         """Create a successful health check result."""
-        return cls(status=HealthStatus.HEALTHY, message=message, details=details, response_time_ms=response_time_ms)
+        return cls(
+            status=HealthStatus.HEALTHY,
+            message=message,
+            details=details,
+            response_time_ms=response_time_ms,
+        )
 
     @classmethod
     def failure(

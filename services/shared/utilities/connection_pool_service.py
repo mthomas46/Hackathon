@@ -86,7 +86,10 @@ class ConnectionWrapper:
     def is_expired(self, max_idle_time: float, max_lifetime: float) -> bool:
         """Check if connection has expired."""
         current_time = time.time()
-        return current_time - self.last_used > max_idle_time or current_time - self.created_at > max_lifetime
+        return (
+            current_time - self.last_used > max_idle_time
+            or current_time - self.created_at > max_lifetime
+        )
 
     async def close(self) -> None:
         """Close the connection."""
@@ -182,7 +185,9 @@ class ConnectionPool:
                 self._in_use_connections.remove(wrapper)
 
                 # Check if connection should be destroyed
-                if wrapper.is_expired(self.config.max_idle_time, self.config.max_lifetime):
+                if wrapper.is_expired(
+                    self.config.max_idle_time, self.config.max_lifetime
+                ):
                     await self._destroy_connection(wrapper)
                 else:
                     self._available_connections.append(wrapper)
@@ -235,7 +240,9 @@ class ConnectionPool:
                 )
 
             else:
-                raise ValueError(f"Unsupported connection type: {self.config.pool_type}")
+                raise ValueError(
+                    f"Unsupported connection type: {self.config.pool_type}"
+                )
 
             self.metrics.total_connections_created += 1
             wrapper = ConnectionWrapper(connection=conn, pool_name=self.name)
@@ -294,12 +301,16 @@ class ConnectionPool:
 
     def _determine_pool_state(self) -> PoolState:
         """Determine the current pool state."""
-        total_connections = self.metrics.active_connections + self.metrics.idle_connections
+        total_connections = (
+            self.metrics.active_connections + self.metrics.idle_connections
+        )
 
         if total_connections == 0:
             return PoolState.INITIALIZING
 
-        error_rate = self.metrics.connection_errors / max(1, self.metrics.total_connections_created)
+        error_rate = self.metrics.connection_errors / max(
+            1, self.metrics.total_connections_created
+        )
 
         if error_rate > 0.5:
             return PoolState.UNHEALTHY
@@ -311,7 +322,9 @@ class ConnectionPool:
     async def start_health_monitoring(self) -> None:
         """Start background health monitoring."""
         if self._health_check_task is None:
-            self._health_check_task = asyncio.create_task(self._health_monitoring_loop())
+            self._health_check_task = asyncio.create_task(
+                self._health_monitoring_loop()
+            )
             logger.info(f"Started health monitoring for connection pool {self.name}")
 
     async def stop_health_monitoring(self) -> None:
@@ -329,7 +342,10 @@ class ConnectionPool:
         while not self._shutdown_event.is_set():
             try:
                 current_time = time.time()
-                if current_time - self._last_health_check >= self.config.health_check_interval:
+                if (
+                    current_time - self._last_health_check
+                    >= self.config.health_check_interval
+                ):
                     await self._perform_health_check()
                     self._last_health_check = current_time
 
@@ -341,7 +357,9 @@ class ConnectionPool:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.error(f"Error in health monitoring loop for pool {self.name}: {e}")
+                logger.error(
+                    f"Error in health monitoring loop for pool {self.name}: {e}"
+                )
                 await asyncio.sleep(self.config.health_check_interval)
 
     async def _perform_health_check(self) -> None:
@@ -359,7 +377,9 @@ class ConnectionPool:
         with self._lock:
             expired_connections = []
             for wrapper in self._available_connections[:]:  # Copy the list
-                if wrapper.is_expired(self.config.max_idle_time, self.config.max_lifetime):
+                if wrapper.is_expired(
+                    self.config.max_idle_time, self.config.max_lifetime
+                ):
                     expired_connections.append(wrapper)
                     self._available_connections.remove(wrapper)
 
@@ -368,7 +388,9 @@ class ConnectionPool:
                 await self._destroy_connection(wrapper)
 
             if expired_connections:
-                logger.debug(f"Cleaned up {len(expired_connections)} expired connections in pool {self.name}")
+                logger.debug(
+                    f"Cleaned up {len(expired_connections)} expired connections in pool {self.name}"
+                )
 
     async def shutdown(self) -> None:
         """Shutdown the connection pool."""
@@ -379,7 +401,9 @@ class ConnectionPool:
 
         # Close all connections
         with self._lock:
-            all_connections = self._available_connections + list(self._in_use_connections)
+            all_connections = self._available_connections + list(
+                self._in_use_connections
+            )
 
         for wrapper in all_connections:
             await self._destroy_connection(wrapper)
@@ -448,7 +472,9 @@ class ConnectionPoolService:
             raise ValueError(f"Connection pool {name} does not exist")
         return self._pools[name]
 
-    def create_http_pool(self, name: str, config: ConnectionConfig) -> HTTPConnectionPool:
+    def create_http_pool(
+        self, name: str, config: ConnectionConfig
+    ) -> HTTPConnectionPool:
         """Create a new HTTP connection pool."""
         with self._lock:
             if name in self._http_pools:
@@ -536,23 +562,34 @@ def get_connection_pool_service() -> ConnectionPoolService:
 
 # Convenience functions
 def create_database_pool(
-    name: str, database_url: str, pool_type: ConnectionType = ConnectionType.SQLITE, max_connections: int = 10
+    name: str,
+    database_url: str,
+    pool_type: ConnectionType = ConnectionType.SQLITE,
+    max_connections: int = 10,
 ) -> ConnectionPool:
     """Convenience function to create a database connection pool."""
     # Parse database URL (simplified)
     if pool_type == ConnectionType.SQLITE:
-        config = ConnectionConfig(pool_type=pool_type, database=database_url, max_connections=max_connections)
+        config = ConnectionConfig(
+            pool_type=pool_type, database=database_url, max_connections=max_connections
+        )
     else:
         # For other databases, you'd parse the URL properly
         config = ConnectionConfig(
-            pool_type=pool_type, host="localhost", port=5432, database=database_url, max_connections=max_connections
+            pool_type=pool_type,
+            host="localhost",
+            port=5432,
+            database=database_url,
+            max_connections=max_connections,
         )
 
     service = get_connection_pool_service()
     return service.create_pool(name, config)
 
 
-def create_http_pool(name: str, base_url: str = "", max_connections: int = 20) -> HTTPConnectionPool:
+def create_http_pool(
+    name: str, base_url: str = "", max_connections: int = 20
+) -> HTTPConnectionPool:
     """Convenience function to create an HTTP connection pool."""
     config = ConnectionConfig(
         pool_type=ConnectionType.HTTP,

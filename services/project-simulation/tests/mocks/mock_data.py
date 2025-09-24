@@ -134,7 +134,9 @@ class MockDataGenerator:
             ],
             "milestones": [
                 self.generate_milestone(),
-                self.generate_milestone(name="MVP Release", due_date=datetime.now() + timedelta(days=45)),
+                self.generate_milestone(
+                    name="MVP Release", due_date=datetime.now() + timedelta(days=45)
+                ),
             ],
             "created_at": datetime.now(),
             "updated_at": datetime.now(),
@@ -186,7 +188,13 @@ class MockDataGenerator:
             "target_id": self.generate_id("doc"),
             "analysis_type": "quality",
             "overall_score": 0.82,
-            "issues": [{"severity": "medium", "description": "Mock analysis issue", "suggestion": "Fix mock issue"}],
+            "issues": [
+                {
+                    "severity": "medium",
+                    "description": "Mock analysis issue",
+                    "suggestion": "Fix mock issue",
+                }
+            ],
             "recommendations": ["Improve mock documentation", "Add more mock tests"],
             "created_at": datetime.now(),
             "processing_time_seconds": 1.5,
@@ -243,8 +251,18 @@ class MockDataGenerator:
                 for i in range(4)
             ],
             "phases": [
-                {"name": "Planning", "start_date": "2024-01-01", "end_date": "2024-01-10", "duration_days": 10},
-                {"name": "Development", "start_date": "2024-01-11", "end_date": "2024-02-10", "duration_days": 30},
+                {
+                    "name": "Planning",
+                    "start_date": "2024-01-01",
+                    "end_date": "2024-01-10",
+                    "duration_days": 10,
+                },
+                {
+                    "name": "Development",
+                    "start_date": "2024-01-11",
+                    "end_date": "2024-02-10",
+                    "duration_days": 30,
+                },
             ],
         }
         request_data.update(overrides)
@@ -256,13 +274,26 @@ class MockDataGenerator:
         response_data = {
             "success": True,
             "message": "Operation completed successfully",
-            "data": {"id": self.generate_id("response"), "created_at": datetime.now().isoformat(), "status": "active"},
+            "data": {
+                "id": self.generate_id("response"),
+                "created_at": datetime.now().isoformat(),
+                "status": "active",
+            },
             "request_id": f"req_{uuid.uuid4().hex[:8]}",
             "timestamp": datetime.now().isoformat(),
             "_links": {
-                "self": {"href": f"/api/v1/resource/{self.generate_id()}", "method": "GET"},
-                "update": {"href": f"/api/v1/resource/{self.generate_id()}", "method": "PUT"},
-                "delete": {"href": f"/api/v1/resource/{self.generate_id()}", "method": "DELETE"},
+                "self": {
+                    "href": f"/api/v1/resource/{self.generate_id()}",
+                    "method": "GET",
+                },
+                "update": {
+                    "href": f"/api/v1/resource/{self.generate_id()}",
+                    "method": "PUT",
+                },
+                "delete": {
+                    "href": f"/api/v1/resource/{self.generate_id()}",
+                    "method": "DELETE",
+                },
             },
         }
         response_data.update(overrides)
@@ -324,7 +355,10 @@ TEST_SCENARIOS = {
             "complexity": ComplexityLevel.SIMPLE,
             "duration_weeks": 4,
         },
-        "team": [{"role": "developer", "experience_years": 2}, {"role": "qa_engineer", "experience_years": 1}],
+        "team": [
+            {"role": "developer", "experience_years": 2},
+            {"role": "qa_engineer", "experience_years": 1},
+        ],
     },
     "complex_enterprise": {
         "project": {
@@ -349,7 +383,10 @@ TEST_SCENARIOS = {
             "complexity": ComplexityLevel.MEDIUM,
             "duration_weeks": 6,
         },
-        "team": [{"role": "developer", "experience_years": 4}, {"role": "qa_engineer", "experience_years": 3}],
+        "team": [
+            {"role": "developer", "experience_years": 4},
+            {"role": "qa_engineer", "experience_years": 3},
+        ],
     },
 }
 
@@ -364,7 +401,9 @@ def create_test_scenario(scenario_name: str) -> Dict[str, Any]:
 
     # Generate core data
     project = generator.generate_project(**scenario["project"])
-    team_members = [generator.generate_team_member(**member) for member in scenario["team"]]
+    team_members = [
+        generator.generate_team_member(**member) for member in scenario["team"]
+    ]
 
     # Create timeline
     timeline = generator.generate_timeline(project_id=project.project_id)
@@ -372,7 +411,12 @@ def create_test_scenario(scenario_name: str) -> Dict[str, Any]:
     # Create simulation
     simulation = generator.generate_simulation(project_id=project.project_id)
 
-    return {"project": project, "team": team_members, "timeline": timeline, "simulation": simulation}
+    return {
+        "project": project,
+        "team": team_members,
+        "timeline": timeline,
+        "simulation": simulation,
+    }
 
 
 __all__ = [

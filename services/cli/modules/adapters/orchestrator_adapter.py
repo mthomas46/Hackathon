@@ -8,7 +8,12 @@ for workflow management, service registry, peer synchronization, and orchestrati
 import time
 from typing import Dict, List, Tuple
 
-from .base_service_adapter import BaseServiceAdapter, CommandResult, ServiceInfo, ServiceStatus
+from .base_service_adapter import (
+    BaseServiceAdapter,
+    CommandResult,
+    ServiceInfo,
+    ServiceStatus,
+)
 
 
 class OrchestratorAdapter(BaseServiceAdapter):
@@ -76,14 +81,20 @@ class OrchestratorAdapter(BaseServiceAdapter):
                     data={
                         "health": health_response,
                         "peers_accessible": peers_response is not None,
-                        "peer_count": len(peers_response) if isinstance(peers_response, list) else 0,
+                        "peer_count": (
+                            len(peers_response)
+                            if isinstance(peers_response, list)
+                            else 0
+                        ),
                     },
                     message="Orchestrator is fully operational",
                     execution_time=execution_time,
                 )
             else:
                 return CommandResult(
-                    success=False, error="Orchestrator health check failed", execution_time=execution_time
+                    success=False,
+                    error="Orchestrator health check failed",
+                    execution_time=execution_time,
                 )
 
         except Exception as e:
@@ -99,7 +110,11 @@ class OrchestratorAdapter(BaseServiceAdapter):
             ("registry_status", "Get registry status", "registry_status"),
             ("services", "List registered services", "services"),
             ("workflow_status", "Get workflow status", "workflow_status"),
-            ("register_service", "Register a new service", "register_service [service_data]"),
+            (
+                "register_service",
+                "Register a new service",
+                "register_service [service_data]",
+            ),
             ("health_detailed", "Get detailed health information", "health_detailed"),
         ]
 
@@ -130,7 +145,9 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 return CommandResult(success=False, error=f"Unknown command: {command}")
 
         except Exception as e:
-            return CommandResult(success=False, error=f"Command execution failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Command execution failed: {str(e)}"
+            )
 
     # Private command implementations
     async def _get_peers(self) -> CommandResult:
@@ -155,7 +172,9 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get orchestrator data: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get orchestrator data: {str(e)}"
+            )
 
     async def _sync_peers(self) -> CommandResult:
         """Synchronize peer registry"""
@@ -166,10 +185,15 @@ class OrchestratorAdapter(BaseServiceAdapter):
             execution_time = time.time() - start_time
 
             return CommandResult(
-                success=True, data=response, message="Peer synchronization completed", execution_time=execution_time
+                success=True,
+                data=response,
+                message="Peer synchronization completed",
+                execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Peer synchronization failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Peer synchronization failed: {str(e)}"
+            )
 
     async def _poll_openapi(self) -> CommandResult:
         """Poll OpenAPI specifications"""
@@ -187,7 +211,9 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"OpenAPI polling failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"OpenAPI polling failed: {str(e)}"
+            )
 
     async def _demo_e2e(self, params: Dict) -> CommandResult:
         """Run end-to-end demonstration"""
@@ -207,7 +233,9 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"E2E demonstration failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"E2E demonstration failed: {str(e)}"
+            )
 
     async def _get_registry_status(self) -> CommandResult:
         """Get registry status"""
@@ -224,7 +252,9 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get registry status: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get registry status: {str(e)}"
+            )
 
     async def _get_services(self) -> CommandResult:
         """Get registered services"""
@@ -242,7 +272,9 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get services: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get services: {str(e)}"
+            )
 
     async def _get_workflow_status(self) -> CommandResult:
         """Get workflow status"""
@@ -259,7 +291,9 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Failed to get workflow status: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Failed to get workflow status: {str(e)}"
+            )
 
     async def _register_service(self, params: Dict) -> CommandResult:
         """Register a new service"""
@@ -285,4 +319,6 @@ class OrchestratorAdapter(BaseServiceAdapter):
                 execution_time=execution_time,
             )
         except Exception as e:
-            return CommandResult(success=False, error=f"Service registration failed: {str(e)}")
+            return CommandResult(
+                success=False, error=f"Service registration failed: {str(e)}"
+            )

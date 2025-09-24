@@ -6,4 +6,10 @@ from .ingestion_result import IngestionResult
 from .ingestion_source_type import IngestionSourceType
 from .ingestion_status import IngestionStatus
 
-__all__ = ["IngestionSourceType", "IngestionStatus", "IngestionRequest", "IngestionResult", "DocumentMetadata"]
+__all__ = [
+    "IngestionSourceType",
+    "IngestionStatus",
+    "IngestionRequest",
+    "IngestionResult",
+    "DocumentMetadata",
+]

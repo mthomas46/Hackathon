@@ -35,4 +35,8 @@ def initialize_orchestrator_client():
 
 
 # Export key module functions for easier importing
-__all__ = ["get_orchestrator_client", "initialize_orchestrator_client", "orchestrator_client"]
+__all__ = [
+    "get_orchestrator_client",
+    "initialize_orchestrator_client",
+    "orchestrator_client",
+]

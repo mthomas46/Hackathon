@@ -32,7 +32,12 @@ class DatabaseConnectionPool(ConnectionPool):
 class SQLiteConnectionPool(DatabaseConnectionPool):
     """SQLite connection pool implementation."""
 
-    def __init__(self, config: ConnectionPoolConfig, database_path: str, pragmas: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        config: ConnectionPoolConfig,
+        database_path: str,
+        pragmas: Optional[Dict[str, Any]] = None,
+    ):
         """Initialize SQLite connection pool."""
         connection_string = f"sqlite:///{database_path}"
         super().__init__(config, connection_string)
@@ -52,7 +57,9 @@ class SQLiteConnectionPool(DatabaseConnectionPool):
 
         def _create_conn():
             conn = sqlite3.connect(
-                self.database_path, isolation_level=None, check_same_thread=False  # We'll manage transactions manually
+                self.database_path,
+                isolation_level=None,
+                check_same_thread=False,  # We'll manage transactions manually
             )
 
             # Apply pragmas
@@ -93,7 +100,9 @@ class SQLiteConnectionPool(DatabaseConnectionPool):
 
         await loop.run_in_executor(None, _close)
 
-    async def execute_query(self, query: str, params: Optional[tuple] = None) -> List[tuple]:
+    async def execute_query(
+        self, query: str, params: Optional[tuple] = None
+    ) -> List[tuple]:
         """Execute a query using a pooled connection."""
         async with self.acquire() as pooled_conn:
             loop = asyncio.get_event_loop()
@@ -213,7 +222,9 @@ class PostgreSQLConnectionPool(DatabaseConnectionPool):
 
         await loop.run_in_executor(None, _close)
 
-    async def execute_query(self, query: str, params: Optional[tuple] = None) -> List[tuple]:
+    async def execute_query(
+        self, query: str, params: Optional[tuple] = None
+    ) -> List[tuple]:
         """Execute a query using a pooled connection."""
         async with self.acquire() as pooled_conn:
             loop = asyncio.get_event_loop()
@@ -330,7 +341,9 @@ class MySQLConnectionPool(DatabaseConnectionPool):
 
         await loop.run_in_executor(None, _close)
 
-    async def execute_query(self, query: str, params: Optional[tuple] = None) -> List[tuple]:
+    async def execute_query(
+        self, query: str, params: Optional[tuple] = None
+    ) -> List[tuple]:
         """Execute a query using a pooled connection."""
         async with self.acquire() as pooled_conn:
             loop = asyncio.get_event_loop()
@@ -381,21 +394,35 @@ class DatabasePoolFactory:
 
     @staticmethod
     def create_postgresql_pool(
-        host: str, database: str, user: str, password: str, config: Optional[ConnectionPoolConfig] = None, **kwargs
+        host: str,
+        database: str,
+        user: str,
+        password: str,
+        config: Optional[ConnectionPoolConfig] = None,
+        **kwargs,
     ) -> PostgreSQLConnectionPool:
         """Create PostgreSQL connection pool."""
         if config is None:
             config = ConnectionPoolConfig()
-        return PostgreSQLConnectionPool(config, host, database=database, user=user, password=password, **kwargs)
+        return PostgreSQLConnectionPool(
+            config, host, database=database, user=user, password=password, **kwargs
+        )
 
     @staticmethod
     def create_mysql_pool(
-        host: str, database: str, user: str, password: str, config: Optional[ConnectionPoolConfig] = None, **kwargs
+        host: str,
+        database: str,
+        user: str,
+        password: str,
+        config: Optional[ConnectionPoolConfig] = None,
+        **kwargs,
     ) -> MySQLConnectionPool:
         """Create MySQL connection pool."""
         if config is None:
             config = ConnectionPoolConfig()
-        return MySQLConnectionPool(config, host, database=database, user=user, password=password, **kwargs)
+        return MySQLConnectionPool(
+            config, host, database=database, user=user, password=password, **kwargs
+        )
 
     @staticmethod
     def create_pool_from_url(
@@ -410,17 +437,23 @@ class DatabasePoolFactory:
             database_path = connection_url.replace("sqlite:///", "")
             return SQLiteConnectionPool(config, database_path)
 
-        elif connection_url.startswith("postgresql://") or connection_url.startswith("postgres://"):
+        elif connection_url.startswith("postgresql://") or connection_url.startswith(
+            "postgres://"
+        ):
             # Simple URL parsing (in production, use a proper URL parser)
             # postgres://user:password@host:port/database
-            url_parts = connection_url.replace("postgresql://", "").replace("postgres://", "")
+            url_parts = connection_url.replace("postgresql://", "").replace(
+                "postgres://", ""
+            )
             if "@" in url_parts:
                 auth_part, rest = url_parts.split("@", 1)
                 user, password = auth_part.split(":", 1)
                 if ":" in rest:
                     host_port, database = rest.split("/", 1)
                     host, port = host_port.split(":", 1)
-                    return PostgreSQLConnectionPool(config, host, int(port), database, user, password)
+                    return PostgreSQLConnectionPool(
+                        config, host, int(port), database, user, password
+                    )
 
         elif connection_url.startswith("mysql://"):
             # mysql://user:password@host:port/database
@@ -431,6 +464,8 @@ class DatabasePoolFactory:
                 if ":" in rest:
                     host_port, database = rest.split("/", 1)
                     host, port = host_port.split(":", 1)
-                    return MySQLConnectionPool(config, host, int(port), database, user, password)
+                    return MySQLConnectionPool(
+                        config, host, int(port), database, user, password
+                    )
 
         raise ValueError(f"Unsupported database URL: {connection_url}")

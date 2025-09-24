@@ -1,17 +1,43 @@
-"""Document domain service."""
+"""Document domain service using standardized BaseService."""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from services.shared.utilities import BaseService
+
 from ..entities import Content, Document, DocumentId, Metadata
 
 
-class DocumentService:
+class DocumentService(BaseService[Document]):
     """Domain service for document operations."""
 
     def __init__(self, max_document_size: int = 10 * 1024 * 1024):  # 10MB default
         """Initialize document service."""
         self.max_document_size = max_document_size
+
+    def _validate_entity(self, entity: Document) -> None:
+        """Validate document entity using standardized validation."""
+        if len(entity.content.text.encode("utf-8")) > self.max_document_size:
+            raise ValueError(
+                f"Document content exceeds maximum size of {self.max_document_size} bytes"
+            )
+        if not entity.title or not entity.title.strip():
+            raise ValueError("Document title cannot be empty")
+        if not entity.content or not entity.content.text.strip():
+            raise ValueError("Document content cannot be empty")
+
+    async def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> Document:
+        """Create document entity from data using standardized factory pattern."""
+        return self.create_document(
+            title=data.get("title", ""),
+            content_text=data.get("content_text", ""),
+            content_format=data.get("content_format", "markdown"),
+            author=data.get("author"),
+            tags=data.get("tags", []),
+            repository_id=data.get("repository_id"),
+        )
 
     def create_document(
         self,
@@ -25,21 +51,31 @@ class DocumentService:
         """Create a new document."""
         # Validate content size
         if len(content_text.encode("utf-8")) > self.max_document_size:
-            raise ValueError(f"Document content exceeds maximum size of {self.max_document_size} bytes")
+            raise ValueError(
+                f"Document content exceeds maximum size of {self.max_document_size} bytes"
+            )
 
         # Generate document ID
-        document_id = DocumentId(f"doc_{datetime.now().timestamp()}_{hash(title) % 10000}")
+        document_id = DocumentId(
+            f"doc_{datetime.now().timestamp()}_{hash(title) % 10000}"
+        )
 
         # Create content value object
         content = Content(text=content_text, format=content_format)
 
         # Create metadata
         now = datetime.now()
-        metadata = Metadata(created_at=now, updated_at=now, author=author, tags=tags or [])
+        metadata = Metadata(
+            created_at=now, updated_at=now, author=author, tags=tags or []
+        )
 
         # Create document entity
         document = Document(
-            id=document_id, title=title, content=content, metadata=metadata, repository_id=repository_id
+            id=document_id,
+            title=title,
+            content=content,
+            metadata=metadata,
+            repository_id=repository_id,
         )
 
         return document
@@ -50,7 +86,9 @@ class DocumentService:
         """Update document content."""
         # Validate content size
         if len(new_content.encode("utf-8")) > self.max_document_size:
-            raise ValueError(f"Document content exceeds maximum size of {self.max_document_size} bytes")
+            raise ValueError(
+                f"Document content exceeds maximum size of {self.max_document_size} bytes"
+            )
 
         # Create new content
         content_format = new_format or document.content.format
@@ -100,7 +138,10 @@ class DocumentService:
         return issues
 
     def search_documents(
-        self, documents: List[Document], query: str, filters: Optional[Dict[str, Any]] = None
+        self,
+        documents: List[Document],
+        query: str,
+        filters: Optional[Dict[str, Any]] = None,
     ) -> List[Document]:
         """Search documents by content and metadata."""
         results = []
@@ -116,9 +157,13 @@ class DocumentService:
             metadata_match = False
             if filters:
                 if "author" in filters and document.metadata.author:
-                    metadata_match = filters["author"].lower() in document.metadata.author.lower()
+                    metadata_match = (
+                        filters["author"].lower() in document.metadata.author.lower()
+                    )
                 if "tags" in filters:
-                    metadata_match = any(tag in document.metadata.tags for tag in filters["tags"])
+                    metadata_match = any(
+                        tag in document.metadata.tags for tag in filters["tags"]
+                    )
 
             if content_match or title_match or metadata_match:
                 results.append(document)

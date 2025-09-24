@@ -143,9 +143,18 @@ class Migration(ABC):
 class SchemaMigration(Migration):
     """Schema migration for table structure changes."""
 
-    def __init__(self, migration_id: str, name: str, up_sql: str, down_sql: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        migration_id: str,
+        name: str,
+        up_sql: str,
+        down_sql: Optional[str] = None,
+        **kwargs,
+    ):
         """Initialize schema migration."""
-        super().__init__(migration_id, name, migration_type=MigrationType.SCHEMA, **kwargs)
+        super().__init__(
+            migration_id, name, migration_type=MigrationType.SCHEMA, **kwargs
+        )
         self.up_sql = up_sql
         self.down_sql = down_sql
 
@@ -158,7 +167,9 @@ class SchemaMigration(Migration):
         if self.down_sql:
             await context.execute_sql(self.down_sql)
         else:
-            raise NotImplementedError(f"Migration {self.migration_id} is not reversible")
+            raise NotImplementedError(
+                f"Migration {self.migration_id} is not reversible"
+            )
 
     def is_reversible(self) -> bool:
         """Check if migration is reversible."""
@@ -170,7 +181,9 @@ class DataMigration(Migration):
 
     def __init__(self, migration_id: str, name: str, **kwargs):
         """Initialize data migration."""
-        super().__init__(migration_id, name, migration_type=MigrationType.DATA, **kwargs)
+        super().__init__(
+            migration_id, name, migration_type=MigrationType.DATA, **kwargs
+        )
 
     async def up(self, context: "MigrationExecutionContext") -> None:
         """Execute data migration."""
@@ -179,7 +192,9 @@ class DataMigration(Migration):
     async def down(self, context: "MigrationExecutionContext") -> None:
         """Rollback data migration."""
         # Default implementation - subclasses should override
-        raise NotImplementedError(f"Data migration {self.migration_id} rollback not implemented")
+        raise NotImplementedError(
+            f"Data migration {self.migration_id} rollback not implemented"
+        )
 
     def is_reversible(self) -> bool:
         """Data migrations are generally not reversible."""
@@ -189,9 +204,13 @@ class DataMigration(Migration):
 class IndexMigration(Migration):
     """Index migration for performance optimizations."""
 
-    def __init__(self, migration_id: str, name: str, create_sql: str, drop_sql: str, **kwargs):
+    def __init__(
+        self, migration_id: str, name: str, create_sql: str, drop_sql: str, **kwargs
+    ):
         """Initialize index migration."""
-        super().__init__(migration_id, name, migration_type=MigrationType.INDEX, **kwargs)
+        super().__init__(
+            migration_id, name, migration_type=MigrationType.INDEX, **kwargs
+        )
         self.create_sql = create_sql
         self.drop_sql = drop_sql
 
@@ -289,13 +308,19 @@ class MigrationFactory:
     """Factory for creating migration instances."""
 
     @staticmethod
-    def create_migration(migration_class: Type[Migration], migration_id: str, **kwargs) -> Migration:
+    def create_migration(
+        migration_class: Type[Migration], migration_id: str, **kwargs
+    ) -> Migration:
         """Create migration instance."""
         return migration_class(migration_id, **kwargs)
 
     @staticmethod
     def create_schema_migration(
-        migration_id: str, name: str, up_sql: str, down_sql: Optional[str] = None, **kwargs
+        migration_id: str,
+        name: str,
+        up_sql: str,
+        down_sql: Optional[str] = None,
+        **kwargs,
     ) -> SchemaMigration:
         """Create schema migration."""
         return SchemaMigration(migration_id, name, up_sql, down_sql, **kwargs)

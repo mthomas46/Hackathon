@@ -10,7 +10,9 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from simulation.presentation.websockets.simulation_websocket import SimulationWebSocketHandler
+from simulation.presentation.websockets.simulation_websocket import (
+    SimulationWebSocketHandler,
+)
 from starlette.websockets import WebSocketDisconnect
 
 
@@ -36,7 +38,9 @@ class TestWebSocketConnectionHandling:
             mock_websocket.close = AsyncMock()
 
             # Test connection
-            await handler.handle_simulation_connection(mock_websocket, "test-simulation-123")
+            await handler.handle_simulation_connection(
+                mock_websocket, "test-simulation-123"
+            )
 
             # Verify connection was accepted
             mock_websocket.accept.assert_called_once()
@@ -75,7 +79,9 @@ class TestWebSocketConnectionHandling:
 
         # Should handle timeout gracefully
         try:
-            await handler.handle_simulation_connection(mock_websocket, "test-simulation")
+            await handler.handle_simulation_connection(
+                mock_websocket, "test-simulation"
+            )
         except asyncio.TimeoutError:
             pytest.fail("Timeout should be handled gracefully")
 
@@ -95,7 +101,9 @@ class TestWebSocketConnectionHandling:
             mock_websocket.close = AsyncMock()
 
             # Should handle disconnect gracefully
-            await handler.handle_simulation_connection(mock_websocket, "test-simulation")
+            await handler.handle_simulation_connection(
+                mock_websocket, "test-simulation"
+            )
 
             # Verify cleanup
             mock_websocket.close.assert_called_once()
@@ -167,7 +175,11 @@ class TestWebSocketMessageHandling:
         """Test client acknowledgment of received messages."""
         SimulationWebSocketHandler()
 
-        ack_message = {"type": "ack", "message_id": "msg-123", "timestamp": datetime.now().isoformat()}
+        ack_message = {
+            "type": "ack",
+            "message_id": "msg-123",
+            "timestamp": datetime.now().isoformat(),
+        }
 
         # Validate acknowledgment structure
         assert ack_message["type"] == "ack"
@@ -189,7 +201,11 @@ class TestWebSocketEventBroadcasting:
         # Simulate client connections for simulation
         handler._simulation_clients = {"test-simulation": [mock_client1, mock_client2]}
 
-        message = {"type": "simulation_update", "status": "completed", "timestamp": datetime.now().isoformat()}
+        message = {
+            "type": "simulation_update",
+            "status": "completed",
+            "timestamp": datetime.now().isoformat(),
+        }
 
         # Broadcast message
         await handler.broadcast_to_simulation("test-simulation", message)
@@ -286,7 +302,10 @@ class TestWebSocketPerformance:
         SimulationWebSocketHandler()
 
         # Simulate many rapid messages
-        messages = [{"type": "update", "id": i, "timestamp": datetime.now().isoformat()} for i in range(100)]
+        messages = [
+            {"type": "update", "id": i, "timestamp": datetime.now().isoformat()}
+            for i in range(100)
+        ]
 
         # Test processing performance
         start_time = asyncio.get_event_loop().time()
@@ -353,7 +372,11 @@ class TestWebSocketMessageFormats:
             "simulation_id": "sim-123",
             "error_type": "validation_error",
             "message": "Invalid configuration",
-            "details": {"field": "complexity", "expected": ["low", "medium", "high"], "received": "invalid"},
+            "details": {
+                "field": "complexity",
+                "expected": ["low", "medium", "high"],
+                "received": "invalid",
+            },
             "timestamp": datetime.now().isoformat(),
         }
 

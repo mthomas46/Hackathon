@@ -43,10 +43,12 @@ class CacheConfig:
             redis_ssl=os.getenv("REDIS_SSL", "false").lower() == "true",
             default_ttl=int(os.getenv("CACHE_DEFAULT_TTL", "3600")),
             max_memory=os.getenv("CACHE_MAX_MEMORY", "256mb"),
-            enable_compression=os.getenv("CACHE_ENABLE_COMPRESSION", "true").lower() == "true",
+            enable_compression=os.getenv("CACHE_ENABLE_COMPRESSION", "true").lower()
+            == "true",
             connection_pool_size=int(os.getenv("CACHE_POOL_SIZE", "10")),
             connection_timeout=int(os.getenv("CACHE_CONNECTION_TIMEOUT", "5")),
-            retry_on_timeout=os.getenv("CACHE_RETRY_ON_TIMEOUT", "true").lower() == "true",
+            retry_on_timeout=os.getenv("CACHE_RETRY_ON_TIMEOUT", "true").lower()
+            == "true",
             max_retries=int(os.getenv("CACHE_MAX_RETRIES", "3")),
         )
 

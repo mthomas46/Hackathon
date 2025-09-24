@@ -9,7 +9,38 @@ from typing import Any, Dict
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-app = FastAPI(title="Code Analyzer Service", version="0.1.0", description="Code analysis service for prompt generation")
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="code-analyzer",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Code Analyzer Service"
+SERVICE_VERSION = config.service_version
+
+app = FastAPI(
+    title=SERVICE_TITLE,
+    version=SERVICE_VERSION,
+    description="Code analysis service for prompt generation",
+    docs_url="/docs",
+    redoc_url="/redoc",
+)
+
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=SERVICE_NAME)
+
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 
 class CodeAnalysisRequest(BaseModel):
@@ -51,15 +82,26 @@ async def analyze_code(request: CodeAnalysisRequest) -> Dict[str, Any]:
                     "methods": ["method1", "method2"],
                 }
             ],
-            "complexity": {"overall": 5, "functions": {"example_function": 3}, "classes": {"ExampleClass": 4}},
+            "complexity": {
+                "overall": 5,
+                "functions": {"example_function": 3},
+                "classes": {"ExampleClass": 4},
+            },
             "imports": ["os", "json", "typing"],
             "patterns": ["factory", "singleton"],
         }
 
-        return CodeAnalysisResponse(success=True, data=analysis).dict()
+        return create_success_response(
+            data=analysis,
+            message="Code analysis completed successfully"
+        )
 
     except Exception as e:
-        return CodeAnalysisResponse(success=False, error=str(e)).dict()
+        return create_error_response(
+            message=f"Code analysis failed: {str(e)}",
+            error_code="ANALYSIS_FAILED",
+            details={"error": str(e)}
+        )
 
 
 @app.post("/api/v1/analyze/code")
@@ -71,8 +113,12 @@ async def analyze_code_v1(request: CodeAnalysisRequest) -> Dict[str, Any]:
             "language": request.language,
             "code_metrics": {
                 "lines_of_code": len(request.code.split("\n")),
-                "functions_count": request.code.count("def ") if request.language == "python" else 0,
-                "classes_count": request.code.count("class ") if request.language == "python" else 0,
+                "functions_count": (
+                    request.code.count("def ") if request.language == "python" else 0
+                ),
+                "classes_count": (
+                    request.code.count("class ") if request.language == "python" else 0
+                ),
                 "complexity_score": 5.2,
             },
             "functions": (
@@ -123,7 +169,12 @@ async def analyze_code_v1(request: CodeAnalysisRequest) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        return {"success": False, "error": str(e), "analysis_id": None, "timestamp": "2025-09-18T14:48:40Z"}
+        return {
+            "success": False,
+            "error": str(e),
+            "analysis_id": None,
+            "timestamp": "2025-09-18T14:48:40Z",
+        }
 
 
 @app.post("/api/v1/analyze/code")
@@ -135,8 +186,12 @@ async def analyze_code_v1(request: CodeAnalysisRequest) -> Dict[str, Any]:
             "language": request.language,
             "code_metrics": {
                 "lines_of_code": len(request.code.split("\n")),
-                "functions_count": request.code.count("def ") if request.language == "python" else 0,
-                "classes_count": request.code.count("class ") if request.language == "python" else 0,
+                "functions_count": (
+                    request.code.count("def ") if request.language == "python" else 0
+                ),
+                "classes_count": (
+                    request.code.count("class ") if request.language == "python" else 0
+                ),
                 "complexity_score": 5.2,
             },
             "functions": (
@@ -187,7 +242,12 @@ async def analyze_code_v1(request: CodeAnalysisRequest) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        return {"success": False, "error": str(e), "analysis_id": None, "timestamp": "2025-09-18T14:48:40Z"}
+        return {
+            "success": False,
+            "error": str(e),
+            "analysis_id": None,
+            "timestamp": "2025-09-18T14:48:40Z",
+        }
 
 
 @app.get("/health")
@@ -195,7 +255,11 @@ async def health() -> Dict[str, Any]:
     """Health check endpoint."""
     from datetime import datetime
 
-    return {"status": "healthy", "service": "code-analyzer", "timestamp": datetime.utcnow().isoformat()}
+    return {
+        "status": "healthy",
+        "service": "code-analyzer",
+        "timestamp": datetime.utcnow().isoformat(),
+    }
 
 
 if __name__ == "__main__":

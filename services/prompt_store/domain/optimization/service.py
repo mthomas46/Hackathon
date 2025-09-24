@@ -5,14 +5,20 @@ from typing import Any, Dict, List, Optional
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.utilities import generate_id, utc_now
 
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from ...infrastructure.cache import prompt_store_cache
 
 
 class ABTest(BaseService):
     """A/B testing entity for prompt optimization."""
 
-    def __init__(self, test_id: str, prompt_a_id: str, prompt_b_id: str, traffic_percentage: float = 50.0):
+    def __init__(
+        self,
+        test_id: str,
+        prompt_a_id: str,
+        prompt_b_id: str,
+        traffic_percentage: float = 50.0,
+    ):
         self.test_id = test_id
         self.prompt_a_id = prompt_a_id
         self.prompt_b_id = prompt_b_id
@@ -89,7 +95,9 @@ class OptimizationService:
         self.clients = ServiceClients()
         self.active_tests: Dict[str, ABTest] = {}
 
-    async def create_ab_test(self, prompt_a_id: str, prompt_b_id: str, traffic_percentage: float = 50.0) -> ABTest:
+    async def create_ab_test(
+        self, prompt_a_id: str, prompt_b_id: str, traffic_percentage: float = 50.0
+    ) -> ABTest:
         """Create a new A/B test between two prompt variants."""
         test_id = generate_id()
         test = ABTest(test_id, prompt_a_id, prompt_b_id, traffic_percentage)
@@ -108,7 +116,11 @@ class OptimizationService:
             cached = await prompt_store_cache.get(f"ab_test:{test_id}")
             if cached:
                 # Recreate test from cached data (simplified)
-                test = ABTest(cached["test_id"], cached["prompt_a"]["id"], cached["prompt_b"]["id"])
+                test = ABTest(
+                    cached["test_id"],
+                    cached["prompt_a"]["id"],
+                    cached["prompt_b"]["id"],
+                )
                 self.active_tests[test_id] = test
 
         if test and test.status == "running":
@@ -116,13 +128,17 @@ class OptimizationService:
 
         return None
 
-    async def record_test_result(self, test_id: str, prompt_id: str, success: bool, score: float = 0.0):
+    async def record_test_result(
+        self, test_id: str, prompt_id: str, success: bool, score: float = 0.0
+    ):
         """Record the result of using a prompt in an A/B test."""
         test = self.active_tests.get(test_id)
         if test:
             test.record_result(prompt_id, success, score)
             # Update cache
-            await prompt_store_cache.set(f"ab_test:{test_id}", test.get_results(), ttl=3600)
+            await prompt_store_cache.set(
+                f"ab_test:{test_id}", test.get_results(), ttl=3600
+            )
 
     async def get_test_results(self, test_id: str) -> Optional[Dict[str, Any]]:
         """Get results for an A/B test."""
@@ -142,12 +158,16 @@ class OptimizationService:
             winner = test.determine_winner()
             # Update cache
             results = test.get_results()
-            await prompt_store_cache.set(f"ab_test:{test_id}", results, ttl=86400)  # Keep for 24 hours
+            await prompt_store_cache.set(
+                f"ab_test:{test_id}", results, ttl=86400
+            )  # Keep for 24 hours
             return winner
 
         return None
 
-    async def run_automated_optimization(self, prompt_id: str, base_version: int) -> Dict[str, Any]:
+    async def run_automated_optimization(
+        self, prompt_id: str, base_version: int
+    ) -> Dict[str, Any]:
         """Run automated optimization cycle for a prompt."""
         # This would create variations, run A/B tests, and implement improvements
         # For now, return a basic structure
@@ -163,11 +183,17 @@ class OptimizationService:
         }
 
         # Cache the optimization cycle
-        await prompt_store_cache.set(f"optimization:{optimization_cycle['cycle_id']}", optimization_cycle, ttl=3600)
+        await prompt_store_cache.set(
+            f"optimization:{optimization_cycle['cycle_id']}",
+            optimization_cycle,
+            ttl=3600,
+        )
 
         return optimization_cycle
 
-    async def generate_prompt_variations(self, prompt_content: str, count: int = 3) -> List[str]:
+    async def generate_prompt_variations(
+        self, prompt_content: str, count: int = 3
+    ) -> List[str]:
         """Generate variations of a prompt using LLM."""
         variations = []
 
@@ -185,7 +211,9 @@ class OptimizationService:
                 Provide only the improved prompt, no explanation:
                 """
 
-                response = await self.clients.interpret_query(variation_prompt, "system")
+                response = await self.clients.interpret_query(
+                    variation_prompt, "system"
+                )
                 if response.get("success"):
                     variation = response["data"].get("response_text", "").strip()
                     if variation and len(variation) > 10:  # Basic quality check

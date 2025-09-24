@@ -12,7 +12,9 @@ from ...base.base_manager import BaseManager
 class DocumentAnalysisManager(BaseManager):
     """Manager for document analysis operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
@@ -66,16 +68,22 @@ class DocumentAnalysisManager(BaseManager):
             analysis_request = {"targets": [doc_id], "detectors": selected_detectors}
 
             with self.console.status("[bold green]Analyzing document...") as status:
-                response = await self.clients.post_json("analysis-service/analyze", analysis_request)
+                response = await self.clients.post_json(
+                    "analysis-service/analyze", analysis_request
+                )
 
             if response.get("success"):
                 results = response.get("results", [])
                 if results:
-                    await self.display_analysis_results(results, f"Analysis Results for Document {doc_id}")
+                    await self.display_analysis_results(
+                        results, f"Analysis Results for Document {doc_id}"
+                    )
                 else:
                     self.display.show_info("No analysis results found")
             else:
-                self.display.show_error(f"Analysis failed: {response.get('message', 'Unknown error')}")
+                self.display.show_error(
+                    f"Analysis failed: {response.get('message', 'Unknown error')}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error analyzing document: {e}")
@@ -84,10 +92,14 @@ class DocumentAnalysisManager(BaseManager):
         """Analyze multiple documents."""
         try:
             # Get document selection criteria
-            criteria_input = await self.get_user_input("Selection criteria (JSON format)", default='{"limit": 10}')
+            criteria_input = await self.get_user_input(
+                "Selection criteria (JSON format)", default='{"limit": 10}'
+            )
 
             try:
-                criteria = json.loads(criteria_input) if criteria_input else {"limit": 10}
+                criteria = (
+                    json.loads(criteria_input) if criteria_input else {"limit": 10}
+                )
             except (json.JSONDecodeError, ValueError):
                 criteria = {"limit": 10}
 
@@ -108,14 +120,20 @@ class DocumentAnalysisManager(BaseManager):
             analysis_request = {"criteria": criteria, "detectors": selected_detectors}
 
             with self.console.status("[bold green]Analyzing documents...") as status:
-                response = await self.clients.post_json("analysis-service/analyze/bulk", analysis_request)
+                response = await self.clients.post_json(
+                    "analysis-service/analyze/bulk", analysis_request
+                )
 
             if response.get("success"):
                 summary = response.get("summary", {})
-                self.display.show_success(f"Analysis completed: {summary.get('processed', 0)} documents processed")
+                self.display.show_success(
+                    f"Analysis completed: {summary.get('processed', 0)} documents processed"
+                )
                 self.display.show_info(f"Findings: {summary.get('total_findings', 0)}")
             else:
-                self.display.show_error(f"Bulk analysis failed: {response.get('message', 'Unknown error')}")
+                self.display.show_error(
+                    f"Bulk analysis failed: {response.get('message', 'Unknown error')}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error analyzing multiple documents: {e}")
@@ -125,7 +143,9 @@ class DocumentAnalysisManager(BaseManager):
         try:
             source_types = ["api", "file", "web", "database", "git"]
 
-            source_type = await self.select_from_list(source_types, "Select source type to analyze")
+            source_type = await self.select_from_list(
+                source_types, "Select source type to analyze"
+            )
 
             if not source_type:
                 return
@@ -136,15 +156,25 @@ class DocumentAnalysisManager(BaseManager):
             # Perform analysis
             analysis_request = {"source_type": source_type, "detectors": detectors}
 
-            with self.console.status(f"[bold green]Analyzing {source_type} documents...") as status:
-                response = await self.clients.post_json("analysis-service/analyze/by-source", analysis_request)
+            with self.console.status(
+                f"[bold green]Analyzing {source_type} documents..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "analysis-service/analyze/by-source", analysis_request
+                )
 
             if response.get("success"):
                 results = response.get("results", [])
-                self.display.show_success(f"Analyzed {len(results)} {source_type} documents")
-                self.display.show_info(f"Total findings: {sum(len(r.get('findings', [])) for r in results)}")
+                self.display.show_success(
+                    f"Analyzed {len(results)} {source_type} documents"
+                )
+                self.display.show_info(
+                    f"Total findings: {sum(len(r.get('findings', [])) for r in results)}"
+                )
             else:
-                self.display.show_error(f"Source analysis failed: {response.get('message', 'Unknown error')}")
+                self.display.show_error(
+                    f"Source analysis failed: {response.get('message', 'Unknown error')}"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error analyzing by source type: {e}")
@@ -156,17 +186,29 @@ class DocumentAnalysisManager(BaseManager):
 
             table_data = []
             for name, config in detectors.items():
-                enabled = "[green]YES[/green]" if config.get("enabled", True) else "[red]NO[/red]"
+                enabled = (
+                    "[green]YES[/green]"
+                    if config.get("enabled", True)
+                    else "[red]NO[/red]"
+                )
                 table_data.append([name, config.get("description", ""), enabled])
 
-            self.display.show_table("Available Analysis Detectors", ["Detector", "Description", "Enabled"], table_data)
+            self.display.show_table(
+                "Available Analysis Detectors",
+                ["Detector", "Description", "Enabled"],
+                table_data,
+            )
 
             # Allow configuration
-            detector_to_configure = await self.select_from_list(list(detectors.keys()), "Select detector to configure")
+            detector_to_configure = await self.select_from_list(
+                list(detectors.keys()), "Select detector to configure"
+            )
 
             if detector_to_configure:
                 config = detectors[detector_to_configure]
-                self.display.show_dict(config, f"Configuration for {detector_to_configure}")
+                self.display.show_dict(
+                    config, f"Configuration for {detector_to_configure}"
+                )
 
                 # Simple enable/disable toggle
                 current_state = config.get("enabled", True)
@@ -194,9 +236,19 @@ class DocumentAnalysisManager(BaseManager):
 
             table_data = []
             for name, template in templates.items():
-                table_data.append([name, template.get("description", ""), str(len(template.get("detectors", [])))])
+                table_data.append(
+                    [
+                        name,
+                        template.get("description", ""),
+                        str(len(template.get("detectors", []))),
+                    ]
+                )
 
-            self.display.show_table("Analysis Templates", ["Template", "Description", "Detectors"], table_data)
+            self.display.show_table(
+                "Analysis Templates",
+                ["Template", "Description", "Detectors"],
+                table_data,
+            )
 
         except Exception as e:
             self.display.show_error(f"Error loading analysis templates: {e}")
@@ -228,7 +280,9 @@ class DocumentAnalysisManager(BaseManager):
                 severity_data.append([severity.upper(), str(count)])
 
         if severity_data:
-            self.display.show_table("Findings by Severity", ["Severity", "Count"], severity_data)
+            self.display.show_table(
+                "Findings by Severity", ["Severity", "Count"], severity_data
+            )
 
         # Show detailed results (first few)
         if len(results) > 0:
@@ -266,7 +320,11 @@ class DocumentAnalysisManager(BaseManager):
                 "enabled": True,
                 "category": "security",
             },
-            "syntax": {"description": "Validates code syntax and structure", "enabled": True, "category": "code"},
+            "syntax": {
+                "description": "Validates code syntax and structure",
+                "enabled": True,
+                "category": "code",
+            },
             "dependencies": {
                 "description": "Analyzes dependency relationships and imports",
                 "enabled": False,
@@ -280,13 +338,17 @@ class DocumentAnalysisManager(BaseManager):
         for i, detector in enumerate(detectors, 1):
             self.console.print(f"  {i}. {detector}")
 
-        selection_input = await self.get_user_input("Enter detector numbers (comma-separated, or 'all')", default="all")
+        selection_input = await self.get_user_input(
+            "Enter detector numbers (comma-separated, or 'all')", default="all"
+        )
 
         if selection_input.lower() == "all":
             return detectors
 
         try:
-            indices = [int(x.strip()) - 1 for x in selection_input.split(",") if x.strip()]
+            indices = [
+                int(x.strip()) - 1 for x in selection_input.split(",") if x.strip()
+            ]
             selected = []
             for idx in indices:
                 if 0 <= idx < len(detectors):

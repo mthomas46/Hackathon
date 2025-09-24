@@ -30,7 +30,9 @@ class TestDataGenerator:
     """Generate realistic test data for various scenarios."""
 
     @staticmethod
-    def generate_openapi_spec(service_name: str = "test-service", version: str = "1.0.0") -> Dict[str, Any]:
+    def generate_openapi_spec(
+        service_name: str = "test-service", version: str = "1.0.0"
+    ) -> Dict[str, Any]:
         """Generate a realistic OpenAPI specification."""
         return {
             "openapi": "3.0.0",
@@ -58,8 +60,14 @@ class TestDataGenerator:
                                         "schema": {
                                             "type": "object",
                                             "properties": {
-                                                "status": {"type": "string", "enum": ["healthy", "unhealthy"]},
-                                                "timestamp": {"type": "string", "format": "date-time"},
+                                                "status": {
+                                                    "type": "string",
+                                                    "enum": ["healthy", "unhealthy"],
+                                                },
+                                                "timestamp": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                },
                                             },
                                         }
                                     }
@@ -75,12 +83,21 @@ class TestDataGenerator:
                             {
                                 "name": "limit",
                                 "in": "query",
-                                "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 10},
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 100,
+                                    "default": 10,
+                                },
                             },
                             {
                                 "name": "offset",
                                 "in": "query",
-                                "schema": {"type": "integer", "minimum": 0, "default": 0},
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "default": 0,
+                                },
                             },
                         ],
                         "responses": {
@@ -93,7 +110,9 @@ class TestDataGenerator:
                                             "properties": {
                                                 "users": {
                                                     "type": "array",
-                                                    "items": {"$ref": "#/components/schemas/User"},
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/User"
+                                                    },
                                                 },
                                                 "total": {"type": "integer"},
                                                 "limit": {"type": "integer"},
@@ -109,12 +128,20 @@ class TestDataGenerator:
                         "summary": "Create user",
                         "requestBody": {
                             "required": True,
-                            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserInput"}}},
+                            "content": {
+                                "application/json": {
+                                    "schema": {"$ref": "#/components/schemas/UserInput"}
+                                }
+                            },
                         },
                         "responses": {
                             "201": {
                                 "description": "User created",
-                                "content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}},
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": "#/components/schemas/User"}
+                                    }
+                                },
                             }
                         },
                     },
@@ -123,12 +150,21 @@ class TestDataGenerator:
                     "get": {
                         "summary": "Get user by ID",
                         "parameters": [
-                            {"name": "userId", "in": "path", "required": True, "schema": {"type": "string"}}
+                            {
+                                "name": "userId",
+                                "in": "path",
+                                "required": True,
+                                "schema": {"type": "string"},
+                            }
                         ],
                         "responses": {
                             "200": {
                                 "description": "User details",
-                                "content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}},
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": "#/components/schemas/User"}
+                                    }
+                                },
                             },
                             "404": {"description": "User not found"},
                         },
@@ -136,30 +172,59 @@ class TestDataGenerator:
                     "put": {
                         "summary": "Update user",
                         "parameters": [
-                            {"name": "userId", "in": "path", "required": True, "schema": {"type": "string"}}
+                            {
+                                "name": "userId",
+                                "in": "path",
+                                "required": True,
+                                "schema": {"type": "string"},
+                            }
                         ],
                         "requestBody": {
                             "required": True,
-                            "content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserUpdate"}}},
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "$ref": "#/components/schemas/UserUpdate"
+                                    }
+                                }
+                            },
                         },
                         "responses": {
                             "200": {
                                 "description": "User updated",
-                                "content": {"application/json": {"schema": {"$ref": "#/components/schemas/User"}}},
+                                "content": {
+                                    "application/json": {
+                                        "schema": {"$ref": "#/components/schemas/User"}
+                                    }
+                                },
                             }
                         },
                     },
                     "delete": {
                         "summary": "Delete user",
                         "parameters": [
-                            {"name": "userId", "in": "path", "required": True, "schema": {"type": "string"}}
+                            {
+                                "name": "userId",
+                                "in": "path",
+                                "required": True,
+                                "schema": {"type": "string"},
+                            }
                         ],
-                        "responses": {"204": {"description": "User deleted"}, "404": {"description": "User not found"}},
+                        "responses": {
+                            "204": {"description": "User deleted"},
+                            "404": {"description": "User not found"},
+                        },
                     },
                 },
             },
             "components": {
-                "securitySchemes": {"bearerAuth": {"type": "http", "scheme": "bearer", "bearerFormat": "JWT"}},
+                "securitySchemes": {
+                    "bearerAuth": {
+                        "type": "http",
+                        "scheme": "bearer",
+                        "bearerFormat": "JWT",
+                    }
+                },
                 "schemas": {
                     "User": {
                         "type": "object",
@@ -175,7 +240,11 @@ class TestDataGenerator:
                         "type": "object",
                         "required": ["username", "email"],
                         "properties": {
-                            "username": {"type": "string", "minLength": 3, "maxLength": 50},
+                            "username": {
+                                "type": "string",
+                                "minLength": 3,
+                                "maxLength": 50,
+                            },
                             "email": {"type": "string", "format": "email"},
                             "first_name": {"type": "string"},
                             "last_name": {"type": "string"},
@@ -194,7 +263,9 @@ class TestDataGenerator:
         }
 
     @staticmethod
-    def generate_api_request(service: str = "test-service", endpoint: str = "/users") -> Dict[str, Any]:
+    def generate_api_request(
+        service: str = "test-service", endpoint: str = "/users"
+    ) -> Dict[str, Any]:
         """Generate a sample API request."""
         return {
             "service_name": service,
@@ -205,8 +276,15 @@ class TestDataGenerator:
                 "Content-Type": "application/json",
                 "User-Agent": "TestClient/1.0",
             },
-            "params": {"limit": random.randint(1, 100), "offset": random.randint(0, 1000)},
-            "body": TestDataGenerator.generate_random_json() if random.random() > 0.5 else None,
+            "params": {
+                "limit": random.randint(1, 100),
+                "offset": random.randint(0, 1000),
+            },
+            "body": (
+                TestDataGenerator.generate_random_json()
+                if random.random() > 0.5
+                else None
+            ),
         }
 
     @staticmethod
@@ -270,8 +348,14 @@ class TestDataGenerator:
                     "method": random.choice(["GET", "POST", "PUT", "DELETE"]),
                     "error_type": random.choice(error_types),
                     "error_message": f"Error {i}: {random.choice(error_types).replace('_', ' ')}",
-                    "status_code": random.choice([400, 401, 403, 404, 422, 500, 502, 503]),
-                    "user_id": f"user_{random.randint(1, 50)}" if random.random() > 0.3 else None,
+                    "status_code": random.choice(
+                        [400, 401, 403, 404, 422, 500, 502, 503]
+                    ),
+                    "user_id": (
+                        f"user_{random.randint(1, 50)}"
+                        if random.random() > 0.3
+                        else None
+                    ),
                     "stack_trace": f"Traceback (most recent call last):\n  File \"app.py\", line {random.randint(10, 200)}, in handler\n    {random.choice(['ValueError', 'KeyError', 'TypeError'])}: {random.choice(['Invalid input', 'Key not found', 'Type mismatch'])}",
                     "request_id": str(uuid.uuid4()),
                 }
@@ -283,14 +367,50 @@ class TestDataGenerator:
     def generate_service_topology() -> Dict[str, Any]:
         """Generate a realistic service topology."""
         return {
-            "services": ["api-gateway", "user-service", "auth-service", "data-service", "notification-service"],
+            "services": [
+                "api-gateway",
+                "user-service",
+                "auth-service",
+                "data-service",
+                "notification-service",
+            ],
             "relationships": [
-                {"from": "api-gateway", "to": "user-service", "calls": 1250, "avg_response_time": 120},
-                {"from": "api-gateway", "to": "auth-service", "calls": 980, "avg_response_time": 80},
-                {"from": "api-gateway", "to": "data-service", "calls": 750, "avg_response_time": 200},
-                {"from": "user-service", "to": "data-service", "calls": 680, "avg_response_time": 150},
-                {"from": "user-service", "to": "notification-service", "calls": 120, "avg_response_time": 90},
-                {"from": "auth-service", "to": "data-service", "calls": 340, "avg_response_time": 110},
+                {
+                    "from": "api-gateway",
+                    "to": "user-service",
+                    "calls": 1250,
+                    "avg_response_time": 120,
+                },
+                {
+                    "from": "api-gateway",
+                    "to": "auth-service",
+                    "calls": 980,
+                    "avg_response_time": 80,
+                },
+                {
+                    "from": "api-gateway",
+                    "to": "data-service",
+                    "calls": 750,
+                    "avg_response_time": 200,
+                },
+                {
+                    "from": "user-service",
+                    "to": "data-service",
+                    "calls": 680,
+                    "avg_response_time": 150,
+                },
+                {
+                    "from": "user-service",
+                    "to": "notification-service",
+                    "calls": 120,
+                    "avg_response_time": 90,
+                },
+                {
+                    "from": "auth-service",
+                    "to": "data-service",
+                    "calls": 340,
+                    "avg_response_time": 110,
+                },
             ],
             "health_status": {
                 "api-gateway": "healthy",
@@ -335,7 +455,9 @@ class TestDataGenerator:
         num_fields = random.randint(1, 5)
 
         for _ in range(num_fields):
-            key = "".join(random.choices(string.ascii_lowercase, k=random.randint(3, 10)))
+            key = "".join(
+                random.choices(string.ascii_lowercase, k=random.randint(3, 10))
+            )
             data[key] = TestDataGenerator.generate_random_value()
 
         return data
@@ -348,7 +470,11 @@ class TestDataGenerator:
         value_type = random.choice(value_types)
 
         if value_type == str:
-            return "".join(random.choices(string.ascii_letters + string.digits, k=random.randint(5, 20)))
+            return "".join(
+                random.choices(
+                    string.ascii_letters + string.digits, k=random.randint(5, 20)
+                )
+            )
         elif value_type == int:
             return random.randint(1, 1000)
         elif value_type == float:
@@ -356,7 +482,10 @@ class TestDataGenerator:
         elif value_type == bool:
             return random.choice([True, False])
         elif value_type == list:
-            return [TestDataGenerator.generate_random_value() for _ in range(random.randint(1, 5))]
+            return [
+                TestDataGenerator.generate_random_value()
+                for _ in range(random.randint(1, 5))
+            ]
 
 
 # ============================================================================
@@ -466,7 +595,10 @@ class PerformanceTester:
 
     @staticmethod
     async def run_stress_test(
-        client: AsyncClient, endpoint: str, duration_seconds: int = 60, max_concurrent: int = 50
+        client: AsyncClient,
+        endpoint: str,
+        duration_seconds: int = 60,
+        max_concurrent: int = 50,
     ) -> List[PerformanceTestResult]:
         """Run a stress test with increasing load."""
         results = []
@@ -484,7 +616,11 @@ class PerformanceTester:
             num_requests = concurrency * 10  # 10 requests per concurrent user
 
             result = await PerformanceTester.run_load_test(
-                client=client, endpoint=endpoint, num_requests=num_requests, concurrent_users=concurrency, timeout=10.0
+                client=client,
+                endpoint=endpoint,
+                num_requests=num_requests,
+                concurrent_users=concurrency,
+                timeout=10.0,
             )
 
             results.append(result)
@@ -546,7 +682,9 @@ class SecurityTestHelper:
         ]
 
     @staticmethod
-    async def test_authentication_bypass(client: AsyncClient, endpoints: List[str]) -> Dict[str, Any]:
+    async def test_authentication_bypass(
+        client: AsyncClient, endpoints: List[str]
+    ) -> Dict[str, Any]:
         """Test for authentication bypass vulnerabilities."""
         results = {}
 
@@ -573,7 +711,9 @@ class SecurityTestHelper:
         return results
 
     @staticmethod
-    async def test_rate_limiting(client: AsyncClient, endpoint: str, num_requests: int = 100) -> Dict[str, Any]:
+    async def test_rate_limiting(
+        client: AsyncClient, endpoint: str, num_requests: int = 100
+    ) -> Dict[str, Any]:
         """Test rate limiting effectiveness."""
         success_count = 0
         rate_limited_count = 0
@@ -631,7 +771,9 @@ class AssertionHelpers:
             assert "message" in response, "Failed response must have 'message' field"
 
     @staticmethod
-    def assert_performance_thresholds(result: PerformanceTestResult, thresholds: Dict[str, Any]):
+    def assert_performance_thresholds(
+        result: PerformanceTestResult, thresholds: Dict[str, Any]
+    ):
         """Assert that performance results meet thresholds."""
         if "max_response_time" in thresholds:
             assert (
@@ -649,15 +791,21 @@ class AssertionHelpers:
             ), f"RPS {result.requests_per_second} below threshold {thresholds['min_requests_per_second']}"
 
     @staticmethod
-    def assert_security_compliance(security_events: List[Dict[str, Any]], max_critical: int = 0):
+    def assert_security_compliance(
+        security_events: List[Dict[str, Any]], max_critical: int = 0
+    ):
         """Assert that security events meet compliance requirements."""
-        critical_events = [e for e in security_events if e.get("threat_level") == "critical"]
+        critical_events = [
+            e for e in security_events if e.get("threat_level") == "critical"
+        ]
         assert (
             len(critical_events) <= max_critical
         ), f"Found {len(critical_events)} critical security events, max allowed: {max_critical}"
 
     @staticmethod
-    def assert_coverage_meets_threshold(coverage_data: Dict[str, Any], min_coverage: float = 80.0):
+    def assert_coverage_meets_threshold(
+        coverage_data: Dict[str, Any], min_coverage: float = 80.0
+    ):
         """Assert that test coverage meets minimum threshold."""
         if "totals" in coverage_data:
             total_coverage = coverage_data["totals"]["percent_covered"]

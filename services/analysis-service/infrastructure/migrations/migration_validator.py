@@ -82,7 +82,9 @@ class MigrationValidator:
 
         return result
 
-    async def validate_migration_batch(self, migrations: List[Migration]) -> Dict[str, ValidationResult]:
+    async def validate_migration_batch(
+        self, migrations: List[Migration]
+    ) -> Dict[str, ValidationResult]:
         """Validate a batch of migrations."""
         results = {}
 
@@ -92,13 +94,17 @@ class MigrationValidator:
 
         return results
 
-    async def _validate_basic_properties(self, migration: Migration, result: ValidationResult) -> None:
+    async def _validate_basic_properties(
+        self, migration: Migration, result: ValidationResult
+    ) -> None:
         """Validate basic migration properties."""
         # Check migration ID format
         if not migration.migration_id:
             result.add_error("Migration ID cannot be empty")
         elif not re.match(r"^[a-zA-Z0-9_-]+$", migration.migration_id):
-            result.add_error("Migration ID must contain only alphanumeric characters, hyphens, and underscores")
+            result.add_error(
+                "Migration ID must contain only alphanumeric characters, hyphens, and underscores"
+            )
         elif len(migration.migration_id) > 100:
             result.add_error("Migration ID is too long (max 100 characters)")
 
@@ -112,13 +118,17 @@ class MigrationValidator:
         if not migration.version:
             result.add_error("Migration version cannot be empty")
         elif not re.match(r"^\d+\.\d+\.\d+.*$", migration.version):
-            result.add_warning(f"Version '{migration.version}' does not follow semantic versioning")
+            result.add_warning(
+                f"Version '{migration.version}' does not follow semantic versioning"
+            )
 
         # Check description
         if not migration.description:
             result.add_warning("Migration description is empty")
 
-    async def _validate_schema_migration(self, migration: Migration, result: ValidationResult) -> None:
+    async def _validate_schema_migration(
+        self, migration: Migration, result: ValidationResult
+    ) -> None:
         """Validate schema migration."""
         # This would need access to the actual migration implementation
         # For now, we'll do basic checks
@@ -132,7 +142,9 @@ class MigrationValidator:
         # For schema migrations with SQL, we could validate SQL syntax
         # This would require database-specific validation
 
-    async def _validate_data_migration(self, migration: Migration, result: ValidationResult) -> None:
+    async def _validate_data_migration(
+        self, migration: Migration, result: ValidationResult
+    ) -> None:
         """Validate data migration."""
         # Data migrations are generally more dangerous
         if not migration.is_reversible():
@@ -141,13 +153,17 @@ class MigrationValidator:
         # Check if migration has proper error handling
         # This would require inspecting the migration code
 
-    async def _validate_index_migration(self, migration: Migration, result: ValidationResult) -> None:
+    async def _validate_index_migration(
+        self, migration: Migration, result: ValidationResult
+    ) -> None:
         """Validate index migration."""
         # Index migrations should generally be reversible
         if not migration.is_reversible():
             result.add_warning("Index migration is not reversible")
 
-    async def _validate_dependencies(self, migration: Migration, result: ValidationResult) -> None:
+    async def _validate_dependencies(
+        self, migration: Migration, result: ValidationResult
+    ) -> None:
         """Validate migration dependencies."""
         dependencies = migration.get_required_dependencies()
 
@@ -163,7 +179,9 @@ class MigrationValidator:
         if len(dependencies) != len(set(dependencies)):
             result.add_error("Migration has duplicate dependencies")
 
-    async def _validate_security(self, migration: Migration, result: ValidationResult) -> None:
+    async def _validate_security(
+        self, migration: Migration, result: ValidationResult
+    ) -> None:
         """Validate migration security."""
         # This would analyze the migration content for potential security issues
 
@@ -182,8 +200,14 @@ class MigrationValidator:
         dangerous_patterns = [
             (r"\bDROP\s+DATABASE\b", "Contains DROP DATABASE statement"),
             (r"\bTRUNCATE\s+TABLE\b", "Contains TRUNCATE TABLE statement"),
-            (r"\bDELETE\s+FROM\b.*\bWHERE\b.*1\s*=\s*1", "Contains DELETE without WHERE clause"),
-            (r"\bUPDATE\b.*\bSET\b.*\bWHERE\b.*1\s*=\s*1", "Contains UPDATE without WHERE clause"),
+            (
+                r"\bDELETE\s+FROM\b.*\bWHERE\b.*1\s*=\s*1",
+                "Contains DELETE without WHERE clause",
+            ),
+            (
+                r"\bUPDATE\b.*\bSET\b.*\bWHERE\b.*1\s*=\s*1",
+                "Contains UPDATE without WHERE clause",
+            ),
         ]
 
         for pattern, message in dangerous_patterns:
@@ -217,7 +241,9 @@ class MigrationValidator:
         extra_in_plan = plan_migration_ids - all_migration_ids
 
         if missing_from_plan:
-            result.add_error(f"Migrations missing from execution plan: {missing_from_plan}")
+            result.add_error(
+                f"Migrations missing from execution plan: {missing_from_plan}"
+            )
 
         if extra_in_plan:
             result.add_error(f"Extra migrations in execution plan: {extra_in_plan}")
@@ -225,12 +251,16 @@ class MigrationValidator:
         # Validate execution order respects dependencies
         executed_migrations = set()
         for migration_id in execution_order:
-            migration = next((m for m in migrations if m.migration_id == migration_id), None)
+            migration = next(
+                (m for m in migrations if m.migration_id == migration_id), None
+            )
             if migration:
                 # Check if all dependencies are satisfied
                 for dep in migration.get_required_dependencies():
                     if dep not in executed_migrations:
-                        result.add_error(f"Migration {migration_id} depends on {dep} which is not executed yet")
+                        result.add_error(
+                            f"Migration {migration_id} depends on {dep} which is not executed yet"
+                        )
 
                 executed_migrations.add(migration_id)
 
@@ -239,7 +269,9 @@ class MigrationValidator:
 
         return result
 
-    async def _detect_circular_dependencies(self, migrations: List[Migration], result: ValidationResult) -> None:
+    async def _detect_circular_dependencies(
+        self, migrations: List[Migration], result: ValidationResult
+    ) -> None:
         """Detect circular dependencies in migration set."""
         # Create dependency graph
         graph = {}
@@ -267,7 +299,9 @@ class MigrationValidator:
         for migration in migrations:
             if migration.migration_id not in visited:
                 if has_cycle(migration.migration_id):
-                    result.add_error(f"Circular dependency detected involving {migration.migration_id}")
+                    result.add_error(
+                        f"Circular dependency detected involving {migration.migration_id}"
+                    )
                     break
 
     async def suggest_optimizations(self, migrations: List[Migration]) -> List[str]:
@@ -275,19 +309,29 @@ class MigrationValidator:
         suggestions = []
 
         # Check for multiple schema changes that could be combined
-        schema_migrations = [m for m in migrations if m.migration_type == MigrationType.SCHEMA]
+        schema_migrations = [
+            m for m in migrations if m.migration_type == MigrationType.SCHEMA
+        ]
         if len(schema_migrations) > 5:
-            suggestions.append("Consider combining multiple schema migrations into fewer, larger migrations")
+            suggestions.append(
+                "Consider combining multiple schema migrations into fewer, larger migrations"
+            )
 
         # Check for data migrations that could be batched
-        data_migrations = [m for m in migrations if m.migration_type == MigrationType.DATA]
+        data_migrations = [
+            m for m in migrations if m.migration_type == MigrationType.DATA
+        ]
         if len(data_migrations) > 3:
-            suggestions.append("Consider batching data migrations to reduce execution time")
+            suggestions.append(
+                "Consider batching data migrations to reduce execution time"
+            )
 
         # Check for migrations without rollback
         non_reversible = [m for m in migrations if not m.is_reversible()]
         if len(non_reversible) > len(migrations) * 0.5:
-            suggestions.append("Many migrations are not reversible - consider adding rollback logic")
+            suggestions.append(
+                "Many migrations are not reversible - consider adding rollback logic"
+            )
 
         return suggestions
 
@@ -327,7 +371,16 @@ class SQLValidator:
 
         # Check for basic SQL structure
         if not any(
-            keyword in sql_string for keyword in ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP"]
+            keyword in sql_string
+            for keyword in [
+                "SELECT",
+                "INSERT",
+                "UPDATE",
+                "DELETE",
+                "CREATE",
+                "ALTER",
+                "DROP",
+            ]
         ):
             result.add_warning("SQL does not contain recognized SQL keywords")
 
@@ -359,7 +412,9 @@ class MigrationConflictDetector:
         # Report potential conflicts
         for table, migration_ids in table_modifications.items():
             if len(migration_ids) > 1:
-                conflicts.append(f"Multiple migrations modify table '{table}': {migration_ids}")
+                conflicts.append(
+                    f"Multiple migrations modify table '{table}': {migration_ids}"
+                )
 
         return conflicts
 

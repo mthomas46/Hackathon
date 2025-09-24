@@ -13,7 +13,9 @@ class AnalysisHandler:
         """Initialize handler with application service."""
         self.analysis_service = analysis_application_service
 
-    async def handle_analyze_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_analyze_request(
+        self, request_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle document analysis request."""
         try:
             document_id = request_data.get("document_id")
@@ -23,12 +25,22 @@ class AnalysisHandler:
             if not document_id:
                 return {"error": "Document ID is required", "status": "error"}
 
-            result = await self.analysis_service.perform_analysis(document_id, analysis_type, configuration)
+            result = await self.analysis_service.perform_analysis(
+                document_id, analysis_type, configuration
+            )
 
-            return {"status": "success", "data": result, "timestamp": datetime.now().isoformat()}
+            return {
+                "status": "success",
+                "data": result,
+                "timestamp": datetime.now().isoformat(),
+            }
 
         except Exception as e:
-            return {"error": str(e), "status": "error", "timestamp": datetime.now().isoformat()}
+            return {
+                "error": str(e),
+                "status": "error",
+                "timestamp": datetime.now().isoformat(),
+            }
 
     async def handle_get_analysis_result(self, analysis_id: str) -> Dict[str, Any]:
         """Handle get analysis result request."""
@@ -38,10 +50,18 @@ class AnalysisHandler:
             if not result:
                 return {"error": "Analysis not found", "status": "error"}
 
-            return {"status": "success", "data": result, "timestamp": datetime.now().isoformat()}
+            return {
+                "status": "success",
+                "data": result,
+                "timestamp": datetime.now().isoformat(),
+            }
 
         except Exception as e:
-            return {"error": str(e), "status": "error", "timestamp": datetime.now().isoformat()}
+            return {
+                "error": str(e),
+                "status": "error",
+                "timestamp": datetime.now().isoformat(),
+            }
 
     async def handle_get_document_analyses(self, document_id: str) -> Dict[str, Any]:
         """Handle get document analyses request."""
@@ -50,12 +70,20 @@ class AnalysisHandler:
 
             return {
                 "status": "success",
-                "data": {"document_id": document_id, "analyses": analyses, "total": len(analyses)},
+                "data": {
+                    "document_id": document_id,
+                    "analyses": analyses,
+                    "total": len(analyses),
+                },
                 "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
-            return {"error": str(e), "status": "error", "timestamp": datetime.now().isoformat()}
+            return {
+                "error": str(e),
+                "status": "error",
+                "timestamp": datetime.now().isoformat(),
+            }
 
     async def handle_get_findings(self, query_params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle get findings request."""
@@ -73,15 +101,25 @@ class AnalysisHandler:
                 "data": {
                     "findings": findings,
                     "total": len(findings),
-                    "filters": {"document_id": document_id, "category": category, "severity": severity},
+                    "filters": {
+                        "document_id": document_id,
+                        "category": category,
+                        "severity": severity,
+                    },
                 },
                 "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
-            return {"error": str(e), "status": "error", "timestamp": datetime.now().isoformat()}
+            return {
+                "error": str(e),
+                "status": "error",
+                "timestamp": datetime.now().isoformat(),
+            }
 
-    async def handle_create_document(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def handle_create_document(
+        self, request_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Handle create document request."""
         try:
             title = request_data.get("title")
@@ -94,13 +132,25 @@ class AnalysisHandler:
                 return {"error": "Title and content are required", "status": "error"}
 
             result = await self.analysis_service.create_document(
-                title=title, content=content, content_format=content_format, author=author, tags=tags
+                title=title,
+                content=content,
+                content_format=content_format,
+                author=author,
+                tags=tags,
             )
 
-            return {"status": "success", "data": result, "timestamp": datetime.now().isoformat()}
+            return {
+                "status": "success",
+                "data": result,
+                "timestamp": datetime.now().isoformat(),
+            }
 
         except Exception as e:
-            return {"error": str(e), "status": "error", "timestamp": datetime.now().isoformat()}
+            return {
+                "error": str(e),
+                "status": "error",
+                "timestamp": datetime.now().isoformat(),
+            }
 
     async def handle_get_document(self, document_id: str) -> Dict[str, Any]:
         """Handle get document request."""
@@ -110,10 +160,18 @@ class AnalysisHandler:
             if not document:
                 return {"error": "Document not found", "status": "error"}
 
-            return {"status": "success", "data": document, "timestamp": datetime.now().isoformat()}
+            return {
+                "status": "success",
+                "data": document,
+                "timestamp": datetime.now().isoformat(),
+            }
 
         except Exception as e:
-            return {"error": str(e), "status": "error", "timestamp": datetime.now().isoformat()}
+            return {
+                "error": str(e),
+                "status": "error",
+                "timestamp": datetime.now().isoformat(),
+            }
 
     async def handle_health_check(self) -> Dict[str, Any]:
         """Handle health check request."""
@@ -123,4 +181,8 @@ class AnalysisHandler:
             return {"status": "success", "data": health}
 
         except Exception as e:
-            return {"error": str(e), "status": "error", "timestamp": datetime.now().isoformat()}
+            return {
+                "error": str(e),
+                "status": "error",
+                "timestamp": datetime.now().isoformat(),
+            }

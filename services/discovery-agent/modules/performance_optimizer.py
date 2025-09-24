@@ -17,7 +17,9 @@ class PerformanceOptimizer:
         self.dependency_graph = defaultdict(list)
         self.optimization_cache = {}
 
-    async def optimize_discovery_workflow(self, discovery_results: Dict[str, Any]) -> Dict[str, Any]:
+    async def optimize_discovery_workflow(
+        self, discovery_results: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Optimize discovery workflow based on performance analysis"""
 
         optimization_recommendations = {
@@ -31,7 +33,10 @@ class PerformanceOptimizer:
         performance_data = discovery_results.get("performance_metrics", [])
 
         if not performance_data:
-            return {"optimizations": [], "message": "No performance data available for optimization"}
+            return {
+                "optimizations": [],
+                "message": "No performance data available for optimization",
+            }
 
         print("⚡ Analyzing discovery performance for optimization opportunities...")
 
@@ -43,21 +48,31 @@ class PerformanceOptimizer:
             min_time = min(response_times)
 
             # Identify slow services (bottlenecks)
-            slow_services = [p for p in performance_data if p.get("response_time", 0) > avg_time * 1.5]
+            slow_services = [
+                p
+                for p in performance_data
+                if p.get("response_time", 0) > avg_time * 1.5
+            ]
             if slow_services:
                 optimization_recommendations["bottleneck_identification"].extend(
                     [
                         {
                             "type": "slow_service",
                             "services": [s["service"] for s in slow_services],
-                            "avg_slow_time": statistics.mean([s["response_time"] for s in slow_services]),
+                            "avg_slow_time": statistics.mean(
+                                [s["response_time"] for s in slow_services]
+                            ),
                             "recommendation": "Consider parallel processing or caching for slow services",
                         }
                     ]
                 )
 
             # Identify fast services for parallelization
-            fast_services = [p for p in performance_data if p.get("response_time", 0) < avg_time * 0.5]
+            fast_services = [
+                p
+                for p in performance_data
+                if p.get("response_time", 0) < avg_time * 0.5
+            ]
             if len(fast_services) > 1:
                 optimization_recommendations["parallelization_opportunities"].append(
                     {
@@ -72,7 +87,9 @@ class PerformanceOptimizer:
         tools_per_service = [p.get("tools_found", 0) for p in performance_data]
         if tools_per_service:
             avg_tools = statistics.mean(tools_per_service)
-            high_tool_services = [p for p in performance_data if p.get("tools_found", 0) > avg_tools * 2]
+            high_tool_services = [
+                p for p in performance_data if p.get("tools_found", 0) > avg_tools * 2
+            ]
 
             if high_tool_services:
                 optimization_recommendations["resource_optimization"].append(
@@ -100,11 +117,15 @@ class PerformanceOptimizer:
                 "avg_response_time": avg_time if "avg_time" in locals() else 0,
                 "max_response_time": max(response_times) if response_times else 0,
                 "min_response_time": min(response_times) if response_times else 0,
-                "total_tools_found": sum(p.get("tools_found", 0) for p in performance_data),
+                "total_tools_found": sum(
+                    p.get("tools_found", 0) for p in performance_data
+                ),
             },
         }
 
-    async def analyze_tool_dependencies(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_tool_dependencies(
+        self, tools: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze dependencies between discovered tools"""
 
         dependency_analysis = {
@@ -138,7 +159,9 @@ class PerformanceOptimizer:
 
                 relationship = self._analyze_tool_dependency(tool1, tool2)
                 if relationship["depends"]:
-                    dependency_analysis["dependency_graph"][tool1["name"]]["depends_on"].append(
+                    dependency_analysis["dependency_graph"][tool1["name"]][
+                        "depends_on"
+                    ].append(
                         {
                             "tool": tool2["name"],
                             "relationship": relationship["type"],
@@ -170,7 +193,9 @@ class PerformanceOptimizer:
         for tool_name, deps in dependency_analysis["dependency_graph"].items():
             dependency_counts[tool_name] = len(deps["depends_on"])
 
-        high_dependency_tools = [tool for tool, count in dependency_counts.items() if count > 2]
+        high_dependency_tools = [
+            tool for tool, count in dependency_counts.items() if count > 2
+        ]
         if high_dependency_tools:
             dependency_analysis["optimization_opportunities"].append(
                 {
@@ -182,7 +207,9 @@ class PerformanceOptimizer:
 
         return dependency_analysis
 
-    def _analyze_tool_dependency(self, tool1: Dict[str, Any], tool2: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_tool_dependency(
+        self, tool1: Dict[str, Any], tool2: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze dependency relationship between two tools"""
 
         # Data flow dependencies
@@ -227,7 +254,9 @@ class PerformanceOptimizer:
 
         return {"depends": False, "type": "none", "strength": 0.0}
 
-    async def optimize_workflow_execution(self, workflow_spec: Dict[str, Any]) -> Dict[str, Any]:
+    async def optimize_workflow_execution(
+        self, workflow_spec: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Optimize workflow execution based on dependencies and performance"""
 
         optimization_result = {
@@ -240,7 +269,9 @@ class PerformanceOptimizer:
 
         steps = workflow_spec.get("steps", [])
         if len(steps) < 2:
-            return optimization_result  # No optimization needed for single-step workflows
+            return (
+                optimization_result  # No optimization needed for single-step workflows
+            )
 
         print(f"⚡ Optimizing workflow with {len(steps)} steps...")
 
@@ -253,20 +284,28 @@ class PerformanceOptimizer:
         if len(parallel_groups) > 1:
             optimization_result["parallelization_suggestions"].extend(parallel_groups)
             optimization_result["optimizations_applied"].append("parallel_execution")
-            optimization_result["estimated_performance_gain"] += len(parallel_groups) * 0.3  # 30% per parallel group
+            optimization_result["estimated_performance_gain"] += (
+                len(parallel_groups) * 0.3
+            )  # 30% per parallel group
 
         # Optimize resource allocation
         resource_optimization = self._optimize_resource_allocation(steps)
         if resource_optimization["optimizations"]:
-            optimization_result["optimizations_applied"].extend(resource_optimization["optimizations"])
-            optimization_result["estimated_performance_gain"] += resource_optimization["gain"]
+            optimization_result["optimizations_applied"].extend(
+                resource_optimization["optimizations"]
+            )
+            optimization_result["estimated_performance_gain"] += resource_optimization[
+                "gain"
+            ]
 
         # Create optimized workflow spec
         if optimization_result["optimizations_applied"]:
             optimized_spec = workflow_spec.copy()
             optimized_spec["optimization_metadata"] = {
                 "applied_optimizations": optimization_result["optimizations_applied"],
-                "estimated_performance_gain": optimization_result["estimated_performance_gain"],
+                "estimated_performance_gain": optimization_result[
+                    "estimated_performance_gain"
+                ],
                 "parallel_groups": len(parallel_groups),
                 "optimized_at": "2025-01-17T21:30:00Z",
             }
@@ -274,7 +313,9 @@ class PerformanceOptimizer:
 
         return optimization_result
 
-    def _analyze_step_dependencies(self, steps: List[Dict[str, Any]]) -> Dict[str, List[str]]:
+    def _analyze_step_dependencies(
+        self, steps: List[Dict[str, Any]]
+    ) -> Dict[str, List[str]]:
         """Analyze dependencies between workflow steps"""
 
         dependencies = {}
@@ -291,7 +332,9 @@ class PerformanceOptimizer:
                 prev_name = prev_step.get("step_name", f"step_{j}")
 
                 # Look for sequential patterns
-                if any(word in prev_desc for word in ["generate", "create", "produce"]) and any(
+                if any(
+                    word in prev_desc for word in ["generate", "create", "produce"]
+                ) and any(
                     word in step_desc for word in ["analyze", "process", "validate"]
                 ):
                     depends_on.append(prev_name)
@@ -332,7 +375,9 @@ class PerformanceOptimizer:
 
         return parallel_groups
 
-    def _optimize_resource_allocation(self, steps: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _optimize_resource_allocation(
+        self, steps: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Optimize resource allocation for workflow steps"""
 
         optimization = {"optimizations": [], "gain": 0}
@@ -344,7 +389,9 @@ class PerformanceOptimizer:
             tool_usage[tool] += 1
 
         # Identify tools used multiple times
-        frequently_used_tools = [tool for tool, count in tool_usage.items() if count > 1]
+        frequently_used_tools = [
+            tool for tool, count in tool_usage.items() if count > 1
+        ]
 
         if frequently_used_tools:
             optimization["optimizations"].append("connection_pooling")
@@ -366,7 +413,9 @@ class PerformanceOptimizer:
 
         return optimization
 
-    async def create_performance_baseline(self, discovery_results: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_performance_baseline(
+        self, discovery_results: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create performance baseline for future optimization comparisons"""
 
         baseline = {
@@ -411,16 +460,20 @@ class PerformanceOptimizer:
                 }
 
         baseline["baseline_metrics"] = {
-            "tools_per_second": baseline["total_tools"] / max(baseline["avg_response_time"], 1),
+            "tools_per_second": baseline["total_tools"]
+            / max(baseline["avg_response_time"], 1),
             "services_per_second": baseline["services_tested"]
             / max(baseline["avg_response_time"] * baseline["services_tested"], 1),
-            "health_rate": baseline["healthy_services"] / max(baseline["services_tested"], 1),
+            "health_rate": baseline["healthy_services"]
+            / max(baseline["services_tested"], 1),
         }
 
         print("📊 Performance baseline established:")
         print(f"  📈 Avg response time: {baseline['avg_response_time']:.2f}s")
         print(f"  🎯 Tools discovered: {baseline['total_tools']}")
-        print(f"  ⚡ Tools/second: {baseline['baseline_metrics']['tools_per_second']:.2f}")
+        print(
+            f"  ⚡ Tools/second: {baseline['baseline_metrics']['tools_per_second']:.2f}"
+        )
 
         return baseline
 
@@ -438,11 +491,15 @@ class PerformanceOptimizer:
         }
 
         # Compare current performance with baseline
-        current_avg_time = current_results.get("summary", {}).get("avg_response_time", 0)
+        current_avg_time = current_results.get("summary", {}).get(
+            "avg_response_time", 0
+        )
         baseline_avg_time = baseline.get("avg_response_time", 0)
 
         if baseline_avg_time > 0:
-            time_change_pct = ((current_avg_time - baseline_avg_time) / baseline_avg_time) * 100
+            time_change_pct = (
+                (current_avg_time - baseline_avg_time) / baseline_avg_time
+            ) * 100
             trends["performance_changes"]["avg_response_time"] = {
                 "change_percent": time_change_pct,
                 "trend": "improving" if time_change_pct < 0 else "degrading",
@@ -452,7 +509,9 @@ class PerformanceOptimizer:
         # Analyze tool discovery efficiency
         current_tools = current_results.get("total_tools_discovered", 0)
         baseline_tools = baseline.get("total_tools")
-        tools_change_pct = ((current_tools - baseline_tools) / max(baseline_tools, 1)) * 100
+        tools_change_pct = (
+            (current_tools - baseline_tools) / max(baseline_tools, 1)
+        ) * 100
 
         trends["performance_changes"]["tool_discovery_efficiency"] = {
             "change_percent": tools_change_pct,
@@ -462,13 +521,27 @@ class PerformanceOptimizer:
         }
 
         # Generate trend analysis
-        if trends["performance_changes"].get("avg_response_time", {}).get("trend") == "degrading":
-            trends["trend_analysis"].append("Response times are increasing - investigate performance bottlenecks")
-            trends["recommendations"].append("Consider implementing caching or optimizing slow services")
+        if (
+            trends["performance_changes"].get("avg_response_time", {}).get("trend")
+            == "degrading"
+        ):
+            trends["trend_analysis"].append(
+                "Response times are increasing - investigate performance bottlenecks"
+            )
+            trends["recommendations"].append(
+                "Consider implementing caching or optimizing slow services"
+            )
 
-        if trends["performance_changes"].get("tool_discovery_efficiency", {}).get("trend") == "improving":
+        if (
+            trends["performance_changes"]
+            .get("tool_discovery_efficiency", {})
+            .get("trend")
+            == "improving"
+        ):
             trends["trend_analysis"].append("Tool discovery efficiency is improving")
-            trends["recommendations"].append("Continue monitoring and optimizing discovery patterns")
+            trends["recommendations"].append(
+                "Continue monitoring and optimizing discovery patterns"
+            )
 
         return trends
 

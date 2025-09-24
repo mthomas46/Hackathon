@@ -25,7 +25,9 @@ Main Components:
 
 __version__ = "1.0.0"
 __author__ = "LLM Documentation Ecosystem Team"
-__description__ = "Unified LLM Gateway for secure, optimized access to all LLM providers"
+__description__ = (
+    "Unified LLM Gateway for secure, optimized access to all LLM providers"
+)
 
 # Service metadata
 SERVICE_NAME = "llm-gateway"

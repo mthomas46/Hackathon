@@ -19,36 +19,60 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python test_runner.py --unit              # Run unit tests only
-  python test_runner.py --integration       # Run integration tests only
-  python test_runner.py --functional        # Run functional tests only
-  python test_runner.py --all               # Run all tests
-  python test_runner.py --coverage          # Run with coverage report
-  python test_runner.py --verbose           # Run with verbose output
-  python test_runner.py --web               # Generate HTML coverage report
+    python test_runner.py --unit              # Run unit tests only
+    python test_runner.py --integration       # Run integration tests only
+    python test_runner.py --functional        # Run functional tests only
+    python test_runner.py --all               # Run all tests
+    python test_runner.py --coverage          # Run with coverage report
+    python test_runner.py --verbose           # Run with verbose output
+    python test_runner.py --web               # Generate HTML coverage report
         """,
     )
 
     # Test type options
     test_group = parser.add_mutually_exclusive_group()
-    test_group.add_argument("--unit", "-u", action="store_true", help="Run unit tests only")
-    test_group.add_argument("--integration", "-i", action="store_true", help="Run integration tests only")
-    test_group.add_argument("--functional", "-f", action="store_true", help="Run functional tests only")
-    test_group.add_argument("--all", "-a", action="store_true", default=True, help="Run all tests (default)")
+    test_group.add_argument(
+        "--unit", "-u", action="store_true", help="Run unit tests only"
+    )
+    test_group.add_argument(
+        "--integration", "-i", action="store_true", help="Run integration tests only"
+    )
+    test_group.add_argument(
+        "--functional", "-f", action="store_true", help="Run functional tests only"
+    )
+    test_group.add_argument(
+        "--all", "-a", action="store_true", default=True, help="Run all tests (default)"
+    )
 
     # Output options
-    parser.add_argument("--coverage", "-c", action="store_true", help="Generate coverage report")
-    parser.add_argument("--web", "-w", action="store_true", help="Generate HTML coverage report (implies --coverage)")
+    parser.add_argument(
+        "--coverage", "-c", action="store_true", help="Generate coverage report"
+    )
+    parser.add_argument(
+        "--web",
+        "-w",
+        action="store_true",
+        help="Generate HTML coverage report (implies --coverage)",
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     parser.add_argument("--quiet", "-q", action="store_true", help="Quiet output")
 
     # Specific test options
-    parser.add_argument("--pattern", "-p", help='Run tests matching pattern (e.g., "test_config")')
-    parser.add_argument("--marker", "-m", help='Run tests with specific marker (e.g., "slow", "websocket")')
+    parser.add_argument(
+        "--pattern", "-p", help='Run tests matching pattern (e.g., "test_config")'
+    )
+    parser.add_argument(
+        "--marker",
+        "-m",
+        help='Run tests with specific marker (e.g., "slow", "websocket")',
+    )
 
     # Environment options
     parser.add_argument(
-        "--env", choices=["development", "test", "production"], default="test", help="Test environment (default: test)"
+        "--env",
+        choices=["development", "test", "production"],
+        default="test",
+        help="Test environment (default: test)",
     )
 
     args = parser.parse_args()
@@ -189,7 +213,14 @@ def check_test_environment():
 
 if __name__ == "__main__":
     # If run with suite name as argument
-    if len(sys.argv) == 2 and sys.argv[1] in ["unit", "integration", "functional", "websocket", "slow", "ui"]:
+    if len(sys.argv) == 2 and sys.argv[1] in [
+        "unit",
+        "integration",
+        "functional",
+        "websocket",
+        "slow",
+        "ui",
+    ]:
         suite_name = sys.argv[1]
         sys.exit(run_specific_test_suite(suite_name))
     elif len(sys.argv) == 2 and sys.argv[1] == "check":

@@ -44,7 +44,10 @@ def _load_app_config() -> Dict[str, Any]:
 
 
 def get_config_value(
-    key: str, default: Any = None, section: Optional[str] = None, env_key: Optional[str] = None
+    key: str,
+    default: Any = None,
+    section: Optional[str] = None,
+    env_key: Optional[str] = None,
 ) -> Any:
     """Return a configuration value with precedence: env > app.yaml section > app.yaml root > default.
 

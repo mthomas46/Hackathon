@@ -10,20 +10,24 @@ from typing import Optional
 import httpx
 
 from services.shared.auth.credentials import get_secret
-from services.shared.core.config.config import get_config_value
+# Config now handled by standardized config system in main.py
+import os
 
 
 class ProviderImplementations:
     """Handles different LLM provider implementations."""
 
     @staticmethod
-    async def summarize_with_ollama(provider_config, prompt: Optional[str], text: str) -> str:
+    async def summarize_with_ollama(
+        provider_config, prompt: Optional[str], text: str
+    ) -> str:
         """Summarize using Ollama API."""
-        ollama_host = get_config_value(
-            "OLLAMA_HOST", "http://localhost:11434", section="summarizer_hub", env_key="OLLAMA_HOST"
-        )
+        ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
         url = (provider_config.endpoint or ollama_host).rstrip("/") + "/api/generate"
-        payload = {"model": provider_config.model or "llama3", "prompt": ((prompt + "\n\n") if prompt else "") + text}
+        payload = {
+            "model": provider_config.model or "llama3",
+            "prompt": ((prompt + "\n\n") if prompt else "") + text,
+        }
         async with httpx.AsyncClient(timeout=60) as client:
             try:
                 r = await client.post(url, json=payload)
@@ -34,22 +38,30 @@ class ProviderImplementations:
                 return ""
 
     @staticmethod
-    async def summarize_with_openai(provider_config, prompt: Optional[str], text: str) -> str:
+    async def summarize_with_openai(
+        provider_config, prompt: Optional[str], text: str
+    ) -> str:
         """Summarize using OpenAI API (placeholder)."""
         return ((prompt + "\n\n") if prompt else "") + text
 
     @staticmethod
-    async def summarize_with_anthropic(provider_config, prompt: Optional[str], text: str) -> str:
+    async def summarize_with_anthropic(
+        provider_config, prompt: Optional[str], text: str
+    ) -> str:
         """Summarize using Anthropic API (placeholder)."""
         return ((prompt + "\n\n") if prompt else "") + text
 
     @staticmethod
-    async def summarize_with_grok(provider_config, prompt: Optional[str], text: str) -> str:
+    async def summarize_with_grok(
+        provider_config, prompt: Optional[str], text: str
+    ) -> str:
         """Summarize using Grok API (placeholder)."""
         return ((prompt + "\n\n") if prompt else "") + text
 
     @staticmethod
-    async def summarize_with_bedrock(provider_config, prompt: Optional[str], text: str) -> str:
+    async def summarize_with_bedrock(
+        provider_config, prompt: Optional[str], text: str
+    ) -> str:
         """Summarize using Amazon Bedrock."""
         content = ((prompt + "\n\n") if prompt else "") + text
 
@@ -57,17 +69,11 @@ class ProviderImplementations:
         try:
             import boto3
 
-            region = provider_config.region or get_config_value(
-                "BEDROCK_REGION",
-                os.environ.get("AWS_REGION") or "us-east-1",
-                section="summarizer_hub",
-                env_key="BEDROCK_REGION",
+            region = provider_config.region or os.getenv(
+                "BEDROCK_REGION", os.environ.get("AWS_REGION") or "us-east-1"
             )
-            model_id = provider_config.model or get_config_value(
-                "BEDROCK_MODEL",
-                "anthropic.claude-3-sonnet-20240229-v1:0",
-                section="summarizer_hub",
-                env_key="BEDROCK_MODEL",
+            model_id = provider_config.model or os.getenv(
+                "BEDROCK_MODEL", "anthropic.claude-3-sonnet-20240229-v1:0"
             )
             client = boto3.client(
                 "bedrock-runtime",
@@ -99,7 +105,7 @@ class ProviderImplementations:
         # Fallback: HTTP proxy
         url = (
             provider_config.endpoint
-            or get_config_value("BEDROCK_ENDPOINT", "", section="summarizer_hub", env_key="BEDROCK_ENDPOINT")
+            or os.getenv("BEDROCK_ENDPOINT", "")
             or ""
         ).strip()
         if not url:
@@ -108,25 +114,15 @@ class ProviderImplementations:
         api_key = (
             provider_config.api_key
             or get_secret("BEDROCK_API_KEY")
-            or get_config_value("BEDROCK_API_KEY", None, section="summarizer_hub", env_key="BEDROCK_API_KEY")
+            or os.getenv("BEDROCK_API_KEY")
         )
         if api_key:
             headers["Authorization"] = f"Bearer {api_key}"
         payload = {
             "model": provider_config.model
-            or get_config_value(
-                "BEDROCK_MODEL",
-                "anthropic.claude-3-sonnet-20240229-v1:0",
-                section="summarizer_hub",
-                env_key="BEDROCK_MODEL",
-            ),
+            or os.getenv("BEDROCK_MODEL", "anthropic.claude-3-sonnet-20240229-v1:0"),
             "region": provider_config.region
-            or get_config_value(
-                "BEDROCK_REGION",
-                os.environ.get("AWS_REGION", "us-east-1"),
-                section="summarizer_hub",
-                env_key="BEDROCK_REGION",
-            ),
+            or os.getenv("BEDROCK_REGION", os.environ.get("AWS_REGION", "us-east-1")),
             "prompt": content,
         }
         async with httpx.AsyncClient(timeout=90) as client:

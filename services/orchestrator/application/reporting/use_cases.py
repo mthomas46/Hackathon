@@ -13,7 +13,11 @@ class GenerateReportUseCase(UseCase):
     async def execute(self, command: GenerateReportCommand) -> Dict[str, Any]:
         """Execute the generate report use case."""
         # Placeholder implementation
-        return {"report_id": "placeholder-report-id", "report_type": command.report_type, "status": "generated"}
+        return {
+            "report_id": "placeholder-report-id",
+            "report_type": command.report_type,
+            "status": "generated",
+        }
 
 
 class GetReportUseCase(UseCase):
@@ -22,7 +26,11 @@ class GetReportUseCase(UseCase):
     async def execute(self, query: GetReportQuery) -> Optional[Dict[str, Any]]:
         """Execute the get report use case."""
         # Placeholder implementation
-        return {"report_id": query.report_id, "report_type": "sample", "content": "Sample report content"}
+        return {
+            "report_id": query.report_id,
+            "report_type": "sample",
+            "content": "Sample report content",
+        }
 
 
 class ListReportsUseCase(UseCase):
@@ -31,4 +39,10 @@ class ListReportsUseCase(UseCase):
     async def execute(self, query: ListReportsQuery) -> List[Dict[str, Any]]:
         """Execute the list reports use case."""
         # Placeholder implementation
-        return [{"report_id": "report-1", "report_type": "summary", "created_at": "2024-01-01T00:00:00Z"}]
+        return [
+            {
+                "report_id": "report-1",
+                "report_type": "summary",
+                "created_at": "2024-01-01T00:00:00Z",
+            }
+        ]

@@ -21,7 +21,9 @@ class WorkflowBuilder:
     def __init__(self):
         self.clients = get_interpreter_clients()
 
-    async def build_workflow(self, intent: str, entities: Dict[str, Any]) -> Optional["InterpretedWorkflow"]:
+    async def build_workflow(
+        self, intent: str, entities: Dict[str, Any]
+    ) -> Optional["InterpretedWorkflow"]:
         """Build workflow from intent and entities."""
 
         if intent == "analyze_document":
@@ -41,7 +43,9 @@ class WorkflowBuilder:
 
         return None
 
-    async def _build_analysis_workflow(self, entities: Dict[str, Any]) -> "InterpretedWorkflow":
+    async def _build_analysis_workflow(
+        self, entities: Dict[str, Any]
+    ) -> "InterpretedWorkflow":
         """Build document analysis workflow."""
 
         targets = []
@@ -62,7 +66,10 @@ class WorkflowBuilder:
                     step_id="analyze_docs",
                     service="analysis-service",
                     operation="analyze",
-                    params={"targets": targets, "analysis_types": ["consistency", "quality", "security"]},
+                    params={
+                        "targets": targets,
+                        "analysis_types": ["consistency", "quality", "security"],
+                    },
                 ),
                 WorkflowStep(
                     step_id="generate_findings",
@@ -73,7 +80,9 @@ class WorkflowBuilder:
             ],
         )
 
-    async def _build_consistency_workflow(self, entities: Dict[str, Any]) -> "InterpretedWorkflow":
+    async def _build_consistency_workflow(
+        self, entities: Dict[str, Any]
+    ) -> "InterpretedWorkflow":
         """Build consistency check workflow."""
 
         return InterpretedWorkflow(
@@ -88,7 +97,9 @@ class WorkflowBuilder:
             ],
         )
 
-    async def _build_ingestion_workflow(self, source_type: str, entities: Dict[str, Any]) -> "InterpretedWorkflow":
+    async def _build_ingestion_workflow(
+        self, source_type: str, entities: Dict[str, Any]
+    ) -> "InterpretedWorkflow":
         """Build data ingestion workflow."""
 
         sources = []
@@ -113,12 +124,17 @@ class WorkflowBuilder:
                     params={"sources": sources, "source_type": source_type},
                 ),
                 WorkflowStep(
-                    step_id="store_documents", service="doc_store", operation="store", params={"validate": True}
+                    step_id="store_documents",
+                    service="doc_store",
+                    operation="store",
+                    params={"validate": True},
                 ),
             ],
         )
 
-    async def _build_report_workflow(self, entities: Dict[str, Any]) -> "InterpretedWorkflow":
+    async def _build_report_workflow(
+        self, entities: Dict[str, Any]
+    ) -> "InterpretedWorkflow":
         """Build report generation workflow."""
 
         report_type = entities.get("report_type", ["summary"])[0]
@@ -135,7 +151,9 @@ class WorkflowBuilder:
             ],
         )
 
-    async def _build_prompt_search_workflow(self, entities: Dict[str, Any]) -> "InterpretedWorkflow":
+    async def _build_prompt_search_workflow(
+        self, entities: Dict[str, Any]
+    ) -> "InterpretedWorkflow":
         """Build prompt search workflow."""
 
         search_terms = entities.get("search_terms", [""])

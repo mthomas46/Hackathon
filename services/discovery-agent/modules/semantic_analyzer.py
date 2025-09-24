@@ -88,7 +88,9 @@ class SemanticToolAnalyzer:
             semantic_analysis["llm_analysis"] = llm_analysis["analysis"]
 
             # Parse LLM response for semantic insights
-            parsed_semantics = self._parse_llm_semantic_response(llm_analysis["analysis"])
+            parsed_semantics = self._parse_llm_semantic_response(
+                llm_analysis["analysis"]
+            )
             semantic_analysis.update(parsed_semantics)
         else:
             # Fallback to rule-based semantic analysis
@@ -97,11 +99,15 @@ class SemanticToolAnalyzer:
             semantic_analysis.update(rule_based)
 
         # Calculate confidence score
-        semantic_analysis["confidence_score"] = self._calculate_semantic_confidence(semantic_analysis)
+        semantic_analysis["confidence_score"] = self._calculate_semantic_confidence(
+            semantic_analysis
+        )
 
         return semantic_analysis
 
-    async def _perform_llm_semantic_analysis(self, tool: Dict[str, Any]) -> Dict[str, Any]:
+    async def _perform_llm_semantic_analysis(
+        self, tool: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Use LLM to perform semantic analysis of the tool"""
 
         analysis_prompt = f"""
@@ -131,14 +137,24 @@ class SemanticToolAnalyzer:
             async with self.service_client.session() as session:
                 url = f"{self.interpreter_url}/interpret"
 
-                payload = {"query": analysis_prompt, "context": "tool_semantic_analysis", "response_format": "json"}
+                payload = {
+                    "query": analysis_prompt,
+                    "context": "tool_semantic_analysis",
+                    "response_format": "json",
+                }
 
                 async with session.post(url, json=payload, timeout=20) as response:
                     if response.status == 200:
                         result = await response.json()
-                        return {"success": True, "analysis": result.get("interpretation", "")}
+                        return {
+                            "success": True,
+                            "analysis": result.get("interpretation", ""),
+                        }
                     else:
-                        return {"success": False, "error": f"Interpreter returned {response.status}"}
+                        return {
+                            "success": False,
+                            "error": f"Interpreter returned {response.status}",
+                        }
 
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -215,7 +231,9 @@ class SemanticToolAnalyzer:
         # Sort by score and select top matches
         semantic_matches.sort(key=lambda x: x["score"], reverse=True)
 
-        primary_category = semantic_matches[0]["category"] if semantic_matches else "utility"
+        primary_category = (
+            semantic_matches[0]["category"] if semantic_matches else "utility"
+        )
 
         # Collect capabilities and use cases from top matches
         for match in semantic_matches[:3]:  # Top 3 matches
@@ -233,10 +251,14 @@ class SemanticToolAnalyzer:
             "use_cases_identified": use_cases,
             "semantic_description": f"Tool appears to be related to {primary_category.replace('_', ' ')} based on keyword analysis",
             "relationships": {},
-            "complexity_score": min(len(tool.get("parameters", {}).get("properties", {})), 10),
+            "complexity_score": min(
+                len(tool.get("parameters", {}).get("properties", {})), 10
+            ),
         }
 
-    def _calculate_semantic_confidence(self, semantic_analysis: Dict[str, Any]) -> float:
+    def _calculate_semantic_confidence(
+        self, semantic_analysis: Dict[str, Any]
+    ) -> float:
         """Calculate confidence score for semantic analysis"""
 
         confidence = 0.0
@@ -264,7 +286,9 @@ class SemanticToolAnalyzer:
 
         return min(confidence, 1.0)
 
-    async def analyze_tool_relationships(self, tools: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def analyze_tool_relationships(
+        self, tools: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Analyze relationships between tools using semantic understanding"""
 
         relationship_analysis = {
@@ -304,13 +328,17 @@ class SemanticToolAnalyzer:
                     )
 
         # Generate workflow suggestions
-        relationship_analysis["workflow_suggestions"] = self._generate_workflow_suggestions(
-            relationship_analysis["complementary_pairs"]
+        relationship_analysis["workflow_suggestions"] = (
+            self._generate_workflow_suggestions(
+                relationship_analysis["complementary_pairs"]
+            )
         )
 
         return relationship_analysis
 
-    async def _analyze_tool_pair_relationship(self, tool1: Dict[str, Any], tool2: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_tool_pair_relationship(
+        self, tool1: Dict[str, Any], tool2: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Analyze relationship between two tools"""
 
         # Get semantic information
@@ -377,7 +405,9 @@ class SemanticToolAnalyzer:
             "description": "No significant relationship detected",
         }
 
-    def _generate_workflow_suggestions(self, complementary_pairs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _generate_workflow_suggestions(
+        self, complementary_pairs: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Generate workflow suggestions based on tool relationships"""
 
         suggestions = []
@@ -396,7 +426,9 @@ class SemanticToolAnalyzer:
                 suggestion = {
                     "workflow_type": rel_type,
                     "description": f"Multi-step workflow using {rel_type.replace('_', ' ')}",
-                    "tools_involved": list(set([p["tool1"] for p in pairs] + [p["tool2"] for p in pairs])),
+                    "tools_involved": list(
+                        set([p["tool1"] for p in pairs] + [p["tool2"] for p in pairs])
+                    ),
                     "estimated_steps": len(pairs) + 1,
                     "complexity": "medium" if len(pairs) <= 3 else "high",
                 }
@@ -404,12 +436,16 @@ class SemanticToolAnalyzer:
 
         return suggestions
 
-    async def enhance_tool_categorization(self, tools: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def enhance_tool_categorization(
+        self, tools: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Enhance tool categorization using semantic analysis"""
 
         enhanced_tools = []
 
-        print(f"🧠 Enhancing categorization for {len(tools)} tools using semantic analysis...")
+        print(
+            f"🧠 Enhancing categorization for {len(tools)} tools using semantic analysis..."
+        )
 
         for tool in tools:
             # Perform semantic analysis
@@ -424,10 +460,14 @@ class SemanticToolAnalyzer:
                 original_category = tool.get("category", "unknown")
                 semantic_category = semantic_analysis["primary_category"]
 
-                if semantic_category != "utility":  # Only override if we have a meaningful semantic category
+                if (
+                    semantic_category != "utility"
+                ):  # Only override if we have a meaningful semantic category
                     enhanced_tool["enhanced_category"] = semantic_category
                     enhanced_tool["categorization_method"] = "semantic_analysis"
-                    print(f"  📋 Enhanced {tool['name']}: {original_category} → {semantic_category}")
+                    print(
+                        f"  📋 Enhanced {tool['name']}: {original_category} → {semantic_category}"
+                    )
 
             enhanced_tools.append(enhanced_tool)
 

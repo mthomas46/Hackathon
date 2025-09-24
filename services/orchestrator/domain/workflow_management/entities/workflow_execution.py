@@ -40,7 +40,12 @@ class WorkflowExecution:
         if self.workflow_id is None:
             raise ValueError("Workflow ID is required")
 
-    def start(self, parameters: Dict[str, Any], correlation_id: Optional[str] = None, trace_id: Optional[str] = None):
+    def start(
+        self,
+        parameters: Dict[str, Any],
+        correlation_id: Optional[str] = None,
+        trace_id: Optional[str] = None,
+    ):
         """Start the workflow execution."""
         if self.status != WorkflowExecutionStatus.PENDING:
             raise ValueError(f"Cannot start execution in {self.status.value} status")
@@ -53,7 +58,10 @@ class WorkflowExecution:
 
     def complete(self):
         """Mark the execution as completed."""
-        if self.status not in [WorkflowExecutionStatus.RUNNING, WorkflowExecutionStatus.PENDING]:
+        if self.status not in [
+            WorkflowExecutionStatus.RUNNING,
+            WorkflowExecutionStatus.PENDING,
+        ]:
             raise ValueError(f"Cannot complete execution in {self.status.value} status")
 
         self.status = WorkflowExecutionStatus.COMPLETED
@@ -61,7 +69,10 @@ class WorkflowExecution:
 
     def fail(self, error_message: str):
         """Mark the execution as failed."""
-        if self.status not in [WorkflowExecutionStatus.RUNNING, WorkflowExecutionStatus.PENDING]:
+        if self.status not in [
+            WorkflowExecutionStatus.RUNNING,
+            WorkflowExecutionStatus.PENDING,
+        ]:
             raise ValueError(f"Cannot fail execution in {self.status.value} status")
 
         self.status = WorkflowExecutionStatus.FAILED
@@ -70,7 +81,10 @@ class WorkflowExecution:
 
     def cancel(self):
         """Cancel the execution."""
-        if self.status in [WorkflowExecutionStatus.COMPLETED, WorkflowExecutionStatus.FAILED]:
+        if self.status in [
+            WorkflowExecutionStatus.COMPLETED,
+            WorkflowExecutionStatus.FAILED,
+        ]:
             raise ValueError(f"Cannot cancel execution in {self.status.value} status")
 
         self.status = WorkflowExecutionStatus.CANCELLED
@@ -86,11 +100,17 @@ class WorkflowExecution:
 
     def get_successful_actions(self) -> List[str]:
         """Get list of action IDs that completed successfully."""
-        return [action_id for action_id, result in self.results.items() if result.is_successful]
+        return [
+            action_id
+            for action_id, result in self.results.items()
+            if result.is_successful
+        ]
 
     def get_failed_actions(self) -> List[str]:
         """Get list of action IDs that failed."""
-        return [action_id for action_id, result in self.results.items() if result.has_error]
+        return [
+            action_id for action_id, result in self.results.items() if result.has_error
+        ]
 
     def get_pending_actions(self) -> List[str]:
         """Get list of action IDs that are pending (not yet executed)."""
@@ -126,7 +146,9 @@ class WorkflowExecution:
             "workflow_id": self.workflow_id.value,
             "status": self.status.value,
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
             "parameters": self.parameters,
             "results": {k: v.to_dict() for k, v in self.results.items()},
             "error_message": self.error_message,

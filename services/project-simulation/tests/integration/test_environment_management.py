@@ -84,7 +84,11 @@ class TestEnvironmentSwitching:
         }
 
         # Test environment variable overrides
-        overrides = {"DATABASE_HOST": "db.example.com", "API_PORT": "9000", "REDIS_HOST": "redis-cluster"}
+        overrides = {
+            "DATABASE_HOST": "db.example.com",
+            "API_PORT": "9000",
+            "REDIS_HOST": "redis-cluster",
+        }
 
         with patch.dict(os.environ, overrides):
             merged_config = self._apply_environment_overrides(base_config)
@@ -207,7 +211,11 @@ class TestEnvironmentSwitching:
 
     def _apply_environment_overrides(self, config):
         """Mock environment variable override application."""
-        overrides = {"DATABASE_HOST": "database.host", "API_PORT": "api.port", "REDIS_HOST": "redis.host"}
+        overrides = {
+            "DATABASE_HOST": "database.host",
+            "API_PORT": "api.port",
+            "REDIS_HOST": "redis.host",
+        }
 
         result = json.loads(json.dumps(config))  # Deep copy
 
@@ -226,7 +234,12 @@ class TestEnvironmentSwitching:
 
     def _create_environment_context(self, env_name):
         """Mock environment context creation."""
-        return {"name": env_name, "config": self._load_environment_config(env_name), "services": {}, "variables": {}}
+        return {
+            "name": env_name,
+            "config": self._load_environment_config(env_name),
+            "services": {},
+            "variables": {},
+        }
 
     def _switch_to_environment(self, context):
         """Mock environment switching."""
@@ -282,31 +295,33 @@ class TestConfigurationValidation:
             """
             environment: development
             database:
-              type: sqlite
-              path: :memory:
+                type: sqlite
+                path: :memory:
             api:
-              host: localhost
-              port: 8000
+                host: localhost
+                port: 8000
             """,
             """
             environment: production
             database:
-              type: postgresql
-              host: prod-db.example.com
-              port: 5432
-              ssl: true
+                type: postgresql
+                host: prod-db.example.com
+                port: 5432
+                ssl: true
             api:
-              host: 0.0.0.0
-              port: 443
-              ssl: true
+                host: 0.0.0.0
+                port: 443
+                ssl: true
             logging:
-              level: WARNING
-              format: json
+                level: WARNING
+                format: json
             """,
         ]
 
         for yaml_config in valid_yaml_configs:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".yaml", delete=False
+            ) as f:
                 f.write(yaml_config)
                 config_file = f.name
 
@@ -339,7 +354,9 @@ class TestConfigurationValidation:
         ]
 
         for json_config in valid_json_configs:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".json", delete=False
+            ) as f:
                 json.dump(json_config, f)
                 config_file = f.name
 
@@ -347,7 +364,11 @@ class TestConfigurationValidation:
                 parsed_config = self._parse_json_config(config_file)
                 assert isinstance(parsed_config, dict)
                 assert "environment" in parsed_config
-                assert parsed_config["environment"] in ["development", "staging", "production"]
+                assert parsed_config["environment"] in [
+                    "development",
+                    "staging",
+                    "production",
+                ]
             finally:
                 os.unlink(config_file)
 
@@ -421,7 +442,9 @@ class TestConfigurationValidation:
 
         # Test shallow merge strategy
         merged_shallow = self._shallow_merge_configs(base_config, override_config)
-        assert merged_shallow["database"] == {"path": "/tmp/test.db"}  # Completely replaced
+        assert merged_shallow["database"] == {
+            "path": "/tmp/test.db"
+        }  # Completely replaced
         assert merged_shallow["api"] == {"port": 9000}  # Completely replaced
 
         print("✅ Configuration merge strategies validated")
@@ -429,13 +452,20 @@ class TestConfigurationValidation:
     def test_configuration_change_tracking(self):
         """Test configuration change tracking and auditing."""
         # Test tracking configuration changes
-        initial_config = {"database": {"host": "localhost", "port": 5432}, "api": {"port": 8000}}
+        initial_config = {
+            "database": {"host": "localhost", "port": 5432},
+            "api": {"port": 8000},
+        }
 
         changes = []
 
         # Simulate configuration changes
         change_events = [
-            {"path": "database.host", "old_value": "localhost", "new_value": "db.example.com"},
+            {
+                "path": "database.host",
+                "old_value": "localhost",
+                "new_value": "db.example.com",
+            },
             {"path": "api.port", "old_value": 8000, "new_value": 9000},
             {"path": "redis.host", "old_value": None, "new_value": "redis.example.com"},
         ]
@@ -477,19 +507,27 @@ class TestConfigurationValidation:
             "type": "object",
             "required": ["environment", "database", "api"],
             "properties": {
-                "environment": {"type": "string", "enum": ["development", "staging", "production", "testing"]},
+                "environment": {
+                    "type": "string",
+                    "enum": ["development", "staging", "production", "testing"],
+                },
                 "database": {
                     "type": "object",
                     "required": ["type"],
                     "properties": {
-                        "type": {"type": "string", "enum": ["sqlite", "postgresql", "mysql"]},
+                        "type": {
+                            "type": "string",
+                            "enum": ["sqlite", "postgresql", "mysql"],
+                        },
                         "host": {"type": "string"},
                         "port": {"type": "integer", "minimum": 1024, "maximum": 65535},
                     },
                 },
                 "api": {
                     "type": "object",
-                    "properties": {"port": {"type": "integer", "minimum": 1024, "maximum": 65535}},
+                    "properties": {
+                        "port": {"type": "integer", "minimum": 1024, "maximum": 65535}
+                    },
                 },
             },
         }
@@ -501,7 +539,12 @@ class TestConfigurationValidation:
         # Basic validation logic
         if "environment" not in config:
             errors.append("Missing environment field")
-        elif config["environment"] not in ["development", "staging", "production", "testing"]:
+        elif config["environment"] not in [
+            "development",
+            "staging",
+            "production",
+            "testing",
+        ]:
             errors.append(f"Invalid environment: {config['environment']}")
 
         if "database" not in config:
@@ -524,7 +567,11 @@ class TestConfigurationValidation:
 
         def merge_dict(target, source):
             for key, value in source.items():
-                if key in target and isinstance(target[key], dict) and isinstance(value, dict):
+                if (
+                    key in target
+                    and isinstance(target[key], dict)
+                    and isinstance(value, dict)
+                ):
                     merge_dict(target[key], value)
                 else:
                     target[key] = value
@@ -562,7 +609,11 @@ class TestServiceHealthMonitoring:
                 "expected_response": {
                     "status": "healthy",
                     "timestamp": "2024-01-01T12:00:00Z",
-                    "services": {"database": "healthy", "redis": "healthy", "api": "healthy"},
+                    "services": {
+                        "database": "healthy",
+                        "redis": "healthy",
+                        "api": "healthy",
+                    },
                 },
             },
             {
@@ -586,7 +637,9 @@ class TestServiceHealthMonitoring:
             # Validate health response
             is_valid, errors = self._validate_health_response(mock_response, endpoint)
 
-            assert is_valid, f"Health endpoint validation failed for {endpoint['url']}: {errors}"
+            assert (
+                is_valid
+            ), f"Health endpoint validation failed for {endpoint['url']}: {errors}"
             assert len(errors) == 0
 
         print("✅ Health endpoint validation validated")
@@ -595,10 +648,22 @@ class TestServiceHealthMonitoring:
         """Test service health status aggregation."""
         # Test various service health scenarios
         health_scenarios = [
-            {"services": {"db": "healthy", "redis": "healthy", "api": "healthy"}, "expected_overall": "healthy"},
-            {"services": {"db": "healthy", "redis": "degraded", "api": "healthy"}, "expected_overall": "degraded"},
-            {"services": {"db": "unhealthy", "redis": "healthy", "api": "healthy"}, "expected_overall": "unhealthy"},
-            {"services": {"db": "healthy", "redis": "healthy", "api": "unknown"}, "expected_overall": "degraded"},
+            {
+                "services": {"db": "healthy", "redis": "healthy", "api": "healthy"},
+                "expected_overall": "healthy",
+            },
+            {
+                "services": {"db": "healthy", "redis": "degraded", "api": "healthy"},
+                "expected_overall": "degraded",
+            },
+            {
+                "services": {"db": "unhealthy", "redis": "healthy", "api": "healthy"},
+                "expected_overall": "unhealthy",
+            },
+            {
+                "services": {"db": "healthy", "redis": "healthy", "api": "unknown"},
+                "expected_overall": "degraded",
+            },
         ]
 
         for scenario in health_scenarios:
@@ -640,13 +705,17 @@ class TestServiceHealthMonitoring:
         total_attempts = 20
 
         for i in range(total_attempts):
-            if self._perform_mock_health_check_with_failure_probability(0.1):  # 10% failure rate
+            if self._perform_mock_health_check_with_failure_probability(
+                0.1
+            ):  # 10% failure rate
                 success_count += 1
 
         success_rate = success_count / total_attempts
 
         # Should have reasonable success rate (> 80%)
-        assert success_rate > 0.8, f"Health check reliability too low: {success_rate:.1%}"
+        assert (
+            success_rate > 0.8
+        ), f"Health check reliability too low: {success_rate:.1%}"
 
         print("✅ Health check timing and reliability validated")
 
@@ -671,8 +740,12 @@ class TestServiceHealthMonitoring:
                 assert latest_alert["status"] == state["status"]
             else:
                 # Count alerts before this state
-                initial_alert_count = len([a for a in alerts_sent if a["status"] != state["status"]])
-                assert len(alerts_sent) == initial_alert_count, f"Unexpected alert sent for {state['status']}"
+                initial_alert_count = len(
+                    [a for a in alerts_sent if a["status"] != state["status"]]
+                )
+                assert (
+                    len(alerts_sent) == initial_alert_count
+                ), f"Unexpected alert sent for {state['status']}"
 
         print("✅ Health monitoring alerting validated")
 
@@ -711,7 +784,9 @@ class TestServiceHealthMonitoring:
                     assert full_url in endpoints
             else:
                 # Services without explicit endpoints should have defaults
-                assert len(endpoints) > 0, f"No default endpoints discovered for {service['name']}"
+                assert (
+                    len(endpoints) > 0
+                ), f"No default endpoints discovered for {service['name']}"
 
         print("✅ Health check endpoint discovery validated")
 
@@ -721,7 +796,9 @@ class TestServiceHealthMonitoring:
 
         # Check HTTP status
         if response.status_code != endpoint_config["expected_status"]:
-            errors.append(f"Expected status {endpoint_config['expected_status']}, got {response.status_code}")
+            errors.append(
+                f"Expected status {endpoint_config['expected_status']}, got {response.status_code}"
+            )
 
         # Check response structure
         try:
@@ -734,8 +811,13 @@ class TestServiceHealthMonitoring:
                     errors.append(f"Missing field: {key}")
 
             # Check status field
-            if "status" in expected_data and response_data.get("status") != expected_data["status"]:
-                errors.append(f"Status mismatch: expected {expected_data['status']}, got {response_data.get('status')}")
+            if (
+                "status" in expected_data
+                and response_data.get("status") != expected_data["status"]
+            ):
+                errors.append(
+                    f"Status mismatch: expected {expected_data['status']}, got {response_data.get('status')}"
+                )
 
         except Exception as e:
             errors.append(f"Invalid JSON response: {e}")
@@ -746,7 +828,9 @@ class TestServiceHealthMonitoring:
         """Mock service health aggregation."""
         status_priority = {"unhealthy": 3, "degraded": 2, "unknown": 1, "healthy": 0}
 
-        max_priority = max((status_priority.get(status, 1) for status in services.values()), default=0)
+        max_priority = max(
+            (status_priority.get(status, 1) for status in services.values()), default=0
+        )
 
         priority_map = {3: "unhealthy", 2: "degraded", 1: "degraded", 0: "healthy"}
         return priority_map.get(max_priority, "unknown")
@@ -822,7 +906,9 @@ class TestEnvironmentManagementIntegration:
 
             # Perform health checks
             health_status = self._perform_environment_health_checks(env)
-            assert health_status["overall"] == "healthy", f"Unhealthy environment {env}: {health_status}"
+            assert (
+                health_status["overall"] == "healthy"
+            ), f"Unhealthy environment {env}: {health_status}"
 
             # Switch to environment
             switched = self._switch_to_environment(env)
@@ -871,7 +957,9 @@ class TestEnvironmentManagementIntegration:
         self._save_environment_configuration("development", updated_config)
         loaded_updated = self._load_environment_configuration("development")
 
-        assert loaded_updated["api"]["port"] == 9000, "Configuration update not persisted"
+        assert (
+            loaded_updated["api"]["port"] == 9000
+        ), "Configuration update not persisted"
 
         print("✅ Environment configuration persistence validated")
 
@@ -908,7 +996,9 @@ class TestEnvironmentManagementIntegration:
 
             # Verify all expected services discovered
             for service_name, expected_url in config["services"].items():
-                assert service_name in discovered_services, f"Service {service_name} not discovered in {env}"
+                assert (
+                    service_name in discovered_services
+                ), f"Service {service_name} not discovered in {env}"
                 assert (
                     discovered_services[service_name] == expected_url
                 ), f"Service URL mismatch for {service_name} in {env}"
@@ -930,9 +1020,21 @@ class TestEnvironmentManagementIntegration:
     def _load_environment_configuration(self, env_name):
         """Mock environment configuration loading."""
         configs = {
-            "development": {"database": {"type": "sqlite"}, "api": {"port": 8000}, "logging": {"level": "DEBUG"}},
-            "staging": {"database": {"type": "postgresql"}, "api": {"port": 8000}, "logging": {"level": "INFO"}},
-            "production": {"database": {"type": "postgresql"}, "api": {"port": 443}, "logging": {"level": "WARNING"}},
+            "development": {
+                "database": {"type": "sqlite"},
+                "api": {"port": 8000},
+                "logging": {"level": "DEBUG"},
+            },
+            "staging": {
+                "database": {"type": "postgresql"},
+                "api": {"port": 8000},
+                "logging": {"level": "INFO"},
+            },
+            "production": {
+                "database": {"type": "postgresql"},
+                "api": {"port": 443},
+                "logging": {"level": "WARNING"},
+            },
         }
         return configs.get(env_name, configs["development"])
 
@@ -951,7 +1053,10 @@ class TestEnvironmentManagementIntegration:
 
     def _perform_environment_health_checks(self, env_name):
         """Mock health checks."""
-        return {"overall": "healthy", "services": {"database": "healthy", "api": "healthy", "redis": "healthy"}}
+        return {
+            "overall": "healthy",
+            "services": {"database": "healthy", "api": "healthy", "redis": "healthy"},
+        }
 
     def _switch_to_environment(self, env_name):
         """Mock environment switching."""

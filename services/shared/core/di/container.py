@@ -108,11 +108,11 @@ class ServiceLifetime(Enum):
 
     Attributes:
         SINGLETON: Single instance shared across entire application lifetime.
-                  Most efficient for stateless services and shared resources.
+                Most efficient for stateless services and shared resources.
         TRANSIENT: New instance created each time the service is requested.
-                  Best for stateful services or when isolation is required.
+                Best for stateful services or when isolation is required.
         SCOPED: Single instance per scope/context, disposed when scope ends.
-               Useful for request-scoped services and per-operation state.
+                Useful for request-scoped services and per-operation state.
     """
 
     SINGLETON = "singleton"  # Single instance for entire application
@@ -167,7 +167,9 @@ class ServiceDescriptor(Generic[T]):
         self.instance: Optional[T] = instance
         self._lock = threading.RLock()
 
-    def create_instance(self, container: "DependencyContainer", *args: Any, **kwargs: Any) -> T:
+    def create_instance(
+        self, container: "DependencyContainer", *args: Any, **kwargs: Any
+    ) -> T:
         """Create a new instance of the service.
 
         This method handles the complete service instantiation process including:
@@ -207,7 +209,9 @@ class ServiceDescriptor(Generic[T]):
 
             return instance
 
-    def _create_with_injection(self, container: "DependencyContainer", *args: Any, **kwargs: Any) -> T:
+    def _create_with_injection(
+        self, container: "DependencyContainer", *args: Any, **kwargs: Any
+    ) -> T:
         """Create instance with automatic dependency injection.
 
         This method performs automatic dependency injection by:
@@ -258,7 +262,9 @@ class ServiceDescriptor(Generic[T]):
             return self.implementation_type(*args, **parameters)
 
         except Exception as e:
-            raise RuntimeError(f"Failed to create instance of {self.implementation_type}: {e}") from e
+            raise RuntimeError(
+                f"Failed to create instance of {self.implementation_type}: {e}"
+            ) from e
 
 
 class IServiceProvider(Protocol):
@@ -403,17 +409,24 @@ class DependencyContainer(IServiceProvider):
 
         Args:
             parent: Optional parent container for hierarchical resolution.
-                  Child containers can resolve services from parent containers
-                  if not found locally, enabling modular application composition.
+                Child containers can resolve services from parent containers
+                if not found locally, enabling modular application composition.
         """
         self._parent = parent
         self._services: Dict[Type[Any], ServiceDescriptor[Any]] = {}
-        self._scoped_services: WeakValueDictionary[Type[Any], Any] = WeakValueDictionary()
-        self._current_scope: ContextVar[Optional["ServiceScope"]] = ContextVar("current_scope", default=None)
+        self._scoped_services: WeakValueDictionary[Type[Any], Any] = (
+            WeakValueDictionary()
+        )
+        self._current_scope: ContextVar[Optional["ServiceScope"]] = ContextVar(
+            "current_scope", default=None
+        )
         self._lock = threading.RLock()
 
     def register_singleton(
-        self, service_type: Type[T], implementation_type: Optional[Type[T]] = None, instance: Optional[T] = None
+        self,
+        service_type: Type[T],
+        implementation_type: Optional[Type[T]] = None,
+        instance: Optional[T] = None,
     ) -> "DependencyContainer":
         """Register a singleton service.
 
@@ -431,7 +444,12 @@ class DependencyContainer(IServiceProvider):
         Example:
             container.register_singleton(ILogger, FileLogger)
         """
-        return self._register(service_type, implementation_type, ServiceLifetime.SINGLETON, instance=instance)
+        return self._register(
+            service_type,
+            implementation_type,
+            ServiceLifetime.SINGLETON,
+            instance=instance,
+        )
 
     def register_transient(
         self, service_type: Type[T], implementation_type: Optional[Type[T]] = None
@@ -451,7 +469,9 @@ class DependencyContainer(IServiceProvider):
         Example:
             container.register_transient(IAnalyzer, SemanticAnalyzer)
         """
-        return self._register(service_type, implementation_type, ServiceLifetime.TRANSIENT)
+        return self._register(
+            service_type, implementation_type, ServiceLifetime.TRANSIENT
+        )
 
     def register_scoped(
         self, service_type: Type[T], implementation_type: Optional[Type[T]] = None
@@ -474,7 +494,10 @@ class DependencyContainer(IServiceProvider):
         return self._register(service_type, implementation_type, ServiceLifetime.SCOPED)
 
     def register_factory(
-        self, service_type: Type[T], factory: Callable[..., T], lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT
+        self,
+        service_type: Type[T],
+        factory: Callable[..., T],
+        lifetime: ServiceLifetime = ServiceLifetime.TRANSIENT,
     ) -> "DependencyContainer":
         """Register a service with a custom factory function.
 
@@ -500,7 +523,9 @@ class DependencyContainer(IServiceProvider):
         self._services[service_type] = descriptor
         return self
 
-    def register_instance(self, service_type: Type[T], instance: T) -> "DependencyContainer":
+    def register_instance(
+        self, service_type: Type[T], instance: T
+    ) -> "DependencyContainer":
         """Register a pre-created instance as singleton.
 
         This is useful for services that need special initialization or
@@ -517,7 +542,9 @@ class DependencyContainer(IServiceProvider):
             existing_logger = FileLogger("/var/log/app.log")
             container.register_instance(ILogger, existing_logger)
         """
-        descriptor = ServiceDescriptor(service_type, instance=instance, lifetime=ServiceLifetime.SINGLETON)
+        descriptor = ServiceDescriptor(
+            service_type, instance=instance, lifetime=ServiceLifetime.SINGLETON
+        )
         self._services[service_type] = descriptor
         return self
 
@@ -534,7 +561,10 @@ class DependencyContainer(IServiceProvider):
                 implementation_type = service_type
 
             descriptor = ServiceDescriptor(
-                service_type=service_type, implementation_type=implementation_type, lifetime=lifetime, instance=instance
+                service_type=service_type,
+                implementation_type=implementation_type,
+                lifetime=lifetime,
+                instance=instance,
             )
 
             self._services[service_type] = descriptor
@@ -722,7 +752,7 @@ class ServiceScope(IServiceScope):
 
         Args:
             container: The parent dependency injection container that
-                      manages the service registrations and resolution.
+                        manages the service registrations and resolution.
         """
         self._container = container
         self._scoped_instances: Dict[Type[Any], Any] = {}

@@ -58,7 +58,9 @@ class TrendAnalysisHandler(BaseAnalysisHandler):
                     key_insights=trend_result.get("key_insights", []),
                     recommendations=trend_result.get("recommendations", []),
                     forecast_accuracy=trend_result.get("forecast_accuracy", 0.0),
-                    execution_time_seconds=trend_result.get("execution_time_seconds", 0.0),
+                    execution_time_seconds=trend_result.get(
+                        "execution_time_seconds", 0.0
+                    ),
                     error_message=None,
                 )
             else:  # Single document response
@@ -70,7 +72,9 @@ class TrendAnalysisHandler(BaseAnalysisHandler):
                     key_insights=trend_result.get("key_insights", []),
                     recommendations=trend_result.get("recommendations", []),
                     forecast_accuracy=trend_result.get("forecast_accuracy", 0.0),
-                    execution_time_seconds=trend_result.get("execution_time_seconds", 0.0),
+                    execution_time_seconds=trend_result.get(
+                        "execution_time_seconds", 0.0
+                    ),
                     error_message=None,
                 )
 
@@ -105,16 +109,22 @@ class TrendAnalysisHandler(BaseAnalysisHandler):
 
             for i in range(time_range // 7):  # Weekly data points
                 date = datetime.now(timezone.utc) - timedelta(days=(time_range - i * 7))
-                value = base_value + random.uniform(-10, 10) + (i * 0.1)  # Slight upward trend
+                value = (
+                    base_value + random.uniform(-10, 10) + (i * 0.1)
+                )  # Slight upward trend
                 historical_data.append(
-                    {"date": date.isoformat(), "value": max(0, min(100, value))}  # Clamp between 0-100
+                    {
+                        "date": date.isoformat(),
+                        "value": max(0, min(100, value)),
+                    }  # Clamp between 0-100
                 )
 
             # Calculate trend metrics
             values = [point["value"] for point in historical_data]
             trend_slope = (values[-1] - values[0]) / len(values) if values else 0
             volatility = (
-                sum(abs(values[i] - values[i - 1]) for i in range(1, len(values))) / len(values)
+                sum(abs(values[i] - values[i - 1]) for i in range(1, len(values)))
+                / len(values)
                 if len(values) > 1
                 else 0
             )
@@ -123,14 +133,19 @@ class TrendAnalysisHandler(BaseAnalysisHandler):
             forecast_value = values[-1] + (trend_slope * forecast_days / 30)
             forecast_data = {
                 "forecasted_value": max(0, min(100, forecast_value)),
-                "confidence_interval": {"lower": max(0, forecast_value - 5), "upper": min(100, forecast_value + 5)},
+                "confidence_interval": {
+                    "lower": max(0, forecast_value - 5),
+                    "upper": min(100, forecast_value + 5),
+                },
             }
 
             trend_data[metric] = {
                 "historical_data": historical_data,
                 "current_value": values[-1] if values else 0,
                 "trend_direction": (
-                    "improving" if trend_slope > 0.1 else "stable" if abs(trend_slope) < 0.1 else "declining"
+                    "improving"
+                    if trend_slope > 0.1
+                    else "stable" if abs(trend_slope) < 0.1 else "declining"
                 ),
                 "trend_slope": trend_slope,
                 "volatility": volatility,
@@ -159,10 +174,15 @@ class TrendAnalysisHandler(BaseAnalysisHandler):
             "execution_time_seconds": random.uniform(2.0, 5.0),
         }
 
-    async def get_trend_forecast(self, document_id: str, metric: str, forecast_days: int = 30) -> Dict[str, Any]:
+    async def get_trend_forecast(
+        self, document_id: str, metric: str, forecast_days: int = 30
+    ) -> Dict[str, Any]:
         """Get trend forecast for specific metric."""
         request = TrendAnalysisRequest(
-            document_id=document_id, time_range_days=90, trend_metrics=[metric], forecast_days=forecast_days
+            document_id=document_id,
+            time_range_days=90,
+            trend_metrics=[metric],
+            forecast_days=forecast_days,
         )
 
         result = await self.handle(request)
@@ -183,16 +203,25 @@ class TrendAnalysisHandler(BaseAnalysisHandler):
             "metric": metric,
             "current_value": metric_data.get("current_value", 0),
             "trend_direction": metric_data.get("trend_direction", "unknown"),
-            "forecasted_value": metric_data.get("forecast", {}).get("forecasted_value", 0),
-            "confidence_interval": metric_data.get("forecast", {}).get("confidence_interval", {}),
+            "forecasted_value": metric_data.get("forecast", {}).get(
+                "forecasted_value", 0
+            ),
+            "confidence_interval": metric_data.get("forecast", {}).get(
+                "confidence_interval", {}
+            ),
             "forecast_accuracy": response_data.get("forecast_accuracy", 0),
             "execution_time_seconds": result.execution_time_seconds,
         }
 
-    async def analyze_portfolio_trends(self, document_ids: List[str], metrics: List[str]) -> Dict[str, Any]:
+    async def analyze_portfolio_trends(
+        self, document_ids: List[str], metrics: List[str]
+    ) -> Dict[str, Any]:
         """Analyze trends across document portfolio."""
         request = PortfolioTrendAnalysisRequest(
-            document_ids=document_ids, time_range_days=90, trend_metrics=metrics, forecast_days=30
+            document_ids=document_ids,
+            time_range_days=90,
+            trend_metrics=metrics,
+            forecast_days=30,
         )
 
         result = await self.handle(request)
@@ -217,7 +246,10 @@ class TrendAnalysisHandler(BaseAnalysisHandler):
         # Get trend data for quality metrics
         quality_metrics = ["quality_score", "readability", "grammar_score"]
         request = TrendAnalysisRequest(
-            document_id=document_id, time_range_days=60, trend_metrics=quality_metrics, forecast_days=14
+            document_id=document_id,
+            time_range_days=60,
+            trend_metrics=quality_metrics,
+            forecast_days=14,
         )
 
         result = await self.handle(request)
@@ -269,7 +301,10 @@ class TrendAnalysisHandler(BaseAnalysisHandler):
             "document_id": document_id,
             "overall_risk": overall_risk,
             "degradation_indicators": degradation_indicators,
-            "trend_summary": {metric: data.get("trend_direction") for metric, data in trend_data.items()},
+            "trend_summary": {
+                metric: data.get("trend_direction")
+                for metric, data in trend_data.items()
+            },
             "recommendations": [
                 (
                     "Monitor quality metrics closely"

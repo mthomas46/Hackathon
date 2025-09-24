@@ -29,15 +29,25 @@ class ParameterValue:
         if self._value is None:
             return
 
-        if self._param_type == ParameterType.STRING and not isinstance(self._value, str):
+        if self._param_type == ParameterType.STRING and not isinstance(
+            self._value, str
+        ):
             raise ValueError(f"Parameter must be a string, got {type(self._value)}")
-        elif self._param_type == ParameterType.INTEGER and not isinstance(self._value, int):
+        elif self._param_type == ParameterType.INTEGER and not isinstance(
+            self._value, int
+        ):
             raise ValueError(f"Parameter must be an integer, got {type(self._value)}")
-        elif self._param_type == ParameterType.FLOAT and not isinstance(self._value, (int, float)):
+        elif self._param_type == ParameterType.FLOAT and not isinstance(
+            self._value, (int, float)
+        ):
             raise ValueError(f"Parameter must be a number, got {type(self._value)}")
-        elif self._param_type == ParameterType.BOOLEAN and not isinstance(self._value, bool):
+        elif self._param_type == ParameterType.BOOLEAN and not isinstance(
+            self._value, bool
+        ):
             raise ValueError(f"Parameter must be a boolean, got {type(self._value)}")
-        elif self._param_type == ParameterType.ARRAY and not isinstance(self._value, list):
+        elif self._param_type == ParameterType.ARRAY and not isinstance(
+            self._value, list
+        ):
             raise ValueError(f"Parameter must be an array, got {type(self._value)}")
 
     @property

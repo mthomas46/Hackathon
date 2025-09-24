@@ -46,7 +46,9 @@ class DockerManager(BaseManager):
             # Show available compose files
             file_options = []
             for i, compose_file in enumerate(compose_files, 1):
-                file_options.append((str(i), f"{compose_file.name} ({compose_file.parent})"))
+                file_options.append(
+                    (str(i), f"{compose_file.name} ({compose_file.parent})")
+                )
 
             choice = await self.get_user_input("Select Docker Compose file to view")
             if choice and choice.isdigit():
@@ -63,7 +65,9 @@ class DockerManager(BaseManager):
             compose_files = await self._find_docker_compose_files()
             validation_results = []
 
-            with self.display.show_progress("Validating Docker Compose files") as progress:
+            with self.display.show_progress(
+                "Validating Docker Compose files"
+            ) as progress:
                 for compose_file in compose_files:
                     result = await self._validate_compose_file(compose_file)
                     validation_results.append(result)
@@ -75,7 +79,9 @@ class DockerManager(BaseManager):
             table_data = []
             for result in validation_results:
                 status = "✅ Valid" if result["valid"] else "❌ Invalid"
-                message = "OK" if result["valid"] else result.get("error", "Unknown error")
+                message = (
+                    "OK" if result["valid"] else result.get("error", "Unknown error")
+                )
                 table_data.append([result["file"], status, message])
 
             self.display.show_table(
@@ -87,7 +93,9 @@ class DockerManager(BaseManager):
             if valid_count == total_count:
                 self.display.show_success("All Docker Compose files are valid!")
             else:
-                self.display.show_error(f"{total_count - valid_count} Docker Compose files have validation errors")
+                self.display.show_error(
+                    f"{total_count - valid_count} Docker Compose files have validation errors"
+                )
 
         except Exception as e:
             self.display.show_error(f"Error validating Docker Compose files: {e}")
@@ -123,7 +131,9 @@ class DockerManager(BaseManager):
                 substitution_issues.extend(issues)
 
             if not substitution_issues:
-                self.display.show_success("No environment variable substitution issues found!")
+                self.display.show_success(
+                    "No environment variable substitution issues found!"
+                )
                 return
 
             # Display issues
@@ -132,7 +142,9 @@ class DockerManager(BaseManager):
                 table_data.append([issue["file"], issue["variable"], issue["issue"]])
 
             self.display.show_table(
-                "Environment Variable Substitution Issues", ["File", "Variable", "Issue"], table_data
+                "Environment Variable Substitution Issues",
+                ["File", "Variable", "Issue"],
+                table_data,
             )
 
         except Exception as e:
@@ -148,19 +160,27 @@ class DockerManager(BaseManager):
                 return
 
             # Generate deployment config
-            deployment_config = await self._generate_deployment_configuration(compose_files)
+            deployment_config = await self._generate_deployment_configuration(
+                compose_files
+            )
 
             # Show or save the config
-            config_yaml = yaml.dump(deployment_config, default_flow_style=False, indent=2)
+            config_yaml = yaml.dump(
+                deployment_config, default_flow_style=False, indent=2
+            )
 
             self.display.show_panel(config_yaml, "Generated Deployment Configuration")
 
             if await self.confirm_action("Save deployment configuration to file?"):
-                output_path = await self.get_user_input("Output file path", default="./deployment-config.yaml")
+                output_path = await self.get_user_input(
+                    "Output file path", default="./deployment-config.yaml"
+                )
                 if output_path:
                     with open(output_path, "w") as f:
                         f.write(config_yaml)
-                    self.display.show_success(f"Deployment configuration saved to {output_path}")
+                    self.display.show_success(
+                        f"Deployment configuration saved to {output_path}"
+                    )
 
         except Exception as e:
             self.display.show_error(f"Error generating deployment configuration: {e}")
@@ -223,7 +243,9 @@ class DockerManager(BaseManager):
             # Validate each service has required fields
             for service_name, service_config in services.items():
                 if not isinstance(service_config, dict):
-                    result["error"] = f"Service '{service_name}' configuration must be a dictionary"
+                    result["error"] = (
+                        f"Service '{service_name}' configuration must be a dictionary"
+                    )
                     return result
 
             result["valid"] = True
@@ -244,16 +266,22 @@ class DockerManager(BaseManager):
             # Try to format as YAML
             try:
                 compose_data = yaml.safe_load(content)
-                formatted_content = yaml.dump(compose_data, default_flow_style=False, indent=2)
+                formatted_content = yaml.dump(
+                    compose_data, default_flow_style=False, indent=2
+                )
             except Exception:
                 formatted_content = content
 
-            self.display.show_panel(formatted_content, f"Docker Compose: {file_path.name}")
+            self.display.show_panel(
+                formatted_content, f"Docker Compose: {file_path.name}"
+            )
 
         except Exception as e:
             self.display.show_error(f"Error displaying compose file: {e}")
 
-    async def _analyze_service_dependencies(self, compose_file: Path) -> Dict[str, List[str]]:
+    async def _analyze_service_dependencies(
+        self, compose_file: Path
+    ) -> Dict[str, List[str]]:
         """Analyze service dependencies in a compose file."""
         dependencies = {}
 
@@ -275,7 +303,9 @@ class DockerManager(BaseManager):
                         dependencies[service_name] = []
 
         except Exception as e:
-            self.display.show_error(f"Error analyzing dependencies in {compose_file}: {e}")
+            self.display.show_error(
+                f"Error analyzing dependencies in {compose_file}: {e}"
+            )
 
         return dependencies
 
@@ -290,9 +320,13 @@ class DockerManager(BaseManager):
             deps_str = ", ".join(deps) if deps else "None"
             table_data.append([service, deps_str])
 
-        self.display.show_table("Service Dependency Graph", ["Service", "Dependencies"], table_data)
+        self.display.show_table(
+            "Service Dependency Graph", ["Service", "Dependencies"], table_data
+        )
 
-    async def _check_environment_substitution(self, compose_file: Path) -> List[Dict[str, Any]]:
+    async def _check_environment_substitution(
+        self, compose_file: Path
+    ) -> List[Dict[str, Any]]:
         """Check environment variable substitution in compose file."""
         issues = []
 
@@ -327,9 +361,16 @@ class DockerManager(BaseManager):
 
         return issues
 
-    async def _generate_deployment_configuration(self, compose_files: List[Path]) -> Dict[str, Any]:
+    async def _generate_deployment_configuration(
+        self, compose_files: List[Path]
+    ) -> Dict[str, Any]:
         """Generate deployment configuration from compose files."""
-        deployment_config = {"version": "1.0", "services": {}, "networks": {}, "volumes": {}}
+        deployment_config = {
+            "version": "1.0",
+            "services": {},
+            "networks": {},
+            "volumes": {},
+        }
 
         for compose_file in compose_files:
             try:

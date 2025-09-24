@@ -23,7 +23,10 @@ from services.prompt_store.domain.prompts.handlers import PromptHandlers
 from services.prompt_store.infrastructure.cache import prompt_store_cache
 from services.shared.core.config.config import get_config_value
 from services.shared.core.constants_new import ServiceNames
-from services.shared.core.responses.responses import create_error_response, create_success_response
+from services.shared.core.responses.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation
@@ -92,7 +95,9 @@ async def create_prompt(prompt_data: PromptCreate):
 
 
 @app.get("/api/v1/prompts", response_model=Dict[str, Any])
-async def list_prompts(category: Optional[str] = None, limit: int = 50, offset: int = 0, **filters):
+async def list_prompts(
+    category: Optional[str] = None, limit: int = 50, offset: int = 0, **filters
+):
     """List prompts with filtering and pagination."""
     return await prompt_handlers.handle_list_prompts(category, limit, offset, **filters)
 
@@ -121,9 +126,13 @@ async def delete_prompt(prompt_id: str):
 
 
 @app.post("/api/v1/prompts/{prompt_id}/fork", response_model=Dict[str, Any])
-async def fork_prompt(prompt_id: str, new_name: str, created_by: str = "api_user", **changes):
+async def fork_prompt(
+    prompt_id: str, new_name: str, created_by: str = "api_user", **changes
+):
     """Fork a prompt to create a new variant."""
-    return await prompt_handlers.handle_fork_prompt(prompt_id, new_name, created_by, **changes)
+    return await prompt_handlers.handle_fork_prompt(
+        prompt_id, new_name, created_by, **changes
+    )
 
 
 @app.put("/api/v1/prompts/{prompt_id}/content", response_model=Dict[str, Any])
@@ -135,7 +144,9 @@ async def update_prompt_content(
     updated_by: str = "api_user",
 ):
     """Update prompt content with versioning."""
-    return await prompt_handlers.handle_update_prompt_content(prompt_id, content, variables, change_summary, updated_by)
+    return await prompt_handlers.handle_update_prompt_content(
+        prompt_id, content, variables, change_summary, updated_by
+    )
 
 
 @app.get("/api/v1/prompts/{prompt_id}/drift", response_model=Dict[str, Any])
@@ -156,7 +167,12 @@ async def get_prompt_suggestions(prompt_id: str):
 
 
 @app.post("/api/v1/prompts/search", response_model=Dict[str, Any])
-async def search_prompts(query: str, category: Optional[str] = None, tags: Optional[List[str]] = None, limit: int = 50):
+async def search_prompts(
+    query: str,
+    category: Optional[str] = None,
+    tags: Optional[List[str]] = None,
+    limit: int = 50,
+):
     """Advanced prompt search with full-text search."""
     return await prompt_handlers.handle_search_prompts(query, category, tags, limit)
 
@@ -187,10 +203,14 @@ async def bulk_create_prompts(prompts: List[Dict[str, Any]]):
 
 @app.put("/api/v1/bulk/prompts/tags", response_model=Dict[str, Any])
 async def bulk_update_tags(
-    prompt_ids: List[str], tags_to_add: Optional[List[str]] = None, tags_to_remove: Optional[List[str]] = None
+    prompt_ids: List[str],
+    tags_to_add: Optional[List[str]] = None,
+    tags_to_remove: Optional[List[str]] = None,
 ):
     """Bulk update tags on multiple prompts."""
-    return await prompt_handlers.handle_bulk_update_tags(prompt_ids, tags_to_add, tags_to_remove)
+    return await prompt_handlers.handle_bulk_update_tags(
+        prompt_ids, tags_to_add, tags_to_remove
+    )
 
 
 @app.get("/api/v1/bulk/operations", response_model=Dict[str, Any])
@@ -223,7 +243,9 @@ async def get_prompt_analytics(prompt_id: str, days_back: int = 30):
 
 
 @app.get("/api/v1/analytics/usage", response_model=Dict[str, Any])
-async def get_usage_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def get_usage_analytics(
+    start_date: Optional[str] = None, end_date: Optional[str] = None
+):
     """Get usage analytics with date filtering."""
     return await analytics_handlers.handle_get_usage_analytics(start_date, end_date)
 
@@ -269,7 +291,9 @@ async def get_ab_test_results(test_id: str):
 
 
 @app.post("/api/v1/prompts/{prompt_id}/relationships", response_model=Dict[str, Any])
-async def add_prompt_relationship(prompt_id: str, relationship: PromptRelationshipCreate):
+async def add_prompt_relationship(
+    prompt_id: str, relationship: PromptRelationshipCreate
+):
     """Add a relationship between prompts."""
     return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
 
@@ -286,8 +310,13 @@ async def get_prompt_versions(prompt_id: str, limit: int = 50, offset: int = 0):
     return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
 
 
-@app.post("/api/v1/prompts/{prompt_id}/versions/{version_number}/rollback", response_model=Dict[str, Any])
-async def rollback_prompt_version(prompt_id: str, version_number: int, reason: str = ""):
+@app.post(
+    "/api/v1/prompts/{prompt_id}/versions/{version_number}/rollback",
+    response_model=Dict[str, Any],
+)
+async def rollback_prompt_version(
+    prompt_id: str, version_number: int, reason: str = ""
+):
     """Rollback prompt to a specific version."""
     return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
 
@@ -304,7 +333,9 @@ async def update_prompt_lifecycle(prompt_id: str, status: str, reason: str = "")
 
 
 @app.get("/api/v1/prompts/lifecycle/{status}", response_model=Dict[str, Any])
-async def get_prompts_by_lifecycle_status(status: str, limit: int = 50, offset: int = 0):
+async def get_prompts_by_lifecycle_status(
+    status: str, limit: int = 50, offset: int = 0
+):
     """Get prompts by lifecycle status."""
     return create_error_response("Not implemented yet", "NOT_IMPLEMENTED")
 
@@ -321,7 +352,9 @@ async def get_cache_stats():
         stats = prompt_store_cache.get_stats()
         return create_success_response(message="Cache statistics retrieved", data=stats)
     except Exception as e:
-        return create_error_response(f"Failed to get cache stats: {str(e)}", "INTERNAL_ERROR")
+        return create_error_response(
+            f"Failed to get cache stats: {str(e)}", "INTERNAL_ERROR"
+        )
 
 
 @app.post("/api/v1/cache/invalidate", response_model=Dict[str, Any])
@@ -330,10 +363,13 @@ async def invalidate_cache(pattern: str = "*"):
     try:
         invalidated = await prompt_store_cache.invalidate_pattern(pattern)
         return create_success_response(
-            message=f"Invalidated {invalidated} cache entries", data={"invalidated_count": invalidated}
+            message=f"Invalidated {invalidated} cache entries",
+            data={"invalidated_count": invalidated},
         )
     except Exception as e:
-        return create_error_response(f"Failed to invalidate cache: {str(e)}", "INTERNAL_ERROR")
+        return create_error_response(
+            f"Failed to invalidate cache: {str(e)}", "INTERNAL_ERROR"
+        )
 
 
 @app.post("/api/v1/cache/warmup", response_model=Dict[str, Any])
@@ -341,9 +377,13 @@ async def warmup_cache():
     """Warm up cache with frequently accessed data."""
     try:
         # This would implement cache warming logic
-        return create_success_response(message="Cache warmup initiated", data={"status": "warming"})
+        return create_success_response(
+            message="Cache warmup initiated", data={"status": "warming"}
+        )
     except Exception as e:
-        return create_error_response(f"Failed to warmup cache: {str(e)}", "INTERNAL_ERROR")
+        return create_error_response(
+            f"Failed to warmup cache: {str(e)}", "INTERNAL_ERROR"
+        )
 
 
 # ============================================================================
@@ -373,6 +413,8 @@ if __name__ == "__main__":
     """Run the Prompt Store service directly."""
     import uvicorn
 
-    port = get_config_value("port", DEFAULT_PORT, section="server", env_key="PROMPT_STORE_PORT")
+    port = get_config_value(
+        "port", DEFAULT_PORT, section="server", env_key="PROMPT_STORE_PORT"
+    )
     print(f"🚀 Starting Prompt Store Service v{SERVICE_VERSION} on port {port}...")
     uvicorn.run(app, host="0.0.0.0", port=int(port), log_level="info")

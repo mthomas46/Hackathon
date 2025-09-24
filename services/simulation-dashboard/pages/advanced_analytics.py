@@ -17,8 +17,6 @@ import streamlit as st
 warnings.filterwarnings("ignore")
 
 
-
-
 def render_advanced_analytics_page():
     """Render the advanced analytics platform page."""
     st.markdown("## 📊 Advanced Analytics Platform")
@@ -31,7 +29,12 @@ def render_advanced_analytics_page():
 
     # Create tabs for different analytics capabilities
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["⚡ Real-Time Pipeline", "🔮 Predictive Modeling", "🔗 Causal Analysis", "🎨 Visualization Engine"]
+        [
+            "⚡ Real-Time Pipeline",
+            "🔮 Predictive Modeling",
+            "🔗 Causal Analysis",
+            "🎨 Visualization Engine",
+        ]
     )
 
     with tab1:
@@ -79,7 +82,9 @@ def initialize_analytics_state():
 def render_realtime_pipeline():
     """Render the real-time analytics pipeline interface."""
     st.markdown("### ⚡ Real-Time Analytics Pipeline")
-    st.markdown("Live data processing, real-time metrics calculation, and streaming analytics for immediate insights.")
+    st.markdown(
+        "Live data processing, real-time metrics calculation, and streaming analytics for immediate insights."
+    )
 
     # Pipeline configuration
     col1, col2 = st.columns(2)
@@ -93,37 +98,75 @@ def render_realtime_pipeline():
         )
 
         processing_mode = st.selectbox(
-            "Processing Mode", options=["Streaming", "Batch", "Hybrid"], key="processing_mode"
+            "Processing Mode",
+            options=["Streaming", "Batch", "Hybrid"],
+            key="processing_mode",
         )
 
     with col2:
         st.markdown("#### 📊 Pipeline Metrics")
-        throughput_target = st.slider("Target Throughput (events/sec)", 10, 1000, 100, key="throughput_target")
-        latency_target = st.slider("Target Latency (ms)", 10, 500, 100, key="latency_target")
+        throughput_target = st.slider(
+            "Target Throughput (events/sec)", 10, 1000, 100, key="throughput_target"
+        )
+        latency_target = st.slider(
+            "Target Latency (ms)", 10, 500, 100, key="latency_target"
+        )
 
     # Data sources
     st.markdown("#### 📡 Data Sources")
 
     data_sources = [
-        {"name": "Simulation Events", "status": "Active", "throughput": 125, "latency": 45},
-        {"name": "Performance Metrics", "status": "Active", "throughput": 89, "latency": 32},
+        {
+            "name": "Simulation Events",
+            "status": "Active",
+            "throughput": 125,
+            "latency": 45,
+        },
+        {
+            "name": "Performance Metrics",
+            "status": "Active",
+            "throughput": 89,
+            "latency": 32,
+        },
         {"name": "Audit Events", "status": "Active", "throughput": 67, "latency": 78},
-        {"name": "System Resources", "status": "Active", "throughput": 234, "latency": 23},
-        {"name": "User Interactions", "status": "Inactive", "throughput": 0, "latency": 0},
+        {
+            "name": "System Resources",
+            "status": "Active",
+            "throughput": 234,
+            "latency": 23,
+        },
+        {
+            "name": "User Interactions",
+            "status": "Inactive",
+            "throughput": 0,
+            "latency": 0,
+        },
     ]
 
     for source in data_sources:
-        with st.expander(f"{'🟢' if source['status'] == 'Active' else '🔴'} {source['name']}"):
+        with st.expander(
+            f"{'🟢' if source['status'] == 'Active' else '🔴'} {source['name']}"
+        ):
             col1, col2, col3 = st.columns(3)
 
             with col1:
                 st.metric("Status", source["status"])
 
             with col2:
-                st.metric("Throughput", f"{source['throughput']}/sec" if source["throughput"] > 0 else "N/A")
+                st.metric(
+                    "Throughput",
+                    (
+                        f"{source['throughput']}/sec"
+                        if source["throughput"] > 0
+                        else "N/A"
+                    ),
+                )
 
             with col3:
-                st.metric("Latency", f"{source['latency']}ms" if source["latency"] > 0 else "N/A")
+                st.metric(
+                    "Latency",
+                    f"{source['latency']}ms" if source["latency"] > 0 else "N/A",
+                )
 
     # Real-time metrics dashboard
     st.markdown("#### 📈 Real-Time Metrics Dashboard")
@@ -163,7 +206,9 @@ def render_realtime_pipeline():
         streaming_data.append(
             {
                 "timestamp": datetime.now() - timedelta(seconds=20 - i),
-                "event_type": np.random.choice(["simulation_start", "metric_update", "error", "completion"]),
+                "event_type": np.random.choice(
+                    ["simulation_start", "metric_update", "error", "completion"]
+                ),
                 "value": np.random.uniform(10, 100),
                 "source": np.random.choice(["simulation", "system", "user", "audit"]),
             }
@@ -193,7 +238,10 @@ def render_realtime_pipeline():
         # Latency distribution
         latency_data = np.random.exponential(50, 1000)
         fig = px.histogram(
-            latency_data, title="Latency Distribution", labels={"value": "Latency (ms)", "count": "Frequency"}, nbins=30
+            latency_data,
+            title="Latency Distribution",
+            labels={"value": "Latency (ms)", "count": "Frequency"},
+            nbins=30,
         )
         st.plotly_chart(fig, use_container_width=True)
 
@@ -219,7 +267,9 @@ def render_realtime_pipeline():
             control_pipeline("stop")
 
     # Apply pipeline configuration
-    if st.button("💾 Apply Pipeline Configuration", key="apply_pipeline_config", type="primary"):
+    if st.button(
+        "💾 Apply Pipeline Configuration", key="apply_pipeline_config", type="primary"
+    ):
         apply_pipeline_configuration(
             {
                 "enabled": realtime_enabled,
@@ -233,7 +283,9 @@ def render_realtime_pipeline():
 def render_predictive_modeling():
     """Render the predictive modeling dashboard."""
     st.markdown("### 🔮 Predictive Modeling Dashboard")
-    st.markdown("Advanced predictive analytics with machine learning models for forecasting and optimization.")
+    st.markdown(
+        "Advanced predictive analytics with machine learning models for forecasting and optimization."
+    )
 
     # Model configuration
     col1, col2 = st.columns(2)
@@ -254,8 +306,12 @@ def render_predictive_modeling():
 
     with col2:
         st.markdown("#### 📊 Model Performance")
-        target_accuracy = st.slider("Target Accuracy (%)", 70, 99, 85, key="target_accuracy")
-        max_training_time = st.slider("Max Training Time (min)", 5, 120, 30, key="max_training_time")
+        target_accuracy = st.slider(
+            "Target Accuracy (%)", 70, 99, 85, key="target_accuracy"
+        )
+        max_training_time = st.slider(
+            "Max Training Time (min)", 5, 120, 30, key="max_training_time"
+        )
 
     # Available models
     st.markdown("#### 🧠 Available Models")
@@ -296,7 +352,12 @@ def render_predictive_modeling():
     ]
 
     for model in available_models:
-        status_icon = {"Trained": "✅", "Training": "🔄", "Failed": "❌", "Inactive": "⏸️"}.get(model["status"], "❓")
+        status_icon = {
+            "Trained": "✅",
+            "Training": "🔄",
+            "Failed": "❌",
+            "Inactive": "⏸️",
+        }.get(model["status"], "❓")
 
         with st.expander(f"{status_icon} {model['name']} ({model['type']})"):
             col1, col2, col3, col4 = st.columns(4)
@@ -400,7 +461,11 @@ def render_predictive_modeling():
     st.plotly_chart(fig, use_container_width=True)
 
     # Apply predictive configuration
-    if st.button("💾 Apply Predictive Configuration", key="apply_predictive_config", type="primary"):
+    if st.button(
+        "💾 Apply Predictive Configuration",
+        key="apply_predictive_config",
+        type="primary",
+    ):
         apply_predictive_configuration(
             {
                 "enabled": predictive_enabled,
@@ -442,7 +507,9 @@ def render_causal_analysis():
 
     with col2:
         st.markdown("#### 🎯 Analysis Targets")
-        confidence_level = st.slider("Confidence Level (%)", 80, 99, 95, key="confidence_level")
+        confidence_level = st.slider(
+            "Confidence Level (%)", 80, 99, 95, key="confidence_level"
+        )
         max_lags = st.slider("Maximum Time Lags", 1, 20, 5, key="max_lags")
 
     # Causal hypotheses
@@ -484,9 +551,12 @@ def render_causal_analysis():
     ]
 
     for hypothesis in hypotheses:
-        status_icon = {"Strongly Supported": "🟢", "Supported": "🟡", "Weak Evidence": "🟠", "Not Supported": "🔴"}.get(
-            hypothesis["status"], "⚪"
-        )
+        status_icon = {
+            "Strongly Supported": "🟢",
+            "Supported": "🟡",
+            "Weak Evidence": "🟠",
+            "Not Supported": "🔴",
+        }.get(hypothesis["status"], "⚪")
 
         with st.expander(f"{status_icon} {hypothesis['hypothesis'][:50]}..."):
             col1, col2, col3, col4 = st.columns(4)
@@ -583,7 +653,9 @@ def render_causal_analysis():
         st.info(f"💡 {insight}")
 
     # Apply causal configuration
-    if st.button("💾 Apply Causal Configuration", key="apply_causal_config", type="primary"):
+    if st.button(
+        "💾 Apply Causal Configuration", key="apply_causal_config", type="primary"
+    ):
         apply_causal_configuration(
             {
                 "enabled": causal_enabled,
@@ -614,14 +686,21 @@ def render_visualization_engine():
 
         viz_type = st.selectbox(
             "Primary Visualization Type",
-            options=["Interactive Charts", "3D Visualizations", "Real-time Dashboards", "Custom Components"],
+            options=[
+                "Interactive Charts",
+                "3D Visualizations",
+                "Real-time Dashboards",
+                "Custom Components",
+            ],
             key="primary_viz_type",
         )
 
     with col2:
         st.markdown("#### 🎨 Rendering Options")
         enable_3d = st.checkbox("Enable 3D Visualizations", value=True, key="enable_3d")
-        real_time_updates = st.checkbox("Real-time Updates", value=True, key="real_time_updates")
+        real_time_updates = st.checkbox(
+            "Real-time Updates", value=True, key="real_time_updates"
+        )
         custom_themes = st.checkbox("Custom Themes", value=False, key="custom_themes")
 
     # Visualization gallery
@@ -687,7 +766,9 @@ def render_visualization_engine():
 
             elif viz["type"] == "Time Series":
                 # Create a time series chart
-                dates = pd.date_range(start=datetime.now() - timedelta(days=7), periods=100, freq="H")
+                dates = pd.date_range(
+                    start=datetime.now() - timedelta(days=7), periods=100, freq="H"
+                )
                 values = np.random.rand(100) * 100
                 fig = px.line(x=dates, y=values, title=f"{viz['name']} Preview")
                 st.plotly_chart(fig, use_container_width=True)
@@ -710,24 +791,50 @@ def render_visualization_engine():
     with col1:
         chart_type = st.selectbox(
             "Chart Type",
-            options=["Line Chart", "Bar Chart", "Scatter Plot", "Heatmap", "3D Surface", "Network Graph"],
+            options=[
+                "Line Chart",
+                "Bar Chart",
+                "Scatter Plot",
+                "Heatmap",
+                "3D Surface",
+                "Network Graph",
+            ],
             key="custom_chart_type",
         )
 
         data_source = st.selectbox(
             "Data Source",
-            options=["Simulation Metrics", "Performance Data", "Audit Events", "Real-time Stream"],
+            options=[
+                "Simulation Metrics",
+                "Performance Data",
+                "Audit Events",
+                "Real-time Stream",
+            ],
             key="custom_data_source",
         )
 
     with col2:
         x_axis = st.selectbox(
-            "X-Axis", options=["Time", "CPU Usage", "Memory Usage", "Response Time", "Event Count"], key="custom_x_axis"
+            "X-Axis",
+            options=[
+                "Time",
+                "CPU Usage",
+                "Memory Usage",
+                "Response Time",
+                "Event Count",
+            ],
+            key="custom_x_axis",
         )
 
         y_axis = st.selectbox(
             "Y-Axis",
-            options=["Performance", "Resource Usage", "Error Rate", "Throughput", "Latency"],
+            options=[
+                "Performance",
+                "Resource Usage",
+                "Error Rate",
+                "Throughput",
+                "Latency",
+            ],
             key="custom_y_axis",
         )
 
@@ -752,7 +859,9 @@ def render_visualization_engine():
             export_visualization("HTML")
 
     # Apply visualization configuration
-    if st.button("💾 Apply Visualization Configuration", key="apply_viz_config", type="primary"):
+    if st.button(
+        "💾 Apply Visualization Configuration", key="apply_viz_config", type="primary"
+    ):
         apply_visualization_configuration(
             {
                 "enabled": visualization_enabled,
@@ -784,7 +893,9 @@ def control_pipeline(action: str):
 def apply_pipeline_configuration(config: Dict[str, Any]):
     """Apply pipeline configuration."""
     try:
-        st.session_state.analytics_config.update({"realtime_enabled": config["enabled"], "pipeline_config": config})
+        st.session_state.analytics_config.update(
+            {"realtime_enabled": config["enabled"], "pipeline_config": config}
+        )
         st.success("✅ Pipeline configuration applied successfully!")
     except Exception as e:
         st.error(f"❌ Failed to apply pipeline configuration: {str(e)}")
@@ -820,7 +931,9 @@ def retrain_all_models():
 def apply_predictive_configuration(config: Dict[str, Any]):
     """Apply predictive configuration."""
     try:
-        st.session_state.analytics_config.update({"predictive_enabled": config["enabled"], "model_configs": config})
+        st.session_state.analytics_config.update(
+            {"predictive_enabled": config["enabled"], "model_configs": config}
+        )
         st.success("✅ Predictive configuration applied successfully!")
     except Exception as e:
         st.error(f"❌ Failed to apply predictive configuration: {str(e)}")
@@ -839,7 +952,9 @@ def run_ab_analysis():
     """Run A/B analysis."""
     try:
         st.success("✅ A/B analysis completed")
-        st.info("📊 Analysis shows 23% improvement in performance with new configuration")
+        st.info(
+            "📊 Analysis shows 23% improvement in performance with new configuration"
+        )
     except Exception as e:
         st.error(f"❌ A/B analysis failed: {str(e)}")
 
@@ -848,7 +963,9 @@ def run_impact_analysis():
     """Run impact analysis."""
     try:
         st.success("✅ Impact analysis completed")
-        st.info("📈 Configuration changes have 34% positive impact on system performance")
+        st.info(
+            "📈 Configuration changes have 34% positive impact on system performance"
+        )
     except Exception as e:
         st.error(f"❌ Impact analysis failed: {str(e)}")
 
@@ -856,13 +973,17 @@ def run_impact_analysis():
 def apply_causal_configuration(config: Dict[str, Any]):
     """Apply causal configuration."""
     try:
-        st.session_state.analytics_config.update({"causal_enabled": config["enabled"], "causal_configs": config})
+        st.session_state.analytics_config.update(
+            {"causal_enabled": config["enabled"], "causal_configs": config}
+        )
         st.success("✅ Causal configuration applied successfully!")
     except Exception as e:
         st.error(f"❌ Failed to apply causal configuration: {str(e)}")
 
 
-def generate_custom_visualization(chart_type: str, data_source: str, x_axis: str, y_axis: str):
+def generate_custom_visualization(
+    chart_type: str, data_source: str, x_axis: str, y_axis: str
+):
     """Generate custom visualization."""
     try:
         # Mock custom visualization generation
@@ -895,7 +1016,9 @@ def export_visualization(format: str):
     """Export visualizations."""
     try:
         st.success(f"✅ Visualizations exported as {format}")
-        st.info(f"📁 Files saved to exports/visualizations_{datetime.now().strftime('%Y%m%d_%H%M%S')}/")
+        st.info(
+            f"📁 Files saved to exports/visualizations_{datetime.now().strftime('%Y%m%d_%H%M%S')}/"
+        )
     except Exception as e:
         st.error(f"❌ Failed to export visualizations: {str(e)}")
 
@@ -903,7 +1026,9 @@ def export_visualization(format: str):
 def apply_visualization_configuration(config: Dict[str, Any]):
     """Apply visualization configuration."""
     try:
-        st.session_state.analytics_config.update({"visualization_enabled": config["enabled"], "viz_configs": config})
+        st.session_state.analytics_config.update(
+            {"visualization_enabled": config["enabled"], "viz_configs": config}
+        )
         st.success("✅ Visualization configuration applied successfully!")
     except Exception as e:
         st.error(f"❌ Failed to apply visualization configuration: {str(e)}")

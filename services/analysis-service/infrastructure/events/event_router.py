@@ -45,7 +45,9 @@ class TopicBasedEventRouter(EventRouter):
         for pattern, handlers in self.routes.items():
             if self._matches_pattern(envelope.topic, pattern):
                 # Get handlers that can handle this event type
-                capable_handlers = self.handler_registry.get_handlers_for_event(envelope.event, envelope.topic)
+                capable_handlers = self.handler_registry.get_handlers_for_event(
+                    envelope.event, envelope.topic
+                )
 
                 # Filter to only those registered for this pattern
                 for handler in handlers:
@@ -111,7 +113,10 @@ class TopicBasedEventRouter(EventRouter):
 
     def get_routes(self) -> Dict[str, List[str]]:
         """Get all routing rules."""
-        return {pattern: [h.__class__.__name__ for h in handlers] for pattern, handlers in self.routes.items()}
+        return {
+            pattern: [h.__class__.__name__ for h in handlers]
+            for pattern, handlers in self.routes.items()
+        }
 
 
 class TypeBasedEventRouter(EventRouter):
@@ -228,7 +233,11 @@ class CompositeEventRouter(EventRouter):
 class ConditionalEventRouter(EventRouter):
     """Routes events based on conditions."""
 
-    def __init__(self, handler_registry: EventHandlerRegistry, condition: Callable[[EventEnvelope], bool]):
+    def __init__(
+        self,
+        handler_registry: EventHandlerRegistry,
+        condition: Callable[[EventEnvelope], bool],
+    ):
         """Initialize conditional router."""
         super().__init__(handler_registry)
         self.condition = condition
@@ -246,9 +255,15 @@ class ConditionalEventRouter(EventRouter):
     async def route_event(self, envelope: EventEnvelope) -> List[EventHandler]:
         """Route event based on condition."""
         if self.condition(envelope):
-            return await self.true_router.route_event(envelope) if self.true_router else []
+            return (
+                await self.true_router.route_event(envelope) if self.true_router else []
+            )
         else:
-            return await self.false_router.route_event(envelope) if self.false_router else []
+            return (
+                await self.false_router.route_event(envelope)
+                if self.false_router
+                else []
+            )
 
     def add_route(self, pattern: str, handler: EventHandler) -> None:
         """Add route to both routers."""
@@ -259,8 +274,12 @@ class ConditionalEventRouter(EventRouter):
 
     def remove_route(self, pattern: str) -> bool:
         """Remove route from both routers."""
-        removed_true = self.true_router.remove_route(pattern) if self.true_router else False
-        removed_false = self.false_router.remove_route(pattern) if self.false_router else False
+        removed_true = (
+            self.true_router.remove_route(pattern) if self.true_router else False
+        )
+        removed_false = (
+            self.false_router.remove_route(pattern) if self.false_router else False
+        )
         return removed_true or removed_false
 
 
@@ -268,17 +287,23 @@ class EventRouterFactory:
     """Factory for creating event routers."""
 
     @staticmethod
-    def create_topic_router(handler_registry: EventHandlerRegistry) -> TopicBasedEventRouter:
+    def create_topic_router(
+        handler_registry: EventHandlerRegistry,
+    ) -> TopicBasedEventRouter:
         """Create topic-based router."""
         return TopicBasedEventRouter(handler_registry)
 
     @staticmethod
-    def create_type_router(handler_registry: EventHandlerRegistry) -> TypeBasedEventRouter:
+    def create_type_router(
+        handler_registry: EventHandlerRegistry,
+    ) -> TypeBasedEventRouter:
         """Create type-based router."""
         return TypeBasedEventRouter(handler_registry)
 
     @staticmethod
-    def create_composite_router(handler_registry: EventHandlerRegistry) -> CompositeEventRouter:
+    def create_composite_router(
+        handler_registry: EventHandlerRegistry,
+    ) -> CompositeEventRouter:
         """Create composite router with both topic and type routing."""
         composite = CompositeEventRouter(handler_registry)
         composite.add_router(TopicBasedEventRouter(handler_registry))
@@ -287,7 +312,8 @@ class EventRouterFactory:
 
     @staticmethod
     def create_conditional_router(
-        handler_registry: EventHandlerRegistry, condition: Callable[[EventEnvelope], bool]
+        handler_registry: EventHandlerRegistry,
+        condition: Callable[[EventEnvelope], bool],
     ) -> ConditionalEventRouter:
         """Create conditional router."""
         return ConditionalEventRouter(handler_registry, condition)
@@ -315,16 +341,28 @@ class EventDispatcher:
             handlers = await self.router.route_event(envelope)
 
             if not handlers:
-                return {"status": "no_handlers", "handlers_called": 0, "processing_time": 0.0}
+                return {
+                    "status": "no_handlers",
+                    "handlers_called": 0,
+                    "processing_time": 0.0,
+                }
 
             # Call all handlers
             handler_results = []
             for handler in handlers:
                 try:
                     await handler.handle(envelope.event, envelope)
-                    handler_results.append({"handler": handler.__class__.__name__, "status": "success"})
+                    handler_results.append(
+                        {"handler": handler.__class__.__name__, "status": "success"}
+                    )
                 except Exception as e:
-                    handler_results.append({"handler": handler.__class__.__name__, "status": "error", "error": str(e)})
+                    handler_results.append(
+                        {
+                            "handler": handler.__class__.__name__,
+                            "status": "error",
+                            "error": str(e),
+                        }
+                    )
                     self._processing_stats["errors_count"] += 1
 
             processing_time = asyncio.get_event_loop().time() - start_time
@@ -345,7 +383,12 @@ class EventDispatcher:
             processing_time = asyncio.get_event_loop().time() - start_time
             self._processing_stats["errors_count"] += 1
 
-            return {"status": "error", "error": str(e), "processing_time": processing_time, "handlers_called": 0}
+            return {
+                "status": "error",
+                "error": str(e),
+                "processing_time": processing_time,
+                "handlers_called": 0,
+            }
 
     def get_stats(self) -> Dict[str, Any]:
         """Get dispatcher statistics."""
@@ -395,11 +438,15 @@ class RoutingConditions:
         return lambda envelope: envelope.event.metadata.get(key) == value
 
     @staticmethod
-    def and_conditions(*conditions: Callable[[EventEnvelope], bool]) -> Callable[[EventEnvelope], bool]:
+    def and_conditions(
+        *conditions: Callable[[EventEnvelope], bool]
+    ) -> Callable[[EventEnvelope], bool]:
         """Combine conditions with AND logic."""
         return lambda envelope: all(condition(envelope) for condition in conditions)
 
     @staticmethod
-    def or_conditions(*conditions: Callable[[EventEnvelope], bool]) -> Callable[[EventEnvelope], bool]:
+    def or_conditions(
+        *conditions: Callable[[EventEnvelope], bool]
+    ) -> Callable[[EventEnvelope], bool]:
         """Combine conditions with OR logic."""
         return lambda envelope: any(condition(envelope) for condition in conditions)

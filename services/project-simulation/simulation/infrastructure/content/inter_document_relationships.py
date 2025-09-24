@@ -15,10 +15,16 @@ from typing import Any, Dict, List, Optional, Set, Union
 import networkx as nx
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
-from simulation.infrastructure.content.personality_driven_generation import PersonalityDrivenGenerator
-from simulation.infrastructure.content.timeline_based_generation import TimelineAwareContentGenerator
+from simulation.infrastructure.content.personality_driven_generation import (
+    PersonalityDrivenGenerator,
+)
+from simulation.infrastructure.content.timeline_based_generation import (
+    TimelineAwareContentGenerator,
+)
 from simulation.infrastructure.logging import get_simulation_logger
 
 
@@ -147,7 +153,11 @@ class DocumentRelationshipManager:
                         "target_types": ["technical_design", "architecture_diagram"],
                         "strength": 0.9,
                     },
-                    {"type": RelationshipType.REFERENCE.value, "target_types": ["user_story"], "strength": 0.7},
+                    {
+                        "type": RelationshipType.REFERENCE.value,
+                        "target_types": ["user_story"],
+                        "strength": 0.7,
+                    },
                     {
                         "type": RelationshipType.PREREQUISITE.value,
                         "target_types": ["project_requirements"],
@@ -160,13 +170,25 @@ class DocumentRelationshipManager:
                         "source_types": ["user_story", "business_analysis"],
                         "strength": 0.8,
                     },
-                    {"type": RelationshipType.UPDATE.value, "source_types": ["change_request"], "strength": 0.6},
+                    {
+                        "type": RelationshipType.UPDATE.value,
+                        "source_types": ["change_request"],
+                        "strength": 0.6,
+                    },
                 ],
             },
             "architecture_diagram": {
                 "outgoing": [
-                    {"type": RelationshipType.IMPLEMENT.value, "target_types": ["technical_design"], "strength": 0.8},
-                    {"type": RelationshipType.REFERENCE.value, "target_types": ["deployment_guide"], "strength": 0.6},
+                    {
+                        "type": RelationshipType.IMPLEMENT.value,
+                        "target_types": ["technical_design"],
+                        "strength": 0.8,
+                    },
+                    {
+                        "type": RelationshipType.REFERENCE.value,
+                        "target_types": ["deployment_guide"],
+                        "strength": 0.6,
+                    },
                 ],
                 "incoming": [
                     {
@@ -174,13 +196,25 @@ class DocumentRelationshipManager:
                         "source_types": ["project_requirements"],
                         "strength": 0.7,
                     },
-                    {"type": RelationshipType.REFERENCE.value, "source_types": ["technical_design"], "strength": 0.5},
+                    {
+                        "type": RelationshipType.REFERENCE.value,
+                        "source_types": ["technical_design"],
+                        "strength": 0.5,
+                    },
                 ],
             },
             "user_story": {
                 "outgoing": [
-                    {"type": RelationshipType.IMPLEMENT.value, "target_types": ["technical_design"], "strength": 0.7},
-                    {"type": RelationshipType.VALIDATE.value, "target_types": ["test_scenarios"], "strength": 0.8},
+                    {
+                        "type": RelationshipType.IMPLEMENT.value,
+                        "target_types": ["technical_design"],
+                        "strength": 0.7,
+                    },
+                    {
+                        "type": RelationshipType.VALIDATE.value,
+                        "target_types": ["test_scenarios"],
+                        "strength": 0.8,
+                    },
                 ],
                 "incoming": [
                     {
@@ -197,15 +231,26 @@ class DocumentRelationshipManager:
                         "target_types": ["code_implementation"],
                         "strength": 0.9,
                     },
-                    {"type": RelationshipType.REFERENCE.value, "target_types": ["test_scenarios"], "strength": 0.7},
+                    {
+                        "type": RelationshipType.REFERENCE.value,
+                        "target_types": ["test_scenarios"],
+                        "strength": 0.7,
+                    },
                 ],
                 "incoming": [
                     {
                         "type": RelationshipType.DERIVE_FROM.value,
-                        "source_types": ["project_requirements", "architecture_diagram"],
+                        "source_types": [
+                            "project_requirements",
+                            "architecture_diagram",
+                        ],
                         "strength": 0.8,
                     },
-                    {"type": RelationshipType.REFERENCE.value, "source_types": ["user_story"], "strength": 0.6},
+                    {
+                        "type": RelationshipType.REFERENCE.value,
+                        "source_types": ["user_story"],
+                        "strength": 0.6,
+                    },
                 ],
             },
             "test_scenarios": {
@@ -222,12 +267,20 @@ class DocumentRelationshipManager:
                         "source_types": ["user_story", "technical_design"],
                         "strength": 0.7,
                     },
-                    {"type": RelationshipType.REFERENCE.value, "source_types": ["test_plan"], "strength": 0.6},
+                    {
+                        "type": RelationshipType.REFERENCE.value,
+                        "source_types": ["test_plan"],
+                        "strength": 0.6,
+                    },
                 ],
             },
             "deployment_guide": {
                 "outgoing": [
-                    {"type": RelationshipType.REFERENCE.value, "target_types": ["maintenance_docs"], "strength": 0.5}
+                    {
+                        "type": RelationshipType.REFERENCE.value,
+                        "target_types": ["maintenance_docs"],
+                        "strength": 0.5,
+                    }
                 ],
                 "incoming": [
                     {
@@ -240,14 +293,23 @@ class DocumentRelationshipManager:
         }
 
     def add_document(
-        self, doc_id: str, doc_type: str, title: str, author_id: Optional[str] = None, **metadata
+        self,
+        doc_id: str,
+        doc_type: str,
+        title: str,
+        author_id: Optional[str] = None,
+        **metadata,
     ) -> DocumentNode:
         """Add a document to the relationship graph."""
         if doc_id in self.documents:
             raise ValueError(f"Document {doc_id} already exists")
 
         node = DocumentNode(
-            doc_id=doc_id, doc_type=doc_type, title=title, created_at=datetime.now(), author_id=author_id
+            doc_id=doc_id,
+            doc_type=doc_type,
+            title=title,
+            created_at=datetime.now(),
+            author_id=author_id,
         )
 
         # Add metadata
@@ -260,7 +322,9 @@ class DocumentRelationshipManager:
         self.documents[doc_id] = node
         self.relationship_graph.add_node(doc_id, **node.to_dict())
 
-        self.logger.info("Added document to relationship graph", doc_id=doc_id, doc_type=doc_type)
+        self.logger.info(
+            "Added document to relationship graph", doc_id=doc_id, doc_type=doc_type
+        )
 
         return node
 
@@ -319,7 +383,11 @@ class DocumentRelationshipManager:
 
         # Add to graph
         self.relationship_graph.add_edge(
-            source_doc_id, target_doc_id, relationship_type=relationship_type.value, strength=strength, context=context
+            source_doc_id,
+            target_doc_id,
+            relationship_type=relationship_type.value,
+            strength=strength,
+            context=context,
         )
 
         # Add reverse relationship if bidirectional
@@ -342,12 +410,17 @@ class DocumentRelationshipManager:
             )
 
         self.logger.info(
-            "Created document relationship", source=source_doc_id, target=target_doc_id, type=relationship_type.value
+            "Created document relationship",
+            source=source_doc_id,
+            target=target_doc_id,
+            type=relationship_type.value,
         )
 
         return reference
 
-    def generate_automatic_relationships(self, new_doc_id: str) -> List[DocumentReference]:
+    def generate_automatic_relationships(
+        self, new_doc_id: str
+    ) -> List[DocumentReference]:
         """Generate automatic relationships for a newly added document."""
         if new_doc_id not in self.documents:
             raise ValueError(f"Document {new_doc_id} not found")
@@ -361,9 +434,14 @@ class DocumentRelationshipManager:
         # Create outgoing relationships
         for pattern in patterns.get("outgoing", []):
             for target_doc_id, target_doc in self.documents.items():
-                if target_doc_id != new_doc_id and target_doc.doc_type in pattern["target_types"]:
+                if (
+                    target_doc_id != new_doc_id
+                    and target_doc.doc_type in pattern["target_types"]
+                ):
                     # Check if relationship already exists
-                    if not self._relationship_exists(new_doc_id, target_doc_id, pattern["type"]):
+                    if not self._relationship_exists(
+                        new_doc_id, target_doc_id, pattern["type"]
+                    ):
                         relationship = self.create_relationship(
                             source_doc_id=new_doc_id,
                             target_doc_id=target_doc_id,
@@ -376,9 +454,14 @@ class DocumentRelationshipManager:
         # Create incoming relationships (relationships from other docs to this one)
         for pattern in patterns.get("incoming", []):
             for source_doc_id, source_doc in self.documents.items():
-                if source_doc_id != new_doc_id and source_doc.doc_type in pattern["source_types"]:
+                if (
+                    source_doc_id != new_doc_id
+                    and source_doc.doc_type in pattern["source_types"]
+                ):
                     # Check if relationship already exists
-                    if not self._relationship_exists(source_doc_id, new_doc_id, pattern["type"]):
+                    if not self._relationship_exists(
+                        source_doc_id, new_doc_id, pattern["type"]
+                    ):
                         relationship = self.create_relationship(
                             source_doc_id=source_doc_id,
                             target_doc_id=new_doc_id,
@@ -390,7 +473,9 @@ class DocumentRelationshipManager:
 
         return relationships_created
 
-    def _relationship_exists(self, source_id: str, target_id: str, rel_type: str) -> bool:
+    def _relationship_exists(
+        self, source_id: str, target_id: str, rel_type: str
+    ) -> bool:
         """Check if a relationship already exists between two documents."""
         return any(
             rel.source_doc_id == source_id
@@ -399,7 +484,9 @@ class DocumentRelationshipManager:
             for rel in self.relationships
         )
 
-    def get_document_relationships(self, doc_id: str) -> Dict[str, List[Dict[str, Any]]]:
+    def get_document_relationships(
+        self, doc_id: str
+    ) -> Dict[str, List[Dict[str, Any]]]:
         """Get all relationships for a specific document."""
         if doc_id not in self.documents:
             raise ValueError(f"Document {doc_id} not found")
@@ -438,7 +525,10 @@ class DocumentRelationshipManager:
         }
 
     def find_related_documents(
-        self, doc_id: str, max_depth: int = 2, relationship_types: Optional[List[str]] = None
+        self,
+        doc_id: str,
+        max_depth: int = 2,
+        relationship_types: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Find documents related to a given document within specified depth."""
         if doc_id not in self.documents:
@@ -452,32 +542,45 @@ class DocumentRelationshipManager:
             if target_doc_id != doc_id:
                 try:
                     # Find shortest path
-                    path = nx.shortest_path(self.relationship_graph, doc_id, target_doc_id)
-                    if len(path) <= max_depth + 1:  # +1 because path includes start node
+                    path = nx.shortest_path(
+                        self.relationship_graph, doc_id, target_doc_id
+                    )
+                    if (
+                        len(path) <= max_depth + 1
+                    ):  # +1 because path includes start node
                         path_length = len(path) - 1
                         relationship_chain = self._build_relationship_chain(path)
 
                         # Filter by relationship types if specified
                         if relationship_types:
-                            if any(rel["type"] in relationship_types for rel in relationship_chain):
+                            if any(
+                                rel["type"] in relationship_types
+                                for rel in relationship_chain
+                            ):
                                 related_docs[target_doc_id] = {
                                     "doc_info": self.documents[target_doc_id].to_dict(),
                                     "distance": path_length,
                                     "relationship_chain": relationship_chain,
-                                    "relevance_score": self._calculate_relevance_score(relationship_chain),
+                                    "relevance_score": self._calculate_relevance_score(
+                                        relationship_chain
+                                    ),
                                 }
                         else:
                             related_docs[target_doc_id] = {
                                 "doc_info": self.documents[target_doc_id].to_dict(),
                                 "distance": path_length,
                                 "relationship_chain": relationship_chain,
-                                "relevance_score": self._calculate_relevance_score(relationship_chain),
+                                "relevance_score": self._calculate_relevance_score(
+                                    relationship_chain
+                                ),
                             }
                 except nx.NetworkXNoPath:
                     continue
 
         # Sort by relevance score
-        sorted_related = sorted(related_docs.items(), key=lambda x: x[1]["relevance_score"], reverse=True)
+        sorted_related = sorted(
+            related_docs.items(), key=lambda x: x[1]["relevance_score"], reverse=True
+        )
 
         return {
             "source_document": self.documents[doc_id].to_dict(),
@@ -514,20 +617,27 @@ class DocumentRelationshipManager:
 
         return chain
 
-    def _calculate_relevance_score(self, relationship_chain: List[Dict[str, Any]]) -> float:
+    def _calculate_relevance_score(
+        self, relationship_chain: List[Dict[str, Any]]
+    ) -> float:
         """Calculate relevance score for a relationship chain."""
         if not relationship_chain:
             return 0.0
 
         # Base score from relationship strengths
-        strength_score = sum(rel["strength"] for rel in relationship_chain) / len(relationship_chain)
+        strength_score = sum(rel["strength"] for rel in relationship_chain) / len(
+            relationship_chain
+        )
 
         # Bonus for shorter chains
         length_penalty = 1.0 / len(relationship_chain)
 
         # Bonus for certain relationship types
         type_bonus = 0.0
-        high_value_types = [RelationshipType.PREREQUISITE.value, RelationshipType.IMPLEMENT.value]
+        high_value_types = [
+            RelationshipType.PREREQUISITE.value,
+            RelationshipType.IMPLEMENT.value,
+        ]
         for rel in relationship_chain:
             if rel["type"] in high_value_types:
                 type_bonus += 0.2
@@ -543,10 +653,14 @@ class DocumentRelationshipManager:
         related_docs = self.find_related_documents(doc_id, max_depth=3)
 
         # Generate cross-reference text
-        cross_references = self._generate_cross_reference_text(self.documents[doc_id], relationships, related_docs)
+        cross_references = self._generate_cross_reference_text(
+            self.documents[doc_id], relationships, related_docs
+        )
 
         # Generate navigation suggestions
-        navigation_suggestions = self._generate_navigation_suggestions(doc_id, relationships, related_docs)
+        navigation_suggestions = self._generate_navigation_suggestions(
+            doc_id, relationships, related_docs
+        )
 
         return {
             "document_id": doc_id,
@@ -561,10 +675,19 @@ class DocumentRelationshipManager:
         }
 
     def _generate_cross_reference_text(
-        self, document: DocumentNode, relationships: Dict[str, List[Dict[str, Any]]], related_docs: Dict[str, Any]
+        self,
+        document: DocumentNode,
+        relationships: Dict[str, List[Dict[str, Any]]],
+        related_docs: Dict[str, Any],
     ) -> Dict[str, Any]:
         """Generate human-readable cross-reference text."""
-        cross_refs = {"prerequisites": [], "implements": [], "references": [], "updates": [], "complements": []}
+        cross_refs = {
+            "prerequisites": [],
+            "implements": [],
+            "references": [],
+            "updates": [],
+            "complements": [],
+        }
 
         # Process outgoing relationships
         for rel in relationships["outgoing_relationships"]:
@@ -575,7 +698,9 @@ class DocumentRelationshipManager:
             if rel_type == RelationshipType.PREREQUISITE.value:
                 cross_refs["prerequisites"].append(f"Prerequisites: {target_title}")
             elif rel_type == RelationshipType.IMPLEMENT.value:
-                cross_refs["implements"].append(f"Implements requirements from: {target_title}")
+                cross_refs["implements"].append(
+                    f"Implements requirements from: {target_title}"
+                )
             elif rel_type == RelationshipType.REFERENCE.value:
                 cross_refs["references"].append(f"See also: {target_title}")
             elif rel_type == RelationshipType.UPDATE.value:
@@ -597,22 +722,35 @@ class DocumentRelationshipManager:
         summary_parts = []
 
         if cross_refs["prerequisites"]:
-            summary_parts.append(f"This document depends on: {', '.join(cross_refs['prerequisites'])}")
+            summary_parts.append(
+                f"This document depends on: {', '.join(cross_refs['prerequisites'])}"
+            )
 
         if cross_refs["implements"]:
-            summary_parts.append(f"This document: {', '.join(cross_refs['implements'])}")
+            summary_parts.append(
+                f"This document: {', '.join(cross_refs['implements'])}"
+            )
 
         if cross_refs["references"]:
-            summary_parts.append(f"Related documents: {', '.join(cross_refs['references'])}")
+            summary_parts.append(
+                f"Related documents: {', '.join(cross_refs['references'])}"
+            )
 
         return {
             "sections": cross_refs,
-            "summary": " ".join(summary_parts) if summary_parts else "No significant cross-references identified.",
+            "summary": (
+                " ".join(summary_parts)
+                if summary_parts
+                else "No significant cross-references identified."
+            ),
             "detailed_relationships": relationships,
         }
 
     def _generate_navigation_suggestions(
-        self, doc_id: str, relationships: Dict[str, List[Dict[str, Any]]], related_docs: Dict[str, Any]
+        self,
+        doc_id: str,
+        relationships: Dict[str, List[Dict[str, Any]]],
+        related_docs: Dict[str, Any],
     ) -> List[Dict[str, Any]]:
         """Generate navigation suggestions for document users."""
         suggestions = []
@@ -667,7 +805,9 @@ class DocumentRelationshipManager:
 
         # Suggest highly relevant related documents
         highly_relevant = [
-            doc_id for doc_id, info in related_docs["related_documents"].items() if info["relevance_score"] > 0.7
+            doc_id
+            for doc_id, info in related_docs["related_documents"].items()
+            if info["relevance_score"] > 0.7
         ][
             :3
         ]  # Top 3
@@ -684,10 +824,14 @@ class DocumentRelationshipManager:
 
         return suggestions
 
-    def export_relationship_graph(self, format: str = "json") -> Union[str, Dict[str, Any]]:
+    def export_relationship_graph(
+        self, format: str = "json"
+    ) -> Union[str, Dict[str, Any]]:
         """Export the relationship graph in specified format."""
         graph_data = {
-            "documents": {doc_id: doc.to_dict() for doc_id, doc in self.documents.items()},
+            "documents": {
+                doc_id: doc.to_dict() for doc_id, doc in self.documents.items()
+            },
             "relationships": [rel.to_dict() for rel in self.relationships],
             "metadata": {
                 "total_documents": len(self.documents),
@@ -733,7 +877,11 @@ class DocumentRelationshipManager:
             relationships = self.get_document_relationships(doc_id)
             doc_connectivity[doc_id] = relationships["total_relationships"]
 
-        most_connected = max(doc_connectivity.items(), key=lambda x: x[1]) if doc_connectivity else None
+        most_connected = (
+            max(doc_connectivity.items(), key=lambda x: x[1])
+            if doc_connectivity
+            else None
+        )
 
         return {
             "total_documents": len(self.documents),
@@ -743,7 +891,9 @@ class DocumentRelationshipManager:
             "graph_density": self._calculate_graph_density(),
             "most_connected_document": most_connected[0] if most_connected else None,
             "connectivity_distribution": doc_connectivity,
-            "bidirectional_relationships": len([r for r in self.relationships if r.bidirectional]),
+            "bidirectional_relationships": len(
+                [r for r in self.relationships if r.bidirectional]
+            ),
         }
 
 

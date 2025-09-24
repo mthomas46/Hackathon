@@ -21,7 +21,9 @@ class HumanReadableReportGenerator:
     and various output formats (Markdown, HTML, JSON).
     """
 
-    def __init__(self, output_dir: str = "reports", include_perspectives: List[str] = None):
+    def __init__(
+        self, output_dir: str = "reports", include_perspectives: List[str] = None
+    ):
         """
         Initialize the report generator.
 
@@ -87,14 +89,22 @@ class HumanReadableReportGenerator:
             "perspectives_included": self.include_perspectives,
             "output_format": output_format,
             "files_generated": saved_files,
-            "confidence_score": analysis_results.get("executive_summary", {}).get("confidence_score"),
-            "confidence_level": analysis_results.get("executive_summary", {}).get("confidence_level"),
-            "recommendation": analysis_results.get("executive_summary", {}).get("approval_recommendation"),
+            "confidence_score": analysis_results.get("executive_summary", {}).get(
+                "confidence_score"
+            ),
+            "confidence_level": analysis_results.get("executive_summary", {}).get(
+                "confidence_level"
+            ),
+            "recommendation": analysis_results.get("executive_summary", {}).get(
+                "approval_recommendation"
+            ),
         }
 
         return report_metadata
 
-    def _generate_report_content(self, analysis_results: Dict[str, Any], workflow_type: str) -> str:
+    def _generate_report_content(
+        self, analysis_results: Dict[str, Any], workflow_type: str
+    ) -> str:
         """Generate the complete report content."""
 
         # Extract key information
@@ -104,7 +114,9 @@ class HumanReadableReportGenerator:
         recommendation = executive_summary.get("approval_recommendation", "unknown")
 
         # Generate header
-        content = self._generate_header(workflow_type, confidence_score, confidence_level, recommendation)
+        content = self._generate_header(
+            workflow_type, confidence_score, confidence_level, recommendation
+        )
 
         # Add perspectives
         for perspective in self.include_perspectives:
@@ -120,7 +132,11 @@ class HumanReadableReportGenerator:
         return content
 
     def _generate_header(
-        self, workflow_type: str, confidence_score: int, confidence_level: str, recommendation: str
+        self,
+        workflow_type: str,
+        confidence_score: int,
+        confidence_level: str,
+        recommendation: str,
     ) -> str:
         """Generate the report header."""
 
@@ -131,7 +147,9 @@ class HumanReadableReportGenerator:
             "performance_analysis": "Performance Analysis Report",
         }
 
-        title = title_map.get(workflow_type, f'{workflow_type.replace("_", " ").title()} Report')
+        title = title_map.get(
+            workflow_type, f'{workflow_type.replace("_", " ").title()} Report'
+        )
 
         header = f"""# {title}
 
@@ -146,10 +164,14 @@ class HumanReadableReportGenerator:
 """
         return header
 
-    def _generate_perspective_section(self, perspective: str, template: str, analysis_results: Dict[str, Any]) -> str:
+    def _generate_perspective_section(
+        self, perspective: str, template: str, analysis_results: Dict[str, Any]
+    ) -> str:
         """Generate a specific perspective section."""
 
-        perspective_data = analysis_results.get("human_readable_summary", {}).get(f"{perspective}_perspective", {})
+        perspective_data = analysis_results.get("human_readable_summary", {}).get(
+            f"{perspective}_perspective", {}
+        )
 
         if not perspective_data:
             return f"## {perspective.replace('_', ' ').title()} Perspective\n\n*No {perspective} perspective data available.*\n\n"
@@ -188,23 +210,29 @@ class HumanReadableReportGenerator:
     def _generate_analysis_details(self, analysis_results: Dict[str, Any]) -> str:
         """Generate analysis details section."""
 
-        quick_ref = analysis_results.get("human_readable_summary", {}).get("quick_reference", {})
+        quick_ref = analysis_results.get("human_readable_summary", {}).get(
+            "quick_reference", {}
+        )
 
         details_section = "## 📊 Analysis Details\n\n"
         details_section += "| Aspect | Details |\n"
         details_section += "|--------|--------|\n"
-        details_section += f"| **Generated** | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} |\n"
-        details_section += f"| **LLM Model** | {quick_ref.get('llm_model_used', 'Unknown')} |\n"
+        details_section += (
+            f"| **Generated** | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} |\n"
+        )
+        details_section += (
+            f"| **LLM Model** | {quick_ref.get('llm_model_used', 'Unknown')} |\n"
+        )
         details_section += f"| **Analysis Time** | {quick_ref.get('total_analysis_time', 'Unknown')} |\n"
         details_section += f"| **Documents Analyzed** | {analysis_results.get('executive_summary', {}).get('documents_analyzed', 'Unknown')} |\n"
-        details_section += (
-            f"| **Prompts Used** | {analysis_results.get('executive_summary', {}).get('prompts_used', 'Unknown')} |\n"
-        )
+        details_section += f"| **Prompts Used** | {analysis_results.get('executive_summary', {}).get('prompts_used', 'Unknown')} |\n"
         details_section += "\n---\n\n"
 
         return details_section
 
-    def _save_report(self, content: str, filename: str, output_format: str) -> Dict[str, str]:
+    def _save_report(
+        self, content: str, filename: str, output_format: str
+    ) -> Dict[str, str]:
         """Save the report in the specified format."""
 
         saved_files = {}

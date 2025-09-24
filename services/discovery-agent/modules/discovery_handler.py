@@ -63,7 +63,9 @@ class DiscoveryHandler:
                 return create_discovery_success_response(
                     "completed (dry run)",
                     response_data,
-                    **build_discovery_context("discover", service_name=req.name, dry_run=True),
+                    **build_discovery_context(
+                        "discover", service_name=req.name, dry_run=True
+                    ),
                 )
 
             # Register with orchestrator
@@ -71,18 +73,26 @@ class DiscoveryHandler:
             reg_resp = await register_with_orchestrator(payload, orchestrator_url)
 
             # Return success response
-            response_data = create_discovery_response(endpoints, {"registered": reg_resp})
+            response_data = create_discovery_response(
+                endpoints, {"registered": reg_resp}
+            )
             return create_discovery_success_response(
                 "and registration completed",
                 response_data,
-                **build_discovery_context("discover", service_name=req.name, endpoint_count=len(endpoints)),
+                **build_discovery_context(
+                    "discover", service_name=req.name, endpoint_count=len(endpoints)
+                ),
             )
 
         except httpx.HTTPStatusError as e:
             # Handle HTTP errors specifically
-            context = build_discovery_context("discover", service_name=getattr(req, "name", None))
+            context = build_discovery_context(
+                "discover", service_name=getattr(req, "name", None)
+            )
             context = {k: v for k, v in context.items() if k != "operation"}
-            return handle_discovery_error("discover endpoints", e, status_code=e.response.status_code, **context)
+            return handle_discovery_error(
+                "discover endpoints", e, status_code=e.response.status_code, **context
+            )
 
         except Exception as e:
             from fastapi import HTTPException
@@ -93,7 +103,9 @@ class DiscoveryHandler:
             if isinstance(e, ValidationException):
                 raise HTTPException(status_code=400, detail=str(e))
 
-            context = build_discovery_context("discover", service_name=getattr(req, "name", None))
+            context = build_discovery_context(
+                "discover", service_name=getattr(req, "name", None)
+            )
             context = {k: v for k, v in context.items() if k != "operation"}
             return handle_discovery_error("discover endpoints", e, **context)
 
@@ -114,13 +126,17 @@ class DiscoveryHandler:
                 return create_discovery_success_response(
                     "tool discovery completed (dry run)",
                     discovery_result,
-                    **build_discovery_context("discover_tools", service_name=req.service_name, dry_run=True),
+                    **build_discovery_context(
+                        "discover_tools", service_name=req.service_name, dry_run=True
+                    ),
                 )
 
             # Register tools with orchestrator if available
             orchestrator_url = req.orchestrator_url or get_orchestrator_url()
             try:
-                await DiscoveryHandler._register_tools_with_orchestrator(discovery_result, orchestrator_url)
+                await DiscoveryHandler._register_tools_with_orchestrator(
+                    discovery_result, orchestrator_url
+                )
                 discovery_result["registration_status"] = "completed"
             except Exception as reg_error:
                 discovery_result["registration_status"] = "failed"
@@ -137,17 +153,25 @@ class DiscoveryHandler:
             )
 
         except httpx.HTTPStatusError as e:
-            context = build_discovery_context("discover_tools", service_name=getattr(req, "service_name", None))
+            context = build_discovery_context(
+                "discover_tools", service_name=getattr(req, "service_name", None)
+            )
             context = {k: v for k, v in context.items() if k != "operation"}
-            return handle_discovery_error("discover tools", e, status_code=e.response.status_code, **context)
+            return handle_discovery_error(
+                "discover tools", e, status_code=e.response.status_code, **context
+            )
 
         except Exception as e:
-            context = build_discovery_context("discover_tools", service_name=getattr(req, "service_name", None))
+            context = build_discovery_context(
+                "discover_tools", service_name=getattr(req, "service_name", None)
+            )
             context = {k: v for k, v in context.items() if k != "operation"}
             return handle_discovery_error("discover tools", e, **context)
 
     @staticmethod
-    async def _register_tools_with_orchestrator(discovery_result: Dict[str, Any], orchestrator_url: str):
+    async def _register_tools_with_orchestrator(
+        discovery_result: Dict[str, Any], orchestrator_url: str
+    ):
         """Register discovered tools with the orchestrator."""
         try:
             # Prepare tool registration payload

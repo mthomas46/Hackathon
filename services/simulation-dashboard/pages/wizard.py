@@ -11,11 +11,12 @@ from typing import Any, Dict, List, Optional
 import streamlit as st
 
 
-
 def render_wizard_page():
     """Render the comprehensive guided setup wizard page."""
     st.markdown("## 🧙‍♂️ Guided Simulation Setup Wizard")
-    st.markdown("Create comprehensive project simulations with our step-by-step guided wizard.")
+    st.markdown(
+        "Create comprehensive project simulations with our step-by-step guided wizard."
+    )
 
     # Initialize wizard session state
     initialize_wizard_state()
@@ -58,9 +59,16 @@ def render_wizard_start():
 
     with col1:
         st.markdown("#### 🏃‍♂️ Quick Start")
-        st.markdown("Get started quickly with pre-configured templates for common scenarios.")
+        st.markdown(
+            "Get started quickly with pre-configured templates for common scenarios."
+        )
 
-        if st.button("🚀 Quick Start", key="quick_start", type="primary", use_container_width=True):
+        if st.button(
+            "🚀 Quick Start",
+            key="quick_start",
+            type="primary",
+            use_container_width=True,
+        ):
             st.session_state.wizard_active = True
             st.session_state.wizard_data["setup_method"] = "quick"
             st.session_state.wizard_data["step"] = 1
@@ -73,9 +81,16 @@ def render_wizard_start():
 
     with col2:
         st.markdown("#### 🧙‍♂️ Guided Setup")
-        st.markdown("Step through our comprehensive wizard with detailed configuration options.")
+        st.markdown(
+            "Step through our comprehensive wizard with detailed configuration options."
+        )
 
-        if st.button("🧙‍♂️ Guided Setup", key="guided_setup", type="primary", use_container_width=True):
+        if st.button(
+            "🧙‍♂️ Guided Setup",
+            key="guided_setup",
+            type="primary",
+            use_container_width=True,
+        ):
             st.session_state.wizard_active = True
             st.session_state.wizard_data["setup_method"] = "guided"
             st.session_state.wizard_data["step"] = 1
@@ -90,9 +105,13 @@ def render_wizard_start():
         st.markdown("#### 📤 Import Configuration")
         st.markdown("Upload an existing YAML configuration file to get started.")
 
-        uploaded_file = st.file_uploader("Upload YAML config", type=["yaml", "yml"], key="config_upload")
+        uploaded_file = st.file_uploader(
+            "Upload YAML config", type=["yaml", "yml"], key="config_upload"
+        )
 
-        if uploaded_file is not None and st.button("📤 Import & Continue", key="import_config"):
+        if uploaded_file is not None and st.button(
+            "📤 Import & Continue", key="import_config"
+        ):
             config_data = load_config_from_file(uploaded_file)
             if config_data:
                 st.session_state.wizard_active = True
@@ -266,15 +285,21 @@ def render_step_1_project_basics():
         ]
 
         project_type_names = [opt["name"] for opt in project_type_options]
-        selected_type_index = get_project_type_index(wizard_data["project_info"].get("type"))
+        selected_type_index = get_project_type_index(
+            wizard_data["project_info"].get("type")
+        )
 
         project_type = st.selectbox(
-            "Project Type *", options=project_type_names, index=selected_type_index, key="project_type"
+            "Project Type *",
+            options=project_type_names,
+            index=selected_type_index,
+            key="project_type",
         )
 
         # Show detailed information for selected project type
         selected_type_info = next(
-            (opt for opt in project_type_options if opt["name"] == project_type), project_type_options[0]
+            (opt for opt in project_type_options if opt["name"] == project_type),
+            project_type_options[0],
         )
 
         with st.expander(f"📋 {project_type} Details", expanded=False):
@@ -342,15 +367,21 @@ def render_step_1_project_basics():
         ]
 
         complexity_names = [opt["name"] for opt in complexity_options]
-        selected_complexity_index = get_complexity_index(wizard_data["project_info"].get("complexity"))
+        selected_complexity_index = get_complexity_index(
+            wizard_data["project_info"].get("complexity")
+        )
 
         complexity = st.selectbox(
-            "Complexity Level *", options=complexity_names, index=selected_complexity_index, key="complexity"
+            "Complexity Level *",
+            options=complexity_names,
+            index=selected_complexity_index,
+            key="complexity",
         )
 
         # Show detailed complexity information
         selected_complexity = next(
-            (opt for opt in complexity_options if opt["name"] == complexity), complexity_options[1]
+            (opt for opt in complexity_options if opt["name"] == complexity),
+            complexity_options[1],
         )
 
         col_a, col_b, col_c = st.columns(3)
@@ -359,7 +390,9 @@ def render_step_1_project_basics():
         with col_b:
             st.metric("Team Size", selected_complexity["team"])
         with col_c:
-            risk_color = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}[selected_complexity["risk"]]
+            risk_color = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}[
+                selected_complexity["risk"]
+            ]
             st.metric("Risk Level", f"{risk_color} {selected_complexity['risk']}")
 
         with st.expander(f"📋 {complexity} Project Details", expanded=False):
@@ -377,7 +410,12 @@ def render_step_1_project_basics():
             # Question 1: Technology familiarity
             tech_familiarity = st.selectbox(
                 "How familiar is your team with the required technology stack?",
-                ["Very Familiar", "Somewhat Familiar", "Limited Experience", "New Technology"],
+                [
+                    "Very Familiar",
+                    "Somewhat Familiar",
+                    "Limited Experience",
+                    "New Technology",
+                ],
                 key="tech_familiarity",
             )
             assessment_score += {
@@ -390,7 +428,12 @@ def render_step_1_project_basics():
             # Question 2: Requirements stability
             req_stability = st.selectbox(
                 "How stable are your project requirements?",
-                ["Very Stable", "Mostly Stable", "Some Changes Expected", "High Uncertainty"],
+                [
+                    "Very Stable",
+                    "Mostly Stable",
+                    "Some Changes Expected",
+                    "High Uncertainty",
+                ],
                 key="req_stability",
             )
             assessment_score += {
@@ -403,7 +446,12 @@ def render_step_1_project_basics():
             # Question 3: Timeline pressure
             timeline_pressure = st.selectbox(
                 "What is your timeline flexibility?",
-                ["Flexible Timeline", "Moderate Pressure", "Tight Deadline", "Fixed Deadline"],
+                [
+                    "Flexible Timeline",
+                    "Moderate Pressure",
+                    "Tight Deadline",
+                    "Fixed Deadline",
+                ],
                 key="timeline_pressure",
             )
             assessment_score += {
@@ -419,23 +467,36 @@ def render_step_1_project_basics():
                 ["Expert Team", "Experienced Team", "Mixed Experience", "Junior Team"],
                 key="team_experience",
             )
-            assessment_score += {"Expert Team": 0, "Experienced Team": 1, "Mixed Experience": 2, "Junior Team": 3}[
-                team_experience
-            ]
+            assessment_score += {
+                "Expert Team": 0,
+                "Experienced Team": 1,
+                "Mixed Experience": 2,
+                "Junior Team": 3,
+            }[team_experience]
 
             # Question 5: Project scope
             project_scope = st.selectbox(
                 "What is the scope of your project?",
-                ["Well-defined Scope", "Moderate Scope", "Broad Scope", "Undefined Scope"],
+                [
+                    "Well-defined Scope",
+                    "Moderate Scope",
+                    "Broad Scope",
+                    "Undefined Scope",
+                ],
                 key="project_scope",
             )
-            assessment_score += {"Well-defined Scope": 0, "Moderate Scope": 1, "Broad Scope": 2, "Undefined Scope": 3}[
-                project_scope
-            ]
+            assessment_score += {
+                "Well-defined Scope": 0,
+                "Moderate Scope": 1,
+                "Broad Scope": 2,
+                "Undefined Scope": 3,
+            }[project_scope]
 
             # Calculate recommended complexity
             recommended_complexity = (
-                "Simple" if assessment_score <= 3 else "Medium" if assessment_score <= 7 else "Complex"
+                "Simple"
+                if assessment_score <= 3
+                else "Medium" if assessment_score <= 7 else "Complex"
             )
             assessment_percentage = (assessment_score / (total_questions * 3)) * 100
 
@@ -446,7 +507,9 @@ def render_step_1_project_basics():
                 if recommended_complexity == complexity:
                     st.success(f"✅ Assessment matches your selection: {complexity}")
                 else:
-                    st.warning(f"⚠️ Assessment suggests: {recommended_complexity} (you selected: {complexity})")
+                    st.warning(
+                        f"⚠️ Assessment suggests: {recommended_complexity} (you selected: {complexity})"
+                    )
 
             with col_y:
                 st.metric("Complexity Score", ".1f", assessment_percentage)
@@ -464,9 +527,18 @@ def render_step_1_project_basics():
         )
 
         # Budget estimation based on complexity, duration, and project type
-        estimated_budget = estimate_project_budget(complexity, duration_weeks, project_type)
+        estimated_budget = estimate_project_budget(
+            complexity, duration_weeks, project_type
+        )
 
-        budget_ranges = ["Under $50K", "$50K - $100K", "$100K - $250K", "$250K - $500K", "$500K - $1M", "Over $1M"]
+        budget_ranges = [
+            "Under $50K",
+            "$50K - $100K",
+            "$100K - $250K",
+            "$250K - $500K",
+            "$500K - $1M",
+            "Over $1M",
+        ]
 
         # Auto-select appropriate budget range
         auto_budget_index = get_budget_range_from_estimate(estimated_budget)
@@ -479,7 +551,9 @@ def render_step_1_project_basics():
             key="budget_range",
         )
 
-        st.success(f"💰 **Estimated Budget:** ${estimated_budget:,.0f} for {duration_weeks} weeks")
+        st.success(
+            f"💰 **Estimated Budget:** ${estimated_budget:,.0f} for {duration_weeks} weeks"
+        )
 
     # Quick setup for quick start method
     if wizard_data.get("setup_method") == "quick":
@@ -503,7 +577,14 @@ def render_step_1_project_basics():
     # Save step data
     if st.button("Continue to Team Setup →", key="step1_continue", type="primary"):
         if validate_step_1():
-            save_step_1_data(project_name, project_description, project_type, complexity, duration_weeks, budget_range)
+            save_step_1_data(
+                project_name,
+                project_description,
+                project_type,
+                complexity,
+                duration_weeks,
+                budget_range,
+            )
             wizard_data["step"] = 2
             st.rerun()
 
@@ -519,7 +600,9 @@ def render_step_2_team_setup():
     project_complexity = wizard_data["project_info"].get("complexity", "Medium")
     recommended_team_size = get_recommended_team_size(project_complexity)
 
-    st.info(f"**Recommended team size for {project_complexity.lower()} complexity:** {recommended_team_size} members")
+    st.info(
+        f"**Recommended team size for {project_complexity.lower()} complexity:** {recommended_team_size} members"
+    )
 
     # Team composition
     st.markdown("#### 👥 Team Composition")
@@ -560,7 +643,9 @@ def render_step_2_team_setup():
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            total_cost = sum(m.get("cost_per_hour", 50) * 40 * 4 for m in team_members)  # Monthly estimate
+            total_cost = sum(
+                m.get("cost_per_hour", 50) * 40 * 4 for m in team_members
+            )  # Monthly estimate
             st.metric("Monthly Cost", f"${total_cost:,.0f}")
 
         with col2:
@@ -570,7 +655,8 @@ def render_step_2_team_setup():
 
         with col3:
             avg_expertise = sum(
-                get_expertise_score(m.get("expertise_level", "intermediate")) for m in team_members
+                get_expertise_score(m.get("expertise_level", "intermediate"))
+                for m in team_members
             ) / len(team_members)
             st.metric("Avg Expertise", ".2f", avg_expertise)
 
@@ -599,7 +685,9 @@ def render_step_2_team_setup():
 def render_step_3_timeline_design():
     """Render Step 3: Timeline Design."""
     st.markdown("### 📅 Step 3: Timeline Design")
-    st.markdown("Design your project timeline with phases, milestones, and dependencies.")
+    st.markdown(
+        "Design your project timeline with phases, milestones, and dependencies."
+    )
 
     wizard_data = st.session_state.wizard_data
 
@@ -661,7 +749,11 @@ def render_step_3_timeline_design():
         with col3:
             resource_conflicts = detect_resource_conflicts(phases)
             if resource_conflicts > 0:
-                st.metric("Resource Conflicts", resource_conflicts, delta=f"-{resource_conflicts}")
+                st.metric(
+                    "Resource Conflicts",
+                    resource_conflicts,
+                    delta=f"-{resource_conflicts}",
+                )
             else:
                 st.metric("Resource Conflicts", "None")
 
@@ -708,7 +800,9 @@ def render_step_4_budget_planning():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        team_cost = calculate_team_cost(wizard_data["team_config"].get("team_members", []))
+        team_cost = calculate_team_cost(
+            wizard_data["team_config"].get("team_members", [])
+        )
         st.metric("Team Cost", f"${team_cost:,.0f}/month")
 
     with col2:
@@ -728,7 +822,9 @@ def render_step_4_budget_planning():
 
         team_data = []
         for member in wizard_data["team_config"]["team_members"]:
-            monthly_cost = member.get("cost_per_hour", 50) * 40 * 4  # 40 hours/week * 4 weeks
+            monthly_cost = (
+                member.get("cost_per_hour", 50) * 40 * 4
+            )  # 40 hours/week * 4 weeks
             team_data.append(
                 {
                     "Member": member.get("name", "Unnamed"),
@@ -767,16 +863,28 @@ def render_step_4_budget_planning():
 
     with col1:
         project_benefits = st.number_input(
-            "Expected Annual Benefits ($)", min_value=0, value=100000, step=10000, key="project_benefits"
+            "Expected Annual Benefits ($)",
+            min_value=0,
+            value=100000,
+            step=10000,
+            key="project_benefits",
         )
 
         project_duration_years = st.slider(
-            "Project Duration (years)", min_value=1, max_value=5, value=2, key="project_duration_years"
+            "Project Duration (years)",
+            min_value=1,
+            max_value=5,
+            value=2,
+            key="project_duration_years",
         )
 
     with col2:
         total_investment = total_monthly * 12 * project_duration_years
-        roi_percentage = ((project_benefits - total_investment) / total_investment) * 100 if total_investment > 0 else 0
+        roi_percentage = (
+            ((project_benefits - total_investment) / total_investment) * 100
+            if total_investment > 0
+            else 0
+        )
 
         st.metric("Total Investment", f"${total_investment:,.0f}")
         st.metric("ROI", ".1f", roi_percentage)
@@ -789,7 +897,9 @@ def render_step_4_budget_planning():
     # Budget recommendations
     st.markdown("#### 💡 Budget Recommendations")
 
-    recommendations = get_budget_recommendations(total_monthly, wizard_data["project_info"])
+    recommendations = get_budget_recommendations(
+        total_monthly, wizard_data["project_info"]
+    )
     for rec in recommendations:
         if rec["type"] == "warning":
             st.warning(f"⚠️ {rec['message']}")
@@ -817,7 +927,9 @@ def render_step_4_budget_planning():
             st.rerun()
 
     with col3:
-        if st.button("Continue to Risk Assessment →", key="step4_continue", type="primary"):
+        if st.button(
+            "Continue to Risk Assessment →", key="step4_continue", type="primary"
+        ):
             wizard_data["step"] = 5
             st.rerun()
 
@@ -835,11 +947,21 @@ def render_step_5_risk_assessment():
     risk_factors = {
         "team_experience": {
             "question": "How experienced is your team with this technology stack?",
-            "options": ["Very Experienced", "Somewhat Experienced", "Limited Experience", "New Technology"],
+            "options": [
+                "Very Experienced",
+                "Somewhat Experienced",
+                "Limited Experience",
+                "New Technology",
+            ],
         },
         "requirement_stability": {
             "question": "How stable are the project requirements?",
-            "options": ["Very Stable", "Mostly Stable", "Some Changes Expected", "High Uncertainty"],
+            "options": [
+                "Very Stable",
+                "Mostly Stable",
+                "Some Changes Expected",
+                "High Uncertainty",
+            ],
         },
         "timeline_realism": {
             "question": "How realistic is the project timeline?",
@@ -847,11 +969,21 @@ def render_step_5_risk_assessment():
         },
         "budget_contingency": {
             "question": "Do you have budget contingency for unexpected issues?",
-            "options": ["Yes, >20% contingency", "Yes, 10-20% contingency", "Minimal contingency", "No contingency"],
+            "options": [
+                "Yes, >20% contingency",
+                "Yes, 10-20% contingency",
+                "Minimal contingency",
+                "No contingency",
+            ],
         },
         "stakeholder_alignment": {
             "question": "How aligned are stakeholders on project goals?",
-            "options": ["Fully Aligned", "Mostly Aligned", "Some Misalignment", "Significant Misalignment"],
+            "options": [
+                "Fully Aligned",
+                "Mostly Aligned",
+                "Some Misalignment",
+                "Significant Misalignment",
+            ],
         },
     }
 
@@ -883,7 +1015,9 @@ def render_step_5_risk_assessment():
         st.metric("Success Probability", ".1f", success_probability)
 
     with col3:
-        risk_level = "Low" if risk_score < 30 else "Medium" if risk_score < 60 else "High"
+        risk_level = (
+            "Low" if risk_score < 30 else "Medium" if risk_score < 60 else "High"
+        )
         st.metric("Risk Level", risk_level)
 
     # Risk mitigation strategies
@@ -892,8 +1026,14 @@ def render_step_5_risk_assessment():
     mitigation_strategies = get_mitigation_strategies(risk_scores, risk_score)
 
     for strategy in mitigation_strategies:
-        priority_icon = "🔴" if strategy["priority"] == "High" else "🟡" if strategy["priority"] == "Medium" else "🟢"
-        with st.expander(f"{priority_icon} {strategy['title']} ({strategy['priority']} Priority)"):
+        priority_icon = (
+            "🔴"
+            if strategy["priority"] == "High"
+            else "🟡" if strategy["priority"] == "Medium" else "🟢"
+        )
+        with st.expander(
+            f"{priority_icon} {strategy['title']} ({strategy['priority']} Priority)"
+        ):
             st.write(f"**Description:** {strategy['description']}")
             st.write(f"**Implementation:** {strategy['implementation']}")
             st.write(f"**Expected Impact:** {strategy['impact']}")
@@ -918,7 +1058,9 @@ def render_step_5_risk_assessment():
             st.rerun()
 
     with col3:
-        if st.button("Continue to Advanced Config →", key="step5_continue", type="primary"):
+        if st.button(
+            "Continue to Advanced Config →", key="step5_continue", type="primary"
+        ):
             wizard_data["step"] = 6
             st.rerun()
 
@@ -946,7 +1088,9 @@ def render_step_6_advanced_config():
                 "Workflow Execution",
                 "Performance Test",
             ],
-            index=get_simulation_type_index(wizard_data["advanced_config"].get("simulation_type")),
+            index=get_simulation_type_index(
+                wizard_data["advanced_config"].get("simulation_type")
+            ),
             key="simulation_type",
         )
 
@@ -985,14 +1129,18 @@ def render_step_6_advanced_config():
     with col1:
         include_document_generation = st.checkbox(
             "Document Generation",
-            value=wizard_data["advanced_config"].get("include_document_generation", True),
+            value=wizard_data["advanced_config"].get(
+                "include_document_generation", True
+            ),
             key="include_document_generation",
         )
 
     with col2:
         include_workflow_execution = st.checkbox(
             "Workflow Execution",
-            value=wizard_data["advanced_config"].get("include_workflow_execution", True),
+            value=wizard_data["advanced_config"].get(
+                "include_workflow_execution", True
+            ),
             key="include_workflow_execution",
         )
 
@@ -1011,18 +1159,29 @@ def render_step_6_advanced_config():
             "label": "Enable Ecosystem Integration",
             "description": "Connect with other LLM Documentation Ecosystem services",
         },
-        "enable_analysis": {"label": "Analysis Service", "description": "Document analysis and quality assessment"},
+        "enable_analysis": {
+            "label": "Analysis Service",
+            "description": "Document analysis and quality assessment",
+        },
         "enable_orchestration": {
             "label": "Workflow Orchestration",
             "description": "Advanced workflow management and orchestration",
         },
-        "enable_notification": {"label": "Notification Service", "description": "Automated notifications and alerts"},
-        "enable_audit": {"label": "Audit Integration", "description": "Comprehensive audit trail and compliance"},
+        "enable_notification": {
+            "label": "Notification Service",
+            "description": "Automated notifications and alerts",
+        },
+        "enable_audit": {
+            "label": "Audit Integration",
+            "description": "Comprehensive audit trail and compliance",
+        },
     }
 
     for service_key, service_config in ecosystem_services.items():
         enabled = st.checkbox(
-            service_config["label"], value=wizard_data["advanced_config"].get(service_key, False), key=service_key
+            service_config["label"],
+            value=wizard_data["advanced_config"].get(service_key, False),
+            key=service_key,
         )
         if enabled:
             st.caption(service_config["description"])
@@ -1041,7 +1200,9 @@ def render_step_6_advanced_config():
 
         enable_performance_monitoring = st.checkbox(
             "Performance Monitoring",
-            value=wizard_data["advanced_config"].get("enable_performance_monitoring", True),
+            value=wizard_data["advanced_config"].get(
+                "enable_performance_monitoring", True
+            ),
             key="enable_performance_monitoring",
         )
 
@@ -1057,7 +1218,9 @@ def render_step_6_advanced_config():
         resource_intensity = st.selectbox(
             "Resource Intensity",
             options=["Low", "Medium", "High", "Very High"],
-            index=get_resource_intensity_index(wizard_data["advanced_config"].get("resource_intensity")),
+            index=get_resource_intensity_index(
+                wizard_data["advanced_config"].get("resource_intensity")
+            ),
             key="resource_intensity",
         )
 
@@ -1081,7 +1244,9 @@ def render_step_6_advanced_config():
 
     # Add ecosystem settings
     for service_key in ecosystem_services.keys():
-        wizard_data["advanced_config"][service_key] = st.session_state.get(service_key, False)
+        wizard_data["advanced_config"][service_key] = st.session_state.get(
+            service_key, False
+        )
 
     # Navigation
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -1112,10 +1277,18 @@ def render_step_7_review_launch():
 
     with col1:
         st.markdown("**🎯 Project Basics**")
-        st.write(f"**Name:** {wizard_data['project_info'].get('name', 'Not specified')}")
-        st.write(f"**Type:** {wizard_data['project_info'].get('type', 'Not specified')}")
-        st.write(f"**Complexity:** {wizard_data['project_info'].get('complexity', 'Not specified')}")
-        st.write(f"**Duration:** {wizard_data['project_info'].get('duration_weeks', 0)} weeks")
+        st.write(
+            f"**Name:** {wizard_data['project_info'].get('name', 'Not specified')}"
+        )
+        st.write(
+            f"**Type:** {wizard_data['project_info'].get('type', 'Not specified')}"
+        )
+        st.write(
+            f"**Complexity:** {wizard_data['project_info'].get('complexity', 'Not specified')}"
+        )
+        st.write(
+            f"**Duration:** {wizard_data['project_info'].get('duration_weeks', 0)} weeks"
+        )
 
     with col2:
         st.markdown("**👥 Team Setup**")
@@ -1192,7 +1365,9 @@ def render_step_7_review_launch():
 
     with col3:
         if all(status["valid"] for status in validation_status.values()):
-            if st.button("🚀 Launch Simulation", key="launch_simulation", type="primary"):
+            if st.button(
+                "🚀 Launch Simulation", key="launch_simulation", type="primary"
+            ):
                 simulation_id = launch_simulation(wizard_data)
                 if simulation_id:
                     st.success(f"🎉 Simulation launched successfully!")
@@ -1236,7 +1411,9 @@ def render_wizard_navigation():
             if step_num < wizard_data["step"]:
                 st.button(f"✅ {step_num}", key=f"nav_step_{step_num}", disabled=True)
             elif step_num == wizard_data["step"]:
-                st.button(f"🔵 {step_num}", key=f"nav_current_{step_num}", disabled=True)
+                st.button(
+                    f"🔵 {step_num}", key=f"nav_current_{step_num}", disabled=True
+                )
             else:
                 if st.button(f"⬜ {step_num}", key=f"nav_step_{step_num}"):
                     wizard_data["step"] = step_num
@@ -1396,20 +1573,32 @@ def validate_complete_configuration(wizard_data: Dict[str, Any]) -> Dict[str, An
         "timeline": {"valid": True, "message": "Timeline configuration complete"},
         "budget": {"valid": True, "message": "Budget planning complete"},
         "risk_assessment": {"valid": True, "message": "Risk assessment complete"},
-        "advanced_config": {"valid": True, "message": "Advanced configuration complete"},
+        "advanced_config": {
+            "valid": True,
+            "message": "Advanced configuration complete",
+        },
     }
 
     # Check project basics
     if not wizard_data["project_info"].get("name"):
-        validation_status["project_basics"] = {"valid": False, "message": "Project name is required"}
+        validation_status["project_basics"] = {
+            "valid": False,
+            "message": "Project name is required",
+        }
 
     # Check team setup
     if not wizard_data["team_config"].get("team_members"):
-        validation_status["team_setup"] = {"valid": False, "message": "At least one team member required"}
+        validation_status["team_setup"] = {
+            "valid": False,
+            "message": "At least one team member required",
+        }
 
     # Check timeline
     if not wizard_data["timeline_config"].get("phases"):
-        validation_status["timeline"] = {"valid": False, "message": "At least one project phase required"}
+        validation_status["timeline"] = {
+            "valid": False,
+            "message": "At least one project phase required",
+        }
 
     return validation_status
 
@@ -1418,7 +1607,9 @@ def save_configuration(wizard_data: Dict[str, Any]) -> Optional[str]:
     """Save configuration to file."""
     try:
         # In production, this would save to a proper location
-        config_path = f"/tmp/simulation_config_{datetime.now().strftime('%Y%m%d_%H%M%S')}.yaml"
+        config_path = (
+            f"/tmp/simulation_config_{datetime.now().strftime('%Y%m%d_%H%M%S')}.yaml"
+        )
         # Save logic would go here
         return config_path
     except Exception as e:
@@ -1431,8 +1622,12 @@ def export_as_yaml(wizard_data: Dict[str, Any]) -> str:
     try:
         # Convert wizard data to YAML format
         yaml_content = "# Generated Simulation Configuration\n"
-        yaml_content += f"project_name: \"{wizard_data['project_info'].get('name', '')}\"\n"
-        yaml_content += f"project_type: \"{wizard_data['project_info'].get('type', '').lower()}\"\n"
+        yaml_content += (
+            f"project_name: \"{wizard_data['project_info'].get('name', '')}\"\n"
+        )
+        yaml_content += (
+            f"project_type: \"{wizard_data['project_info'].get('type', '').lower()}\"\n"
+        )
         yaml_content += f"complexity_level: \"{wizard_data['project_info'].get('complexity', '').lower()}\"\n"
         # Add more YAML conversion logic as needed
         return yaml_content
@@ -1447,8 +1642,13 @@ def launch_simulation(wizard_data: Dict[str, Any]) -> Optional[str]:
         simulation_request = {
             "name": wizard_data["project_info"].get("name", "Unnamed Project"),
             "description": wizard_data["project_info"].get("description", ""),
-            "type": wizard_data["project_info"].get("type", "web_application").lower().replace(" ", "_"),
-            "complexity": wizard_data["project_info"].get("complexity", "medium").lower(),
+            "type": wizard_data["project_info"]
+            .get("type", "web_application")
+            .lower()
+            .replace(" ", "_"),
+            "complexity": wizard_data["project_info"]
+            .get("complexity", "medium")
+            .lower(),
             "duration_weeks": wizard_data["project_info"].get("duration_weeks", 12),
             "team_members": wizard_data["team_config"].get("team_members", []),
             "phases": wizard_data["timeline_config"].get("phases", []),
@@ -1493,14 +1693,28 @@ def get_complexity_index(complexity: Optional[str]) -> int:
 
 def get_budget_index(budget_range: Optional[str]) -> int:
     """Get index for budget range selection."""
-    ranges = ["Under $50K", "$50K - $100K", "$100K - $250K", "$250K - $500K", "$500K - $1M", "Over $1M"]
+    ranges = [
+        "Under $50K",
+        "$50K - $100K",
+        "$100K - $250K",
+        "$250K - $500K",
+        "$500K - $1M",
+        "Over $1M",
+    ]
     try:
         return ranges.index(budget_range) if budget_range else 2
     except ValueError:
         return 2
 
 
-def save_step_1_data(name: str, description: str, project_type: str, complexity: str, duration: int, budget_range: str):
+def save_step_1_data(
+    name: str,
+    description: str,
+    project_type: str,
+    complexity: str,
+    duration: int,
+    budget_range: str,
+):
     """Save step 1 data to wizard state."""
     wizard_data = st.session_state.wizard_data
     wizard_data["project_info"] = {
@@ -1525,7 +1739,9 @@ def get_recommended_team_size(complexity: str) -> int:
     return recommendations.get(complexity, 5)
 
 
-def get_team_recommendations(team_members: List[Dict[str, Any]], complexity: str) -> List[str]:
+def get_team_recommendations(
+    team_members: List[Dict[str, Any]], complexity: str
+) -> List[str]:
     """Get team configuration recommendations."""
     # Implementation would analyze team composition and provide recommendations
     return []
@@ -1564,7 +1780,9 @@ def estimate_infrastructure_cost(project_info: Dict[str, Any]) -> float:
     return 2000.0
 
 
-def get_budget_recommendations(monthly_cost: float, project_info: Dict[str, Any]) -> List[Dict[str, Any]]:
+def get_budget_recommendations(
+    monthly_cost: float, project_info: Dict[str, Any]
+) -> List[Dict[str, Any]]:
     """Get budget planning recommendations."""
     # Implementation would provide budget recommendations
     return []
@@ -1572,7 +1790,12 @@ def get_budget_recommendations(monthly_cost: float, project_info: Dict[str, Any]
 
 def get_risk_score_index(score: Optional[str]) -> int:
     """Get index for risk score selection."""
-    options = ["Very Experienced", "Somewhat Experienced", "Limited Experience", "New Technology"]
+    options = [
+        "Very Experienced",
+        "Somewhat Experienced",
+        "Limited Experience",
+        "New Technology",
+    ]
     try:
         return options.index(score) if score else 1
     except ValueError:
@@ -1590,7 +1813,9 @@ def calculate_success_probability(risk_score: float) -> float:
     return max(0, 100 - risk_score)
 
 
-def get_mitigation_strategies(risk_scores: Dict[str, Any], risk_score: float) -> List[Dict[str, Any]]:
+def get_mitigation_strategies(
+    risk_scores: Dict[str, Any], risk_score: float
+) -> List[Dict[str, Any]]:
     """Get risk mitigation strategies."""
     # Implementation would provide risk mitigation recommendations
     return []
@@ -1644,7 +1869,13 @@ def apply_timeline_template(template_name: str):
 
 def get_expertise_score(expertise_level: str) -> float:
     """Get numerical score for expertise level."""
-    scores = {"junior": 1.0, "intermediate": 2.0, "senior": 3.0, "expert": 4.0, "lead": 5.0}
+    scores = {
+        "junior": 1.0,
+        "intermediate": 2.0,
+        "senior": 3.0,
+        "expert": 4.0,
+        "lead": 5.0,
+    }
     return scores.get(expertise_level.lower(), 2.0)
 
 
@@ -1657,15 +1888,33 @@ def get_project_type_recommendations(project_type: str) -> List[Dict[str, Any]]:
 
     if project_type == "Web Application":
         recommendations = [
-            {"type": "success", "message": "Great choice for traditional web development with proven technologies"},
-            {"type": "info", "message": "Consider using modern frontend frameworks like React or Vue.js"},
-            {"type": "info", "message": "PostgreSQL or MySQL are excellent database choices for web apps"},
+            {
+                "type": "success",
+                "message": "Great choice for traditional web development with proven technologies",
+            },
+            {
+                "type": "info",
+                "message": "Consider using modern frontend frameworks like React or Vue.js",
+            },
+            {
+                "type": "info",
+                "message": "PostgreSQL or MySQL are excellent database choices for web apps",
+            },
         ]
     elif project_type == "API Service":
         recommendations = [
-            {"type": "success", "message": "Perfect for microservices architecture and API-first development"},
-            {"type": "info", "message": "FastAPI or Express.js provide excellent API development frameworks"},
-            {"type": "info", "message": "Consider implementing comprehensive API documentation with OpenAPI/Swagger"},
+            {
+                "type": "success",
+                "message": "Perfect for microservices architecture and API-first development",
+            },
+            {
+                "type": "info",
+                "message": "FastAPI or Express.js provide excellent API development frameworks",
+            },
+            {
+                "type": "info",
+                "message": "Consider implementing comprehensive API documentation with OpenAPI/Swagger",
+            },
         ]
     elif project_type == "Mobile Application":
         recommendations = [
@@ -1673,26 +1922,59 @@ def get_project_type_recommendations(project_type: str) -> List[Dict[str, Any]]:
                 "type": "warning",
                 "message": "Mobile development requires specialized skills and testing across platforms",
             },
-            {"type": "info", "message": "React Native or Flutter enable cross-platform development"},
-            {"type": "info", "message": "Plan for additional QA time due to device fragmentation"},
+            {
+                "type": "info",
+                "message": "React Native or Flutter enable cross-platform development",
+            },
+            {
+                "type": "info",
+                "message": "Plan for additional QA time due to device fragmentation",
+            },
         ]
     elif project_type == "Microservices":
         recommendations = [
-            {"type": "warning", "message": "High complexity - requires DevOps expertise and infrastructure investment"},
-            {"type": "info", "message": "Kubernetes provides excellent orchestration for microservices"},
-            {"type": "info", "message": "Implement service mesh (Istio/Linkerd) for advanced service communication"},
+            {
+                "type": "warning",
+                "message": "High complexity - requires DevOps expertise and infrastructure investment",
+            },
+            {
+                "type": "info",
+                "message": "Kubernetes provides excellent orchestration for microservices",
+            },
+            {
+                "type": "info",
+                "message": "Implement service mesh (Istio/Linkerd) for advanced service communication",
+            },
         ]
     elif project_type == "Data Pipeline":
         recommendations = [
-            {"type": "info", "message": "Apache Airflow is excellent for orchestrating complex data workflows"},
-            {"type": "info", "message": "Consider cloud data warehouses like Snowflake or BigQuery for scalability"},
-            {"type": "warning", "message": "Data pipelines require careful monitoring and error handling"},
+            {
+                "type": "info",
+                "message": "Apache Airflow is excellent for orchestrating complex data workflows",
+            },
+            {
+                "type": "info",
+                "message": "Consider cloud data warehouses like Snowflake or BigQuery for scalability",
+            },
+            {
+                "type": "warning",
+                "message": "Data pipelines require careful monitoring and error handling",
+            },
         ]
     elif project_type == "Machine Learning":
         recommendations = [
-            {"type": "warning", "message": "ML projects require specialized data science and MLOps expertise"},
-            {"type": "info", "message": "Implement MLflow for experiment tracking and model management"},
-            {"type": "info", "message": "Plan for GPU resources and model serving infrastructure"},
+            {
+                "type": "warning",
+                "message": "ML projects require specialized data science and MLOps expertise",
+            },
+            {
+                "type": "info",
+                "message": "Implement MLflow for experiment tracking and model management",
+            },
+            {
+                "type": "info",
+                "message": "Plan for GPU resources and model serving infrastructure",
+            },
         ]
 
     return recommendations
@@ -1724,7 +2006,9 @@ def get_recommended_duration(complexity: str, project_type: str) -> int:
     return base_durations.get((complexity, project_type), 12)
 
 
-def estimate_project_budget(complexity: str, duration_weeks: int, project_type: str) -> float:
+def estimate_project_budget(
+    complexity: str, duration_weeks: int, project_type: str
+) -> float:
     """Estimate project budget based on complexity, duration, and project type."""
     # Base rates per week by complexity
     base_rates = {

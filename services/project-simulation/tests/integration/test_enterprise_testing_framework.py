@@ -38,7 +38,9 @@ class TestUnitTestFrameworkValidation:
         test_files = list(test_dir.rglob("test_*.py"))
 
         # Should have a reasonable number of test files
-        assert len(test_files) > 10, f"Expected > 10 test files, found {len(test_files)}"
+        assert (
+            len(test_files) > 10
+        ), f"Expected > 10 test files, found {len(test_files)}"
 
         # Should have tests in different categories
         categories = ["unit", "integration", "functional", "api"]
@@ -49,7 +51,9 @@ class TestUnitTestFrameworkValidation:
                 if category in str(test_file):
                     found_categories.add(category)
 
-        assert len(found_categories) >= 3, f"Expected at least 3 test categories, found {found_categories}"
+        assert (
+            len(found_categories) >= 3
+        ), f"Expected at least 3 test categories, found {found_categories}"
 
     def test_test_naming_conventions(self):
         """Test that test naming conventions are followed."""
@@ -71,10 +75,14 @@ class TestUnitTestFrameworkValidation:
 
             # Should use underscores, not camelCase
             if any(char.isupper() for char in filename):
-                naming_issues.append(f"{filename}: Should use underscores, not camelCase")
+                naming_issues.append(
+                    f"{filename}: Should use underscores, not camelCase"
+                )
 
         # Allow some flexibility but ensure basic conventions
-        critical_issues = [issue for issue in naming_issues if "Should start with" in issue]
+        critical_issues = [
+            issue for issue in naming_issues if "Should start with" in issue
+        ]
         assert len(critical_issues) == 0, f"Critical naming issues: {critical_issues}"
 
     def test_test_isolation_validation(self):
@@ -142,13 +150,17 @@ class TestMockingPatternsValidation:
 
             # Check for context managers or cleanup methods
             if "with patch" in content or "mock.patch" in content:
-                cleanup_patterns.append(f"{test_file.name}: Uses context manager mocking")
+                cleanup_patterns.append(
+                    f"{test_file.name}: Uses context manager mocking"
+                )
 
             if "addCleanup" in content or "tearDown" in content:
                 cleanup_patterns.append(f"{test_file.name}: Uses cleanup methods")
 
         # Should have some cleanup patterns
-        assert len(cleanup_patterns) >= 0  # At least some tests should use proper cleanup
+        assert (
+            len(cleanup_patterns) >= 0
+        )  # At least some tests should use proper cleanup
 
     def test_mock_assertion_patterns(self):
         """Test that mock assertions are used properly."""
@@ -295,7 +307,9 @@ class TestTestCoverageValidation:
             content = f.read()
 
         # Should have coverage configuration
-        coverage_config = any(marker in content for marker in ["--cov", "coverage", "cov-report"])
+        coverage_config = any(
+            marker in content for marker in ["--cov", "coverage", "cov-report"]
+        )
         if coverage_config:
             assert True
         else:
@@ -351,14 +365,20 @@ class TestCIIntegrationValidation:
 
     def test_github_actions_configuration(self):
         """Test that GitHub Actions workflows are properly configured."""
-        workflows_dir = Path(__file__).parent.parent.parent.parent / ".github" / "workflows"
+        workflows_dir = (
+            Path(__file__).parent.parent.parent.parent / ".github" / "workflows"
+        )
 
         if workflows_dir.exists():
             workflow_files = list(workflows_dir.glob("*.yml"))
             assert len(workflow_files) > 0, "No workflow files found"
 
             # Should have CI workflow
-            ci_workflows = [f for f in workflow_files if "ci" in f.name.lower() or "test" in f.name.lower()]
+            ci_workflows = [
+                f
+                for f in workflow_files
+                if "ci" in f.name.lower() or "test" in f.name.lower()
+            ]
             assert len(ci_workflows) > 0, "No CI/test workflows found"
         else:
             pytest.skip("GitHub Actions workflows directory not found")
@@ -394,7 +414,13 @@ class TestEnterpriseTestingStandards:
                 content = f.read()
 
             # Count test functions
-            test_functions = len([line for line in content.split("\n") if line.strip().startswith("def test_")])
+            test_functions = len(
+                [
+                    line
+                    for line in content.split("\n")
+                    if line.strip().startswith("def test_")
+                ]
+            )
             total_test_functions += test_functions
 
             # Count docstrings
@@ -403,7 +429,9 @@ class TestEnterpriseTestingStandards:
 
         if total_test_functions > 0:
             compliance_rate = docstring_compliant / len(test_files)
-            assert compliance_rate > 0.8, f"Docstring compliance too low: {compliance_rate:.2f}"
+            assert (
+                compliance_rate > 0.8
+            ), f"Docstring compliance too low: {compliance_rate:.2f}"
         else:
             pytest.skip("No test functions found")
 
@@ -442,4 +470,7 @@ def test_client():
 @pytest.fixture(scope="session")
 def performance_metrics():
     """Collect performance metrics for the test session."""
-    return {"start_time": time.time(), "initial_memory": psutil.Process().memory_info().rss / 1024 / 1024}  # MB
+    return {
+        "start_time": time.time(),
+        "initial_memory": psutil.Process().memory_info().rss / 1024 / 1024,
+    }  # MB

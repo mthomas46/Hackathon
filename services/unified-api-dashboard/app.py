@@ -18,7 +18,12 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from modules.analytics import ErrorTracking, PerformanceInsights, UsageAnalytics, UsagePatterns
+from modules.analytics import (
+    ErrorTracking,
+    PerformanceInsights,
+    UsageAnalytics,
+    UsagePatterns,
+)
 from modules.catalog import APICatalogManager
 from modules.developer_tools import APIValidator, ClientCodeGenerator, IntegrationTester
 
@@ -28,10 +33,17 @@ from modules.health import HealthMonitor
 from modules.performance import CacheManager, PerformanceMonitor
 from modules.security import AuthenticationManager, AuthorizationManager
 from modules.testing import APITester
-from modules.topology import DependencyGraphBuilder, TopologyAnalyzer, TopologyMetrics, TopologyVisualizer
+from modules.topology import (
+    DependencyGraphBuilder,
+    TopologyAnalyzer,
+    TopologyMetrics,
+    TopologyVisualizer,
+)
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(level)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # Global service instances
@@ -58,16 +70,28 @@ async def lifespan(app: FastAPI):
         cache_manager = CacheManager()
 
         # Core discovery and catalog
-        discovery_client = DiscoveryClient(base_url=os.getenv("DISCOVERY_AGENT_URL", "http://localhost:5045"))
-        catalog_manager = APICatalogManager(discovery_client=discovery_client, cache_manager=cache_manager)
+        discovery_client = DiscoveryClient(
+            base_url=os.getenv("DISCOVERY_AGENT_URL", "http://localhost:5045")
+        )
+        catalog_manager = APICatalogManager(
+            discovery_client=discovery_client, cache_manager=cache_manager
+        )
         health_monitor = HealthMonitor(discovery_client=discovery_client)
         api_tester = APITester()
 
         # Analytics modules
-        usage_analytics = UsageAnalytics(discovery_client=discovery_client, health_monitor=health_monitor)
-        performance_insights = PerformanceInsights(discovery_client=discovery_client, health_monitor=health_monitor)
-        error_tracking = ErrorTracking(discovery_client=discovery_client, health_monitor=health_monitor)
-        usage_patterns = UsagePatterns(discovery_client=discovery_client, health_monitor=health_monitor)
+        usage_analytics = UsageAnalytics(
+            discovery_client=discovery_client, health_monitor=health_monitor
+        )
+        performance_insights = PerformanceInsights(
+            discovery_client=discovery_client, health_monitor=health_monitor
+        )
+        error_tracking = ErrorTracking(
+            discovery_client=discovery_client, health_monitor=health_monitor
+        )
+        usage_patterns = UsagePatterns(
+            discovery_client=discovery_client, health_monitor=health_monitor
+        )
 
         # Developer tools
         client_generator = ClientCodeGenerator()
@@ -76,7 +100,9 @@ async def lifespan(app: FastAPI):
 
         # Service topology
         topology_analyzer = TopologyAnalyzer(
-            discovery_client=discovery_client, catalog_manager=catalog_manager, health_monitor=health_monitor
+            discovery_client=discovery_client,
+            catalog_manager=catalog_manager,
+            health_monitor=health_monitor,
         )
         topology_visualizer = TopologyVisualizer()
         graph_builder = DependencyGraphBuilder()
@@ -144,10 +170,40 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Error during shutdown: {e}")
 
 
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="unified-api-dashboard",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Unified API Dashboard"
+SERVICE_VERSION = config.service_version
+
 # Create FastAPI application
 app = FastAPI(
-    title="Unified API Dashboard", description="Enterprise API Management Platform", version="1.0.0", lifespan=lifespan
+    title=SERVICE_TITLE,
+    description="Enterprise API Management Platform",
+    version=SERVICE_VERSION,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
+
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=SERVICE_NAME)
+
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 # Security
 security = HTTPBearer(auto_error=False)
@@ -156,7 +212,9 @@ security = HTTPBearer(auto_error=False)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8501").split(","),
+    allow_origins=os.getenv(
+        "CORS_ORIGINS", "http://localhost:3000,http://localhost:8501"
+    ).split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -165,12 +223,18 @@ app.add_middleware(
 if os.getenv("ENVIRONMENT") == "production":
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else None,
+        allowed_hosts=(
+            os.getenv("ALLOWED_HOSTS", "").split(",")
+            if os.getenv("ALLOWED_HOSTS")
+            else None
+        ),
     )
 
 
 # Dependency injection
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[Dict[str, Any]]:
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> Optional[Dict[str, Any]]:
     """Get current authenticated user."""
     if not credentials:
         return None
@@ -270,12 +334,16 @@ async def get_performance_insights(user: Dict = Depends(get_current_user)):
         insights = await performance_insights.analyze_response_times()
         return {"success": True, "data": insights}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Performance analysis failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Performance analysis failed: {str(e)}"
+        )
 
 
 # Developer tools endpoints
 @app.post("/api/tools/generate-client")
-async def generate_client_code(request: Dict[str, Any], user: Dict = Depends(get_current_user)):
+async def generate_client_code(
+    request: Dict[str, Any], user: Dict = Depends(get_current_user)
+):
     """Generate client SDK code."""
     try:
         client_generator = service_instances["client_generator"]
@@ -289,14 +357,18 @@ async def generate_client_code(request: Dict[str, Any], user: Dict = Depends(get
 
 
 @app.post("/api/tools/validate-spec")
-async def validate_api_spec(request: Dict[str, Any], user: Dict = Depends(get_current_user)):
+async def validate_api_spec(
+    request: Dict[str, Any], user: Dict = Depends(get_current_user)
+):
     """Validate OpenAPI specification."""
     try:
         api_validator = service_instances["api_validator"]
         service_name = request.get("service_name")
         openapi_spec = request.get("openapi_spec")
 
-        validation_result = await api_validator.validate_openapi_spec(service_name, openapi_spec)
+        validation_result = await api_validator.validate_openapi_spec(
+            service_name, openapi_spec
+        )
         return {"success": True, "data": validation_result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
@@ -311,11 +383,15 @@ async def get_topology_analysis(user: Dict = Depends(get_current_user)):
         analysis = await topology_analyzer.analyze_topology()
         return {"success": True, "data": analysis}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Topology analysis failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Topology analysis failed: {str(e)}"
+        )
 
 
 @app.get("/api/topology/visualization")
-async def get_topology_visualization(format: str = "cytoscape", user: Dict = Depends(get_current_user)):
+async def get_topology_visualization(
+    format: str = "cytoscape", user: Dict = Depends(get_current_user)
+):
     """Get topology visualization data."""
     try:
         topology_visualizer = service_instances["topology_visualizer"]
@@ -335,7 +411,9 @@ async def login(request: Dict[str, str]):
         password = request.get("password")
 
         if not username or not password:
-            raise HTTPException(status_code=400, detail="Username and password required")
+            raise HTTPException(
+                status_code=400, detail="Username and password required"
+            )
 
         token = await auth_manager.authenticate_user(username, password)
         return {"success": True, "data": {"token": token}}
@@ -344,7 +422,9 @@ async def login(request: Dict[str, str]):
 
 
 @app.get("/api/security/threats")
-async def get_security_threats(limit: int = 100, user: Dict = Depends(get_current_user)):
+async def get_security_threats(
+    limit: int = 100, user: Dict = Depends(get_current_user)
+):
     """Get security threats and alerts."""
     try:
         security_monitor = service_instances["security_monitor"]
@@ -361,7 +441,11 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"success": False, "error": "Internal server error", "timestamp": datetime.now().isoformat()},
+        content={
+            "success": False,
+            "error": "Internal server error",
+            "timestamp": datetime.now().isoformat(),
+        },
     )
 
 

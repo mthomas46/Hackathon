@@ -24,7 +24,9 @@ class BaseService(Generic[T], ABC):
     def _validate_entity(self, entity: T) -> None:
         """Validate entity before saving."""
 
-    def create_entity(self, entity_data: Dict[str, Any], entity_id: Optional[str] = None) -> T:
+    def create_entity(
+        self, entity_data: Dict[str, Any], entity_id: Optional[str] = None
+    ) -> T:
         """Create a new entity with validation."""
         # Generate ID if not provided
         if not entity_id:
@@ -94,13 +96,27 @@ class BaseService(Generic[T], ABC):
             if hasattr(entity, key):
                 setattr(entity, key, value)
 
-    def _validate_required_fields(self, data: Dict[str, Any], required_fields: List[str]) -> None:
+    def _validate_required_fields(
+        self, data: Dict[str, Any], required_fields: List[str]
+    ) -> None:
         """Validate required fields are present."""
-        missing_fields = [field for field in required_fields if field not in data or data[field] is None]
+        missing_fields = [
+            field
+            for field in required_fields
+            if field not in data or data[field] is None
+        ]
         if missing_fields:
-            raise ServiceException(f"Missing required fields: {', '.join(missing_fields)}", "VALIDATION_ERROR")
+            raise ServiceException(
+                f"Missing required fields: {', '.join(missing_fields)}",
+                "VALIDATION_ERROR",
+            )
 
-    def _validate_field_type(self, value: Any, field_name: str, expected_type: type) -> None:
+    def _validate_field_type(
+        self, value: Any, field_name: str, expected_type: type
+    ) -> None:
         """Validate field type."""
         if not isinstance(value, expected_type):
-            raise ServiceException(f"Field '{field_name}' must be of type {expected_type.__name__}", "VALIDATION_ERROR")
+            raise ServiceException(
+                f"Field '{field_name}' must be of type {expected_type.__name__}",
+                "VALIDATION_ERROR",
+            )

@@ -12,6 +12,7 @@ Provides robust Redis connection management with:
 
 import asyncio
 import json
+import os
 import time
 import uuid
 from dataclasses import dataclass
@@ -27,8 +28,7 @@ except ImportError:
     redis = None
     REDIS_AVAILABLE = False
 
-from services.shared.core.config.config import get_config_value
-from services.shared.core.constants_new import ServiceNames
+# Config and service names now handled by standardized systems
 from services.shared.monitoring.logging import fire_and_forget
 
 
@@ -115,7 +115,9 @@ class CircuitBreaker:
                 self.state = CircuitBreakerState.CLOSED
                 self.failure_count = 0
                 self.success_count = 0
-                fire_and_forget("info", "Circuit breaker closed - service recovered", ServiceNames.ORCHESTRATOR)
+                fire_and_forget(
+                    "info", "Circuit breaker closed - service recovered", "orchestrator"
+                )
 
     def _record_failure(self):
         """Record failed operation."""
@@ -126,12 +128,16 @@ class CircuitBreaker:
             self.state = CircuitBreakerState.OPEN
             self.success_count = 0
             fire_and_forget(
-                "warning", f"Circuit breaker opened after failure in half-open state", ServiceNames.ORCHESTRATOR
+                "warning",
+                f"Circuit breaker opened after failure in half-open state",
+                "orchestrator",
             )
         elif self.failure_count >= self.config.failure_threshold:
             self.state = CircuitBreakerState.OPEN
             fire_and_forget(
-                "error", f"Circuit breaker opened after {self.failure_count} failures", ServiceNames.ORCHESTRATOR
+                "error",
+                f"Circuit breaker opened after {self.failure_count} failures",
+                "orchestrator",
             )
 
     async def call(self, func: Callable, *args, **kwargs):
@@ -140,7 +146,9 @@ class CircuitBreaker:
             if self._should_attempt_reset():
                 self.state = CircuitBreakerState.HALF_OPEN
                 fire_and_forget(
-                    "info", "Circuit breaker half-open - testing service recovery", ServiceNames.ORCHESTRATOR
+                    "info",
+                    "Circuit breaker half-open - testing service recovery",
+                    "orchestrator",
                 )
             else:
                 raise Exception("Circuit breaker is OPEN")
@@ -171,7 +179,7 @@ class RedisManager:
         if not REDIS_AVAILABLE:
             raise RuntimeError("Redis dependencies not available")
 
-        self.host = host or get_config_value("REDIS_HOST", "redis", env_key="REDIS_HOST")
+        self.host = host or os.getenv("REDIS_HOST", "redis")
         self.port = port
         self.db = db
         self.password = password
@@ -209,7 +217,9 @@ class RedisManager:
             try:
                 asyncio.create_task(listener(self.connection_state, new_state))
             except Exception as e:
-                fire_and_forget("error", f"Connection listener failed: {e}", ServiceNames.ORCHESTRATOR)
+                fire_and_forget(
+                    "error", f"Connection listener failed: {e}", "orchestrator"
+                )
 
     def _notify_error_listeners(self, error: Exception, operation: str):
         """Notify error listeners."""
@@ -217,14 +227,18 @@ class RedisManager:
             try:
                 asyncio.create_task(listener(error, operation))
             except Exception as e:
-                fire_and_forget("error", f"Error listener failed: {e}", ServiceNames.ORCHESTRATOR)
+                fire_and_forget("error", f"Error listener failed: {e}", "orchestrator")
 
     async def _calculate_delay(self, attempt: int) -> float:
         """Calculate delay for retry with exponential backoff."""
-        delay = self.retry_config.base_delay * (self.retry_config.exponential_base**attempt)
+        delay = self.retry_config.base_delay * (
+            self.retry_config.exponential_base**attempt
+        )
         return min(delay, self.retry_config.max_delay)
 
-    async def _execute_with_retry(self, operation: str, func: Callable, *args, **kwargs):
+    async def _execute_with_retry(
+        self, operation: str, func: Callable, *args, **kwargs
+    ):
         """Execute Redis operation with retry logic."""
         last_exception = None
 
@@ -236,7 +250,7 @@ class RedisManager:
                     fire_and_forget(
                         "info",
                         f"Retrying Redis operation {operation} (attempt {attempt + 1})",
-                        ServiceNames.ORCHESTRATOR,
+                        "orchestrator",
                     )
 
                 start_time = time.time()
@@ -252,7 +266,9 @@ class RedisManager:
                 if self.metrics.average_response_time == 0:
                     self.metrics.average_response_time = response_time
                 else:
-                    self.metrics.average_response_time = (self.metrics.average_response_time + response_time) / 2
+                    self.metrics.average_response_time = (
+                        self.metrics.average_response_time + response_time
+                    ) / 2
 
                 return result
 
@@ -265,7 +281,7 @@ class RedisManager:
                 fire_and_forget(
                     "warning",
                     f"Redis operation {operation} failed (attempt {attempt + 1}): {e}",
-                    ServiceNames.ORCHESTRATOR,
+                    "orchestrator",
                 )
 
                 # Notify error listeners
@@ -278,7 +294,7 @@ class RedisManager:
         fire_and_forget(
             "error",
             f"Redis operation {operation} failed after {self.retry_config.max_attempts} attempts",
-            ServiceNames.ORCHESTRATOR,
+            "orchestrator",
         )
         raise last_exception
 
@@ -302,7 +318,9 @@ class RedisManager:
             return True
 
         except Exception as e:
-            fire_and_forget("error", f"Failed to create Redis connection pool: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "error", f"Failed to create Redis connection pool: {e}", "orchestrator"
+            )
             return False
 
     async def connect(self) -> bool:
@@ -334,7 +352,9 @@ class RedisManager:
             self.metrics.successful_connections += 1
 
             fire_and_forget(
-                "info", f"Successfully connected to Redis at {self.host}:{self.port}", ServiceNames.ORCHESTRATOR
+                "info",
+                f"Successfully connected to Redis at {self.host}:{self.port}",
+                "orchestrator",
             )
             self._notify_connection_listeners(self.connection_state)
 
@@ -344,7 +364,7 @@ class RedisManager:
             self.connection_state = RedisConnectionState.ERROR
             self.metrics.failed_connections += 1
 
-            fire_and_forget("error", f"Failed to connect to Redis: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget("error", f"Failed to connect to Redis: {e}", "orchestrator")
             self._notify_error_listeners(e, "connect")
 
             # Don't change state to CIRCUIT_OPEN here - let circuit breaker handle it
@@ -364,7 +384,7 @@ class RedisManager:
         self.connection_state = RedisConnectionState.DISCONNECTED
         self._notify_connection_listeners(self.connection_state)
 
-        fire_and_forget("info", "Disconnected from Redis", ServiceNames.ORCHESTRATOR)
+        fire_and_forget("info", "Disconnected from Redis", "orchestrator")
 
     async def health_check(self) -> Dict[str, Any]:
         """Perform Redis health check."""
@@ -432,7 +452,9 @@ class RedisManager:
                 "details": {"connection_state": self.connection_state.value},
             }
 
-    async def publish_event(self, channel: str, message: Dict[str, Any], event_id: str = None) -> bool:
+    async def publish_event(
+        self, channel: str, message: Dict[str, Any], event_id: str = None
+    ) -> bool:
         """Publish event to Redis channel with error handling."""
         if not event_id:
             event_id = str(uuid.uuid4())
@@ -458,11 +480,17 @@ class RedisManager:
 
             await self._execute_with_retry("publish", _publish)
 
-            fire_and_forget("debug", f"Published event to channel {channel}: {event_id}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "debug",
+                f"Published event to channel {channel}: {event_id}",
+                "orchestrator",
+            )
             return True
 
         except Exception as e:
-            fire_and_forget("error", f"Failed to publish event to {channel}: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "error", f"Failed to publish event to {channel}: {e}", "orchestrator"
+            )
             return False
 
     async def set_cache(self, key: str, value: Any, ttl_seconds: int = None) -> bool:
@@ -473,7 +501,9 @@ class RedisManager:
                 if not self.redis_client:
                     raise Exception("Redis client not available")
 
-                serialized_value = json.dumps(value) if isinstance(value, (dict, list)) else str(value)
+                serialized_value = (
+                    json.dumps(value) if isinstance(value, (dict, list)) else str(value)
+                )
 
                 if ttl_seconds:
                     await self.redis_client.setex(key, ttl_seconds, serialized_value)
@@ -484,11 +514,13 @@ class RedisManager:
 
             await self._execute_with_retry("set_cache", _set)
 
-            fire_and_forget("debug", f"Set cache key {key} with TTL {ttl_seconds}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "debug", f"Set cache key {key} with TTL {ttl_seconds}", "orchestrator"
+            )
             return True
 
         except Exception as e:
-            fire_and_forget("error", f"Failed to set cache {key}: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget("error", f"Failed to set cache {key}: {e}", "orchestrator")
             return False
 
     async def get_cache(self, key: str) -> Optional[Any]:
@@ -511,11 +543,11 @@ class RedisManager:
 
             result = await self._execute_with_retry("get_cache", _get)
 
-            fire_and_forget("debug", f"Retrieved cache key {key}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget("debug", f"Retrieved cache key {key}", "orchestrator")
             return result
 
         except Exception as e:
-            fire_and_forget("error", f"Failed to get cache {key}: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget("error", f"Failed to get cache {key}: {e}", "orchestrator")
             return None
 
     async def delete_cache(self, key: str) -> bool:
@@ -531,11 +563,13 @@ class RedisManager:
 
             await self._execute_with_retry("delete_cache", _delete)
 
-            fire_and_forget("debug", f"Deleted cache key {key}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget("debug", f"Deleted cache key {key}", "orchestrator")
             return True
 
         except Exception as e:
-            fire_and_forget("error", f"Failed to delete cache {key}: {e}", ServiceNames.ORCHESTRATOR)
+            fire_and_forget(
+                "error", f"Failed to delete cache {key}: {e}", "orchestrator"
+            )
             return False
 
     def get_metrics(self) -> Dict[str, Any]:
@@ -551,13 +585,19 @@ class RedisManager:
             "failed_operations": self.metrics.failed_operations,
             "average_response_time": self.metrics.average_response_time,
             "last_connection_attempt": (
-                self.metrics.last_connection_attempt.isoformat() if self.metrics.last_connection_attempt else None
+                self.metrics.last_connection_attempt.isoformat()
+                if self.metrics.last_connection_attempt
+                else None
             ),
             "last_successful_operation": (
-                self.metrics.last_successful_operation.isoformat() if self.metrics.last_successful_operation else None
+                self.metrics.last_successful_operation.isoformat()
+                if self.metrics.last_successful_operation
+                else None
             ),
             "last_failed_operation": (
-                self.metrics.last_failed_operation.isoformat() if self.metrics.last_failed_operation else None
+                self.metrics.last_failed_operation.isoformat()
+                if self.metrics.last_failed_operation
+                else None
             ),
             "success_rate": (
                 (self.metrics.successful_operations / self.metrics.total_operations)
@@ -582,7 +622,9 @@ async def initialize_redis_manager():
     success = await redis_manager.connect()
 
     if success:
-        fire_and_forget("info", "Redis manager initialized successfully", ServiceNames.ORCHESTRATOR)
+        fire_and_forget(
+            "info", "Redis manager initialized successfully", "orchestrator"
+        )
 
         # Add health monitoring
         async def health_monitor():
@@ -591,17 +633,21 @@ async def initialize_redis_manager():
                     health = await redis_manager.health_check()
                     if health["status"] != "healthy":
                         fire_and_forget(
-                            "warning", f"Redis health check failed: {health['message']}", ServiceNames.ORCHESTRATOR
+                            "warning",
+                            f"Redis health check failed: {health['message']}",
+                            "orchestrator",
                         )
                 except Exception as e:
-                    fire_and_forget("error", f"Redis health monitor error: {e}", ServiceNames.ORCHESTRATOR)
+                    fire_and_forget(
+                        "error", f"Redis health monitor error: {e}", "orchestrator"
+                    )
 
                 await asyncio.sleep(redis_manager.health_check_interval)
 
         asyncio.create_task(health_monitor())
 
     else:
-        fire_and_forget("error", "Failed to initialize Redis manager", ServiceNames.ORCHESTRATOR)
+        fire_and_forget("error", "Failed to initialize Redis manager", "orchestrator")
 
     return success
 
@@ -609,15 +655,21 @@ async def initialize_redis_manager():
 async def shutdown_redis_manager():
     """Shutdown the global Redis manager."""
     await redis_manager.cleanup()
-    fire_and_forget("info", "Redis manager shutdown", ServiceNames.ORCHESTRATOR)
+    fire_and_forget("info", "Redis manager shutdown", "orchestrator")
 
 
 # Convenience functions
-async def publish_orchestrator_event(event_type: str, payload: Dict[str, Any], correlation_id: str = None) -> bool:
+async def publish_orchestrator_event(
+    event_type: str, payload: Dict[str, Any], correlation_id: str = None
+) -> bool:
     """Publish orchestrator event to Redis."""
     return await redis_manager.publish_event(
         "orchestrator.events",
-        {"event_type": event_type, "payload": payload, "correlation_id": correlation_id or str(uuid.uuid4())},
+        {
+            "event_type": event_type,
+            "payload": payload,
+            "correlation_id": correlation_id or str(uuid.uuid4()),
+        },
     )
 
 

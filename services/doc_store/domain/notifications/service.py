@@ -6,7 +6,7 @@ Handles notification processing and webhook management.
 from typing import Any, Dict, Optional
 
 from ...core.entities import NotificationEvent
-from ...core.service import BaseService
+from services.shared.utilities import BaseService
 from .repository import NotificationsRepository
 
 
@@ -14,14 +14,18 @@ class NotificationsService(BaseService[NotificationEvent]):
     """Service for notification business logic."""
 
     def __init__(self):
-        super().__init__(NotificationsRepository())
+        from ...db.connection import get_document_connection_string
+
+        super().__init__(NotificationsRepository(get_document_connection_string()))
 
     def _validate_entity(self, entity: NotificationEvent) -> None:
         """Validate notification event."""
         if not entity.event_type or not entity.entity_type or not entity.entity_id:
             raise ValueError("Event type, entity type, and entity ID are required")
 
-    def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> NotificationEvent:
+    def _create_entity_from_data(
+        self, entity_id: str, data: Dict[str, Any]
+    ) -> NotificationEvent:
         """Create notification event from data."""
         return NotificationEvent(
             id=entity_id,
@@ -72,12 +76,18 @@ class NotificationsService(BaseService[NotificationEvent]):
         limit: int = 100,
     ) -> Dict[str, Any]:
         """Get notification event history."""
-        events = self.repository.get_event_history(event_type, entity_type, entity_id, limit)
+        events = self.repository.get_event_history(
+            event_type, entity_type, entity_id, limit
+        )
 
         return {
             "events": [event.to_dict() for event in events],
             "total": len(events),
-            "filters": {"event_type": event_type, "entity_type": entity_type, "entity_id": entity_id},
+            "filters": {
+                "event_type": event_type,
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+            },
             "limit": limit,
         }
 

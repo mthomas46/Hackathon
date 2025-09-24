@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 from services.shared.utilities import utc_now
 
 
-
 class CLIMonitor:
     """Monitor for CLI service with terminal pass-through capabilities."""
 
@@ -27,7 +26,10 @@ class CLIMonitor:
         return (utc_now() - cache_time).total_seconds() < self._cache_ttl
 
     async def execute_cli_command(
-        self, command: str, args: Optional[List[str]] = None, session_id: Optional[str] = None
+        self,
+        command: str,
+        args: Optional[List[str]] = None,
+        session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Execute a CLI command and return the result."""
         try:
@@ -38,7 +40,10 @@ class CLIMonitor:
 
             # Create a subprocess to run the CLI command
             process = await asyncio.create_subprocess_exec(
-                *cmd_args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, cwd="."
+                *cmd_args,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=".",
             )
 
             # Wait for the command to complete
@@ -105,19 +110,32 @@ class CLIMonitor:
             return health_data
 
         except Exception as e:
-            return {"status": "unhealthy", "last_check": utc_now().isoformat(), "cli_available": False, "error": str(e)}
+            return {
+                "status": "unhealthy",
+                "last_check": utc_now().isoformat(),
+                "cli_available": False,
+                "error": str(e),
+            }
 
     async def get_available_commands(self) -> Dict[str, Any]:
         """Get list of available CLI commands."""
         return {
             "commands": [
-                {"name": "interactive", "description": "Start interactive TUI workflow", "usage": "interactive"},
+                {
+                    "name": "interactive",
+                    "description": "Start interactive TUI workflow",
+                    "usage": "interactive",
+                },
                 {
                     "name": "get-prompt",
                     "description": "Retrieve and render a prompt",
                     "usage": "get-prompt <category> <name> [--content <content>]",
                 },
-                {"name": "health", "description": "Check service health across the stack", "usage": "health"},
+                {
+                    "name": "health",
+                    "description": "Check service health across the stack",
+                    "usage": "health",
+                },
                 {
                     "name": "list-prompts",
                     "description": "List available prompts",
@@ -168,7 +186,9 @@ class CLIMonitor:
         except Exception as e:
             return {"success": False, "error": str(e), "category": category}
 
-    async def get_prompt_details(self, category: str, name: str, content: Optional[str] = None) -> Dict[str, Any]:
+    async def get_prompt_details(
+        self, category: str, name: str, content: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Get specific prompt details via CLI."""
         try:
             args = [category, name]
@@ -187,14 +207,23 @@ class CLIMonitor:
             }
 
         except Exception as e:
-            return {"success": False, "error": str(e), "category": category, "name": name}
+            return {
+                "success": False,
+                "error": str(e),
+                "category": category,
+                "name": name,
+            }
 
     async def run_integration_tests(self) -> Dict[str, Any]:
         """Run integration tests via CLI."""
         try:
             result = await self.execute_cli_command("test-integration")
 
-            return {"success": result["success"], "output": result["stdout"], "error": result["stderr"]}
+            return {
+                "success": result["success"],
+                "output": result["stdout"],
+                "error": result["stderr"],
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e)}

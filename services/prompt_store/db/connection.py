@@ -10,7 +10,9 @@ from contextlib import contextmanager
 
 def _validate_db_path(db_path: str) -> str:
     """Validate database path to prevent directory traversal attacks."""
-    if any(char in db_path for char in ["..", "/", "\\", ":", "*", "?", '"', "<", ">", "|"]):
+    if any(
+        char in db_path for char in ["..", "/", "\\", ":", "*", "?", '"', "<", ">", "|"]
+    ):
         return "prompt_store.db"
     return db_path
 
@@ -27,13 +29,20 @@ def _validate_connection_pool_size(size_str: str) -> int:
 
 
 _DB_PATH = _validate_db_path(os.environ.get("PROMPT_STORE_DB", "prompt_store.db"))
-_CONNECTION_POOL_SIZE = _validate_connection_pool_size(os.environ.get("PROMPT_STORE_CONNECTION_POOL_SIZE", "5"))
+_CONNECTION_POOL_SIZE = _validate_connection_pool_size(
+    os.environ.get("PROMPT_STORE_CONNECTION_POOL_SIZE", "5")
+)
 _connection_pool = []
 
 
 def get_prompt_store_db_path() -> str:
     """Get the database path for prompt_store service."""
     return _DB_PATH
+
+
+def get_prompt_store_connection_string() -> str:
+    """Get the database connection string for prompt_store service."""
+    return f"sqlite:///{_DB_PATH}"
 
 
 def get_prompt_store_connection() -> sqlite3.Connection:
@@ -53,7 +62,9 @@ def get_prompt_store_connection() -> sqlite3.Connection:
 
     # Create new connection with optimizations
     conn = sqlite3.connect(_DB_PATH, check_same_thread=False)
-    conn.execute("PRAGMA journal_mode=WAL")  # Write-Ahead Logging for better concurrency
+    conn.execute(
+        "PRAGMA journal_mode=WAL"
+    )  # Write-Ahead Logging for better concurrency
     conn.execute("PRAGMA synchronous=NORMAL")  # Balance between performance and safety
     conn.execute("PRAGMA cache_size=-64000")  # 64MB cache
     conn.execute("PRAGMA temp_store=MEMORY")  # Store temp tables in memory

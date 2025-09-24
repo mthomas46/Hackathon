@@ -319,7 +319,9 @@ class TestServiceEndpoint:
 
     def test_valid_service_endpoint_creation(self):
         """Test creating valid service endpoints."""
-        endpoint = ServiceEndpoint(url="https://api.example.com", timeout_seconds=30, retries=3)
+        endpoint = ServiceEndpoint(
+            url="https://api.example.com", timeout_seconds=30, retries=3
+        )
 
         assert endpoint.url == "https://api.example.com"
         assert endpoint.timeout_seconds == 30
@@ -378,7 +380,9 @@ class TestServiceHealthStatus:
 
     def test_service_health_degraded_status(self):
         """Test degraded service status."""
-        status = ServiceHealthStatus(service_name="api", status=ServiceHealth.DEGRADED, response_time_ms=5000.0)
+        status = ServiceHealthStatus(
+            service_name="api", status=ServiceHealth.DEGRADED, response_time_ms=5000.0
+        )
 
         assert status.is_healthy() == False
         assert status.needs_attention() == True
@@ -386,7 +390,9 @@ class TestServiceHealthStatus:
     def test_service_health_unhealthy_status(self):
         """Test unhealthy service status."""
         status = ServiceHealthStatus(
-            service_name="api", status=ServiceHealth.UNHEALTHY, error_message="Connection timeout"
+            service_name="api",
+            status=ServiceHealth.UNHEALTHY,
+            error_message="Connection timeout",
         )
 
         assert status.is_healthy() == False
@@ -612,7 +618,9 @@ class TestEcosystemService:
     def test_ecosystem_service_health_check_url(self):
         """Test health check URL generation."""
         endpoint = ServiceEndpoint("https://api.example.com/v1")
-        service = EcosystemService(name="test_api", endpoint=endpoint, health_check_endpoint="health")
+        service = EcosystemService(
+            name="test_api", endpoint=endpoint, health_check_endpoint="health"
+        )
 
         expected_url = "https://api.example.com/health"
         assert service.get_health_check_url() == expected_url

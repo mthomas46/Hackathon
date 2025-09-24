@@ -17,7 +17,6 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set
 
 
-
 class ThreatLevel(Enum):
     """Threat severity levels."""
 
@@ -125,7 +124,11 @@ class SecurityMonitor:
                 threat_type=ThreatType.BRUTE_FORCE,
                 description="Multiple failed login attempts from same IP",
                 severity=ThreatLevel.HIGH,
-                conditions={"failed_logins_threshold": 5, "time_window_minutes": 15, "same_ip_only": True},
+                conditions={
+                    "failed_logins_threshold": 5,
+                    "time_window_minutes": 15,
+                    "same_ip_only": True,
+                },
             ),
             "unusual_login_time": ThreatPattern(
                 pattern_id="unusual_login_time",
@@ -133,7 +136,10 @@ class SecurityMonitor:
                 threat_type=ThreatType.ANOMALOUS_BEHAVIOR,
                 description="Login at unusual time for user",
                 severity=ThreatLevel.MEDIUM,
-                conditions={"deviation_threshold": 2.0, "minimum_samples": 10},  # Standard deviations
+                conditions={
+                    "deviation_threshold": 2.0,
+                    "minimum_samples": 10,
+                },  # Standard deviations
             ),
             "suspicious_ip": ThreatPattern(
                 pattern_id="suspicious_ip",
@@ -149,7 +155,10 @@ class SecurityMonitor:
                 threat_type=ThreatType.SUSPICIOUS_TRAFFIC,
                 description="Unusually high number of API calls",
                 severity=ThreatLevel.MEDIUM,
-                conditions={"calls_per_minute_threshold": 100, "burst_window_seconds": 60},
+                conditions={
+                    "calls_per_minute_threshold": 100,
+                    "burst_window_seconds": 60,
+                },
             ),
             "privilege_escalation": ThreatPattern(
                 pattern_id="privilege_escalation",
@@ -165,7 +174,10 @@ class SecurityMonitor:
                 threat_type=ThreatType.DATA_EXFILTRATION,
                 description="Large data downloads or unusual export patterns",
                 severity=ThreatLevel.HIGH,
-                conditions={"data_volume_threshold_mb": 100, "unusual_export_pattern": True},
+                conditions={
+                    "data_volume_threshold_mb": 100,
+                    "unusual_export_pattern": True,
+                },
             ),
         }
 
@@ -184,7 +196,9 @@ class SecurityMonitor:
             if not pattern.enabled:
                 continue
 
-            threat = await self._check_pattern(pattern, event_type, user_id, username, ip_address, details)
+            threat = await self._check_pattern(
+                pattern, event_type, user_id, username, ip_address, details
+            )
             if threat:
                 detected_threats.append(threat)
                 self.events.append(threat)
@@ -197,7 +211,9 @@ class SecurityMonitor:
                 )
 
                 severity_key = pattern.severity.value
-                self.metrics.events_by_severity[severity_key] = self.metrics.events_by_severity.get(severity_key, 0) + 1
+                self.metrics.events_by_severity[severity_key] = (
+                    self.metrics.events_by_severity.get(severity_key, 0) + 1
+                )
 
                 # Trigger alerts for high/critical threats
                 if pattern.severity in [ThreatLevel.HIGH, ThreatLevel.CRITICAL]:
@@ -205,7 +221,9 @@ class SecurityMonitor:
 
         # Update behavioral profiles
         if user_id:
-            await self._update_behavioral_profile(user_id, event_type, ip_address, details)
+            await self._update_behavioral_profile(
+                user_id, event_type, ip_address, details
+            )
 
         return detected_threats
 
@@ -238,7 +256,9 @@ class SecurityMonitor:
             return await self._check_rapid_api_calls(pattern, user_id, conditions)
 
         # Privilege escalation
-        elif pattern.pattern_id == "privilege_escalation" and event_type == "auth.denied":
+        elif (
+            pattern.pattern_id == "privilege_escalation" and event_type == "auth.denied"
+        ):
             return await self._check_privilege_escalation(pattern, user_id, conditions)
 
         return None
@@ -255,7 +275,9 @@ class SecurityMonitor:
         recent_failures = [
             e
             for e in self.events
-            if e.threat_type == ThreatType.BRUTE_FORCE and e.source_ip == ip_address and e.timestamp > cutoff_time
+            if e.threat_type == ThreatType.BRUTE_FORCE
+            and e.source_ip == ip_address
+            and e.timestamp > cutoff_time
         ]
 
         if len(recent_failures) >= threshold:
@@ -366,7 +388,9 @@ class SecurityMonitor:
         recent_calls = [
             e
             for e in self.events
-            if e.user_id == user_id and e.timestamp > cutoff_time and str(e.threat_type).startswith("api.")
+            if e.user_id == user_id
+            and e.timestamp > cutoff_time
+            and str(e.threat_type).startswith("api.")
         ]
 
         if len(recent_calls) >= threshold:
@@ -401,7 +425,9 @@ class SecurityMonitor:
         recent_denials = [
             e
             for e in self.events
-            if e.user_id == user_id and e.threat_type == ThreatType.UNAUTHORIZED_ACCESS and e.timestamp > cutoff_time
+            if e.user_id == user_id
+            and e.threat_type == ThreatType.UNAUTHORIZED_ACCESS
+            and e.timestamp > cutoff_time
         ]
 
         if len(recent_denials) >= threshold:
@@ -424,7 +450,9 @@ class SecurityMonitor:
 
         return None
 
-    async def _update_behavioral_profile(self, user_id: str, event_type: str, ip_address: str, details: Dict[str, Any]):
+    async def _update_behavioral_profile(
+        self, user_id: str, event_type: str, ip_address: str, details: Dict[str, Any]
+    ):
         """Update user behavioral profile."""
         if user_id not in self.behavioral_profiles:
             self.behavioral_profiles[user_id] = BehavioralProfile(user_id=user_id)
@@ -492,7 +520,9 @@ class SecurityMonitor:
         filtered_events = self.events
 
         if threat_type:
-            filtered_events = [e for e in filtered_events if e.threat_type == threat_type]
+            filtered_events = [
+                e for e in filtered_events if e.threat_type == threat_type
+            ]
 
         if severity:
             filtered_events = [e for e in filtered_events if e.threat_level == severity]
@@ -531,20 +561,25 @@ class ThreatDetector:
         login_events = [
             e
             for e in self.security_monitor.events
-            if e.timestamp > cutoff_time and e.threat_type == ThreatType.ANOMALOUS_BEHAVIOR
+            if e.timestamp > cutoff_time
+            and e.threat_type == ThreatType.ANOMALOUS_BEHAVIOR
         ]
 
         if login_events:
             login_hours = [e.timestamp.hour for e in login_events]
             self.baseline_metrics["login_patterns"] = {
                 "mean_hour": statistics.mean(login_hours),
-                "std_hour": statistics.stdev(login_hours) if len(login_hours) > 1 else 1,
+                "std_hour": (
+                    statistics.stdev(login_hours) if len(login_hours) > 1 else 1
+                ),
                 "sample_count": len(login_hours),
             }
 
         # This would be expanded with more sophisticated ML models in production
 
-    async def detect_anomalies(self, current_metrics: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def detect_anomalies(
+        self, current_metrics: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Detect anomalous behavior using statistical analysis."""
         anomalies = []
 

@@ -14,7 +14,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.analytics.analytics_integration import (
     AnalysisType,
@@ -69,7 +71,13 @@ class WorkflowStep:
 class WorkflowExecution:
     """Represents the execution of an analysis workflow."""
 
-    def __init__(self, execution_id: str, workflow_id: str, context: Dict[str, Any], steps: List[WorkflowStep]):
+    def __init__(
+        self,
+        execution_id: str,
+        workflow_id: str,
+        context: Dict[str, Any],
+        steps: List[WorkflowStep],
+    ):
         """Initialize workflow execution."""
         self.execution_id = execution_id
         self.workflow_id = workflow_id
@@ -122,10 +130,14 @@ class WorkflowExecution:
             "step_results": self.step_results,
             "step_status": {k: v.value for k, v in self.step_status.items()},
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
             "errors": self.errors,
             "execution_time_seconds": (
-                (self.completed_at - self.started_at).total_seconds() if self.started_at and self.completed_at else None
+                (self.completed_at - self.started_at).total_seconds()
+                if self.started_at and self.completed_at
+                else None
             ),
         }
 
@@ -179,14 +191,18 @@ class AnalysisWorkflowOrchestrator:
                 name="Requirement Coverage Analysis",
                 analysis_type=AnalysisType.REQUIREMENT_COVERAGE,
                 dependencies=["initial_assessment", "risk_analysis"],
-                parameters={"coverage_types": ["functional", "non_functional", "business"]},
+                parameters={
+                    "coverage_types": ["functional", "non_functional", "business"]
+                },
             ),
             WorkflowStep(
                 step_id="architecture_compliance",
                 name="Architecture Compliance Check",
                 analysis_type=AnalysisType.ARCHITECTURE_COMPLIANCE,
                 dependencies=["requirement_coverage"],
-                parameters={"standards": ["security", "scalability", "maintainability"]},
+                parameters={
+                    "standards": ["security", "scalability", "maintainability"]
+                },
             ),
             WorkflowStep(
                 step_id="test_coverage",
@@ -257,7 +273,13 @@ class AnalysisWorkflowOrchestrator:
                 name="Performance Analysis",
                 analysis_type=AnalysisType.PERFORMANCE_METRICS,
                 dependencies=["code_complexity"],
-                parameters={"performance_indicators": ["response_time", "throughput", "resource_usage"]},
+                parameters={
+                    "performance_indicators": [
+                        "response_time",
+                        "throughput",
+                        "resource_usage",
+                    ]
+                },
             ),
             WorkflowStep(
                 step_id="quality_synthesis",
@@ -271,7 +293,10 @@ class AnalysisWorkflowOrchestrator:
         return workflows
 
     async def execute_workflow(
-        self, workflow_id: str, context: Dict[str, Any], execution_id: Optional[str] = None
+        self,
+        workflow_id: str,
+        context: Dict[str, Any],
+        execution_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Execute a complete analysis workflow."""
         try:
@@ -289,7 +314,11 @@ class AnalysisWorkflowOrchestrator:
             # Register execution
             self.active_executions[execution_id] = execution
 
-            self.logger.info("Starting workflow execution", execution_id=execution_id, workflow_id=workflow_id)
+            self.logger.info(
+                "Starting workflow execution",
+                execution_id=execution_id,
+                workflow_id=workflow_id,
+            )
 
             # Execute workflow
             execution.start()
@@ -302,10 +331,14 @@ class AnalysisWorkflowOrchestrator:
             return result
 
         except Exception as e:
-            self.logger.error("Workflow execution failed", workflow_id=workflow_id, error=str(e))
+            self.logger.error(
+                "Workflow execution failed", workflow_id=workflow_id, error=str(e)
+            )
             raise
 
-    async def _execute_workflow_steps(self, execution: WorkflowExecution) -> Dict[str, Any]:
+    async def _execute_workflow_steps(
+        self, execution: WorkflowExecution
+    ) -> Dict[str, Any]:
         """Execute workflow steps in dependency order."""
         try:
             # Build dependency graph
@@ -327,19 +360,28 @@ class AnalysisWorkflowOrchestrator:
                     result = await self._execute_workflow_step(step, execution.context)
                     execution.complete_step(step_id, result)
 
-                    self.logger.info("Workflow step completed", execution_id=execution.execution_id, step_id=step_id)
+                    self.logger.info(
+                        "Workflow step completed",
+                        execution_id=execution.execution_id,
+                        step_id=step_id,
+                    )
 
                 except Exception as e:
                     execution.fail_step(step_id, str(e))
                     self.logger.error(
-                        "Workflow step failed", execution_id=execution.execution_id, step_id=step_id, error=str(e)
+                        "Workflow step failed",
+                        execution_id=execution.execution_id,
+                        step_id=step_id,
+                        error=str(e),
                     )
                     break
 
             # Complete execution
             if execution.status == WorkflowExecutionStatus.RUNNING:
                 execution.complete()
-                self.logger.info("Workflow execution completed", execution_id=execution.execution_id)
+                self.logger.info(
+                    "Workflow execution completed", execution_id=execution.execution_id
+                )
 
             return execution.to_dict()
 
@@ -347,7 +389,9 @@ class AnalysisWorkflowOrchestrator:
             execution.fail(str(e))
             raise
 
-    async def _execute_workflow_step(self, step: WorkflowStep, context: Dict[str, Any]) -> Dict[str, Any]:
+    async def _execute_workflow_step(
+        self, step: WorkflowStep, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Execute a single workflow step."""
         try:
             # Prepare step inputs
@@ -355,7 +399,9 @@ class AnalysisWorkflowOrchestrator:
 
             # Execute analysis component
             result = await self.analytics_manager._execute_analysis_component(
-                step.analysis_type, step_inputs, None  # Context not needed for this call
+                step.analysis_type,
+                step_inputs,
+                None,  # Context not needed for this call
             )
 
             # Post-process results
@@ -364,10 +410,14 @@ class AnalysisWorkflowOrchestrator:
             return processed_result
 
         except Exception as e:
-            self.logger.error("Step execution failed", step_id=step.step_id, error=str(e))
+            self.logger.error(
+                "Step execution failed", step_id=step.step_id, error=str(e)
+            )
             raise
 
-    def _prepare_step_inputs(self, step: WorkflowStep, context: Dict[str, Any]) -> Dict[str, Any]:
+    def _prepare_step_inputs(
+        self, step: WorkflowStep, context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Prepare inputs for step execution."""
         inputs = step.parameters.copy()
 
@@ -390,7 +440,9 @@ class AnalysisWorkflowOrchestrator:
 
         return inputs
 
-    def _post_process_step_result(self, step: WorkflowStep, result: Dict[str, Any]) -> Dict[str, Any]:
+    def _post_process_step_result(
+        self, step: WorkflowStep, result: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Post-process step execution result."""
         processed = result.copy()
 
@@ -405,7 +457,9 @@ class AnalysisWorkflowOrchestrator:
 
         # Add recommendations if not present
         if "recommendations" not in processed:
-            processed["recommendations"] = self._generate_step_recommendations(step, result)
+            processed["recommendations"] = self._generate_step_recommendations(
+                step, result
+            )
 
         return processed
 
@@ -427,7 +481,9 @@ class AnalysisWorkflowOrchestrator:
 
         return max(0.0, min(1.0, confidence))
 
-    def _generate_step_recommendations(self, step: WorkflowStep, result: Dict[str, Any]) -> List[str]:
+    def _generate_step_recommendations(
+        self, step: WorkflowStep, result: Dict[str, Any]
+    ) -> List[str]:
         """Generate recommendations for step result."""
         recommendations = []
 
@@ -448,7 +504,9 @@ class AnalysisWorkflowOrchestrator:
 
         return recommendations
 
-    def _build_dependency_graph(self, steps: List[WorkflowStep]) -> Dict[str, List[str]]:
+    def _build_dependency_graph(
+        self, steps: List[WorkflowStep]
+    ) -> Dict[str, List[str]]:
         """Build dependency graph for workflow steps."""
         graph = {}
 
@@ -486,10 +544,15 @@ class AnalysisWorkflowOrchestrator:
 
         return order
 
-    def _are_dependencies_satisfied(self, step: WorkflowStep, execution: WorkflowExecution) -> bool:
+    def _are_dependencies_satisfied(
+        self, step: WorkflowStep, execution: WorkflowExecution
+    ) -> bool:
         """Check if step dependencies are satisfied."""
         for dependency_id in step.dependencies:
-            if execution.step_status.get(dependency_id) != WorkflowExecutionStatus.COMPLETED:
+            if (
+                execution.step_status.get(dependency_id)
+                != WorkflowExecutionStatus.COMPLETED
+            ):
                 return False
         return True
 
@@ -536,7 +599,9 @@ class AnalysisWorkflowOrchestrator:
 
         return descriptions.get(workflow_id, f"Analysis workflow: {workflow_id}")
 
-    def get_execution_history(self, workflow_id: Optional[str] = None, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_execution_history(
+        self, workflow_id: Optional[str] = None, limit: int = 10
+    ) -> List[Dict[str, Any]]:
         """Get execution history."""
         history = self.execution_history
 
@@ -548,7 +613,9 @@ class AnalysisWorkflowOrchestrator:
 
         return [exec.to_dict() for exec in history[:limit]]
 
-    async def execute_parallel_workflows(self, workflow_configs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def execute_parallel_workflows(
+        self, workflow_configs: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Execute multiple workflows in parallel."""
         tasks = []
 
@@ -568,7 +635,11 @@ class AnalysisWorkflowOrchestrator:
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 processed_results.append(
-                    {"workflow_config": workflow_configs[i], "status": "error", "error": str(result)}
+                    {
+                        "workflow_config": workflow_configs[i],
+                        "status": "error",
+                        "error": str(result),
+                    }
                 )
             else:
                 processed_results.append(result)

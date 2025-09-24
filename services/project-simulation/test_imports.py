@@ -7,7 +7,12 @@ import sys
 # Add shared infrastructure to path
 shared_path = os.path.join(os.path.dirname(__file__), "..", "..", "services", "shared")
 sys.path.insert(0, shared_path)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "services", "project-simulation"))
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(__file__), "..", "..", "services", "project-simulation"
+    ),
+)
 
 
 def test_shared_imports():

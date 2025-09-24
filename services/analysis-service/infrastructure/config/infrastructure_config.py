@@ -15,7 +15,9 @@ class InfrastructureConfig:
     # Component configurations
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     cache: CacheConfig = field(default_factory=CacheConfig)
-    external_services: ExternalServiceConfig = field(default_factory=ExternalServiceConfig)
+    external_services: ExternalServiceConfig = field(
+        default_factory=ExternalServiceConfig
+    )
 
     # Environment settings
     environment: str = "development"
@@ -127,8 +129,15 @@ class InfrastructureConfig:
 
     def get_feature_flags(self) -> dict:
         """Get feature flags."""
-        return {"caching": self.enable_caching, "metrics": self.enable_metrics, "tracing": self.enable_tracing}
+        return {
+            "caching": self.enable_caching,
+            "metrics": self.enable_metrics,
+            "tracing": self.enable_tracing,
+        }
 
     def get_performance_settings(self) -> dict:
         """Get performance settings."""
-        return {"max_concurrent_requests": self.max_concurrent_requests, "request_timeout": self.request_timeout}
+        return {
+            "max_concurrent_requests": self.max_concurrent_requests,
+            "request_timeout": self.request_timeout,
+        }

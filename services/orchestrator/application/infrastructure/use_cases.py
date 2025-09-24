@@ -3,7 +3,12 @@
 from typing import Any, Dict, List, Optional
 
 from ...domain.infrastructure import DistributedTrace, DLQEvent, SagaInstance
-from ...domain.infrastructure.services import DLQService, EventStreamingService, SagaService, TracingService
+from ...domain.infrastructure.services import (
+    DLQService,
+    EventStreamingService,
+    SagaService,
+    TracingService,
+)
 from ...shared.application import UseCase
 from .commands import (
     AddTraceSpanCommand,
@@ -36,7 +41,9 @@ class StartSagaUseCase(UseCase):
     async def execute(self, command: StartSagaCommand) -> SagaInstance:
         """Execute the start saga use case."""
         return self.saga_service.start_saga(
-            saga_type=command.saga_type, correlation_id=command.correlation_id, steps=command.steps
+            saga_type=command.saga_type,
+            correlation_id=command.correlation_id,
+            steps=command.steps,
         )
 
 
@@ -59,7 +66,9 @@ class CompensateSagaUseCase(UseCase):
 
     async def execute(self, command: CompensateSagaCommand) -> SagaInstance:
         """Execute the compensate saga use case."""
-        return self.saga_service.compensate_saga(command.saga_id, command.failed_step_id)
+        return self.saga_service.compensate_saga(
+            command.saga_id, command.failed_step_id
+        )
 
 
 class CompleteSagaUseCase(UseCase):
@@ -234,5 +243,7 @@ class PublishEventUseCase(UseCase):
     async def execute(self, command: PublishEventCommand) -> Dict[str, Any]:
         """Execute the publish event use case."""
         return self.event_streaming_service.publish_event(
-            event_type=command.event_type, event_data=command.event_data, correlation_id=command.correlation_id
+            event_type=command.event_type,
+            event_data=command.event_data,
+            correlation_id=command.correlation_id,
         )

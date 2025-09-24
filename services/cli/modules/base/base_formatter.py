@@ -19,7 +19,9 @@ class BaseFormatter(ABC):
         self.console = console
         self.display = DisplayManager(console)
 
-    def create_table(self, title: str, columns: List[str], styles: Optional[List[str]] = None) -> Table:
+    def create_table(
+        self, title: str, columns: List[str], styles: Optional[List[str]] = None
+    ) -> Table:
         """Create a styled table."""
         table = Table(title=title)
 
@@ -32,7 +34,9 @@ class BaseFormatter(ABC):
 
         return table
 
-    def add_table_rows(self, table: Table, rows: List[List[str]], max_rows: Optional[int] = None):
+    def add_table_rows(
+        self, table: Table, rows: List[List[str]], max_rows: Optional[int] = None
+    ):
         """Add rows to table with optional limiting."""
         display_rows = rows[:max_rows] if max_rows else rows
 
@@ -41,9 +45,18 @@ class BaseFormatter(ABC):
 
         if max_rows and len(rows) > max_rows:
             table.add_row(*["[dim]...[/dim]"] * len(rows[0]))
-            table.add_row(*[f"[dim]+{len(rows) - max_rows} more[/dim]"] + [""] * (len(rows[0]) - 1))
+            table.add_row(
+                *[f"[dim]+{len(rows) - max_rows} more[/dim]"]
+                + [""] * (len(rows[0]) - 1)
+            )
 
-    def show_panel(self, content: str, title: Optional[str] = None, border_style: str = "blue", expand: bool = False):
+    def show_panel(
+        self,
+        content: str,
+        title: Optional[str] = None,
+        border_style: str = "blue",
+        expand: bool = False,
+    ):
         """Show content in a styled panel."""
         panel = Panel(content, title=title, border_style=border_style, expand=expand)
         self.console.print(panel)
@@ -115,7 +128,9 @@ class BaseFormatter(ABC):
         return Layout()
 
     @abstractmethod
-    def format_service_status(self, service_name: str, status_data: Dict[str, Any]) -> str:
+    def format_service_status(
+        self, service_name: str, status_data: Dict[str, Any]
+    ) -> str:
         """Format service status information."""
 
     @abstractmethod

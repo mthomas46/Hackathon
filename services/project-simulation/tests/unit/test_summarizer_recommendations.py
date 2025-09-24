@@ -13,8 +13,13 @@ import pytest
 from simulation.application.analysis.simulation_analyzer import SimulationAnalyzer
 
 # Import the modules we'll be testing
-from simulation.domain.recommendations.recommendation import Recommendation, RecommendationType
-from simulation.infrastructure.recommendations.summarizer_hub_client import SummarizerHubClient
+from simulation.domain.recommendations.recommendation import (
+    Recommendation,
+    RecommendationType,
+)
+from simulation.infrastructure.recommendations.summarizer_hub_client import (
+    SummarizerHubClient,
+)
 
 
 class TestSummarizerHubClient:
@@ -29,9 +34,24 @@ class TestSummarizerHubClient:
         """Test getting consolidation recommendations from summarizer-hub."""
         # Arrange
         documents = [
-            {"id": "doc1", "title": "API Guide", "content": "API documentation", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API reference guide", "type": "api_docs"},
-            {"id": "doc3", "title": "API Examples", "content": "API usage examples", "type": "api_docs"},
+            {
+                "id": "doc1",
+                "title": "API Guide",
+                "content": "API documentation",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc2",
+                "title": "API Reference",
+                "content": "API reference guide",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc3",
+                "title": "API Examples",
+                "content": "API usage examples",
+                "type": "api_docs",
+            },
         ]
 
         mock_response = {
@@ -72,7 +92,9 @@ class TestSummarizerHubClient:
             mock_instance.post.return_value.status_code = 200
             mock_instance.post.return_value.json.return_value = mock_response
 
-            recommendations = await self.client.get_consolidation_recommendations(documents)
+            recommendations = await self.client.get_consolidation_recommendations(
+                documents
+            )
 
             # Assert
             assert isinstance(recommendations, list)
@@ -93,7 +115,11 @@ class TestSummarizerHubClient:
         documents = [
             {"id": "doc1", "title": "User Guide", "content": "How to use the system"},
             {"id": "doc2", "title": "User Manual", "content": "How to use the system"},
-            {"id": "doc3", "title": "Getting Started", "content": "How to use the system"},
+            {
+                "id": "doc3",
+                "title": "Getting Started",
+                "content": "How to use the system",
+            },
         ]
 
         mock_response = {
@@ -280,9 +306,24 @@ class TestSummarizerHubClient:
         """Test getting comprehensive recommendations across all types from summarizer-hub."""
         # Arrange
         documents = [
-            {"id": "doc1", "title": "API Guide", "content": "API info", "type": "api_docs"},
-            {"id": "doc2", "title": "API Reference", "content": "API info", "type": "api_docs"},
-            {"id": "doc3", "title": "Old Guide", "content": "Old content", "dateCreated": "2020-01-01"},
+            {
+                "id": "doc1",
+                "title": "API Guide",
+                "content": "API info",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc2",
+                "title": "API Reference",
+                "content": "API info",
+                "type": "api_docs",
+            },
+            {
+                "id": "doc3",
+                "title": "Old Guide",
+                "content": "Old content",
+                "dateCreated": "2020-01-01",
+            },
         ]
 
         mock_response = {
@@ -324,7 +365,12 @@ class TestSummarizerHubClient:
             "total_documents": 3,
             "recommendations_count": 2,
             "processing_time": 0.5,
-            "recommendation_types": ["consolidation", "duplicate", "outdated", "quality"],
+            "recommendation_types": [
+                "consolidation",
+                "duplicate",
+                "outdated",
+                "quality",
+            ],
             "confidence_threshold": 0.4,
         }
 
@@ -337,7 +383,9 @@ class TestSummarizerHubClient:
             mock_instance.post.return_value.status_code = 200
             mock_instance.post.return_value.json.return_value = mock_response
 
-            recommendations = await self.client.get_comprehensive_recommendations(documents)
+            recommendations = await self.client.get_comprehensive_recommendations(
+                documents
+            )
 
             # Assert
             assert isinstance(recommendations, list)
@@ -365,12 +413,18 @@ class TestSummarizerHubClient:
         """Test that recommendations are properly prioritized."""
         # Arrange
         documents = [
-            {"id": "doc1", "title": "Critical API", "content": "Critical API documentation"},
+            {
+                "id": "doc1",
+                "title": "Critical API",
+                "content": "Critical API documentation",
+            },
             {"id": "doc2", "title": "Minor Guide", "content": "Minor guide content"},
         ]
 
         # Act
-        recommendations = await self.engine.generate_comprehensive_recommendations(documents)
+        recommendations = await self.engine.generate_comprehensive_recommendations(
+            documents
+        )
 
         # Assert
         # Sort by priority (high first)
@@ -379,7 +433,9 @@ class TestSummarizerHubClient:
         low_priority = [r for r in recommendations if r.priority == "low"]
 
         # High priority should come first in sorted list
-        sorted_recs = sorted(recommendations, key=lambda r: ["high", "medium", "low"].index(r.priority))
+        sorted_recs = sorted(
+            recommendations, key=lambda r: ["high", "medium", "low"].index(r.priority)
+        )
         assert sorted_recs == recommendations or len(high_priority) == 0
 
 
@@ -394,7 +450,11 @@ class TestSummarizerHubClient:
     async def test_analyze_document_with_summarizer_hub(self):
         """Test document analysis using summarizer-hub service."""
         # Arrange
-        document = {"id": "doc1", "content": "This is a test document about API usage.", "title": "API Documentation"}
+        document = {
+            "id": "doc1",
+            "content": "This is a test document about API usage.",
+            "title": "API Documentation",
+        }
 
         # Act
         analysis_result = await self.client.analyze_document(document)
@@ -504,13 +564,27 @@ class TestRecommendationTypes:
     def test_recommendation_priority_sorting(self):
         """Test that recommendations can be sorted by priority."""
         recommendations = [
-            Recommendation(type=RecommendationType.QUALITY, description="Low priority", priority="low"),
-            Recommendation(type=RecommendationType.CONSOLIDATION, description="High priority", priority="high"),
-            Recommendation(type=RecommendationType.DUPLICATE, description="Medium priority", priority="medium"),
+            Recommendation(
+                type=RecommendationType.QUALITY,
+                description="Low priority",
+                priority="low",
+            ),
+            Recommendation(
+                type=RecommendationType.CONSOLIDATION,
+                description="High priority",
+                priority="high",
+            ),
+            Recommendation(
+                type=RecommendationType.DUPLICATE,
+                description="Medium priority",
+                priority="medium",
+            ),
         ]
 
         # Sort by priority
-        sorted_recs = sorted(recommendations, key=lambda r: ["high", "medium", "low"].index(r.priority))
+        sorted_recs = sorted(
+            recommendations, key=lambda r: ["high", "medium", "low"].index(r.priority)
+        )
 
         assert sorted_recs[0].priority == "high"
         assert sorted_recs[1].priority == "medium"
@@ -534,7 +608,12 @@ class TestAnalysisServiceReportIntegration:
                 "title": "API Guide",
                 "type": "api_docs",
             },
-            {"id": "doc2", "content": "This is a short document.", "title": "Brief Note", "type": "note"},
+            {
+                "id": "doc2",
+                "content": "This is a short document.",
+                "title": "Brief Note",
+                "type": "note",
+            },
         ]
 
         # Mock the analysis-service response
@@ -555,24 +634,42 @@ class TestAnalysisServiceReportIntegration:
             ],
         }
 
-        with patch.object(self.summarizer, "_request_analysis_report_from_service", return_value=mock_report):
+        with patch.object(
+            self.summarizer,
+            "_request_analysis_report_from_service",
+            return_value=mock_report,
+        ):
             with patch.object(
-                self.summarizer, "_store_received_analysis_report", return_value="analysis_report_sim_123_1234567890"
+                self.summarizer,
+                "_store_received_analysis_report",
+                return_value="analysis_report_sim_123_1234567890",
             ):
                 # Test analysis report reception
-                analysis_report = await self.summarizer._get_analysis_report_from_analysis_service("sim_123", documents)
+                analysis_report = (
+                    await self.summarizer._get_analysis_report_from_analysis_service(
+                        "sim_123", documents
+                    )
+                )
 
                 # Should return a report with proper structure
                 assert analysis_report is not None
-                assert analysis_report["report_id"] == "analysis_report_sim_123_1234567890"
+                assert (
+                    analysis_report["report_id"] == "analysis_report_sim_123_1234567890"
+                )
                 assert "summary" in analysis_report
                 assert analysis_report["summary"]["total_analyses"] == 2
 
     @pytest.mark.asyncio
     async def test_get_analysis_from_analysis_service_empty_documents(self):
         """Test analysis with empty document list."""
-        with patch.object(self.summarizer, "_request_analysis_report_from_service", return_value=None):
-            analysis_report = await self.summarizer._get_analysis_report_from_analysis_service("sim_123", [])
+        with patch.object(
+            self.summarizer, "_request_analysis_report_from_service", return_value=None
+        ):
+            analysis_report = (
+                await self.summarizer._get_analysis_report_from_analysis_service(
+                    "sim_123", []
+                )
+            )
 
             assert analysis_report is None
 
@@ -597,12 +694,16 @@ class TestAnalysisServiceReportIntegration:
         # Mock the doc-store saving
         with patch.object(self.summarizer, "_save_to_doc_store") as mock_save:
             with patch.object(self.summarizer, "_save_markdown_report") as mock_save_md:
-                with patch.object(self.summarizer, "_link_analysis_report_to_simulation") as mock_link:
+                with patch.object(
+                    self.summarizer, "_link_analysis_report_to_simulation"
+                ) as mock_link:
                     mock_save.return_value = None
                     mock_save_md.return_value = None
                     mock_link.return_value = None
 
-                    report_id = await self.summarizer._store_received_analysis_report(analysis_report, "sim_123")
+                    report_id = await self.summarizer._store_received_analysis_report(
+                        analysis_report, "sim_123"
+                    )
 
                     assert report_id == "analysis_report_sim_123_1234567890"
                     mock_save.assert_called()
@@ -620,11 +721,17 @@ class TestAnalysisServiceReportIntegration:
         mock_repo.find_by_id.return_value = mock_simulation
         mock_repo.save.return_value = None
 
-        with patch.object(self.summarizer, "_get_simulation_repository", return_value=mock_repo):
-            await self.summarizer._link_analysis_report_to_simulation("analysis_report_123", "sim_123")
+        with patch.object(
+            self.summarizer, "_get_simulation_repository", return_value=mock_repo
+        ):
+            await self.summarizer._link_analysis_report_to_simulation(
+                "analysis_report_123", "sim_123"
+            )
 
             # Verify the simulation was updated
-            assert mock_simulation.metadata["analysis_report_id"] == "analysis_report_123"
+            assert (
+                mock_simulation.metadata["analysis_report_id"] == "analysis_report_123"
+            )
             assert "analysis_report_timestamp" in mock_simulation.metadata
             mock_repo.save.assert_called_once_with(mock_simulation)
 
@@ -634,8 +741,12 @@ class TestAnalysisServiceReportIntegration:
         mock_repo = Mock()
         mock_repo.find_by_id.return_value = None
 
-        with patch.object(self.summarizer, "_get_simulation_repository", return_value=mock_repo):
-            await self.summarizer._link_analysis_report_to_simulation("analysis_report_123", "sim_123")
+        with patch.object(
+            self.summarizer, "_get_simulation_repository", return_value=mock_repo
+        ):
+            await self.summarizer._link_analysis_report_to_simulation(
+                "analysis_report_123", "sim_123"
+            )
 
             # Should not attempt to save when simulation not found
             mock_repo.save.assert_not_called()
@@ -643,16 +754,27 @@ class TestAnalysisServiceReportIntegration:
     @pytest.mark.asyncio
     async def test_request_analysis_report_from_service_with_service_error(self):
         """Test handling analysis service errors gracefully."""
-        documents = [{"id": "doc1", "content": "Test content", "title": "Test Doc", "type": "test"}]
+        documents = [
+            {
+                "id": "doc1",
+                "content": "Test content",
+                "title": "Test Doc",
+                "type": "test",
+            }
+        ]
 
         # Mock httpx to simulate service error
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = Mock()
             mock_response.status_code = 500
             mock_response.text = "Internal Server Error"
-            mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
+            mock_client.return_value.__aenter__.return_value.post.return_value = (
+                mock_response
+            )
 
-            result = await self.summarizer._request_analysis_report_from_service("sim_123", documents)
+            result = await self.summarizer._request_analysis_report_from_service(
+                "sim_123", documents
+            )
 
             # Should handle error gracefully and return None
             assert result is None
@@ -668,7 +790,12 @@ class TestAnalysisServiceReportIntegration:
                 "dateCreated": "2024-01-01T10:00:00",
                 "dateUpdated": "2024-01-02T10:00:00",
             },
-            {"id": "doc2", "title": "Later Document", "type": "api", "dateCreated": "2024-02-01T10:00:00"},
+            {
+                "id": "doc2",
+                "title": "Later Document",
+                "type": "api",
+                "dateCreated": "2024-02-01T10:00:00",
+            },
         ]
 
         timeline = {
@@ -688,7 +815,9 @@ class TestAnalysisServiceReportIntegration:
             ]
         }
 
-        result = await self.summarizer.place_documents_on_timeline("sim_123", documents, timeline)
+        result = await self.summarizer.place_documents_on_timeline(
+            "sim_123", documents, timeline
+        )
 
         assert result["simulation_id"] == "sim_123"
         assert result["timeline_phases"] == 2
@@ -727,10 +856,17 @@ class TestAnalysisServiceReportIntegration:
         """Test finding relevant phase when document date is within phase dates."""
         doc_date = datetime(2024, 1, 10)
         timeline_phases = [
-            {"id": "phase1", "name": "Planning", "start_date": "2024-01-01T00:00:00", "end_date": "2024-01-15T00:00:00"}
+            {
+                "id": "phase1",
+                "name": "Planning",
+                "start_date": "2024-01-01T00:00:00",
+                "end_date": "2024-01-15T00:00:00",
+            }
         ]
 
-        result = self.summarizer._find_relevant_timeline_phase(doc_date, timeline_phases)
+        result = self.summarizer._find_relevant_timeline_phase(
+            doc_date, timeline_phases
+        )
 
         assert result is not None
         assert result["id"] == "phase1"
@@ -753,7 +889,9 @@ class TestAnalysisServiceReportIntegration:
             },
         ]
 
-        result = self.summarizer._find_relevant_timeline_phase(doc_date, timeline_phases)
+        result = self.summarizer._find_relevant_timeline_phase(
+            doc_date, timeline_phases
+        )
 
         # Should find phase2 as it's closer to the document date
         assert result is not None
@@ -839,7 +977,9 @@ class TestAnalysisServiceReportIntegration:
             },
         ]
 
-        result = self.summarizer._group_documents_by_phases(document_placements, timeline_phases)
+        result = self.summarizer._group_documents_by_phases(
+            document_placements, timeline_phases
+        )
 
         assert "phase1" in result
         assert "phase2" in result
@@ -851,23 +991,51 @@ class TestAnalysisServiceReportIntegration:
     def test_generate_timeline_recommendations_good_coverage(self):
         """Test timeline recommendations with good document coverage."""
         phase_documents = {
-            "phase1": {"phase_name": "Planning", "document_count": 5, "avg_relevance": 0.8},
-            "phase2": {"phase_name": "Development", "document_count": 3, "avg_relevance": 0.7},
+            "phase1": {
+                "phase_name": "Planning",
+                "document_count": 5,
+                "avg_relevance": 0.8,
+            },
+            "phase2": {
+                "phase_name": "Development",
+                "document_count": 3,
+                "avg_relevance": 0.7,
+            },
         }
-        timeline_phases = [{"id": "phase1", "name": "Planning"}, {"id": "phase2", "name": "Development"}]
+        timeline_phases = [
+            {"id": "phase1", "name": "Planning"},
+            {"id": "phase2", "name": "Development"},
+        ]
 
-        recommendations = self.summarizer._generate_timeline_recommendations(phase_documents, timeline_phases)
+        recommendations = self.summarizer._generate_timeline_recommendations(
+            phase_documents, timeline_phases
+        )
 
         # Should have positive recommendations
         assert len(recommendations) > 0
-        assert any("good" in rec.lower() or "adequate" in rec.lower() for rec in recommendations)
+        assert any(
+            "good" in rec.lower() or "adequate" in rec.lower()
+            for rec in recommendations
+        )
 
     def test_generate_timeline_recommendations_poor_coverage(self):
         """Test timeline recommendations with poor document coverage."""
         phase_documents = {
-            "phase1": {"phase_name": "Planning", "document_count": 0, "avg_relevance": 0.0},
-            "phase2": {"phase_name": "Development", "document_count": 0, "avg_relevance": 0.0},
-            "phase3": {"phase_name": "Testing", "document_count": 1, "avg_relevance": 0.3},
+            "phase1": {
+                "phase_name": "Planning",
+                "document_count": 0,
+                "avg_relevance": 0.0,
+            },
+            "phase2": {
+                "phase_name": "Development",
+                "document_count": 0,
+                "avg_relevance": 0.0,
+            },
+            "phase3": {
+                "phase_name": "Testing",
+                "document_count": 1,
+                "avg_relevance": 0.3,
+            },
         }
         timeline_phases = [
             {"id": "phase1", "name": "Planning"},
@@ -875,11 +1043,16 @@ class TestAnalysisServiceReportIntegration:
             {"id": "phase3", "name": "Testing"},
         ]
 
-        recommendations = self.summarizer._generate_timeline_recommendations(phase_documents, timeline_phases)
+        recommendations = self.summarizer._generate_timeline_recommendations(
+            phase_documents, timeline_phases
+        )
 
         # Should have recommendations for improvement
         assert len(recommendations) > 0
-        assert any("coverage is low" in rec.lower() or "consider adding" in rec.lower() for rec in recommendations)
+        assert any(
+            "coverage is low" in rec.lower() or "consider adding" in rec.lower()
+            for rec in recommendations
+        )
 
     @pytest.mark.asyncio
     async def test_generate_comprehensive_summary_report(self):
@@ -918,7 +1091,9 @@ class TestAnalysisServiceReportIntegration:
             ]
         }
 
-        result = await self.summarizer.generate_comprehensive_summary_report("sim_123", documents, timeline)
+        result = await self.summarizer.generate_comprehensive_summary_report(
+            "sim_123", documents, timeline
+        )
 
         assert result["simulation_id"] == "sim_123"
         assert result["report_generated"] is True
@@ -935,13 +1110,22 @@ class TestAnalysisServiceReportIntegration:
             ]
         }
 
-        analysis = {"summary_statistics": {"average_quality_score": 0.75, "total_issues_found": 3}}
+        analysis = {
+            "summary_statistics": {
+                "average_quality_score": 0.75,
+                "total_issues_found": 3,
+            }
+        }
 
-        timeline = {"placement_report": {"timeline_coverage": 0.8, "placed_documents": 8}}
+        timeline = {
+            "placement_report": {"timeline_coverage": 0.8, "placed_documents": 8}
+        }
 
         documents = [{"id": "doc1"}, {"id": "doc2"}]
 
-        summary = self.summarizer._generate_executive_summary(recommendations, analysis, timeline, documents)
+        summary = self.summarizer._generate_executive_summary(
+            recommendations, analysis, timeline, documents
+        )
 
         assert summary["total_documents"] == 2
         assert summary["critical_issues"] == 1  # High priority recommendation
@@ -952,7 +1136,11 @@ class TestAnalysisServiceReportIntegration:
         """Test overall assessment generation with high scores."""
         sections = {
             "recommendations": {"total_recommendations": 3, "source": "summarizer-hub"},
-            "analysis": {"average_quality_score": 0.9, "documents_with_issues": 0, "source": "analysis-service"},
+            "analysis": {
+                "average_quality_score": 0.9,
+                "documents_with_issues": 0,
+                "source": "analysis-service",
+            },
             "timeline": {"timeline_coverage": 0.95, "source": "simulation-service"},
         }
 
@@ -966,8 +1154,15 @@ class TestAnalysisServiceReportIntegration:
     def test_generate_overall_assessment_low_score(self):
         """Test overall assessment generation with low scores."""
         sections = {
-            "recommendations": {"total_recommendations": 15, "source": "summarizer-hub"},
-            "analysis": {"average_quality_score": 0.4, "documents_with_issues": 5, "source": "analysis-service"},
+            "recommendations": {
+                "total_recommendations": 15,
+                "source": "summarizer-hub",
+            },
+            "analysis": {
+                "average_quality_score": 0.4,
+                "documents_with_issues": 5,
+                "source": "analysis-service",
+            },
             "timeline": {"timeline_coverage": 0.3, "source": "simulation-service"},
         }
 
@@ -1005,7 +1200,9 @@ class TestAnalysisServiceReportIntegration:
                     ]
                 }
             },
-            "timeline": {"recommendations": ["Consider adding documentation for phase X"]},
+            "timeline": {
+                "recommendations": ["Consider adding documentation for phase X"]
+            },
         }
 
         action_items = self.summarizer._generate_action_items(sections)
@@ -1034,14 +1231,24 @@ class TestAnalysisServiceReportIntegration:
         analysis = {
             "source": "analysis-service",
             "quality_analysis": [{"document_id": "doc1", "quality_score": 0.8}],
-            "summary_statistics": {"average_quality_score": 0.8, "documents_with_issues": 1, "total_issues_found": 2},
-            "processing_metadata": {"documents_processed": 1, "processing_time": "completed"},
+            "summary_statistics": {
+                "average_quality_score": 0.8,
+                "documents_with_issues": 1,
+                "total_issues_found": 2,
+            },
+            "processing_metadata": {
+                "documents_processed": 1,
+                "processing_time": "completed",
+            },
         }
 
         timeline = {
             "timeline_phases": 2,
             "placed_documents": 1,
-            "placement_report": {"timeline_coverage": 0.5, "recommendations": ["Add more documentation"]},
+            "placement_report": {
+                "timeline_coverage": 0.5,
+                "recommendations": ["Add more documentation"],
+            },
             "phase_breakdown": {},
         }
 
@@ -1095,7 +1302,11 @@ class TestAnalysisServiceReportIntegration:
                     "documents_with_issues": 1,
                     "total_issues_found": 3,
                 },
-                "timeline": {"total_phases": 2, "documents_placed": 2, "timeline_coverage": 1.0},
+                "timeline": {
+                    "total_phases": 2,
+                    "documents_placed": 2,
+                    "timeline_coverage": 1.0,
+                },
             },
             "action_items": [
                 {
@@ -1118,4 +1329,6 @@ class TestAnalysisServiceReportIntegration:
         assert "## 🔍 Quality Analysis" in markdown
         assert "## 📅 Timeline Analysis" in markdown
         assert "## ✅ Action Items" in markdown
-        assert "🚨 **High** - Critical action" in markdown  # Priority emoji and formatting
+        assert (
+            "🚨 **High** - Critical action" in markdown
+        )  # Priority emoji and formatting

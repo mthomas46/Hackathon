@@ -66,7 +66,9 @@ class ServiceHealth:
         """Check if service is operational."""
         return self._status.is_operational
 
-    def update_status(self, status: HealthStatus, check_result: Optional[HealthCheckResult] = None):
+    def update_status(
+        self, status: HealthStatus, check_result: Optional[HealthCheckResult] = None
+    ):
         """Update the service health status."""
         self._status = status
         self._last_check = datetime.utcnow()
@@ -92,7 +94,11 @@ class ServiceHealth:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ServiceHealth):
             return NotImplemented
-        return self._service_name == other._service_name and self._status == other._status
+        return (
+            self._service_name == other._service_name and self._status == other._status
+        )
 
     def __repr__(self) -> str:
-        return f"ServiceHealth(service_name='{self._service_name}', status={self._status})"
+        return (
+            f"ServiceHealth(service_name='{self._service_name}', status={self._status})"
+        )

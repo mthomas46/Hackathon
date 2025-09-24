@@ -25,7 +25,9 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 # Import from shared infrastructure
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared"))
+sys.path.append(
+    str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
+)
 
 from simulation.infrastructure.logging import get_simulation_logger
 
@@ -161,7 +163,12 @@ class RedisEventStore:
         self._running = False
 
         # Statistics
-        self.stats = {"events_stored": 0, "events_retrieved": 0, "replay_sessions": 0, "errors": 0}
+        self.stats = {
+            "events_stored": 0,
+            "events_retrieved": 0,
+            "replay_sessions": 0,
+            "errors": 0,
+        }
 
     async def initialize(self) -> None:
         """Initialize Redis connection and setup."""
@@ -183,16 +190,22 @@ class RedisEventStore:
             self._redis_client = redis.Redis(connection_pool=pool)
 
             # Test connection
-            await asyncio.get_event_loop().run_in_executor(self._executor, self._redis_client.ping)
+            await asyncio.get_event_loop().run_in_executor(
+                self._executor, self._redis_client.ping
+            )
 
             # Setup indexes and streams
             await self._setup_indexes()
 
             self._running = True
-            self.logger.info(f"Redis event store initialized: {self.redis_host}:{self.redis_port}")
+            self.logger.info(
+                f"Redis event store initialized: {self.redis_host}:{self.redis_port}"
+            )
 
         except ImportError:
-            self.logger.warning("Redis not available, falling back to in-memory storage")
+            self.logger.warning(
+                "Redis not available, falling back to in-memory storage"
+            )
             self._redis_client = None
             self._fallback_store = {}
         except Exception as e:
@@ -239,7 +252,10 @@ class RedisEventStore:
 
             # Add to simulation stream
             sim_stream = f"{self.key_prefix}:stream:{event.simulation_id}"
-            pipeline.xadd(sim_stream, {"event_id": event.event_id, "timestamp": event.timestamp.isoformat()})
+            pipeline.xadd(
+                sim_stream,
+                {"event_id": event.event_id, "timestamp": event.timestamp.isoformat()},
+            )
 
             # Add to indexes
             for key in keys[:-1]:  # Exclude the event key itself
@@ -250,7 +266,9 @@ class RedisEventStore:
                 pipeline.expire(key, self.ttl_seconds)
 
             # Execute pipeline
-            await asyncio.get_event_loop().run_in_executor(self._executor, pipeline.execute)
+            await asyncio.get_event_loop().run_in_executor(
+                self._executor, pipeline.execute
+            )
 
             self.stats["events_stored"] += 1
 
@@ -277,7 +295,9 @@ class RedisEventStore:
         """Retrieve events with filtering."""
         try:
             if not self._redis_client:
-                return await self._get_fallback_events(simulation_id, event_types, start_time, end_time, limit, offset)
+                return await self._get_fallback_events(
+                    simulation_id, event_types, start_time, end_time, limit, offset
+                )
 
             # Build query
             event_ids = await self._build_event_query(
@@ -292,7 +312,9 @@ class RedisEventStore:
             for event_id in event_ids:
                 pipeline.get(f"{self.key_prefix}:event:{event_id}")
 
-            results = await asyncio.get_event_loop().run_in_executor(self._executor, pipeline.execute)
+            results = await asyncio.get_event_loop().run_in_executor(
+                self._executor, pipeline.execute
+            )
 
             events = []
             for result in results:
@@ -324,7 +346,9 @@ class RedisEventStore:
             self.stats["errors"] += 1
             return []
 
-    async def replay_events(self, config: ReplayConfiguration, callback: Callable[[SimulationEvent], None]) -> int:
+    async def replay_events(
+        self, config: ReplayConfiguration, callback: Callable[[SimulationEvent], None]
+    ) -> int:
         """Replay events with the specified configuration."""
         try:
             self.stats["replay_sessions"] += 1
@@ -362,7 +386,9 @@ class RedisEventStore:
                 if config.max_events and replayed_count >= config.max_events:
                     break
 
-            self.logger.info(f"Replayed {replayed_count} events for simulation {config.simulation_id}")
+            self.logger.info(
+                f"Replayed {replayed_count} events for simulation {config.simulation_id}"
+            )
             return replayed_count
 
         except Exception as e:
@@ -412,8 +438,16 @@ class RedisEventStore:
                 "total_events": len(events),
                 "event_types": {},
                 "time_range": {
-                    "start": min(events, key=lambda e: e.timestamp).timestamp.isoformat() if events else None,
-                    "end": max(events, key=lambda e: e.timestamp).timestamp.isoformat() if events else None,
+                    "start": (
+                        min(events, key=lambda e: e.timestamp).timestamp.isoformat()
+                        if events
+                        else None
+                    ),
+                    "end": (
+                        max(events, key=lambda e: e.timestamp).timestamp.isoformat()
+                        if events
+                        else None
+                    ),
                 },
                 "simulations": set(),
                 "tags": set(),
@@ -457,7 +491,9 @@ class RedisEventStore:
                 pipeline = self._redis_client.pipeline()
                 for event_id in event_ids:
                     pipeline.delete(f"{self.key_prefix}:event:{event_id}")
-                await asyncio.get_event_loop().run_in_executor(self._executor, pipeline.execute)
+                await asyncio.get_event_loop().run_in_executor(
+                    self._executor, pipeline.execute
+                )
 
             self.logger.info(f"Cleaned up {len(event_ids)} old events")
             return len(event_ids)
@@ -537,7 +573,9 @@ class RedisEventStore:
                 pipeline = self._redis_client.pipeline()
                 for key in sim_keys:
                     pipeline.smembers(key)
-                results = await asyncio.get_event_loop().run_in_executor(self._executor, pipeline.execute)
+                results = await asyncio.get_event_loop().run_in_executor(
+                    self._executor, pipeline.execute
+                )
 
                 event_ids = set()
                 for result in results:
@@ -651,7 +689,10 @@ class EventReplayManager:
         self.active_replays: Dict[str, ReplayConfiguration] = {}
 
     async def start_replay(
-        self, simulation_id: str, callback: Callable[[SimulationEvent], None], config: ReplayConfiguration
+        self,
+        simulation_id: str,
+        callback: Callable[[SimulationEvent], None],
+        config: ReplayConfiguration,
     ) -> str:
         """Start an event replay session."""
         replay_id = str(uuid.uuid4())
@@ -662,7 +703,9 @@ class EventReplayManager:
         # Start replay in background
         asyncio.create_task(self._execute_replay(replay_id, callback))
 
-        self.logger.info(f"Started event replay {replay_id} for simulation {simulation_id}")
+        self.logger.info(
+            f"Started event replay {replay_id} for simulation {simulation_id}"
+        )
         return replay_id
 
     async def stop_replay(self, replay_id: str) -> bool:
@@ -684,10 +727,14 @@ class EventReplayManager:
             "simulation_id": config.simulation_id,
             "status": "active",
             "speed_multiplier": config.speed_multiplier,
-            "event_types": [et.value for et in config.event_types] if config.event_types else None,
+            "event_types": (
+                [et.value for et in config.event_types] if config.event_types else None
+            ),
         }
 
-    async def _execute_replay(self, replay_id: str, callback: Callable[[SimulationEvent], None]) -> None:
+    async def _execute_replay(
+        self, replay_id: str, callback: Callable[[SimulationEvent], None]
+    ) -> None:
         """Execute the replay in the background."""
         try:
             if replay_id not in self.active_replays:
@@ -698,7 +745,9 @@ class EventReplayManager:
             # Execute replay
             events_replayed = await self.event_store.replay_events(config, callback)
 
-            self.logger.info(f"Completed event replay {replay_id}: {events_replayed} events replayed")
+            self.logger.info(
+                f"Completed event replay {replay_id}: {events_replayed} events replayed"
+            )
 
         except Exception as e:
             self.logger.error(f"Error during event replay {replay_id}: {e}")

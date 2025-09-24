@@ -10,7 +10,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from ...domain.entities.simulation import Simulation, SimulationConfiguration, SimulationId
+from ...domain.entities.simulation import (
+    Simulation,
+    SimulationConfiguration,
+    SimulationId,
+)
 from ...domain.repositories import ISimulationRepository
 from ...domain.value_objects import SimulationStatus
 
@@ -251,7 +255,9 @@ class SQLiteSimulationRepository(ISimulationRepository):
 
             return simulations
 
-    async def save_simulation_run(self, simulation_id: str, run_id: str, execution_data: Dict[str, Any]) -> None:
+    async def save_simulation_run(
+        self, simulation_id: str, run_id: str, execution_data: Dict[str, Any]
+    ) -> None:
         """Save simulation run data."""
         now = datetime.now().isoformat()
         with sqlite3.connect(self.db_path) as conn:
@@ -275,7 +281,11 @@ class SQLiteSimulationRepository(ISimulationRepository):
             conn.commit()
 
     async def link_document_to_simulation(
-        self, simulation_id: str, document_id: str, document_type: str, doc_store_reference: str
+        self,
+        simulation_id: str,
+        document_id: str,
+        document_type: str,
+        doc_store_reference: str,
     ) -> None:
         """Link a document to a simulation."""
         now = datetime.now().isoformat()
@@ -286,12 +296,23 @@ class SQLiteSimulationRepository(ISimulationRepository):
                 (id, simulation_id, document_id, document_type, doc_store_reference, created_at)
                 VALUES (?, ?, ?, ?, ?, ?)
             """,
-                (f"{simulation_id}_{document_id}", simulation_id, document_id, document_type, doc_store_reference, now),
+                (
+                    f"{simulation_id}_{document_id}",
+                    simulation_id,
+                    document_id,
+                    document_type,
+                    doc_store_reference,
+                    now,
+                ),
             )
             conn.commit()
 
     async def link_prompt_to_simulation(
-        self, simulation_id: str, prompt_id: str, prompt_type: str, prompt_store_reference: str
+        self,
+        simulation_id: str,
+        prompt_id: str,
+        prompt_type: str,
+        prompt_store_reference: str,
     ) -> None:
         """Link a prompt to a simulation."""
         now = datetime.now().isoformat()
@@ -302,11 +323,20 @@ class SQLiteSimulationRepository(ISimulationRepository):
                 (id, simulation_id, prompt_id, prompt_type, prompt_store_reference, created_at)
                 VALUES (?, ?, ?, ?, ?, ?)
             """,
-                (f"{simulation_id}_{prompt_id}", simulation_id, prompt_id, prompt_type, prompt_store_reference, now),
+                (
+                    f"{simulation_id}_{prompt_id}",
+                    simulation_id,
+                    prompt_id,
+                    prompt_type,
+                    prompt_store_reference,
+                    now,
+                ),
             )
             conn.commit()
 
-    async def get_simulation_run_data(self, simulation_id: str, run_id: str) -> Optional[Dict[str, Any]]:
+    async def get_simulation_run_data(
+        self, simulation_id: str, run_id: str
+    ) -> Optional[Dict[str, Any]]:
         """Get simulation run data."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
@@ -322,7 +352,9 @@ class SQLiteSimulationRepository(ISimulationRepository):
                 return json.loads(row[0])
             return None
 
-    async def get_simulation_documents(self, simulation_id: str) -> List[Dict[str, Any]]:
+    async def get_simulation_documents(
+        self, simulation_id: str
+    ) -> List[Dict[str, Any]]:
         """Get all documents linked to a simulation."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
@@ -363,7 +395,12 @@ class SQLiteSimulationRepository(ISimulationRepository):
             prompts = []
             for row in cursor.fetchall():
                 prompts.append(
-                    {"prompt_id": row[0], "prompt_type": row[1], "prompt_store_reference": row[2], "created_at": row[3]}
+                    {
+                        "prompt_id": row[0],
+                        "prompt_type": row[1],
+                        "prompt_store_reference": row[2],
+                        "created_at": row[3],
+                    }
                 )
             return prompts
 
@@ -371,12 +408,22 @@ class SQLiteSimulationRepository(ISimulationRepository):
         """Delete a simulation by its ID."""
         with sqlite3.connect(self.db_path) as conn:
             # Delete related data first (due to foreign key constraints)
-            conn.execute("DELETE FROM simulation_runs WHERE simulation_id = ?", (simulation_id,))
-            conn.execute("DELETE FROM simulation_documents WHERE simulation_id = ?", (simulation_id,))
-            conn.execute("DELETE FROM simulation_prompts WHERE simulation_id = ?", (simulation_id,))
+            conn.execute(
+                "DELETE FROM simulation_runs WHERE simulation_id = ?", (simulation_id,)
+            )
+            conn.execute(
+                "DELETE FROM simulation_documents WHERE simulation_id = ?",
+                (simulation_id,),
+            )
+            conn.execute(
+                "DELETE FROM simulation_prompts WHERE simulation_id = ?",
+                (simulation_id,),
+            )
 
             # Delete the simulation
-            cursor = conn.execute("DELETE FROM simulations WHERE id = ?", (simulation_id,))
+            cursor = conn.execute(
+                "DELETE FROM simulations WHERE id = ?", (simulation_id,)
+            )
             conn.commit()
             return cursor.rowcount > 0
 
@@ -404,18 +451,32 @@ class SQLiteSimulationRepository(ISimulationRepository):
 
             configuration = SimulationConfiguration(
                 simulation_type=SimulationType(config_dict["simulation_type"]),
-                include_document_generation=config_dict.get("include_document_generation", True),
-                include_workflow_execution=config_dict.get("include_workflow_execution", True),
+                include_document_generation=config_dict.get(
+                    "include_document_generation", True
+                ),
+                include_workflow_execution=config_dict.get(
+                    "include_workflow_execution", True
+                ),
                 include_team_dynamics=config_dict.get("include_team_dynamics", True),
                 real_time_progress=config_dict.get("real_time_progress", False),
-                max_execution_time_minutes=config_dict.get("max_execution_time_minutes", 60),
-                generate_realistic_delays=config_dict.get("generate_realistic_delays", True),
+                max_execution_time_minutes=config_dict.get(
+                    "max_execution_time_minutes", 60
+                ),
+                generate_realistic_delays=config_dict.get(
+                    "generate_realistic_delays", True
+                ),
                 capture_metrics=config_dict.get("capture_metrics", True),
-                enable_ecosystem_integration=config_dict.get("enable_ecosystem_integration", True),
+                enable_ecosystem_integration=config_dict.get(
+                    "enable_ecosystem_integration", True
+                ),
             )
 
             # Create simulation object
-            simulation = Simulation(id=SimulationId(id_str), project_id=project_id, configuration=configuration)
+            simulation = Simulation(
+                id=SimulationId(id_str),
+                project_id=project_id,
+                configuration=configuration,
+            )
 
             # Set status if different from default
             if status_str != "created":
@@ -424,7 +485,9 @@ class SQLiteSimulationRepository(ISimulationRepository):
             # Set recommendations report linkage if present
             if recommendations_report_id:
                 simulation.recommendations_report_id = recommendations_report_id
-                simulation.recommendations_report_timestamp = recommendations_report_timestamp
+                simulation.recommendations_report_timestamp = (
+                    recommendations_report_timestamp
+                )
 
             # Set analysis report linkage if present
             if analysis_report_id:

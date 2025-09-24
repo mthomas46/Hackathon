@@ -7,7 +7,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiohttp import ClientError
 
-from services.clients.simulation_client import SimulationClient, SimulationClientError, SimulationClientTimeoutError
+from services.clients.simulation_client import (
+    SimulationClient,
+    SimulationClientError,
+    SimulationClientTimeoutError,
+)
 
 
 class TestSimulationClient:
@@ -43,14 +47,18 @@ class TestSimulationClient:
         """Test successful health check."""
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(return_value={"status": "healthy", "version": "1.0.0", "uptime": "2h 30m"})
+        mock_response.json = AsyncMock(
+            return_value={"status": "healthy", "version": "1.0.0", "uptime": "2h 30m"}
+        )
 
         with patch("aiohttp.ClientSession.get", return_value=mock_response) as mock_get:
             result = await client.get_health()
 
             assert result["status"] == "healthy"
             assert result["version"] == "1.0.0"
-            mock_get.assert_called_once_with("http://localhost:5075/health", timeout=30.0)
+            mock_get.assert_called_once_with(
+                "http://localhost:5075/health", timeout=30.0
+            )
 
     @pytest.mark.asyncio
     async def test_health_check_http_error(self, client):
@@ -68,7 +76,9 @@ class TestSimulationClient:
     @pytest.mark.asyncio
     async def test_health_check_connection_error(self, client):
         """Test health check with connection error."""
-        with patch("aiohttp.ClientSession.get", side_effect=ClientError("Connection failed")):
+        with patch(
+            "aiohttp.ClientSession.get", side_effect=ClientError("Connection failed")
+        ):
             with pytest.raises(SimulationClientError) as exc_info:
                 await client.get_health()
 
@@ -85,7 +95,12 @@ class TestSimulationClient:
     async def test_list_simulations(self, client):
         """Test listing simulations."""
         mock_simulations = [
-            {"id": "sim_001", "name": "Test Simulation", "status": "completed", "created_at": "2024-01-15T10:00:00Z"}
+            {
+                "id": "sim_001",
+                "name": "Test Simulation",
+                "status": "completed",
+                "created_at": "2024-01-15T10:00:00Z",
+            }
         ]
 
         mock_response = MagicMock()
@@ -97,12 +112,18 @@ class TestSimulationClient:
 
             assert len(result) == 1
             assert result[0]["id"] == "sim_001"
-            mock_get.assert_called_once_with("http://localhost:5075/api/v1/simulations", timeout=30.0)
+            mock_get.assert_called_once_with(
+                "http://localhost:5075/api/v1/simulations", timeout=30.0
+            )
 
     @pytest.mark.asyncio
     async def test_create_simulation(self, client):
         """Test creating a simulation."""
-        simulation_data = {"name": "New Simulation", "type": "software_development", "complexity": "medium"}
+        simulation_data = {
+            "name": "New Simulation",
+            "type": "software_development",
+            "complexity": "medium",
+        }
 
         mock_response = MagicMock()
         mock_response.status = 201
@@ -115,7 +136,9 @@ class TestSimulationClient:
             }
         )
 
-        with patch("aiohttp.ClientSession.post", return_value=mock_response) as mock_post:
+        with patch(
+            "aiohttp.ClientSession.post", return_value=mock_response
+        ) as mock_post:
             result = await client.create_simulation(simulation_data)
 
             assert result["id"] == "sim_002"
@@ -130,7 +153,12 @@ class TestSimulationClient:
     async def test_get_simulation_details(self, client):
         """Test getting simulation details."""
         simulation_id = "sim_001"
-        mock_details = {"id": simulation_id, "name": "Test Simulation", "status": "running", "progress": 65.5}
+        mock_details = {
+            "id": simulation_id,
+            "name": "Test Simulation",
+            "status": "running",
+            "progress": 65.5,
+        }
 
         mock_response = MagicMock()
         mock_response.status = 200
@@ -141,7 +169,10 @@ class TestSimulationClient:
 
             assert result["id"] == simulation_id
             assert result["status"] == "running"
-            mock_get.assert_called_once_with(f"http://localhost:5075/api/v1/simulations/{simulation_id}", timeout=30.0)
+            mock_get.assert_called_once_with(
+                f"http://localhost:5075/api/v1/simulations/{simulation_id}",
+                timeout=30.0,
+            )
 
     @pytest.mark.asyncio
     async def test_execute_simulation(self, client):
@@ -151,15 +182,21 @@ class TestSimulationClient:
         mock_response = MagicMock()
         mock_response.status = 200
         mock_response.json = AsyncMock(
-            return_value={"status": "executing", "message": "Simulation started successfully"}
+            return_value={
+                "status": "executing",
+                "message": "Simulation started successfully",
+            }
         )
 
-        with patch("aiohttp.ClientSession.post", return_value=mock_response) as mock_post:
+        with patch(
+            "aiohttp.ClientSession.post", return_value=mock_response
+        ) as mock_post:
             result = await client.execute_simulation(simulation_id)
 
             assert result["status"] == "executing"
             mock_post.assert_called_once_with(
-                f"http://localhost:5075/api/v1/simulations/{simulation_id}/execute", timeout=30.0
+                f"http://localhost:5075/api/v1/simulations/{simulation_id}/execute",
+                timeout=30.0,
             )
 
     @pytest.mark.asyncio
@@ -185,7 +222,8 @@ class TestSimulationClient:
             assert len(result) == 1
             assert result[0]["type"] == "executive_summary"
             mock_get.assert_called_once_with(
-                f"http://localhost:5075/api/v1/simulations/{simulation_id}/reports", timeout=30.0
+                f"http://localhost:5075/api/v1/simulations/{simulation_id}/reports",
+                timeout=30.0,
             )
 
     @pytest.mark.asyncio
@@ -198,7 +236,11 @@ class TestSimulationClient:
 
         with patch("aiohttp.ClientSession.get") as mock_get:
             # First two calls fail, third succeeds
-            mock_get.side_effect = [ClientError("Connection failed"), ClientError("Connection failed"), mock_response]
+            mock_get.side_effect = [
+                ClientError("Connection failed"),
+                ClientError("Connection failed"),
+                mock_response,
+            ]
 
             result = await client.get_health()
 
@@ -208,7 +250,9 @@ class TestSimulationClient:
     @pytest.mark.asyncio
     async def test_max_retries_exceeded(self, client):
         """Test behavior when max retries are exceeded."""
-        with patch("aiohttp.ClientSession.get", side_effect=ClientError("Connection failed")):
+        with patch(
+            "aiohttp.ClientSession.get", side_effect=ClientError("Connection failed")
+        ):
             with pytest.raises(SimulationClientError):
                 await client.get_health()
 
@@ -232,7 +276,9 @@ class TestSimulationClient:
         """Test handling of invalid JSON responses."""
         mock_response = MagicMock()
         mock_response.status = 200
-        mock_response.json = AsyncMock(side_effect=json.JSONDecodeError("Invalid JSON", "", 0))
+        mock_response.json = AsyncMock(
+            side_effect=json.JSONDecodeError("Invalid JSON", "", 0)
+        )
 
         with patch("aiohttp.ClientSession.get", return_value=mock_response):
             with pytest.raises(SimulationClientError) as exc_info:
@@ -262,7 +308,10 @@ class TestSimulationClient:
     def test_client_string_representation(self, client):
         """Test client string representation."""
         assert str(client) == "SimulationClient(base_url=http://localhost:5075)"
-        assert repr(client) == "SimulationClient(base_url=http://localhost:5075, timeout=30.0)"
+        assert (
+            repr(client)
+            == "SimulationClient(base_url=http://localhost:5075, timeout=30.0)"
+        )
 
 
 class TestSimulationClientError:

@@ -239,11 +239,14 @@ async def discover_ecosystem_tools():
         # Monitor discovery performance
         await tool_discovery_service.monitor_discovery_performance(results)
 
-        return create_success_response(message="Ecosystem discovery completed successfully", data=results)
+        return create_success_response(
+            message="Ecosystem discovery completed successfully", data=results
+        )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Ecosystem discovery failed: {str(e)}", {"error_type": "ecosystem_discovery_error"}
+            f"Ecosystem discovery failed: {str(e)}",
+            {"error_type": "ecosystem_discovery_error"},
         )
 
 
@@ -253,7 +256,9 @@ async def discover_ecosystem_tools():
 
 
 @app.get("/api/v1/registry/tools")
-async def get_registry_tools(service: Optional[str] = None, category: Optional[str] = None):
+async def get_registry_tools(
+    service: Optional[str] = None, category: Optional[str] = None
+):
     """PHASE 5: Retrieve tools from persistent registry
 
     Query the persistent tool registry with optional filtering by service or category.
@@ -276,11 +281,17 @@ async def get_registry_tools(service: Optional[str] = None, category: Optional[s
 
         return create_success_response(
             message=f"Retrieved {len(tools)} tools from registry",
-            data={"tools": tools, "count": len(tools), "filters": {"service": service, "category": category}},
+            data={
+                "tools": tools,
+                "count": len(tools),
+                "filters": {"service": service, "category": category},
+            },
         )
 
     except Exception as e:
-        return handle_discovery_error(f"Registry query failed: {str(e)}", {"error_type": "registry_query_error"})
+        return handle_discovery_error(
+            f"Registry query failed: {str(e)}", {"error_type": "registry_query_error"}
+        )
 
 
 @app.get("/api/v1/monitoring/dashboard")
@@ -293,10 +304,14 @@ async def get_monitoring_dashboard():
     try:
         dashboard = await discovery_monitoring_service.create_monitoring_dashboard()
 
-        return create_success_response(message="Monitoring dashboard generated successfully", data=dashboard)
+        return create_success_response(
+            message="Monitoring dashboard generated successfully", data=dashboard
+        )
 
     except Exception as e:
-        return handle_discovery_error(f"Dashboard generation failed: {str(e)}", {"error_type": "dashboard_error"})
+        return handle_discovery_error(
+            f"Dashboard generation failed: {str(e)}", {"error_type": "dashboard_error"}
+        )
 
 
 @app.get("/api/v1/registry/stats")
@@ -309,10 +324,14 @@ async def get_registry_stats():
     try:
         stats = await tool_registry_storage.get_registry_stats()
 
-        return create_success_response(message="Registry statistics retrieved successfully", data=stats)
+        return create_success_response(
+            message="Registry statistics retrieved successfully", data=stats
+        )
 
     except Exception as e:
-        return handle_discovery_error(f"Registry stats failed: {str(e)}", {"error_type": "stats_error"})
+        return handle_discovery_error(
+            f"Registry stats failed: {str(e)}", {"error_type": "stats_error"}
+        )
 
 
 # ============================================================================
@@ -337,11 +356,16 @@ async def register_tools_with_orchestrator():
         if not all_tools:
             return create_success_response(
                 message="No tools found in registry to register",
-                data={"registered_tools": 0, "message": "Run ecosystem discovery first"},
+                data={
+                    "registered_tools": 0,
+                    "message": "Run ecosystem discovery first",
+                },
             )
 
         # Register tools with orchestrator
-        registration_result = await orchestrator_integration.register_discovered_tools(all_tools)
+        registration_result = await orchestrator_integration.register_discovered_tools(
+            all_tools
+        )
 
         return create_success_response(
             message=f"Registered {registration_result['registered_tools']} tools with orchestrator",
@@ -350,7 +374,8 @@ async def register_tools_with_orchestrator():
 
     except Exception as e:
         return handle_discovery_error(
-            f"Tool registration failed: {str(e)}", {"error_type": "orchestrator_registration_error"}
+            f"Tool registration failed: {str(e)}",
+            {"error_type": "orchestrator_registration_error"},
         )
 
 
@@ -363,10 +388,15 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
     """
     try:
         task_description = workflow_request.get("task_description")
-        workflow_name = workflow_request.get("name", f"ai_workflow_{len(str(task_description))}")
+        workflow_name = workflow_request.get(
+            "name", f"ai_workflow_{len(str(task_description))}"
+        )
 
         if not task_description:
-            return handle_discovery_error("task_description is required", {"error_type": "missing_task_description"})
+            return handle_discovery_error(
+                "task_description is required",
+                {"error_type": "missing_task_description"},
+            )
 
         # Get all available tools from registry
         all_tools_data = await tool_registry_storage.get_all_tools()
@@ -376,16 +406,22 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
 
         if not available_tools:
             return handle_discovery_error(
-                "No tools available in registry. Run ecosystem discovery first.", {"error_type": "no_tools_available"}
+                "No tools available in registry. Run ecosystem discovery first.",
+                {"error_type": "no_tools_available"},
             )
 
         # Use AI to select optimal tools
-        tool_selection = await ai_tool_selector.select_tools_for_task(task_description, available_tools)
+        tool_selection = await ai_tool_selector.select_tools_for_task(
+            task_description, available_tools
+        )
 
         if not tool_selection["success"]:
             return handle_discovery_error(
                 f"AI tool selection failed: {tool_selection.get('error', 'Unknown error')}",
-                {"error_type": "ai_selection_failed", "fallback_tools": tool_selection.get("fallback_tools", [])},
+                {
+                    "error_type": "ai_selection_failed",
+                    "fallback_tools": tool_selection.get("fallback_tools", []),
+                },
             )
 
         # Create workflow specification
@@ -393,7 +429,9 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
             "name": workflow_name,
             "description": f"AI-generated workflow for: {task_description[:50]}...",
             "task_description": task_description,
-            "selected_tools": [tool["name"] for tool in tool_selection["selected_tools"]],
+            "selected_tools": [
+                tool["name"] for tool in tool_selection["selected_tools"]
+            ],
             "ai_analysis": tool_selection["task_analysis"],
             "confidence_score": tool_selection["confidence_score"],
             "reasoning": tool_selection["reasoning"],
@@ -402,10 +440,14 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
         # Add workflow steps if AI generated a workflow
         if tool_selection.get("workflow"):
             workflow_spec["steps"] = tool_selection["workflow"]["steps"]
-            workflow_spec["required_tools"] = tool_selection["workflow"]["required_tools"]
+            workflow_spec["required_tools"] = tool_selection["workflow"][
+                "required_tools"
+            ]
 
         # Create workflow in orchestrator
-        workflow_result = await orchestrator_integration.create_dynamic_workflow(workflow_spec)
+        workflow_result = await orchestrator_integration.create_dynamic_workflow(
+            workflow_spec
+        )
 
         if workflow_result["success"]:
             return create_success_response(
@@ -419,11 +461,17 @@ async def create_ai_workflow(workflow_request: Dict[str, Any]):
         else:
             return handle_discovery_error(
                 f"Workflow creation failed: {workflow_result.get('error', 'Unknown error')}",
-                {"error_type": "workflow_creation_failed", "tool_selection": tool_selection},
+                {
+                    "error_type": "workflow_creation_failed",
+                    "tool_selection": tool_selection,
+                },
             )
 
     except Exception as e:
-        return handle_discovery_error(f"AI workflow creation failed: {str(e)}", {"error_type": "ai_workflow_error"})
+        return handle_discovery_error(
+            f"AI workflow creation failed: {str(e)}",
+            {"error_type": "ai_workflow_error"},
+        )
 
 
 @app.post("/api/v1/workflows/execute-ai")
@@ -437,14 +485,19 @@ async def execute_ai_workflow(execution_request: Dict[str, Any]):
         parameters = execution_request.get("parameters", {})
 
         if not workflow_name:
-            return handle_discovery_error("workflow_name is required", {"error_type": "missing_workflow_name"})
+            return handle_discovery_error(
+                "workflow_name is required", {"error_type": "missing_workflow_name"}
+            )
 
         # Execute workflow
-        execution_result = await orchestrator_integration.execute_dynamic_workflow(workflow_name, parameters)
+        execution_result = await orchestrator_integration.execute_dynamic_workflow(
+            workflow_name, parameters
+        )
 
         if execution_result["success"]:
             return create_success_response(
-                message=f"Workflow '{workflow_name}' executed successfully", data=execution_result
+                message=f"Workflow '{workflow_name}' executed successfully",
+                data=execution_result,
             )
         else:
             return handle_discovery_error(
@@ -454,7 +507,8 @@ async def execute_ai_workflow(execution_request: Dict[str, Any]):
 
     except Exception as e:
         return handle_discovery_error(
-            f"Workflow execution failed: {str(e)}", {"error_type": "workflow_execution_error"}
+            f"Workflow execution failed: {str(e)}",
+            {"error_type": "workflow_execution_error"},
         )
 
 
@@ -477,19 +531,30 @@ async def get_orchestrator_integration_status():
 
         integration_status = {
             "orchestrator": orchestrator_status,
-            "workflows": workflows_result.get("workflows", []) if workflows_result.get("success") else [],
+            "workflows": (
+                workflows_result.get("workflows", [])
+                if workflows_result.get("success")
+                else []
+            ),
             "registry": registry_stats,
             "ai_selector": {
                 "status": "available",
-                "capabilities": ["task_analysis", "tool_selection", "workflow_generation"],
+                "capabilities": [
+                    "task_analysis",
+                    "tool_selection",
+                    "workflow_generation",
+                ],
             },
         }
 
-        return create_success_response(message="Orchestrator integration status retrieved", data=integration_status)
+        return create_success_response(
+            message="Orchestrator integration status retrieved", data=integration_status
+        )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Integration status check failed: {str(e)}", {"error_type": "integration_status_error"}
+            f"Integration status check failed: {str(e)}",
+            {"error_type": "integration_status_error"},
         )
 
 
@@ -521,10 +586,14 @@ async def analyze_tools_semantically():
         print(f"🧠 Performing semantic analysis on {len(all_tools)} tools...")
 
         # Perform semantic analysis
-        semantically_enhanced_tools = await semantic_tool_analyzer.enhance_tool_categorization(all_tools)
+        semantically_enhanced_tools = (
+            await semantic_tool_analyzer.enhance_tool_categorization(all_tools)
+        )
 
         # Analyze tool relationships
-        relationship_analysis = await semantic_tool_analyzer.analyze_tool_relationships(semantically_enhanced_tools)
+        relationship_analysis = await semantic_tool_analyzer.analyze_tool_relationships(
+            semantically_enhanced_tools
+        )
 
         # Store enhanced tools back in registry
         for tool in semantically_enhanced_tools:
@@ -538,16 +607,27 @@ async def analyze_tools_semantically():
                 "relationship_analysis": relationship_analysis,
                 "enhancement_summary": {
                     "tools_with_semantic_analysis": len(
-                        [t for t in semantically_enhanced_tools if t.get("semantic_analysis")]
+                        [
+                            t
+                            for t in semantically_enhanced_tools
+                            if t.get("semantic_analysis")
+                        ]
                     ),
-                    "relationships_found": relationship_analysis.get("relationships_found", 0),
-                    "workflow_suggestions": len(relationship_analysis.get("workflow_suggestions", [])),
+                    "relationships_found": relationship_analysis.get(
+                        "relationships_found", 0
+                    ),
+                    "workflow_suggestions": len(
+                        relationship_analysis.get("workflow_suggestions", [])
+                    ),
                 },
             },
         )
 
     except Exception as e:
-        return handle_discovery_error(f"Semantic analysis failed: {str(e)}", {"error_type": "semantic_analysis_error"})
+        return handle_discovery_error(
+            f"Semantic analysis failed: {str(e)}",
+            {"error_type": "semantic_analysis_error"},
+        )
 
 
 # ============================================================================
@@ -575,12 +655,16 @@ async def optimize_discovery_performance():
         # Get the most recent discovery run
         latest_run_key = max(discovery_results.keys()) if discovery_results else None
         if not latest_run_key:
-            return handle_discovery_error("No valid discovery results found", {"error_type": "no_discovery_data"})
+            return handle_discovery_error(
+                "No valid discovery results found", {"error_type": "no_discovery_data"}
+            )
 
         latest_results = discovery_results[latest_run_key]
 
         # Perform performance optimization analysis
-        optimization_analysis = await performance_optimizer.optimize_discovery_workflow(latest_results)
+        optimization_analysis = await performance_optimizer.optimize_discovery_workflow(
+            latest_results
+        )
 
         return create_success_response(
             message="Performance optimization analysis completed",
@@ -588,16 +672,27 @@ async def optimize_discovery_performance():
                 "analysis": optimization_analysis,
                 "discovery_run": latest_run_key,
                 "recommendations_count": len(
-                    optimization_analysis.get("optimizations", {}).get("parallelization_opportunities", [])
+                    optimization_analysis.get("optimizations", {}).get(
+                        "parallelization_opportunities", []
+                    )
                 )
-                + len(optimization_analysis.get("optimizations", {}).get("bottleneck_identification", []))
-                + len(optimization_analysis.get("optimizations", {}).get("resource_optimization", [])),
+                + len(
+                    optimization_analysis.get("optimizations", {}).get(
+                        "bottleneck_identification", []
+                    )
+                )
+                + len(
+                    optimization_analysis.get("optimizations", {}).get(
+                        "resource_optimization", []
+                    )
+                ),
             },
         )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Performance optimization failed: {str(e)}", {"error_type": "performance_optimization_error"}
+            f"Performance optimization failed: {str(e)}",
+            {"error_type": "performance_optimization_error"},
         )
 
 
@@ -622,20 +717,27 @@ async def analyze_tool_dependencies():
             )
 
         # Analyze tool dependencies
-        dependency_analysis = await performance_optimizer.analyze_tool_dependencies(all_tools)
+        dependency_analysis = await performance_optimizer.analyze_tool_dependencies(
+            all_tools
+        )
 
         return create_success_response(
             message=f"Dependency analysis completed for {len(all_tools)} tools",
             data={
                 "dependency_analysis": dependency_analysis,
-                "optimization_opportunities": len(dependency_analysis.get("optimization_opportunities", [])),
-                "independent_tools": len(dependency_analysis.get("independent_tools", [])),
+                "optimization_opportunities": len(
+                    dependency_analysis.get("optimization_opportunities", [])
+                ),
+                "independent_tools": len(
+                    dependency_analysis.get("independent_tools", [])
+                ),
             },
         )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Dependency analysis failed: {str(e)}", {"error_type": "dependency_analysis_error"}
+            f"Dependency analysis failed: {str(e)}",
+            {"error_type": "dependency_analysis_error"},
         )
 
 
@@ -652,7 +754,8 @@ async def create_performance_baseline():
 
         if not discovery_results:
             return handle_discovery_error(
-                "No discovery results available for baseline creation", {"error_type": "no_baseline_data"}
+                "No discovery results available for baseline creation",
+                {"error_type": "no_baseline_data"},
             )
 
         # Use the most recent discovery run
@@ -660,7 +763,9 @@ async def create_performance_baseline():
         latest_results = discovery_results[latest_run_key]
 
         # Create performance baseline
-        baseline = await performance_optimizer.create_performance_baseline(latest_results)
+        baseline = await performance_optimizer.create_performance_baseline(
+            latest_results
+        )
 
         return create_success_response(
             message="Performance baseline established successfully",
@@ -672,7 +777,10 @@ async def create_performance_baseline():
         )
 
     except Exception as e:
-        return handle_discovery_error(f"Baseline creation failed: {str(e)}", {"error_type": "baseline_creation_error"})
+        return handle_discovery_error(
+            f"Baseline creation failed: {str(e)}",
+            {"error_type": "baseline_creation_error"},
+        )
 
 
 @app.get("/api/v1/optimization/status")
@@ -700,7 +808,9 @@ async def get_optimization_status():
             "optimization_readiness": {
                 "has_discovery_data": bool(latest_run),
                 "has_tools": registry_stats.get("total_tools", 0) > 0,
-                "can_optimize_performance": bool(latest_run and latest_run.get("performance_metrics")),
+                "can_optimize_performance": bool(
+                    latest_run and latest_run.get("performance_metrics")
+                ),
                 "can_analyze_dependencies": registry_stats.get("total_tools", 0) > 1,
             },
         }
@@ -714,11 +824,15 @@ async def get_optimization_status():
                 "avg_tools_per_service": summary.get("avg_tools_per_service", 0),
             }
 
-        return create_success_response(message="Optimization status retrieved successfully", data=optimization_status)
+        return create_success_response(
+            message="Optimization status retrieved successfully",
+            data=optimization_status,
+        )
 
     except Exception as e:
         return handle_discovery_error(
-            f"Optimization status retrieval failed: {str(e)}", {"error_type": "optimization_status_error"}
+            f"Optimization status retrieval failed: {str(e)}",
+            {"error_type": "optimization_status_error"},
         )
 
 

@@ -8,8 +8,17 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
-from simulation.domain.entities.project import Project, ProjectId, ProjectPhase, TeamMember
-from simulation.domain.events import ProjectCreated, ProjectPhaseCompleted, ProjectStatusChanged
+from simulation.domain.entities.project import (
+    Project,
+    ProjectId,
+    ProjectPhase,
+    TeamMember,
+)
+from simulation.domain.events import (
+    ProjectCreated,
+    ProjectPhaseCompleted,
+    ProjectStatusChanged,
+)
 from simulation.domain.value_objects import ComplexityLevel, ProjectStatus, ProjectType
 
 
@@ -639,7 +648,9 @@ class TestProjectAggregate:
             status=ProjectStatus.IN_PROGRESS,
         )
 
-        expected_str = f"Project(id={project_id}, name='Test Project', status=in_progress)"
+        expected_str = (
+            f"Project(id={project_id}, name='Test Project', status=in_progress)"
+        )
         assert str(project) == expected_str
         assert repr(project) == expected_str
 
@@ -656,10 +667,15 @@ class TestProjectAggregate:
         )
 
         # Create custom phases with dependencies
-        planning_phase = ProjectPhase(name="custom_planning", duration_days=5, deliverables=["plan"])
+        planning_phase = ProjectPhase(
+            name="custom_planning", duration_days=5, deliverables=["plan"]
+        )
 
         dev_phase = ProjectPhase(
-            name="custom_development", duration_days=10, deliverables=["code"], dependencies=["custom_planning"]
+            name="custom_development",
+            duration_days=10,
+            deliverables=["code"],
+            dependencies=["custom_planning"],
         )
 
         # Manually set phases for testing

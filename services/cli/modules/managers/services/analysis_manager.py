@@ -10,7 +10,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from rich.table import Table
 
-from services.shared.core.constants_new import ServiceNames
+# Service names now handled by standardized config system
 
 from ...base.base_manager import BaseManager
 
@@ -18,12 +18,14 @@ from ...base.base_manager import BaseManager
 class AnalysisManager(BaseManager):
     """Manager for analysis service power-user operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
 
     def get_required_services(self) -> List[str]:
         """Return list of services required by this manager."""
-        return [ServiceNames.ANALYSIS_SERVICE, ServiceNames.DOC_STORE]
+        return ["analysis-service", "doc-store"]
 
     async def get_main_menu(self) -> List[tuple[str, str]]:
         """Return the main menu items for analysis management."""
@@ -94,11 +96,15 @@ class AnalysisManager(BaseManager):
         target = await self.select_from_list(["documents", "prompts", "all"]) or "all"
 
         response = await self.api_post_with_status(
-            "analysis-service/analyze", {"type": "quality", "target": target}, f"Running quality analysis on {target}"
+            "analysis-service/analyze",
+            {"type": "quality", "target": target},
+            f"Running quality analysis on {target}",
         )
 
         if response and response.get("analysis_id"):
-            self.display.show_success(f"Quality analysis started: {response['analysis_id']}")
+            self.display.show_success(
+                f"Quality analysis started: {response['analysis_id']}"
+            )
             await self.monitor_operation(
                 response["analysis_id"],
                 "analysis",
@@ -110,16 +116,22 @@ class AnalysisManager(BaseManager):
         """Run consistency analysis."""
         try:
             scope = Prompt.ask(
-                "[bold cyan]Analysis scope[/bold cyan]", choices=["documents", "workflows", "all"], default="all"
+                "[bold cyan]Analysis scope[/bold cyan]",
+                choices=["documents", "workflows", "all"],
+                default="all",
             )
 
-            with self.console.status(f"[bold green]Running consistency analysis on {scope}...") as status:
+            with self.console.status(
+                f"[bold green]Running consistency analysis on {scope}..."
+            ) as status:
                 response = await self.clients.post_json(
                     "analysis-service/analyze", {"type": "consistency", "scope": scope}
                 )
 
             if response.get("analysis_id"):
-                self.console.print(f"[green]✅ Consistency analysis started: {response['analysis_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Consistency analysis started: {response['analysis_id']}[/green]"
+                )
                 await self.monitor_analysis(response["analysis_id"])
             else:
                 self.console.print("[red]❌ Failed to start consistency analysis[/red]")
@@ -131,16 +143,23 @@ class AnalysisManager(BaseManager):
         """Run security analysis."""
         try:
             target_type = Prompt.ask(
-                "[bold cyan]Target type[/bold cyan]", choices=["documents", "prompts", "code", "all"], default="all"
+                "[bold cyan]Target type[/bold cyan]",
+                choices=["documents", "prompts", "code", "all"],
+                default="all",
             )
 
-            with self.console.status(f"[bold green]Running security analysis on {target_type}...") as status:
+            with self.console.status(
+                f"[bold green]Running security analysis on {target_type}..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "analysis-service/analyze", {"type": "security", "target_type": target_type}
+                    "analysis-service/analyze",
+                    {"type": "security", "target_type": target_type},
                 )
 
             if response.get("analysis_id"):
-                self.console.print(f"[green]✅ Security analysis started: {response['analysis_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Security analysis started: {response['analysis_id']}[/green]"
+                )
                 await self.monitor_analysis(response["analysis_id"])
             else:
                 self.console.print("[red]❌ Failed to start security analysis[/red]")
@@ -152,17 +171,25 @@ class AnalysisManager(BaseManager):
         """Run custom analysis."""
         try:
             analysis_type = Prompt.ask("[bold cyan]Analysis type[/bold cyan]")
-            parameters = Prompt.ask("[bold cyan]Parameters (JSON)[/bold cyan]", default="{}")
+            parameters = Prompt.ask(
+                "[bold cyan]Parameters (JSON)[/bold cyan]", default="{}"
+            )
 
             import json
 
             params = json.loads(parameters)
 
-            with self.console.status(f"[bold green]Running custom {analysis_type} analysis...") as status:
-                response = await self.clients.post_json("analysis-service/analyze", {"type": analysis_type, **params})
+            with self.console.status(
+                f"[bold green]Running custom {analysis_type} analysis..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "analysis-service/analyze", {"type": analysis_type, **params}
+                )
 
             if response.get("analysis_id"):
-                self.console.print(f"[green]✅ Custom analysis started: {response['analysis_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Custom analysis started: {response['analysis_id']}[/green]"
+                )
                 await self.monitor_analysis(response["analysis_id"])
             else:
                 self.console.print("[red]❌ Failed to start custom analysis[/red]")
@@ -219,7 +246,9 @@ class AnalysisManager(BaseManager):
 
     async def view_all_findings(self):
         """View all findings."""
-        response = await self.api_get_with_status("analysis-service/findings", "Fetching findings")
+        response = await self.api_get_with_status(
+            "analysis-service/findings", "Fetching findings"
+        )
 
         if response and response.get("findings"):
             table = self.create_findings_table("Analysis Findings")
@@ -237,16 +266,25 @@ class AnalysisManager(BaseManager):
         """Filter findings by severity."""
         try:
             severity = Prompt.ask(
-                "[bold cyan]Severity level[/bold cyan]", choices=["critical", "high", "medium", "low", "info"]
+                "[bold cyan]Severity level[/bold cyan]",
+                choices=["critical", "high", "medium", "low", "info"],
             )
 
-            with self.console.status(f"[bold green]Fetching {severity} severity findings...") as status:
-                response = await self.clients.get_json(f"analysis-service/findings?severity={severity}")
+            with self.console.status(
+                f"[bold green]Fetching {severity} severity findings..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"analysis-service/findings?severity={severity}"
+                )
 
             if response.get("findings"):
-                self.display_findings_table(response["findings"], f"{severity.title()} Severity Findings")
+                self.display_findings_table(
+                    response["findings"], f"{severity.title()} Severity Findings"
+                )
             else:
-                self.console.print(f"[yellow]No {severity} severity findings found.[/yellow]")
+                self.console.print(
+                    f"[yellow]No {severity} severity findings found.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error filtering findings by severity: {e}[/red]")
@@ -256,13 +294,21 @@ class AnalysisManager(BaseManager):
         try:
             finding_type = Prompt.ask("[bold cyan]Finding type[/bold cyan]")
 
-            with self.console.status(f"[bold green]Fetching {finding_type} findings...") as status:
-                response = await self.clients.get_json(f"analysis-service/findings?type={finding_type}")
+            with self.console.status(
+                f"[bold green]Fetching {finding_type} findings..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"analysis-service/findings?type={finding_type}"
+                )
 
             if response.get("findings"):
-                self.display_findings_table(response["findings"], f"{finding_type.title()} Findings")
+                self.display_findings_table(
+                    response["findings"], f"{finding_type.title()} Findings"
+                )
             else:
-                self.console.print(f"[yellow]No {finding_type} findings found.[/yellow]")
+                self.console.print(
+                    f"[yellow]No {finding_type} findings found.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error filtering findings by type: {e}[/red]")
@@ -272,11 +318,17 @@ class AnalysisManager(BaseManager):
         try:
             query = Prompt.ask("[bold cyan]Search query[/bold cyan]")
 
-            with self.console.status(f"[bold green]Searching findings for '{query}'...") as status:
-                response = await self.clients.get_json(f"analysis-service/findings?search={query}")
+            with self.console.status(
+                f"[bold green]Searching findings for '{query}'..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"analysis-service/findings?search={query}"
+                )
 
             if response.get("findings"):
-                self.display_findings_table(response["findings"], f"Search Results for '{query}'")
+                self.display_findings_table(
+                    response["findings"], f"Search Results for '{query}'"
+                )
             else:
                 self.console.print(f"[yellow]No findings found for '{query}'.[/yellow]")
 
@@ -293,9 +345,13 @@ class AnalysisManager(BaseManager):
         table.add_column("Description", style="dim white")
 
         for finding in findings[:15]:  # Show first 15
-            severity_color = {"critical": "red", "high": "red", "medium": "yellow", "low": "green", "info": "blue"}.get(
-                finding.get("severity", "unknown"), "white"
-            )
+            severity_color = {
+                "critical": "red",
+                "high": "red",
+                "medium": "yellow",
+                "low": "green",
+                "info": "blue",
+            }.get(finding.get("severity", "unknown"), "white")
 
             table.add_row(
                 finding.get("id", "N/A")[:8],
@@ -311,12 +367,20 @@ class AnalysisManager(BaseManager):
         """Export findings."""
         try:
             export_format = Prompt.ask(
-                "[bold cyan]Export format[/bold cyan]", choices=["json", "csv", "html"], default="json"
+                "[bold cyan]Export format[/bold cyan]",
+                choices=["json", "csv", "html"],
+                default="json",
             )
-            filename = Prompt.ask("[bold cyan]Filename[/bold cyan]", default=f"findings.{export_format}")
+            filename = Prompt.ask(
+                "[bold cyan]Filename[/bold cyan]", default=f"findings.{export_format}"
+            )
 
-            with self.console.status(f"[bold green]Exporting findings to {filename}...") as status:
-                response = await self.clients.get_json(f"analysis-service/findings?export={export_format}")
+            with self.console.status(
+                f"[bold green]Exporting findings to {filename}..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"analysis-service/findings?export={export_format}"
+                )
 
             if response.get("exported"):
                 self.console.print(f"[green]✅ Findings exported to {filename}[/green]")
@@ -360,8 +424,12 @@ class AnalysisManager(BaseManager):
     async def generate_confluence_report(self):
         """Generate Confluence consolidation report."""
         try:
-            with self.console.status("[bold green]Generating Confluence consolidation report...") as status:
-                response = await self.clients.get_json("analysis-service/reports/confluence/consolidation")
+            with self.console.status(
+                "[bold green]Generating Confluence consolidation report..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "analysis-service/reports/confluence/consolidation"
+                )
 
             if response.get("report"):
                 report = response["report"]
@@ -385,8 +453,12 @@ Generated: {report.get('generated_at', 'unknown')}
     async def generate_jira_staleness_report(self):
         """Generate Jira staleness report."""
         try:
-            with self.console.status("[bold green]Generating Jira staleness report...") as status:
-                response = await self.clients.get_json("analysis-service/reports/jira/staleness")
+            with self.console.status(
+                "[bold green]Generating Jira staleness report..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "analysis-service/reports/jira/staleness"
+                )
 
             if response.get("report"):
                 report = response["report"]
@@ -402,25 +474,36 @@ Generated: {report.get('generated_at', 'unknown')}
 """
                 print_panel(self.console, content, border_style="orange")
             else:
-                self.console.print("[red]❌ Failed to generate Jira staleness report[/red]")
+                self.console.print(
+                    "[red]❌ Failed to generate Jira staleness report[/red]"
+                )
 
         except Exception as e:
-            self.console.print(f"[red]Error generating Jira staleness report: {e}[/red]")
+            self.console.print(
+                f"[red]Error generating Jira staleness report: {e}[/red]"
+            )
 
     async def generate_findings_report(self):
         """Generate findings report."""
         try:
             report_type = Prompt.ask(
-                "[bold cyan]Report type[/bold cyan]", choices=["summary", "detailed", "trends"], default="summary"
+                "[bold cyan]Report type[/bold cyan]",
+                choices=["summary", "detailed", "trends"],
+                default="summary",
             )
 
-            with self.console.status(f"[bold green]Generating {report_type} findings report...") as status:
+            with self.console.status(
+                f"[bold green]Generating {report_type} findings report..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "analysis-service/reports/generate", {"type": "findings", "format": report_type}
+                    "analysis-service/reports/generate",
+                    {"type": "findings", "format": report_type},
                 )
 
             if response.get("report_id"):
-                self.console.print(f"[green]✅ Findings report generated: {response['report_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Findings report generated: {response['report_id']}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to generate findings report[/red]")
 
@@ -430,11 +513,17 @@ Generated: {report.get('generated_at', 'unknown')}
     async def generate_quality_report(self):
         """Generate quality metrics report."""
         try:
-            with self.console.status("[bold green]Generating quality metrics report...") as status:
-                response = await self.clients.post_json("analysis-service/reports/generate", {"type": "quality"})
+            with self.console.status(
+                "[bold green]Generating quality metrics report..."
+            ) as status:
+                response = await self.clients.post_json(
+                    "analysis-service/reports/generate", {"type": "quality"}
+                )
 
             if response.get("report_id"):
-                self.console.print(f"[green]✅ Quality metrics report generated: {response['report_id']}[/green]")
+                self.console.print(
+                    f"[green]✅ Quality metrics report generated: {response['report_id']}[/green]"
+                )
             else:
                 self.console.print("[red]❌ Failed to generate quality report[/red]")
 
@@ -479,8 +568,12 @@ Generated: {report.get('generated_at', 'unknown')}
     async def view_overall_quality(self):
         """View overall quality scores."""
         try:
-            with self.console.status("[bold green]Fetching quality metrics...") as status:
-                response = await self.clients.get_json("analysis-service/quality/metrics")
+            with self.console.status(
+                "[bold green]Fetching quality metrics..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "analysis-service/quality/metrics"
+                )
 
             if response.get("metrics"):
                 metrics = response["metrics"]
@@ -495,9 +588,9 @@ Documents Analyzed: {metrics.get('total_documents', 0)}
 Prompts Analyzed: {metrics.get('total_prompts', 0)}
 
 Quality Distribution:
-  High (8-10): {metrics.get('quality_distribution', {}).get('high', 0)} items
-  Medium (5-7): {metrics.get('quality_distribution', {}).get('medium', 0)} items
-  Low (0-4): {metrics.get('quality_distribution', {}).get('low', 0)} items
+    High (8-10): {metrics.get('quality_distribution', {}).get('high', 0)} items
+    Medium (5-7): {metrics.get('quality_distribution', {}).get('medium', 0)} items
+    Low (0-4): {metrics.get('quality_distribution', {}).get('low', 0)} items
 """
                 print_panel(self.console, content, border_style="green")
             else:
@@ -509,8 +602,12 @@ Quality Distribution:
     async def view_document_quality_trends(self):
         """View document quality trends."""
         try:
-            with self.console.status("[bold green]Fetching document quality trends...") as status:
-                response = await self.clients.get_json("analysis-service/quality/trends?type=document")
+            with self.console.status(
+                "[bold green]Fetching document quality trends..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "analysis-service/quality/trends?type=document"
+                )
 
             if response.get("trends"):
                 trends = response["trends"]
@@ -529,16 +626,24 @@ Quality Improvement Areas:
 
                 print_panel(self.console, content, border_style="blue")
             else:
-                self.console.print("[yellow]No document quality trends available.[/yellow]")
+                self.console.print(
+                    "[yellow]No document quality trends available.[/yellow]"
+                )
 
         except Exception as e:
-            self.console.print(f"[red]Error fetching document quality trends: {e}[/red]")
+            self.console.print(
+                f"[red]Error fetching document quality trends: {e}[/red]"
+            )
 
     async def view_prompt_quality_metrics(self):
         """View prompt quality metrics."""
         try:
-            with self.console.status("[bold green]Fetching prompt quality metrics...") as status:
-                response = await self.clients.get_json("analysis-service/quality/prompts")
+            with self.console.status(
+                "[bold green]Fetching prompt quality metrics..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "analysis-service/quality/prompts"
+                )
 
             if response.get("metrics"):
                 metrics = response["metrics"]
@@ -557,7 +662,9 @@ Category Breakdown:
 
                 print_panel(self.console, content, border_style="cyan")
             else:
-                self.console.print("[yellow]No prompt quality metrics available.[/yellow]")
+                self.console.print(
+                    "[yellow]No prompt quality metrics available.[/yellow]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error fetching prompt quality metrics: {e}[/red]")
@@ -565,8 +672,12 @@ Category Breakdown:
     async def view_quality_recommendations(self):
         """View quality improvement recommendations."""
         try:
-            with self.console.status("[bold green]Fetching quality recommendations...") as status:
-                response = await self.clients.get_json("analysis-service/quality/recommendations")
+            with self.console.status(
+                "[bold green]Fetching quality recommendations..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "analysis-service/quality/recommendations"
+                )
 
             if response.get("recommendations"):
                 recommendations = response["recommendations"]
@@ -579,10 +690,14 @@ Category Breakdown:
 
                 print_panel(self.console, content, border_style="yellow")
             else:
-                self.console.print("[yellow]No quality recommendations available.[/yellow]")
+                self.console.print(
+                    "[yellow]No quality recommendations available.[/yellow]"
+                )
 
         except Exception as e:
-            self.console.print(f"[red]Error fetching quality recommendations: {e}[/red]")
+            self.console.print(
+                f"[red]Error fetching quality recommendations: {e}[/red]"
+            )
 
     async def detectors_management_menu(self):
         """Detectors management submenu."""
@@ -652,8 +767,12 @@ Category Breakdown:
         try:
             detector_name = Prompt.ask("[bold cyan]Detector name[/bold cyan]")
 
-            with self.console.status(f"[bold green]Fetching details for {detector_name}...") as status:
-                response = await self.clients.get_json(f"analysis-service/detectors/{detector_name}")
+            with self.console.status(
+                f"[bold green]Fetching details for {detector_name}..."
+            ) as status:
+                response = await self.clients.get_json(
+                    f"analysis-service/detectors/{detector_name}"
+                )
 
             if response.get("detector"):
                 detector = response["detector"]
@@ -669,9 +788,9 @@ Description: {detector.get('description', 'No description')}
 Capabilities: {', '.join(detector.get('capabilities', []))}
 
 Performance:
-  Accuracy: {detector.get('performance', {}).get('accuracy', 'unknown')}
-  Speed: {detector.get('performance', {}).get('speed', 'unknown')} items/sec
-  Last Run: {detector.get('last_run', 'never')}
+    Accuracy: {detector.get('performance', {}).get('accuracy', 'unknown')}
+    Speed: {detector.get('performance', {}).get('speed', 'unknown')} items/sec
+    Last Run: {detector.get('last_run', 'never')}
 """
                 print_panel(self.console, content, border_style="cyan")
             else:
@@ -684,15 +803,25 @@ Performance:
         """Enable/disable detector."""
         try:
             detector_name = Prompt.ask("[bold cyan]Detector name[/bold cyan]")
-            action = Prompt.ask("[bold cyan]Action[/bold cyan]", choices=["enable", "disable"])
+            action = Prompt.ask(
+                "[bold cyan]Action[/bold cyan]", choices=["enable", "disable"]
+            )
 
-            with self.console.status(f"[bold green]{action.title()}ing detector {detector_name}...") as status:
-                response = await self.clients.post_json(f"analysis-service/detectors/{detector_name}/{action}", {})
+            with self.console.status(
+                f"[bold green]{action.title()}ing detector {detector_name}..."
+            ) as status:
+                response = await self.clients.post_json(
+                    f"analysis-service/detectors/{detector_name}/{action}", {}
+                )
 
             if response.get("success"):
-                self.console.print(f"[green]✅ Detector {detector_name} {action}d successfully[/green]")
+                self.console.print(
+                    f"[green]✅ Detector {detector_name} {action}d successfully[/green]"
+                )
             else:
-                self.console.print(f"[red]❌ Failed to {action} detector {detector_name}[/red]")
+                self.console.print(
+                    f"[red]❌ Failed to {action} detector {detector_name}[/red]"
+                )
 
         except Exception as e:
             self.console.print(f"[red]Error toggling detector: {e}[/red]")
@@ -700,8 +829,12 @@ Performance:
     async def detector_performance_stats(self):
         """View detector performance statistics."""
         try:
-            with self.console.status("[bold green]Fetching detector performance stats...") as status:
-                response = await self.clients.get_json("analysis-service/detectors/performance")
+            with self.console.status(
+                "[bold green]Fetching detector performance stats..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "analysis-service/detectors/performance"
+                )
 
             if response.get("stats"):
                 table = Table(title="Detector Performance Statistics")
@@ -725,10 +858,14 @@ Performance:
 
                 self.console.print(table)
             else:
-                self.console.print("[yellow]No detector performance stats available.[/yellow]")
+                self.console.print(
+                    "[yellow]No detector performance stats available.[/yellow]"
+                )
 
         except Exception as e:
-            self.console.print(f"[red]Error fetching detector performance stats: {e}[/red]")
+            self.console.print(
+                f"[red]Error fetching detector performance stats: {e}[/red]"
+            )
 
     async def integration_analysis_menu(self):
         """Integration analysis submenu."""
@@ -766,11 +903,16 @@ Performance:
         """Run natural language analysis."""
         try:
             query = Prompt.ask("[bold cyan]Analysis query[/bold cyan]")
-            context = Prompt.ask("[bold cyan]Context (optional)[/bold cyan]", default="")
+            context = Prompt.ask(
+                "[bold cyan]Context (optional)[/bold cyan]", default=""
+            )
 
-            with self.console.status("[bold green]Running natural language analysis...") as status:
+            with self.console.status(
+                "[bold green]Running natural language analysis..."
+            ) as status:
                 response = await self.clients.post_json(
-                    "analysis-service/integration/natural-language-analysis", {"query": query, "context": context}
+                    "analysis-service/integration/natural-language-analysis",
+                    {"query": query, "context": context},
                 )
 
             if response.get("analysis"):
@@ -796,10 +938,14 @@ Key Insights:
 
                 print_panel(self.console, content, border_style="blue")
             else:
-                self.console.print("[red]❌ Failed to run natural language analysis[/red]")
+                self.console.print(
+                    "[red]❌ Failed to run natural language analysis[/red]"
+                )
 
         except Exception as e:
-            self.console.print(f"[red]Error running natural language analysis: {e}[/red]")
+            self.console.print(
+                f"[red]Error running natural language analysis: {e}[/red]"
+            )
 
     async def prompt_based_analysis(self):
         """Run prompt-based analysis."""
@@ -807,10 +953,15 @@ Key Insights:
             prompt_category = Prompt.ask("[bold cyan]Prompt category[/bold cyan]")
             target_content = Prompt.ask("[bold cyan]Target content[/bold cyan]")
 
-            with self.console.status(f"[bold green]Running {prompt_category} analysis...") as status:
+            with self.console.status(
+                f"[bold green]Running {prompt_category} analysis..."
+            ) as status:
                 response = await self.clients.post_json(
                     "analysis-service/integration/analyze-with-prompt",
-                    {"prompt_category": prompt_category, "target_content": target_content},
+                    {
+                        "prompt_category": prompt_category,
+                        "target_content": target_content,
+                    },
                 )
 
             if response.get("result"):
@@ -843,7 +994,8 @@ Recommendations:
 
             with self.console.status("[bold green]Running log analysis...") as status:
                 response = await self.clients.post_json(
-                    "analysis-service/integration/log-analysis", {"log_content": log_content}
+                    "analysis-service/integration/log-analysis",
+                    {"log_content": log_content},
                 )
 
             if response.get("analysis"):
@@ -859,9 +1011,7 @@ Key Findings:
 """
                 if analysis.get("findings"):
                     for finding in analysis["findings"][:10]:  # Show first 10
-                        content += (
-                            f"  • {finding.get('type', 'unknown')}: {finding.get('description', 'No description')}\n"
-                        )
+                        content += f"  • {finding.get('type', 'unknown')}: {finding.get('description', 'No description')}\n"
 
                 print_panel(self.console, content, border_style="red")
             else:
@@ -873,8 +1023,12 @@ Key Findings:
     async def view_prompt_categories(self):
         """View available prompt categories."""
         try:
-            with self.console.status("[bold green]Fetching prompt categories...") as status:
-                response = await self.clients.get_json("analysis-service/integration/prompts/categories")
+            with self.console.status(
+                "[bold green]Fetching prompt categories..."
+            ) as status:
+                response = await self.clients.get_json(
+                    "analysis-service/integration/prompts/categories"
+                )
 
             if response.get("categories"):
                 table = Table(title="Available Prompt Categories")

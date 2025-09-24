@@ -16,8 +16,19 @@ class DataBrowser:
 
     def __init__(self):
         self._cache = {
-            "doc_store": {"documents": [], "analyses": [], "quality": {}, "style_examples": {}, "last_updated": None},
-            "prompt_store": {"prompts": [], "analytics": {}, "ab_tests": [], "last_updated": None},
+            "doc_store": {
+                "documents": [],
+                "analyses": [],
+                "quality": {},
+                "style_examples": {},
+                "last_updated": None,
+            },
+            "prompt_store": {
+                "prompts": [],
+                "analytics": {},
+                "ab_tests": [],
+                "last_updated": None,
+            },
         }
         self._cache_ttl = 60  # Cache for 60 seconds
 
@@ -37,7 +48,9 @@ class DataBrowser:
             start_idx = offset
             end_idx = offset + limit
             return {
-                "documents": documents[start_idx:end_idx] if start_idx < len(documents) else [],
+                "documents": (
+                    documents[start_idx:end_idx] if start_idx < len(documents) else []
+                ),
                 "total": len(documents),
                 "limit": limit,
                 "offset": offset,
@@ -49,7 +62,9 @@ class DataBrowser:
             doc_store_url = get_doc_store_url()
 
             # Get document list
-            list_response = await clients.get_json(f"{doc_store_url}/documents/_list", {"limit": 1000})
+            list_response = await clients.get_json(
+                f"{doc_store_url}/documents/_list", {"limit": 1000}
+            )
             documents = list_response.get("items", [])
 
             # Update cache
@@ -60,7 +75,9 @@ class DataBrowser:
             start_idx = offset
             end_idx = offset + limit
             return {
-                "documents": documents[start_idx:end_idx] if start_idx < len(documents) else [],
+                "documents": (
+                    documents[start_idx:end_idx] if start_idx < len(documents) else []
+                ),
                 "total": len(documents),
                 "limit": limit,
                 "offset": offset,
@@ -68,7 +85,14 @@ class DataBrowser:
             }
 
         except Exception as e:
-            return {"documents": [], "total": 0, "limit": limit, "offset": offset, "error": str(e), "cached": False}
+            return {
+                "documents": [],
+                "total": 0,
+                "limit": limit,
+                "offset": offset,
+                "error": str(e),
+                "cached": False,
+            }
 
     async def get_doc_store_document(self, doc_id: str) -> Dict[str, Any]:
         """Get a specific document by ID."""
@@ -83,7 +107,11 @@ class DataBrowser:
             return {"document": None, "error": str(e)}
 
     async def get_doc_store_analyses(
-        self, document_id: Optional[str] = None, limit: int = 50, offset: int = 0, force_refresh: bool = False
+        self,
+        document_id: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+        force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Get analyses from doc_store with optional filtering."""
         if not force_refresh and self.is_cache_fresh("doc_store"):
@@ -95,7 +123,9 @@ class DataBrowser:
             start_idx = offset
             end_idx = offset + limit
             return {
-                "analyses": analyses[start_idx:end_idx] if start_idx < len(analyses) else [],
+                "analyses": (
+                    analyses[start_idx:end_idx] if start_idx < len(analyses) else []
+                ),
                 "total": len(analyses),
                 "limit": limit,
                 "offset": offset,
@@ -122,7 +152,9 @@ class DataBrowser:
             start_idx = offset
             end_idx = offset + limit
             return {
-                "analyses": analyses[start_idx:end_idx] if start_idx < len(analyses) else [],
+                "analyses": (
+                    analyses[start_idx:end_idx] if start_idx < len(analyses) else []
+                ),
                 "total": len(analyses),
                 "limit": limit,
                 "offset": offset,
@@ -130,9 +162,18 @@ class DataBrowser:
             }
 
         except Exception as e:
-            return {"analyses": [], "total": 0, "limit": limit, "offset": offset, "error": str(e), "cached": False}
+            return {
+                "analyses": [],
+                "total": 0,
+                "limit": limit,
+                "offset": offset,
+                "error": str(e),
+                "cached": False,
+            }
 
-    async def get_doc_store_quality(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_doc_store_quality(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get document quality metrics."""
         if not force_refresh and self.is_cache_fresh("doc_store"):
             return {"quality": self._cache["doc_store"]["quality"], "cached": True}
@@ -152,10 +193,15 @@ class DataBrowser:
         except Exception as e:
             return {"quality": {}, "error": str(e), "cached": False}
 
-    async def get_doc_store_style_examples(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_doc_store_style_examples(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get style examples by programming language."""
         if not force_refresh and self.is_cache_fresh("doc_store"):
-            return {"style_examples": self._cache["doc_store"]["style_examples"], "cached": True}
+            return {
+                "style_examples": self._cache["doc_store"]["style_examples"],
+                "cached": True,
+            }
 
         try:
             clients = get_frontend_clients()
@@ -173,7 +219,11 @@ class DataBrowser:
             return {"style_examples": {}, "error": str(e), "cached": False}
 
     async def get_prompt_store_prompts(
-        self, category: Optional[str] = None, limit: int = 50, offset: int = 0, force_refresh: bool = False
+        self,
+        category: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+        force_refresh: bool = False,
     ) -> Dict[str, Any]:
         """Get prompts from prompt-store with optional filtering."""
         if not force_refresh and self.is_cache_fresh("prompt_store"):
@@ -185,7 +235,9 @@ class DataBrowser:
             start_idx = offset
             end_idx = offset + limit
             return {
-                "prompts": prompts[start_idx:end_idx] if start_idx < len(prompts) else [],
+                "prompts": (
+                    prompts[start_idx:end_idx] if start_idx < len(prompts) else []
+                ),
                 "total": len(prompts),
                 "limit": limit,
                 "offset": offset,
@@ -212,7 +264,9 @@ class DataBrowser:
             start_idx = offset
             end_idx = offset + limit
             return {
-                "prompts": prompts[start_idx:end_idx] if start_idx < len(prompts) else [],
+                "prompts": (
+                    prompts[start_idx:end_idx] if start_idx < len(prompts) else []
+                ),
                 "total": len(prompts),
                 "limit": limit,
                 "offset": offset,
@@ -220,12 +274,24 @@ class DataBrowser:
             }
 
         except Exception as e:
-            return {"prompts": [], "total": 0, "limit": limit, "offset": offset, "error": str(e), "cached": False}
+            return {
+                "prompts": [],
+                "total": 0,
+                "limit": limit,
+                "offset": offset,
+                "error": str(e),
+                "cached": False,
+            }
 
-    async def get_prompt_store_analytics(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_prompt_store_analytics(
+        self, force_refresh: bool = False
+    ) -> Dict[str, Any]:
         """Get prompt store analytics."""
         if not force_refresh and self.is_cache_fresh("prompt_store"):
-            return {"analytics": self._cache["prompt_store"]["analytics"], "cached": True}
+            return {
+                "analytics": self._cache["prompt_store"]["analytics"],
+                "cached": True,
+            }
 
         try:
             clients = get_frontend_clients()
@@ -259,7 +325,13 @@ class DataBrowser:
             }
 
         except Exception as e:
-            return {"results": [], "total": 0, "query": query, "limit": limit, "error": str(e)}
+            return {
+                "results": [],
+                "total": 0,
+                "query": query,
+                "limit": limit,
+                "error": str(e),
+            }
 
     def get_doc_store_categories(self) -> List[str]:
         """Get unique categories from cached documents."""

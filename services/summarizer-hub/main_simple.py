@@ -20,7 +20,11 @@ from services.shared.core.responses import create_success_response
 from services.shared.monitoring.health import register_health_endpoints
 
 # Create FastAPI app
-app = FastAPI(title="Summarizer Hub", description="Simplified document summarization service", version="1.0.0")
+app = FastAPI(
+    title="Summarizer Hub",
+    description="Simplified document summarization service",
+    version="1.0.0",
+)
 
 # Add CORS middleware
 app.add_middleware(
@@ -69,7 +73,9 @@ class SimplifiedSummarizer:
     """Simplified summarizer without complex NLP dependencies."""
 
     def __init__(self):
-        self.llm_gateway_url = os.environ.get("LLM_GATEWAY_URL", "http://llm-gateway:5055")
+        self.llm_gateway_url = os.environ.get(
+            "LLM_GATEWAY_URL", "http://llm-gateway:5055"
+        )
 
     async def summarize_with_llm(
         self, content: str, max_length: int = 150, summary_type: str = "extractive"
@@ -144,26 +150,53 @@ class SimplifiedSummarizer:
             "model_used": "rule_based",
         }
 
-    async def categorize_content(self, content: str, categories: List[str] = None) -> Dict[str, Any]:
+    async def categorize_content(
+        self, content: str, categories: List[str] = None
+    ) -> Dict[str, Any]:
         """Simple content categorization."""
-        default_categories = ["Technical Documentation", "API Reference", "Tutorial", "Guide", "Other"]
+        default_categories = [
+            "Technical Documentation",
+            "API Reference",
+            "Tutorial",
+            "Guide",
+            "Other",
+        ]
         categories = categories or default_categories
 
         content_lower = content.lower()
 
         # Simple keyword-based categorization
-        if any(word in content_lower for word in ["api", "endpoint", "request", "response"]):
-            return {"category": "API Reference", "confidence": 0.8, "explanation": "Contains API-related keywords"}
-        elif any(word in content_lower for word in ["tutorial", "step", "how to", "guide"]):
-            return {"category": "Tutorial", "confidence": 0.8, "explanation": "Contains tutorial-style language"}
-        elif any(word in content_lower for word in ["class", "function", "method", "variable"]):
+        if any(
+            word in content_lower for word in ["api", "endpoint", "request", "response"]
+        ):
+            return {
+                "category": "API Reference",
+                "confidence": 0.8,
+                "explanation": "Contains API-related keywords",
+            }
+        elif any(
+            word in content_lower for word in ["tutorial", "step", "how to", "guide"]
+        ):
+            return {
+                "category": "Tutorial",
+                "confidence": 0.8,
+                "explanation": "Contains tutorial-style language",
+            }
+        elif any(
+            word in content_lower
+            for word in ["class", "function", "method", "variable"]
+        ):
             return {
                 "category": "Technical Documentation",
                 "confidence": 0.7,
                 "explanation": "Contains code-related terms",
             }
         else:
-            return {"category": "Other", "confidence": 0.5, "explanation": "No specific category indicators found"}
+            return {
+                "category": "Other",
+                "confidence": 0.5,
+                "explanation": "No specific category indicators found",
+            }
 
 
 # Initialize summarizer
@@ -174,7 +207,8 @@ summarizer = SimplifiedSummarizer()
 @app.get("/")
 async def root():
     return create_success_response(
-        data={"message": "Simplified Summarizer Hub is running"}, message="Service operational"
+        data={"message": "Simplified Summarizer Hub is running"},
+        message="Service operational",
     )
 
 
@@ -182,7 +216,9 @@ async def root():
 async def summarize_content(request: SummarizeRequest):
     """Summarize the provided content."""
     try:
-        result = await summarizer.summarize_with_llm(request.content, request.max_length, request.summary_type)
+        result = await summarizer.summarize_with_llm(
+            request.content, request.max_length, request.summary_type
+        )
 
         return SummarizeResponse(
             success=True,
@@ -190,7 +226,11 @@ async def summarize_content(request: SummarizeRequest):
             summary_id=str(uuid.uuid4()),
             word_count=result["word_count"],
             original_length=len(request.content.split()),
-            metadata={"method": result["method"], "model_used": result["model_used"], "timestamp": time.time()},
+            metadata={
+                "method": result["method"],
+                "model_used": result["model_used"],
+                "timestamp": time.time(),
+            },
         )
 
     except Exception as e:
@@ -201,7 +241,9 @@ async def summarize_content(request: SummarizeRequest):
 async def categorize_content(request: CategorizeRequest):
     """Categorize the provided content."""
     try:
-        result = await summarizer.categorize_content(request.content, request.categories)
+        result = await summarizer.categorize_content(
+            request.content, request.categories
+        )
 
         return CategorizeResponse(
             success=True,
@@ -211,7 +253,13 @@ async def categorize_content(request: CategorizeRequest):
             metadata={
                 "timestamp": time.time(),
                 "available_categories": request.categories
-                or ["Technical Documentation", "API Reference", "Tutorial", "Guide", "Other"],
+                or [
+                    "Technical Documentation",
+                    "API Reference",
+                    "Tutorial",
+                    "Guide",
+                    "Other",
+                ],
             },
         )
 
@@ -226,9 +274,19 @@ async def get_capabilities():
         "service": "summarizer-hub",
         "version": "1.0.0",
         "capabilities": {
-            "summarization": {"types": ["extractive", "abstractive"], "max_length": 500, "llm_integration": True},
+            "summarization": {
+                "types": ["extractive", "abstractive"],
+                "max_length": 500,
+                "llm_integration": True,
+            },
             "categorization": {
-                "default_categories": ["Technical Documentation", "API Reference", "Tutorial", "Guide", "Other"],
+                "default_categories": [
+                    "Technical Documentation",
+                    "API Reference",
+                    "Tutorial",
+                    "Guide",
+                    "Other",
+                ],
                 "custom_categories": True,
                 "confidence_scoring": True,
             },
@@ -239,7 +297,11 @@ async def get_capabilities():
             "categorize": "/categorize",
             "capabilities": "/capabilities",
         },
-        "features": {"llm_integration": True, "fallback_processing": True, "simple_mode": True},
+        "features": {
+            "llm_integration": True,
+            "fallback_processing": True,
+            "simple_mode": True,
+        },
     }
 
 

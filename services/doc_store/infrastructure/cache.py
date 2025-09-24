@@ -66,7 +66,9 @@ class DocStoreCache:
                 return False
         return False
 
-    async def get(self, operation: str, params: Dict[str, Any], tags: Optional[List[str]] = None) -> Optional[Any]:
+    async def get(
+        self, operation: str, params: Dict[str, Any], tags: Optional[List[str]] = None
+    ) -> Optional[Any]:
         """Get cached value with performance monitoring."""
         start_time = time.time()
         cache_key = self._generate_cache_key(operation, params)
@@ -79,7 +81,9 @@ class DocStoreCache:
                     if cached_data:
                         # Update access time and hit count
                         await self.redis_client.hincrby(f"{cache_key}:meta", "hits", 1)
-                        await self.redis_client.hset(f"{cache_key}:meta", "last_accessed", utc_now().isoformat())
+                        await self.redis_client.hset(
+                            f"{cache_key}:meta", "last_accessed", utc_now().isoformat()
+                        )
 
                         self.stats.total_hits += 1
                         response_time = (time.time() - start_time) * 1000
@@ -111,7 +115,12 @@ class DocStoreCache:
             return None
 
     async def set(
-        self, operation: str, params: Dict[str, Any], value: Any, ttl: int = 3600, tags: Optional[List[str]] = None
+        self,
+        operation: str,
+        params: Dict[str, Any],
+        value: Any,
+        ttl: int = 3600,
+        tags: Optional[List[str]] = None,
     ) -> None:
         """Set cached value with metadata."""
         cache_key = self._generate_cache_key(operation, params)
@@ -137,7 +146,9 @@ class DocStoreCache:
                     pass
 
             # Store in local cache
-            entry = CacheEntry(value=value, created_at=utc_now(), ttl=ttl, tags=tags or [])
+            entry = CacheEntry(
+                value=value, created_at=utc_now(), ttl=ttl, tags=tags or []
+            )
             self.local_cache[cache_key] = entry
 
             # Evict if needed
@@ -150,7 +161,9 @@ class DocStoreCache:
         except Exception:
             pass
 
-    async def invalidate(self, tags: Optional[List[str]] = None, patterns: Optional[List[str]] = None) -> None:
+    async def invalidate(
+        self, tags: Optional[List[str]] = None, patterns: Optional[List[str]] = None
+    ) -> None:
         """Invalidate cache entries by tags or patterns."""
         try:
             invalidated_keys = []
@@ -206,7 +219,9 @@ class DocStoreCache:
                     info = await self.redis_client.info()
                     redis_stats = {
                         "redis_used_memory": info.get("used_memory", 0),
-                        "redis_total_connections": info.get("total_connections_received", 0),
+                        "redis_total_connections": info.get(
+                            "total_connections_received", 0
+                        ),
                         "redis_connected_clients": info.get("connected_clients", 0),
                         "redis_keys_count": await self.redis_client.dbsize(),
                     }
@@ -215,10 +230,18 @@ class DocStoreCache:
 
             # Calculate hit rate
             total_requests = self.stats.total_hits + self.stats.total_misses
-            hit_rate = (self.stats.total_hits / total_requests * 100) if total_requests > 0 else 0
+            hit_rate = (
+                (self.stats.total_hits / total_requests * 100)
+                if total_requests > 0
+                else 0
+            )
 
             # Calculate average response time
-            avg_response_time = sum(self.response_times) / len(self.response_times) if self.response_times else 0
+            avg_response_time = (
+                sum(self.response_times) / len(self.response_times)
+                if self.response_times
+                else 0
+            )
 
             # Keep only last 100 response times
             self.response_times = self.response_times[-100:]
@@ -280,7 +303,9 @@ class DocStoreCache:
             if self.redis_client:
                 try:
                     # Configure Redis for better performance
-                    await self.redis_client.config_set("maxmemory-policy", "allkeys-lru")
+                    await self.redis_client.config_set(
+                        "maxmemory-policy", "allkeys-lru"
+                    )
                     await self.redis_client.config_set("tcp-keepalive", "60")
                 except Exception:
                     pass
@@ -322,7 +347,9 @@ class DocStoreCache:
     def _calculate_size(self) -> int:
         """Calculate approximate size of local cache."""
         try:
-            return sum(len(json.dumps(entry.value)) for entry in self.local_cache.values())
+            return sum(
+                len(json.dumps(entry.value)) for entry in self.local_cache.values()
+            )
         except Exception:
             return 0
 

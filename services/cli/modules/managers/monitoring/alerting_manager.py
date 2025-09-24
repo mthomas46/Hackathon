@@ -12,7 +12,9 @@ from ...base.base_manager import BaseManager
 class AlertingManager(BaseManager):
     """Manager for alerting operations."""
 
-    def __init__(self, console: Console, clients, cache: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, console: Console, clients, cache: Optional[Dict[str, Any]] = None
+    ):
         super().__init__(console, clients, cache)
         self.alert_rules = {}
 
@@ -64,9 +66,11 @@ class AlertingManager(BaseManager):
                 table.add_column("Triggered", style="green")
 
                 for alert in alerts:
-                    severity_color = {"critical": "red", "warning": "yellow", "info": "blue"}.get(
-                        alert.get("severity", "info"), "white"
-                    )
+                    severity_color = {
+                        "critical": "red",
+                        "warning": "yellow",
+                        "info": "blue",
+                    }.get(alert.get("severity", "info"), "white")
 
                     status_display = {
                         "firing": "[red]FIRING[/red]",
@@ -88,7 +92,9 @@ class AlertingManager(BaseManager):
                 firing = sum(1 for a in alerts if a.get("status") == "firing")
                 resolved = sum(1 for a in alerts if a.get("status") == "resolved")
 
-                self.display.show_info(f"Active alerts: {firing} firing, {resolved} resolved")
+                self.display.show_info(
+                    f"Active alerts: {firing} firing, {resolved} resolved"
+                )
 
             else:
                 self.display.show_success("No active alerts found")
@@ -105,11 +111,15 @@ class AlertingManager(BaseManager):
                 self.display.show_warning("Alert rule name cannot be empty")
                 return
 
-            rule_type = await self.select_from_list(["threshold", "rate", "absence", "custom"], "Alert rule type")
+            rule_type = await self.select_from_list(
+                ["threshold", "rate", "absence", "custom"], "Alert rule type"
+            )
             if not rule_type:
                 return
 
-            severity = await self.select_from_list(["critical", "warning", "info"], "Alert severity")
+            severity = await self.select_from_list(
+                ["critical", "warning", "info"], "Alert severity"
+            )
             if not severity:
                 severity = "warning"
 
@@ -129,7 +139,9 @@ class AlertingManager(BaseManager):
             if rule_type == "threshold":
                 metric = await self.get_user_input("Metric name (e.g., cpu_usage)")
                 threshold = await self.get_user_input("Threshold value")
-                operator = await self.select_from_list([">", "<", ">=", "<=", "=="], "Operator")
+                operator = await self.select_from_list(
+                    [">", "<", ">=", "<=", "=="], "Operator"
+                )
 
                 if metric and threshold and operator:
                     rule_config.update(
@@ -145,14 +157,22 @@ class AlertingManager(BaseManager):
                 rate = await self.get_user_input("Rate threshold (e.g., 10 per minute)")
 
                 if metric and rate:
-                    rule_config.update({"metric": metric, "rate_threshold": float(rate), "time_window": "5m"})
+                    rule_config.update(
+                        {
+                            "metric": metric,
+                            "rate_threshold": float(rate),
+                            "time_window": "5m",
+                        }
+                    )
 
             # Save alert rule
             success = await self._save_alert_rule(rule_name, rule_config)
 
             if success:
                 self.alert_rules[rule_name] = rule_config
-                self.display.show_success(f"Alert rule '{rule_name}' created successfully")
+                self.display.show_success(
+                    f"Alert rule '{rule_name}' created successfully"
+                )
                 self.display.show_info("Rule will be active immediately")
             else:
                 self.display.show_error("Failed to create alert rule")
@@ -170,7 +190,9 @@ class AlertingManager(BaseManager):
                 return
 
             rule_names = list(rules.keys())
-            selected_rule = await self.select_from_list(rule_names, "Select alert rule to edit")
+            selected_rule = await self.select_from_list(
+                rule_names, "Select alert rule to edit"
+            )
 
             if not selected_rule:
                 return
@@ -179,9 +201,13 @@ class AlertingManager(BaseManager):
             self.display.show_info(f"Editing alert rule: {selected_rule}")
 
             # Allow editing basic properties
-            new_description = await self.get_user_input("New description", default=rule_config.get("description", ""))
+            new_description = await self.get_user_input(
+                "New description", default=rule_config.get("description", "")
+            )
 
-            new_severity = await self.select_from_list(["critical", "warning", "info"], "New severity")
+            new_severity = await self.select_from_list(
+                ["critical", "warning", "info"], "New severity"
+            )
 
             if new_description != rule_config.get("description", ""):
                 rule_config["description"] = new_description
@@ -212,12 +238,16 @@ class AlertingManager(BaseManager):
                 return
 
             rule_names = list(rules.keys())
-            selected_rule = await self.select_from_list(rule_names, "Select alert rule to delete")
+            selected_rule = await self.select_from_list(
+                rule_names, "Select alert rule to delete"
+            )
 
             if not selected_rule:
                 return
 
-            confirm = await self.confirm_action(f"Are you sure you want to delete alert rule '{selected_rule}'?")
+            confirm = await self.confirm_action(
+                f"Are you sure you want to delete alert rule '{selected_rule}'?"
+            )
 
             if confirm:
                 success = await self._delete_alert_rule(selected_rule)
@@ -225,7 +255,9 @@ class AlertingManager(BaseManager):
                 if success:
                     if selected_rule in self.alert_rules:
                         del self.alert_rules[selected_rule]
-                    self.display.show_success(f"Alert rule '{selected_rule}' deleted successfully")
+                    self.display.show_success(
+                        f"Alert rule '{selected_rule}' deleted successfully"
+                    )
                 else:
                     self.display.show_error("Failed to delete alert rule")
 
@@ -271,9 +303,11 @@ class AlertingManager(BaseManager):
             table.add_column("Duration", style="green")
 
             for alert in history:
-                severity_color = {"critical": "red", "warning": "yellow", "info": "blue"}.get(
-                    alert.get("severity", "info"), "white"
-                )
+                severity_color = {
+                    "critical": "red",
+                    "warning": "yellow",
+                    "info": "blue",
+                }.get(alert.get("severity", "info"), "white")
 
                 status_display = {
                     "firing": "[red]FIRING[/red]",
@@ -309,7 +343,11 @@ class AlertingManager(BaseManager):
                     "recipients": ["admin@example.com", "ops@example.com"],
                     "critical_only": True,
                 },
-                "slack": {"enabled": False, "webhook_url": "https://hooks.slack.com/...", "channel": "#alerts"},
+                "slack": {
+                    "enabled": False,
+                    "webhook_url": "https://hooks.slack.com/...",
+                    "channel": "#alerts",
+                },
                 "webhook": {
                     "enabled": True,
                     "url": "https://api.example.com/webhooks/alerts",
@@ -323,7 +361,9 @@ class AlertingManager(BaseManager):
             table.add_column("Configuration", style="white")
 
             for channel, config in notifications_config.items():
-                enabled = "[green]YES[/green]" if config.get("enabled") else "[red]NO[/red]"
+                enabled = (
+                    "[green]YES[/green]" if config.get("enabled") else "[red]NO[/red]"
+                )
                 details = []
 
                 if channel == "email":
@@ -337,7 +377,11 @@ class AlertingManager(BaseManager):
                     if config.get("url"):
                         details.append("Configured")
 
-                table.add_row(channel, enabled, ", ".join(details) if details else "Not configured")
+                table.add_row(
+                    channel,
+                    enabled,
+                    ", ".join(details) if details else "Not configured",
+                )
 
             self.console.print(table)
 

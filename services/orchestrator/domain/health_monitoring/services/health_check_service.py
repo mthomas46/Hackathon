@@ -21,7 +21,9 @@ class HealthCheckService:
         """Register a custom health check function for a service."""
         self._custom_checks[service_name] = check_function
 
-    async def check_service_health(self, service_name: str, timeout_seconds: float = 5.0) -> ServiceHealth:
+    async def check_service_health(
+        self, service_name: str, timeout_seconds: float = 5.0
+    ) -> ServiceHealth:
         """Check the health of a specific service."""
         start_time = time.time()
 
@@ -30,7 +32,9 @@ class HealthCheckService:
             if service_name in self._custom_checks:
                 result = await self._perform_custom_check(service_name, timeout_seconds)
             else:
-                result = await self._perform_standard_check(service_name, timeout_seconds)
+                result = await self._perform_standard_check(
+                    service_name, timeout_seconds
+                )
 
             response_time = (time.time() - start_time) * 1000  # Convert to milliseconds
 
@@ -45,7 +49,9 @@ class HealthCheckService:
                     error_message=result.error_message,
                 )
 
-            return ServiceHealth(service_name=service_name, status=result.status, check_result=result)
+            return ServiceHealth(
+                service_name=service_name, status=result.status, check_result=result
+            )
 
         except asyncio.TimeoutError:
             response_time = (time.time() - start_time) * 1000
@@ -54,16 +60,28 @@ class HealthCheckService:
                 error_message="Timeout",
                 response_time_ms=response_time,
             )
-            return ServiceHealth(service_name=service_name, status=HealthStatus.UNHEALTHY, check_result=error_result)
+            return ServiceHealth(
+                service_name=service_name,
+                status=HealthStatus.UNHEALTHY,
+                check_result=error_result,
+            )
 
         except Exception as e:
             response_time = (time.time() - start_time) * 1000
             error_result = HealthCheckResult.failure(
-                f"Health check failed: {str(e)}", error_message=str(e), response_time_ms=response_time
+                f"Health check failed: {str(e)}",
+                error_message=str(e),
+                response_time_ms=response_time,
             )
-            return ServiceHealth(service_name=service_name, status=HealthStatus.UNHEALTHY, check_result=error_result)
+            return ServiceHealth(
+                service_name=service_name,
+                status=HealthStatus.UNHEALTHY,
+                check_result=error_result,
+            )
 
-    async def _perform_custom_check(self, service_name: str, timeout_seconds: float) -> HealthCheckResult:
+    async def _perform_custom_check(
+        self, service_name: str, timeout_seconds: float
+    ) -> HealthCheckResult:
         """Perform a custom health check."""
         check_function = self._custom_checks[service_name]
 
@@ -89,9 +107,13 @@ class HealthCheckService:
                 return HealthCheckResult.success("Custom check completed")
 
         except Exception as e:
-            return HealthCheckResult.failure(f"Custom health check failed: {str(e)}", error_message=str(e))
+            return HealthCheckResult.failure(
+                f"Custom health check failed: {str(e)}", error_message=str(e)
+            )
 
-    async def _perform_standard_check(self, service_name: str, timeout_seconds: float) -> HealthCheckResult:
+    async def _perform_standard_check(
+        self, service_name: str, timeout_seconds: float
+    ) -> HealthCheckResult:
         """Perform a standard health check."""
         # This would typically call the service's health endpoint
         # For now, we'll simulate a basic check
@@ -101,17 +123,23 @@ class HealthCheckService:
 
             # Mock successful response
             return HealthCheckResult.success(
-                f"Service {service_name} is healthy", details={"endpoint": f"/health/{service_name}"}
+                f"Service {service_name} is healthy",
+                details={"endpoint": f"/health/{service_name}"},
             )
 
         except Exception as e:
-            return HealthCheckResult.failure(f"Standard health check failed for {service_name}", error_message=str(e))
+            return HealthCheckResult.failure(
+                f"Standard health check failed for {service_name}", error_message=str(e)
+            )
 
     async def check_multiple_services(
         self, service_names: List[str], timeout_seconds: float = 5.0
     ) -> List[ServiceHealth]:
         """Check health of multiple services concurrently."""
-        tasks = [self.check_service_health(service_name, timeout_seconds) for service_name in service_names]
+        tasks = [
+            self.check_service_health(service_name, timeout_seconds)
+            for service_name in service_names
+        ]
 
         return await asyncio.gather(*tasks)
 

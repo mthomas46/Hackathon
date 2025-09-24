@@ -51,7 +51,9 @@ class CircuitBreakerService:
 
     def __init__(self):
         self._endpoints: Dict[str, ServiceEndpoint] = {}
-        self._global_resource_limiter = ResourceLimiter(max_concurrent=50, max_memory_mb=1024.0)
+        self._global_resource_limiter = ResourceLimiter(
+            max_concurrent=50, max_memory_mb=1024.0
+        )
         self._health_metrics = EcosystemHealthMetrics()
         self._monitoring_task: Optional[asyncio.Task] = None
         self._shutdown_event = asyncio.Event()
@@ -84,7 +86,9 @@ class CircuitBreakerService:
 
         # Create enhanced circuit breaker
         circuit_breaker = EnhancedCircuitBreaker(
-            failure_threshold=failure_threshold, reset_timeout=reset_timeout, resource_limiter=resource_limiter
+            failure_threshold=failure_threshold,
+            reset_timeout=reset_timeout,
+            resource_limiter=resource_limiter,
         )
 
         # Create resilience manager
@@ -134,7 +138,9 @@ class CircuitBreakerService:
         finally:
             self._global_resource_limiter.release()
 
-    def get_endpoint_status(self, service_name: str, endpoint_path: str) -> Optional[Dict[str, Any]]:
+    def get_endpoint_status(
+        self, service_name: str, endpoint_path: str
+    ) -> Optional[Dict[str, Any]]:
         """Get status of a specific endpoint."""
         endpoint_key = f"{service_name}:{endpoint_path}"
         endpoint = self._endpoints.get(endpoint_key)
@@ -172,7 +178,8 @@ class CircuitBreakerService:
             "last_updated": self._health_metrics.last_updated,
             "global_resource_usage": self._global_resource_limiter.active_operations,
             "services": {
-                key: self.get_endpoint_status(ep.service_name, ep.endpoint_path) for key, ep in self._endpoints.items()
+                key: self.get_endpoint_status(ep.service_name, ep.endpoint_path)
+                for key, ep in self._endpoints.items()
             },
         }
 
@@ -254,7 +261,10 @@ class CircuitBreakerService:
         current_time = time.time()
 
         for endpoint in self._endpoints.values():
-            if current_time - endpoint.last_health_check > endpoint.health_check_interval:
+            if (
+                current_time - endpoint.last_health_check
+                > endpoint.health_check_interval
+            ):
                 # Perform basic health check (circuit not open)
                 was_healthy = endpoint.is_healthy
                 endpoint.is_healthy = endpoint.circuit_breaker.state != "open"
@@ -262,7 +272,9 @@ class CircuitBreakerService:
 
                 if was_healthy != endpoint.is_healthy:
                     status = "healthy" if endpoint.is_healthy else "unhealthy"
-                    logger.info(f"Endpoint {endpoint.service_name}:{endpoint.endpoint_path} status changed to {status}")
+                    logger.info(
+                        f"Endpoint {endpoint.service_name}:{endpoint.endpoint_path} status changed to {status}"
+                    )
 
 
 # Global instance

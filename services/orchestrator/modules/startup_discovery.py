@@ -8,7 +8,7 @@ discovered and their LangGraph tools are registered with the orchestrator.
 import logging
 from typing import Any, Dict, Optional
 
-from services.shared.core.constants_new import ServiceNames
+# Service name now handled by standardized config system
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
 
@@ -68,13 +68,17 @@ class StartupToolDiscovery:
                 try:
                     service_url = service_url_map.get(service_name)
                     if not service_url:
-                        logger.warning(f"⚠️ No URL mapping found for service: {service_name}")
+                        logger.warning(
+                            f"⚠️ No URL mapping found for service: {service_name}"
+                        )
                         continue
 
                     logger.info(f"🔍 Discovering tools for {service_name}...")
 
                     # Call discovery-agent to discover tools
-                    discovery_result = await self._discover_service_tools(service_name, service_url, dry_run)
+                    discovery_result = await self._discover_service_tools(
+                        service_name, service_url, dry_run
+                    )
 
                     if discovery_result["status"] == "success":
                         tools_count = discovery_result["tools_discovered"]
@@ -84,7 +88,9 @@ class StartupToolDiscovery:
                         # Store discovered tools for later use
                         self.discovered_tools[service_name] = discovery_result
 
-                        logger.info(f"✅ {service_name}: {tools_count} tools discovered")
+                        logger.info(
+                            f"✅ {service_name}: {tools_count} tools discovered"
+                        )
 
                     results.append(discovery_result)
 
@@ -92,7 +98,13 @@ class StartupToolDiscovery:
                     error_msg = f"Failed to discover tools for {service_name}: {str(e)}"
                     logger.error(f"❌ {error_msg}")
 
-                    results.append({"service_name": service_name, "status": "error", "error": str(e)})
+                    results.append(
+                        {
+                            "service_name": service_name,
+                            "status": "error",
+                            "error": str(e),
+                        }
+                    )
 
             # Create summary
             summary = {
@@ -106,7 +118,9 @@ class StartupToolDiscovery:
 
             # Log final results
             if dry_run:
-                logger.info(f"🔍 DRY RUN: Would discover {total_tools} tools from {successful_services} services")
+                logger.info(
+                    f"🔍 DRY RUN: Would discover {total_tools} tools from {successful_services} services"
+                )
             else:
                 logger.info(
                     f"🎉 Tool discovery completed: {total_tools} tools registered from {successful_services} services"
@@ -116,20 +130,31 @@ class StartupToolDiscovery:
             fire_and_forget(
                 "startup_tool_discovery_completed",
                 f"Ecosystem tool discovery completed: {total_tools} tools from {successful_services} services",
-                ServiceNames.ORCHESTRATOR,
+                "orchestrator",
                 {"summary": summary, "results": results},
             )
 
-            return {"summary": summary, "results": results, "discovered_tools": self.discovered_tools}
+            return {
+                "summary": summary,
+                "results": results,
+                "discovered_tools": self.discovered_tools,
+            }
 
         except Exception as e:
             error_msg = f"Ecosystem tool discovery failed: {str(e)}"
             logger.error(f"💥 {error_msg}")
 
-            fire_and_forget("startup_tool_discovery_failed", error_msg, ServiceNames.ORCHESTRATOR, {"error": str(e)})
+            fire_and_forget(
+                "startup_tool_discovery_failed",
+                error_msg,
+                "orchestrator",
+                {"error": str(e)},
+            )
             raise
 
-    async def _discover_service_tools(self, service_name: str, service_url: str, dry_run: bool) -> Dict[str, Any]:
+    async def _discover_service_tools(
+        self, service_name: str, service_url: str, dry_run: bool
+    ) -> Dict[str, Any]:
         """Discover tools for a specific service."""
         try:
             # Prepare discovery request
@@ -141,7 +166,9 @@ class StartupToolDiscovery:
             }
 
             # Call discovery-agent
-            response = await self.client.post_json(f"{self.discovery_agent_url}/discover/tools", discovery_payload)
+            response = await self.client.post_json(
+                f"{self.discovery_agent_url}/discover/tools", discovery_payload
+            )
 
             if response.get("success"):
                 data = response["data"]
@@ -163,13 +190,17 @@ class StartupToolDiscovery:
         except Exception as e:
             return {"service_name": service_name, "status": "error", "error": str(e)}
 
-    async def get_discovered_tools(self, service_name: Optional[str] = None) -> Dict[str, Any]:
+    async def get_discovered_tools(
+        self, service_name: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Get discovered tools for a service or all services."""
         if service_name:
             return self.discovered_tools.get(service_name, {})
         return self.discovered_tools
 
-    async def refresh_tools(self, service_name: Optional[str] = None, dry_run: bool = False) -> Dict[str, Any]:
+    async def refresh_tools(
+        self, service_name: Optional[str] = None, dry_run: bool = False
+    ) -> Dict[str, Any]:
         """Refresh tool discovery for specific service or all services."""
         if service_name:
             # Refresh tools for specific service
@@ -188,7 +219,9 @@ class StartupToolDiscovery:
             if not service_url:
                 raise ValueError(f"Unknown service: {service_name}")
 
-            result = await self._discover_service_tools(service_name, service_url, dry_run)
+            result = await self._discover_service_tools(
+                service_name, service_url, dry_run
+            )
             if result["status"] == "success":
                 self.discovered_tools[service_name] = result
             return result
@@ -230,7 +263,9 @@ async def initialize_ecosystem_tools(dry_run: bool = False) -> Dict[str, Any]:
         raise
 
 
-async def refresh_service_tools(service_name: str, dry_run: bool = False) -> Dict[str, Any]:
+async def refresh_service_tools(
+    service_name: str, dry_run: bool = False
+) -> Dict[str, Any]:
     """Refresh tools for a specific service.
 
     Args:
@@ -246,9 +281,13 @@ async def refresh_service_tools(service_name: str, dry_run: bool = False) -> Dic
         results = await startup_discovery.refresh_tools(service_name, dry_run)
 
         if results["status"] == "success":
-            logger.info(f"✅ Tools refreshed for {service_name}: {results['tools_discovered']} tools")
+            logger.info(
+                f"✅ Tools refreshed for {service_name}: {results['tools_discovered']} tools"
+            )
         else:
-            logger.error(f"❌ Failed to refresh tools for {service_name}: {results.get('error', 'Unknown error')}")
+            logger.error(
+                f"❌ Failed to refresh tools for {service_name}: {results.get('error', 'Unknown error')}"
+            )
 
         return results
 

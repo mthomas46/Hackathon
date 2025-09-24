@@ -10,8 +10,9 @@ Provides integration between the Secure Analyzer and LLM Gateway for:
 from datetime import datetime
 from typing import Any, Dict, List
 
-from services.shared.core.config.config import get_config_value
-from services.shared.core.constants_new import ServiceNames
+# Config now handled by standardized config system in main.py
+# Service name now handled by standardized config system
+import os
 from services.shared.integrations.clients.clients import ServiceClients
 from services.shared.monitoring.logging import fire_and_forget
 
@@ -21,7 +22,7 @@ class LLMGatewayIntegration:
 
     def __init__(self):
         self.clients = ServiceClients()
-        self.llm_gateway_url = get_config_value("LLM_GATEWAY_URL", "http://llm-gateway:5055", section="services")
+        self.llm_gateway_url = os.getenv("LLM_GATEWAY_URL", "http://llm-gateway:5055")
 
     async def enhance_security_analysis_with_llm(
         self, content: str, basic_findings: List[Dict[str, Any]]
@@ -65,7 +66,9 @@ Return your analysis as a JSON object with keys: risk_assessment, attack_vectors
                 "temperature": 0.2,
             }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -110,8 +113,12 @@ Return your analysis as a JSON object with keys: risk_assessment, attack_vectors
             fire_and_forget(
                 "secure_analyzer_llm_enhancement_error",
                 f"LLM security enhancement error: {str(e)}",
-                ServiceNames.SECURE_ANALYZER,
-                {"content_length": len(content), "basic_findings_count": len(basic_findings), "error": str(e)},
+                "secure-analyzer",
+                {
+                    "content_length": len(content),
+                    "basic_findings_count": len(basic_findings),
+                    "error": str(e),
+                },
             )
             return {
                 "enhanced_security_analysis": {
@@ -125,7 +132,10 @@ Return your analysis as a JSON object with keys: risk_assessment, attack_vectors
             }
 
     async def intelligent_provider_recommendation(
-        self, content: str, security_findings: List[Dict[str, Any]], available_providers: List[str]
+        self,
+        content: str,
+        security_findings: List[Dict[str, Any]],
+        available_providers: List[str],
     ) -> Dict[str, Any]:
         """Use LLM Gateway to recommend the most secure provider for content processing."""
         try:
@@ -164,7 +174,9 @@ Return a JSON object with keys: recommended_provider, reasoning, security_score,
                 "temperature": 0.1,
             }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -175,7 +187,9 @@ Return a JSON object with keys: recommended_provider, reasoning, security_score,
                     return {
                         "provider_recommendation": provider_recommendation,
                         "recommendation_method": "llm_security_aware",
-                        "content_security_level": "high" if security_findings else "low",
+                        "content_security_level": (
+                            "high" if security_findings else "low"
+                        ),
                         "available_providers": available_providers,
                         "llm_provider": response["data"]["provider"],
                     }
@@ -206,7 +220,7 @@ Return a JSON object with keys: recommended_provider, reasoning, security_score,
             fire_and_forget(
                 "secure_analyzer_provider_recommendation_error",
                 f"Provider recommendation error: {str(e)}",
-                ServiceNames.SECURE_ANALYZER,
+                "secure-analyzer",
                 {
                     "content_length": len(content),
                     "security_findings_count": len(security_findings),
@@ -226,7 +240,9 @@ Return a JSON object with keys: recommended_provider, reasoning, security_score,
             }
 
     async def generate_security_policy_with_llm(
-        self, content_patterns: List[Dict[str, Any]], historical_incidents: List[Dict[str, Any]]
+        self,
+        content_patterns: List[Dict[str, Any]],
+        historical_incidents: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
         """Use LLM Gateway to generate intelligent security policies based on patterns and incidents."""
         try:
@@ -268,9 +284,16 @@ Focus on practical, implementable policies that balance security with usability.
 Return the policy recommendations as a JSON object with keys: content_classification, provider_criteria, data_handling, monitoring_rules, incident_response, compliance_requirements
             """.strip()
 
-            llm_request = {"prompt": policy_prompt, "provider": "ollama", "max_tokens": 1500, "temperature": 0.2}
+            llm_request = {
+                "prompt": policy_prompt,
+                "provider": "ollama",
+                "max_tokens": 1500,
+                "temperature": 0.2,
+            }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -320,7 +343,7 @@ Return the policy recommendations as a JSON object with keys: content_classifica
             fire_and_forget(
                 "secure_analyzer_policy_generation_error",
                 f"Security policy generation error: {str(e)}",
-                ServiceNames.SECURE_ANALYZER,
+                "secure-analyzer",
                 {
                     "patterns_count": len(content_patterns),
                     "incidents_count": len(historical_incidents),
@@ -340,7 +363,9 @@ Return the policy recommendations as a JSON object with keys: content_classifica
                 "generation_method": "error_fallback",
             }
 
-    async def analyze_compliance_with_llm(self, content: str, compliance_frameworks: List[str]) -> Dict[str, Any]:
+    async def analyze_compliance_with_llm(
+        self, content: str, compliance_frameworks: List[str]
+    ) -> Dict[str, Any]:
         """Use LLM Gateway to analyze content for compliance with various frameworks."""
         try:
             frameworks_str = ", ".join(compliance_frameworks)
@@ -365,9 +390,16 @@ Consider data handling, privacy, security, and regulatory requirements.
 Return your compliance analysis as a JSON object with framework names as keys and compliance assessments as values.
             """.strip()
 
-            llm_request = {"prompt": compliance_prompt, "provider": "ollama", "max_tokens": 1200, "temperature": 0.1}
+            llm_request = {
+                "prompt": compliance_prompt,
+                "provider": "ollama",
+                "max_tokens": 1200,
+                "temperature": 0.1,
+            }
 
-            response = await self.clients.post_json(f"{self.llm_gateway_url}/query", llm_request)
+            response = await self.clients.post_json(
+                f"{self.llm_gateway_url}/query", llm_request
+            )
 
             if response.get("success"):
                 llm_response = response["data"]["response"]
@@ -420,8 +452,12 @@ Return your compliance analysis as a JSON object with framework names as keys an
             fire_and_forget(
                 "secure_analyzer_compliance_analysis_error",
                 f"Compliance analysis error: {str(e)}",
-                ServiceNames.SECURE_ANALYZER,
-                {"content_length": len(content), "frameworks_count": len(compliance_frameworks), "error": str(e)},
+                "secure-analyzer",
+                {
+                    "content_length": len(content),
+                    "frameworks_count": len(compliance_frameworks),
+                    "error": str(e),
+                },
             )
             return {
                 "compliance_analysis": {

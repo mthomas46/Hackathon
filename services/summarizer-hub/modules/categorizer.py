@@ -56,9 +56,13 @@ class DocumentCategorizer:
         try:
             # Initialize zero-shot classification pipeline
             if self.zero_shot_classifier is None:
-                logger.info(f"Loading zero-shot classification model: {self.model_name}")
+                logger.info(
+                    f"Loading zero-shot classification model: {self.model_name}"
+                )
                 self.zero_shot_classifier = pipeline(
-                    "zero-shot-classification", model=self.model_name, device=-1  # Use CPU
+                    "zero-shot-classification",
+                    model=self.model_name,
+                    device=-1,  # Use CPU
                 )
 
             # Initialize traditional ML model for backup
@@ -75,7 +79,12 @@ class DocumentCategorizer:
     def _create_traditional_model(self):
         """Create a traditional ML model for categorization."""
         # Create a simple pipeline with TF-IDF and Naive Bayes
-        return Pipeline([("tfidf", TfidfVectorizer(max_features=1000, stop_words="english")), ("clf", MultinomialNB())])
+        return Pipeline(
+            [
+                ("tfidf", TfidfVectorizer(max_features=1000, stop_words="english")),
+                ("clf", MultinomialNB()),
+            ]
+        )
 
     def _get_document_text(self, document: Dict[str, Any]) -> str:
         """Extract text content from document for categorization."""
@@ -145,7 +154,9 @@ class DocumentCategorizer:
             "these",
             "those",
         }
-        filtered_words = [word for word in words if len(word) > 2 and word not in stop_words]
+        filtered_words = [
+            word for word in words if len(word) > 2 and word not in stop_words
+        ]
 
         # Get most common words
         word_counts = Counter(filtered_words)
@@ -153,10 +164,14 @@ class DocumentCategorizer:
 
         return keywords
 
-    def _categorize_with_zero_shot(self, text: str, candidate_categories: List[str]) -> Dict[str, Any]:
+    def _categorize_with_zero_shot(
+        self, text: str, candidate_categories: List[str]
+    ) -> Dict[str, Any]:
         """Categorize document using zero-shot classification."""
         try:
-            result = self.zero_shot_classifier(text, candidate_labels=candidate_categories, multi_label=True)
+            result = self.zero_shot_classifier(
+                text, candidate_labels=candidate_categories, multi_label=True
+            )
 
             # Get the top category and confidence
             if result["labels"] and result["scores"]:
@@ -169,11 +184,20 @@ class DocumentCategorizer:
                     "all_scores": dict(zip(result["labels"], result["scores"])),
                 }
             else:
-                return {"category": "uncategorized", "confidence": 0.0, "all_scores": {}}
+                return {
+                    "category": "uncategorized",
+                    "confidence": 0.0,
+                    "all_scores": {},
+                }
 
         except Exception as e:
             logger.warning(f"Zero-shot classification failed: {e}")
-            return {"category": "uncategorized", "confidence": 0.0, "all_scores": {}, "error": str(e)}
+            return {
+                "category": "uncategorized",
+                "confidence": 0.0,
+                "all_scores": {},
+                "error": str(e),
+            }
 
     def _categorize_with_traditional(self, text: str) -> Dict[str, Any]:
         """Categorize document using traditional ML approach."""
@@ -183,7 +207,11 @@ class DocumentCategorizer:
             return self._rule_based_categorization(text)
         except Exception as e:
             logger.warning(f"Traditional categorization failed: {e}")
-            return {"category": "uncategorized", "confidence": 0.0, "method": "rule_based_fallback"}
+            return {
+                "category": "uncategorized",
+                "confidence": 0.0,
+                "method": "rule_based_fallback",
+            }
 
     def _rule_based_categorization(self, text: str) -> Dict[str, Any]:
         """Simple rule-based categorization as fallback."""
@@ -191,14 +219,65 @@ class DocumentCategorizer:
 
         # Define category patterns
         patterns = {
-            "api_documentation": ["api", "endpoint", "request", "response", "rest", "graphql", "swagger"],
-            "user_guide": ["guide", "tutorial", "getting started", "how to", "walkthrough"],
-            "technical_specification": ["specification", "spec", "requirements", "architecture", "design"],
-            "troubleshooting": ["troubleshoot", "error", "issue", "problem", "fix", "debug"],
-            "configuration": ["config", "setup", "installation", "deploy", "environment"],
-            "security": ["security", "authentication", "authorization", "encryption", "privacy"],
-            "performance": ["performance", "optimization", "benchmark", "speed", "efficiency"],
-            "integration": ["integration", "webhook", "callback", "third-party", "external"],
+            "api_documentation": [
+                "api",
+                "endpoint",
+                "request",
+                "response",
+                "rest",
+                "graphql",
+                "swagger",
+            ],
+            "user_guide": [
+                "guide",
+                "tutorial",
+                "getting started",
+                "how to",
+                "walkthrough",
+            ],
+            "technical_specification": [
+                "specification",
+                "spec",
+                "requirements",
+                "architecture",
+                "design",
+            ],
+            "troubleshooting": [
+                "troubleshoot",
+                "error",
+                "issue",
+                "problem",
+                "fix",
+                "debug",
+            ],
+            "configuration": [
+                "config",
+                "setup",
+                "installation",
+                "deploy",
+                "environment",
+            ],
+            "security": [
+                "security",
+                "authentication",
+                "authorization",
+                "encryption",
+                "privacy",
+            ],
+            "performance": [
+                "performance",
+                "optimization",
+                "benchmark",
+                "speed",
+                "efficiency",
+            ],
+            "integration": [
+                "integration",
+                "webhook",
+                "callback",
+                "third-party",
+                "external",
+            ],
         }
 
         category_scores = {}
@@ -210,8 +289,14 @@ class DocumentCategorizer:
 
         if category_scores:
             best_category = max(category_scores, key=category_scores.get)
-            confidence = min(category_scores[best_category] / len(patterns[best_category]), 1.0)
-            return {"category": best_category, "confidence": confidence, "method": "rule_based"}
+            confidence = min(
+                category_scores[best_category] / len(patterns[best_category]), 1.0
+            )
+            return {
+                "category": best_category,
+                "confidence": confidence,
+                "method": "rule_based",
+            }
         else:
             return {"category": "general", "confidence": 0.1, "method": "rule_based"}
 
@@ -221,7 +306,13 @@ class DocumentCategorizer:
 
         # Filter keywords based on category
         category_keywords = {
-            "api_documentation": ["api", "endpoint", "request", "response", "integration"],
+            "api_documentation": [
+                "api",
+                "endpoint",
+                "request",
+                "response",
+                "integration",
+            ],
             "user_guide": ["guide", "tutorial", "getting-started", "how-to"],
             "technical_specification": ["spec", "requirements", "architecture"],
             "troubleshooting": ["error", "fix", "debug", "issue"],
@@ -251,7 +342,10 @@ class DocumentCategorizer:
         return tags[:max_tags]
 
     async def categorize_document(
-        self, document: Dict[str, Any], candidate_categories: Optional[List[str]] = None, use_zero_shot: bool = True
+        self,
+        document: Dict[str, Any],
+        candidate_categories: Optional[List[str]] = None,
+        use_zero_shot: bool = True,
     ) -> Dict[str, Any]:
         """Categorize a single document.
 
@@ -314,7 +408,11 @@ class DocumentCategorizer:
 
         except Exception as e:
             logger.error(f"Document categorization failed: {e}")
-            return {"error": "Categorization failed", "message": str(e), "document_id": document.get("id", "unknown")}
+            return {
+                "error": "Categorization failed",
+                "message": str(e),
+                "document_id": document.get("id", "unknown"),
+            }
 
     async def categorize_documents_batch(
         self,
@@ -335,11 +433,18 @@ class DocumentCategorizer:
         start_time = time.time()
 
         if not documents:
-            return {"total_documents": 0, "results": [], "processing_time": 0.0, "message": "No documents provided"}
+            return {
+                "total_documents": 0,
+                "results": [],
+                "processing_time": 0.0,
+                "message": "No documents provided",
+            }
 
         results = []
         for doc in documents:
-            result = await self.categorize_document(doc, candidate_categories, use_zero_shot)
+            result = await self.categorize_document(
+                doc, candidate_categories, use_zero_shot
+            )
             results.append(result)
 
         processing_time = time.time() - start_time
@@ -348,7 +453,9 @@ class DocumentCategorizer:
         successful_results = [r for r in results if "error" not in r]
         category_counts = Counter(r["category"] for r in successful_results)
         avg_confidence = (
-            sum(r["confidence"] for r in successful_results) / len(successful_results) if successful_results else 0.0
+            sum(r["confidence"] for r in successful_results) / len(successful_results)
+            if successful_results
+            else 0.0
         )
 
         return {
@@ -358,7 +465,9 @@ class DocumentCategorizer:
             "summary": {
                 "category_distribution": dict(category_counts),
                 "average_confidence": avg_confidence,
-                "most_common_category": category_counts.most_common(1)[0][0] if category_counts else None,
+                "most_common_category": (
+                    category_counts.most_common(1)[0][0] if category_counts else None
+                ),
             },
             "processing_time": processing_time,
         }
@@ -369,7 +478,9 @@ document_categorizer = DocumentCategorizer()
 
 
 async def categorize_document(
-    document: Dict[str, Any], candidate_categories: Optional[List[str]] = None, use_zero_shot: bool = True
+    document: Dict[str, Any],
+    candidate_categories: Optional[List[str]] = None,
+    use_zero_shot: bool = True,
 ) -> Dict[str, Any]:
     """Convenience function for single document categorization.
 
@@ -382,12 +493,16 @@ async def categorize_document(
         Categorization result
     """
     return await document_categorizer.categorize_document(
-        document=document, candidate_categories=candidate_categories, use_zero_shot=use_zero_shot
+        document=document,
+        candidate_categories=candidate_categories,
+        use_zero_shot=use_zero_shot,
     )
 
 
 async def categorize_documents_batch(
-    documents: List[Dict[str, Any]], candidate_categories: Optional[List[str]] = None, use_zero_shot: bool = True
+    documents: List[Dict[str, Any]],
+    candidate_categories: Optional[List[str]] = None,
+    use_zero_shot: bool = True,
 ) -> Dict[str, Any]:
     """Convenience function for batch document categorization.
 
@@ -400,5 +515,7 @@ async def categorize_documents_batch(
         Batch categorization results
     """
     return await document_categorizer.categorize_documents_batch(
-        documents=documents, candidate_categories=candidate_categories, use_zero_shot=use_zero_shot
+        documents=documents,
+        candidate_categories=candidate_categories,
+        use_zero_shot=use_zero_shot,
     )

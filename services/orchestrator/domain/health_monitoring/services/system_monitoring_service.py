@@ -11,7 +11,11 @@ from .health_check_service import HealthCheckService
 class SystemMonitoringService:
     """Domain service for monitoring overall system health."""
 
-    def __init__(self, health_check_service: HealthCheckService, known_services: Optional[List[str]] = None):
+    def __init__(
+        self,
+        health_check_service: HealthCheckService,
+        known_services: Optional[List[str]] = None,
+    ):
         self._health_check_service = health_check_service
         self._known_services = known_services or [
             "orchestrator",
@@ -41,7 +45,9 @@ class SystemMonitoringService:
         # Update last check timestamp
         self._last_system_check = datetime.utcnow()
 
-        return SystemHealth.from_service_health_list(service_health_list, metadata=metadata)
+        return SystemHealth.from_service_health_list(
+            service_health_list, metadata=metadata
+        )
 
     def _collect_system_metrics(self) -> Dict[str, Any]:
         """Collect system-level metrics."""
@@ -50,7 +56,9 @@ class SystemMonitoringService:
             "active_workflows": self._system_metrics.get("active_workflows", 0),
             "total_services": len(self._known_services),
             "routes_count": self._system_metrics.get("routes_count", 0),
-            "last_check": self._last_system_check.isoformat() if self._last_system_check else None,
+            "last_check": (
+                self._last_system_check.isoformat() if self._last_system_check else None
+            ),
         }
 
     def _get_system_uptime(self) -> float:
@@ -63,9 +71,13 @@ class SystemMonitoringService:
         """Update system metrics."""
         self._system_metrics.update(metrics)
 
-    async def get_service_health_details(self, service_name: str, timeout_seconds: float = 5.0) -> ServiceHealth:
+    async def get_service_health_details(
+        self, service_name: str, timeout_seconds: float = 5.0
+    ) -> ServiceHealth:
         """Get detailed health information for a specific service."""
-        return await self._health_check_service.check_service_health(service_name, timeout_seconds)
+        return await self._health_check_service.check_service_health(
+            service_name, timeout_seconds
+        )
 
     def get_known_services(self) -> List[str]:
         """Get list of known services in the system."""
@@ -87,11 +99,18 @@ class SystemMonitoringService:
             "service": "orchestrator",
             "version": "1.0.0",
             "description": "Central control plane and service coordinator",
-            "capabilities": ["coordination", "health_monitoring", "query_processing", "workflow_execution"],
+            "capabilities": [
+                "coordination",
+                "health_monitoring",
+                "query_processing",
+                "workflow_execution",
+            ],
             "known_services": self._known_services,
             "routes_count": self._system_metrics.get("routes_count", 0),
             "uptime_seconds": self._get_system_uptime(),
-            "last_system_check": self._last_system_check.isoformat() if self._last_system_check else None,
+            "last_system_check": (
+                self._last_system_check.isoformat() if self._last_system_check else None
+            ),
         }
 
     def get_system_config(self) -> Dict[str, Any]:
@@ -110,7 +129,13 @@ class SystemMonitoringService:
     def get_system_metrics(self) -> Dict[str, Any]:
         """Get current system metrics."""
         metrics = self._collect_system_metrics()
-        metrics.update({"service": "orchestrator", "version": "1.0.0", "timestamp": datetime.utcnow().isoformat()})
+        metrics.update(
+            {
+                "service": "orchestrator",
+                "version": "1.0.0",
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
         return metrics
 
     def is_system_ready(self) -> bool:

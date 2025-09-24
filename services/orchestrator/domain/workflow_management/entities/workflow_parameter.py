@@ -38,7 +38,9 @@ class WorkflowParameter:
             return False, f"Parameter '{self.name}' must be a string"
         elif self.param_type == ParameterType.INTEGER and not isinstance(value, int):
             return False, f"Parameter '{self.name}' must be an integer"
-        elif self.param_type == ParameterType.FLOAT and not isinstance(value, (int, float)):
+        elif self.param_type == ParameterType.FLOAT and not isinstance(
+            value, (int, float)
+        ):
             return False, f"Parameter '{self.name}' must be a number"
         elif self.param_type == ParameterType.BOOLEAN and not isinstance(value, bool):
             return False, f"Parameter '{self.name}' must be a boolean"
@@ -47,7 +49,10 @@ class WorkflowParameter:
 
         # Allowed values validation
         if self.allowed_values and value not in self.allowed_values:
-            return False, f"Parameter '{self.name}' must be one of: {self.allowed_values}"
+            return (
+                False,
+                f"Parameter '{self.name}' must be one of: {self.allowed_values}",
+            )
 
         # Custom validation rules
         if self.validation_rules:
@@ -55,17 +60,34 @@ class WorkflowParameter:
             max_length = self.validation_rules.get("max_length")
             pattern = self.validation_rules.get("pattern")
 
-            if min_length and isinstance(value, (str, list)) and len(value) < min_length:
-                return False, f"Parameter '{self.name}' must be at least {min_length} characters long"
+            if (
+                min_length
+                and isinstance(value, (str, list))
+                and len(value) < min_length
+            ):
+                return (
+                    False,
+                    f"Parameter '{self.name}' must be at least {min_length} characters long",
+                )
 
-            if max_length and isinstance(value, (str, list)) and len(value) > max_length:
-                return False, f"Parameter '{self.name}' must be at most {max_length} characters long"
+            if (
+                max_length
+                and isinstance(value, (str, list))
+                and len(value) > max_length
+            ):
+                return (
+                    False,
+                    f"Parameter '{self.name}' must be at most {max_length} characters long",
+                )
 
             if pattern and isinstance(value, str):
                 import re
 
                 if not re.match(pattern, value):
-                    return False, f"Parameter '{self.name}' does not match required pattern"
+                    return (
+                        False,
+                        f"Parameter '{self.name}' does not match required pattern",
+                    )
 
         return True, ""
 

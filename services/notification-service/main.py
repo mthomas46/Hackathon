@@ -28,23 +28,43 @@ from .modules.dlq_manager import dlq_manager
 from .modules.notification_sender import notification_sender
 from .modules.owner_resolver import owner_resolver
 
-# Service configuration constants
-SERVICE_NAME = "notification-service"
-SERVICE_VERSION = "0.1.0"
-DEFAULT_PORT = 5020
+# ============================================================================
+# STANDARDIZED CONFIGURATION
+# ============================================================================
+from services.shared.infrastructure.config import load_service_config
+from services.shared.utilities import setup_common_middleware
+from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.monitoring.health import register_health_endpoints
+
+# Load standardized configuration
+config = load_service_config(
+    service_type="notification-service",
+    config_file="./config.yaml"  # Optional config file override
+)
+
+# Service configuration from standardized config
+SERVICE_NAME = config.service_name
+SERVICE_TITLE = config.service_description or "Notification Service"
+SERVICE_VERSION = config.service_version
+DEFAULT_PORT = config.port
 
 # Default limits and constraints
 DEFAULT_DLQ_LIMIT = 50
 MAX_DLQ_LIMIT = 500
 
 app = FastAPI(
-    title="Notification Service",
+    title=SERVICE_TITLE,
     version=SERVICE_VERSION,
     description="Centralized notification service with owner resolution, deduplication, and dead letter queue",
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
-app.add_middleware(RequestIdMiddleware)
-app.add_middleware(RequestMetricsMiddleware, service_name=SERVICE_NAME)
-attach_self_register(app, SERVICE_NAME)
+
+# Setup standardized middleware and utilities
+setup_common_middleware(app, service_name=SERVICE_NAME)
+
+# Register standardized health endpoints
+register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 
 class OwnerUpdate(BaseModel):
