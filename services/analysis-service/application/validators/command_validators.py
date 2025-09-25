@@ -241,8 +241,22 @@ class PerformAnalysisCommandValidator(BaseValidator):
         """Validate PerformAnalysisCommand."""
         errors = []
 
-        # Validate document_id
-        if not command.document_id or not isinstance(command.document_id, str):
+        # Validate each field
+        errors.extend(self._validate_document_id(command.document_id))
+        errors.extend(self._validate_analysis_type(command.analysis_type))
+        errors.extend(self._validate_configuration(command.configuration))
+        errors.extend(self._validate_timeout_seconds(command.timeout_seconds))
+
+        if errors:
+            return ValidationResult.failure(errors)
+
+        return ValidationResult.success()
+
+    def _validate_document_id(self, document_id) -> list:
+        """Validate document ID."""
+        errors = []
+
+        if not document_id or not isinstance(document_id, str):
             errors.append(
                 self.create_error(
                     "Document ID is required and must be a string",
@@ -250,11 +264,16 @@ class PerformAnalysisCommandValidator(BaseValidator):
                     "document_id",
                 )
             )
-        elif not command.document_id.strip():
+        elif not document_id.strip():
             errors.append(self.create_error("Document ID cannot be empty", "EMPTY_DOCUMENT_ID", "document_id"))
 
-        # Validate analysis_type
-        if not command.analysis_type or not isinstance(command.analysis_type, str):
+        return errors
+
+    def _validate_analysis_type(self, analysis_type) -> list:
+        """Validate analysis type."""
+        errors = []
+
+        if not analysis_type or not isinstance(analysis_type, str):
             errors.append(
                 self.create_error(
                     "Analysis type is required and must be a string",
@@ -262,7 +281,7 @@ class PerformAnalysisCommandValidator(BaseValidator):
                     "analysis_type",
                 )
             )
-        elif command.analysis_type not in [
+        elif analysis_type not in [
             "semantic_similarity",
             "sentiment",
             "content_quality",
@@ -276,15 +295,20 @@ class PerformAnalysisCommandValidator(BaseValidator):
         ]:
             errors.append(
                 self.create_error(
-                    f"Invalid analysis type: {command.analysis_type}",
+                    f"Invalid analysis type: {analysis_type}",
                     "UNSUPPORTED_ANALYSIS_TYPE",
                     "analysis_type",
                 )
             )
 
-        # Validate configuration
-        if command.configuration:
-            if not isinstance(command.configuration, dict):
+        return errors
+
+    def _validate_configuration(self, configuration) -> list:
+        """Validate analysis configuration."""
+        errors = []
+
+        if configuration:
+            if not isinstance(configuration, dict):
                 errors.append(
                     self.create_error(
                         "Analysis configuration must be a dictionary",
@@ -293,43 +317,62 @@ class PerformAnalysisCommandValidator(BaseValidator):
                     )
                 )
             else:
-                # Validate timeout if provided
-                if "timeout_seconds" in command.configuration:
-                    timeout = command.configuration["timeout_seconds"]
-                    if not isinstance(timeout, (int, float)):
-                        errors.append(
-                            self.create_error(
-                                "Timeout must be a number",
-                                "INVALID_TIMEOUT",
-                                "configuration.timeout_seconds",
-                            )
-                        )
-                    elif timeout < 10 or timeout > 3600:
-                        errors.append(
-                            self.create_error(
-                                "Timeout must be between 10 and 3600 seconds",
-                                "INVALID_TIMEOUT_RANGE",
-                                "configuration.timeout_seconds",
-                            )
-                        )
+                # Validate nested configuration fields
+                errors.extend(self._validate_config_timeout(configuration))
+                errors.extend(self._validate_config_priority(configuration))
 
-                # Validate priority if provided
-                if "priority" in command.configuration:
-                    priority = command.configuration["priority"]
-                    if priority not in ["low", "normal", "high", "critical"]:
-                        errors.append(
-                            self.create_error(
-                                f"Invalid priority: {priority}",
-                                "INVALID_PRIORITY",
-                                "configuration.priority",
-                            )
-                        )
+        return errors
 
-        # Validate timeout_seconds
-        if hasattr(command, "timeout_seconds") and command.timeout_seconds is not None:
-            if not isinstance(command.timeout_seconds, (int, float)):
+    def _validate_config_timeout(self, configuration) -> list:
+        """Validate configuration timeout."""
+        errors = []
+
+        if "timeout_seconds" in configuration:
+            timeout = configuration["timeout_seconds"]
+            if not isinstance(timeout, (int, float)):
+                errors.append(
+                    self.create_error(
+                        "Timeout must be a number",
+                        "INVALID_TIMEOUT",
+                        "configuration.timeout_seconds",
+                    )
+                )
+            elif timeout < 10 or timeout > 3600:
+                errors.append(
+                    self.create_error(
+                        "Timeout must be between 10 and 3600 seconds",
+                        "INVALID_TIMEOUT_RANGE",
+                        "configuration.timeout_seconds",
+                    )
+                )
+
+        return errors
+
+    def _validate_config_priority(self, configuration) -> list:
+        """Validate configuration priority."""
+        errors = []
+
+        if "priority" in configuration:
+            priority = configuration["priority"]
+            if priority not in ["low", "normal", "high", "critical"]:
+                errors.append(
+                    self.create_error(
+                        f"Invalid priority: {priority}",
+                        "INVALID_PRIORITY",
+                        "configuration.priority",
+                    )
+                )
+
+        return errors
+
+    def _validate_timeout_seconds(self, timeout_seconds) -> list:
+        """Validate timeout seconds."""
+        errors = []
+
+        if timeout_seconds is not None:
+            if not isinstance(timeout_seconds, (int, float)):
                 errors.append(self.create_error("Timeout must be a number", "INVALID_TIMEOUT", "timeout_seconds"))
-            elif command.timeout_seconds < 10 or command.timeout_seconds > 3600:
+            elif timeout_seconds < 10 or timeout_seconds > 3600:
                 errors.append(
                     self.create_error(
                         "Timeout must be between 10 and 3600 seconds",
@@ -338,10 +381,7 @@ class PerformAnalysisCommandValidator(BaseValidator):
                     )
                 )
 
-        if errors:
-            return ValidationResult.failure(errors)
-
-        return ValidationResult.success()
+        return errors
 
 
 class CreateFindingCommandValidator(BaseValidator):
