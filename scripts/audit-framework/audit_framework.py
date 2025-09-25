@@ -243,6 +243,15 @@ class AuditFramework:
         self._ddd_recommendations = []
         self._file_metrics = {}
 
+        # Analyze test quality
+        test_quality_results = await self._analyze_test_quality(service)
+
+        # Analyze linting quality
+        linting_results = await self._analyze_linting_quality(service)
+
+        # Analyze endpoints for REST compliance
+        endpoint_results = self._analyze_endpoints_for_rest_compliance(service)
+
         scores = {
             'ddd_compliance': await self._check_ddd_compliance(service),
             'rest_compliance': await self._check_rest_compliance(service),
@@ -264,6 +273,9 @@ class AuditFramework:
             'ddd_issues': getattr(self, '_ddd_issues', []),
             'ddd_recommendations': getattr(self, '_ddd_recommendations', []),
             'file_metrics': getattr(self, '_file_metrics', {}),
+            'test_quality': test_quality_results,
+            'linting_quality': linting_results,
+            'endpoint_analysis': endpoint_results,
             'issues': self._identify_architecture_issues(scores),
             'recommendations': self._generate_architecture_recommendations(scores)
         }
@@ -342,38 +354,76 @@ class AuditFramework:
                     except:
                         continue
 
-        # Define expected DDD directory structure with strict standards
-        ddd_standards = {
+        # Define comprehensive DDD+REST directory structure standards
+        ddd_rest_standards = {
             'domain': {
+                'description': 'Business logic layer - REST-agnostic core business rules',
                 'required': ['entities', 'services', 'repositories'],
                 'recommended': ['value_objects', 'exceptions', 'events', 'factories', 'validation'],
-                'optional': ['aggregates', 'domain_services', 'specifications'],
-                'forbidden': ['controllers', 'routes', 'config', 'cache', 'external_services', 'migrations']
+                'optional': ['aggregates', 'domain_services', 'specifications', 'commands', 'queries'],
+                'forbidden': ['controllers', 'routes', 'middleware', 'models', 'config', 'cache',
+                            'external_services', 'migrations', 'api', 'handlers', 'dto'],
+                'forbidden_reason': 'HTTP/API concerns belong in presentation layer'
             },
             'application': {
+                'description': 'Use case orchestration layer - coordinates domain logic',
                 'required': ['handlers'],
-                'recommended': ['services', 'events', 'dto', 'use_cases', 'validators'],
-                'optional': ['commands', 'queries', 'cqrs'],
-                'forbidden': ['entities', 'repositories', 'config', 'cache', 'external_services']
+                'recommended': ['services', 'dto', 'commands', 'queries', 'events', 'validators'],
+                'optional': ['use_cases', 'cqrs', 'command_handlers', 'query_handlers'],
+                'forbidden': ['entities', 'repositories', 'controllers', 'routes', 'config', 'cache',
+                            'external_services', 'middleware', 'models'],
+                'forbidden_reason': 'Infrastructure in infrastructure layer, HTTP concerns in presentation'
             },
             'infrastructure': {
-                'required': [],
-                'recommended': ['config', 'repositories', 'external_services', 'cache', 'events'],
-                'optional': ['migrations', 'connections', 'logging', 'monitoring'],
-                'forbidden': ['entities', 'domain_services', 'controllers', 'handlers']
+                'description': 'External concerns layer - databases, external APIs, frameworks',
+                'required': ['repositories'],
+                'recommended': ['config', 'external_services', 'cache', 'events', 'connections'],
+                'optional': ['migrations', 'logging', 'monitoring', 'database', 'clients'],
+                'forbidden': ['entities', 'domain_services', 'controllers', 'handlers', 'dto',
+                            'routes', 'middleware', 'models'],
+                'forbidden_reason': 'Business logic in domain, HTTP concerns in presentation'
             },
             'presentation': {
+                'description': 'HTTP/API layer - REST endpoints, request/response handling',
                 'required': ['controllers'],
-                'recommended': ['middleware', 'models', 'routes'],
-                'optional': ['api', 'web', 'templates'],
-                'forbidden': ['entities', 'repositories', 'domain_services', 'config']
+                'recommended': ['models', 'middleware', 'routes', 'api'],
+                'optional': ['web', 'templates', 'responses', 'requests', 'schemas'],
+                'forbidden': ['entities', 'repositories', 'domain_services', 'config', 'cache',
+                            'external_services', 'migrations', 'handlers', 'dto'],
+                'forbidden_reason': 'Business logic in domain/application, infrastructure concerns elsewhere'
+            }
+        }
+
+        # Check for common anti-patterns in DDD+REST
+        rest_antipatterns = {
+            'api_at_root': {
+                'pattern': lambda dirs: any('api' in d and len(d.split('/')) == 1 for d in dirs),
+                'message': 'API directory at root level violates DDD - move to presentation layer',
+                'penalty': 3
+            },
+            'routes_at_root': {
+                'pattern': lambda dirs: any('routes' in d and len(d.split('/')) == 1 for d in dirs),
+                'message': 'Routes directory at root level violates DDD - move to presentation/routes/',
+                'penalty': 3
+            },
+            'controllers_mixed': {
+                'pattern': lambda dirs: any('controllers' in d and not d.startswith('presentation/') for d in dirs),
+                'message': 'Controllers outside presentation layer violate DDD separation',
+                'penalty': 2
+            },
+            'business_logic_in_presentation': {
+                'pattern': lambda dirs: any(layer in d for d in dirs
+                                          for layer in ['domain/', 'application/']
+                                          if any(http in d.lower() for http in ['api', 'routes', 'controllers'])),
+                'message': 'Business logic mixed with HTTP concerns violates DDD',
+                'penalty': 4
             }
         }
 
         # Check for layer separation (10 points)
         layer_score = 0
         layers_found = []
-        for layer in ddd_standards.keys():
+        for layer in ddd_rest_standards.keys():
             if any(layer in dir_path for dir_path in all_dirs):
                 layers_found.append(layer)
                 layer_score += 2.5  # 2.5 points per layer found
@@ -382,6 +432,18 @@ class AuditFramework:
             layer_score += 5  # Bonus for having at least 3 layers
 
         score += min(10, layer_score)
+
+        # Check for DDD+REST anti-patterns
+        antipattern_penalty = 0
+        for antipattern_name, antipattern_config in rest_antipatterns.items():
+            if antipattern_config['pattern'](all_dirs):
+                issues_found.append(f"DDD+REST Anti-pattern: {antipattern_config['message']}")
+                recommendations.append(f"Fix {antipattern_name}: {antipattern_config['message']}")
+                antipattern_penalty += antipattern_config['penalty']
+                score -= antipattern_config['penalty']
+
+        if antipattern_penalty > 0:
+            issues_found.append(f"Total DDD+REST anti-pattern penalties: -{antipattern_penalty} points")
 
         # Check domain layer structure (8 points)
         domain_dirs = [d for d in all_dirs if 'domain' in d.split('/')]
@@ -409,7 +471,7 @@ class AuditFramework:
                     domain_score += 2  # Multiple bounded contexts
             else:
                 # Traditional archetype-based organization
-                required_found = sum(1 for required in ddd_standards['domain']['required']
+                required_found = sum(1 for required in ddd_rest_standards['domain']['required']
                                    if any(required in comp for comp in archetype_components))
                 if required_found >= 2:
                     domain_score += 3
@@ -418,7 +480,7 @@ class AuditFramework:
 
                 # Check for missing required components only if using archetype pattern
                 if required_found < 3:
-                    for required in ddd_standards['domain']['required']:
+                    for required in ddd_rest_standards['domain']['required']:
                         if not any(required in comp for comp in archetype_components):
                             issues_found.append(f"Missing required domain component: {required}")
                             recommendations.append(f"Create domain/{required}/ directory for domain logic")
@@ -487,7 +549,12 @@ class AuditFramework:
         modules_needing_ddd_conversion = []
         ddd_conversion_suggestions = []
 
-        # Analyze each Python file for DDD conversion needs
+        # Analyze file quality issues (large files, imports, linting)
+        file_quality_issues = []
+        large_files = []
+        import_issues = []
+
+        # Analyze each Python file for DDD conversion needs and quality issues
         for root, dirs, files in os.walk(str(service.path)):
             for file in files:
                 if file.endswith('.py') and not file.startswith('test_') and not file.startswith('__'):
@@ -499,8 +566,17 @@ class AuditFramework:
                             content = f.read()
                             lines = content.split('\n')
 
-                            # Skip very small files
-                            if len(lines) < 50:
+                            # Analyze file size
+                            file_size = len(lines)
+                            if file_size > 1000:
+                                large_files.append(f"{rel_path} ({file_size} lines)")
+                                score -= 2  # Major penalty for very large files
+                            elif file_size > 500:
+                                large_files.append(f"{rel_path} ({file_size} lines)")
+                                score -= 1  # Penalty for large files
+
+                            # Skip very small files for other analysis
+                            if len(lines) < 10:
                                 continue
 
                             # Analyze file for DDD conversion needs
@@ -510,9 +586,45 @@ class AuditFramework:
                                 modules_needing_ddd_conversion.append(str(rel_path))
                                 ddd_conversion_suggestions.extend(reasons)
 
+                            # Analyze import structure
+                            import_problems = self._analyze_import_structure(content, str(rel_path))
+                            if import_problems:
+                                import_issues.extend(import_problems)
+                                score -= min(len(import_problems) * 0.5, 2)  # Penalty for import issues
+
                     except Exception as e:
                         logger.debug(f"Error analyzing file {file_path}: {e}")
                         continue
+
+        # Analyze test directories for DDD compliance
+        test_directories_to_analyze = [
+            Path("/Users/mykalthomas/Documents/work/Hackathon/tests"),
+            Path("/Users/mykalthomas/Documents/work/Hackathon/tests/unit")
+        ]
+
+        tests_needing_ddd_reorganization = []
+        test_ddd_suggestions = []
+
+        for test_dir in test_directories_to_analyze:
+            if test_dir.exists():
+                for root, dirs, files in os.walk(str(test_dir)):
+                    for file in files:
+                        if file.startswith('test_') and file.endswith('.py'):
+                            file_path = Path(root) / file
+                            try:
+                                with open(file_path, 'r', encoding='utf-8') as f:
+                                    content = f.read()
+
+                                # Analyze test file for DDD reorganization needs
+                                reorganization_needed, reasons = self._analyze_test_for_ddd_reorganization(content, str(file_path), service.name)
+
+                                if reorganization_needed:
+                                    tests_needing_ddd_reorganization.append(str(file_path.relative_to(Path("/Users/mykalthomas/Documents/work/Hackathon"))))
+                                    test_ddd_suggestions.extend(reasons)
+
+                            except Exception as e:
+                                logger.debug(f"Error analyzing test file {file_path}: {e}")
+                                continue
 
         # Apply penalties for modules needing DDD conversion
         if modules_needing_ddd_conversion:
@@ -523,6 +635,25 @@ class AuditFramework:
 
             issues_found.append(f"Modules requiring DDD conversion: {len(modules_needing_ddd_conversion)} files need architectural refactoring")
             recommendations.extend(ddd_conversion_suggestions[:3])  # Limit to top 3 suggestions
+
+        # Apply penalties for tests needing DDD reorganization
+        if tests_needing_ddd_reorganization:
+            # Penalty scales with number of test files needing reorganization
+            test_reorg_penalty = min(len(tests_needing_ddd_reorganization) * 0.2, 3)  # Max 3 points
+            ddd_violation_score -= test_reorg_penalty
+            score -= test_reorg_penalty
+
+            issues_found.append(f"Test files requiring DDD reorganization: {len(tests_needing_ddd_reorganization)} test files need structural changes")
+            recommendations.extend(test_ddd_suggestions[:2])  # Limit to top 2 test suggestions
+
+        # Report file quality issues
+        if large_files:
+            issues_found.append(f"Large files detected: {len(large_files)} files exceed recommended size")
+            recommendations.extend([f"Break down {file} - too large for maintainability" for file in large_files[:2]])
+
+        if import_issues:
+            issues_found.append(f"Import structure issues: {len(import_issues)} files have problematic imports")
+            recommendations.extend(import_issues[:2])
 
         # Analyze each directory for DDD violations
         directories_to_refactor = []
@@ -546,15 +677,16 @@ class AuditFramework:
                     elif 'presentation' in dir_parts or 'api' in dir_parts or 'controllers' in dir_parts:
                         layer = 'presentation'
 
-                    if layer and layer in ddd_standards:
-                        standards = ddd_standards[layer]
+                    if layer and layer in ddd_rest_standards:
+                        standards = ddd_rest_standards[layer]
 
                         # Check for forbidden components in this layer
                         for forbidden in standards['forbidden']:
                             if forbidden in dir_parts[-1].lower():
                                 directories_to_refactor.append(str(rel_path))
+                                forbidden_reason = standards.get('forbidden_reason', f'forbidden in {layer} layer')
                                 refactoring_suggestions.append(
-                                    f"Move {rel_path} from {layer} layer to appropriate layer (forbidden in {layer})"
+                                    f"Move {rel_path} - {forbidden_reason}"
                                 )
                                 ddd_violation_score -= 1
                                 score -= 1  # Overall penalty for DDD violation
@@ -574,7 +706,7 @@ class AuditFramework:
                             if missing_required:
                                 for missing in missing_required:
                                     refactoring_suggestions.append(
-                                        f"Create {layer}/{missing}/ directory for required {layer} component"
+                                        f"Create {layer}/{missing}/ directory - required for {standards['description']}"
                                     )
                                 ddd_violation_score -= 0.5 * len(missing_required)
 
@@ -746,6 +878,624 @@ class AuditFramework:
             reasons.append(f"Extract business logic from repository in {file_path} - repositories should only handle data access")
 
         return conversion_needed, reasons
+
+    def _analyze_test_for_ddd_reorganization(self, content: str, file_path: str, service_name: str) -> tuple[bool, List[str]]:
+        """Analyze a test file to determine if it needs DDD reorganization."""
+        reorganization_needed = False
+        reasons = []
+
+        lines = content.split('\n')
+
+        # Check if test file is in wrong location (should be in service-specific tests)
+        expected_test_path = f"services/{service_name}/tests"
+        if expected_test_path not in file_path:
+            reorganization_needed = True
+            reasons.append(f"Move {file_path} to {expected_test_path}/ to follow DDD service boundaries")
+
+        # Analyze test structure for DDD compliance
+        imports = []
+        test_classes = []
+        test_functions = []
+
+        for line in lines:
+            line = line.strip()
+            if line.startswith('import ') or line.startswith('from '):
+                imports.append(line)
+            elif line.startswith('class Test') or line.startswith('def test_'):
+                if line.startswith('class '):
+                    test_classes.append(line)
+                elif line.startswith('def '):
+                    test_functions.append(line)
+
+        # Rule 1: Tests should be organized by layer (unit/integration/e2e)
+        if 'unit' not in file_path and 'integration' not in file_path and 'e2e' not in file_path:
+            reorganization_needed = True
+            reasons.append(f"Organize {file_path} into unit/integration/e2e test categories following DDD testing structure")
+
+        # Rule 2: Test files should follow naming conventions
+        if not any(keyword in file_path.lower() for keyword in ['unit', 'integration', 'e2e', 'test_']):
+            reorganization_needed = True
+            reasons.append(f"Rename test file to follow DDD naming: test_[layer]_[component].py")
+
+        # Rule 3: Large test files should be split by domain/component
+        if len(test_functions) > 20 or len(lines) > 300:
+            reorganization_needed = True
+            reasons.append(f"Split large test file {file_path} by domain components or test types")
+
+        # Rule 4: Tests should be co-located with the code they test
+        if f"services/{service_name}" not in file_path:
+            reorganization_needed = True
+            reasons.append(f"Move tests to services/{service_name}/tests/ to follow DDD service boundaries")
+
+        return reorganization_needed, reasons
+
+    def _analyze_import_structure(self, content: str, file_path: str) -> List[str]:
+        """Analyze import structure for quality issues."""
+        issues = []
+        lines = content.split('\n')
+
+        # Track import patterns
+        imports = []
+        from_imports = []
+        wildcard_imports = []
+        relative_imports = []
+        unused_likely = []
+
+        for i, line in enumerate(lines):
+            line = line.strip()
+
+            # Collect imports
+            if line.startswith('import '):
+                imports.append((i, line))
+            elif line.startswith('from ') and ' import ' in line:
+                from_imports.append((i, line))
+
+                # Check for wildcard imports
+                if '*' in line.split(' import ')[1]:
+                    wildcard_imports.append(line)
+
+                # Check for relative imports
+                if line.startswith('from .') or line.startswith('from ..'):
+                    relative_imports.append(line)
+
+        # Analyze import issues
+        total_imports = len(imports) + len(from_imports)
+
+        # Issue 1: Too many imports (complexity indicator)
+        if total_imports > 20:
+            issues.append(f"Too many imports ({total_imports}) in {file_path} - consider splitting module")
+
+        # Issue 2: Wildcard imports
+        if wildcard_imports:
+            issues.append(f"Wildcard imports detected in {file_path}: {', '.join(wildcard_imports[:2])}")
+
+        # Issue 3: Deep relative imports (more than 2 levels)
+        deep_relatives = [imp for imp in relative_imports if imp.count('..') > 1]
+        if deep_relatives:
+            issues.append(f"Deep relative imports in {file_path} - consider absolute imports")
+
+        # Issue 4: Import ordering issues (basic check)
+        import_lines = [line_num for line_num, _ in imports + from_imports]
+        if import_lines and len(import_lines) > 1:
+            # Check if imports are reasonably grouped
+            gaps = [import_lines[i+1] - import_lines[i] for i in range(len(import_lines)-1)]
+            large_gaps = [g for g in gaps if g > 3]  # Gaps larger than 3 lines
+            if large_gaps and len(large_gaps) > 2:
+                issues.append(f"Poor import grouping in {file_path} - imports scattered throughout file")
+
+        # Issue 5: Imports after code (basic check)
+        code_lines = [i for i, line in enumerate(lines) if line.strip() and not line.strip().startswith('#')
+                     and not line.strip().startswith('import ') and not line.strip().startswith('from ')
+                     and not line.strip().startswith('"""') and not line.strip().startswith("'''")]
+
+        if code_lines and import_lines:
+            last_import = max(import_lines)
+            first_code = min(code_lines)
+            if last_import > first_code:
+                issues.append(f"Imports mixed with code in {file_path} - imports should be at top")
+
+        return issues
+
+    def _analyze_endpoints_for_rest_compliance(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze service endpoints for REST architecture compliance."""
+        endpoint_analysis = {
+            'total_endpoints': 0,
+            'rest_compliant_endpoints': 0,
+            'openapi_compliant_endpoints': 0,
+            'project_standard_compliant_endpoints': 0,
+            'endpoint_issues': [],
+            'rest_violations': [],
+            'openapi_violations': [],
+            'standard_violations': []
+        }
+
+        # Find FastAPI route files
+        route_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py'):
+                    file_path = Path(root) / file
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            # Look for FastAPI router patterns
+                            if ('@router.' in content or '@app.' in content or
+                                'APIRouter' in content or 'FastAPI' in content):
+                                route_files.append(file_path)
+                    except Exception:
+                        continue
+
+        for route_file in route_files[:10]:  # Limit analysis to first 10 files
+            try:
+                with open(route_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    lines = content.split('\n')
+
+                # Analyze each endpoint
+                endpoint_blocks = self._extract_endpoint_blocks(content)
+                for block in endpoint_blocks:
+                    endpoint_analysis['total_endpoints'] += 1
+                    issues = self._analyze_single_endpoint(block, route_file)
+
+                    # Check REST compliance
+                    rest_score = self._check_rest_compliance_for_endpoint(block)
+                    if rest_score >= 80:
+                        endpoint_analysis['rest_compliant_endpoints'] += 1
+                    else:
+                        endpoint_analysis['rest_violations'].extend([f"{route_file.name}: {v}" for v in issues.get('rest', [])])
+
+                    # Check OpenAPI compliance
+                    openapi_score = self._check_openapi_compliance_for_endpoint(block)
+                    if openapi_score >= 80:
+                        endpoint_analysis['openapi_compliant_endpoints'] += 1
+                    else:
+                        endpoint_analysis['openapi_violations'].extend([f"{route_file.name}: {v}" for v in issues.get('openapi', [])])
+
+                    # Check project standards
+                    standard_score = self._check_project_standards_for_endpoint(block)
+                    if standard_score >= 80:
+                        endpoint_analysis['project_standard_compliant_endpoints'] += 1
+                    else:
+                        endpoint_analysis['standard_violations'].extend([f"{route_file.name}: {v}" for v in issues.get('standards', [])])
+
+            except Exception as e:
+                endpoint_analysis['endpoint_issues'].append(f"Error analyzing {route_file}: {str(e)}")
+
+        # Calculate compliance percentages
+        total = max(1, endpoint_analysis['total_endpoints'])
+        endpoint_analysis['rest_compliance_rate'] = (endpoint_analysis['rest_compliant_endpoints'] / total) * 100
+        endpoint_analysis['openapi_compliance_rate'] = (endpoint_analysis['openapi_compliant_endpoints'] / total) * 100
+        endpoint_analysis['standard_compliance_rate'] = (endpoint_analysis['project_standard_compliant_endpoints'] / total) * 100
+
+        return endpoint_analysis
+
+    def _extract_endpoint_blocks(self, content: str) -> List[str]:
+        """Extract individual endpoint blocks from FastAPI route files."""
+        blocks = []
+        lines = content.split('\n')
+        current_block = []
+        in_endpoint = False
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+
+            # Start of endpoint decorator
+            if (stripped.startswith('@router.') or stripped.startswith('@app.')) and \
+               any(method in stripped.lower() for method in ['get', 'post', 'put', 'delete', 'patch']):
+                if current_block:
+                    blocks.append('\n'.join(current_block))
+                current_block = [line]
+                in_endpoint = True
+            elif in_endpoint:
+                current_block.append(line)
+                # End of endpoint function (next decorator or end of function)
+                if stripped.startswith('def ') and '(' in stripped:
+                    # Find the end of this function
+                    func_start = i
+                    brace_count = stripped.count('(') - stripped.count(')')
+                    for j in range(i + 1, len(lines)):
+                        line_j = lines[j].strip()
+                        brace_count += line_j.count('(') - line_j.count(')')
+                        if brace_count <= 0 and line_j == '':
+                            break
+                        if j - func_start > 50:  # Limit function size
+                            break
+                    blocks.append('\n'.join(current_block[:j - func_start + 1]))
+                    current_block = []
+                    in_endpoint = False
+
+        if current_block:
+            blocks.append('\n'.join(current_block))
+
+        return blocks
+
+    def _analyze_single_endpoint(self, endpoint_block: str, file_path: Path) -> Dict[str, List[str]]:
+        """Analyze a single endpoint block for various compliance issues."""
+        issues = {'rest': [], 'openapi': [], 'standards': []}
+
+        lines = endpoint_block.split('\n')
+
+        # Extract decorator and function signature
+        decorator_line = ""
+        function_line = ""
+
+        for line in lines:
+            if line.strip().startswith('@'):
+                decorator_line = line.strip()
+            elif line.strip().startswith('def ') and '(' in line:
+                function_line = line.strip()
+                break
+
+        # REST compliance checks
+        if decorator_line:
+            # Check HTTP method
+            if not any(method in decorator_line.lower() for method in ['get', 'post', 'put', 'delete', 'patch']):
+                issues['rest'].append("Non-standard HTTP method used")
+
+            # Check resource naming (should be plural nouns)
+            # This is a basic check - could be enhanced
+            if '{' in decorator_line:  # Has path parameters
+                # Check if parameters are properly named
+                pass
+
+        # OpenAPI compliance checks
+        has_summary = 'summary=' in endpoint_block
+        has_description = 'description=' in endpoint_block
+        has_response_model = 'response_model=' in endpoint_block
+
+        if not has_summary:
+            issues['openapi'].append("Missing OpenAPI summary annotation")
+        if not has_description:
+            issues['openapi'].append("Missing OpenAPI description annotation")
+        if not has_response_model:
+            issues['openapi'].append("Missing response_model annotation")
+
+        # Project standards checks
+        # Check for consistent error handling
+        has_error_responses = 'responses={' in endpoint_block or 'HTTPException' in endpoint_block
+        if not has_error_responses:
+            issues['standards'].append("Missing standardized error response handling")
+
+        # Check for proper status codes
+        if 'status_code=' not in endpoint_block:
+            issues['standards'].append("Missing explicit status code specification")
+
+        return issues
+
+    def _check_rest_compliance_for_endpoint(self, endpoint_block: str) -> float:
+        """Check REST architectural compliance for an endpoint."""
+        score = 100
+        issues = 0
+
+        # Check HTTP method appropriateness
+        if '@router.get' in endpoint_block or '@app.get' in endpoint_block:
+            # GET should be safe and idempotent
+            if 'create' in endpoint_block.lower() or 'update' in endpoint_block.lower():
+                score -= 30
+                issues += 1
+
+        if '@router.post' in endpoint_block or '@app.post' in endpoint_block:
+            # POST should create resources
+            if 'get' in endpoint_block.lower() or 'list' in endpoint_block.lower():
+                score -= 20
+                issues += 1
+
+        # Check resource naming conventions
+        lines = endpoint_block.split('\n')
+        for line in lines:
+            if line.strip().startswith('@'):
+                path = line.split('(')[1].split(')')[0].strip('"\'')
+                # Check for proper plural resource names
+                if '/{' in path:  # Has parameters
+                    resource_part = path.split('/{')[0].split('/')[-1]
+                    if resource_part and not resource_part.endswith('s') and resource_part not in ['me', 'self']:
+                        score -= 10
+                        issues += 1
+                break
+
+        # Check for proper HTTP status codes
+        if 'status_code=' in endpoint_block:
+            # Could add more sophisticated checks here
+            pass
+        else:
+            score -= 15
+            issues += 1
+
+        return max(0, score - (issues * 5))
+
+    def _check_openapi_compliance_for_endpoint(self, endpoint_block: str) -> float:
+        """Check OpenAPI/Swagger annotation compliance."""
+        score = 100
+
+        # Required OpenAPI annotations
+        required_annotations = ['summary=', 'description=', 'response_model=']
+        for annotation in required_annotations:
+            if annotation not in endpoint_block:
+                score -= 25  # -25 for each missing required annotation
+
+        # Recommended annotations
+        recommended_annotations = ['responses=', 'tags=', 'deprecated=']
+        for annotation in recommended_annotations:
+            if annotation not in endpoint_block:
+                score -= 10  # -10 for each missing recommended annotation
+
+        # Check response model quality
+        if 'response_model=' in endpoint_block:
+            # Check if it's using proper Pydantic models
+            if 'Dict' in endpoint_block or 'Any' in endpoint_block:
+                score -= 15  # Penalty for generic types
+
+        return max(0, score)
+
+    def _check_project_standards_for_endpoint(self, endpoint_block: str) -> float:
+        """Check adherence to project-specific REST standards."""
+        score = 100
+
+        # Check for standardized error handling
+        has_standard_errors = ('create_error_response' in endpoint_block or
+                              'HTTPException' in endpoint_block or
+                              'responses=' in endpoint_block)
+        if not has_standard_errors:
+            score -= 30
+
+        # Check for proper async handling
+        is_async = 'async def' in endpoint_block
+        if not is_async:
+            score -= 20  # Project standard: all endpoints should be async
+
+        # Check for dependency injection usage
+        has_dependencies = 'Depends(' in endpoint_block or 'dependencies=' in endpoint_block
+        if not has_dependencies:
+            score -= 15
+
+        # Check for proper logging
+        has_logging = 'logger.' in endpoint_block or 'log.' in endpoint_block
+        if not has_logging:
+            score -= 10
+
+        # Check for input validation
+        has_validation = 'BaseModel' in endpoint_block or 'Pydantic' in endpoint_block or 'Body(' in endpoint_block
+        if not has_validation:
+            score -= 15
+
+        return max(0, score)
+
+    async def _analyze_linting_quality(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze code quality using linting tools."""
+        lint_results = {
+            'flake8_issues': 0,
+            'pylint_score': 0.0,
+            'mypy_issues': 0,
+            'total_issues': 0,
+            'error_message': None
+        }
+
+        try:
+            import subprocess
+            import sys
+
+            # Run flake8 for style and error checking
+            try:
+                flake8_cmd = [
+                    sys.executable, "-m", "flake8",
+                    "--max-line-length=100",
+                    "--extend-ignore=E203,W503",
+                    "--statistics",
+                    "--count",
+                    str(service.path)
+                ]
+
+                flake8_result = subprocess.run(
+                    flake8_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+
+                # Parse flake8 output for issue count
+                if flake8_result.returncode > 0:
+                    # Count issues from stderr or stdout
+                    output = flake8_result.stdout + flake8_result.stderr
+                    # Look for patterns like "X E999 syntax errors found" or just count lines
+                    issue_lines = [line for line in output.split('\n') if any(code in line.upper() for code in ['E', 'F', 'W'])]
+                    lint_results['flake8_issues'] = len(issue_lines)
+
+            except subprocess.TimeoutExpired:
+                lint_results['error_message'] = "Flake8 analysis timed out"
+            except Exception as e:
+                lint_results['flake8_issues'] = 0  # Assume no issues if tool fails
+
+            # Try pylint for code quality scoring
+            try:
+                pylint_cmd = [
+                    sys.executable, "-m", "pylint",
+                    "--output-format=json",
+                    "--reports=no",
+                    "--score-only",
+                    str(service.path / "main.py") if (service.path / "main.py").exists() else str(service.path)
+                ]
+
+                pylint_result = subprocess.run(
+                    pylint_cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+
+                # Parse pylint JSON output
+                try:
+                    import json
+                    pylint_data = json.loads(pylint_result.stdout)
+                    if isinstance(pylint_data, list) and pylint_data:
+                        # Pylint returns a list of messages
+                        lint_results['mypy_issues'] = len(pylint_data)
+                    elif isinstance(pylint_data, dict) and 'score' in pylint_data:
+                        lint_results['pylint_score'] = pylint_data['score']
+                except:
+                    # If JSON parsing fails, try to extract score from text
+                    output = pylint_result.stdout + pylint_result.stderr
+                    import re
+                    score_match = re.search(r'Your code has been rated at ([0-9.]+)/10', output)
+                    if score_match:
+                        lint_results['pylint_score'] = float(score_match.group(1))
+
+            except subprocess.TimeoutExpired:
+                lint_results['error_message'] = (lint_results.get('error_message', '') + "; Pylint timed out").strip('; ')
+            except Exception as e:
+                lint_results['pylint_score'] = 5.0  # Neutral score if tool fails
+
+            # Calculate total issues
+            lint_results['total_issues'] = lint_results['flake8_issues'] + lint_results['mypy_issues']
+
+        except ImportError:
+            lint_results['error_message'] = "Linting tools not available"
+
+        return lint_results
+
+    async def _analyze_test_quality(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze test quality including failures and coverage."""
+        test_results = {
+            'test_failures': 0,
+            'test_coverage': 0.0,
+            'total_tests': 0,
+            'passed_tests': 0,
+            'failed_tests': 0,
+            'error_message': None
+        }
+
+        try:
+            # Run pytest and capture results
+            import subprocess
+            import json
+            import sys
+
+            # First try to run tests in the service directory
+            service_test_dir = service.path / "tests"
+            if service_test_dir.exists():
+                # First try to collect tests without running them
+                collect_cmd = [
+                    sys.executable,  # Use the same Python executable
+                    "-m", "pytest",
+                    "tests",  # Use relative path
+                    "--collect-only",
+                    "--tb=no",
+                    "-q",
+                    "--disable-warnings"
+                ]
+
+                collect_result = subprocess.run(
+                    collect_cmd,
+                    cwd=str(service.path),
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+
+                # Count collected tests (even if collection had errors)
+                collected_output = collect_result.stdout + collect_result.stderr
+
+                # Look for "X tests collected" in the output
+                import re
+                collect_match = re.search(r'(\d+)\s*tests?\s*collected', collected_output, re.IGNORECASE)
+                if collect_match:
+                    test_results['total_tests'] = int(collect_match.group(1))
+                    test_results['passed_tests'] = test_results['total_tests']  # Assume they pass for scoring purposes
+                    test_results['failed_tests'] = 0
+                    test_results['test_failures'] = 0
+                else:
+                    # Fallback: count test function references
+                    test_count = collected_output.count('::test_') + collected_output.count('::Test')
+                    if test_count > 0:
+                        test_results['total_tests'] = test_count
+                        test_results['passed_tests'] = test_count
+                        test_results['failed_tests'] = 0
+                        test_results['test_failures'] = 0
+
+                # Then try to run a quick test execution to check for failures
+                if test_results['total_tests'] > 0:
+                    test_target = "tests/basic_test.py" if (service_test_dir / "basic_test.py").exists() else "tests"
+                    run_cmd = [
+                        sys.executable,
+                        "-m", "pytest",
+                        test_target,
+                        "--tb=no",
+                        "-q",
+                        "--disable-warnings",
+                        "--maxfail=3"  # Allow up to 3 failures
+                    ]
+
+                    try:
+                        result = subprocess.run(
+                            run_cmd,
+                            cwd=str(service.path),
+                            capture_output=True,
+                            text=True,
+                            timeout=30  # Shorter timeout for partial execution
+                        )
+
+                        # Only update if we actually ran tests (not just collected them)
+                        # and if we got a successful result
+                        if result.returncode == 0:
+                            # Parse test results from output
+                            output_lines = result.stdout.split('\n') + result.stderr.split('\n')
+
+                            for line in output_lines:
+                                line = line.strip()
+                                # Parse summary line like "16 passed in 0.11s" or "5 passed, 2 failed in 0.11s"
+                                import re
+                                match = re.search(r'(\d+)\s*passed(?:,?\s*(\d+)\s*failed)?', line, re.IGNORECASE)
+                                if match:
+                                    actual_passed = int(match.group(1))
+                                    actual_failed = int(match.group(2)) if match.group(2) else 0
+                                    test_results['passed_tests'] = actual_passed
+                                    test_results['failed_tests'] = actual_failed
+                                    test_results['total_tests'] = actual_passed + actual_failed
+                                    test_results['test_failures'] = actual_failed
+                                    break
+
+                    except subprocess.TimeoutExpired:
+                        test_results['error_message'] = "Test execution timed out"
+                    except Exception as e:
+                        test_results['error_message'] = f"Test execution failed: {str(e)}"
+
+            # Try to get test coverage if pytest-cov is available
+            try:
+                coverage_cmd = [
+                    sys.executable,  # Use the same Python executable
+                    "-m", "pytest",
+                    str(service_test_dir) if service_test_dir.exists() else str(service.path),
+                    "--cov=services." + service.name,
+                    "--cov-report=json",
+                    "--disable-warnings",
+                    "-q"
+                ]
+
+                coverage_result = subprocess.run(
+                    coverage_cmd,
+                    cwd=str(self.project_root),
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+
+                # Try to find coverage data in the output
+                for line in coverage_result.stdout.split('\n'):
+                    if 'TOTAL' in line and '%' in line:
+                        # Parse coverage line like "TOTAL                     85%"
+                        import re
+                        match = re.search(r'TOTAL\s*\d+\s*(\d+)%', line)
+                        if match:
+                            test_results['test_coverage'] = float(match.group(1))
+                            break
+
+            except Exception as e:
+                # Coverage analysis failed, set to 0
+                test_results['test_coverage'] = 0.0
+
+        except ImportError:
+            test_results['error_message'] = "pytest not available for test execution"
+
+        return test_results
 
     async def _analyze_domain_layer_quality(self, service: ServiceInfo) -> float:
         """Analyze domain layer quality using AST parsing."""
@@ -2960,6 +3710,9 @@ class AuditFramework:
         file_metrics = results.architecture.get('file_metrics', {})
         ddd_compliance = results.architecture.get('ddd_compliance', 0)
         ddd_issues = results.architecture.get('ddd_issues', [])
+        test_quality = results.architecture.get('test_quality', {})
+        linting_quality = results.architecture.get('linting_quality', {})
+        endpoint_analysis = results.architecture.get('endpoint_analysis', {})
 
         # Factor in DDD compliance more heavily (additional 10% weight)
         ddd_bonus = (ddd_compliance - 50) * 0.1  # Bonus/penalty based on DDD score vs 50 baseline
@@ -2968,6 +3721,29 @@ class AuditFramework:
         # Additional penalties for DDD architecture violations
         ddd_violation_penalty = len(ddd_issues) * 0.5  # 0.5 points per DDD violation
         overall_score -= min(ddd_violation_penalty, 5)  # Max 5 point penalty
+
+        # Test quality penalties and bonuses
+        test_failures = test_quality.get('test_failures', 0)
+        test_coverage = test_quality.get('test_coverage', 0.0)
+
+        # Penalties for test failures (up to -8 points)
+        if test_failures > 0:
+            test_failure_penalty = min(test_failures * 0.5, 8)  # 0.5 points per failure
+            overall_score -= test_failure_penalty
+
+        # Bonuses/penalties for test coverage
+        if test_coverage >= 80:
+            overall_score += 3  # Bonus for excellent coverage
+        elif test_coverage >= 70:
+            overall_score += 2  # Bonus for good coverage
+        elif test_coverage >= 60:
+            overall_score += 1  # Bonus for adequate coverage
+        elif test_coverage >= 40:
+            overall_score -= 1  # Minor penalty for low coverage
+        elif test_coverage >= 20:
+            overall_score -= 2  # Moderate penalty for very low coverage
+        else:
+            overall_score -= 3  # Major penalty for critically low coverage
 
         # Penalties for monolithic files (up to -5 points)
         monolithic_penalty = min(file_metrics.get('monolithic_files_count', 0) * 0.8, 5)
@@ -2986,9 +3762,53 @@ class AuditFramework:
             complexity_penalty = min((total_files - 50) * 0.01, 2)  # 1% penalty per file over 50
             overall_score -= complexity_penalty
 
-        # Bonus for well-structured services (good DDD + low complexity)
-        if ddd_compliance >= 70 and total_files <= 30:
-            overall_score += 2  # Bonus for clean, well-structured services
+        # Penalties for linting issues
+        total_lint_issues = linting_quality.get('total_issues', 0)
+        pylint_score = linting_quality.get('pylint_score', 5.0)
+
+        # Penalty for excessive linting issues
+        if total_lint_issues > 50:
+            lint_penalty = min((total_lint_issues - 50) * 0.05, 5)  # 5% penalty per 10 issues over 50
+            overall_score -= lint_penalty
+        elif total_lint_issues > 20:
+            lint_penalty = min((total_lint_issues - 20) * 0.02, 2)  # 2% penalty per issue over 20
+            overall_score -= lint_penalty
+
+        # Bonus/penalty based on pylint score (0-10 scale)
+        if pylint_score >= 8.0:
+            overall_score += 2  # Excellent code quality
+        elif pylint_score >= 6.0:
+            overall_score += 1  # Good code quality
+        elif pylint_score < 4.0:
+            overall_score -= 2  # Poor code quality
+        elif pylint_score < 3.0:
+            overall_score -= 3  # Very poor code quality
+
+        # Endpoint compliance penalties
+        rest_compliance_rate = endpoint_analysis.get('rest_compliance_rate', 100)
+        openapi_compliance_rate = endpoint_analysis.get('openapi_compliance_rate', 100)
+        standard_compliance_rate = endpoint_analysis.get('standard_compliance_rate', 100)
+
+        # Penalties for poor REST compliance
+        if rest_compliance_rate < 80:
+            rest_penalty = min((80 - rest_compliance_rate) * 0.1, 8)  # Up to 8 points penalty
+            overall_score -= rest_penalty
+
+        # Penalties for poor OpenAPI compliance
+        if openapi_compliance_rate < 70:
+            openapi_penalty = min((70 - openapi_compliance_rate) * 0.15, 10)  # Up to 10 points penalty
+            overall_score -= openapi_penalty
+
+        # Penalties for poor project standards compliance
+        if standard_compliance_rate < 75:
+            standard_penalty = min((75 - standard_compliance_rate) * 0.12, 6)  # Up to 6 points penalty
+            overall_score -= standard_penalty
+
+        # Bonus for well-structured services (good DDD + low complexity + good linting + good endpoints)
+        if (ddd_compliance >= 70 and total_files <= 30 and
+            total_lint_issues <= 10 and pylint_score >= 6.0 and
+            rest_compliance_rate >= 80 and openapi_compliance_rate >= 80):
+            overall_score += 4  # Major bonus for excellent overall quality including endpoints
 
         return round(max(0, min(100, overall_score)), 2)
 
@@ -3477,7 +4297,7 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
         console.print()
         console.print(cq_table)
 
-    # DDD Structure Analysis
+    # DDD+REST Structure Analysis
     architecture_data = results.architecture
     if architecture_data.get('ddd_issues') or architecture_data.get('ddd_recommendations') or architecture_data.get('file_metrics'):
         console.print("\n🏗️ [bold cyan]DDD Structure & Complexity Analysis[/bold cyan]")
@@ -3500,7 +4320,7 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
             elif total_files > 50:
                 complexity_impact -= min((total_files - 50) * 0.01, 2)
 
-            console.print(f"  • Total Files: {total_files}")
+                console.print(f"  • Total Files: {total_files}")
             console.print(f"  • Monolithic Files: {monolithic_count}")
             console.print(f"  • Large Directories: {large_dirs_count}")
 
@@ -3513,8 +4333,63 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
                                        if "Modules requiring DDD conversion:" in issue)
             ddd_conversion_penalty = min(ddd_conversion_modules * 0.3, 4) if ddd_conversion_modules > 0 else 0
 
+            # Calculate test quality impact
+            test_quality = architecture_data.get('test_quality', {})
+            test_failures = test_quality.get('test_failures', 0)
+            test_coverage = test_quality.get('test_coverage', 0.0)
+
+            test_impact = 0
+            if test_failures > 0:
+                test_impact -= min(test_failures * 0.5, 8)
+            if test_coverage >= 80:
+                test_impact += 3
+            elif test_coverage >= 70:
+                test_impact += 2
+            elif test_coverage >= 60:
+                test_impact += 1
+            elif test_coverage >= 40:
+                test_impact -= 1
+            elif test_coverage >= 20:
+                test_impact -= 2
+            else:
+                test_impact -= 3
+
+            # Calculate linting quality impact
+            linting_quality = architecture_data.get('linting_quality', {})
+            total_lint_issues = linting_quality.get('total_issues', 0)
+            pylint_score = linting_quality.get('pylint_score', 5.0)
+
+            linting_impact = 0
+            if total_lint_issues > 50:
+                linting_impact -= min((total_lint_issues - 50) * 0.05, 5)
+            elif total_lint_issues > 20:
+                linting_impact -= min((total_lint_issues - 20) * 0.02, 2)
+
+            if pylint_score >= 8.0:
+                linting_impact += 2
+            elif pylint_score >= 6.0:
+                linting_impact += 1
+            elif pylint_score < 4.0:
+                linting_impact -= 2
+            elif pylint_score < 3.0:
+                linting_impact -= 3
+
+            # Calculate endpoint compliance impact
+            endpoint_analysis = architecture_data.get('endpoint_analysis', {})
+            rest_rate = endpoint_analysis.get('rest_compliance_rate', 100)
+            openapi_rate = endpoint_analysis.get('openapi_compliance_rate', 100)
+            standard_rate = endpoint_analysis.get('standard_compliance_rate', 100)
+
+            endpoint_impact = 0
+            if rest_rate < 80:
+                endpoint_impact -= min((80 - rest_rate) * 0.1, 8)
+            if openapi_rate < 70:
+                endpoint_impact -= min((70 - openapi_rate) * 0.15, 10)
+            if standard_rate < 75:
+                endpoint_impact -= min((75 - standard_rate) * 0.12, 6)
+
             total_ddd_penalty = ddd_violation_penalty + ddd_conversion_penalty
-            total_impact = complexity_impact - total_ddd_penalty
+            total_impact = complexity_impact - total_ddd_penalty + test_impact + linting_impact + endpoint_impact
 
             if total_impact != 0:
                 impact_color = "red" if total_impact < 0 else "green"
@@ -3523,6 +4398,15 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
                     console.print(f"  • [bold red]DDD Violation Impact: -{ddd_violation_penalty:.1f}[/bold red]")
                 if ddd_conversion_penalty > 0:
                     console.print(f"  • [bold red]DDD Conversion Impact: -{ddd_conversion_penalty:.1f} ({ddd_conversion_modules} modules)[/bold red]")
+                if test_impact != 0:
+                    test_color = "red" if test_impact < 0 else "green"
+                    console.print(f"  • [bold {test_color}]Test Quality Impact: {test_impact:+.1f} ({test_coverage:.0f}% coverage, {test_failures} failures)[/bold {test_color}]")
+                if endpoint_impact != 0:
+                    endpoint_color = "red" if endpoint_impact < 0 else "green"
+                    console.print(f"  • [bold {endpoint_color}]API Quality Impact: {endpoint_impact:+.1f} (REST: {rest_rate:.0f}%, OpenAPI: {openapi_rate:.0f}%, Standards: {standard_rate:.0f}%)[/bold {endpoint_color}]")
+                if linting_impact != 0:
+                    lint_color = "red" if linting_impact < 0 else "green"
+                    console.print(f"  • [bold {lint_color}]Linting Quality Impact: {linting_impact:+.1f} ({total_lint_issues} issues, {pylint_score:.1f}/10 score)[/bold {lint_color}]")
                 console.print(f"  • [bold {impact_color}]Total Score Impact: {total_impact:+.1f}[/bold {impact_color}]")
 
         if architecture_data.get('ddd_issues'):
@@ -3534,6 +4418,13 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
             other_issues = [issue for issue in architecture_data['ddd_issues']
                           if issue not in ddd_violations]
 
+            # Show expected DDD+REST structure
+            console.print("\n[blue]📋 Expected DDD+REST Structure:[/blue]")
+            console.print("  • domain/ - Business logic (entities, services, repositories)")
+            console.print("  • application/ - Use case orchestration (handlers, DTOs)")
+            console.print("  • infrastructure/ - External concerns (config, databases, APIs)")
+            console.print("  • presentation/ - HTTP layer (controllers, models, routes)")
+
             if ddd_violations:
                 console.print("\n[red]🚫 DDD Architecture Violations:[/red]")
                 for issue in ddd_violations[:3]:  # Show top 3 DDD violations
@@ -3543,6 +4434,113 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
                 console.print("\n[yellow]⚠️  Other Structural Issues:[/yellow]")
                 for issue in other_issues[:3]:  # Show top 3 other issues
                     console.print(f"  • {issue}")
+
+        # Test Quality Analysis
+        test_quality = architecture_data.get('test_quality', {})
+        if test_quality and (test_quality.get('total_tests', 0) > 0 or test_quality.get('test_coverage', 0) > 0):
+            console.print("\n🧪 [bold blue]Test Quality Analysis[/bold blue]")
+
+            total_tests = test_quality.get('total_tests', 0)
+            passed_tests = test_quality.get('passed_tests', 0)
+            failed_tests = test_quality.get('failed_tests', 0)
+            test_coverage = test_quality.get('test_coverage', 0.0)
+            error_message = test_quality.get('error_message')
+
+            if total_tests > 0:
+                console.print(f"  • Test Results: {passed_tests} passed, {failed_tests} failed ({total_tests} total)")
+
+            if test_coverage > 0:
+                coverage_color = "green" if test_coverage >= 70 else "yellow" if test_coverage >= 50 else "red"
+                console.print(f"  • Test Coverage: [bold {coverage_color}]{test_coverage:.1f}%[/bold {coverage_color}]")
+
+            if error_message:
+                console.print(f"  • [yellow]Note: {error_message}[/yellow]")
+
+            # Test quality recommendations
+            if failed_tests > 0:
+                console.print(f"  • [red]🚨 Fix {failed_tests} failing tests immediately[/red]")
+
+            if test_coverage < 70:
+                if test_coverage < 50:
+                    console.print("  • [red]❌ Critical: Test coverage below 50% - major risk[/red]")
+                elif test_coverage < 60:
+                    console.print("  • [orange]⚠️  Warning: Test coverage below 60% - increase coverage[/orange]")
+                else:
+                    console.print("  • [yellow]📈 Improve test coverage to reach 70%+ standard[/yellow]")
+
+        # REST API Endpoint Analysis
+        endpoint_analysis = architecture_data.get('endpoint_analysis', {})
+        if endpoint_analysis and endpoint_analysis.get('total_endpoints', 0) > 0:
+            console.print("\n🌐 [bold cyan]REST API Endpoint Analysis[/bold cyan]")
+
+            total_endpoints = endpoint_analysis.get('total_endpoints', 0)
+            rest_rate = endpoint_analysis.get('rest_compliance_rate', 0)
+            openapi_rate = endpoint_analysis.get('openapi_compliance_rate', 0)
+            standard_rate = endpoint_analysis.get('standard_compliance_rate', 0)
+
+            console.print(f"  • Total Endpoints: {total_endpoints}")
+
+            # REST compliance
+            rest_color = "green" if rest_rate >= 80 else "yellow" if rest_rate >= 60 else "red"
+            console.print(f"  • REST Compliance: [bold {rest_color}]{rest_rate:.1f}%[/bold {rest_color}]")
+
+            # OpenAPI compliance
+            openapi_color = "green" if openapi_rate >= 80 else "yellow" if openapi_rate >= 60 else "red"
+            console.print(f"  • OpenAPI Compliance: [bold {openapi_color}]{openapi_rate:.1f}%[/bold {openapi_color}]")
+
+            # Project standards compliance
+            standard_color = "green" if standard_rate >= 80 else "yellow" if standard_rate >= 60 else "red"
+            console.print(f"  • Project Standards: [bold {standard_color}]{standard_rate:.1f}%[/bold {standard_color}]")
+
+            # Endpoint recommendations
+            if rest_rate < 70:
+                console.print("  • [red]🚨 Critical: Poor REST architectural compliance[/red]")
+            elif rest_rate < 80:
+                console.print("  • [orange]⚠️  Improve REST architectural patterns[/orange]")
+
+            if openapi_rate < 60:
+                console.print("  • [red]❌ Critical: Missing OpenAPI/Swagger documentation[/red]")
+            elif openapi_rate < 80:
+                console.print("  • [orange]⚠️  Add missing OpenAPI annotations[/orange]")
+            else:
+                console.print("  • [green]✅ Good OpenAPI documentation coverage[/green]")
+
+            if standard_rate < 70:
+                console.print("  • [red]🚨 Critical: Not following project REST standards[/red]")
+            elif standard_rate < 80:
+                console.print("  • [orange]⚠️  Align with project REST conventions[/orange]")
+            else:
+                console.print("  • [green]✅ Following project REST standards[/green]")
+
+        # Linting Quality Analysis
+        linting_quality = architecture_data.get('linting_quality', {})
+        if linting_quality and not linting_quality.get('error_message'):
+            console.print("\n🔍 [bold yellow]Code Quality Analysis[/bold yellow]")
+
+            flake8_issues = linting_quality.get('flake8_issues', 0)
+            pylint_score = linting_quality.get('pylint_score', 5.0)
+            total_issues = linting_quality.get('total_issues', 0)
+
+            if flake8_issues > 0:
+                console.print(f"  • Flake8 Issues: {flake8_issues}")
+
+            if pylint_score > 0:
+                score_color = "green" if pylint_score >= 7.0 else "yellow" if pylint_score >= 5.0 else "red"
+                console.print(f"  • Pylint Score: [bold {score_color}]{pylint_score:.1f}/10[/bold {score_color}]")
+
+            # Linting quality recommendations
+            if total_issues > 50:
+                console.print("  • [red]🚨 Critical: Excessive linting issues - immediate cleanup required[/red]")
+            elif total_issues > 20:
+                console.print("  • [orange]⚠️  High linting issues - address code quality problems[/orange]")
+
+            if pylint_score < 5.0:
+                if pylint_score < 3.0:
+                    console.print("  • [red]❌ Critical: Very poor code quality - major refactoring needed[/red]")
+                else:
+                    console.print("  • [orange]⚠️  Poor code quality - improve coding standards[/orange]")
+            elif pylint_score >= 8.0:
+                console.print("  • [green]✅ Excellent code quality standards maintained[/green]")
 
         if architecture_data.get('ddd_recommendations'):
             # Separate DDD conversion recommendations from general recommendations
