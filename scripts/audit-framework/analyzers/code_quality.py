@@ -89,8 +89,30 @@ class CodeQualityAnalyzer:
             scores['duplication'] * duplication_weight
         )
 
+        # Additional analyses for comprehensive code quality
+        security_score = await self._check_security(service)
+        dry_score = await self._check_dry_principle(service)
+        kiss_score = await self._check_kiss_principle(service)
+
+        # Adjust weights to include new analyses
+        total_weight = complexity_weight + testing_weight + linting_weight + duplication_weight
+        security_weight = 0.15
+        dry_weight = 0.10
+        kiss_weight = 0.10
+
+        # Recalculate with additional analyses
+        final_score = (
+            scores['complexity'] * complexity_weight +
+            scores['testing'] * testing_weight +
+            scores['linting'] * linting_weight +
+            scores['duplication'] * duplication_weight +
+            security_score * security_weight +
+            dry_score * dry_weight +
+            kiss_score * kiss_weight
+        ) / (total_weight + security_weight + dry_weight + kiss_weight)
+
         return CodeQualityAnalysisResult(
-            score=round(code_quality_score, 2),
+            score=round(final_score, 2),
             complexity_score=scores['complexity'],
             testing_score=scores['testing'],
             linting_score=scores['linting'],
@@ -357,6 +379,196 @@ class CodeQualityAnalyzer:
 
         except Exception:
             score = 70  # Neutral score on error
+
+        return max(0, min(100, score))
+
+    async def _check_security(self, service: ServiceInfo) -> float:
+        """Check security vulnerabilities and best practices"""
+        score = 100.0
+        security_findings = {
+            'high_severity': 0,
+            'medium_severity': 0,
+            'low_severity': 0,
+            'hardcoded_secrets': 0,
+            'injection_vulnerabilities': 0,
+            'unsafe_functions': 0,
+            'weak_crypto': 0
+        }
+
+        try:
+            python_files = list(service.path.rglob("*.py"))
+
+            # Limit analysis for performance
+            max_files = min(10, len(python_files))
+
+            for file_path in python_files[:max_files]:
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+
+                    # Check for hardcoded secrets and sensitive patterns
+                    sensitive_patterns = [
+                        r'password\s*=\s*["\'][^"\']*["\']',
+                        r'secret\s*=\s*["\'][^"\']*["\']',
+                        r'key\s*=\s*["\'][^"\']*["\']',
+                        r'token\s*=\s*["\'][^"\']*["\']',
+                        r'api_key\s*=\s*["\'][^"\']*["\']'
+                    ]
+
+                    for pattern in sensitive_patterns:
+                        matches = re.findall(pattern, content, re.IGNORECASE)
+                        security_findings['hardcoded_secrets'] += len(matches)
+
+                    # Check for SQL injection vulnerabilities
+                    if 'execute(' in content or 'cursor.execute' in content:
+                        # Look for string concatenation in SQL
+                        if '+' in content and ('select' in content.lower() or 'insert' in content.lower()):
+                            security_findings['injection_vulnerabilities'] += 1
+
+                    # Check for unsafe functions
+                    unsafe_funcs = ['eval(', 'exec(', 'pickle.loads(', 'yaml.unsafe_load']
+                    for func in unsafe_funcs:
+                        if func in content:
+                            security_findings['unsafe_functions'] += 1
+
+                    # Check for weak cryptography
+                    if 'md5(' in content or 'sha1(' in content:
+                        security_findings['weak_crypto'] += 1
+
+                except Exception:
+                    continue
+
+            # Apply penalties
+            score -= min(30, security_findings['hardcoded_secrets'] * 5)
+            score -= min(25, security_findings['injection_vulnerabilities'] * 10)
+            score -= min(20, security_findings['unsafe_functions'] * 8)
+            score -= min(15, security_findings['weak_crypto'] * 5)
+
+            # Bonus for good security practices
+            if security_findings['hardcoded_secrets'] == 0 and security_findings['unsafe_functions'] == 0:
+                score += 10
+
+        except Exception:
+            score = 60.0  # Neutral score on error
+
+        return max(0, min(100, score))
+
+    async def _check_dry_principle(self, service: ServiceInfo) -> float:
+        """Check DRY (Don't Repeat Yourself) principle compliance"""
+        score = 100.0
+        dry_violations = 0
+
+        try:
+            python_files = list(service.path.rglob("*.py"))
+
+            # Limit analysis for performance
+            max_files = min(5, len(python_files))
+
+            # Check for duplicate import blocks and code patterns
+            import_blocks = {}
+            code_blocks = {}
+
+            for file_path in python_files[:max_files]:
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        lines = content.split('\n')
+
+                    # Check for duplicate import blocks (first 20 lines)
+                    import_section = '\n'.join(lines[:20])
+                    if len(import_section.strip()) > 50:  # Substantial import block
+                        if import_section in import_blocks:
+                            dry_violations += 1
+                        else:
+                            import_blocks[import_section] = file_path
+
+                    # Check for duplicate code blocks (4+ consecutive lines)
+                    for i in range(len(lines) - 3):
+                        block = '\n'.join(lines[i:i+4]).strip()
+                        if len(block) > 100:  # Substantial code block
+                            if block in code_blocks:
+                                dry_violations += 1
+                            else:
+                                code_blocks[block] = file_path
+
+                except Exception:
+                    continue
+
+            # Apply penalties for DRY violations
+            score -= min(40, dry_violations * 3)
+
+            # Bonus for DRY compliance
+            if dry_violations == 0:
+                score += 5
+
+        except Exception:
+            score = 70.0  # Neutral score on error
+
+        return max(0, min(100, score))
+
+    async def _check_kiss_principle(self, service: ServiceInfo) -> float:
+        """Check KISS (Keep It Simple Stupid) principle compliance"""
+        score = 100.0
+        complexity_violations = 0
+
+        try:
+            python_files = list(service.path.rglob("*.py"))
+
+            # Limit analysis for performance
+            max_files = min(5, len(python_files))
+
+            for file_path in python_files[:max_files]:
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        lines = content.split('\n')
+
+                    # Check file length (too long files violate KISS)
+                    if len(lines) > self.thresholds['file_limits']['max_lines_per_file']:
+                        complexity_violations += 1
+
+                    # Check for overly complex functions (too many parameters, nested logic)
+                    tree = ast.parse(content)
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.FunctionDef):
+                            # Check parameter count
+                            param_count = len(node.args.args)
+                            if param_count > 7:  # Too many parameters
+                                complexity_violations += 1
+
+                            # Check nesting depth
+                            nesting_depth = 0
+                            max_nesting = 0
+
+                            for child in ast.walk(node):
+                                if isinstance(child, (ast.If, ast.For, ast.While, ast.Try)):
+                                    nesting_depth += 1
+                                    max_nesting = max(max_nesting, nesting_depth)
+                                elif isinstance(child, ast.FunctionDef):
+                                    # Reset for nested functions
+                                    nesting_depth = 0
+
+                            if max_nesting > 4:  # Too deeply nested
+                                complexity_violations += 1
+
+                            # Check line count per function
+                            if hasattr(node, 'lineno') and hasattr(node, 'end_lineno'):
+                                func_lines = node.end_lineno - node.lineno
+                                if func_lines > 50:  # Too long function
+                                    complexity_violations += 1
+
+                except Exception:
+                    continue
+
+            # Apply penalties for KISS violations
+            score -= min(50, complexity_violations * 2)
+
+            # Bonus for KISS compliance
+            if complexity_violations == 0:
+                score += 10
+
+        except Exception:
+            score = 75.0  # Slightly positive score on error
 
         return max(0, min(100, score))
 
