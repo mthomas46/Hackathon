@@ -9,7 +9,17 @@ class SecretProvider(Protocol):
 
 
 class EnvSecretProvider:
+    """Secret provider that reads from environment variables."""
+
     def get_secret(self, name: str) -> Optional[str]:
+        """Get secret value from environment variables.
+
+        Args:
+            name: Environment variable name
+
+        Returns:
+            Secret value or None if not found or empty
+        """
         value = os.environ.get(name)
         if value is None or str(value).strip() == "":
             return None
@@ -20,6 +30,11 @@ _provider: SecretProvider = EnvSecretProvider()
 
 
 def set_secret_provider(provider: SecretProvider) -> None:
+    """Set the global secret provider for credential management.
+
+    Args:
+        provider: SecretProvider implementation to use for secret retrieval
+    """
     global _provider
     _provider = provider
 

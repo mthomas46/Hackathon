@@ -1,0 +1,37 @@
+{
+  "service_name": "shared",
+  "overall_score": 76.99,
+  "grade": "C",
+  "critical_issues_count": 0,
+  "estimated_effort_days": 14.5,
+  "dimensions": {
+    "architecture": 93.0,
+    "code_quality": 62.8,
+    "performance": 82.5,
+    "maintainability": 67.55
+  },
+  "recommendations": [
+    "Optimize system resource usage - monitor CPU, memory, and I/O",
+    "Increase docstring coverage to at least 80.0%",
+    "Fix resource management issues - use context managers and proper cleanup",
+    "Reduce code duplication through refactoring",
+    "Increase test coverage to at least 85.0%"
+  ],
+  "metadata": {
+    "audit_time_seconds": 4.83,
+    "profile_used": "ci_comprehensive",
+    "service_info": {
+      "python_files": 117,
+      "has_main": true,
+      "has_tests": true,
+      "has_config": true,
+      "has_docker": false,
+      "has_requirements": true,
+      "total_files": 256
+    },
+    "thresholds_applied": {
+      "min_passing_score": 70.0,
+      "critical_issues_threshold": 1
+    }
+  }
+}

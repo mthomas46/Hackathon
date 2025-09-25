@@ -24,6 +24,11 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
     """Middleware for request correlation ID propagation."""
 
     def __init__(self, app):
+        """Initialize request ID middleware.
+
+        Args:
+            app: ASGI application
+        """
         super().__init__(app)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
@@ -38,6 +43,12 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
     """Middleware for request metrics collection."""
 
     def __init__(self, app, service_name: Optional[str] = None):
+        """Initialize request metrics middleware.
+
+        Args:
+            app: ASGI application
+            service_name: Name of the service for metrics tagging
+        """
         super().__init__(app)
         self.service_name = service_name or "unknown-service"
 
@@ -79,6 +90,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     """
 
     def __init__(self, app, limits: Optional[Dict[str, tuple[float, int]]] = None):
+        """Initialize rate limiting middleware.
+
+        Args:
+            app: ASGI application
+            limits: Dict mapping paths to (rate, burst) tuples for token buckets
+        """
         super().__init__(app)
         self._buckets: Dict[str, TokenBucket] = {}
         limits = limits or {}
@@ -103,6 +120,13 @@ class ServiceMiddleware:
         rate_limits: Optional[Dict[str, tuple[float, int]]] = None,
         enable_rate_limit: bool = False,
     ):
+        """Initialize combined service middleware stack.
+
+        Args:
+            service_name: Name of the service
+            rate_limits: Optional rate limiting configuration
+            enable_rate_limit: Whether to enable rate limiting
+        """
         self.service_name = service_name
         self.rate_limits = rate_limits
         self.enable_rate_limit = enable_rate_limit
