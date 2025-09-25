@@ -71,18 +71,21 @@ class PerformanceAnalyzer:
         scores = {
             'system_metrics': await self._analyze_system_performance(system_metrics),
             'database': await self._check_database_performance(service),
-            'resources': await self._check_resource_usage(service)
+            'resources': await self._check_resource_usage(service),
+            'runtime': await self._check_runtime_performance(service)
         }
 
         # Calculate weighted performance score
-        system_weight = 0.4
-        database_weight = 0.3
-        resources_weight = 0.3
+        system_weight = 0.35
+        database_weight = 0.25
+        resources_weight = 0.25
+        runtime_weight = 0.15
 
         performance_score = (
             scores['system_metrics'] * system_weight +
             scores['database'] * database_weight +
-            scores['resources'] * resources_weight
+            scores['resources'] * resources_weight +
+            scores['runtime'] * runtime_weight
         )
 
         return PerformanceAnalysisResult(
@@ -227,6 +230,75 @@ class PerformanceAnalyzer:
         # Bonus for good resource management
         if file_handles == 0 and memory_leaks == 0 and resource_issues == 0:
             score += 10
+
+        return max(0, min(100, score))
+
+    async def _check_runtime_performance(self, service: ServiceInfo) -> float:
+        """Check runtime performance indicators and patterns"""
+        score = 100.0
+
+        try:
+            python_files = list(service.path.rglob("*.py"))
+
+            # Analyze code for performance anti-patterns
+            performance_issues = 0
+            max_files = min(10, len(python_files))
+
+            for file_path in python_files[:max_files]:
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+
+                    # Check for inefficient operations
+                    inefficient_patterns = [
+                        r'for\s+\w+\s+in\s+range\(len\(',  # Iterating over range(len())
+                        r'\.append\(.*for.*in.*\)',       # List comprehensions that could be generators
+                        r'list\(.*range\(.*\)\)',         # Creating unnecessary lists
+                        r'\.sort\(\)',                     # In-place sort when sorted() might be better
+                    ]
+
+                    for pattern in inefficient_patterns:
+                        if re.search(pattern, content):
+                            performance_issues += 1
+
+                    # Check for blocking operations that could be async
+                    if not file_path.name.startswith('test_'):
+                        blocking_patterns = [
+                            'requests.',       # Synchronous HTTP requests
+                            'time.sleep',      # Blocking sleep
+                            'input(',          # Blocking input
+                        ]
+
+                        for pattern in blocking_patterns:
+                            if pattern in content:
+                                performance_issues += 1
+
+                    # Check for large data structures in memory
+                    if 'list(' in content and 'range(' in content and '10000' in content:
+                        performance_issues += 2  # Major penalty for large in-memory lists
+
+                except Exception:
+                    continue
+
+            # Apply penalties
+            score -= min(40, performance_issues * 3)
+
+            # Bonus for good performance patterns
+            async_usage = 0
+            for file_path in python_files[:max_files]:
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        if 'async def' in content or 'await ' in content:
+                            async_usage += 1
+                except Exception:
+                    continue
+
+            if async_usage > 0:
+                score += min(15, async_usage * 2)
+
+        except Exception:
+            score = 70.0  # Neutral score on error
 
         return max(0, min(100, score))
 

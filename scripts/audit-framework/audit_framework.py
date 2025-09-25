@@ -84,6 +84,7 @@ class AuditResults:
     performance: Dict[str, Any]
     maintainability: Dict[str, Any]
     recommendations: List[str]
+    estimated_effort_days: float = 0.0
     metadata: Dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=datetime.now)
 
@@ -266,6 +267,9 @@ class AuditFramework:
             # Generate recommendations
             recommendations = self._generate_recommendations(results)
 
+            # Estimate effort for recommendations
+            estimated_effort_days = self._estimate_effort(recommendations)
+
             audit_time = time.time() - start_time
 
             return AuditResults(
@@ -285,6 +289,7 @@ class AuditFramework:
                 performance=results['performance'].__dict__,
                 maintainability=results['maintainability'].__dict__,
                 recommendations=recommendations,
+                estimated_effort_days=estimated_effort_days,
                 metadata={
                     'audit_time_seconds': round(audit_time, 2),
                     'profile_used': self.profile.name,
@@ -419,6 +424,112 @@ class AuditFramework:
 
         return unique_recommendations[:15]  # Limit to top 15 recommendations
 
+    def _estimate_effort(self, recommendations: List[str]) -> float:
+        """Estimate total effort for all recommendations."""
+        total_effort = 0.0
+
+        # Effort estimation based on recommendation content
+        effort_mapping = {
+            'refactor': 2.0,      # Refactoring complex functions
+            'increase': 1.5,      # Increasing coverage/documentation
+            'implement': 3.0,     # Implementing missing patterns
+            'fix': 1.0,           # Fixing specific issues
+            'add': 1.5,           # Adding missing components
+            'optimize': 2.5,      # Performance optimizations
+            'improve': 2.0,       # General improvements
+            'reduce': 1.5,        # Reducing complexity/duplication
+            'use': 1.0,           # Using better patterns
+            'replace': 2.0,       # Replacing implementations
+            'consider': 0.5,      # Considering changes (low effort)
+        }
+
+        for rec in recommendations:
+            rec_lower = rec.lower()
+            effort_days = 0.5  # Base effort
+
+            for keyword, effort in effort_mapping.items():
+                if keyword in rec_lower:
+                    effort_days = max(effort_days, effort)
+                    break
+
+            # Adjust based on complexity indicators
+            if any(word in rec_lower for word in ['multiple', 'many', 'complex', 'significant']):
+                effort_days *= 1.5
+
+            total_effort += effort_days
+
+        return round(total_effort, 1)
+
+    def generate_markdown_report(self, results: AuditResults) -> str:
+        """Generate markdown audit report."""
+        report = f"""# Service Audit Report: {results.service_name}
+
+**Audit Date:** {results.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
+**Overall Score:** {results.overall_score}/100 ({results.grade})
+**Estimated Effort:** {results.estimated_effort_days} days
+
+## 📊 Score Breakdown
+
+| Dimension | Score | Weight | Contribution |
+|-----------|-------|--------|--------------|
+| Architecture | {results.dimensions['architecture']:.1f} | 30% | {(results.dimensions['architecture'] * 0.30):.1f} |
+| Code Quality | {results.dimensions['code_quality']:.1f} | 25% | {(results.dimensions['code_quality'] * 0.25):.1f} |
+| Performance | {results.dimensions['performance']:.1f} | 20% | {(results.dimensions['performance'] * 0.20):.1f} |
+| Maintainability | {results.dimensions['maintainability']:.1f} | 25% | {(results.dimensions['maintainability'] * 0.25):.1f} |
+
+## 🚨 Critical Issues
+
+{f"**{len(results.critical_issues)} critical issues found:**" if results.critical_issues else "**No critical issues found** ✅"}
+
+"""
+
+        if results.critical_issues:
+            for i, issue in enumerate(results.critical_issues, 1):
+                report += f"{i}. **{issue['severity'].title()}**: {issue['message']}\n"
+
+        report += "\n## 🎯 Top Recommendations\n\n"
+
+        for i, rec in enumerate(results.recommendations[:10], 1):
+            report += f"{i}. {rec}\n"
+
+        report += "\n## 📈 Detailed Analysis\n\n"
+
+        # Architecture details
+        report += "### 🏗️ Architecture Analysis\n"
+        report += f"- **DDD Compliance:** {results.architecture.get('ddd_compliance', 0):.1f}/100\n"
+        report += f"- **REST Compliance:** {results.architecture.get('rest_compliance', 0):.1f}/100\n"
+        report += f"- **Layer Separation:** {results.architecture.get('layer_separation', 0):.1f}/100\n\n"
+
+        # Code Quality details
+        report += "### 💻 Code Quality Analysis\n"
+        report += f"- **Complexity:** {results.code_quality.get('complexity_score', 0):.1f}/100\n"
+        report += f"- **Testing:** {results.code_quality.get('testing_score', 0):.1f}/100\n"
+        report += f"- **Linting:** {results.code_quality.get('linting_score', 0):.1f}/100\n"
+        report += f"- **Test Coverage:** {results.code_quality.get('test_coverage', 0):.1f}%\n\n"
+
+        # Performance details
+        report += "### ⚡ Performance Analysis\n"
+        report += f"- **System Metrics:** {results.performance.get('system_metrics_score', 0):.1f}/100\n"
+        report += f"- **Database:** {results.performance.get('database_score', 0):.1f}/100\n"
+        report += f"- **Resource Usage:** {results.performance.get('resource_usage_score', 0):.1f}/100\n\n"
+
+        # Maintainability details
+        report += "### 🔧 Maintainability Analysis\n"
+        report += f"- **Documentation:** {results.maintainability.get('documentation_score', 0):.1f}/100\n"
+        report += f"- **Organization:** {results.maintainability.get('organization_score', 0):.1f}/100\n"
+        report += f"- **Error Handling:** {results.maintainability.get('error_handling_score', 0):.1f}/100\n"
+        report += f"- **DevOps Readiness:** {results.maintainability.get('devops_readiness_score', 0):.1f}/100\n\n"
+
+        report += "## 📋 Metadata\n\n"
+        report += f"- **Profile Used:** {results.metadata.get('profile_used', 'unknown')}\n"
+        report += f"- **Audit Time:** {results.metadata.get('audit_time_seconds', 0):.1f} seconds\n"
+        report += f"- **Python Files:** {results.metadata.get('service_info', {}).get('python_files', 0)}\n"
+        report += f"- **Total Files:** {results.metadata.get('service_info', {}).get('total_files', 0)}\n\n"
+
+        report += "---\n\n*Report generated by LLM Documentation Ecosystem Audit Framework*"
+
+        return report
+
     def compare_services(self, service_names: List[str]) -> Dict[str, Any]:
         """Compare multiple services side by side"""
         results = {}
@@ -469,7 +580,7 @@ def main():
     audit_parser.add_argument('--profile', default='standard',
                             choices=['relaxed', 'standard', 'strict', 'ci_fast', 'ci_comprehensive'],
                             help='Audit profile to use')
-    audit_parser.add_argument('--output', choices=['rich', 'json'], default='rich',
+    audit_parser.add_argument('--output', choices=['rich', 'json', 'markdown'], default='rich',
                             help='Output format')
     audit_parser.add_argument('--verbose', action='store_true', help='Verbose output')
 
@@ -528,18 +639,24 @@ def main():
             # Run single service audit
             result = asyncio.run(framework.audit_service(args.service))
 
-            if getattr(args, 'output', 'rich') == 'json':
+            output_format = getattr(args, 'output', 'rich')
+            if output_format == 'json':
                 # JSON output for CI/CD
                 output = {
                     'service_name': result.service_name,
                     'overall_score': result.overall_score,
                     'grade': result.grade,
                     'critical_issues_count': len(result.critical_issues),
+                    'estimated_effort_days': result.estimated_effort_days,
                     'dimensions': result.dimensions,
                     'recommendations': result.recommendations[:5],  # Top 5
                     'metadata': result.metadata
                 }
                 print(json.dumps(output, indent=2, default=str))
+            elif output_format == 'markdown':
+                # Markdown report output
+                report = framework.generate_markdown_report(result)
+                print(report)
             else:
                 # Rich console output
                 _display_rich_audit_results(framework.console, result)
