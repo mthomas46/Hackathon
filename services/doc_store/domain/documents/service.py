@@ -6,8 +6,8 @@ Only contains business-specific validation and logic.
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import (
-    BaseService,
+from services.shared.domain.base_service import BaseService
+from services.shared.domain.exceptions import (
     create_validation_error,
     create_duplicate_error,
 )

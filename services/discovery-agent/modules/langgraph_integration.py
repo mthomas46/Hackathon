@@ -28,7 +28,13 @@ class DiscoveryAgentLangGraphIntegration:
 
     async def initialize_langgraph_tools(self) -> Dict[str, BaseTool]:
         """Initialize LangGraph tools for discovery agent."""
+        return {
+            "discover_service_tools": self._create_discovery_tool(),
+            "register_tools_with_orchestrator": self._create_registration_tool(),
+        }
 
+    def _create_discovery_tool(self) -> BaseTool:
+        """Create the service discovery tool for LangGraph."""
         @tool
         async def discover_service_tools_langgraph(
             service_name: str,
@@ -36,243 +42,193 @@ class DiscoveryAgentLangGraphIntegration:
             workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Discover tools for a service within LangGraph workflow context."""
-            try:
-                # Check cache first
-                cache_key = f"{service_name}_{service_url}"
-                if cache_key in self.discovered_tools_cache:
-                    cached_result = self.discovered_tools_cache[cache_key]
-                    return {
-                        "success": True,
-                        "discovered_tools": cached_result,
-                        "source": "cache",
-                        "workflow_integration": "completed",
-                    }
+            return await self._handle_service_discovery(service_name, service_url, workflow_context)
 
-                # Enhance discovery with workflow context
-                discovery_context = {
-                    "service_name": service_name,
-                    "service_url": service_url,
-                    "workflow_context": workflow_context or {},
-                    "discovery_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True,
-                    "auto_registration": True,
-                }
+        return discover_service_tools_langgraph
 
-                result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/discover/tools",
-                    {
-                        "service_name": service_name,
-                        "service_url": service_url,
-                        "context": discovery_context,
-                    },
-                )
-
-                # Cache the discovery result
-                if result.get("success"):
-                    self.discovered_tools_cache[cache_key] = result
-
-                    # Update service capabilities
-                    if service_name not in self.service_capabilities:
-                        self.service_capabilities[service_name] = []
-                    self.service_capabilities[service_name].extend(
-                        result.get("tools", [])
-                    )
-
-                return {
-                    "success": True,
-                    "discovered_tools": result,
-                    "source": "fresh_discovery",
-                    "workflow_integration": "completed",
-                    "cached_for_future": True,
-                }
-
-            except Exception as e:
-                fire_and_forget(
-                    "error",
-                    f"LangGraph tool discovery failed for {service_name}: {e}",
-                    self.service_name,
-                )
-                return {"success": False, "error": str(e)}
-
+    def _create_registration_tool(self) -> BaseTool:
+        """Create the tool registration tool for LangGraph."""
         @tool
         async def register_tools_with_orchestrator_langgraph(
             tools_data: Dict[str, Any],
             workflow_context: Optional[Dict[str, Any]] = None,
         ) -> Dict[str, Any]:
             """Register discovered tools with orchestrator within workflow context."""
-            try:
-                # Enhance registration with workflow context
-                registration_context = {
-                    "tools_data": tools_data,
-                    "workflow_context": workflow_context or {},
-                    "registration_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True,
-                    "auto_registration": True,
-                }
+            return await self._handle_tool_registration(tools_data, workflow_context)
 
-                result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/register/tools",
-                    {
-                        "tools_data": tools_data,
-                        "target": "orchestrator",
-                        "context": registration_context,
-                    },
-                )
+        return register_tools_with_orchestrator_langgraph
 
-                # Update workflow context with registration result
-                if workflow_context and result.get("success"):
-                    workflow_id = workflow_context.get("workflow_id")
-                    if workflow_id:
-                        # This would typically be stored in a workflow state manager
-                        registration_record = {
-                            "tools_registered": len(tools_data.get("tools", [])),
-                            "registration_timestamp": datetime.now().isoformat(),
-                            "workflow_id": workflow_id,
-                        }
-
+    async def _handle_service_discovery(
+        self,
+        service_name: str,
+        service_url: str,
+        workflow_context: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Handle the actual service discovery logic."""
+        try:
+            # Check cache first
+            cache_key = f"{service_name}_{service_url}"
+            cached_result = self._check_discovery_cache(cache_key)
+            if cached_result:
                 return {
                     "success": True,
-                    "registration_result": result,
-                    "workflow_integration": "completed",
-                    "tools_registered": len(tools_data.get("tools", [])),
-                }
-
-            except Exception as e:
-                fire_and_forget(
-                    "error",
-                    f"LangGraph tool registration failed: {e}",
-                    self.service_name,
-                )
-                return {"success": False, "error": str(e)}
-
-        @tool
-        async def validate_service_compatibility_langgraph(
-            service_name: str, workflow_context: Optional[Dict[str, Any]] = None
-        ) -> Dict[str, Any]:
-            """Validate service compatibility for tool discovery within workflow."""
-            try:
-                validation_context = {
-                    "service_name": service_name,
-                    "workflow_context": workflow_context or {},
-                    "validation_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True,
-                }
-
-                result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/validate",
-                    {
-                        "service_name": service_name,
-                        "validation_context": validation_context,
-                    },
-                )
-
-                # Store validation result in service capabilities
-                if result.get("success"):
-                    compatibility_status = result.get("compatibility_status", "unknown")
-                    self.service_capabilities[service_name] = {
-                        "compatibility_status": compatibility_status,
-                        "last_validated": datetime.now().isoformat(),
-                        "validation_context": validation_context,
-                    }
-
-                return {
-                    "success": True,
-                    "validation_result": result,
-                    "workflow_integration": "completed",
-                    "service_compatible": result.get("compatibility_status")
-                    == "compatible",
-                }
-
-            except Exception as e:
-                return {"success": False, "error": str(e)}
-
-        @tool
-        async def get_service_capabilities_langgraph(
-            service_name: str, workflow_context: Optional[Dict[str, Any]] = None
-        ) -> Dict[str, Any]:
-            """Get discovered capabilities for a service within workflow."""
-            try:
-                # Check local cache first
-                if service_name in self.service_capabilities:
-                    cached_capabilities = self.service_capabilities[service_name]
-                    return {
-                        "success": True,
-                        "capabilities": cached_capabilities,
-                        "source": "cache",
-                        "workflow_integration": "completed",
-                    }
-
-                # Query service capabilities
-                result = await self.service_client.get_json(
-                    f"{self.service_name}/api/v1/capabilities/{service_name}"
-                )
-
-                # Cache the result
-                if result.get("success"):
-                    self.service_capabilities[service_name] = result.get(
-                        "capabilities", {}
-                    )
-
-                return {
-                    "success": True,
-                    "capabilities": result,
-                    "source": "fresh_query",
+                    "discovered_tools": cached_result,
+                    "source": "cache",
                     "workflow_integration": "completed",
                 }
 
-            except Exception as e:
-                return {"success": False, "error": str(e)}
+            # Perform fresh discovery
+            discovery_context = self._build_discovery_context(service_name, service_url, workflow_context)
+            result = await self._perform_discovery_request(service_name, service_url, discovery_context)
 
-        @tool
-        async def discover_ecosystem_services_langgraph(
-            workflow_context: Optional[Dict[str, Any]] = None,
-        ) -> Dict[str, Any]:
-            """Discover all available services in the ecosystem."""
-            try:
-                discovery_context = {
-                    "workflow_context": workflow_context or {},
-                    "ecosystem_discovery_timestamp": datetime.now().isoformat(),
-                    "langgraph_driven": True,
-                    "comprehensive_scan": True,
-                }
+            # Cache and update capabilities
+            if result.get("success"):
+                self._cache_discovery_result(cache_key, result)
+                self._update_service_capabilities(service_name, result)
 
-                result = await self.service_client.post_json(
-                    f"{self.service_name}/api/v1/discover/ecosystem",
-                    {"context": discovery_context},
-                )
+            return {
+                "success": True,
+                "discovered_tools": result,
+                "source": "fresh_discovery",
+                "workflow_integration": "completed",
+                "cached_for_future": True,
+            }
 
-                # Update local capabilities cache
-                if result.get("success") and "services" in result:
-                    for service_info in result["services"]:
-                        service_name = service_info.get("name")
-                        if service_name:
-                            self.service_capabilities[service_name] = service_info.get(
-                                "capabilities", {}
-                            )
+        except Exception as e:
+            self._log_discovery_error(service_name, str(e))
+            return {"success": False, "error": str(e)}
 
-                return {
-                    "success": True,
-                    "ecosystem_services": result,
-                    "workflow_integration": "completed",
-                    "services_discovered": len(result.get("services", [])),
-                }
+    def _check_discovery_cache(self, cache_key: str) -> Optional[Dict[str, Any]]:
+        """Check if discovery result is cached."""
+        return self.discovered_tools_cache.get(cache_key)
 
-            except Exception as e:
-                fire_and_forget(
-                    "error",
-                    f"LangGraph ecosystem discovery failed: {e}",
-                    self.service_name,
-                )
-                return {"success": False, "error": str(e)}
-
+    def _build_discovery_context(
+        self,
+        service_name: str,
+        service_url: str,
+        workflow_context: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Build the discovery context with enhanced metadata."""
         return {
-            "discover_service_tools_langgraph": discover_service_tools_langgraph,
-            "register_tools_with_orchestrator_langgraph": register_tools_with_orchestrator_langgraph,
-            "validate_service_compatibility_langgraph": validate_service_compatibility_langgraph,
-            "get_service_capabilities_langgraph": get_service_capabilities_langgraph,
-            "discover_ecosystem_services_langgraph": discover_ecosystem_services_langgraph,
+            "service_name": service_name,
+            "service_url": service_url,
+            "workflow_context": workflow_context or {},
+            "discovery_timestamp": datetime.now().isoformat(),
+            "langgraph_driven": True,
+            "auto_registration": True,
         }
 
+    async def _perform_discovery_request(
+        self,
+        service_name: str,
+        service_url: str,
+        discovery_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Perform the actual discovery API request."""
+        return await self.service_client.post_json(
+            f"{self.service_name}/api/v1/discover/tools",
+            {
+                "service_name": service_name,
+                "service_url": service_url,
+                "context": discovery_context,
+            },
+        )
+
+    def _cache_discovery_result(self, cache_key: str, result: Dict[str, Any]) -> None:
+        """Cache the discovery result."""
+        self.discovered_tools_cache[cache_key] = result
+
+    def _update_service_capabilities(self, service_name: str, result: Dict[str, Any]) -> None:
+        """Update service capabilities with discovered tools."""
+        if service_name not in self.service_capabilities:
+            self.service_capabilities[service_name] = []
+        self.service_capabilities[service_name].extend(result.get("tools", []))
+
+    def _log_discovery_error(self, service_name: str, error: str) -> None:
+        """Log discovery errors."""
+        fire_and_forget(
+            "error",
+            f"LangGraph tool discovery failed for {service_name}: {error}",
+            self.service_name,
+        )
+
+    async def _handle_tool_registration(
+        self,
+        tools_data: Dict[str, Any],
+        workflow_context: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Handle the actual tool registration logic."""
+        try:
+            registration_context = self._build_registration_context(tools_data, workflow_context)
+            result = await self._perform_registration_request(tools_data, registration_context)
+
+            # Update workflow context with registration result
+            if workflow_context and result.get("success"):
+                self._update_workflow_context(workflow_context, tools_data, result)
+
+            return {
+                "success": True,
+                "registration_result": result,
+                "workflow_integration": "completed",
+                "tools_registered": len(tools_data.get("tools", [])),
+            }
+
+        except Exception as e:
+            self._log_registration_error(str(e))
+            return {"success": False, "error": str(e)}
+
+    def _build_registration_context(
+        self,
+        tools_data: Dict[str, Any],
+        workflow_context: Optional[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Build the registration context with enhanced metadata."""
+        return {
+            "tools_data": tools_data,
+            "workflow_context": workflow_context or {},
+            "registration_timestamp": datetime.now().isoformat(),
+            "langgraph_driven": True,
+            "auto_registration": True,
+        }
+
+    async def _perform_registration_request(
+        self,
+        tools_data: Dict[str, Any],
+        registration_context: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Perform the actual registration API request."""
+        return await self.service_client.post_json(
+            f"{self.service_name}/api/v1/register/tools",
+            {
+                "tools_data": tools_data,
+                "target": "orchestrator",
+                "context": registration_context,
+            },
+        )
+
+    def _update_workflow_context(
+        self,
+        workflow_context: Dict[str, Any],
+        tools_data: Dict[str, Any],
+        result: Dict[str, Any]
+    ) -> None:
+        """Update workflow context with registration results."""
+        workflow_id = workflow_context.get("workflow_id")
+        if workflow_id:
+            # This would typically be stored in a workflow state manager
+            registration_record = {
+                "tools_registered": len(tools_data.get("tools", [])),
+                "registration_timestamp": datetime.now().isoformat(),
+                "workflow_id": workflow_id,
+            }
+
+    def _log_registration_error(self, error: str) -> None:
+        """Log registration errors."""
+        fire_and_forget(
+            "error",
+            f"LangGraph tool registration failed: {error}",
+            self.service_name,
+        )
     async def handle_langgraph_workflow_message(
         self, message: BaseMessage
     ) -> Dict[str, Any]:

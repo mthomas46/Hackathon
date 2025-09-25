@@ -1,0 +1,200 @@
+name: PR Quality Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'services/**'
+      - 'scripts/audit-framework/**'
+
+jobs:
+  pr-audit:
+    name: PR Service Audit
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install radon bandit psutil rich coverage interrogate mypy pylint safety pydeps
+
+    - name: Detect changed services
+      id: changed-services
+      run: |
+        # Get list of changed services
+        CHANGED_SERVICES=$(git diff --name-only HEAD~1 | grep '^services/' | cut -d'/' -f2 | sort | uniq)
+
+        # If no services changed, check if audit framework changed
+        if [ -z "$CHANGED_SERVICES" ]; then
+          if git diff --name-only HEAD~1 | grep -q '^scripts/audit-framework/'; then
+            CHANGED_SERVICES="shared doc_store discovery-agent analysis-service orchestrator"
+          fi
+        fi
+
+        # If still empty, run basic checks
+        if [ -z "$CHANGED_SERVICES" ]; then
+          CHANGED_SERVICES="shared"
+        fi
+
+        echo "services=$CHANGED_SERVICES" >> $GITHUB_OUTPUT
+        echo "🔍 Changed services: $CHANGED_SERVICES"
+
+    - name: Run targeted service audits
+      run: |
+        CHANGED_SERVICES="${{ steps.changed-services.outputs.services }}"
+        mkdir -p pr-audit-results
+
+        for service in $CHANGED_SERVICES; do
+          if [ -d "services/$service" ]; then
+            echo "🔍 Auditing $service..."
+            python scripts/audit-framework/audit_cli.py audit --service $service --output json > pr-audit-results/$service-audit.json
+
+            # Extract key metrics
+            SCORE=$(jq -r '.overall_score' pr-audit-results/$service-audit.json)
+            CRITICAL=$(jq -r '.critical_issues | length' pr-audit-results/$service-audit.json)
+            GRADE=$(jq -r '.grade' pr-audit-results/$service-audit.json)
+
+            echo "📊 $service: Score $SCORE ($GRADE), Critical Issues: $CRITICAL"
+
+            # Check if this PR made things worse
+            if [ -f "baseline-scores.json" ]; then
+              BASELINE_SCORE=$(jq -r ".$service.score" baseline-scores.json 2>/dev/null || echo "0")
+              BASELINE_CRITICAL=$(jq -r ".$service.critical" baseline-scores.json 2>/dev/null || echo "999")
+
+              SCORE_DIFF=$(echo "$SCORE - $BASELINE_SCORE" | bc 2>/dev/null || echo "0")
+              CRITICAL_DIFF=$((CRITICAL - BASELINE_CRITICAL))
+
+              if (( $(echo "$SCORE_DIFF < -5" | bc -l 2>/dev/null || echo "0") )) || (( CRITICAL_DIFF > 0 )); then
+                echo "⚠️  $service quality degraded!"
+                echo "   Score change: $SCORE_DIFF"
+                echo "   Critical issues change: $CRITICAL_DIFF"
+              else
+                echo "✅ $service quality maintained or improved"
+              fi
+            fi
+          fi
+        done
+
+    - name: Generate PR quality report
+      run: |
+        CHANGED_SERVICES="${{ steps.changed-services.outputs.services }}"
+
+        cat > pr-quality-report.md << EOF
+        # 🔍 PR Quality Check Report
+
+        **Pull Request**: #${{ github.event.pull_request.number }}
+        **Branch**: ${{ github.head_ref }}
+        **Services Changed**: $CHANGED_SERVICES
+
+        ## 📊 Audit Results
+
+        EOF
+
+        # Add results for each changed service
+        for service in $CHANGED_SERVICES; do
+          if [ -f "pr-audit-results/$service-audit.json" ]; then
+            SCORE=$(jq -r '.overall_score' pr-audit-results/$service-audit.json)
+            GRADE=$(jq -r '.grade' pr-audit-results/$service-audit.json)
+            CRITICAL=$(jq -r '.critical_issues | length' pr-audit-results/$service-audit.json)
+
+            cat >> pr-quality-report.md << EOF
+        ### $service
+        - **Score**: $SCORE/100 ($GRADE)
+        - **Critical Issues**: $CRITICAL
+
+        EOF
+
+            # Add critical issues if any
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "**Critical Issues:**" >> pr-quality-report.md
+              jq -r '.critical_issues[].issue' pr-audit-results/$service-audit.json | while read -r issue; do
+                echo "- $issue" >> pr-quality-report.md
+              done
+              echo "" >> pr-quality-report.md
+            fi
+
+            # Add top recommendations
+            RECOMMENDATIONS=$(jq '.priority_improvements | length' pr-audit-results/$service-audit.json)
+            if [ "$RECOMMENDATIONS" -gt 0 ]; then
+              echo "**Top Recommendations:**" >> pr-quality-report.md
+              jq -r '.priority_improvements[0:3][] | "- \(.title) (\(.priority) priority)"' pr-audit-results/$service-audit.json >> pr-quality-report.md
+              echo "" >> pr-quality-report.md
+            fi
+          fi
+        done
+
+        # Add action plan
+        cat >> pr-quality-report.md << EOF
+        ## 🎯 Action Plan
+
+        ### For Reviewers
+        1. Review audit results for changed services
+        2. Ensure critical issues are addressed or have mitigation plans
+        3. Verify that service scores are maintained or improved
+
+        ### For Contributors
+        1. Run audits locally: \`python scripts/audit-framework/audit_cli.py audit --service <service>\`
+        2. Address critical issues before merging
+        3. Consider implementing suggested improvements
+
+        ### Quality Gates
+        - ✅ **Non-blocking**: This check provides guidance but won't block merges
+        - 📊 **Main quality gates** run on main branch pushes and schedule
+        - 🎯 **Focus**: Code review should consider audit results alongside functionality
+
+        ---
+        *Generated by Service Quality Audit Framework*
+        EOF
+
+    - name: Comment PR with quality report
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('pr-quality-report.md', 'utf8');
+
+          // Check if we already commented
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const existingComment = comments.find(comment =>
+            comment.body.includes('PR Quality Check Report')
+          );
+
+          if (existingComment) {
+            // Update existing comment
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existingComment.id,
+              body: report
+            });
+          } else {
+            // Create new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: report
+            });
+          }
+
+    - name: Upload PR audit results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pr-audit-results-${{ github.event.pull_request.number }}
+        path: pr-audit-results/
+        retention-days: 7

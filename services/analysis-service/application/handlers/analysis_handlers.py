@@ -8,7 +8,7 @@ handler modules in the handlers/ package.
 import logging
 from typing import Any
 
-from .handlers import handler_registry
+from ...modules.handlers import handler_registry
 
 logger = logging.getLogger(__name__)
 

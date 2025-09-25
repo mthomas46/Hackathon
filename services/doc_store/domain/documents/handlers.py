@@ -3,7 +3,8 @@
 Handles HTTP requests and responses for document operations.
 """
 
-from typing import Any, Dict
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
 from fastapi import HTTPException
 
@@ -24,11 +25,57 @@ from ...domain.exceptions import (
 from .service import DocumentService
 
 
-class DocumentHandlers:
-    """Handlers for document API endpoints."""
+class AbstractDocumentHandlers(ABC):
+    """Abstract base class for document handlers - enables dependency injection."""
 
-    def __init__(self):
-        self.service = DocumentService()
+    @abstractmethod
+    async def handle_create_document(
+        self, request: DocumentRequest
+    ) -> DocumentResponse:
+        """Handle document creation."""
+        pass
+
+    @abstractmethod
+    async def handle_get_document(self, document_id: str) -> DocumentResponse:
+        """Handle document retrieval."""
+        pass
+
+    @abstractmethod
+    async def handle_list_documents(
+        self, limit: int = 10, offset: int = 0
+    ) -> DocumentListResponse:
+        """Handle document listing."""
+        pass
+
+    @abstractmethod
+    async def handle_update_metadata(
+        self, document_id: str, request: MetadataUpdateRequest
+    ) -> DocumentResponse:
+        """Handle metadata updates."""
+        pass
+
+    @abstractmethod
+    async def handle_delete_document(self, document_id: str) -> Dict[str, Any]:
+        """Handle document deletion."""
+        pass
+
+    @abstractmethod
+    async def handle_search_documents(self, request: SearchRequest) -> SearchResponse:
+        """Handle document search."""
+        pass
+
+    @abstractmethod
+    async def handle_get_quality_metrics(self, limit: int = 10) -> QualityResponse:
+        """Handle quality metrics retrieval."""
+        pass
+
+
+class DocumentHandlers(AbstractDocumentHandlers):
+    """Handlers for document API endpoints with dependency injection."""
+
+    def __init__(self, service: Optional[DocumentService] = None):
+        """Initialize with injected service dependency."""
+        self.service = service or DocumentService()
 
     async def handle_create_document(
         self, request: DocumentRequest

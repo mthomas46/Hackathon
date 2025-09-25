@@ -131,8 +131,8 @@ def mock_analysis_service(mock_analysis_repository, mock_document_repository):
 
 # Test configuration
 @pytest.fixture(scope="session")
-def test_config() -> Dict[str, Any]:
-    """Test configuration."""
+def analysis_service_test_configuration() -> Dict[str, Any]:
+    """Provide test configuration for analysis service tests."""
     return {
         "database_url": "sqlite:///:memory:",
         "redis_url": "redis://localhost:6379/1",

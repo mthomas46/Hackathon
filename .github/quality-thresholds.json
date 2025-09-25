@@ -1,0 +1,66 @@
+{
+  "quality_gates": {
+    "description": "Quality thresholds for CI/CD pipelines",
+    "minimum_service_score": 60.0,
+    "maximum_critical_issues_total": 5,
+    "minimum_services_passing": 3,
+    "score_grades": {
+      "A": { "min_score": 90.0, "description": "Excellent - Production ready" },
+      "B": { "min_score": 80.0, "description": "Good - Minor issues only" },
+      "C": { "min_score": 70.0, "description": "Acceptable - Needs improvement" },
+      "D": { "min_score": 60.0, "description": "Poor - Major issues present" },
+      "F": { "min_score": 0.0, "description": "Critical - Immediate action required" }
+    }
+  },
+  "service_targets": {
+    "description": "Target scores for each service",
+    "shared": {
+      "target_score": 75.0,
+      "max_critical_issues": 1,
+      "description": "Infrastructure service - should be highly reliable"
+    },
+    "doc_store": {
+      "target_score": 70.0,
+      "max_critical_issues": 2,
+      "description": "Document storage service"
+    },
+    "discovery-agent": {
+      "target_score": 65.0,
+      "max_critical_issues": 2,
+      "description": "Service discovery agent"
+    },
+    "analysis-service": {
+      "target_score": 65.0,
+      "max_critical_issues": 3,
+      "description": "Document analysis service"
+    },
+    "orchestrator": {
+      "target_score": 70.0,
+      "max_critical_issues": 1,
+      "description": "Service orchestration platform"
+    }
+  },
+  "audit_categories": {
+    "weights": {
+      "architecture": 0.25,
+      "code_quality": 0.25,
+      "performance": 0.20,
+      "maintainability": 0.30
+    },
+    "critical_thresholds": {
+      "cyclomatic_complexity": 15,
+      "function_length": 50,
+      "file_length": 500,
+      "test_coverage": 70.0,
+      "api_documentation_score": 70.0
+    }
+  },
+  "ci_cd_settings": {
+    "audit_timeout_seconds": 300,
+    "fail_on_score_degradation": true,
+    "require_baseline_comparison": false,
+    "weekly_audit_schedule": "0 2 * * 1",
+    "pr_comment_audit": true,
+    "artifact_retention_days": 30
+  }
+}

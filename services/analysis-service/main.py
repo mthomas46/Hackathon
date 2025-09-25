@@ -144,7 +144,7 @@ except Exception:
 
 
 # Create shared client instance for all analysis operations
-service_client = get_service_client(timeout=30)
+service_client = get_service_client(timeout=config.timeouts.service_client)
 
 # Load standardized configuration
 config = load_service_config(
@@ -268,12 +268,6 @@ def register_api_routers(app):
     analysis_controller = AnalysisController()
     workflow_controller = WorkflowController()
     findings_controller = FindingsController()
-    # distributed_controller = DistributedController()  # Initialize when dependencies are available
-    # integration_controller = IntegrationController()  # Initialize when dependencies are available
-    # remediation_controller = RemediationController()  # Initialize when dependencies are available
-    # reports_controller = ReportsController()  # Initialize when dependencies are available
-    # repository_controller = RepositoryController()  # Initialize when dependencies are available
-    # pr_confidence_controller = PRConfidenceController()  # Initialize when dependencies are available
 
     # Register routers with prefixes and tags
     app.include_router(
@@ -456,10 +450,152 @@ def install_error_handlers(app):
 # Create FastAPI app using standardized configuration
 app = FastAPI(
     title=config.service_description or SERVICE_TITLE,
-    description="Document analysis and consistency checking service for the LLM Documentation Ecosystem",
+    description="""
+    A comprehensive document analysis service that provides advanced AI-powered analysis capabilities for documentation quality, consistency, and maintenance.
+
+    ## 🚀 Features
+
+    * **Document Analysis**: Comprehensive analysis using multiple detectors for quality, consistency, and issues
+    * **Semantic Similarity**: Advanced semantic analysis using embeddings to detect conceptually similar content
+    * **Sentiment Analysis**: Understand emotional tone and clarity of documentation
+    * **Quality Assessment**: Automated quality scoring with detailed recommendations
+    * **Trend Analysis**: Predict future documentation issues and maintenance needs
+    * **Risk Assessment**: Identify documentation drift and quality degradation risks
+    * **Change Impact**: Analyze how changes affect related documentation
+    * **Automated Remediation**: Apply fixes to common documentation issues
+    * **Workflow Integration**: Process events and trigger automated analyses
+    * **Cross-Repository Analysis**: Analyze documentation across multiple repositories
+    * **Distributed Processing**: Scale analysis tasks across multiple workers
+    * **RESTful API**: Complete REST API with comprehensive OpenAPI documentation
+
+    ## 🔧 Analysis Types
+
+    ### Core Analysis
+    - **Consistency Analysis**: Detect inconsistencies and terminology issues
+    - **Quality Analysis**: Comprehensive quality assessment and scoring
+    - **Semantic Analysis**: Embedding-based similarity detection
+    - **Sentiment Analysis**: Tone and clarity evaluation
+
+    ### Advanced Analytics
+    - **Trend Analysis**: Historical trend analysis and prediction
+    - **Risk Assessment**: Risk factor identification and mitigation
+    - **Maintenance Forecasting**: Predictive maintenance scheduling
+    - **Quality Degradation**: Monitor quality changes over time
+
+    ### Specialized Features
+    - **Change Impact**: Dependency and relationship analysis
+    - **Automated Remediation**: Intelligent fix application
+    - **Workflow Integration**: CI/CD and development workflow integration
+    - **Multi-Repository**: Cross-repository analysis and reporting
+
+    ## 📊 API Endpoints
+
+    The service provides 50+ REST endpoints organized into logical groups:
+    - `/analyze/*`: Core document analysis operations
+    - `/remediate/*`: Automated fix application
+    - `/workflows/*`: Workflow and event processing
+    - `/repositories/*`: Cross-repository analysis
+    - `/distributed/*`: Distributed processing management
+    - `/findings/*`: Analysis results and findings
+    - `/reports/*`: Report generation and notifications
+
+    ## 🔒 Authentication & Security
+
+    All endpoints require authentication via JWT tokens or API keys.
+    Rate limiting is enforced to ensure fair usage.
+
+    ## 📈 Monitoring & Health
+
+    Comprehensive health checks and metrics endpoints available at `/health`.
+
+    ## 🛠️ Integration
+
+    Seamlessly integrates with:
+    - Document Store Service
+    - Orchestrator Service
+    - Discovery Agent Service
+    - Prompt Store Service
+    - Various CI/CD systems and repositories
+    """,
     version=config.service_version,
     docs_url="/docs",
     redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Analysis Service Team",
+        "email": "analysis@company.com",
+        "url": "https://analysis.company.com/support"
+    },
+    license_info={
+        "name": "Proprietary",
+        "url": "https://analysis.company.com/license"
+    },
+    tags_metadata=[
+        {
+            "name": "analysis",
+            "description": "Core document analysis operations"
+        },
+        {
+            "name": "semantic",
+            "description": "Semantic similarity and embedding analysis"
+        },
+        {
+            "name": "sentiment",
+            "description": "Sentiment, tone, and clarity analysis"
+        },
+        {
+            "name": "quality",
+            "description": "Content quality assessment and scoring"
+        },
+        {
+            "name": "trends",
+            "description": "Trend analysis and predictions"
+        },
+        {
+            "name": "risk",
+            "description": "Risk assessment and mitigation"
+        },
+        {
+            "name": "maintenance",
+            "description": "Maintenance forecasting and scheduling"
+        },
+        {
+            "name": "change-impact",
+            "description": "Change impact and dependency analysis"
+        },
+        {
+            "name": "remediation",
+            "description": "Automated issue remediation"
+        },
+        {
+            "name": "workflows",
+            "description": "Workflow integration and event processing"
+        },
+        {
+            "name": "repositories",
+            "description": "Cross-repository analysis"
+        },
+        {
+            "name": "distributed",
+            "description": "Distributed processing management"
+        },
+        {
+            "name": "findings",
+            "description": "Analysis findings and results"
+        },
+        {
+            "name": "reports",
+            "description": "Report generation and notifications"
+        },
+        {
+            "name": "integration",
+            "description": "External service integrations"
+        },
+        {
+            "name": "health",
+            "description": "Service health and monitoring"
+        }
+    ]
 )
 
 # Setup standardized middleware and utilities
@@ -485,7 +621,7 @@ from .modules.shared_utils import (
 # API Endpoints
 
 
-@app.post("/analyze")
+@app.post("/analyze", tags=["analysis"])
 async def analyze_documents(req: AnalysisRequest):
     """Analyze documents for consistency and issues with configurable detectors.
 
@@ -496,7 +632,7 @@ async def analyze_documents(req: AnalysisRequest):
     return await analysis_handlers.handle_analyze_documents(req)
 
 
-@app.post("/analyze/semantic-similarity")
+@app.post("/analyze/semantic-similarity", tags=["semantic"])
 async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
     """Analyze semantic similarity between documents using embeddings.
 
@@ -551,7 +687,7 @@ async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
         )
 
 
-@app.post("/analyze/sentiment")
+@app.post("/analyze/sentiment", tags=["sentiment"])
 async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
     """Analyze sentiment, tone, and clarity of a document.
 
@@ -1347,7 +1483,7 @@ async def generate_analysis_report_endpoint(req: dict):
         documents = req.get("documents", [])
         report_type = req.get("report_type", "comprehensive_simulation_analysis")
         include_markdown = req.get("include_markdown", True)
-        req.get("include_json", True)
+        include_json = req.get("include_json", True)
 
         if not simulation_id:
             return create_error_response(
@@ -1471,7 +1607,7 @@ async def generate_analysis_report_endpoint(req: dict):
         # Prepare response
         response_data = {
             "success": True,
-            "report": json_report,
+            "report": json_report if include_json else None,
             "markdown_content": markdown_content if include_markdown else None,
             "report_id": report_id,
             "documents_processed": len(analysis_results),
@@ -2242,9 +2378,9 @@ def calculate_pr_health_score(
             commit_score = good_ratio
             scores.append((commit_score, 0.2))
 
-    # Quality score (30% weight)
+    # Quality score (config.limits.quality_score_weight% weight)
     quality_score = quality_analysis.get("quality_score", 0.5)
-    scores.append((quality_score, 0.3))
+    scores.append((quality_score, config.limits.quality_score_weight / 100.0))
 
     # Structural risk penalty (10% weight)
     structural_score = 1.0
@@ -2298,7 +2434,7 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     # Specific recommendations based on analysis
     code_analysis = pr_report.get("code_analysis", {})
 
-    if code_analysis.get("change_metrics", {}).get("lines_added", 0) > 1000:
+    if code_analysis.get("change_metrics", {}).get("lines_added", 0) > config.limits.max_lines_added_threshold:
         recommendations.append(
             "📊 Large PR detected - consider splitting into smaller, focused changes"
         )
@@ -4603,122 +4739,6 @@ async def custom_analysis_health():
 
 # ============================================================================
 # PR ANALYSIS TESTS
-# ============================================================================
-
-
-async def test_pr_analysis_components():
-    """Test individual components of PR analysis."""
-    print("Testing PR Analysis Components...")
-
-    # Test commit message analysis
-    commits = [
-        {"message": "feat: Add user authentication service"},
-        {"message": "fix: Resolve login issue"},
-        {"message": "test: Add authentication tests"},
-        {"message": "chore: Update dependencies"},
-        {"message": "docs: Update API documentation"},
-        {"message": "refactor: Simplify auth logic"},
-        {"message": "style: Format code consistently"},
-        {"message": "perf: Optimize database queries"},
-        {"message": "ci: Update build configuration"},
-        {"message": "build: Update package version"},
-        {"message": "revert: Revert previous changes"},
-    ]
-
-    commit_analysis = analyze_commit_messages(commits)
-    print(
-        f"✅ Commit Analysis: {commit_analysis['patterns']['conventional_commits']} conventional commits"
-    )
-
-    # Test file type detection
-    test_files = [
-        "src/auth/service.py",
-        "tests/test_auth.py",
-        "docs/api.md",
-        "config/settings.json",
-        "requirements.txt",
-        "Dockerfile",
-    ]
-
-    file_types = {}
-    for file in test_files:
-        ftype = get_file_type(file)
-        file_types[ftype] = file_types.get(ftype, 0) + 1
-
-    print(f"✅ File Type Detection: {file_types}")
-
-    # Test code structure analysis
-    changed_files = [
-        {"filename": "src/auth/service.py", "status": "modified"},
-        {"filename": "tests/test_auth.py", "status": "added"},
-        {"filename": "requirements.txt", "status": "modified"},
-        {"filename": "docs/api.md", "status": "added"},
-    ]
-
-    structure_analysis = analyze_code_structure(changed_files)
-    print(
-        f"✅ Structural Analysis: {len(structure_analysis['dependency_changes'])} dependency changes"
-    )
-
-    # Test health score calculation
-    code_analysis = {
-        "change_metrics": {
-            "lines_added": 200,
-            "lines_removed": 50,
-            "files_modified": 3,
-            "files_added": 2,
-        }
-    }
-
-    commit_analysis = {
-        "message_quality": {
-            "good_messages": 8,
-            "needs_improvement": 2,
-            "poor_messages": 1,
-        }
-    }
-
-    structural_analysis = {
-        "structural_risks": ["Dependencies changed without corresponding tests"]
-    }
-    quality_analysis = {"quality_score": 0.75}
-
-    health_score = calculate_pr_health_score(
-        code_analysis, commit_analysis, structural_analysis, quality_analysis
-    )
-    risk_level = determine_pr_risk_level(health_score)
-
-    print(f"✅ Health Score: {health_score:.2f} ({risk_level} risk)")
-
-    # Test refactoring suggestions
-    suggestions = generate_refactoring_suggestions(
-        code_analysis, structural_analysis, quality_analysis
-    )
-    print(f"✅ Refactoring Suggestions: {len(suggestions)} suggestions generated")
-
-    # Test PR recommendations
-    pr_report = {
-        "health_score": health_score,
-        "risk_level": risk_level,
-        "code_analysis": code_analysis,
-        "commit_analysis": commit_analysis,
-        "quality_analysis": quality_analysis,
-    }
-
-    recommendations = generate_pr_recommendations(pr_report)
-    print(f"✅ PR Recommendations: {len(recommendations)} recommendations generated")
-
-    return {
-        "commit_analysis": commit_analysis,
-        "file_types": file_types,
-        "structure_analysis": structure_analysis,
-        "health_score": health_score,
-        "risk_level": risk_level,
-        "suggestions": suggestions,
-        "recommendations": recommendations,
-    }
-
-
 if __name__ == "__main__":
     """Run the Analysis Service directly."""
     import uvicorn
