@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from ..integrations.clients import ServiceClients
+from ..external.clients.clients import ServiceClients
 
 
 class HealthStatus(BaseModel):

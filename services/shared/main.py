@@ -18,8 +18,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Import shared infrastructure
 from .infrastructure.config import load_service_config
-from .utilities.middleware import setup_common_middleware, get_request_id
-from .utilities.error_handling import (
+from .infrastructure.utilities.middleware import setup_common_middleware, get_request_id
+from .infrastructure.utilities.error_handling import (
     register_exception_handlers,
     ServiceException,
     ValidationException,
@@ -27,7 +27,7 @@ from .utilities.error_handling import (
     AuthenticationException,
     AuthorizationException,
 )
-from .monitoring.health import register_health_endpoints
+from .infrastructure.monitoring.health import register_health_endpoints
 from .presentation.responses import create_success_response, create_error_response
 
 # Load configuration

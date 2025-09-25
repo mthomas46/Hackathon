@@ -30,7 +30,7 @@ from ...presentation.api.responses import (
     format_error_details,
     format_validation_errors,
 )
-from ...shared.monitoring.logging import fire_and_forget
+from services.shared.infrastructure.monitoring.logging import fire_and_forget
 
 # ============================================================================
 # CUSTOM EXCEPTION CLASSES

@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional
 import httpx
 
 from ...config.config import get_config_value
-from ..utilities.resilience import CircuitBreaker, with_circuit, with_retries  # type: ignore
+from ...utilities.resilience import CircuitBreaker, with_circuit, with_retries  # type: ignore
 
 # Imports for local database access
 try:
