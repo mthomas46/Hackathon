@@ -353,24 +353,24 @@ async def architecture_info():
 async def lifespan(app: FastAPI):
     """Application lifespan management."""
     # Startup
-    print("🚀 Shared infrastructure service starting...")
+    logger.info("🚀 Shared infrastructure service starting...")
 
     # Validate configuration
     if not config.service_name:
         raise ValueError("Service name not configured")
 
-    print("✅ Shared infrastructure service started successfully")
-    print(f"📊 Service: {config.service_name}")
-    print(f"🏷️  Version: {config.service_version}")
-    print(f"🌐 Port: {config.port}")
-    print("📚 Documentation: http://localhost:8000/docs")
+    logger.info("✅ Shared infrastructure service started successfully")
+    logger.info(f"📊 Service: {config.service_name}")
+    logger.info(f"🏷️  Version: {config.service_version}")
+    logger.info(f"🌐 Port: {config.port}")
+    logger.info("📚 Documentation: http://localhost:8000/docs")
     yield
 
     # Shutdown
-    print("🛑 Shared infrastructure service shutting down...")
+    logger.info("🛑 Shared infrastructure service shutting down...")
 
     # Cleanup resources
-    print("✅ Shared infrastructure service stopped")
+    logger.info("✅ Shared infrastructure service stopped")
 
 
 # Apply lifespan
@@ -380,9 +380,9 @@ app.router.lifespan_context = lifespan
 if __name__ == "__main__":
     import uvicorn
 
-    print("🏗️  Starting Shared Infrastructure Service...")
-    print("This service demonstrates proper usage of shared ecosystem utilities.")
-    print("Visit http://localhost:8000/docs for interactive API documentation.")
+    logger.info("🏗️  Starting Shared Infrastructure Service...")
+    logger.info("This service demonstrates proper usage of shared ecosystem utilities.")
+    logger.info("Visit http://localhost:8000/docs for interactive API documentation.")
 
     uvicorn.run(
         "services.shared.main:app",
