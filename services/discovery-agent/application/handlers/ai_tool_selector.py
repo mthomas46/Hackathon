@@ -7,11 +7,7 @@ generation using intelligent analysis of tool capabilities and requirements.
 import re
 from typing import Any, Dict, List
 
-try:
-    from services.shared.clients import ServiceClients
-except ImportError:
-    # Fallback for when running in Docker or different environment
-    ServiceClients = None
+from ...domain.services.shared_utils import safe_service_clients_call, TIMEOUT_TOOL_REGISTRATION
 
 
 class AIToolSelector:
@@ -19,7 +15,7 @@ class AIToolSelector:
 
     def __init__(self, interpreter_url: str = "http://localhost:5120"):
         self.interpreter_url = interpreter_url
-        self.service_client = ServiceClients()
+        self.service_client = safe_service_clients_call()
         self.tool_knowledge_base = {}
 
     async def select_tools_for_task(
@@ -471,7 +467,7 @@ class AIToolSelector:
                     "response_format": "json",
                 }
 
-                async with session.post(url, json=payload, timeout=15) as response:
+                async with session.post(url, json=payload, timeout=TIMEOUT_TOOL_REGISTRATION) as response:
                     if response.status == 200:
                         result = await response.json()
                         return {

@@ -6,11 +6,11 @@ to enable dynamic tool loading and AI-powered workflow generation.
 
 from typing import Any, Dict, List, Optional
 
-try:
-    from services.shared.clients import ServiceClients
-except ImportError:
-    # Fallback for when running in Docker or different environment
-    ServiceClients = None
+from ...domain.services.shared_utils import (
+    safe_service_clients_call,
+    TIMEOUT_TOOL_REGISTRATION,
+    TIMEOUT_SERVICE_DISCOVERY
+)
 
 
 class OrchestratorIntegration:
@@ -18,7 +18,7 @@ class OrchestratorIntegration:
 
     def __init__(self, orchestrator_url: str = "http://localhost:5099"):
         self.orchestrator_url = orchestrator_url
-        self.service_client = ServiceClients()
+        self.service_client = safe_service_clients_call()
         self.workflow_cache = {}
 
     async def register_discovered_tools(
@@ -109,7 +109,7 @@ class OrchestratorIntegration:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/register-tool"
 
-                async with session.post(url, json=tool_payload, timeout=10) as response:
+                async with session.post(url, json=tool_payload, timeout=TIMEOUT_TOOL_REGISTRATION) as response:
                     if response.status == 200:
                         result = await response.json()
                         return {
@@ -188,7 +188,7 @@ class OrchestratorIntegration:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/available-tools"
 
-                async with session.get(url, timeout=10) as response:
+                async with session.get(url, timeout=TIMEOUT_SERVICE_DISCOVERY) as response:
                     if response.status == 200:
                         available_data = await response.json()
                         available_tools = available_data.get("tools", [])
@@ -318,7 +318,7 @@ class OrchestratorIntegration:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/{workflow_name}"
 
-                async with session.get(url, timeout=10) as response:
+                async with session.get(url, timeout=TIMEOUT_SERVICE_DISCOVERY) as response:
                     if response.status == 200:
                         workflow_data = await response.json()
                         return workflow_data.get("workflow")
@@ -358,7 +358,7 @@ class OrchestratorIntegration:
             async with self.service_client.session() as session:
                 url = f"{self.orchestrator_url}/api/workflows/list"
 
-                async with session.get(url, timeout=10) as response:
+                async with session.get(url, timeout=TIMEOUT_SERVICE_DISCOVERY) as response:
                     if response.status == 200:
                         workflows_data = await response.json()
                         return {

@@ -7,11 +7,7 @@ to intelligently categorize and analyze discovered tools.
 import re
 from typing import Any, Dict, List
 
-try:
-    from services.shared.clients import ServiceClients
-except ImportError:
-    # Fallback for when running in Docker or different environment
-    ServiceClients = None
+from .shared_utils import safe_service_clients_call, TIMEOUT_LLM_ANALYSIS
 
 
 class SemanticToolAnalyzer:
@@ -19,7 +15,7 @@ class SemanticToolAnalyzer:
 
     def __init__(self, interpreter_url: str = "http://localhost:5120"):
         self.interpreter_url = interpreter_url
-        self.service_client = ServiceClients()
+        self.service_client = safe_service_clients_call()
 
         # Semantic categories and their characteristics
         self.semantic_categories = {
@@ -143,7 +139,7 @@ class SemanticToolAnalyzer:
                     "response_format": "json",
                 }
 
-                async with session.post(url, json=payload, timeout=20) as response:
+                async with session.post(url, json=payload, timeout=TIMEOUT_LLM_ANALYSIS) as response:
                     if response.status == 200:
                         result = await response.json()
                         return {

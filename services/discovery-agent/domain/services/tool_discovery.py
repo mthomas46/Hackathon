@@ -8,20 +8,21 @@ generates appropriate tool wrappers for integration with LangGraph workflows.
 import re
 from typing import Any, Dict, List, Optional
 
-try:
-    from services.shared.clients import ServiceClients
-except ImportError:
-    # Fallback for when running in Docker or different environment
-    ServiceClients = None
 from services.shared.constants_new import ServiceNames
-from services.shared.logging import fire_and_forget
+
+from .shared_utils import (
+    safe_service_clients_call,
+    TIMEOUT_OPENAPI_FETCH,
+    TIMEOUT_HEALTH_CHECK,
+    fire_and_forget
+)
 
 
 class ToolDiscoveryService:
     """Service for discovering and generating LangGraph tools from OpenAPI specs."""
 
     def __init__(self):
-        self.service_client = ServiceClients()
+        self.service_client = safe_service_clients_call()
         self.discovered_tools = {}
         self.security_scanner = None
         self.monitoring_service = None
@@ -490,7 +491,7 @@ class ToolDiscoveryService:
                 health_url = f"{config['url']}/health"
                 start_time = 0  # Would use time.time() in real implementation
 
-                async with session.get(health_url, timeout=5) as response:
+                async with session.get(health_url, timeout=TIMEOUT_HEALTH_CHECK) as response:
                     if response.status == 200:
                         return {
                             "status": "healthy",
@@ -514,7 +515,7 @@ class ToolDiscoveryService:
             spec_url = f"{config['url']}{config['openapi_path']}"
 
             async with self.service_client.session() as session:
-                async with session.get(spec_url, timeout=10) as response:
+                async with session.get(spec_url, timeout=TIMEOUT_OPENAPI_FETCH) as response:
                     if response.status == 200:
                         spec = await response.json()
 

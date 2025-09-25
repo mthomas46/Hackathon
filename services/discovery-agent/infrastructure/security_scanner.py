@@ -6,11 +6,7 @@ using the secure-analyzer service integration.
 
 from typing import Any, Dict, List
 
-try:
-    from services.shared.clients import ServiceClients
-except ImportError:
-    # Fallback for when running in Docker or different environment
-    ServiceClients = None
+from ..domain.services.shared_utils import safe_service_clients_call, TIMEOUT_OPENAPI_FETCH
 
 
 class ToolSecurityScanner:
@@ -18,7 +14,7 @@ class ToolSecurityScanner:
 
     def __init__(self, secure_analyzer_url: str = "http://localhost:5070"):
         self.secure_analyzer_url = secure_analyzer_url
-        self.service_client = ServiceClients()
+        self.service_client = safe_service_clients_call()
 
         # Security risk categories
         self.risk_categories = {
@@ -256,7 +252,7 @@ class ToolSecurityScanner:
                 # Use secure-analyzer's detect-content endpoint
                 url = f"{self.secure_analyzer_url}/detect-content"
 
-                async with session.post(url, json=scan_data, timeout=10) as response:
+                async with session.post(url, json=scan_data, timeout=TIMEOUT_OPENAPI_FETCH) as response:
                     if response.status == 200:
                         result = await response.json()
                         return {

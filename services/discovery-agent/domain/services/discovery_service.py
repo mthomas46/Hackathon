@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from services.shared.integrations.clients.clients import ServiceClients  # type: ignore
+from .shared_utils import safe_service_clients_call, TIMEOUT_HEALTH_CHECK
 
 
 def parse_openapi_to_endpoints(spec: Dict) -> List[dict]:
@@ -21,7 +21,7 @@ def parse_openapi_to_endpoints(spec: Dict) -> List[dict]:
 async def self_register(name: str, base_url: str, orchestrator_url: str) -> None:
     """Best-effort self-registration helper for services on startup."""
     try:
-        svc = ServiceClients(timeout=5)
+        svc = safe_service_clients_call(timeout=TIMEOUT_HEALTH_CHECK)
         await svc.post_json(
             f"{orchestrator_url}/registry/register",
             {
