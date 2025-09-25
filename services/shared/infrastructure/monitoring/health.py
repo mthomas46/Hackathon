@@ -110,7 +110,7 @@ class HealthManager:
         )
 
     async def basic_health(self) -> HealthStatus:
-        """Basic health check for the service."""
+        """Basic health check for the service with service-specific monitoring."""
         uptime = (datetime.now(timezone.utc) - self.start_time).total_seconds()
 
         # Create base health status
@@ -122,74 +122,94 @@ class HealthManager:
             environment=os.environ.get("ENVIRONMENT", "development"),
         )
 
-        # Add service-specific fields
-        if self.service_name == "orchestrator":
-            # Check if workflows are loaded
-            try:
-                # For orchestrator, workflows are considered loaded if the service is running
-                health_status.workflows_loaded = True
-            except Exception:
-                health_status.workflows_loaded = False
-
-        elif self.service_name == "doc_store":
-            # Check database connection
-            try:
-                # For doc_store, database is considered connected if the service is running
-                health_status.database_connected = True
-            except Exception:
-                health_status.database_connected = False
-
-        elif self.service_name == "analysis-service":
-            # Check if models are loaded
-            try:
-                # For analysis-service, models are considered loaded if the service is running
-                health_status.models_loaded = True
-            except Exception:
-                health_status.models_loaded = False
-
-        elif self.service_name == "frontend":
-            # Check API connectivity
-            try:
-                health_status.api_connected = True
-            except Exception:
-                health_status.api_connected = False
-
-        elif self.service_name == "summarizer-hub":
-            # Check LLM connectivity
-            try:
-                health_status.llm_connected = True
-            except Exception:
-                health_status.llm_connected = False
-
-        elif self.service_name == "llm-gateway":
-            # Check Ollama availability
-            try:
-                health_status.ollama_available = True
-            except Exception:
-                health_status.ollama_available = False
-
-        elif self.service_name == "mock-data-generator":
-            # Check data sources count
-            try:
-                health_status.data_sources = 5  # Placeholder count
-            except Exception:
-                health_status.data_sources = 0
-
-        elif self.service_name == "notification-service":
-            # Check email configuration
-            try:
-                health_status.email_configured = True
-            except Exception:
-                health_status.email_configured = False
-
-        elif self.service_name == "code-analyzer":
-            # Check analysis readiness
-            try:
-                health_status.analysis_ready = True
-            except (OSError, IOError):
-                health_status.analysis_ready = False
+        # Apply service-specific health checks
+        await self._apply_service_specific_checks(health_status)
 
         return health_status
+
+    async def _apply_service_specific_checks(self, health_status: HealthStatus) -> None:
+        """Apply service-specific health checks using a registry pattern."""
+        service_checks = {
+            "orchestrator": self._check_orchestrator_health,
+            "doc_store": self._check_doc_store_health,
+            "analysis-service": self._check_analysis_service_health,
+            "frontend": self._check_frontend_health,
+            "summarizer-hub": self._check_summarizer_hub_health,
+            "llm-gateway": self._check_llm_gateway_health,
+            "mock-data-generator": self._check_mock_data_generator_health,
+            "notification-service": self._check_notification_service_health,
+            "code-analyzer": self._check_code_analyzer_health,
+        }
+
+        check_func = service_checks.get(self.service_name)
+        if check_func:
+            await check_func(health_status)
+
+    async def _check_orchestrator_health(self, health_status: HealthStatus) -> None:
+        """Check orchestrator-specific health metrics."""
+        try:
+            # For orchestrator, workflows are considered loaded if the service is running
+            health_status.workflows_loaded = True
+        except Exception:
+            health_status.workflows_loaded = False
+
+    async def _check_doc_store_health(self, health_status: HealthStatus) -> None:
+        """Check document store health metrics."""
+        try:
+            # For doc_store, database is considered connected if the service is running
+            health_status.database_connected = True
+        except Exception:
+            health_status.database_connected = False
+
+    async def _check_analysis_service_health(self, health_status: HealthStatus) -> None:
+        """Check analysis service health metrics."""
+        try:
+            # For analysis-service, models are considered loaded if the service is running
+            health_status.models_loaded = True
+        except Exception:
+            health_status.models_loaded = False
+
+    async def _check_frontend_health(self, health_status: HealthStatus) -> None:
+        """Check frontend health metrics."""
+        try:
+            health_status.api_connected = True
+        except Exception:
+            health_status.api_connected = False
+
+    async def _check_summarizer_hub_health(self, health_status: HealthStatus) -> None:
+        """Check summarizer hub health metrics."""
+        try:
+            health_status.llm_connected = True
+        except Exception:
+            health_status.llm_connected = False
+
+    async def _check_llm_gateway_health(self, health_status: HealthStatus) -> None:
+        """Check LLM gateway health metrics."""
+        try:
+            health_status.ollama_available = True
+        except Exception:
+            health_status.ollama_available = False
+
+    async def _check_mock_data_generator_health(self, health_status: HealthStatus) -> None:
+        """Check mock data generator health metrics."""
+        try:
+            health_status.data_sources = 5  # Placeholder count
+        except Exception:
+            health_status.data_sources = 0
+
+    async def _check_notification_service_health(self, health_status: HealthStatus) -> None:
+        """Check notification service health metrics."""
+        try:
+            health_status.email_configured = True
+        except Exception:
+            health_status.email_configured = False
+
+    async def _check_code_analyzer_health(self, health_status: HealthStatus) -> None:
+        """Check code analyzer health metrics."""
+        try:
+            health_status.analysis_ready = True
+        except (OSError, IOError):
+            health_status.analysis_ready = False
 
     async def dependency_health(
         self, service_name: str, endpoint: str = "/health"

@@ -177,55 +177,102 @@ class MemoryLogStorage(LogStorageBackend):
                 self._logs.pop(0)
 
     async def query_logs(self, query: LogQuery) -> List[LogEntry]:
-        """Query logs from memory."""
+        """Query logs from memory with improved performance and maintainability."""
         with self._lock:
-            filtered_logs = self._logs.copy()
+            logs_copy = self._logs.copy()
 
-        # Apply filters
-        if query.service_name:
-            filtered_logs = [
-                log for log in filtered_logs if log.service_name == query.service_name
-            ]
-        if query.level:
-            filtered_logs = [log for log in filtered_logs if log.level == query.level]
-        if query.correlation_id:
-            filtered_logs = [
-                log
-                for log in filtered_logs
-                if log.correlation_id == query.correlation_id
-            ]
-        if query.operation:
-            filtered_logs = [
-                log for log in filtered_logs if log.operation == query.operation
-            ]
-        if query.start_time:
-            filtered_logs = [
-                log for log in filtered_logs if log.timestamp >= query.start_time
-            ]
-        if query.end_time:
-            filtered_logs = [
-                log for log in filtered_logs if log.timestamp <= query.end_time
-            ]
-        if query.message_contains:
-            filtered_logs = [
-                log
-                for log in filtered_logs
-                if query.message_contains.lower() in log.message.lower()
-            ]
+        # Apply filters using dedicated filter methods
+        filtered_logs = self._apply_log_filters(logs_copy, query)
 
-        # Apply ordering
-        if query.order_by == "timestamp":
-            filtered_logs.sort(key=lambda x: x.timestamp, reverse=query.order_desc)
-        elif query.order_by == "level":
-            level_order = {level.value: i for i, level in enumerate(LogLevel)}
-            filtered_logs.sort(
-                key=lambda x: level_order.get(x.level, 99), reverse=query.order_desc
-            )
+        # Apply ordering using dedicated sorting method
+        ordered_logs = self._apply_log_ordering(filtered_logs, query)
 
         # Apply pagination
+        return self._apply_log_pagination(ordered_logs, query)
+
+    def _apply_log_filters(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Apply all query filters to the log list."""
+        filters = [
+            self._filter_by_service_name,
+            self._filter_by_level,
+            self._filter_by_correlation_id,
+            self._filter_by_operation,
+            self._filter_by_time_range,
+            self._filter_by_message_content
+        ]
+
+        filtered_logs = logs
+        for filter_func in filters:
+            filtered_logs = filter_func(filtered_logs, query)
+
+        return filtered_logs
+
+    def _filter_by_service_name(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Filter logs by service name."""
+        if not query.service_name:
+            return logs
+        return [log for log in logs if log.service_name == query.service_name]
+
+    def _filter_by_level(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Filter logs by log level."""
+        if not query.level:
+            return logs
+        return [log for log in logs if log.level == query.level]
+
+    def _filter_by_correlation_id(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Filter logs by correlation ID."""
+        if not query.correlation_id:
+            return logs
+        return [log for log in logs if log.correlation_id == query.correlation_id]
+
+    def _filter_by_operation(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Filter logs by operation."""
+        if not query.operation:
+            return logs
+        return [log for log in logs if log.operation == query.operation]
+
+    def _filter_by_time_range(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Filter logs by time range."""
+        filtered_logs = logs
+
+        if query.start_time:
+            filtered_logs = [log for log in filtered_logs if log.timestamp >= query.start_time]
+
+        if query.end_time:
+            filtered_logs = [log for log in filtered_logs if log.timestamp <= query.end_time]
+
+        return filtered_logs
+
+    def _filter_by_message_content(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Filter logs by message content."""
+        if not query.message_contains:
+            return logs
+
+        search_term = query.message_contains.lower()
+        return [log for log in logs if search_term in log.message.lower()]
+
+    def _apply_log_ordering(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Apply ordering to the filtered logs."""
+        if not query.order_by:
+            return logs
+
+        if query.order_by == "timestamp":
+            return sorted(logs, key=lambda x: x.timestamp, reverse=query.order_desc)
+        elif query.order_by == "level":
+            level_order = {level.value: i for i, level in enumerate(LogLevel)}
+            return sorted(
+                logs,
+                key=lambda x: level_order.get(x.level, 99),
+                reverse=query.order_desc
+            )
+
+        return logs
+
+    def _apply_log_pagination(self, logs: List[LogEntry], query: LogQuery) -> List[LogEntry]:
+        """Apply pagination to the ordered logs."""
         start_idx = query.offset
         end_idx = start_idx + query.limit
-        return filtered_logs[start_idx:end_idx]
+        return logs[start_idx:end_idx]
 
     async def get_log_stats(self) -> Dict[str, Any]:
         """Get memory storage statistics."""
