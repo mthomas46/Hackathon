@@ -1,0 +1,13 @@
+[flake8]
+max-line-length = 130
+extend-ignore = E203,W503,I100,I201,I202,E402,D401,D400,D205,D107,D202
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    *.egg-info,
+    .venv,
+    .tox,
+    migrations,
+    tests

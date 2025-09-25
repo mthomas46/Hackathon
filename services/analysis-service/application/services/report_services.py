@@ -3,6 +3,13 @@
 Provides functions for generating various types of reports and health assessments.
 """
 
+from datetime import datetime
+from typing import List
+
+from services.shared.infrastructure.config import load_service_config
+
+config = load_service_config()
+
 
 def calculate_pr_health_score(
     code_analysis: dict,
@@ -20,10 +27,7 @@ def calculate_pr_health_score(
 
         # Prefer balanced changes over large additions/deletions
         if total_changes > 0:
-            balance_ratio = (
-                min(metrics.get("lines_added", 0), metrics.get("lines_removed", 0))
-                / total_changes
-            )
+            balance_ratio = min(metrics.get("lines_added", 0), metrics.get("lines_removed", 0)) / total_changes
             code_score = min(1.0, balance_ratio * 2)  # Reward balanced changes
             scores.append((code_score, 0.4))
 
@@ -43,9 +47,7 @@ def calculate_pr_health_score(
     # Structural risk penalty (10% weight)
     structural_score = 1.0
     if structural_analysis.get("structural_risks"):
-        structural_score = max(
-            0.0, 1.0 - (len(structural_analysis["structural_risks"]) * 0.2)
-        )
+        structural_score = max(0.0, 1.0 - (len(structural_analysis["structural_risks"]) * 0.2))
     scores.append((structural_score, 0.1))
 
     # Calculate weighted average
@@ -75,12 +77,8 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     risk_level = pr_report.get("risk_level", "medium")
 
     if risk_level == "high":
-        recommendations.append(
-            "🚨 High-risk changes detected - consider breaking into smaller PRs"
-        )
-        recommendations.append(
-            "📋 Schedule thorough code review with senior developers"
-        )
+        recommendations.append("🚨 High-risk changes detected - consider breaking into smaller PRs")
+        recommendations.append("📋 Schedule thorough code review with senior developers")
 
     elif risk_level == "medium":
         recommendations.append("⚠️ Medium-risk changes - ensure adequate test coverage")
@@ -89,13 +87,8 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     # Specific recommendations based on analysis
     code_analysis = pr_report.get("code_analysis", {})
 
-    if (
-        code_analysis.get("change_metrics", {}).get("lines_added", 0)
-        > config.limits.max_lines_added_threshold
-    ):
-        recommendations.append(
-            "📊 Large PR detected - consider splitting into smaller, focused changes"
-        )
+    if code_analysis.get("change_metrics", {}).get("lines_added", 0) > config.limits.max_lines_added_threshold:
+        recommendations.append("📊 Large PR detected - consider splitting into smaller, focused changes")
 
     if code_analysis.get("file_types", {}).get("test", 0) == 0:
         recommendations.append("🧪 Consider adding tests for the changes introduced")
@@ -103,9 +96,7 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     # Commit analysis recommendations
     commit_analysis = pr_report.get("commit_analysis", {})
     if commit_analysis.get("message_quality", {}).get("poor_messages", 0) > 0:
-        recommendations.append(
-            "✍️ Improve commit message quality for better project history"
-        )
+        recommendations.append("✍️ Improve commit message quality for better project history")
 
     # Quality recommendations
     quality_analysis = pr_report.get("quality_analysis", {})
@@ -135,24 +126,18 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
     md_lines.append(f"- **Total Analyses:** {summary['total_analyses']}")
     md_lines.append(f"- **Analysis Types:** {', '.join(summary['analysis_types'])}")
     md_lines.append(f"- **Documents with Issues:** {summary['documents_with_issues']}")
-    md_lines.append(
-        f"- **Average Quality Score:** {summary['average_quality_score']:.2f}"
-    )
+    md_lines.append(f"- **Average Quality Score:** {summary['average_quality_score']:.2f}")
     md_lines.append(f"- **Total Issues Found:** {summary['total_issues_found']}")
     md_lines.append("")
 
     # Overall quality indicator
     avg_score = summary["average_quality_score"]
     if avg_score >= 0.8:
-        quality_indicator = (
-            "🟢 **High Quality** - Documents are well-structured and clear"
-        )
+        quality_indicator = "🟢 **High Quality** - Documents are well-structured and clear"
     elif avg_score >= 0.6:
         quality_indicator = "🟡 **Medium Quality** - Documents need some improvements"
     else:
-        quality_indicator = (
-            "🔴 **Low Quality** - Documents require significant attention"
-        )
+        quality_indicator = "🔴 **Low Quality** - Documents require significant attention"
 
     md_lines.append(f"### Quality Assessment: {quality_indicator}")
     md_lines.append("")

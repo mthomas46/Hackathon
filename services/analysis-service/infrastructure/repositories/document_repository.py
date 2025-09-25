@@ -40,9 +40,7 @@ class DocumentRepository(SqlRepository[Document]):
 
     async def get_recent_documents(self, limit: int = 50) -> List[Document]:
         """Get recent documents (query optimization)."""
-        results = await self._execute_query(
-            "SELECT * FROM documents ORDER BY created_at DESC LIMIT ?", (limit,)
-        )
+        results = await self._execute_query("SELECT * FROM documents ORDER BY created_at DESC LIMIT ?", (limit,))
         return [self._dict_to_entity(row) for row in results]
 
     async def search_by_content(self, query: str, limit: int = 50) -> List[Document]:
@@ -68,11 +66,6 @@ class InMemoryDocumentRepository(InMemoryRepository[Document]):
         super().__init__(Document)
 
     # CQRS-specific query methods only (base class provides CRUD)
-    async def get_by_author(self, author: str) -> List[Document]:
-        """Get documents by author from memory."""
-        all_docs = list(self._storage.values())
-        return [doc for doc in all_docs if getattr(doc, "author", None) == author]
-
     async def get_recent_documents(self, limit: int = 50) -> List[Document]:
         """Get recent documents from memory."""
         all_docs = list(self._storage.values())
@@ -88,11 +81,7 @@ class InMemoryDocumentRepository(InMemoryRepository[Document]):
 
     async def get_by_author(self, author: str) -> List[Document]:
         """Get documents by author from memory."""
-        return [
-            doc
-            for doc in self._documents.values()
-            if doc.metadata.author and doc.metadata.author.lower() == author.lower()
-        ]
+        return [doc for doc in self._documents.values() if doc.metadata.author and doc.metadata.author.lower() == author.lower()]
 
     async def delete(self, document_id: str) -> bool:
         """Delete a document from memory."""

@@ -43,7 +43,20 @@ def get_file_type(filename: str) -> str:
     elif filename.endswith((".go",)):
         return "go"
     elif filename.endswith((".rs",)):
---
+        return "rust"
+    elif filename.endswith((".html", ".htm")):
+        return "html"
+    elif filename.endswith((".css",)):
+        return "css"
+    elif filename.endswith((".md", ".markdown")):
+        return "markdown"
+    elif filename.endswith((".json",)):
+        return "json"
+    elif filename.endswith((".xml", ".yml", ".yaml")):
+        return "config"
+    else:
+        return "unknown"
+
 def is_good_commit_message(message: str) -> bool:
     """Check if a commit message follows good practices."""
     # Basic checks for good commit messages
@@ -86,3 +99,14 @@ def is_conventional_commit(message: str) -> bool:
 
 def generate_refactoring_suggestions(
     code_analysis: dict, structural_analysis: dict, quality_analysis: dict
+) -> dict:
+    """Generate refactoring suggestions based on analysis results."""
+    suggestions = []
+
+    # Code complexity analysis
+    if code_analysis.get("complex_functions"):
+        suggestions.append("Consider refactoring complex functions")
+
+    # Structural analysis
+    if structural_analysis.get("long_methods"):
+        suggestions.append("Consider refactoring long methods")
