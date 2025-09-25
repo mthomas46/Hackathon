@@ -8,6 +8,12 @@ import re
 from typing import Any, Dict, List
 
 from .shared_utils import safe_service_clients_call, TIMEOUT_LLM_ANALYSIS
+from ..exceptions.domain_exceptions import (
+    SemanticAnalysisException,
+    LLMAnalysisException,
+    ParsingException,
+    ValidationException,
+)
 
 
 class SemanticToolAnalyzer:
@@ -96,20 +102,36 @@ class SemanticToolAnalyzer:
             "llm_analysis": None,
         }
 
-        # Use LLM for semantic analysis
-        llm_analysis = await self._perform_llm_semantic_analysis(tool)
+        try:
+            # Use LLM for semantic analysis
+            llm_analysis = await self._perform_llm_semantic_analysis(tool)
 
-        if llm_analysis.get("success"):
-            semantic_analysis["llm_analysis"] = llm_analysis["analysis"]
+            if llm_analysis.get("success"):
+                semantic_analysis["llm_analysis"] = llm_analysis["analysis"]
 
-            # Parse LLM response for semantic insights
-            parsed_semantics = self._parse_llm_semantic_response(
-                llm_analysis["analysis"]
-            )
-            semantic_analysis.update(parsed_semantics)
-        else:
-            # Fallback to rule-based semantic analysis
-            print(f"LLM analysis failed for {tool['name']}, using rule-based analysis")
+                # Parse LLM response for semantic insights
+                parsed_semantics = self._parse_llm_semantic_response(
+                    llm_analysis["analysis"]
+                )
+                semantic_analysis.update(parsed_semantics)
+            else:
+                # Fallback to rule-based semantic analysis
+                print(f"LLM analysis failed for {tool['name']}, using rule-based analysis")
+                rule_based = self._rule_based_semantic_analysis(tool)
+                semantic_analysis.update(rule_based)
+        except LLMAnalysisException as e:
+            # LLM analysis failed, use rule-based fallback
+            print(f"LLM analysis exception for {tool['name']}: {e}, using rule-based analysis")
+            rule_based = self._rule_based_semantic_analysis(tool)
+            semantic_analysis.update(rule_based)
+        except ParsingException as e:
+            # Parsing failed, use rule-based fallback
+            print(f"LLM parsing exception for {tool['name']}: {e}, using rule-based analysis")
+            rule_based = self._rule_based_semantic_analysis(tool)
+            semantic_analysis.update(rule_based)
+        except Exception as e:
+            # Unexpected error, use rule-based fallback
+            print(f"Unexpected semantic analysis error for {tool['name']}: {e}, using rule-based analysis")
             rule_based = self._rule_based_semantic_analysis(tool)
             semantic_analysis.update(rule_based)
 
@@ -181,8 +203,10 @@ class SemanticToolAnalyzer:
                             "error": f"Interpreter returned {response.status}",
                         }
 
+        except TimeoutError as e:
+            raise LLMAnalysisException("llm_semantic_analysis", f"Request timed out after {TIMEOUT_LLM_ANALYSIS} seconds")
         except Exception as e:
-            return {"success": False, "error": str(e)}
+            raise LLMAnalysisException("llm_semantic_analysis", str(e))
 
     def _parse_llm_semantic_response(self, llm_response: str) -> Dict[str, Any]:
         """Parse and extract structured data from LLM semantic analysis response.
@@ -212,8 +236,9 @@ class SemanticToolAnalyzer:
                     "relationships": parsed.get("relationships", {}),
                     "complexity_score": parsed.get("complexity_score", 5),
                 }
-        except Exception:
-            pass
+        except Exception as e:
+            # Log the parsing error but continue with fallback
+            print(f"LLM response parsing error: {e}, using fallback")
 
         # Fallback parsing
         return {
