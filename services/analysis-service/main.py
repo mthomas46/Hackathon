@@ -1726,7 +1726,62 @@ async def detect_document_quality_degradation_endpoint(
         )
 
 
-@app.post("/analyze/quality/degradation/portfolio")
+@app.post(
+    "/analyze/quality/degradation/portfolio",
+    tags=["quality"],
+    summary="Monitor quality degradation across a portfolio of documents",
+    description="""Provides comprehensive quality degradation monitoring across multiple documents,
+    identifying portfolio-wide degradation patterns, generating alerts, and providing
+    strategic recommendations for quality maintenance and improvement. Analyzes
+    quality trends across the entire portfolio to detect systemic issues.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Portfolio quality degradation monitoring completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Portfolio quality degradation monitoring completed successfully",
+                        "data": {
+                            "portfolio_summary": {
+                                "total_documents": 25,
+                                "documents_with_degradation": 8,
+                                "average_degradation_rate": 0.12,
+                                "high_risk_documents": 3,
+                                "overall_portfolio_health": "moderate_concern",
+                            },
+                            "degradation_patterns": [
+                                {
+                                    "pattern_type": "systemic_formatting_issues",
+                                    "affected_documents": 12,
+                                    "severity": "medium",
+                                    "description": "Consistent formatting degradation across multiple docs",
+                                }
+                            ],
+                            "alerts": [
+                                {
+                                    "alert_level": "high",
+                                    "message": "Portfolio-wide quality degradation detected",
+                                    "recommendations": ["Implement portfolio quality standards", "Schedule comprehensive review"],
+                                }
+                            ],
+                            "processing_time": 5.2,
+                            "monitoring_timestamp": "2025-09-25T10:00:00Z",
+                        },
+                        "total_documents": 25,
+                        "documents_with_degradation": 8,
+                        "average_degradation_rate": 0.12,
+                        "processing_time": 5.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Portfolio quality degradation monitoring failed", "model": ErrorResponse},
+    },
+)
 async def monitor_portfolio_quality_degradation_endpoint(
     req: PortfolioQualityDegradationRequest,
 ):
