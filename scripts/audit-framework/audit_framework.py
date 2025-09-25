@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 """
-Modular Audit Framework for LLM Documentation Ecosystem
+DDD Audit Framework for LLM Documentation Ecosystem
 
-This script provides automated assessment of services across four critical dimensions:
+This framework implements Domain-Driven Design principles to provide
+automated assessment of services across four critical dimensions:
+
 - Architecture: DDD compliance, REST design, layer separation
 - Code Quality: Complexity, testing, duplication, documentation
 - Performance: Runtime, database, resource optimization
 - Maintainability: Organization, error handling, scalability, DevOps
+
+Clean Architecture:
+- Domain: Core business logic and entities
+- Application: Use cases and business orchestration
+- Infrastructure: External services and implementations
+- Presentation: CLI and user interfaces
 
 Usage:
     python audit_framework.py audit --service doc_store [--profile strict]
@@ -28,16 +36,16 @@ import logging
 
 # Handle imports for both module and script execution
 try:
-    # When run as module
-    from .config import AuditProfile, ProfileManager
+    # When run as module - use DDD structure
+    from .domain import ServiceInfo, AnalysisResult, AuditProfile, ThresholdConfig, AuditService
+    from .application import AuditServiceUseCase, AuditServiceCommand
+    from .infrastructure import (
+        ArchitectureAnalyzer, CodeQualityAnalyzer,
+        PerformanceAnalyzer, MaintainabilityAnalyzer,
+        FileSystemService
+    )
     from .config.profiles import profile_manager
     from .config.thresholds import get_thresholds_for_profile
-    from .analyzers import (
-        ArchitectureAnalyzer,
-        CodeQualityAnalyzer,
-        PerformanceAnalyzer,
-        MaintainabilityAnalyzer
-    )
 except ImportError:
     # When run as script, add current directory to path
     import sys
@@ -45,15 +53,16 @@ except ImportError:
     current_dir = Path(__file__).parent
     sys.path.insert(0, str(current_dir))
 
-    from config import AuditProfile, ProfileManager
+    # Import from DDD structure
+    from domain import ServiceInfo, AnalysisResult, AuditProfile, ThresholdConfig, AuditService
+    from application import AuditServiceUseCase, AuditServiceCommand
+    from infrastructure import (
+        ArchitectureAnalyzer, CodeQualityAnalyzer,
+        PerformanceAnalyzer, MaintainabilityAnalyzer,
+        FileSystemService
+    )
     from config.profiles import profile_manager
     from config.thresholds import get_thresholds_for_profile
-    from analyzers import (
-        ArchitectureAnalyzer,
-        CodeQualityAnalyzer,
-        PerformanceAnalyzer,
-        MaintainabilityAnalyzer
-    )
 
 # Enhanced reporting libraries
 try:
@@ -566,12 +575,91 @@ class AuditFramework:
         }
 
 
+class AuditOrchestrator:
+    """Orchestrates the audit process using DDD principles.
+
+    This class coordinates between domain services, application use cases,
+    and infrastructure components to execute audits.
+    """
+
+    def __init__(self):
+        """Initialize the audit orchestrator with all dependencies."""
+        self.thresholds = get_thresholds_for_profile("standard")
+
+        # Initialize domain service
+        self.audit_service = AuditService(self.thresholds)
+
+        # Initialize infrastructure services
+        self.file_system = FileSystemService()
+
+        # Initialize analyzers (infrastructure implementations)
+        self.analyzers = {
+            'architecture': ArchitectureAnalyzer(),
+            'code_quality': CodeQualityAnalyzer(),
+            'performance': PerformanceAnalyzer(),
+            'maintainability': MaintainabilityAnalyzer(),
+        }
+
+        # Initialize application use case
+        self.audit_use_case = AuditServiceUseCase(self.audit_service, self.analyzers)
+
+    async def audit_service_by_name(
+        self,
+        service_name: str,
+        profile_name: str = "standard"
+    ) -> AnalysisResult:
+        """Audit a service by discovering it and running analysis.
+
+        Args:
+            service_name: Name of the service to audit
+            profile_name: Name of the audit profile to use
+
+        Returns:
+            Complete analysis result
+        """
+        # Discover service
+        service_path = self._discover_service_path(service_name)
+        if not service_path:
+            raise ValueError(f"Service '{service_name}' not found")
+
+        # Create service info
+        service_info = ServiceInfo(
+            name=service_name,
+            path=service_path
+        )
+
+        # Get audit profile
+        profile = profile_manager.get_profile(profile_name)
+        if not profile:
+            raise ValueError(f"Profile '{profile_name}' not found")
+
+        # Execute audit use case
+        return await self.audit_use_case.execute(service_info, profile)
+
+    def _discover_service_path(self, service_name: str) -> Optional[Path]:
+        """Discover the path for a service by name."""
+        # Look in common service directories
+        search_paths = [
+            Path.cwd() / "services" / service_name,
+            Path.cwd() / service_name,
+            Path.cwd().parent / "services" / service_name,
+        ]
+
+        for path in search_paths:
+            if path.exists() and path.is_dir():
+                # Verify it looks like a service
+                if (path / "main.py").exists() or (path / "app.py").exists():
+                    return path
+
+        return None
+
+
 # CLI Interface
 def main():
-    """Command-line interface for the audit framework"""
+    """Command-line interface for the DDD audit framework"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="LLM Documentation Ecosystem Audit Framework")
+    parser = argparse.ArgumentParser(description="DDD Audit Framework for LLM Documentation Ecosystem")
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
 
     # Audit command
@@ -636,8 +724,12 @@ def main():
         framework = AuditFramework(profile)
 
         if args.command == 'audit':
-            # Run single service audit
-            result = asyncio.run(framework.audit_service(args.service))
+            # Run single service audit using DDD orchestrator
+            orchestrator = AuditOrchestrator()
+            result = asyncio.run(orchestrator.audit_service_by_name(
+                service_name=args.service,
+                profile_name=getattr(args, 'profile', 'standard')
+            ))
 
             output_format = getattr(args, 'output', 'rich')
             if output_format == 'json':
