@@ -4,7 +4,11 @@ A comprehensive document storage and analysis service with advanced features
 for document management, search, analytics, and lifecycle operations.
 """
 
+import logging
+
 from fastapi import FastAPI
+
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # STANDARDIZED SHARED INFRASTRUCTURE - Using consolidated utilities
@@ -16,6 +20,7 @@ from services.shared.infrastructure.utilities.error_handling import create_stand
 from services.shared.infrastructure.utilities.validation_utils import validate_required_fields
 
 from .presentation.api.routes import router as api_router
+from .infrastructure.resource_monitor import DocStoreResourceMonitor
 
 # ============================================================================
 # DOMAIN EXCEPTIONS - Doc Store specific exceptions
@@ -377,16 +382,30 @@ async def health_check():
 # ============================================================================
 # LIFECYCLE MANAGEMENT - Startup and shutdown
 # ============================================================================
+
+# Global resource monitor instance
+resource_monitor = DocStoreResourceMonitor()
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize service on startup."""
     init_database()
 
+    # Start comprehensive resource monitoring
+    await resource_monitor.start_monitoring()
+    logger.info("Doc Store resource monitoring started")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Clean up resources on shutdown."""
+    # Stop resource monitoring
+    await resource_monitor.stop_monitoring()
+
+    # Close cache connections
     await docstore_cache.close()
+
+    logger.info("Doc Store resource monitoring stopped")
 
 
 # ============================================================================
@@ -411,6 +430,77 @@ def custom_healthy_response(service_name: str, version: str = "1.0.0", **kwargs)
 import services.shared.monitoring.health
 
 services.shared.monitoring.health.healthy_response = custom_healthy_response
+
+# ============================================================================
+# RESOURCE MONITORING ENDPOINTS - System resource monitoring
+# ============================================================================
+
+@app.get("/api/v1/resources/status")
+async def get_resource_status():
+    """Get comprehensive resource usage status and insights."""
+    try:
+        status = resource_monitor.get_resource_status()
+        return create_success_response(
+            data=status,
+            message="Resource status retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"Failed to get resource status: {e}")
+        return create_error_response(
+            error="Failed to retrieve resource status",
+            details=str(e)
+        )
+
+
+@app.get("/api/v1/resources/recommendations")
+async def get_performance_recommendations():
+    """Get performance optimization recommendations based on resource usage."""
+    try:
+        recommendations = resource_monitor.get_performance_recommendations()
+        return create_success_response(
+            data={"recommendations": recommendations},
+            message="Performance recommendations retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"Failed to get performance recommendations: {e}")
+        return create_error_response(
+            error="Failed to retrieve performance recommendations",
+            details=str(e)
+        )
+
+
+@app.post("/api/v1/resources/gc")
+async def trigger_garbage_collection():
+    """Manually trigger garbage collection and return cleanup results."""
+    try:
+        gc_result = await resource_monitor.force_garbage_collection()
+        return create_success_response(
+            data=gc_result,
+            message="Garbage collection completed successfully"
+        )
+    except Exception as e:
+        logger.error(f"Failed to trigger garbage collection: {e}")
+        return create_error_response(
+            error="Failed to trigger garbage collection",
+            details=str(e)
+        )
+
+
+@app.post("/api/v1/resources/reset-insights")
+async def reset_resource_insights():
+    """Reset resource usage insights and trends."""
+    try:
+        resource_monitor.reset_insights()
+        return create_success_response(
+            message="Resource insights reset successfully"
+        )
+    except Exception as e:
+        logger.error(f"Failed to reset resource insights: {e}")
+        return create_error_response(
+            error="Failed to reset resource insights",
+            details=str(e)
+        )
+
 
 # ============================================================================
 # METRICS ENDPOINT - Prometheus monitoring
