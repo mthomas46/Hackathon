@@ -320,48 +320,100 @@ class TrendAnalyzer:
         """Generate actionable insights from trend analysis."""
         insights = []
 
-        analysis_results.get("trend_direction", "unknown")
         patterns = analysis_results.get("patterns", {})
         predictions = analysis_results.get("predictions", {})
 
-        # Quality trend insights
-        quality_trend = patterns.get("quality_trend", {})
-        if quality_trend:
-            direction = quality_trend.get("direction", "stable")
-            confidence = quality_trend.get("confidence", 0.0)
+        # Generate quality trend insights
+        insights.extend(self._generate_quality_trend_insights(patterns))
 
-            if direction == "improving" and confidence > 0.7:
-                insights.append("Documentation quality is improving steadily - continue current practices")
-            elif direction == "declining" and confidence > 0.7:
-                insights.append("Documentation quality is declining - implement immediate improvement measures")
-            elif direction == "stable":
-                insights.append("Documentation quality is stable - maintain current standards")
+        # Generate finding trend insights
+        insights.extend(self._generate_finding_trend_insights(patterns))
 
-        # Finding trend insights
-        for pattern_key, pattern_data in patterns.items():
-            if pattern_key.endswith("_trend") and pattern_key != "quality_trend":
-                finding_type = pattern_key.replace("_trend", "").replace("_", " ")
-                direction = pattern_data.get("direction", "stable")
-
-                if direction == "increasing":
-                    insights.append(f"{finding_type.title()} issues are increasing - prioritize resolution")
-                elif direction == "decreasing":
-                    insights.append(f"{finding_type.title()} issues are decreasing - good progress")
-
-        # Prediction insights
-        quality_pred = predictions.get("predictions", {}).get("quality_score", {})
-        if quality_pred:
-            predicted_values = quality_pred.get("predicted_values", [])
-            if predicted_values:
-                final_prediction = predicted_values[-1]
-                if final_prediction < 0.6:
-                    insights.append("Projected quality decline - implement preventive measures")
-                elif final_prediction > 0.8:
-                    insights.append("Quality trajectory is positive - maintain momentum")
+        # Generate prediction insights
+        insights.extend(self._generate_prediction_insights(predictions))
 
         # Default insights if none generated
         if not insights:
             insights.append("Trend analysis complete - monitor quality metrics regularly")
+
+        return insights
+
+    def _generate_quality_trend_insights(self, patterns: Dict[str, Any]) -> List[str]:
+        """Generate insights for quality trends.
+
+        Args:
+            patterns: Pattern analysis results
+
+        Returns:
+            List of quality trend insights
+        """
+        insights = []
+        quality_trend = patterns.get("quality_trend", {})
+
+        if not quality_trend:
+            return insights
+
+        direction = quality_trend.get("direction", "stable")
+        confidence = quality_trend.get("confidence", 0.0)
+
+        if direction == "improving" and confidence > 0.7:
+            insights.append("Documentation quality is improving steadily - continue current practices")
+        elif direction == "declining" and confidence > 0.7:
+            insights.append("Documentation quality is declining - implement immediate improvement measures")
+        elif direction == "stable":
+            insights.append("Documentation quality is stable - maintain current standards")
+
+        return insights
+
+    def _generate_finding_trend_insights(self, patterns: Dict[str, Any]) -> List[str]:
+        """Generate insights for finding trends.
+
+        Args:
+            patterns: Pattern analysis results
+
+        Returns:
+            List of finding trend insights
+        """
+        insights = []
+
+        for pattern_key, pattern_data in patterns.items():
+            if not (pattern_key.endswith("_trend") and pattern_key != "quality_trend"):
+                continue
+
+            finding_type = pattern_key.replace("_trend", "").replace("_", " ")
+            direction = pattern_data.get("direction", "stable")
+
+            if direction == "increasing":
+                insights.append(f"{finding_type.title()} issues are increasing - prioritize resolution")
+            elif direction == "decreasing":
+                insights.append(f"{finding_type.title()} issues are decreasing - good progress")
+
+        return insights
+
+    def _generate_prediction_insights(self, predictions: Dict[str, Any]) -> List[str]:
+        """Generate insights for quality predictions.
+
+        Args:
+            predictions: Prediction analysis results
+
+        Returns:
+            List of prediction insights
+        """
+        insights = []
+        quality_pred = predictions.get("predictions", {}).get("quality_score", {})
+
+        if not quality_pred:
+            return insights
+
+        predicted_values = quality_pred.get("predicted_values", [])
+        if not predicted_values:
+            return insights
+
+        final_prediction = predicted_values[-1]
+        if final_prediction < 0.6:
+            insights.append("Projected quality decline - implement preventive measures")
+        elif final_prediction > 0.8:
+            insights.append("Quality trajectory is positive - maintain momentum")
 
         return insights
 
@@ -495,45 +547,7 @@ class TrendAnalyzer:
                         document_trends.append(trend_result)
 
             # Calculate portfolio summary
-            if document_trends:
-                # Overall portfolio trend
-                trend_directions = [doc["trend_direction"] for doc in document_trends]
-                direction_counts = Counter(trend_directions)
-
-                if direction_counts.get("improving", 0) > direction_counts.get("declining", 0):
-                    overall_trend = "improving"
-                elif direction_counts.get("declining", 0) > direction_counts.get("improving", 0):
-                    overall_trend = "declining"
-                else:
-                    overall_trend = "stable"
-
-                # Average confidence
-                avg_confidence = sum(doc["confidence"] for doc in document_trends) / len(document_trends)
-
-                # High-risk documents
-                high_risk_documents = [
-                    doc["document_id"]
-                    for doc in document_trends
-                    if doc["trend_direction"] == "declining" and doc["confidence"] > 0.6
-                ]
-
-                # Risk area summary
-                all_risk_areas = []
-                for doc in document_trends:
-                    all_risk_areas.extend(doc.get("risk_areas", []))
-
-                risk_summary = Counter(area["risk_type"] for area in all_risk_areas)
-
-                portfolio_summary = {
-                    "total_documents": len(document_groups),
-                    "analyzed_documents": len(document_trends),
-                    "overall_trend": overall_trend,
-                    "average_confidence": round(avg_confidence, 3),
-                    "trend_distribution": dict(direction_counts),
-                    "high_risk_documents": high_risk_documents,
-                    "risk_area_summary": dict(risk_summary),
-                    "most_common_risks": risk_summary.most_common(3),
-                }
+            portfolio_summary = self._calculate_portfolio_summary(document_groups, document_trends)
             else:
                 portfolio_summary = {
                     "total_documents": len(document_groups),
@@ -609,3 +623,117 @@ async def analyze_portfolio_trends(
         group_by=group_by,
         prediction_days=prediction_days,
     )
+
+    def _calculate_portfolio_summary(self, document_groups: Dict[str, List], document_trends: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Calculate comprehensive portfolio summary from document trends.
+
+        Args:
+            document_groups: Groups of documents by ID
+            document_trends: Individual document trend analyses
+
+        Returns:
+            Portfolio summary with overall trends, risk analysis, and statistics
+        """
+        if not document_trends:
+            return {
+                "total_documents": len(document_groups),
+                "analyzed_documents": 0,
+                "overall_trend": "insufficient_data",
+                "average_confidence": 0.0,
+                "trend_distribution": {},
+                "high_risk_documents": [],
+                "risk_area_summary": {},
+                "most_common_risks": [],
+            }
+
+        # Calculate overall portfolio trend
+        overall_trend = self._determine_overall_portfolio_trend(document_trends)
+
+        # Calculate average confidence
+        avg_confidence = sum(doc["confidence"] for doc in document_trends) / len(document_trends)
+
+        # Identify high-risk documents
+        high_risk_documents = self._identify_high_risk_documents(document_trends)
+
+        # Analyze risk areas across portfolio
+        risk_analysis = self._analyze_portfolio_risk_areas(document_trends)
+
+        return {
+            "total_documents": len(document_groups),
+            "analyzed_documents": len(document_trends),
+            "overall_trend": overall_trend,
+            "average_confidence": round(avg_confidence, 3),
+            "trend_distribution": self._count_trend_directions(document_trends),
+            "high_risk_documents": high_risk_documents,
+            "risk_area_summary": risk_analysis["risk_summary"],
+            "most_common_risks": risk_analysis["most_common_risks"],
+        }
+
+    def _determine_overall_portfolio_trend(self, document_trends: List[Dict[str, Any]]) -> str:
+        """Determine overall trend direction for the portfolio.
+
+        Args:
+            document_trends: Individual document trend analyses
+
+        Returns:
+            Overall trend: "improving", "declining", or "stable"
+        """
+        trend_directions = [doc["trend_direction"] for doc in document_trends]
+        direction_counts = Counter(trend_directions)
+
+        improving_count = direction_counts.get("improving", 0)
+        declining_count = direction_counts.get("declining", 0)
+
+        if improving_count > declining_count:
+            return "improving"
+        elif declining_count > improving_count:
+            return "declining"
+        else:
+            return "stable"
+
+    def _count_trend_directions(self, document_trends: List[Dict[str, Any]]) -> Dict[str, int]:
+        """Count occurrences of each trend direction.
+
+        Args:
+            document_trends: Individual document trend analyses
+
+        Returns:
+            Dictionary with counts for each trend direction
+        """
+        trend_directions = [doc["trend_direction"] for doc in document_trends]
+        return dict(Counter(trend_directions))
+
+    def _identify_high_risk_documents(self, document_trends: List[Dict[str, Any]]) -> List[str]:
+        """Identify documents with high risk based on declining trends and confidence.
+
+        Args:
+            document_trends: Individual document trend analyses
+
+        Returns:
+            List of document IDs considered high risk
+        """
+        return [
+            doc["document_id"]
+            for doc in document_trends
+            if doc["trend_direction"] == "declining" and doc["confidence"] > 0.6
+        ]
+
+    def _analyze_portfolio_risk_areas(self, document_trends: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Analyze risk areas across the entire portfolio.
+
+        Args:
+            document_trends: Individual document trend analyses
+
+        Returns:
+            Risk analysis summary with risk types and most common risks
+        """
+        all_risk_areas = []
+        for doc in document_trends:
+            all_risk_areas.extend(doc.get("risk_areas", []))
+
+        risk_summary = Counter(area["risk_type"] for area in all_risk_areas)
+
+        return {
+            "risk_summary": dict(risk_summary),
+            "most_common_risks": risk_summary.most_common(3),
+        }
