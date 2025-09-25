@@ -7,6 +7,7 @@ REST API design, layer separation, and structural analysis.
 import os
 import ast
 import re
+import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass
@@ -104,16 +105,8 @@ class ArchitectureAnalyzer:
             'recommendations': []
         }
 
-        # Note: Other analyses are now handled by separate analyzers
-        # Initialize with basic results for architecture focus
-        endpoint_results = {
-            'total_endpoints': 0,
-            'compliant_endpoints': [],
-            'non_compliant_endpoints': [],
-            'rest_compliance_score': 0,
-            'openapi_compliance_score': 0,
-            'endpoint_detection_validation': {}
-        }
+        # Analyze endpoints for REST compliance
+        endpoint_results = self._analyze_endpoints_for_rest_compliance(service)
 
         # Basic complexity, coupling, dead code results for architecture focus
         complexity_results = {
@@ -606,6 +599,352 @@ class ArchitectureAnalyzer:
             separation_score -= min(50, violation_rate * 100)
 
         return max(0, separation_score)
+
+    def _analyze_endpoints_for_rest_compliance(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze service endpoints for REST architecture compliance."""
+        endpoint_analysis = {
+            'total_endpoints': 0,
+            'rest_compliant_endpoints': 0,
+            'openapi_compliant_endpoints': 0,
+            'project_standard_compliant_endpoints': 0,
+            'endpoint_issues': [],
+            'rest_violations': [],
+            'openapi_violations': [],
+            'standard_violations': [],
+            'endpoint_details': [],  # Detailed endpoint information
+            'compliant_endpoints': [],  # List of compliant endpoints
+            'non_compliant_endpoints': []  # List of non-compliant endpoints
+        }
+
+        # Find FastAPI route files with comprehensive detection
+        route_files = []
+        all_python_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py'):
+                    file_path = Path(root) / file
+                    all_python_files.append(file_path)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                            # Look for FastAPI router patterns - expanded detection
+                            has_fastapi_patterns = (
+                                '@router.' in content or '@app.' in content or
+                                'APIRouter' in content or 'FastAPI' in content or
+                                'fastapi' in content.lower() or
+                                'from fastapi' in content or
+                                'import fastapi' in content
+                            )
+
+                            # Prioritize routes directory files (DDD+REST structure)
+                            is_in_routes_dir = 'presentation/routes' in str(file_path.relative_to(service.path)) or 'routes' in str(file_path.relative_to(service.path)).split('/')
+
+                            if has_fastapi_patterns:
+                                # Routes directory files get priority (add to front of list)
+                                if is_in_routes_dir:
+                                    route_files.insert(0, file_path)
+                                else:
+                                    route_files.append(file_path)
+                    except Exception:
+                        continue
+
+        # Validate endpoint detection completeness
+        endpoint_detection_validation = self._validate_endpoint_detection_completeness(service, route_files, all_python_files)
+
+        # Analyze each route file for endpoints
+        for route_file in route_files:
+            try:
+                with open(route_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # Extract endpoint blocks using improved parsing
+                endpoint_blocks = self._extract_endpoint_blocks(content)
+
+                for block in endpoint_blocks:
+                    endpoint_info = self._extract_endpoint_info(block, route_file)
+                    if endpoint_info:
+                        endpoint_analysis['total_endpoints'] += 1
+                        endpoint_analysis['endpoint_details'].append(endpoint_info)
+
+                        # Analyze compliance for this endpoint
+                        compliance_results = self._analyze_single_endpoint(block, route_file)
+
+                        # Check REST compliance
+                        rest_compliant = compliance_results.get('rest_compliance', 0) >= 80
+                        openapi_compliant = compliance_results.get('openapi_compliance', 0) >= 80
+                        standard_compliant = compliance_results.get('project_standards', 0) >= 80
+
+                        if rest_compliant:
+                            endpoint_analysis['rest_compliant_endpoints'] += 1
+                        if openapi_compliant:
+                            endpoint_analysis['openapi_compliant_endpoints'] += 1
+                        if standard_compliant:
+                            endpoint_analysis['project_standard_compliant_endpoints'] += 1
+
+                        # Overall compliance check
+                        overall_compliant = rest_compliant and openapi_compliant and standard_compliant
+                        if overall_compliant:
+                            endpoint_analysis['compliant_endpoints'].append(endpoint_info)
+                        else:
+                            endpoint_analysis['non_compliant_endpoints'].append({
+                                **endpoint_info,
+                                'issues': compliance_results.get('issues', [])
+                            })
+
+                        # Collect violations
+                        endpoint_analysis['rest_violations'].extend(compliance_results.get('rest_violations', []))
+                        endpoint_analysis['openapi_violations'].extend(compliance_results.get('openapi_violations', []))
+                        endpoint_analysis['standard_violations'].extend(compliance_results.get('standard_violations', []))
+
+            except Exception as e:
+                logger.error(f"Error analyzing route file {route_file}: {e}")
+                continue
+
+        # Calculate compliance scores
+        total_endpoints = endpoint_analysis['total_endpoints']
+        if total_endpoints > 0:
+            endpoint_analysis['rest_compliance_score'] = round((endpoint_analysis['rest_compliant_endpoints'] / total_endpoints) * 100, 2)
+            endpoint_analysis['openapi_compliance_score'] = round((endpoint_analysis['openapi_compliant_endpoints'] / total_endpoints) * 100, 2)
+            endpoint_analysis['project_standards_compliance_score'] = round((endpoint_analysis['project_standard_compliant_endpoints'] / total_endpoints) * 100, 2)
+        else:
+            endpoint_analysis['rest_compliance_score'] = 0
+            endpoint_analysis['openapi_compliance_score'] = 0
+            endpoint_analysis['project_standards_compliance_score'] = 0
+
+        endpoint_analysis['endpoint_detection_validation'] = endpoint_detection_validation
+
+        return endpoint_analysis
+
+    def _extract_endpoint_blocks(self, content: str) -> List[str]:
+        """Extract endpoint blocks from FastAPI route files."""
+        blocks = []
+        lines = content.split('\n')
+
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+
+            # Look for FastAPI decorators
+            if line.startswith('@app.') or line.startswith('@router.'):
+                # Collect the decorator and function
+                block_lines = [line]
+
+                # Look for additional decorators (responses, tags, etc.)
+                j = i + 1
+                while j < len(lines) and (lines[j].strip().startswith('@') or lines[j].strip() == ''):
+                    if lines[j].strip().startswith('@'):
+                        block_lines.append(lines[j].strip())
+                    j += 1
+
+                # Find the function definition
+                while j < len(lines):
+                    if lines[j].strip().startswith('def ') or lines[j].strip().startswith('async def '):
+                        # Collect function lines until next function or class
+                        func_start = j
+                        j += 1
+                        brace_count = 0
+                        in_function = True
+
+                        while j < len(lines) and in_function:
+                            line_content = lines[j]
+                            brace_count += line_content.count('{') - line_content.count('}')
+
+                            # Check for next function/class/decorator at same indentation level
+                            stripped = line_content.strip()
+                            if (stripped.startswith('def ') or stripped.startswith('async def ') or
+                                stripped.startswith('class ') or stripped.startswith('@')) and brace_count <= 0:
+                                in_function = False
+                                j -= 1  # Don't include the next function
+                            else:
+                                j += 1
+
+                        # Add function to block
+                        block_lines.extend(lines[func_start:j])
+                        blocks.append('\n'.join(block_lines))
+                        break
+                    j += 1
+
+                i = j
+            else:
+                i += 1
+
+        return blocks
+
+    def _extract_endpoint_info(self, endpoint_block: str, file_path: Path) -> Optional[Dict[str, Any]]:
+        """Extract endpoint information from a FastAPI endpoint block."""
+        try:
+            lines = endpoint_block.split('\n')
+
+            # Find the main decorator
+            main_decorator = None
+            for line in lines:
+                if line.strip().startswith('@app.') or line.strip().startswith('@router.'):
+                    main_decorator = line.strip()
+                    break
+
+            if not main_decorator:
+                return None
+
+            # Extract HTTP method and path
+            method_match = re.search(r'@(?:app|router)\.(\w+)\s*\(\s*["\']([^"\']+)["\']', main_decorator)
+            if method_match:
+                method = method_match.group(1).upper()
+                path = method_match.group(2)
+            else:
+                return None
+
+            # Find function name
+            func_match = re.search(r'def\s+(\w+)|async def\s+(\w+)', endpoint_block)
+            func_name = func_match.group(1) or func_match.group(2) if func_match else 'unknown'
+
+            return {
+                'method': method,
+                'path': path,
+                'function': func_name,
+                'file': str(file_path.relative_to(file_path.parent.parent.parent)),  # Relative to service root
+                'line_number': self._get_endpoint_line_number(endpoint_block, file_path)
+            }
+
+        except Exception:
+            return None
+
+    def _get_endpoint_line_number(self, endpoint_block: str, file_path: Path) -> int:
+        """Get the line number where the endpoint is defined."""
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            # Find the position of the endpoint block in the file
+            lines = content.split('\n')
+            block_lines = endpoint_block.split('\n')
+
+            # Look for the main decorator
+            for i, line in enumerate(lines):
+                if block_lines and block_lines[0] in line:
+                    return i + 1
+
+        except Exception:
+            pass
+
+        return 0
+
+    def _validate_endpoint_detection_completeness(self, service: ServiceInfo, route_files: List[Path], all_python_files: List[Path]) -> Dict[str, Any]:
+        """Validate that endpoint detection is comprehensive."""
+        validation = {
+            'total_fastapi_files_found': len(route_files),
+            'detection_gaps': [],
+            'recommendations': []
+        }
+
+        # Check for missed FastAPI files
+        missed_files = []
+        for py_file in all_python_files:
+            if py_file not in route_files:
+                try:
+                    with open(py_file, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        if any(pattern in content for pattern in ['@app.', '@router.', 'FastAPI(', 'APIRouter(']):
+                            missed_files.append(str(py_file.relative_to(service.path)))
+                except Exception:
+                    continue
+
+        if missed_files:
+            validation['detection_gaps'].extend(missed_files)
+            validation['recommendations'].append(f"Consider analyzing additional FastAPI files: {', '.join(missed_files[:3])}")
+
+        return validation
+
+    def _analyze_single_endpoint(self, endpoint_block: str, file_path: Path) -> Dict[str, Any]:
+        """Analyze a single endpoint for compliance."""
+        results = {
+            'rest_compliance': 0,
+            'openapi_compliance': 0,
+            'project_standards': 0,
+            'issues': [],
+            'rest_violations': [],
+            'openapi_violations': [],
+            'standard_violations': []
+        }
+
+        # Check REST compliance
+        rest_score = self._check_rest_compliance_for_endpoint(endpoint_block)
+        results['rest_compliance'] = rest_score
+
+        # Check OpenAPI compliance
+        openapi_score = self._check_openapi_compliance_for_endpoint(endpoint_block)
+        results['openapi_compliance'] = openapi_score
+
+        # Check project standards
+        standards_score = self._check_project_standards_for_endpoint(endpoint_block)
+        results['project_standards'] = standards_score
+
+        # Collect issues
+        results['issues'] = []
+        if rest_score < 80:
+            results['issues'].append("REST compliance issues")
+            results['rest_violations'].append("Low REST compliance score")
+        if openapi_score < 80:
+            results['issues'].append("OpenAPI documentation issues")
+            results['openapi_violations'].append("Low OpenAPI compliance score")
+        if standards_score < 80:
+            results['issues'].append("Project standard violations")
+            results['standard_violations'].append("Low project standards compliance")
+
+        return results
+
+    def _check_rest_compliance_for_endpoint(self, endpoint_block: str) -> float:
+        """Check REST compliance for a single endpoint."""
+        score = 100.0
+
+        # Check for proper HTTP methods
+        if not any(method in endpoint_block for method in ['get(', 'post(', 'put(', 'delete(', 'patch(']):
+            score -= 30
+
+        # Check for status code specification
+        if 'status_code=' not in endpoint_block:
+            score -= 20
+
+        # Check for proper response modeling
+        if 'response_model=' not in endpoint_block:
+            score -= 15
+
+        return max(0, score)
+
+    def _check_openapi_compliance_for_endpoint(self, endpoint_block: str) -> float:
+        """Check OpenAPI compliance for a single endpoint."""
+        score = 100.0
+
+        # Required OpenAPI annotations
+        required_annotations = ['summary=', 'description=', 'response_model=']
+        for annotation in required_annotations:
+            if annotation not in endpoint_block:
+                score -= 25
+
+        # Recommended annotations
+        recommended_annotations = ['responses=', 'tags=']
+        for annotation in recommended_annotations:
+            if annotation not in endpoint_block:
+                score -= 10
+
+        return max(0, score)
+
+    def _check_project_standards_for_endpoint(self, endpoint_block: str) -> float:
+        """Check project standards compliance for a single endpoint."""
+        score = 100.0
+
+        # Check for async functions
+        if 'async def' not in endpoint_block and 'def ' in endpoint_block:
+            score -= 15
+
+        # Check for proper error handling
+        if 'try:' not in endpoint_block or 'except' not in endpoint_block:
+            score -= 20
+
+        # Check for logging
+        if 'logger.' not in endpoint_block and 'logging.' not in endpoint_block:
+            score -= 15
+
+        return max(0, score)
 
     def _identify_issues(self, scores: Dict[str, float]) -> List[str]:
         """Identify architecture issues based on scores"""

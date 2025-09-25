@@ -580,8 +580,8 @@ def main():
     audit_parser.add_argument('--profile', default='standard',
                             choices=['relaxed', 'standard', 'strict', 'ci_fast', 'ci_comprehensive'],
                             help='Audit profile to use')
-    audit_parser.add_argument('--output', choices=['rich', 'json', 'markdown'], default='rich',
-                            help='Output format')
+    audit_parser.add_argument('--output', choices=['rich', 'json', 'markdown', 'full'], default='rich',
+                            help='Output format (full includes all detailed analysis)')
     audit_parser.add_argument('--verbose', action='store_true', help='Verbose output')
 
     # Compare command
@@ -657,6 +657,23 @@ def main():
                 # Markdown report output
                 report = framework.generate_markdown_report(result)
                 print(report)
+            elif output_format == 'full':
+                # Full detailed JSON output
+                output = {
+                    'service_name': result.service_name,
+                    'overall_score': result.overall_score,
+                    'grade': result.grade,
+                    'critical_issues': result.critical_issues,
+                    'estimated_effort_days': result.estimated_effort_days,
+                    'dimensions': result.dimensions,
+                    'recommendations': result.recommendations,
+                    'architecture': result.architecture,
+                    'code_quality': result.code_quality,
+                    'performance': result.performance,
+                    'maintainability': result.maintainability,
+                    'metadata': result.metadata
+                }
+                print(json.dumps(output, indent=2, default=str))
             else:
                 # Rich console output
                 _display_rich_audit_results(framework.console, result)
