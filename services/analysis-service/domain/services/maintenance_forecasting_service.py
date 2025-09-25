@@ -197,35 +197,45 @@ class MaintenanceForecaster:
 
     def _generate_factor_recommendation(self, factor_name: str, urgency_score: float, predicted_days: int) -> str:
         """Generate recommendation based on factor analysis."""
-        if urgency_score >= 0.8:
-            urgency_level = "immediate"
-        elif urgency_score >= 0.6:
-            urgency_level = "high priority"
-        elif urgency_score >= 0.4:
-            urgency_level = "medium priority"
-        elif urgency_score >= 0.2:
-            urgency_level = "low priority"
-        else:
-            urgency_level = "minimal priority"
+        urgency_level = self._calculate_urgency_level(urgency_score)
 
-        if factor_name == "risk_score":
-            return f"{urgency_level.capitalize()} maintenance recommended due to high risk score"
-        elif factor_name == "document_age":
-            return f"{urgency_level.capitalize()} update needed - document is {predicted_days} days overdue"
-        elif factor_name == "usage_frequency":
-            if urgency_score < 0.3:
-                return "Low priority - document has high usage, maintain current schedule"
-            else:
-                return f"{urgency_level.capitalize()} review recommended despite high usage"
-        elif factor_name == "quality_trend":
-            if urgency_score > 0.6:
-                return f"{urgency_level.capitalize()} - quality is declining, immediate intervention needed"
-            else:
-                return "Quality stable - maintain regular monitoring schedule"
-        elif factor_name == "business_criticality":
-            return f"{urgency_level.capitalize()} maintenance for business-critical documentation"
+        # Factor-specific recommendation templates
+        templates = {
+            "risk_score": f"{urgency_level.capitalize()} maintenance recommended due to high risk score",
+            "document_age": f"{urgency_level.capitalize()} update needed - document is {predicted_days} days overdue",
+            "usage_frequency": self._get_usage_frequency_recommendation(urgency_score, urgency_level),
+            "quality_trend": self._get_quality_trend_recommendation(urgency_score, urgency_level),
+            "business_criticality": f"{urgency_level.capitalize()} maintenance for business-critical documentation",
+        }
+
+        return templates.get(factor_name, f"{urgency_level.capitalize()} maintenance recommended")
+
+    def _calculate_urgency_level(self, urgency_score: float) -> str:
+        """Calculate urgency level from score."""
+        if urgency_score >= 0.8:
+            return "immediate"
+        elif urgency_score >= 0.6:
+            return "high priority"
+        elif urgency_score >= 0.4:
+            return "medium priority"
+        elif urgency_score >= 0.2:
+            return "low priority"
         else:
-            return f"{urgency_level.capitalize()} maintenance recommended"
+            return "minimal priority"
+
+    def _get_usage_frequency_recommendation(self, urgency_score: float, urgency_level: str) -> str:
+        """Get recommendation for usage frequency factor."""
+        if urgency_score < 0.3:
+            return "Low priority - document has high usage, maintain current schedule"
+        else:
+            return f"{urgency_level.capitalize()} review recommended despite high usage"
+
+    def _get_quality_trend_recommendation(self, urgency_score: float, urgency_level: str) -> str:
+        """Get recommendation for quality trend factor."""
+        if urgency_score > 0.6:
+            return f"{urgency_level.capitalize()} - quality is declining, immediate intervention needed"
+        else:
+            return "Quality stable - maintain regular monitoring schedule"
 
     def _forecast_maintenance_schedule(
         self,
