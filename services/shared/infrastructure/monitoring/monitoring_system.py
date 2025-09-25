@@ -257,35 +257,63 @@ class MonitoringDashboard:
                 break
 
     def _update_dashboard_metrics(self):
-        """Update dashboard metrics summary"""
+        """Update dashboard metrics summary with improved organization."""
         if not self.services:
             return
 
-        total_services = len(self.services)
-        healthy_services = sum(
-            1 for s in self.services.values() if s.status == "healthy"
-        )
-        warning_services = sum(
-            1 for s in self.services.values() if s.status == "warning"
-        )
-        critical_services = sum(
-            1 for s in self.services.values() if s.status == "critical"
-        )
-        unknown_services = sum(
-            1 for s in self.services.values() if s.status == "unknown"
+        # Calculate service status counts
+        status_counts = self._calculate_service_status_counts()
+
+        # Calculate performance metrics
+        performance_metrics = self._calculate_performance_metrics()
+
+        # Calculate request metrics from loggers
+        request_metrics = self._calculate_request_metrics()
+
+        # Create and store metrics
+        metrics = DashboardMetrics(
+            total_services=status_counts["total"],
+            healthy_services=status_counts["healthy"],
+            warning_services=status_counts["warning"],
+            critical_services=status_counts["critical"],
+            unknown_services=status_counts["unknown"],
+            active_alerts=status_counts["active_alerts"],
+            avg_response_time=performance_metrics["avg_response_time"],
+            total_requests=request_metrics["total_requests"],
+            error_rate=request_metrics["error_rate"],
         )
 
-        active_alerts = sum(1 for a in self.alerts if not a.resolved)
+        self._store_metrics_history(metrics)
 
-        # Calculate average response time
+    def _calculate_service_status_counts(self) -> Dict[str, int]:
+        """Calculate counts for each service status."""
+        status_counts = {
+            "total": len(self.services),
+            "healthy": 0,
+            "warning": 0,
+            "critical": 0,
+            "unknown": 0,
+            "active_alerts": sum(1 for a in self.alerts if not a.resolved)
+        }
+
+        for service in self.services.values():
+            status_counts[service.status] += 1
+
+        return status_counts
+
+    def _calculate_performance_metrics(self) -> Dict[str, float]:
+        """Calculate average response time and other performance metrics."""
         response_times = [
             s.response_time for s in self.services.values() if s.response_time
         ]
         avg_response_time = (
-            sum(response_times) / len(response_times) if response_times else 0
+            sum(response_times) / len(response_times) if response_times else 0.0
         )
 
-        # Get total requests and error rate from all loggers
+        return {"avg_response_time": avg_response_time}
+
+    def _calculate_request_metrics(self) -> Dict[str, float]:
+        """Calculate total requests and error rate from all loggers."""
         total_requests = 0
         total_errors = 0
 
@@ -297,18 +325,13 @@ class MonitoringDashboard:
 
         error_rate = total_errors / max(total_requests, 1)
 
-        metrics = DashboardMetrics(
-            total_services=total_services,
-            healthy_services=healthy_services,
-            warning_services=warning_services,
-            critical_services=critical_services,
-            unknown_services=unknown_services,
-            active_alerts=active_alerts,
-            avg_response_time=avg_response_time,
-            total_requests=total_requests,
-            error_rate=error_rate,
-        )
+        return {
+            "total_requests": total_requests,
+            "error_rate": error_rate
+        }
 
+    def _store_metrics_history(self, metrics: DashboardMetrics) -> None:
+        """Store metrics in history with retention policy."""
         self.metrics_history.append(metrics)
 
         # Keep only last 100 metrics
@@ -316,78 +339,74 @@ class MonitoringDashboard:
             self.metrics_history = self.metrics_history[-100:]
 
     def get_dashboard_data(self) -> Dict[str, Any]:
-        """Get current dashboard data"""
+        """Get current dashboard data with improved organization."""
         if not self.services:
             return {"error": "No services monitored"}
 
-        # Get latest metrics
-        latest_metrics = self.metrics_history[-1] if self.metrics_history else None
+        # Get core dashboard components
+        latest_metrics = self._get_latest_metrics()
+        active_alerts = self._get_active_alerts()
+        service_summary = self._build_service_summary()
 
-        # Get active alerts
-        active_alerts = [a for a in self.alerts if not a.resolved]
-
-        # Service status summary
-        service_summary = []
-        for service_name, service_status in self.services.items():
-            service_summary.append(
-                {
-                    "name": service_name,
-                    "status": service_status.status,
-                    "last_check": service_status.last_check.isoformat(),
-                    "response_time": service_status.response_time,
-                    "uptime": service_status.uptime,
-                    "version": service_status.version,
-                }
-            )
-
-        dashboard_data = {
+        return {
             "timestamp": datetime.now().isoformat(),
             "services": service_summary,
-            "alerts": [
-                {
-                    "id": a.alert_id,
-                    "service": a.service_name,
-                    "type": a.alert_type,
-                    "severity": a.severity,
-                    "message": a.message,
-                    "timestamp": a.timestamp.isoformat(),
-                }
-                for a in active_alerts
-            ],
-            "metrics": (
-                {
-                    "total_services": (
-                        latest_metrics.total_services if latest_metrics else 0
-                    ),
-                    "healthy_services": (
-                        latest_metrics.healthy_services if latest_metrics else 0
-                    ),
-                    "warning_services": (
-                        latest_metrics.warning_services if latest_metrics else 0
-                    ),
-                    "critical_services": (
-                        latest_metrics.critical_services if latest_metrics else 0
-                    ),
-                    "unknown_services": (
-                        latest_metrics.unknown_services if latest_metrics else 0
-                    ),
-                    "active_alerts": (
-                        latest_metrics.active_alerts if latest_metrics else 0
-                    ),
-                    "avg_response_time": (
-                        latest_metrics.avg_response_time if latest_metrics else 0
-                    ),
-                    "total_requests": (
-                        latest_metrics.total_requests if latest_metrics else 0
-                    ),
-                    "error_rate": latest_metrics.error_rate if latest_metrics else 0,
-                }
-                if latest_metrics
-                else {}
-            ),
+            "alerts": self._format_alerts(active_alerts),
+            "metrics": self._format_metrics(latest_metrics),
         }
 
-        return dashboard_data
+    def _get_latest_metrics(self) -> Optional[DashboardMetrics]:
+        """Get the most recent dashboard metrics."""
+        return self.metrics_history[-1] if self.metrics_history else None
+
+    def _get_active_alerts(self) -> List[Any]:
+        """Get all unresolved alerts."""
+        return [alert for alert in self.alerts if not alert.resolved]
+
+    def _build_service_summary(self) -> List[Dict[str, Any]]:
+        """Build service status summary."""
+        return [
+            {
+                "name": service_name,
+                "status": service_status.status,
+                "last_check": service_status.last_check.isoformat(),
+                "response_time": service_status.response_time,
+                "uptime": service_status.uptime,
+                "version": service_status.version,
+            }
+            for service_name, service_status in self.services.items()
+        ]
+
+    def _format_alerts(self, active_alerts: List[Any]) -> List[Dict[str, Any]]:
+        """Format alerts for dashboard display."""
+        return [
+            {
+                "id": alert.alert_id,
+                "service": alert.service_name,
+                "type": alert.alert_type,
+                "severity": alert.severity,
+                "message": alert.message,
+                "timestamp": alert.timestamp.isoformat(),
+            }
+            for alert in active_alerts
+        ]
+
+    def _format_metrics(self, latest_metrics: Optional[DashboardMetrics]) -> Dict[str, Any]:
+        """Format metrics for dashboard display."""
+        if not latest_metrics:
+            return {}
+
+        return {
+            "total_services": latest_metrics.total_services,
+            "healthy_services": latest_metrics.healthy_services,
+            "warning_services": latest_metrics.warning_services,
+            "critical_services": latest_metrics.critical_services,
+            "unknown_services": latest_metrics.unknown_services,
+            "active_alerts": latest_metrics.active_alerts,
+            "avg_response_time": latest_metrics.avg_response_time,
+            "total_requests": latest_metrics.total_requests,
+            "error_rate": latest_metrics.error_rate,
+        }
 
     def print_dashboard(self):
         """Print formatted dashboard"""
