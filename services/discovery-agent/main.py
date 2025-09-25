@@ -75,23 +75,32 @@ app = FastAPI(
 
     ## Features
 
-    * **Service Discovery**: Automatically discover services and their capabilities
-    * **Tool Registration**: Register discovered tools with orchestrators and workflows
-    * **OpenAPI Integration**: Parse and analyze OpenAPI specifications
-    * **Health Monitoring**: Monitor service health and availability
-    * **Bulk Operations**: Process multiple services simultaneously
-    * **Ecosystem Integration**: Work with Docker networks and service meshes
-    * **RESTful API**: Complete REST API with OpenAPI/Swagger documentation
+    * **Service Discovery**: Automatically discover services and their capabilities through OpenAPI analysis
+    * **Tool Registration**: Register discovered tools with orchestrators and AI workflows
+    * **Bulk Operations**: Process multiple services simultaneously with progress tracking
+    * **OpenAPI Integration**: Parse, validate, and analyze OpenAPI specifications
+    * **Semantic Analysis**: Extract meaningful tool descriptions and capabilities
+    * **Health Monitoring**: Monitor service health, connectivity, and tool availability
+    * **Network Adaptation**: Automatic URL normalization for Docker networking environments
+    * **RESTful API**: Complete REST API with comprehensive OpenAPI/Swagger documentation
+
+    ## Service Discovery Process
+
+    1. **URL Normalization**: Adapt service URLs for container networking
+    2. **Spec Retrieval**: Fetch OpenAPI specifications with intelligent fallbacks
+    3. **Semantic Analysis**: Extract tool functions, parameters, and descriptions
+    4. **Validation**: Ensure API compliance and tool compatibility
+    5. **Registration**: Register tools with orchestrator systems
 
     ## Authentication
 
-    All endpoints require authentication via JWT tokens or API keys.
+    Service discovery endpoints support optional authentication for secure environments.
 
     ## Rate Limiting
 
-    API endpoints are rate-limited to ensure fair usage and system stability.
+    API endpoints include configurable rate limiting to prevent abuse.
     """,
-    version=config.service_version,
+    version=config.service_version or "1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -107,12 +116,25 @@ app = FastAPI(
     tags_metadata=[
         {
             "name": "discovery",
-            "description": "Service and tool discovery operations"
+            "description": "Core service discovery operations: single service analysis and registration"
         },
         {
-            "name": "registration",
-            "description": "Tool registration and ecosystem integration"
+            "name": "bulk",
+            "description": "Bulk operations: process multiple services simultaneously"
         },
+        {
+            "name": "health",
+            "description": "Service health monitoring and statistics"
+        },
+        {
+            "name": "registry",
+            "description": "Tool registry management and status queries"
+        },
+        {
+            "name": "monitoring",
+            "description": "Performance monitoring and analytics dashboard"
+        }
+    ]
         {
             "name": "health",
             "description": "Service health monitoring and status"
@@ -230,7 +252,77 @@ async def fetch_openapi_spec_with_fallback(
 # ============================================================================
 
 
-@app.post("/discover", tags=["discovery"])
+@app.post(
+    "/discover",
+    response_model=Dict[str, Any],
+    summary="Discover Single Service",
+    description="""
+    Discover and analyze a single service by fetching its OpenAPI specification and extracting tool capabilities.
+
+    This endpoint performs comprehensive service discovery including:
+    - URL normalization for Docker networking
+    - OpenAPI specification retrieval with fallbacks
+    - Semantic analysis of API endpoints
+    - Tool capability extraction and validation
+    - Registration with orchestrator systems
+
+    The discovery process adapts to different networking environments and handles various OpenAPI specification formats.
+    """,
+    tags=["discovery"],
+    responses={
+        200: {
+            "description": "Service successfully discovered and analyzed",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "service_name": "example-service",
+                        "base_url": "http://example-service:8000",
+                        "tools_discovered": 5,
+                        "endpoints_analyzed": 12,
+                        "status": "registered",
+                        "capabilities": ["REST API", "JSON responses", "authentication"]
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Invalid request data or service discovery failed",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Service discovery failed",
+                        "message": "Unable to fetch OpenAPI specification",
+                        "details": {"url": "http://invalid-url", "error": "Connection timeout"}
+                    }
+                }
+            }
+        },
+        422: {
+            "description": "Validation error in request data",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Validation Error",
+                        "message": "Invalid service URL format",
+                        "details": {"field": "base_url", "issue": "Must be valid HTTP/HTTPS URL"}
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal server error during discovery process",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Internal Server Error",
+                        "message": "Unexpected error during service analysis",
+                        "details": {"traceback": "..."}
+                    }
+                }
+            }
+        }
+    }
+)
 async def discover_service(request: DiscoverRequest):
     """Enhanced single service discovery with network URL normalization"""
     try:
@@ -310,7 +402,93 @@ async def discover_service(request: DiscoverRequest):
         )
 
 
-@app.post("/discover-ecosystem", tags=["bulk"])
+@app.post(
+    "/discover-ecosystem",
+    response_model=Dict[str, Any],
+    summary="Discover Multiple Services (Bulk)",
+    description="""
+    Perform bulk service discovery for multiple services simultaneously with progress tracking.
+
+    This endpoint processes multiple services in parallel or sequentially, providing:
+    - Progress tracking and status updates
+    - Individual service results and error handling
+    - Batch processing with configurable concurrency
+    - Comprehensive reporting of discovery outcomes
+    - Auto-detection capabilities for Docker networks
+
+    Ideal for initial ecosystem setup or periodic service inventory updates.
+    """,
+    tags=["bulk"],
+    responses={
+        200: {
+            "description": "Bulk discovery completed successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "total_services": 5,
+                        "successful_discoveries": 4,
+                        "failed_discoveries": 1,
+                        "results": [
+                            {
+                                "service_name": "user-service",
+                                "status": "success",
+                                "tools_discovered": 8,
+                                "processing_time": 2.3
+                            },
+                            {
+                                "service_name": "payment-service",
+                                "status": "failed",
+                                "error": "Connection timeout",
+                                "processing_time": 30.0
+                            }
+                        ],
+                        "summary": {
+                            "total_tools_registered": 32,
+                            "average_processing_time": 5.2,
+                            "completion_time": 15.8
+                        }
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Invalid bulk request or no services provided",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Bulk Discovery Failed",
+                        "message": "No valid services provided for discovery",
+                        "details": {"services_count": 0}
+                    }
+                }
+            }
+        },
+        422: {
+            "description": "Validation error in bulk request data",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Validation Error",
+                        "message": "Invalid service configuration",
+                        "details": {"service_index": 2, "field": "base_url", "issue": "Invalid URL format"}
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal server error during bulk processing",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Bulk Processing Error",
+                        "message": "Unexpected error during bulk discovery",
+                        "details": {"partial_results": True, "processed_count": 3}
+                    }
+                }
+            }
+        }
+    }
+)
 async def discover_ecosystem(request: BulkDiscoverRequest):
     """Comprehensive ecosystem discovery for multiple services"""
     try:
@@ -454,9 +632,60 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
         )
 
 
-@app.get("/registry/stats", tags=["health"])
+@app.get(
+    "/registry/stats",
+    response_model=Dict[str, Any],
+    summary="Get Registry Statistics",
+    description="""
+    Retrieve comprehensive statistics about the tool registry and discovery operations.
+
+    Provides insights into:
+    - Total registered tools and services
+    - Discovery success/failure rates
+    - Performance metrics and trends
+    - Health status of registered services
+    - Recent discovery activities
+
+    Useful for monitoring system health and understanding ecosystem usage patterns.
+    """,
+    tags=["health"],
+    responses={
+        200: {
+            "description": "Registry statistics retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "total_services": 12,
+                        "total_tools": 89,
+                        "active_services": 10,
+                        "failed_services": 2,
+                        "average_discovery_time": 3.2,
+                        "last_discovery": "2025-09-25T01:30:00Z",
+                        "health_score": 85.3,
+                        "recent_activities": [
+                            {"service": "user-service", "status": "success", "timestamp": "2025-09-25T01:29:45Z"},
+                            {"service": "payment-service", "status": "failed", "timestamp": "2025-09-25T01:28:12Z"}
+                        ]
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal server error retrieving statistics",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Statistics Retrieval Failed",
+                        "message": "Unable to access registry data",
+                        "details": {"database_status": "unavailable"}
+                    }
+                }
+            }
+        }
+    }
+)
 async def get_registry_stats():
-    """Get basic registry statistics"""
+    """Get comprehensive registry statistics"""
     try:
         stats = {
             "total_services": 0,
@@ -611,9 +840,71 @@ async def discover_services_v1(request: BulkDiscoverRequest):
         )
 
 
-@app.get("/services")
+@app.get(
+    "/services",
+    response_model=List[Dict[str, Any]],
+    summary="List Discovered Services",
+    description="""
+    Retrieve a comprehensive list of all services discovered by the discovery agent.
+
+    Returns detailed information about each discovered service including:
+    - Service metadata and capabilities
+    - Discovery timestamp and status
+    - Available tools and endpoints
+    - Health and connectivity information
+    - OpenAPI specification details
+
+    This endpoint serves as the primary interface for clients to discover available services in the ecosystem.
+    """,
+    tags=["registry"],
+    responses={
+        200: {
+            "description": "List of discovered services retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "name": "user-service",
+                            "base_url": "http://user-service:8000",
+                            "status": "active",
+                            "discovered_at": "2025-09-25T01:15:30Z",
+                            "tools_count": 12,
+                            "endpoints_count": 8,
+                            "capabilities": ["user_management", "authentication", "profile_data"],
+                            "health_status": "healthy",
+                            "last_health_check": "2025-09-25T01:30:00Z"
+                        },
+                        {
+                            "name": "payment-service",
+                            "base_url": "http://payment-service:8001",
+                            "status": "active",
+                            "discovered_at": "2025-09-25T01:20:15Z",
+                            "tools_count": 6,
+                            "endpoints_count": 4,
+                            "capabilities": ["payment_processing", "transaction_history"],
+                            "health_status": "healthy",
+                            "last_health_check": "2025-09-25T01:29:45Z"
+                        }
+                    ]
+                }
+            }
+        },
+        500: {
+            "description": "Internal server error retrieving service list",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Service List Retrieval Failed",
+                        "message": "Unable to access service registry",
+                        "details": {"registry_status": "unavailable"}
+                    }
+                }
+            }
+        }
+    }
+)
 async def get_discovered_services():
-    """Get list of discovered services for the discovery client."""
+    """Get comprehensive list of discovered services for clients"""
     print("DEBUG: /services endpoint called")
     try:
         # Return a basic list of known services for now
@@ -653,9 +944,77 @@ async def get_discovered_services():
         )
 
 
-@app.get("/monitoring/dashboard")
+@app.get(
+    "/monitoring/dashboard",
+    response_model=Dict[str, Any],
+    summary="Monitoring Dashboard",
+    description="""
+    Retrieve comprehensive monitoring data and analytics for the discovery agent.
+
+    Provides detailed insights into system performance and operations including:
+    - Discovery operation metrics and trends
+    - Service health monitoring data
+    - Performance analytics and bottlenecks
+    - Error rates and failure patterns
+    - Resource utilization statistics
+    - Real-time system status indicators
+
+    Essential for system administrators and DevOps teams to monitor service health and performance.
+    """,
+    tags=["monitoring"],
+    responses={
+        200: {
+            "description": "Monitoring dashboard data retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "system_status": "healthy",
+                        "uptime_seconds": 86400,
+                        "total_discoveries": 150,
+                        "success_rate": 94.2,
+                        "average_response_time": 2.8,
+                        "active_services": 12,
+                        "failed_services": 1,
+                        "performance_metrics": {
+                            "cpu_usage": 45.2,
+                            "memory_usage": 67.8,
+                            "network_requests": 1250,
+                            "error_rate": 2.1
+                        },
+                        "recent_errors": [
+                            {
+                                "timestamp": "2025-09-25T01:25:30Z",
+                                "service": "inventory-service",
+                                "error": "Connection timeout",
+                                "severity": "medium"
+                            }
+                        ],
+                        "discovery_trends": {
+                            "last_24h": 45,
+                            "last_7d": 320,
+                            "success_trend": "stable",
+                            "performance_trend": "improving"
+                        }
+                    }
+                }
+            }
+        },
+        500: {
+            "description": "Internal server error retrieving monitoring data",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": "Monitoring Data Retrieval Failed",
+                        "message": "Unable to access monitoring metrics",
+                        "details": {"monitoring_status": "degraded"}
+                    }
+                }
+            }
+        }
+    }
+)
 async def get_monitoring_dashboard():
-    """Get basic monitoring dashboard"""
+    """Get comprehensive monitoring dashboard with performance metrics"""
     try:
         dashboard = {
             "dashboard_title": "Discovery Agent Monitoring",
