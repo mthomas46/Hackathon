@@ -4180,7 +4180,55 @@ async def submit_batch_tasks_endpoint(req: BatchTasksRequest):
         )
 
 
-@app.get("/distributed/tasks/{task_id}")
+@app.get(
+    "/distributed/tasks/{task_id}",
+    tags=["distributed"],
+    summary="Get the status of a distributed task",
+    description="""Retrieves real-time status, progress, and results for distributed processing tasks,
+    enabling monitoring and tracking of long-running analysis operations. Provides detailed
+    information about task execution, worker assignment, and completion status.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Task status retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Task task_001 status: processing",
+                        "data": {
+                            "task_id": "task_001",
+                            "task_type": "comprehensive_analysis",
+                            "status": "processing",
+                            "priority": "high",
+                            "progress": 0.67,
+                            "created_at": "2025-09-25T10:30:00Z",
+                            "started_at": "2025-09-25T10:30:15Z",
+                            "completed_at": None,
+                            "assigned_worker": "worker_003",
+                            "error_message": None,
+                            "estimated_completion": "2025-09-25T11:05:00Z",
+                            "retry_count": 0,
+                            "results": {
+                                "documents_processed": 10,
+                                "documents_remaining": 5,
+                                "current_document": "doc_015",
+                                "issues_found": 23,
+                                "processing_rate": 1.2,  # docs per minute
+                            },
+                        },
+                        "task_id": "task_001",
+                        "status": "processing",
+                        "progress": 0.67,
+                    }
+                }
+            },
+        },
+        404: {"description": "Task not found", "model": ErrorResponse},
+        500: {"description": "Task status retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_task_status_endpoint(task_id: str):
     """Get the status of a distributed task.
 
@@ -4237,7 +4285,22 @@ async def get_task_status_endpoint(task_id: str):
         )
 
 
-@app.delete("/distributed/tasks/{task_id}")
+@app.delete(
+    "/distributed/tasks/{task_id}",
+    tags=["distributed"],
+    summary="Cancel a distributed task",
+    description="""Cancels a running distributed processing task, freeing up worker resources
+    and preventing completion of unnecessary analysis operations. Gracefully terminates
+    task execution and cleans up associated resources.""",
+    responses={
+        204: {
+            "description": "Task cancelled successfully",
+        },
+        404: {"description": "Task not found", "model": ErrorResponse},
+        409: {"description": "Task cannot be cancelled (already completed or failed)", "model": ErrorResponse},
+        500: {"description": "Task cancellation failed", "model": ErrorResponse},
+    },
+)
 async def cancel_task_endpoint(task_id: str):
     """Cancel a distributed task.
 
@@ -4274,7 +4337,70 @@ async def cancel_task_endpoint(task_id: str):
         )
 
 
-@app.get("/distributed/workers")
+@app.get(
+    "/distributed/workers",
+    tags=["distributed"],
+    summary="Get status of all distributed processing workers",
+    description="""Provides comprehensive information about worker availability, performance,
+    and current task assignments for monitoring and optimization. Includes detailed
+    metrics on worker health, processing capacity, and current workload distribution.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Workers status retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Retrieved status for 5 workers",
+                        "data": {
+                            "workers": [
+                                {
+                                    "worker_id": "worker_001",
+                                    "status": "busy",
+                                    "current_task": "task_015",
+                                    "uptime_seconds": 86400,
+                                    "tasks_completed": 127,
+                                    "tasks_failed": 2,
+                                    "avg_processing_time": 45.3,
+                                    "cpu_usage": 0.78,
+                                    "memory_usage": 0.65,
+                                    "last_heartbeat": "2025-09-25T10:29:45Z",
+                                },
+                                {
+                                    "worker_id": "worker_002",
+                                    "status": "available",
+                                    "current_task": None,
+                                    "uptime_seconds": 75600,
+                                    "tasks_completed": 89,
+                                    "tasks_failed": 1,
+                                    "avg_processing_time": 52.1,
+                                    "cpu_usage": 0.12,
+                                    "memory_usage": 0.23,
+                                    "last_heartbeat": "2025-09-25T10:29:50Z",
+                                }
+                            ],
+                            "total_workers": 5,
+                            "available_workers": 2,
+                            "busy_workers": 3,
+                            "system_health": {
+                                "overall_status": "healthy",
+                                "avg_response_time": 0.8,
+                                "failed_heartbeats": 0,
+                                "capacity_utilization": 0.6,
+                            },
+                        },
+                        "total_workers": 5,
+                        "available_workers": 2,
+                        "busy_workers": 3,
+                    }
+                }
+            },
+        },
+        500: {"description": "Workers status retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_workers_status_endpoint():
     """Get status of all distributed processing workers.
 
