@@ -1651,6 +1651,116 @@ async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactReq
         )
 
 
+def _validate_report_request(simulation_id: str, documents: list) -> Optional[dict]:
+    """Validate report generation request parameters."""
+    if not simulation_id:
+        return create_error_response("simulation_id is required", error_code=ErrorCodes.VALIDATION_ERROR)
+
+    if not documents:
+        return create_error_response("documents list cannot be empty", error_code=ErrorCodes.VALIDATION_ERROR)
+
+    return None
+
+
+async def _analyze_documents_batch(documents: list) -> tuple:
+    """Analyze a batch of documents and return results with statistics."""
+    analysis_results = []
+    total_quality_score = 0
+    total_issues = 0
+
+    for doc in documents:
+        try:
+            doc_content = doc.get("content", "")
+            if not doc_content:
+                continue
+
+            # Use existing analysis quality endpoint for each document
+            quality_req = ContentQualityRequest(
+                content=doc_content,
+                document_id=doc.get("id", ""),
+                document_type=doc.get("type", "unknown"),
+                title=doc.get("title", ""),
+            )
+
+            quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
+
+            if quality_result:
+                doc_analysis = {
+                    "document_id": doc.get("id", ""),
+                    "analysis_type": "comprehensive_document_analysis",
+                    "quality_score": quality_result.quality_score,
+                    "readability_score": quality_result.readability_score,
+                    "issues_found": (len(quality_result.issues) if quality_result.issues else 0),
+                    "issues": ([str(issue) for issue in quality_result.issues] if quality_result.issues else []),
+                    "insights": ([str(insight) for insight in quality_result.insights] if quality_result.insights else []),
+                    "timestamp": (
+                        quality_result.analysis_timestamp.isoformat() if quality_result.analysis_timestamp else None
+                    ),
+                }
+
+                analysis_results.append(doc_analysis)
+                total_quality_score += quality_result.quality_score
+                total_issues += len(quality_result.issues) if quality_result.issues else 0
+
+        except Exception as e:
+            # Log individual document analysis errors but continue with others
+            fire_and_forget(
+                "warning",
+                f"Failed to analyze document {doc.get('id', 'unknown')}",
+                SERVICE_NAME,
+                {"error": str(e), "document_id": doc.get("id", "")},
+            )
+            continue
+
+    return analysis_results, total_quality_score, total_issues
+
+
+def _calculate_report_summary(analysis_results: list, total_quality_score: float, total_issues: int) -> dict:
+    """Calculate summary statistics for the analysis report."""
+    avg_quality_score = total_quality_score / len(analysis_results) if analysis_results else 0
+
+    return {
+        "total_analyses": len(analysis_results),
+        "analysis_types": ["comprehensive_document_analysis"],
+        "documents_with_issues": len([r for r in analysis_results if r["issues_found"] > 0]),
+        "average_quality_score": avg_quality_score,
+        "total_issues_found": total_issues,
+    }
+
+
+def _generate_json_report(report_id: str, simulation_id: str, documents: list,
+                         analysis_results: list, summary: dict, report_type: str) -> dict:
+    """Generate the JSON structure for the analysis report."""
+    return {
+        "report_id": report_id,
+        "simulation_id": simulation_id,
+        "timestamp": datetime.now().isoformat(),
+        "documents_analyzed": len(documents),
+        "analysis_results": analysis_results,
+        "summary": summary,
+        "metadata": {
+            "source": "analysis-service",
+            "report_type": report_type,
+            "processing_time": "completed",
+            "service_version": "1.0.0",
+        },
+    }
+
+
+def _prepare_report_response(json_report: dict, markdown_content: str,
+                           report_id: str, analysis_results: list,
+                           include_json: bool, include_markdown: bool) -> dict:
+    """Prepare the final response data for the report endpoint."""
+    return {
+        "success": True,
+        "report": json_report if include_json else None,
+        "markdown_content": markdown_content if include_markdown else None,
+        "report_id": report_id,
+        "documents_processed": len(analysis_results),
+        "processing_time": "completed",
+    }
+
+
 @app.post("/analyze/generate-report")
 async def generate_analysis_report_endpoint(req: dict):
     """Generate comprehensive analysis reports for simulation service.
@@ -1668,93 +1778,26 @@ async def generate_analysis_report_endpoint(req: dict):
         include_markdown = req.get("include_markdown", True)
         include_json = req.get("include_json", True)
 
-        if not simulation_id:
-            return create_error_response("simulation_id is required", error_code=ErrorCodes.VALIDATION_ERROR)
-
-        if not documents:
-            return create_error_response("documents list cannot be empty", error_code=ErrorCodes.VALIDATION_ERROR)
+        # Validate request parameters
+        validation_error = _validate_report_request(simulation_id, documents)
+        if validation_error:
+            return validation_error
 
         # Perform comprehensive analysis on all documents
-        analysis_results = []
-        total_quality_score = 0
-        total_issues = 0
-
-        for doc in documents:
-            try:
-                doc_content = doc.get("content", "")
-                if not doc_content:
-                    continue
-
-                # Use existing analysis quality endpoint for each document
-                quality_req = ContentQualityRequest(
-                    content=doc_content,
-                    document_id=doc.get("id", ""),
-                    document_type=doc.get("type", "unknown"),
-                    title=doc.get("title", ""),
-                )
-
-                quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
-
-                if quality_result:
-                    doc_analysis = {
-                        "document_id": doc.get("id", ""),
-                        "analysis_type": "comprehensive_document_analysis",
-                        "quality_score": quality_result.quality_score,
-                        "readability_score": quality_result.readability_score,
-                        "issues_found": (len(quality_result.issues) if quality_result.issues else 0),
-                        "issues": ([str(issue) for issue in quality_result.issues] if quality_result.issues else []),
-                        "insights": ([str(insight) for insight in quality_result.insights] if quality_result.insights else []),
-                        "timestamp": (
-                            quality_result.analysis_timestamp.isoformat() if quality_result.analysis_timestamp else None
-                        ),
-                    }
-
-                    analysis_results.append(doc_analysis)
-                    total_quality_score += quality_result.quality_score
-                    total_issues += len(quality_result.issues) if quality_result.issues else 0
-
-            except Exception as e:
-                # Log individual document analysis errors but continue with others
-                fire_and_forget(
-                    "warning",
-                    f"Failed to analyze document {doc.get('id', 'unknown')}",
-                    SERVICE_NAME,
-                    {"error": str(e), "document_id": doc.get("id", "")},
-                )
-                continue
+        analysis_results, total_quality_score, total_issues = await _analyze_documents_batch(documents)
 
         if not analysis_results:
             return create_error_response("No documents could be analyzed", error_code=ErrorCodes.ANALYSIS_FAILED)
 
         # Calculate summary statistics
-        avg_quality_score = total_quality_score / len(analysis_results) if analysis_results else 0
-
-        summary = {
-            "total_analyses": len(analysis_results),
-            "analysis_types": ["comprehensive_document_analysis"],
-            "documents_with_issues": len([r for r in analysis_results if r["issues_found"] > 0]),
-            "average_quality_score": avg_quality_score,
-            "total_issues_found": total_issues,
-        }
+        summary = _calculate_report_summary(analysis_results, total_quality_score, total_issues)
 
         # Generate report ID
         report_id = f"analysis_report_{simulation_id}_{int(datetime.now().timestamp())}"
 
         # Prepare JSON report data
-        json_report = {
-            "report_id": report_id,
-            "simulation_id": simulation_id,
-            "timestamp": datetime.now().isoformat(),
-            "documents_analyzed": len(documents),
-            "analysis_results": analysis_results,
-            "summary": summary,
-            "metadata": {
-                "source": "analysis-service",
-                "report_type": report_type,
-                "processing_time": "completed",
-                "service_version": "1.0.0",
-            },
-        }
+        json_report = _generate_json_report(report_id, simulation_id, documents,
+                                          analysis_results, summary, report_type)
 
         # Generate Markdown report if requested
         markdown_content = ""
@@ -1762,14 +1805,8 @@ async def generate_analysis_report_endpoint(req: dict):
             markdown_content = generate_analysis_markdown_report(json_report)
 
         # Prepare response
-        response_data = {
-            "success": True,
-            "report": json_report if include_json else None,
-            "markdown_content": markdown_content if include_markdown else None,
-            "report_id": report_id,
-            "documents_processed": len(analysis_results),
-            "processing_time": "completed",
-        }
+        response_data = _prepare_report_response(json_report, markdown_content, report_id,
+                                               analysis_results, include_json, include_markdown)
 
         # Log successful report generation
         fire_and_forget(
