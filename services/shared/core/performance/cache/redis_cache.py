@@ -1,3 +1,7 @@
+import logging
+from ....infrastructure.utilities.error_handling import CacheException
+
+
 class RedisCache(CacheBackend):
     """Redis cache implementation."""
 
@@ -64,7 +68,10 @@ class RedisCache(CacheBackend):
                 return pickle.loads(
                     value_bytes
                 )  # nosec: Controlled data from Redis cache
-        except Exception:
+        except Exception as e:
+            # Cache miss or connection error - log and return None
+            logger = logging.getLogger(__name__)
+            logger.debug(f"Cache get failed for key {key}: {e}")
             pass  # Cache miss or error
 
         return None

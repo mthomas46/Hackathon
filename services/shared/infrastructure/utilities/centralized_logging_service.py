@@ -717,7 +717,8 @@ class CentralizedLoggingService:
         elif storage_type == LogStorageType.FILE:
             self.storage = FileLogStorage()
         else:
-            raise ValueError(f"Unsupported storage type: {storage_type}")
+            from .error_handling import ConfigurationException
+            raise ConfigurationException("storage_type", f"Unsupported storage type: {storage_type}")
 
         self.retention_policy = LogRetentionPolicy()
         self._alert_callbacks: List[Callable[[str, Dict[str, Any]], None]] = []
@@ -926,7 +927,8 @@ class CentralizedLoggingService:
         elif format == "json":
             return json.dumps([log.to_dict() for log in logs], indent=2)
         else:
-            raise ValueError(f"Unsupported export format: {format}")
+            from .error_handling import ValidationException
+            raise ValidationException(f"Unsupported export format: {format}")
 
 
 # Global instance
