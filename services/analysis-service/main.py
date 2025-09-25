@@ -691,21 +691,24 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
             },
         )
 
-        return create_success_response(
-            "Sentiment analysis completed successfully",
-            {
-                "document_id": result.document_id,
-                "sentiment_analysis": result.sentiment_analysis,
-                "readability_metrics": result.readability_metrics,
-                "tone_analysis": result.tone_analysis,
-                "quality_score": result.quality_score,
-                "recommendations": result.recommendations,
-                "processing_time": result.processing_time,
-            },
-            document_id=result.document_id,
-            quality_score=result.quality_score,
-            sentiment=result.sentiment_analysis.get("sentiment", "unknown"),
-            processing_time=result.processing_time,
+        return JSONResponse(
+            status_code=200,
+            content=create_success_response(
+                "Sentiment analysis completed successfully",
+                {
+                    "document_id": result.document_id,
+                    "sentiment_analysis": result.sentiment_analysis,
+                    "readability_metrics": result.readability_metrics,
+                    "tone_analysis": result.tone_analysis,
+                    "quality_score": result.quality_score,
+                    "recommendations": result.recommendations,
+                    "processing_time": result.processing_time,
+                },
+                document_id=result.document_id,
+                quality_score=result.quality_score,
+                sentiment=result.sentiment_analysis.get("sentiment", "unknown"),
+                processing_time=result.processing_time,
+            )
         )
 
     except Exception as e:
@@ -720,9 +723,12 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
             exc_info=True,
         )
 
-        return create_error_response(
-            f"Sentiment analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED,
+        return JSONResponse(
+            status_code=500,
+            content=create_error_response(
+                f"Sentiment analysis failed: {str(e)}",
+                error_code=ErrorCodes.ANALYSIS_FAILED,
+            )
         )
 
 
@@ -786,21 +792,24 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
             },
         )
 
-        return create_success_response(
-            "Tone analysis completed successfully",
-            {
-                "document_id": result.document_id,
-                "primary_tone": result.primary_tone,
-                "tone_scores": result.tone_scores,
-                "tone_indicators": result.tone_indicators,
-                "sentiment_summary": result.sentiment_summary,
-                "clarity_assessment": result.clarity_assessment,
-                "processing_time": result.processing_time,
-            },
-            document_id=result.document_id,
-            primary_tone=result.primary_tone,
-            analysis_scope=req.analysis_scope,
-            processing_time=result.processing_time,
+        return JSONResponse(
+            status_code=200,
+            content=create_success_response(
+                "Tone analysis completed successfully",
+                {
+                    "document_id": result.document_id,
+                    "primary_tone": result.primary_tone,
+                    "tone_scores": result.tone_scores,
+                    "tone_indicators": result.tone_indicators,
+                    "sentiment_summary": result.sentiment_summary,
+                    "clarity_assessment": result.clarity_assessment,
+                    "processing_time": result.processing_time,
+                },
+                document_id=result.document_id,
+                primary_tone=result.primary_tone,
+                analysis_scope=req.analysis_scope,
+                processing_time=result.processing_time,
+            )
         )
 
     except Exception as e:
@@ -815,7 +824,10 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
             exc_info=True,
         )
 
-        return create_error_response(f"Tone analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
+        return JSONResponse(
+            status_code=500,
+            content=create_error_response(f"Tone analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
+        )
 
 
 @app.post(
@@ -884,20 +896,23 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
             },
         )
 
-        return create_success_response(
-            "Content quality analysis completed successfully",
-            {
-                "document_id": result.document_id,
-                "quality_assessment": result.quality_assessment,
-                "detailed_metrics": result.detailed_metrics,
-                "recommendations": result.recommendations,
-                "processing_time": result.processing_time,
-                "analysis_timestamp": result.analysis_timestamp,
-            },
-            document_id=result.document_id,
-            quality_score=result.quality_assessment.get("overall_score", 0.0),
-            grade=result.quality_assessment.get("grade", "N/A"),
-            processing_time=result.processing_time,
+        return JSONResponse(
+            status_code=200,
+            content=create_success_response(
+                "Content quality analysis completed successfully",
+                {
+                    "document_id": result.document_id,
+                    "quality_assessment": result.quality_assessment,
+                    "detailed_metrics": result.detailed_metrics,
+                    "recommendations": result.recommendations,
+                    "processing_time": result.processing_time,
+                    "analysis_timestamp": result.analysis_timestamp,
+                },
+                document_id=result.document_id,
+                quality_score=result.quality_assessment.get("overall_score", 0.0),
+                grade=result.quality_assessment.get("grade", "N/A"),
+                processing_time=result.processing_time,
+            )
         )
 
     except Exception as e:
@@ -912,9 +927,12 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
             exc_info=True,
         )
 
-        return create_error_response(
-            f"Content quality analysis failed: {str(e)}",
-            error_code=ErrorCodes.ANALYSIS_FAILED,
+        return JSONResponse(
+            status_code=500,
+            content=create_error_response(
+                f"Content quality analysis failed: {str(e)}",
+                error_code=ErrorCodes.ANALYSIS_FAILED,
+            )
         )
 
 
