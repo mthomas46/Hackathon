@@ -55,6 +55,15 @@ class EventOrderer:
         priority: EventPriority = EventPriority.NORMAL,
         correlation_id: Optional[str] = None,
     ) -> EventMetadata:
+        """Create metadata for event ordering and tracking.
+
+        Args:
+            priority: Event processing priority
+            correlation_id: Optional correlation ID for event tracking
+
+        Returns:
+            EventMetadata: Metadata object with sequence and tracking info
+        """
         self._sequence_counter += 1
         sequence_id = (
             f"{self.service_name}:{int(time.time() * 1000)}:{self._sequence_counter}"
@@ -69,6 +78,15 @@ class EventOrderer:
         )
 
     def is_duplicate(self, event_id: str, ttl_seconds: int = 300) -> bool:
+        """Check if an event ID has been seen recently (duplicate detection).
+
+        Args:
+            event_id: Unique identifier for the event
+            ttl_seconds: Time-to-live in seconds for duplicate tracking
+
+        Returns:
+            bool: True if event is a duplicate within the TTL period
+        """
         now = time.time()
         if event_id in self._seen_events:
             if now - self._seen_events[event_id] < ttl_seconds:
@@ -86,6 +104,18 @@ def create_ordered_event(
     priority: EventPriority = EventPriority.NORMAL,
     correlation_id: Optional[str] = None,
 ) -> Dict[str, Any]:
+    """Create an ordered event with metadata for prioritized processing.
+
+    Args:
+        event_type: Type of the event
+        payload: Event payload data
+        orderer: EventOrderer instance for metadata creation
+        priority: Event processing priority
+        correlation_id: Optional correlation ID for event tracking
+
+    Returns:
+        Dict containing event_type, payload, and metadata
+    """
     metadata = orderer.create_event_metadata(priority, correlation_id)
     return {"event_type": event_type, "payload": payload, "metadata": asdict(metadata)}
 

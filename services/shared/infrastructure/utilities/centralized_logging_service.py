@@ -165,6 +165,7 @@ class MemoryLogStorage(LogStorageBackend):
     """In-memory log storage for development."""
 
     def __init__(self):
+        """Initialize in-memory log storage."""
         self._logs: List[LogEntry] = []
         self._lock = threading.Lock()
 
@@ -309,6 +310,11 @@ class SQLiteLogStorage(LogStorageBackend):
     """SQLite-based log storage for persistent storage."""
 
     def __init__(self, db_path: str = "logs.db"):
+        """Initialize SQLite log storage.
+
+        Args:
+            db_path: Path to SQLite database file
+        """
         self.db_path = db_path
         self._init_db()
 
@@ -346,6 +352,7 @@ class SQLiteLogStorage(LogStorageBackend):
         """Store log in SQLite database."""
 
         def _store():
+            """Store log entry in SQLite database."""
             with sqlite3.connect(self.db_path) as conn:
                 conn.execute(
                     """
@@ -503,6 +510,11 @@ class FileLogStorage(LogStorageBackend):
     """File-based log storage with rotation and compression."""
 
     def __init__(self, log_directory: str = "logs"):
+        """Initialize file-based log storage.
+
+        Args:
+            log_directory: Directory to store log files
+        """
         self.log_directory = Path(log_directory)
         self.log_directory.mkdir(exist_ok=True)
         self.current_file: Optional[Path] = None
@@ -690,6 +702,11 @@ class CentralizedLoggingService:
     """Centralized logging service with aggregation and analysis."""
 
     def __init__(self, storage_type: LogStorageType = LogStorageType.SQLITE):
+        """Initialize centralized logging service.
+
+        Args:
+            storage_type: Type of storage backend to use
+        """
         self.storage_type = storage_type
 
         # Initialize storage backend

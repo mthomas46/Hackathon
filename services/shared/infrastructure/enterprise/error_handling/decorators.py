@@ -15,6 +15,7 @@ def enterprise_error_handler_decorator(service_name: str, operation: str):
     """Decorator for enterprise error handling."""
 
     def decorator(func: Callable) -> Callable:
+        """Create the actual decorator function with enterprise error handling."""
         @functools.wraps(func)
         async def async_wrapper(*args, **kwargs):
             try:
@@ -82,6 +83,7 @@ def circuit_breaker(service_name: str, failure_threshold: int = 5, recovery_time
     """Circuit breaker decorator."""
 
     def decorator(func: Callable) -> Callable:
+        """Create circuit breaker decorator for the function."""
         cb = _error_handler._get_circuit_breaker(service_name)
 
         @functools.wraps(func)
@@ -104,6 +106,7 @@ def retry_on_failure(max_retries: int = 3, delay: float = 1.0, backoff: float = 
     """Retry decorator for transient failures."""
 
     def decorator(func: Callable) -> Callable:
+        """Create retry decorator with exponential backoff."""
         @functools.wraps(func)
         async def async_wrapper(*args, **kwargs):
             last_exception = None

@@ -36,6 +36,7 @@ class TraceSpan:
     error: Optional[str] = None
 
     def __post_init__(self):
+        """Initialize default values for tags and logs."""
         if self.tags is None:
             self.tags = {}
         if self.logs is None:
@@ -67,6 +68,17 @@ class DistributedTracer:
         parent_span_id: Optional[str] = None,
         tags: Optional[Dict[str, Any]] = None,
     ) -> TraceSpan:
+        """Start a new trace span for operation tracking.
+
+        Args:
+            operation_name: Name of the operation being traced
+            trace_id: Optional trace ID (generated if not provided)
+            parent_span_id: Optional parent span ID for nested operations
+            tags: Optional initial tags for the span
+
+        Returns:
+            TraceSpan: The created span object
+        """
         if not trace_id:
             trace_id = str(uuid.uuid4())
         span_id = str(uuid.uuid4())
@@ -90,6 +102,14 @@ class DistributedTracer:
         error: Optional[str] = None,
         tags: Optional[Dict[str, Any]] = None,
     ):
+        """Finish a trace span and record completion metrics.
+
+        Args:
+            span_id: ID of the span to finish
+            status: Completion status of the span
+            error: Optional error message if span failed
+            tags: Additional tags to add to the span
+        """
         if span_id not in self._active_spans:
             return
         span = self._active_spans[span_id]
@@ -109,6 +129,14 @@ class DistributedTracer:
         level: str = "info",
         fields: Optional[Dict[str, Any]] = None,
     ):
+        """Add a log entry to a trace span.
+
+        Args:
+            span_id: ID of the span to add log to
+            message: Log message
+            level: Log level (info, warning, error, etc.)
+            fields: Additional structured fields for the log entry
+        """
         if span_id not in self._active_spans:
             return
         span = self._active_spans[span_id]
@@ -121,6 +149,13 @@ class DistributedTracer:
         span.logs.append(log_entry)
 
     def add_span_tag(self, span_id: str, key: str, value: Any):
+        """Add a tag to a trace span.
+
+        Args:
+            span_id: ID of the span to add tag to
+            key: Tag key
+            value: Tag value
+        """
         if span_id not in self._active_spans:
             return
         span = self._active_spans[span_id]
@@ -146,12 +181,24 @@ class TraceContext:
         self.span: Optional[TraceSpan] = None
 
     def __enter__(self) -> TraceSpan:
+        """Enter the trace context and start the span.
+
+        Returns:
+            TraceSpan: The created span object
+        """
         self.span = self.tracer.start_span(
             self.operation_name, self.trace_id, self.parent_span_id, self.tags
         )
         return self.span
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit the trace context and finish the span.
+
+        Args:
+            exc_type: Exception type if an exception occurred
+            exc_val: Exception value if an exception occurred
+            exc_tb: Exception traceback if an exception occurred
+        """
         if self.span:
             if exc_type:
                 self.tracer.finish_span(
