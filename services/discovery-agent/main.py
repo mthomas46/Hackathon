@@ -21,8 +21,8 @@ from services.shared.presentation.responses import (
 # ============================================================================
 # SHARED MODULES
 # ============================================================================
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities import setup_common_middleware
+from services.shared.infrastructure.monitoring.health import register_health_endpoints
+from services.shared.infrastructure.utilities.middleware import setup_common_middleware
 
 # ============================================================================
 # REQUEST/RESPONSE MODELS
