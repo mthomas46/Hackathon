@@ -1982,7 +1982,65 @@ async def analyze_document_change_impact_endpoint(req: ChangeImpactAnalysisReque
         )
 
 
-@app.post("/analyze/change/impact/portfolio")
+@app.post(
+    "/analyze/change/impact/portfolio",
+    tags=["impact"],
+    summary="Analyze the impact of changes across a document portfolio",
+    description="""Provides comprehensive change impact analysis across multiple documents,
+    identifying portfolio-wide effects, high-impact changes, and strategic
+    recommendations for managing documentation changes at scale. Analyzes
+    cascading effects, resource requirements, and prioritization strategies
+    for documentation portfolio changes.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Portfolio change impact analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Portfolio change impact analysis completed successfully",
+                        "data": {
+                            "portfolio_summary": {
+                                "total_changes": 15,
+                                "analyzed_changes": 12,
+                                "average_impact_score": 0.68,
+                                "high_impact_changes": 4,
+                                "medium_impact_changes": 5,
+                                "low_impact_changes": 3,
+                                "estimated_total_effort_days": 18.5,
+                            },
+                            "change_impacts": [
+                                {
+                                    "change_id": "change_001",
+                                    "impact_score": 0.85,
+                                    "impact_level": "high",
+                                    "affected_documents": ["doc_005", "doc_012", "doc_018"],
+                                    "cascade_risk": 0.72,
+                                    "estimated_effort_days": 4.2,
+                                    "recommendations": [
+                                        "Schedule review meeting with stakeholders",
+                                        "Prepare communication plan for affected teams",
+                                        "Create rollback plan for high-risk changes",
+                                    ],
+                                }
+                            ],
+                            "processing_time": 3.8,
+                            "analysis_timestamp": "2025-09-25T10:00:00Z",
+                        },
+                        "total_changes": 15,
+                        "analyzed_changes": 12,
+                        "average_impact_score": 0.68,
+                        "processing_time": 3.8,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Portfolio change impact analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactRequest):
     """Analyze the impact of changes across a document portfolio.
 
@@ -2151,7 +2209,62 @@ def _prepare_report_response(json_report: dict, markdown_content: str,
     }
 
 
-@app.post("/analyze/generate-report")
+@app.post(
+    "/analyze/generate-report",
+    tags=["reports"],
+    summary="Generate comprehensive analysis reports for simulation service",
+    description="""Generates comprehensive analysis reports for simulation services, including
+    both JSON data and human-readable Markdown formatting. Performs complete
+    document analysis, quality assessment, and generates structured reports
+    with insights, recommendations, and actionable findings.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Analysis report generated successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Analysis report generated for 5 documents",
+                        "data": {
+                            "report_id": "analysis_report_sim_001_1695676800",
+                            "simulation_id": "sim_001",
+                            "report_type": "comprehensive_simulation_analysis",
+                            "generated_at": "2025-09-25T10:00:00Z",
+                            "summary": {
+                                "total_documents": 5,
+                                "analyzed_documents": 5,
+                                "average_quality_score": 0.78,
+                                "total_issues_found": 23,
+                                "critical_issues": 3,
+                                "high_issues": 8,
+                                "medium_issues": 7,
+                                "low_issues": 5,
+                            },
+                            "documents": [
+                                {
+                                    "document_id": "doc_001",
+                                    "quality_score": 0.82,
+                                    "issues_found": 4,
+                                    "critical_issues": 1,
+                                    "recommendations": [
+                                        "Update API references to latest versions",
+                                        "Fix broken links to external documentation",
+                                    ],
+                                }
+                            ],
+                            "markdown_report": "# Analysis Report for Simulation sim_001\n\n## Executive Summary\n\nAnalysis completed for 5 documents with an average quality score of 78%.\n\n## Key Findings\n\n- Total issues found: 23\n- Critical issues requiring immediate attention: 3\n- Average document quality: Good\n\n## Recommendations\n\n1. Address critical issues in doc_001 and doc_003\n2. Review and update outdated references\n3. Implement automated quality checks\n\n## Detailed Analysis\n\n### Document Quality Scores\n\n| Document | Quality Score | Issues | Status |\n|----------|---------------|--------|--------|\n| doc_001 | 82% | 4 | Good |\n| doc_002 | 75% | 6 | Needs Attention |\n\n### Issue Breakdown by Category\n\n- **Content Quality**: 8 issues\n- **Technical Accuracy**: 6 issues\n- **Completeness**: 5 issues\n- **Formatting**: 4 issues\n",
+                            "processing_time": 5.2,
+                        },
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Analysis report generation failed", "model": ErrorResponse},
+    },
+)
 async def generate_analysis_report_endpoint(req: dict):
     """Generate comprehensive analysis reports for simulation service.
 
@@ -2231,7 +2344,89 @@ async def generate_analysis_report_endpoint(req: dict):
         )
 
 
-@app.post("/analyze/pull-request")
+@app.post(
+    "/analyze/pull-request",
+    tags=["pull-request"],
+    summary="Analyze pull request changes and provide refactoring suggestions",
+    description="""Provides comprehensive analysis of pull request data including
+    code quality assessment, commit message review, structural change analysis,
+    refactoring suggestions, and health score calculation with risk assessment.
+    Helps development teams understand the quality and impact of code changes.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Pull request analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Pull request analysis completed with health score 0.78",
+                        "data": {
+                            "simulation_id": "sim_001",
+                            "pr_title": "feat: Add user authentication system",
+                            "pr_author": "developer@example.com",
+                            "analysis_timestamp": "2025-09-25T10:00:00Z",
+                            "health_score": 0.78,
+                            "risk_level": "medium",
+                            "files_analyzed": 8,
+                            "commits_analyzed": 3,
+                            "code_analysis": {
+                                "total_lines_changed": 245,
+                                "complexity_score": 0.65,
+                                "test_coverage_estimate": 0.72,
+                                "security_issues": 0,
+                                "performance_issues": 1,
+                            },
+                            "commit_analysis": {
+                                "conventional_commits": 0.67,
+                                "message_quality": 0.8,
+                                "breaking_changes_detected": False,
+                                "co_authored_commits": 2,
+                            },
+                            "structural_analysis": {
+                                "architecture_changes": True,
+                                "database_changes": False,
+                                "api_changes": True,
+                                "breaking_changes": False,
+                                "new_dependencies": 1,
+                            },
+                            "quality_analysis": {
+                                "linting_score": 0.85,
+                                "type_coverage": 0.92,
+                                "documentation_coverage": 0.78,
+                                "test_quality": 0.71,
+                            },
+                            "refactoring_suggestions": [
+                                {
+                                    "category": "complexity",
+                                    "priority": "high",
+                                    "description": "Consider breaking down the authentication service into smaller modules",
+                                    "estimated_effort": "3-4 hours",
+                                    "impact": "Improved maintainability",
+                                }
+                            ],
+                            "recommendations": [
+                                {
+                                    "type": "approval",
+                                    "message": "Changes look good with minor suggestions",
+                                    "confidence": 0.82,
+                                },
+                                {
+                                    "type": "testing",
+                                    "message": "Consider adding integration tests for the authentication flow",
+                                    "priority": "medium",
+                                },
+                            ],
+                        },
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid pull request data", "model": ErrorResponse},
+        500: {"description": "Pull request analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_pull_request_endpoint(req: dict):
     """Analyze pull request changes and provide refactoring suggestions.
 
@@ -3065,7 +3260,81 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
     return "\n".join(md_lines)
 
 
-@app.post("/remediate")
+@app.post(
+    "/remediate",
+    tags=["remediation"],
+    summary="Apply automated fixes to documentation issues",
+    description="""Intelligently identifies and fixes common documentation problems including
+    formatting inconsistencies, grammar errors, terminology issues, and structural
+    problems. Provides safety checks, rollback capabilities, and detailed change tracking.
+    Only applies safe, reversible fixes with human oversight recommendations.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Automated remediation completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Automated remediation completed with 12 changes",
+                        "data": {
+                            "original_content": "# API Documentation\n\nThis document describes the API endpoints.\n\n## Endpoints\n\n### GET /users\nReturns list of users.\n\n### POST /users\nCreates new user.",
+                            "remediated_content": "# API Documentation\n\nThis document describes the API endpoints available in the system.\n\n## Endpoints\n\n### GET /users\nReturns a list of all registered users in the system.\n\n### POST /users\nCreates a new user account with the provided information.",
+                            "backup": {
+                                "content_hash": "a1b2c3d4...",
+                                "timestamp": "2025-09-25T10:00:00Z",
+                                "version": "1.0",
+                            },
+                            "report": {
+                                "issues_fixed": 12,
+                                "categories": {
+                                    "grammar": 3,
+                                    "terminology": 4,
+                                    "formatting": 3,
+                                    "completeness": 2,
+                                },
+                                "safety_checks": {
+                                    "content_preserved": True,
+                                    "no_data_loss": True,
+                                    "reversible_changes": True,
+                                    "human_review_recommended": False,
+                                },
+                                "changes": [
+                                    {
+                                        "type": "grammar",
+                                        "description": "Fixed subject-verb agreement",
+                                        "line_number": 5,
+                                        "original": "Returns list of users",
+                                        "corrected": "Returns a list of users",
+                                        "confidence": 0.95,
+                                    },
+                                    {
+                                        "type": "completeness",
+                                        "description": "Added missing context",
+                                        "line_number": 1,
+                                        "original": "This document describes the API endpoints",
+                                        "corrected": "This document describes the API endpoints available in the system",
+                                        "confidence": 0.87,
+                                    },
+                                ],
+                            },
+                            "changes_applied": 12,
+                            "safety_status": "safe",
+                            "processing_time": 3.2,
+                            "remediation_timestamp": "2025-09-25T10:00:00Z",
+                        },
+                        "changes_applied": 12,
+                        "safety_status": "safe",
+                        "processing_time": 3.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid remediation request", "model": ErrorResponse},
+        500: {"description": "Automated remediation failed", "model": ErrorResponse},
+    },
+)
 async def remediate_document_endpoint(req: AutomatedRemediationRequest):
     """Apply automated fixes to documentation issues.
 
