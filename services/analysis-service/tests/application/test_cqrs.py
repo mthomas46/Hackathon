@@ -165,9 +165,7 @@ class TestCommandHandlers:
         """Mock event bus for testing."""
         return Mock()
 
-    def test_create_document_command_handler_with_valid_data_succeeds(
-        self, mock_repositories, mock_services, mock_event_bus
-    ):
+    def test_create_document_command_handler_with_valid_data_succeeds(self, mock_repositories, mock_services, mock_event_bus):
         """Test creating create document command handler."""
         handler = CreateDocumentCommandHandler(
             document_repository=mock_repositories["document_repository"],
@@ -180,17 +178,13 @@ class TestCommandHandlers:
         assert handler.event_bus == mock_event_bus
 
     @pytest.mark.asyncio
-    async def test_create_document_command_handler_execution(
-        self, mock_repositories, mock_services, mock_event_bus
-    ):
+    async def test_create_document_command_handler_execution(self, mock_repositories, mock_services, mock_event_bus):
         """Test create document command handler execution."""
         # Setup mocks
         mock_document = Mock()
         mock_document.id = "doc-123"
 
-        mock_services["document_service"].create_document = AsyncMock(
-            return_value=mock_document
-        )
+        mock_services["document_service"].create_document = AsyncMock(return_value=mock_document)
         mock_repositories["document_repository"].save = AsyncMock()
         mock_event_bus.publish = AsyncMock()
 
@@ -217,9 +211,7 @@ class TestCommandHandlers:
         mock_repositories["document_repository"].save.assert_called_once()
         mock_event_bus.publish.assert_called()
 
-    def test_perform_analysis_command_handler_with_valid_data_succeeds(
-        self, mock_repositories, mock_services, mock_event_bus
-    ):
+    def test_perform_analysis_command_handler_with_valid_data_succeeds(self, mock_repositories, mock_services, mock_event_bus):
         """Test creating perform analysis command handler."""
         handler = PerformAnalysisCommandHandler(
             analysis_service=mock_services["analysis_service"],
@@ -233,9 +225,7 @@ class TestCommandHandlers:
         assert handler.event_bus == mock_event_bus
 
     @pytest.mark.asyncio
-    async def test_perform_analysis_command_handler_execution(
-        self, mock_repositories, mock_services, mock_event_bus
-    ):
+    async def test_perform_analysis_command_handler_execution(self, mock_repositories, mock_services, mock_event_bus):
         """Test perform analysis command handler execution."""
         # Setup mocks
         mock_doc = Mock()
@@ -245,17 +235,11 @@ class TestCommandHandlers:
         mock_analysis.id = "analysis-123"
         mock_analysis.status = AnalysisStatus.COMPLETED
 
-        mock_repositories["document_repository"].get_by_id = AsyncMock(
-            return_value=mock_doc
-        )
+        mock_repositories["document_repository"].get_by_id = AsyncMock(return_value=mock_doc)
         mock_repositories["analysis_repository"].save = AsyncMock()
 
-        mock_services["analysis_service"].start_analysis = AsyncMock(
-            return_value=mock_analysis
-        )
-        mock_services["analysis_service"].complete_analysis = AsyncMock(
-            return_value=mock_analysis
-        )
+        mock_services["analysis_service"].start_analysis = AsyncMock(return_value=mock_analysis)
+        mock_services["analysis_service"].complete_analysis = AsyncMock(return_value=mock_analysis)
 
         mock_event_bus.publish = AsyncMock()
 
@@ -267,9 +251,7 @@ class TestCommandHandlers:
             event_bus=mock_event_bus,
         )
 
-        command = PerformAnalysisCommand(
-            document_id="doc-123", analysis_type="semantic_similarity"
-        )
+        command = PerformAnalysisCommand(document_id="doc-123", analysis_type="semantic_similarity")
 
         # Execute
         result = await handler.handle(command)
@@ -293,13 +275,9 @@ class TestQueryHandlers:
             "finding_repository": Mock(),
         }
 
-    def test_get_document_query_handler_with_valid_data_succeeds(
-        self, mock_repositories
-    ):
+    def test_get_document_query_handler_with_valid_data_succeeds(self, mock_repositories):
         """Test creating get document query handler."""
-        handler = GetDocumentQueryHandler(
-            document_repository=mock_repositories["document_repository"]
-        )
+        handler = GetDocumentQueryHandler(document_repository=mock_repositories["document_repository"])
 
         assert handler.document_repository == mock_repositories["document_repository"]
 
@@ -311,13 +289,9 @@ class TestQueryHandlers:
         mock_document.id = "doc-123"
         mock_document.title = "Test Document"
 
-        mock_repositories["document_repository"].get_by_id = AsyncMock(
-            return_value=mock_document
-        )
+        mock_repositories["document_repository"].get_by_id = AsyncMock(return_value=mock_document)
 
-        handler = GetDocumentQueryHandler(
-            document_repository=mock_repositories["document_repository"]
-        )
+        handler = GetDocumentQueryHandler(document_repository=mock_repositories["document_repository"])
 
         query = GetDocumentQuery(document_id="doc-123")
 
@@ -327,17 +301,11 @@ class TestQueryHandlers:
         # Assert
         assert result["document"]["id"] == "doc-123"
         assert result["document"]["title"] == "Test Document"
-        mock_repositories["document_repository"].get_by_id.assert_called_once_with(
-            "doc-123"
-        )
+        mock_repositories["document_repository"].get_by_id.assert_called_once_with("doc-123")
 
-    def test_get_documents_query_handler_with_valid_data_succeeds(
-        self, mock_repositories
-    ):
+    def test_get_documents_query_handler_with_valid_data_succeeds(self, mock_repositories):
         """Test creating get documents query handler."""
-        handler = GetDocumentsQueryHandler(
-            document_repository=mock_repositories["document_repository"]
-        )
+        handler = GetDocumentsQueryHandler(document_repository=mock_repositories["document_repository"])
 
         assert handler.document_repository == mock_repositories["document_repository"]
 
@@ -351,13 +319,9 @@ class TestQueryHandlers:
             Mock(id="doc-3", title="Doc 3"),
         ]
 
-        mock_repositories["document_repository"].get_all = AsyncMock(
-            return_value=mock_documents
-        )
+        mock_repositories["document_repository"].get_all = AsyncMock(return_value=mock_documents)
 
-        handler = GetDocumentsQueryHandler(
-            document_repository=mock_repositories["document_repository"]
-        )
+        handler = GetDocumentsQueryHandler(document_repository=mock_repositories["document_repository"])
 
         query = GetDocumentsQuery()
 
@@ -369,13 +333,9 @@ class TestQueryHandlers:
         assert result["total_count"] == 3
         mock_repositories["document_repository"].get_all.assert_called_once()
 
-    def test_get_analysis_query_handler_with_valid_data_succeeds(
-        self, mock_repositories
-    ):
+    def test_get_analysis_query_handler_with_valid_data_succeeds(self, mock_repositories):
         """Test creating get analysis query handler."""
-        handler = GetAnalysisQueryHandler(
-            analysis_repository=mock_repositories["analysis_repository"]
-        )
+        handler = GetAnalysisQueryHandler(analysis_repository=mock_repositories["analysis_repository"])
 
         assert handler.analysis_repository == mock_repositories["analysis_repository"]
 
@@ -387,13 +347,9 @@ class TestQueryHandlers:
         mock_analysis.id = "analysis-123"
         mock_analysis.status = AnalysisStatus.COMPLETED
 
-        mock_repositories["analysis_repository"].get_by_id = AsyncMock(
-            return_value=mock_analysis
-        )
+        mock_repositories["analysis_repository"].get_by_id = AsyncMock(return_value=mock_analysis)
 
-        handler = GetAnalysisQueryHandler(
-            analysis_repository=mock_repositories["analysis_repository"]
-        )
+        handler = GetAnalysisQueryHandler(analysis_repository=mock_repositories["analysis_repository"])
 
         query = GetAnalysisQuery(analysis_id="analysis-123")
 
@@ -403,17 +359,11 @@ class TestQueryHandlers:
         # Assert
         assert result["analysis"]["id"] == "analysis-123"
         assert result["analysis"]["status"] == AnalysisStatus.COMPLETED
-        mock_repositories["analysis_repository"].get_by_id.assert_called_once_with(
-            "analysis-123"
-        )
+        mock_repositories["analysis_repository"].get_by_id.assert_called_once_with("analysis-123")
 
-    def test_get_findings_query_handler_with_valid_data_succeeds(
-        self, mock_repositories
-    ):
+    def test_get_findings_query_handler_with_valid_data_succeeds(self, mock_repositories):
         """Test creating get findings query handler."""
-        handler = GetFindingsQueryHandler(
-            finding_repository=mock_repositories["finding_repository"]
-        )
+        handler = GetFindingsQueryHandler(finding_repository=mock_repositories["finding_repository"])
 
         assert handler.finding_repository == mock_repositories["finding_repository"]
 
@@ -427,13 +377,9 @@ class TestQueryHandlers:
             Mock(id="finding-3", severity=FindingSeverity.LOW),
         ]
 
-        mock_repositories["finding_repository"].get_by_analysis_id = AsyncMock(
-            return_value=mock_findings
-        )
+        mock_repositories["finding_repository"].get_by_analysis_id = AsyncMock(return_value=mock_findings)
 
-        handler = GetFindingsQueryHandler(
-            finding_repository=mock_repositories["finding_repository"]
-        )
+        handler = GetFindingsQueryHandler(finding_repository=mock_repositories["finding_repository"])
 
         query = GetFindingsQuery(analysis_id="analysis-123")
 
@@ -443,9 +389,7 @@ class TestQueryHandlers:
         # Assert
         assert len(result["findings"]) == 3
         assert result["total_count"] == 3
-        mock_repositories[
-            "finding_repository"
-        ].get_by_analysis_id.assert_called_once_with("analysis-123")
+        mock_repositories["finding_repository"].get_by_analysis_id.assert_called_once_with("analysis-123")
 
 
 class TestCQRSCommands:
@@ -482,9 +426,7 @@ class TestCQRSCommands:
 
     def test_delete_document_command_with_valid_data_succeeds(self):
         """Test creating delete document command."""
-        command = DeleteDocumentCommand(
-            document_id="doc-123", reason="No longer needed"
-        )
+        command = DeleteDocumentCommand(document_id="doc-123", reason="No longer needed")
 
         assert command.document_id == "doc-123"
         assert command.reason == "No longer needed"
@@ -507,9 +449,7 @@ class TestCQRSCommands:
 
     def test_cancel_analysis_command_with_valid_data_succeeds(self):
         """Test creating cancel analysis command."""
-        command = CancelAnalysisCommand(
-            analysis_id="analysis-123", reason="User requested cancellation"
-        )
+        command = CancelAnalysisCommand(analysis_id="analysis-123", reason="User requested cancellation")
 
         assert command.analysis_id == "analysis-123"
         assert command.reason == "User requested cancellation"
@@ -565,9 +505,7 @@ class TestCQRSQueries:
 
     def test_get_document_history_query_with_valid_data_succeeds(self):
         """Test creating get document history query."""
-        query = GetDocumentHistoryQuery(
-            document_id="doc-123", since=datetime.now(timezone.utc), limit=20
-        )
+        query = GetDocumentHistoryQuery(document_id="doc-123", since=datetime.now(timezone.utc), limit=20)
 
         assert query.document_id == "doc-123"
         assert query.limit == 20
@@ -610,9 +548,7 @@ class TestCQRSIntegration:
         mock_doc_repo.get_by_id = AsyncMock(return_value=mock_document)
 
         # Execute command
-        create_command = CreateDocumentCommand(
-            title="Test Document", content="Test content", repository_id="repo-123"
-        )
+        create_command = CreateDocumentCommand(title="Test Document", content="Test content", repository_id="repo-123")
 
         command_result = await command_bus.execute(create_command)
         assert command_result["document_id"] == "doc-123"

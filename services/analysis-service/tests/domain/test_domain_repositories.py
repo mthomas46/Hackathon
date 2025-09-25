@@ -96,9 +96,7 @@ class TestDocumentRepository:
             assert doc.id in doc_ids
 
     @pytest.mark.asyncio
-    async def test_get_documents_by_repository(
-        self, document_repository, test_data_populator
-    ):
+    async def test_get_documents_by_repository(self, document_repository, test_data_populator):
         """Test getting documents by repository."""
         # Setup test data
         test_data_populator.create_test_documents(3)
@@ -111,9 +109,7 @@ class TestDocumentRepository:
             assert doc.repository_id == "test-repo-001"
 
     @pytest.mark.asyncio
-    async def test_get_documents_by_status(
-        self, document_repository, test_data_populator
-    ):
+    async def test_get_documents_by_status(self, document_repository, test_data_populator):
         """Test getting documents by status."""
         # Setup test data
         documents = test_data_populator.create_test_documents(2)
@@ -154,9 +150,7 @@ class TestAnalysisRepository:
         assert retrieved.analysis_type == sample_analysis.analysis_type
 
     @pytest.mark.asyncio
-    async def test_get_analyses_by_document(
-        self, analysis_repository, test_data_populator
-    ):
+    async def test_get_analyses_by_document(self, analysis_repository, test_data_populator):
         """Test getting analyses by document."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
@@ -172,24 +166,18 @@ class TestAnalysisRepository:
             assert analysis.document_id == document_id
 
     @pytest.mark.asyncio
-    async def test_get_analyses_by_status(
-        self, analysis_repository, test_data_populator
-    ):
+    async def test_get_analyses_by_status(self, analysis_repository, test_data_populator):
         """Test getting analyses by status."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses(
-            [doc.id for doc in documents], 2
-        )
+        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 2)
 
         # Modify status of one analysis
         analyses[0].status = AnalysisStatus.FAILED
         await analysis_repository.save(analyses[0])
 
         # Get analyses by status
-        completed_analyses = await analysis_repository.get_by_status(
-            AnalysisStatus.COMPLETED
-        )
+        completed_analyses = await analysis_repository.get_by_status(AnalysisStatus.COMPLETED)
         failed_analyses = await analysis_repository.get_by_status(AnalysisStatus.FAILED)
 
         assert len(completed_analyses) == 1
@@ -205,9 +193,7 @@ class TestAnalysisRepository:
         test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
 
         # Get analyses by type
-        semantic_analyses = await analysis_repository.get_by_analysis_type(
-            AnalysisType.SEMANTIC_SIMILARITY
-        )
+        semantic_analyses = await analysis_repository.get_by_analysis_type(AnalysisType.SEMANTIC_SIMILARITY)
 
         assert len(semantic_analyses) >= 0
         for analysis in semantic_analyses:
@@ -250,18 +236,12 @@ class TestFindingRepository:
         assert retrieved.title == sample_finding.title
 
     @pytest.mark.asyncio
-    async def test_get_findings_by_analysis(
-        self, finding_repository, test_data_populator
-    ):
+    async def test_get_findings_by_analysis(self, finding_repository, test_data_populator):
         """Test getting findings by analysis."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses(
-            [doc.id for doc in documents], 1
-        )
-        test_data_populator.create_test_findings(
-            [analysis.id for analysis in analyses], 3
-        )
+        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 3)
 
         analysis_id = analyses[0].id
 
@@ -273,18 +253,12 @@ class TestFindingRepository:
             assert finding.analysis_id == analysis_id
 
     @pytest.mark.asyncio
-    async def test_get_findings_by_document(
-        self, finding_repository, test_data_populator
-    ):
+    async def test_get_findings_by_document(self, finding_repository, test_data_populator):
         """Test getting findings by document."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses(
-            [doc.id for doc in documents], 2
-        )
-        test_data_populator.create_test_findings(
-            [analysis.id for analysis in analyses], 2
-        )
+        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 2)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 2)
 
         document_id = documents[0].id
 
@@ -296,18 +270,12 @@ class TestFindingRepository:
             assert finding.document_id == document_id
 
     @pytest.mark.asyncio
-    async def test_get_findings_by_severity(
-        self, finding_repository, test_data_populator
-    ):
+    async def test_get_findings_by_severity(self, finding_repository, test_data_populator):
         """Test getting findings by severity."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses(
-            [doc.id for doc in documents], 1
-        )
-        test_data_populator.create_test_findings(
-            [analysis.id for analysis in analyses], 1
-        )
+        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 1)
 
         # Get findings by severity
         high_findings = await finding_repository.get_by_severity(FindingSeverity.HIGH)
@@ -345,12 +313,8 @@ class TestRepositoryIntegration:
         """Test queries that span multiple repositories."""
         # Setup comprehensive test data
         documents = test_data_populator.create_test_documents(2)
-        analyses = test_data_populator.create_test_analyses(
-            [doc.id for doc in documents], 2
-        )
-        findings = test_data_populator.create_test_findings(
-            [analysis.id for analysis in analyses], 2
-        )
+        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 2)
+        findings = test_data_populator.create_test_findings([analysis.id for analysis in analyses], 2)
 
         # Verify cross-repository consistency
         for analysis in analyses:
@@ -371,9 +335,7 @@ class TestRepositoryIntegration:
             assert document.id == finding.document_id
 
     @pytest.mark.asyncio
-    async def test_repository_transaction_simulation(
-        self, document_repository, analysis_repository, test_data_populator
-    ):
+    async def test_repository_transaction_simulation(self, document_repository, analysis_repository, test_data_populator):
         """Test repository behavior in transaction-like scenarios."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
@@ -404,9 +366,7 @@ class TestRepositoryPerformance:
     """Test repository performance characteristics."""
 
     @pytest.mark.asyncio
-    async def test_bulk_operations_performance(
-        self, document_repository, performance_timer
-    ):
+    async def test_bulk_operations_performance(self, document_repository, performance_timer):
         """Test bulk document operations performance."""
         # Create multiple documents
         documents = []
@@ -431,9 +391,7 @@ class TestRepositoryPerformance:
         performance_timer.assert_less_than(2.0, "Bulk save operations took too long")
 
     @pytest.mark.asyncio
-    async def test_query_performance(
-        self, document_repository, test_data_populator, performance_timer
-    ):
+    async def test_query_performance(self, document_repository, test_data_populator, performance_timer):
         """Test repository query performance."""
         # Setup test data
         test_data_populator.create_test_documents(50)

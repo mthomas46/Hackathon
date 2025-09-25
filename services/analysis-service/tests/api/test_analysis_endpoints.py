@@ -88,9 +88,7 @@ class TestAnalysisEndpoints:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_semantic_similarity_analysis_success(
-        self, client, sample_semantic_similarity_request
-    ):
+    async def test_semantic_similarity_analysis_success(self, client, sample_semantic_similarity_request):
         """Test successful semantic similarity analysis."""
         # Mock the analysis service to return success
         with patch(
@@ -306,9 +304,7 @@ class TestAnalysisEndpoints:
         assert response.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_analysis_endpoint_timeout_handling(
-        self, client, sample_semantic_similarity_request
-    ):
+    async def test_analysis_endpoint_timeout_handling(self, client, sample_semantic_similarity_request):
         """Test timeout handling in analysis endpoints."""
         # Mock a handler that takes too long
         with patch(
@@ -356,9 +352,7 @@ class TestAnalysisEndpoints:
                 )
                 mock_handler.return_value = mock_response
 
-                response = client.post(
-                    "/analyze/semantic-similarity", json=request_data
-                )
+                response = client.post("/analyze/semantic-similarity", json=request_data)
                 return response.status_code, response.json()
 
         # Make concurrent requests
@@ -375,9 +369,7 @@ class TestAnalysisEndpoints:
         assert len(set(analysis_ids)) == len(analysis_ids)
 
     @pytest.mark.asyncio
-    async def test_analysis_endpoint_resource_cleanup(
-        self, client, sample_semantic_similarity_request
-    ):
+    async def test_analysis_endpoint_resource_cleanup(self, client, sample_semantic_similarity_request):
         """Test that analysis endpoints properly clean up resources."""
         # This test ensures that connections, memory, and other resources
         # are properly cleaned up after analysis operations
@@ -413,9 +405,7 @@ class TestAnalysisEndpoints:
             # - External service connections are cleaned up
 
     @pytest.mark.asyncio
-    async def test_analysis_endpoint_metrics_collection(
-        self, client, sample_semantic_similarity_request
-    ):
+    async def test_analysis_endpoint_metrics_collection(self, client, sample_semantic_similarity_request):
         """Test that analysis endpoints collect metrics."""
         # This test verifies that performance metrics are collected
         # during analysis operations
@@ -454,14 +444,9 @@ class TestAnalysisEndpoints:
 
         # Check for CORS headers
         headers = response.headers
-        assert (
-            "access-control-allow-origin" in headers
-            or "Access-Control-Allow-Origin" in headers
-        )
+        assert "access-control-allow-origin" in headers or "Access-Control-Allow-Origin" in headers
 
-    def test_analysis_endpoint_content_type_with_invalid_data_raises_validation_error(
-        self, client
-    ):
+    def test_analysis_endpoint_content_type_with_invalid_data_raises_validation_error(self, client):
         """Test that analysis endpoints validate content type."""
         request_data = {"targets": ["doc-1"], "threshold": 0.8}
 
@@ -499,9 +484,7 @@ class TestAnalysisEndpoints:
         assert response.status_code in [200, 413, 422]  # Success or size limit exceeded
 
     @pytest.mark.asyncio
-    async def test_analysis_endpoint_rate_limiting(
-        self, client, sample_semantic_similarity_request
-    ):
+    async def test_analysis_endpoint_rate_limiting(self, client, sample_semantic_similarity_request):
         """Test rate limiting on analysis endpoints."""
         # This test would verify that rate limiting is properly enforced
         # In a real implementation with rate limiting middleware

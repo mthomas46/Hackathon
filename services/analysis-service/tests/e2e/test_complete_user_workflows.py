@@ -78,9 +78,7 @@ class TestCompleteUserWorkflows:
         """
 
     @pytest.mark.asyncio
-    async def test_document_upload_and_analysis_workflow(
-        self, client, sample_document_content
-    ):
+    async def test_document_upload_and_analysis_workflow(self, client, sample_document_content):
         """Test complete workflow: document upload → analysis → findings retrieval."""
         # Step 1: Simulate document upload (in a real system, this would be an upload endpoint)
         document_data = {
@@ -141,9 +139,7 @@ class TestCompleteUserWorkflows:
             )
             mock_similarity.return_value = mock_response
 
-            response = client.post(
-                "/analyze/semantic-similarity", json=similarity_request
-            )
+            response = client.post("/analyze/semantic-similarity", json=similarity_request)
             assert response.status_code == 200
 
             similarity_data = response.json()
@@ -290,12 +286,8 @@ class TestCompleteUserWorkflows:
             assert findings_data["total_count"] == 2
 
             # Verify findings content
-            sentiment_finding = next(
-                f for f in findings_data["findings"] if f["category"] == "sentiment"
-            )
-            quality_finding = next(
-                f for f in findings_data["findings"] if f["category"] == "readability"
-            )
+            sentiment_finding = next(f for f in findings_data["findings"] if f["category"] == "sentiment")
+            quality_finding = next(f for f in findings_data["findings"] if f["category"] == "readability")
 
             assert sentiment_finding["severity"] == "info"
             assert sentiment_finding["confidence"] == 0.88
@@ -303,9 +295,7 @@ class TestCompleteUserWorkflows:
             assert "recommendation" in quality_finding
 
     @pytest.mark.asyncio
-    async def test_multi_user_concurrent_workflow(
-        self, client, sample_document_content
-    ):
+    async def test_multi_user_concurrent_workflow(self, client, sample_document_content):
         """Test concurrent workflows from multiple users."""
 
         async def user_workflow(user_id: int):
@@ -350,9 +340,7 @@ class TestCompleteUserWorkflows:
                     "threshold": 0.8,
                 }
 
-                response = client.post(
-                    "/analyze/semantic-similarity", json=similarity_request
-                )
+                response = client.post("/analyze/semantic-similarity", json=similarity_request)
                 assert response.status_code == 200
 
                 data = response.json()
@@ -420,9 +408,7 @@ class TestCompleteUserWorkflows:
             # Simulate error in analysis
             mock_similarity.side_effect = Exception("Document not found")
 
-            response = client.post(
-                "/analyze/semantic-similarity", json=similarity_request
-            )
+            response = client.post("/analyze/semantic-similarity", json=similarity_request)
 
             # Should handle error gracefully
             assert response.status_code in [400, 404, 500]
@@ -463,9 +449,7 @@ class TestCompleteUserWorkflows:
             )
             mock_similarity.return_value = mock_response
 
-            response = client.post(
-                "/analyze/semantic-similarity", json=valid_similarity_request
-            )
+            response = client.post("/analyze/semantic-similarity", json=valid_similarity_request)
             assert response.status_code == 200
 
             data = response.json()
@@ -807,9 +791,7 @@ class TestCompleteUserWorkflows:
                 "generated_at": datetime.now(timezone.utc).isoformat(),
             }
 
-            response = client.get(
-                f"/findings/export?analysis_id={analysis_id}&format=json"
-            )
+            response = client.get(f"/findings/export?analysis_id={analysis_id}&format=json")
             assert response.status_code == 200
 
             export_data = response.json()
@@ -873,9 +855,7 @@ class TestCompleteUserWorkflows:
 
             analytics_data = response.json()
             assert analytics_data["total_requests"] == 15420
-            assert (
-                "/analyze/semantic-similarity" in analytics_data["requests_by_endpoint"]
-            )
+            assert "/analyze/semantic-similarity" in analytics_data["requests_by_endpoint"]
             assert analytics_data["error_rate_percentage"] < 1.0  # Less than 1%
 
         # Step 3: Test system performance metrics
@@ -897,10 +877,6 @@ class TestCompleteUserWorkflows:
             assert response.status_code == 200
 
             metrics_data = response.json()
-            assert (
-                metrics_data["response_times"]["p95"] < 3.0
-            )  # 95th percentile under 3 seconds
+            assert metrics_data["response_times"]["p95"] < 3.0  # 95th percentile under 3 seconds
             assert metrics_data["throughput"]["requests_per_second"] > 10
-            assert (
-                metrics_data["error_rates"]["total_errors"] < 1.0
-            )  # Less than 1% error rate
+            assert metrics_data["error_rates"]["total_errors"] < 1.0  # Less than 1% error rate

@@ -328,12 +328,8 @@ class TestMonitoringService:
         await metrics.set_gauge("active_connections", 3)
 
         # Test histogram
-        await metrics.record_histogram(
-            "request_duration", 0.125, labels={"method": "GET"}
-        )
-        await metrics.record_histogram(
-            "request_duration", 0.089, labels={"method": "POST"}
-        )
+        await metrics.record_histogram("request_duration", 0.125, labels={"method": "GET"})
+        await metrics.record_histogram("request_duration", 0.089, labels={"method": "POST"})
 
         # Verify metrics were recorded
         assert len(metrics._counters) > 0
@@ -659,9 +655,7 @@ class TestAnalysisApplicationService:
             "transaction_service": Mock(),
         }
 
-    def test_analysis_application_service_with_valid_data_succeeds(
-        self, mock_domain_services, mock_application_services
-    ):
+    def test_analysis_application_service_with_valid_data_succeeds(self, mock_domain_services, mock_application_services):
         """Test creating analysis application service."""
         service = AnalysisApplicationService(
             domain_services=mock_domain_services,
@@ -672,18 +666,12 @@ class TestAnalysisApplicationService:
         assert service.application_services == mock_application_services
 
     @pytest.mark.asyncio
-    async def test_perform_analysis_workflow(
-        self, mock_domain_services, mock_application_services
-    ):
+    async def test_perform_analysis_workflow(self, mock_domain_services, mock_application_services):
         """Test complete analysis workflow."""
         # Setup mocks
         mock_analysis_service = mock_domain_services["analysis_service"]
-        mock_analysis_service.start_analysis = AsyncMock(
-            return_value=Mock(id="analysis-123")
-        )
-        mock_analysis_service.complete_analysis = AsyncMock(
-            return_value=Mock(id="analysis-123", status=AnalysisStatus.COMPLETED)
-        )
+        mock_analysis_service.start_analysis = AsyncMock(return_value=Mock(id="analysis-123"))
+        mock_analysis_service.complete_analysis = AsyncMock(return_value=Mock(id="analysis-123", status=AnalysisStatus.COMPLETED))
 
         service = AnalysisApplicationService(
             domain_services=mock_domain_services,
@@ -691,9 +679,7 @@ class TestAnalysisApplicationService:
         )
 
         # Execute workflow
-        result = await service.perform_analysis_workflow(
-            document_id="doc-123", analysis_type=AnalysisType.SEMANTIC_SIMILARITY
-        )
+        result = await service.perform_analysis_workflow(document_id="doc-123", analysis_type=AnalysisType.SEMANTIC_SIMILARITY)
 
         # Verify calls
         mock_analysis_service.start_analysis.assert_called_once()
@@ -703,15 +689,11 @@ class TestAnalysisApplicationService:
         assert result.status == AnalysisStatus.COMPLETED
 
     @pytest.mark.asyncio
-    async def test_error_handling_in_workflow(
-        self, mock_domain_services, mock_application_services
-    ):
+    async def test_error_handling_in_workflow(self, mock_domain_services, mock_application_services):
         """Test error handling in analysis workflow."""
         # Setup mock to raise exception
         mock_analysis_service = mock_domain_services["analysis_service"]
-        mock_analysis_service.start_analysis = AsyncMock(
-            side_effect=Exception("Analysis failed")
-        )
+        mock_analysis_service.start_analysis = AsyncMock(side_effect=Exception("Analysis failed"))
 
         service = AnalysisApplicationService(
             domain_services=mock_domain_services,
@@ -720,14 +702,10 @@ class TestAnalysisApplicationService:
 
         # Execute and expect error handling
         with pytest.raises(Exception, match="Analysis failed"):
-            await service.perform_analysis_workflow(
-                document_id="doc-123", analysis_type=AnalysisType.CODE_QUALITY
-            )
+            await service.perform_analysis_workflow(document_id="doc-123", analysis_type=AnalysisType.CODE_QUALITY)
 
     @pytest.mark.asyncio
-    async def test_caching_integration(
-        self, mock_domain_services, mock_application_services
-    ):
+    async def test_caching_integration(self, mock_domain_services, mock_application_services):
         """Test caching integration in application service."""
         mock_cache = Mock()
         mock_cache.get = AsyncMock(return_value=None)  # Cache miss
@@ -747,9 +725,7 @@ class TestAnalysisApplicationService:
         assert "caching_service" in service.application_services
 
     @pytest.mark.asyncio
-    async def test_monitoring_integration(
-        self, mock_domain_services, mock_application_services
-    ):
+    async def test_monitoring_integration(self, mock_domain_services, mock_application_services):
         """Test monitoring integration in application service."""
         mock_monitoring = Mock()
         mock_monitoring.increment_counter = AsyncMock()
@@ -767,9 +743,7 @@ class TestAnalysisApplicationService:
         assert "monitoring_service" in service.application_services
 
     @pytest.mark.asyncio
-    async def test_transaction_integration(
-        self, mock_domain_services, mock_application_services
-    ):
+    async def test_transaction_integration(self, mock_domain_services, mock_application_services):
         """Test transaction integration in application service."""
         mock_transaction = Mock()
         mock_transaction.begin_transaction = AsyncMock()

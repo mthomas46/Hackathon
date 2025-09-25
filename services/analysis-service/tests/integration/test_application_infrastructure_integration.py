@@ -68,16 +68,12 @@ class TestApplicationInfrastructureIntegration:
 
         return {
             "document_service": DocumentService(sqlite_repositories["document"]),
-            "analysis_service": AnalysisService(
-                sqlite_repositories["analysis"], sqlite_repositories["document"]
-            ),
+            "analysis_service": AnalysisService(sqlite_repositories["analysis"], sqlite_repositories["document"]),
             "finding_service": FindingService(sqlite_repositories["finding"]),
         }
 
     @pytest.mark.asyncio
-    async def test_application_service_with_sqlite_persistence(
-        self, domain_services, sqlite_repositories
-    ):
+    async def test_application_service_with_sqlite_persistence(self, domain_services, sqlite_repositories):
         """Test application service with SQLite persistence."""
         # Create application service
         app_service = AnalysisApplicationService(
@@ -116,16 +112,12 @@ class TestApplicationInfrastructureIntegration:
         assert analysis_result.success is True
 
         # Verify analysis persistence
-        saved_analysis = await sqlite_repositories["analysis"].get_by_id(
-            analysis_result.analysis.id.value
-        )
+        saved_analysis = await sqlite_repositories["analysis"].get_by_id(analysis_result.analysis.id.value)
         assert saved_analysis is not None
         assert saved_analysis.document_id == document_id
 
     @pytest.mark.asyncio
-    async def test_use_case_with_sqlite_backend(
-        self, domain_services, sqlite_repositories
-    ):
+    async def test_use_case_with_sqlite_backend(self, domain_services, sqlite_repositories):
         """Test use cases with SQLite backend."""
         # Create use case
         use_case = CreateDocumentUseCase(
@@ -147,9 +139,7 @@ class TestApplicationInfrastructureIntegration:
         assert result.success is True
 
         # Verify persistence
-        saved_doc = await sqlite_repositories["document"].get_by_id(
-            result.document.id.value
-        )
+        saved_doc = await sqlite_repositories["document"].get_by_id(result.document.id.value)
         assert saved_doc is not None
         assert saved_doc.title == "Use Case SQLite Test Document"
 
@@ -163,20 +153,14 @@ class TestConnectionPoolingIntegration:
         pools = {}
 
         # SQLite connection pool
-        pools["sqlite"] = SQLiteConnectionPool(
-            database_path=":memory:", pool_size=5, max_overflow=10
-        )
+        pools["sqlite"] = SQLiteConnectionPool(database_path=":memory:", pool_size=5, max_overflow=10)
         await pools["sqlite"].initialize()
 
         # HTTP connection pool (mock)
-        pools["http"] = HTTPConnectionPool(
-            base_url="https://api.example.com", pool_size=10, timeout_seconds=30.0
-        )
+        pools["http"] = HTTPConnectionPool(base_url="https://api.example.com", pool_size=10, timeout_seconds=30.0)
 
         # Redis connection pool (mock)
-        pools["redis"] = RedisConnectionPool(
-            host="localhost", port=6379, pool_size=5, database=1
-        )
+        pools["redis"] = RedisConnectionPool(host="localhost", port=6379, pool_size=5, database=1)
 
         yield pools
 
@@ -216,9 +200,7 @@ class TestConnectionPoolingIntegration:
         sqlite_pool = connection_pools["sqlite"]
 
         # Create repository with pooled connection
-        repo = SQLiteDocumentRepository(
-            database_path=":memory:", connection_pool=sqlite_pool
-        )
+        repo = SQLiteDocumentRepository(database_path=":memory:", connection_pool=sqlite_pool)
         await repo.initialize()
 
         # Create and save document
@@ -282,9 +264,7 @@ class TestCrossCuttingConcernsIntegration:
         # Connection pools
         pools = {
             "sqlite": SQLiteConnectionPool(database_path=":memory:", pool_size=5),
-            "http": HTTPConnectionPool(
-                base_url="https://api.example.com", pool_size=10
-            ),
+            "http": HTTPConnectionPool(base_url="https://api.example.com", pool_size=10),
         }
 
         for pool in pools.values():
@@ -365,9 +345,7 @@ class TestCrossCuttingConcernsIntegration:
         assert value is None
 
     @pytest.mark.asyncio
-    async def test_monitoring_service_with_metrics_collection(
-        self, infrastructure_setup
-    ):
+    async def test_monitoring_service_with_metrics_collection(self, infrastructure_setup):
         """Test monitoring service with metrics collection."""
 
         from ...application.services.monitoring_service import ApplicationMetrics
@@ -379,12 +357,8 @@ class TestCrossCuttingConcernsIntegration:
         await metrics.increment_counter("requests_total", labels={"method": "POST"})
 
         await metrics.set_gauge("active_connections", 5)
-        await metrics.record_histogram(
-            "request_duration", 0.125, labels={"method": "GET"}
-        )
-        await metrics.record_histogram(
-            "request_duration", 0.089, labels={"method": "POST"}
-        )
+        await metrics.record_histogram("request_duration", 0.125, labels={"method": "GET"})
+        await metrics.record_histogram("request_duration", 0.089, labels={"method": "POST"})
 
         # Verify metrics were recorded (implementation-dependent)
         # In a real scenario, these would be persisted or exported
@@ -459,9 +433,7 @@ class TestApplicationInfrastructureWorkflowIntegration:
         event_bus = EventBus()
 
         # Application service
-        app_service = AnalysisApplicationService(
-            domain_services=domain_services, application_services=app_services
-        )
+        app_service = AnalysisApplicationService(domain_services=domain_services, application_services=app_services)
 
         yield {
             "repositories": repos,
@@ -476,9 +448,7 @@ class TestApplicationInfrastructureWorkflowIntegration:
             await repo.close()
 
     @pytest.mark.asyncio
-    async def test_complete_workflow_with_infrastructure(
-        self, full_infrastructure_setup
-    ):
+    async def test_complete_workflow_with_infrastructure(self, full_infrastructure_setup):
         """Test complete workflow with full infrastructure stack."""
         setup = full_infrastructure_setup
 
@@ -508,23 +478,17 @@ class TestApplicationInfrastructureWorkflowIntegration:
         assert analysis_result.success is True
 
         # 4. Verify analysis persistence
-        saved_analysis = await setup["repositories"]["analysis"].get_by_id(
-            analysis_result.analysis.id.value
-        )
+        saved_analysis = await setup["repositories"]["analysis"].get_by_id(analysis_result.analysis.id.value)
         assert saved_analysis is not None
         assert saved_analysis.document_id == document_id
 
         # 5. Verify relationships
-        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(
-            document_id
-        )
+        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(document_id)
         assert len(doc_analyses) == 1
         assert doc_analyses[0].id.value == analysis_result.analysis.id.value
 
     @pytest.mark.asyncio
-    async def test_concurrent_operations_with_infrastructure(
-        self, full_infrastructure_setup
-    ):
+    async def test_concurrent_operations_with_infrastructure(self, full_infrastructure_setup):
         """Test concurrent operations with infrastructure components."""
         setup = full_infrastructure_setup
 
@@ -606,9 +570,7 @@ class TestApplicationInfrastructureWorkflowIntegration:
         assert analysis_result.success is True
 
     @pytest.mark.asyncio
-    async def test_resource_management_with_infrastructure(
-        self, full_infrastructure_setup
-    ):
+    async def test_resource_management_with_infrastructure(self, full_infrastructure_setup):
         """Test resource management with infrastructure components."""
         setup = full_infrastructure_setup
 
@@ -650,9 +612,7 @@ class TestApplicationInfrastructureWorkflowIntegration:
 
         for analysis in all_analyses:
             # Each analysis should reference a valid document
-            doc = await setup["repositories"]["document"].get_by_id(
-                analysis.document_id
-            )
+            doc = await setup["repositories"]["document"].get_by_id(analysis.document_id)
             assert doc is not None
 
 

@@ -558,9 +558,7 @@ class TestEventIntegration:
 
         # Subscriber that fails
         bad_subscriber = Mock()
-        bad_subscriber.handle_event = AsyncMock(
-            side_effect=Exception("Subscriber failed")
-        )
+        bad_subscriber.handle_event = AsyncMock(side_effect=Exception("Subscriber failed"))
 
         # Subscribe both
         bus.subscribe("analysis_requested", good_subscriber)

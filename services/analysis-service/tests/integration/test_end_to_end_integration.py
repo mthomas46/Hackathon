@@ -68,9 +68,7 @@ class TestEndToEndWorkflowIntegration:
         # Domain layer
         domain_services = {
             "document_service": DocumentService(repositories["document"]),
-            "analysis_service": AnalysisService(
-                repositories["analysis"], repositories["document"]
-            ),
+            "analysis_service": AnalysisService(repositories["analysis"], repositories["document"]),
             "finding_service": FindingService(repositories["finding"]),
         }
 
@@ -116,15 +114,11 @@ class TestEndToEndWorkflowIntegration:
             query_bus.register_handler(query_type, handler)
 
         # Application service
-        app_service = AnalysisApplicationService(
-            domain_services=domain_services, application_services=application_services
-        )
+        app_service = AnalysisApplicationService(domain_services=domain_services, application_services=application_services)
 
         # Use cases
         use_cases = {
-            "create_document": CreateDocumentUseCase(
-                repositories["document"], domain_services["document_service"], event_bus
-            ),
+            "create_document": CreateDocumentUseCase(repositories["document"], domain_services["document_service"], event_bus),
             "perform_analysis": PerformAnalysisUseCase(
                 domain_services["analysis_service"],
                 domain_services["finding_service"],
@@ -185,9 +179,7 @@ class TestEndToEndWorkflowIntegration:
             timeout_seconds=60,
         )
 
-        analysis_result = await setup["use_cases"]["perform_analysis"].execute(
-            analysis_command
-        )
+        analysis_result = await setup["use_cases"]["perform_analysis"].execute(analysis_command)
         assert analysis_result.success is True
         analysis_id = analysis_result.analysis.id.value
 
@@ -213,9 +205,7 @@ class TestEndToEndWorkflowIntegration:
         assert final_analysis.document_id == document_id
 
         # Analysis is in document's analyses
-        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(
-            document_id
-        )
+        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(document_id)
         assert len(doc_analyses) == 1
         assert doc_analyses[0].id.value == analysis_id
 
@@ -244,9 +234,7 @@ class TestEndToEndWorkflowIntegration:
         assert query_result["document"]["title"] == "CQRS End-to-End Test Document"
 
         # Step 3: Perform analysis via CQRS command
-        analysis_command = PerformAnalysisCommand(
-            document_id=document_id, analysis_type="semantic_similarity"
-        )
+        analysis_command = PerformAnalysisCommand(document_id=document_id, analysis_type="semantic_similarity")
 
         analysis_command_result = await setup["command_bus"].execute(analysis_command)
         assert analysis_command_result["status"] == "completed"
@@ -308,9 +296,7 @@ class TestEndToEndWorkflowIntegration:
         assert doc is not None
 
         # All analyses should exist and be linked to document
-        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(
-            document_id
-        )
+        doc_analyses = await setup["repositories"]["analysis"].get_by_document_id(document_id)
         assert len(doc_analyses) == 3
 
         analysis_ids = [result.analysis.id.value for result in analysis_results]
@@ -371,10 +357,7 @@ class TestEndToEndWorkflowIntegration:
             # Verify each document exists
             doc = await setup["repositories"]["document"].get_by_id(document_id)
             assert doc is not None
-            assert (
-                doc.title
-                == f"Concurrent Test Document {all_document_ids.index(document_id)}"
-            )
+            assert doc.title == f"Concurrent Test Document {all_document_ids.index(document_id)}"
 
             # Verify each analysis exists and is linked
             analysis = await setup["repositories"]["analysis"].get_by_id(analysis_id)
@@ -412,9 +395,7 @@ class TestSystemIntegrationWithExternalServices:
         # Domain services
         domain_services = {
             "document_service": DocumentService(repositories["document"]),
-            "analysis_service": AnalysisService(
-                repositories["analysis"], repositories["document"]
-            ),
+            "analysis_service": AnalysisService(repositories["analysis"], repositories["document"]),
             "finding_service": FindingService(repositories["finding"]),
         }
 
@@ -452,9 +433,7 @@ class TestSystemIntegrationWithExternalServices:
             await repo.close()
 
     @pytest.mark.asyncio
-    async def test_analysis_with_external_service_integration(
-        self, system_with_mocked_externals
-    ):
+    async def test_analysis_with_external_service_integration(self, system_with_mocked_externals):
         """Test analysis workflow with external service integration."""
         setup = system_with_mocked_externals
 
@@ -479,9 +458,7 @@ class TestSystemIntegrationWithExternalServices:
         results = {"external_service_result": "success"}
         confidence = Confidence(0.85)
 
-        completed_analysis = await setup["domain_services"][
-            "analysis_service"
-        ].complete_analysis(
+        completed_analysis = await setup["domain_services"]["analysis_service"].complete_analysis(
             analysis_id=analysis.id.value, results=results, confidence=confidence
         )
 
@@ -704,12 +681,8 @@ class TestSystemResilienceIntegration:
         # Setup with some mocked failures
         repositories = {
             "document": SQLiteDocumentRepository(":memory:"),
-            "analysis": SQLiteDocumentRepository(
-                ":memory:"
-            ),  # Wrong type to simulate failure
-            "finding": SQLiteDocumentRepository(
-                ":memory:"
-            ),  # Wrong type to simulate failure
+            "analysis": SQLiteDocumentRepository(":memory:"),  # Wrong type to simulate failure
+            "finding": SQLiteDocumentRepository(":memory:"),  # Wrong type to simulate failure
         }
 
         await repositories["document"].initialize()

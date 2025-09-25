@@ -238,9 +238,7 @@ class TestFindingsEndpoints:
 
             assert response.status_code == 200
             data = response.json()
-            assert (
-                len(data["findings"]) == 2
-            )  # Both should be returned since we mocked both
+            assert len(data["findings"]) == 2  # Both should be returned since we mocked both
 
     @pytest.mark.asyncio
     async def test_get_findings_pagination(self, client):
@@ -288,9 +286,7 @@ class TestFindingsEndpoints:
         with patch(
             "services.analysis_service.presentation.controllers.findings_controller.findings_handlers.handle_get_findings"
         ) as mock_handler:
-            mock_response = FindingsListResponse(
-                findings=[], total_count=0, limit=50, offset=0, has_more=False
-            )
+            mock_response = FindingsListResponse(findings=[], total_count=0, limit=50, offset=0, has_more=False)
             mock_handler.return_value = mock_response
 
             response = client.get("/findings?analysis_id=non-existent")
@@ -520,9 +516,7 @@ class TestFindingsEndpoints:
         with patch(
             "services.analysis_service.presentation.controllers.findings_controller.findings_handlers.handle_get_findings"
         ) as mock_handler:
-            mock_response = FindingsListResponse(
-                findings=[], total_count=0, limit=50, offset=0, has_more=False
-            )
+            mock_response = FindingsListResponse(findings=[], total_count=0, limit=50, offset=0, has_more=False)
             mock_handler.return_value = mock_response
 
             # Make many rapid requests
@@ -554,14 +548,10 @@ class TestFindingsEndpoints:
             "access-control-allow-headers",
         ]
 
-        cors_present = any(
-            header in headers or header.title() in headers for header in cors_headers
-        )
+        cors_present = any(header in headers or header.title() in headers for header in cors_headers)
         assert cors_present, "CORS headers should be present"
 
-    def test_findings_endpoint_content_type_with_invalid_data_raises_validation_error(
-        self, client
-    ):
+    def test_findings_endpoint_content_type_with_invalid_data_raises_validation_error(self, client):
         """Test content type validation on findings endpoint."""
         # Test with correct content type
         response = client.get("/findings", headers={"Accept": "application/json"})

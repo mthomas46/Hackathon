@@ -14,9 +14,7 @@ from ...domain.value_objects.metrics import AnalysisMetrics
 class TestAnalysisEntity:
     """Test cases for Analysis entity."""
 
-    def test_analysis_creation_with_valid_data_succeeds(
-        self, sample_analysis_data: Dict[str, Any]
-    ):
+    def test_analysis_creation_with_valid_data_succeeds(self, sample_analysis_data: Dict[str, Any]):
         """Test creating an analysis with valid data."""
         analysis = Analysis(**sample_analysis_data)
 
@@ -54,9 +52,7 @@ class TestAnalysisEntity:
     ):
         """Test analysis creation validation."""
         with pytest.raises(ValueError):
-            Analysis(
-                id="", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY
-            )
+            Analysis(id="", document_id="doc-001", analysis_type=AnalysisType.CODE_QUALITY)
 
         with pytest.raises(ValueError):
             Analysis(id="test", document_id="", analysis_type=AnalysisType.CODE_QUALITY)

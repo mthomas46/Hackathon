@@ -33,16 +33,12 @@ class TestDocumentRepositoryInterface:
     def test_repository_interface_definition(self):
         """Test that DocumentRepository defines the expected interface."""
         # This is a base class test to ensure the interface is properly defined
-        repo_methods = [
-            method for method in dir(DocumentRepository) if not method.startswith("_")
-        ]
+        repo_methods = [method for method in dir(DocumentRepository) if not method.startswith("_")]
 
         expected_methods = ["save", "get_by_id", "get_all", "get_by_author", "delete"]
 
         for method in expected_methods:
-            assert (
-                method in repo_methods
-            ), f"Method {method} should be defined in DocumentRepository"
+            assert method in repo_methods, f"Method {method} should be defined in DocumentRepository"
 
     def test_abstract_methods_are_abstract(self):
         """Test that repository methods are properly marked as abstract."""
@@ -361,9 +357,7 @@ class TestInMemoryAnalysisRepository:
             await repository.save(analysis)
 
         # Get semantic similarity analyses
-        semantic_analyses = await repository.get_by_analysis_type(
-            AnalysisType.SEMANTIC_SIMILARITY
-        )
+        semantic_analyses = await repository.get_by_analysis_type(AnalysisType.SEMANTIC_SIMILARITY)
 
         assert len(semantic_analyses) == 1
         assert semantic_analyses[0].analysis_type == AnalysisType.SEMANTIC_SIMILARITY
@@ -637,14 +631,10 @@ class TestRepositoryIntegration:
 
         # Both should have the same interface
         memory_methods = [
-            method
-            for method in dir(memory_repo)
-            if not method.startswith("_") and callable(getattr(memory_repo, method))
+            method for method in dir(memory_repo) if not method.startswith("_") and callable(getattr(memory_repo, method))
         ]
         sqlite_methods = [
-            method
-            for method in dir(sqlite_repo)
-            if not method.startswith("_") and callable(getattr(sqlite_repo, method))
+            method for method in dir(sqlite_repo) if not method.startswith("_") and callable(getattr(sqlite_repo, method))
         ]
 
         # Core methods should be the same

@@ -107,9 +107,7 @@ class TestDocumentBusinessValidator:
 
     def test_validator_with_valid_data_succeeds(self, mock_document_repository):
         """Test creating document business validator."""
-        validator = DocumentBusinessValidator(
-            document_repository=mock_document_repository
-        )
+        validator = DocumentBusinessValidator(document_repository=mock_document_repository)
 
         assert validator.document_repository == mock_document_repository
 
@@ -179,9 +177,7 @@ class TestDocumentBusinessValidator:
             repository_id="repo-123",
         )
 
-        validator = DocumentBusinessValidator(
-            document_repository=mock_document_repository
-        )
+        validator = DocumentBusinessValidator(document_repository=mock_document_repository)
 
         result = await validator.validate(document)
 
@@ -308,9 +304,7 @@ class TestFindingBusinessValidator:
         # Should pass validation but have warnings about low confidence
         assert result.is_valid
         assert len(result.warnings) > 0
-        assert any(
-            "low confidence" in warning.message.lower() for warning in result.warnings
-        )
+        assert any("low confidence" in warning.message.lower() for warning in result.warnings)
 
 
 class TestCommandValidators:

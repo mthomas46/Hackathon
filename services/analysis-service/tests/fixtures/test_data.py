@@ -43,9 +43,7 @@ class TestDataFactory:
         return documents
 
     @staticmethod
-    def create_sample_analyses(
-        document_ids: List[str], count_per_doc: int = 2
-    ) -> List[Analysis]:
+    def create_sample_analyses(document_ids: List[str], count_per_doc: int = 2) -> List[Analysis]:
         """Create sample analyses for documents."""
         analyses = []
         analysis_types = list(AnalysisType)
@@ -53,9 +51,7 @@ class TestDataFactory:
         for doc_id in document_ids:
             for i in range(count_per_doc):
                 analysis_type = analysis_types[i % len(analysis_types)]
-                status = (
-                    AnalysisStatus.COMPLETED if i % 3 != 2 else AnalysisStatus.FAILED
-                )
+                status = AnalysisStatus.COMPLETED if i % 3 != 2 else AnalysisStatus.FAILED
 
                 analysis = Analysis(
                     id=f'analysis-{doc_id.split("-")[-1]}-{i}',
@@ -79,9 +75,7 @@ class TestDataFactory:
         return analyses
 
     @staticmethod
-    def create_sample_findings(
-        analysis_ids: List[str], count_per_analysis: int = 3
-    ) -> List[Finding]:
+    def create_sample_findings(analysis_ids: List[str], count_per_analysis: int = 3) -> List[Finding]:
         """Create sample findings for analyses."""
         findings = []
         severities = list(FindingSeverity)
@@ -108,9 +102,7 @@ class TestDataFactory:
                         end_column=25,
                     )
                 else:
-                    location = FileLocation(
-                        file_path=f"/docs/document_{i % 3}.md", line_number=50 + i * 20
-                    )
+                    location = FileLocation(file_path=f"/docs/document_{i % 3}.md", line_number=50 + i * 20)
 
                 finding = Finding(
                     id=f'finding-{analysis_id.split("-")[-1]}-{i}',
@@ -127,9 +119,7 @@ class TestDataFactory:
                         "rule_id": f"RULE-{category.upper()}-{i:03d}",
                         "cwe": f"CWE-{100 + i * 10}",
                         "tags": [category, severity.value, f"priority-{i % 3 + 1}"],
-                        "automated_fix_available": (
-                            i % 3 == 0
-                        ),  # Every 3rd finding has automated fix
+                        "automated_fix_available": (i % 3 == 0),  # Every 3rd finding has automated fix
                         "estimated_effort_minutes": 15 + i * 5,
                     },
                 )

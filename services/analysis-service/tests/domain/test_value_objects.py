@@ -56,9 +56,7 @@ class TestConfidenceValueObject:
         str_repr = str(confidence)
         assert "0.75" in str_repr
 
-    def test_confidence_comparison(
-        self, confidence_high, confidence_medium, confidence_low
-    ):
+    def test_confidence_comparison(self, confidence_high, confidence_medium, confidence_low):
         """Test confidence comparison operations."""
         assert confidence_high > confidence_medium
         assert confidence_medium > confidence_low
@@ -156,9 +154,7 @@ class TestLocationValueObjects:
 class TestAnalysisMetricsValueObject:
     """Test cases for AnalysisMetrics value object."""
 
-    def test_analysis_metrics_with_valid_data_succeeds(
-        self, analysis_metrics: AnalysisMetrics
-    ):
+    def test_analysis_metrics_with_valid_data_succeeds(self, analysis_metrics: AnalysisMetrics):
         """Test creating analysis metrics."""
         assert analysis_metrics.processing_time_seconds == 3.5
         assert analysis_metrics.memory_usage_mb == 75.0
@@ -167,9 +163,7 @@ class TestAnalysisMetricsValueObject:
     def test_analysis_metrics_with_invalid_data_raises_validation_error(self):
         """Test analysis metrics validation."""
         # Valid metrics
-        metrics = AnalysisMetrics(
-            processing_time_seconds=5.0, memory_usage_mb=100.0, confidence_score=0.9
-        )
+        metrics = AnalysisMetrics(processing_time_seconds=5.0, memory_usage_mb=100.0, confidence_score=0.9)
         assert metrics.processing_time_seconds == 5.0
 
         # Test negative values (should be allowed for metrics)
@@ -180,9 +174,7 @@ class TestAnalysisMetricsValueObject:
         )
         assert metrics.processing_time_seconds == -1.0
 
-    def test_analysis_metrics_string_representation(
-        self, analysis_metrics: AnalysisMetrics
-    ):
+    def test_analysis_metrics_string_representation(self, analysis_metrics: AnalysisMetrics):
         """Test analysis metrics string representation."""
         str_repr = str(analysis_metrics)
         assert "3.5" in str_repr
@@ -201,9 +193,7 @@ class TestAnalysisMetricsValueObject:
 class TestQualityMetricsValueObject:
     """Test cases for QualityMetrics value object."""
 
-    def test_quality_metrics_with_valid_data_succeeds(
-        self, quality_metrics: QualityMetrics
-    ):
+    def test_quality_metrics_with_valid_data_succeeds(self, quality_metrics: QualityMetrics):
         """Test creating quality metrics."""
         assert quality_metrics.readability_score == 85.0
         assert quality_metrics.complexity_score == 25.0
@@ -245,9 +235,7 @@ class TestQualityMetricsValueObject:
         # Duplication percentage is typically 0-100
         assert 0 <= metrics.duplication_percentage <= 100
 
-    def test_quality_metrics_string_representation(
-        self, quality_metrics: QualityMetrics
-    ):
+    def test_quality_metrics_string_representation(self, quality_metrics: QualityMetrics):
         """Test quality metrics string representation."""
         str_repr = str(quality_metrics)
         assert "85.0" in str_repr
