@@ -106,7 +106,18 @@ class AIToolSelector:
             return self._rule_based_task_analysis(task_description)
 
     def _rule_based_task_analysis(self, task_description: str) -> Dict[str, Any]:
-        """Fallback rule-based task analysis"""
+        """Perform rule-based task analysis as fallback when AI analysis fails.
+
+        Uses keyword matching and pattern recognition to categorize tasks
+        and identify required capabilities, data types, and success criteria.
+
+        Args:
+            task_description: Natural language task description
+
+        Returns:
+            Dict containing analysis results: primary_action, data_types,
+            capabilities, steps, and success_criteria
+        """
         task_lower = task_description.lower()
 
         analysis = {
@@ -163,7 +174,17 @@ class AIToolSelector:
         return analysis
 
     def _parse_task_analysis(self, ai_response: str) -> Dict[str, Any]:
-        """Parse AI response into structured task analysis"""
+        """Parse AI-generated response into structured task analysis format.
+
+        Extracts JSON content from AI responses and converts it into a standardized
+        task analysis structure. Falls back to default analysis if parsing fails.
+
+        Args:
+            ai_response: Raw text response from AI analysis service
+
+        Returns:
+            Structured analysis dict with primary_action, data_types, capabilities, etc.
+        """
         try:
             # Try to extract JSON from AI response
             json_match = re.search(r"\{.*\}", ai_response, re.DOTALL)
