@@ -32,6 +32,7 @@ from .shared_utils import (
     get_medium_priority_score,
     handle_analysis_error,
 )
+from .error_handling_utils import create_error_response, handle_analysis_error
 
 # Constants for analysis thresholds and scoring (using shared configuration)
 DRIFT_OVERLAP_THRESHOLD = get_drift_overlap_threshold()
