@@ -5772,82 +5772,20 @@ def generate_document_section(doc: Dict[str, Any], req: DocumentDumpRequest) -> 
     doc_id = doc.get("id", "unknown")
     title = doc.get("title", "Untitled Document")
 
-    # Document header based on type
-    if doc_type == "confluence":
-        lines.append(f"### 📄 {title}")
-        lines.append(f"**Confluence Page ID:** {doc_id}")
-    elif doc_type == "jira":
-        lines.append(f"### 🎫 {title}")
-        lines.append(f"**Jira Ticket:** {doc_id}")
-    elif doc_type == "pull_request" or doc_type == "pr":
-        lines.append(f"### 🔄 {title}")
-        lines.append(f"**Pull Request:** {doc_id}")
-    else:
-        lines.append(f"### 📋 {title}")
-        lines.append(f"**Document ID:** {doc_id}")
-
+    # Generate document header
+    lines.extend(_generate_document_header(doc_type, doc_id, title))
     lines.append("")
 
     # Metadata section
     if req.include_metadata:
-        lines.append("**📊 Metadata:**")
-        lines.append("")
-
-        metadata_fields = [
-            ("Category", doc.get("category", "N/A")),
-            ("Status", doc.get("status", "N/A")),
-            ("Priority", doc.get("priority", "N/A")),
-            ("Assignee", doc.get("assignee", "N/A")),
-            ("Created", format_timestamp(doc.get("dateCreated"))),
-            ("Updated", format_timestamp(doc.get("dateUpdated"))),
-            ("Author", doc.get("author", "N/A")),
-            ("Tags", ", ".join(doc.get("tags", [])) if doc.get("tags") else "N/A"),
-        ]
-
-        for field_name, field_value in metadata_fields:
-            if field_value and field_value != "N/A":
-                lines.append(f"- **{field_name}:** {field_value}")
-
-        lines.append("")
+        lines.extend(_generate_document_metadata(doc))
 
     # Content section
     if req.include_content:
-        content = doc.get("content", "").strip()
+        lines.extend(_generate_document_content(doc, doc_type))
 
-        if content:
-            lines.append("**📝 Content:**")
-            lines.append("")
-
-            # Format content based on document type
-            if doc_type == "confluence":
-                lines.extend(format_confluence_content(content))
-            elif doc_type == "jira":
-                lines.extend(format_jira_content(content))
-            elif doc_type == "pull_request" or doc_type == "pr":
-                lines.extend(format_pr_content(content))
-            else:
-                lines.extend(format_generic_content(content))
-
-            lines.append("")
-        else:
-            lines.append("**📝 Content:** *(Empty document)*")
-            lines.append("")
-
-    # Comments/Conversation section (for Jira and PR)
-    if doc_type in ["jira", "pull_request", "pr"]:
-        comments = doc.get("comments", [])
-        if comments:
-            lines.append("**💬 Conversation:**")
-            lines.append("")
-
-            for i, comment in enumerate(comments, 1):
-                author = comment.get("author", "Unknown")
-                timestamp = format_timestamp(comment.get("timestamp", ""))
-                comment_content = comment.get("content", "").strip()
-
-                lines.append(f"**Comment {i}** by {author} on {timestamp}:")
-                lines.append(f"> {comment_content}")
-                lines.append("")
+    # Comments/Conversation section
+    lines.extend(_generate_document_comments(doc, doc_type))
 
     # Separator
     lines.append("---")
@@ -6862,6 +6800,134 @@ async def custom_analysis_health():
         uptime_seconds=uptime,
         models_loaded=models_loaded,
     )
+
+
+# ============================================================================
+# DOCUMENT FORMATTING HELPERS
+# ============================================================================
+
+def _generate_document_header(doc_type: str, doc_id: str, title: str) -> List[str]:
+    """Generate document header with appropriate icon and ID format.
+
+    Args:
+        doc_type: Type of document (confluence, jira, pull_request, etc.)
+        doc_id: Document identifier
+        title: Document title
+
+    Returns:
+        List of formatted header lines
+    """
+    lines = []
+
+    if doc_type == "confluence":
+        lines.append(f"### 📄 {title}")
+        lines.append(f"**Confluence Page ID:** {doc_id}")
+    elif doc_type == "jira":
+        lines.append(f"### 🎫 {title}")
+        lines.append(f"**Jira Ticket:** {doc_id}")
+    elif doc_type == "pull_request" or doc_type == "pr":
+        lines.append(f"### 🔄 {title}")
+        lines.append(f"**Pull Request:** {doc_id}")
+    else:
+        lines.append(f"### 📋 {title}")
+        lines.append(f"**Document ID:** {doc_id}")
+
+    return lines
+
+
+def _generate_document_metadata(doc: Dict[str, Any]) -> List[str]:
+    """Generate metadata section for document.
+
+    Args:
+        doc: Document dictionary
+
+    Returns:
+        List of formatted metadata lines
+    """
+    lines = ["**📊 Metadata:**", ""]
+
+    metadata_fields = [
+        ("Category", doc.get("category", "N/A")),
+        ("Status", doc.get("status", "N/A")),
+        ("Priority", doc.get("priority", "N/A")),
+        ("Assignee", doc.get("assignee", "N/A")),
+        ("Created", format_timestamp(doc.get("dateCreated"))),
+        ("Updated", format_timestamp(doc.get("dateUpdated"))),
+        ("Author", doc.get("author", "N/A")),
+        ("Tags", ", ".join(doc.get("tags", [])) if doc.get("tags") else "N/A"),
+    ]
+
+    for field_name, field_value in metadata_fields:
+        if field_value and field_value != "N/A":
+            lines.append(f"- **{field_name}:** {field_value}")
+
+    lines.append("")
+    return lines
+
+
+def _generate_document_content(doc: Dict[str, Any], doc_type: str) -> List[str]:
+    """Generate content section for document.
+
+    Args:
+        doc: Document dictionary
+        doc_type: Type of document
+
+    Returns:
+        List of formatted content lines
+    """
+    lines = []
+    content = doc.get("content", "").strip()
+
+    if content:
+        lines.append("**📝 Content:**")
+        lines.append("")
+
+        # Format content based on document type
+        if doc_type == "confluence":
+            lines.extend(format_confluence_content(content))
+        elif doc_type == "jira":
+            lines.extend(format_jira_content(content))
+        elif doc_type == "pull_request" or doc_type == "pr":
+            lines.extend(format_pr_content(content))
+        else:
+            lines.extend(format_generic_content(content))
+
+        lines.append("")
+    else:
+        lines.append("**📝 Content:** *(Empty document)*")
+        lines.append("")
+
+    return lines
+
+
+def _generate_document_comments(doc: Dict[str, Any], doc_type: str) -> List[str]:
+    """Generate comments/conversation section for document.
+
+    Args:
+        doc: Document dictionary
+        doc_type: Type of document
+
+    Returns:
+        List of formatted comment lines
+    """
+    lines = []
+
+    if doc_type in ["jira", "pull_request", "pr"]:
+        comments = doc.get("comments", [])
+        if comments:
+            lines.append("**💬 Conversation:**")
+            lines.append("")
+
+            for i, comment in enumerate(comments, 1):
+                author = comment.get("author", "Unknown")
+                timestamp = format_timestamp(comment.get("timestamp", ""))
+                comment_content = comment.get("content", "").strip()
+
+                lines.append(f"**Comment {i}** by {author} on {timestamp}:")
+                lines.append(f"> {comment_content}")
+                lines.append("")
+
+    return lines
 
 
 # ============================================================================
