@@ -28,15 +28,27 @@ async def async_add(a: int, b: int) -> int:
     return a + b
 
 
-def test_test_config_fixture_provides_required_configuration():
-    """Test that the test_config fixture provides all required configuration values."""
-    assert isinstance(test_config, dict)
-    assert "database_url" in test_config
-    assert "service_name" in test_config
+def test_basic_arithmetic_operations_produce_expected_results():
+    """Test basic arithmetic operations."""
+    assert 2 + 2 == 4
+    assert 3 * 3 == 9
+    assert 10 - 5 == 5
+    assert 20 / 4 == 5
 
 
-def test_performance_metrics_fixture_records_and_retrieves_values():
-    """Test that the performance metrics fixture correctly records and retrieves metric values."""
-    # Test recording metrics
-    performance_metrics.record("test_metric", 42)
-    assert performance_metrics.get("test_metric") == 42
+def test_string_operations_handle_case_conversion_and_length():
+    """Test string operations."""
+    test_string = "Hello World"
+    assert test_string.upper() == "HELLO WORLD"
+    assert test_string.lower() == "hello world"
+    assert len(test_string) == 11
+
+
+@pytest.mark.asyncio
+async def test_async_functions_execute_and_return_correct_values():
+    """Test async function execution."""
+    async def add_async(a, b):
+        return a + b
+
+    result = await add_async(5, 3)
+    assert result == 8

@@ -10,8 +10,8 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.entities import Document
-from core.repository import DocumentRepository
+from services.doc_store.domain.entities import Document
+from services.doc_store.domain.repository import DocumentRepository
 
 
 class TestDocumentRepository:
