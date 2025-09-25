@@ -77,22 +77,8 @@ class PerformAnalysisUseCase:
 
         try:
             # Publish analysis requested event
-            if self.event_bus:
-                requested_event = AnalysisRequestedEvent(
-                    event_id=str(uuid4()),
-                    correlation_id=getattr(command, "command_id", str(uuid4())),
-                    document_id=command.document_id,
-                    analysis_type=command.analysis_type,
-                    requested_by=getattr(command, "user_id", None),
-                    priority=command.priority,
-                    configuration=command.configuration or {},
-                    metadata={
-                        "user_id": getattr(command, "user_id", None),
-                        "session_id": getattr(command, "session_id", None),
-                        "source": getattr(command, "source", "api"),
-                    },
-                )
-                await self.event_bus.publish(requested_event)
+            requested_event = await self._publish_analysis_requested_event(command)
+            if requested_event:
                 events.append(requested_event)
 
             # Get document
@@ -119,59 +105,16 @@ class PerformAnalysisUseCase:
             # Save analysis
             await self.analysis_repository.save(analysis)
 
-            # Execute analysis
-            analysis.start()
-            result = self.analysis_service.execute_analysis(analysis)
-            execution_time = time.time() - start_time
+            # Execute analysis and process results
+            result, execution_time, findings = await self._execute_analysis_and_process_results(
+                analysis, start_time
+            )
 
-            # Mark as completed
-            analysis.complete(result)
-            await self.analysis_repository.save(analysis)
-
-            # Process findings if any
-            findings = []
-            if "findings" in result:
-                findings = await self._process_findings(analysis, result["findings"])
-
-            # Publish analysis completed event
-            if self.event_bus:
-                completed_event = AnalysisCompletedEvent(
-                    event_id=str(uuid4()),
-                    correlation_id=getattr(command, "command_id", str(uuid4())),
-                    analysis_id=analysis.id.value,
-                    document_id=command.document_id,
-                    analysis_type=command.analysis_type,
-                    result=result,
-                    execution_time_seconds=execution_time,
-                    findings_count=len(findings),
-                    metadata={
-                        "user_id": getattr(command, "user_id", None),
-                        "session_id": getattr(command, "session_id", None),
-                    },
-                )
-                await self.event_bus.publish(completed_event)
-                events.append(completed_event)
-
-            # Publish finding events
-            for finding in findings:
-                if self.event_bus:
-                    finding_event = FindingCreatedEvent(
-                        event_id=str(uuid4()),
-                        correlation_id=getattr(command, "command_id", str(uuid4())),
-                        finding_id=finding.id.value,
-                        document_id=command.document_id,
-                        analysis_id=analysis.id.value,
-                        severity=finding.severity,
-                        category=finding.category,
-                        description=finding.description,
-                        confidence=finding.confidence.value,
-                        metadata={
-                            "user_id": getattr(command, "user_id", None),
-                            "session_id": getattr(command, "session_id", None),
-                        },
-                    )
-                    await self.event_bus.publish(finding_event)
-                    events.append(finding_event)
+            # Publish completion events
+            completion_events = await self._publish_analysis_completion_events(
+                command, analysis, result, execution_time, findings
+            )
+            events.extend(completion_events)
 
             return PerformAnalysisResult(
                 analysis=analysis,
@@ -260,6 +203,128 @@ class PerformAnalysisUseCase:
             findings.append(finding)
 
         return findings
+
+    async def _publish_analysis_requested_event(self, command: PerformAnalysisCommand) -> Optional[AnalysisRequestedEvent]:
+        """Publish analysis requested event.
+
+        Args:
+            command: The analysis command
+
+        Returns:
+            The published event if event bus is available, None otherwise
+        """
+        if not self.event_bus:
+            return None
+
+        requested_event = AnalysisRequestedEvent(
+            event_id=str(uuid4()),
+            correlation_id=getattr(command, "command_id", str(uuid4())),
+            document_id=command.document_id,
+            analysis_type=command.analysis_type,
+            requested_by=getattr(command, "user_id", None),
+            priority=command.priority,
+            configuration=command.configuration or {},
+            metadata={
+                "user_id": getattr(command, "user_id", None),
+                "session_id": getattr(command, "session_id", None),
+                "source": getattr(command, "source", "api"),
+            },
+        )
+        await self.event_bus.publish(requested_event)
+        return requested_event
+
+    async def _execute_analysis_and_process_results(
+        self, analysis: Analysis, start_time: float
+    ) -> tuple:
+        """Execute analysis and process results.
+
+        Args:
+            analysis: The analysis entity
+            start_time: Start time of the operation
+
+        Returns:
+            Tuple of (result, execution_time, findings)
+        """
+        # Execute analysis
+        analysis.start()
+        result = self.analysis_service.execute_analysis(analysis)
+        execution_time = time.time() - start_time
+
+        # Mark as completed and save
+        analysis.complete(result)
+        await self.analysis_repository.save(analysis)
+
+        # Process findings if any
+        findings = []
+        if "findings" in result:
+            findings = await self._process_findings(analysis, result["findings"])
+
+        return result, execution_time, findings
+
+    async def _publish_analysis_completion_events(
+        self,
+        command: PerformAnalysisCommand,
+        analysis: Analysis,
+        result: Dict[str, Any],
+        execution_time: float,
+        findings: List
+    ) -> List:
+        """Publish analysis completion and finding events.
+
+        Args:
+            command: The original command
+            analysis: The completed analysis
+            result: Analysis results
+            execution_time: Time taken for execution
+            findings: Generated findings
+
+        Returns:
+            List of published events
+        """
+        events = []
+        correlation_id = getattr(command, "command_id", str(uuid4()))
+
+        # Publish analysis completed event
+        if self.event_bus:
+            completed_event = AnalysisCompletedEvent(
+                event_id=str(uuid4()),
+                correlation_id=correlation_id,
+                analysis_id=analysis.id.value,
+                document_id=command.document_id,
+                analysis_type=command.analysis_type,
+                result=result,
+                execution_time_seconds=execution_time,
+                findings_count=len(findings),
+                metadata={
+                    "user_id": getattr(command, "user_id", None),
+                    "session_id": getattr(command, "session_id", None),
+                },
+            )
+            await self.event_bus.publish(completed_event)
+            events.append(completed_event)
+
+        # Publish finding events
+        for finding in findings:
+            if self.event_bus:
+                finding_event = FindingCreatedEvent(
+                    event_id=str(uuid4()),
+                    correlation_id=correlation_id,
+                    finding_id=finding.id.value,
+                    document_id=command.document_id,
+                    analysis_id=analysis.id.value,
+                    severity=finding.severity,
+                    category=finding.category,
+                    description=finding.description,
+                    confidence=finding.confidence.value,
+                    metadata={
+                        "user_id": getattr(command, "user_id", None),
+                        "session_id": getattr(command, "session_id", None),
+                    },
+                )
+                await self.event_bus.publish(finding_event)
+                events.append(finding_event)
+
+        return events
 
     def to_response(self, result: PerformAnalysisResult) -> AnalysisResultResponse:
         """Convert result to response DTO."""
