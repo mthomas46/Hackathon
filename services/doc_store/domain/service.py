@@ -7,7 +7,7 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from services.shared.utilities.error_handling import ServiceException
+from services.shared.infrastructure.utilities.error_handling import ServiceException
 
 from .entities import BaseEntity
 

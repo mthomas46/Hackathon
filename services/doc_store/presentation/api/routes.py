@@ -16,7 +16,7 @@ from services.shared.presentation.responses import (
     APIResponse,
 )
 
-from ..core.models import (
+from ...presentation.dto.models import (
     BulkDocumentRequest,
     CacheInvalidationRequest,
     CacheStatsResponse,
@@ -36,19 +36,19 @@ from ..core.models import (
     VersionRollbackRequest,
     WebhookRequest,
 )
-from ..domain.analytics.handlers import AnalyticsHandlers
-from ..domain.bulk.handlers import BulkOperationsHandlers
+from ...application.handlers.analytics_handlers import AnalyticsHandlers
+from ...application.handlers.bulk_handlers import BulkOperationsHandlers
 
-# Import handlers from domains
-from ..domain.documents.handlers import AbstractDocumentHandlers
-from ..domain.lifecycle.handlers import LifecycleHandlers
-from ..domain.notifications.handlers import NotificationsHandlers
-from ..domain.relationships.handlers import RelationshipsHandlers
-from ..domain.tagging.handlers import TaggingHandlers
-from ..domain.versioning.handlers import VersioningHandlers
+# Import handlers from application layer
+from ...application.handlers.document_handlers import AbstractDocumentHandlers
+from ...application.handlers.lifecycle_handlers import LifecycleHandlers
+from ...application.handlers.notifications_handlers import NotificationsHandlers
+from ...application.handlers.relationships_handlers import RelationshipsHandlers
+from ...application.handlers.tagging_handlers import TaggingHandlers
+from ...application.handlers.versioning_handlers import VersioningHandlers
 
 # Dependency injection container
-from ..infrastructure.di.container import container
+from ...infrastructure.di.container import container
 
 
 # Dependency functions for injection
