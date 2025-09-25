@@ -4891,6 +4891,7 @@ async def get_task_status_endpoint(task_id: str):
     description="""Cancels a running distributed processing task, freeing up worker resources
     and preventing completion of unnecessary analysis operations. Gracefully terminates
     task execution and cleans up associated resources.""",
+    response_model=None,
     responses={
         204: {
             "description": "Task cancelled successfully",
@@ -6223,7 +6224,19 @@ async def notify_owners(req: NotifyOwnersRequest):
 # ============================================================================
 
 
-@app.get("/integration/health")
+@app.get(
+    "/integration/health",
+    tags=["integration"],
+    summary="Check integration health with other services in the ecosystem",
+    description="""Performs comprehensive health checks across all integrated services
+    in the ecosystem, including database connectivity, external API status,
+    and inter-service communication health.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Integration health check completed successfully", "model": AnalysisResultResponse},
+        500: {"description": "Integration health check failed", "model": ErrorResponse},
+    },
+)
 async def integration_health():
     """Check integration health with other services in the ecosystem.
 
