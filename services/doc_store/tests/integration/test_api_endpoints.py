@@ -5,7 +5,7 @@ from httpx import AsyncClient
 from fastapi.testclient import TestClient
 
 from services.doc_store.main import app
-from services.doc_store.core.entities import Document
+from services.doc_store.domain.entities import Document
 
 
 class TestDocumentAPI:

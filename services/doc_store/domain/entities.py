@@ -5,24 +5,24 @@ Defines core business objects and their relationships.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 # Import standardized base entity
 from services.shared.domain.repositories.base_repository import BaseEntity
 
 
-@dataclass
+@dataclass(eq=True, frozen=False)
 class Document(BaseEntity):
     """Core document entity using standardized base class."""
 
     id: str
     content: str
     content_hash: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict, hash=False)
     correlation_id: Optional[str] = None
-    created_at: datetime = field(default_factory=datetime.utcnow)
-    updated_at: Optional[datetime] = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc), hash=False)
+    updated_at: Optional[datetime] = field(default=None, hash=False)
 
     def __post_init__(self):
         """Validate document after initialization."""
@@ -42,6 +42,23 @@ class Document(BaseEntity):
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+    def __hash__(self) -> int:
+        """Hash based on immutable fields."""
+        return hash((self.id, self.content, self.content_hash))
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Document":
+        """Create document from dictionary representation."""
+        return cls(
+            id=data["id"],
+            content=data["content"],
+            content_hash=data["content_hash"],
+            metadata=data.get("metadata", {}),
+            correlation_id=data.get("correlation_id"),
+            created_at=datetime.fromisoformat(data["created_at"]) if isinstance(data["created_at"], str) else data["created_at"],
+            updated_at=datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") and isinstance(data["updated_at"], str) else data.get("updated_at"),
+        )
 
 
 @dataclass

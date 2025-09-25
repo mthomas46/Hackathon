@@ -12,8 +12,8 @@ from services.shared.domain.exceptions import (
     create_duplicate_error,
 )
 
-from ...core.entities import Document
-from ...core.repository import DocumentRepository
+from ..entities import Document
+from ..repository import DocumentRepository
 
 
 class DocumentService(BaseService[Document]):
@@ -70,7 +70,7 @@ class DocumentService(BaseService[Document]):
             correlation_id=data.get("correlation_id"),
         )
 
-    def _check_duplicates(self, entity: Document) -> None:
+    async def _check_duplicates(self, entity: Document) -> None:
         """Check for duplicate content (business rule)."""
         # Note: Duplicate checking is done in _create_entity_from_data
         # to allow returning existing documents instead of erroring
