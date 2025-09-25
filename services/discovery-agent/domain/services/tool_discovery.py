@@ -192,14 +192,25 @@ class ToolDiscoveryService:
         }
 
     def _categorize_operation(self, endpoint: Dict[str, Any]) -> List[str]:
-        """Categorize an operation based on its characteristics."""
-        categories = []
+        """Categorize an operation based on its characteristics.
+
+        Delegates categorization to specialized methods for better maintainability
+        and reduced complexity. Each method handles a specific category type.
+        """
         operation_id = endpoint.get("operation_id", "").lower()
         method = endpoint.get("method", "").lower()
-        endpoint.get("path", "").lower()
-        endpoint.get("summary", "").lower()
 
-        # CRUD operations
+        categories = []
+        categories.extend(self._categorize_crud_operations(operation_id, method))
+        categories.extend(self._categorize_business_operations(operation_id))
+        categories.extend(self._categorize_service_specific_operations(operation_id))
+
+        return categories or ["general"]
+
+    def _categorize_crud_operations(self, operation_id: str, method: str) -> List[str]:
+        """Categorize CRUD (Create, Read, Update, Delete) operations."""
+        categories = []
+
         if operation_id.startswith("create") or method == "post":
             categories.append("create")
         if (
@@ -213,32 +224,55 @@ class ToolDiscoveryService:
         if operation_id.startswith("delete") or method == "delete":
             categories.append("delete")
 
-        # Business operations
-        if any(
-            word in operation_id
-            for word in ["analyze", "analysis", "check", "validate"]
-        ):
+        return categories
+
+    def _categorize_business_operations(self, operation_id: str) -> List[str]:
+        """Categorize business logic operations."""
+        categories = []
+
+        # Analysis operations
+        if any(word in operation_id for word in ["analyze", "analysis", "check", "validate"]):
             categories.append("analysis")
+
+        # Search operations
         if any(word in operation_id for word in ["search", "find", "query"]):
             categories.append("search")
+
+        # Communication operations
         if any(word in operation_id for word in ["notify", "alert", "send"]):
             categories.append("notification")
+
+        # Storage operations
         if any(word in operation_id for word in ["store", "save", "persist"]):
             categories.append("storage")
+
+        # Processing operations
         if any(word in operation_id for word in ["process", "execute", "run"]):
             categories.append("processing")
 
-        # Service-specific categories
+        return categories
+
+    def _categorize_service_specific_operations(self, operation_id: str) -> List[str]:
+        """Categorize service-specific operations based on domain context."""
+        categories = []
+
+        # Document operations
         if "document" in operation_id or "doc" in operation_id:
             categories.append("document")
+
+        # Prompt operations
         if "prompt" in operation_id:
             categories.append("prompt")
+
+        # Code operations
         if "code" in operation_id or "repo" in operation_id:
             categories.append("code")
+
+        # Workflow operations
         if "workflow" in operation_id:
             categories.append("workflow")
 
-        return categories or ["general"]
+        return categories
 
     def _generate_tool_name(self, service_name: str, operation_id: str) -> str:
         """Generate a standardized tool name."""
