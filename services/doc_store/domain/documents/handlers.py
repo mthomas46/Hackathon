@@ -7,7 +7,6 @@ from typing import Any, Dict
 
 from fastapi import HTTPException
 
-
 from ...core.models import (
     DocumentListResponse,
     DocumentRequest,
@@ -16,6 +15,11 @@ from ...core.models import (
     QualityResponse,
     SearchRequest,
     SearchResponse,
+)
+from ...domain.exceptions import (
+    DocumentNotFoundException,
+    DocumentValidationException,
+    DocumentSizeExceededException,
 )
 from .service import DocumentService
 
@@ -31,6 +35,19 @@ class DocumentHandlers:
     ) -> DocumentResponse:
         """Handle document creation."""
         try:
+            # Validate input
+            if not request.content or not request.content.strip():
+                raise DocumentValidationException(
+                    "Document content cannot be empty",
+                    ["content"]
+                )
+
+            # Check document size (example: 10MB limit)
+            content_size = len(request.content.encode('utf-8'))
+            max_size = 10 * 1024 * 1024  # 10MB
+            if content_size > max_size:
+                raise DocumentSizeExceededException(content_size, max_size)
+
             # Process metadata
             metadata = request.metadata if isinstance(request.metadata, dict) else {}
 
@@ -51,8 +68,12 @@ class DocumentHandlers:
                 created_at=document.created_at.isoformat(),
             )
 
+        except DocumentValidationException:
+            raise  # Let global exception handler deal with it
+        except DocumentSizeExceededException:
+            raise  # Let global exception handler deal with it
         except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise DocumentValidationException(str(e))
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to create document: {str(e)}"
@@ -63,9 +84,7 @@ class DocumentHandlers:
         try:
             document = self.service.get_entity(document_id)
             if not document:
-                raise HTTPException(
-                    status_code=404, detail=f"Document {document_id} not found"
-                )
+                raise DocumentNotFoundException(document_id)
 
             return DocumentResponse(
                 id=document.id,
@@ -75,8 +94,8 @@ class DocumentHandlers:
                 created_at=document.created_at.isoformat(),
             )
 
-        except HTTPException:
-            raise
+        except DocumentNotFoundException:
+            raise  # Let the global exception handler deal with it
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Failed to retrieve document: {str(e)}"

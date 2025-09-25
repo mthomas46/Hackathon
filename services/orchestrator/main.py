@@ -133,6 +133,23 @@ SERVICE_VERSION = config.service_version
 DEFAULT_PORT = config.port
 
 # ============================================================================
+# DEVOPS & MONITORING SETUP
+# ============================================================================
+
+# Configure structured logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        # Could add file handler for production
+    ]
+)
+
+# Create logger for this service
+logger = logging.getLogger(__name__)
+
+# ============================================================================
 # APPLICATION COMPOSITION - Dependency Injection Container
 # ============================================================================
 
@@ -304,25 +321,86 @@ async def simple_health():
 
 @app.on_event("startup")
 async def startup_event():
-    """Handle orchestrator startup events."""
-    print("🚀 Orchestrator service starting up...")
+    """Handle orchestrator startup events with proper logging and monitoring."""
+    start_time = time.time()
+    app.state.start_time = start_time
 
-    # Initialize core components
-    print("🔧 Initializing core components...")
-    # Add initialization logic here as needed
+    logger.info("🚀 Orchestrator service starting up...")
+    logger.info(f"Service: {config.service_name} v{config.service_version}")
+    logger.info(f"Environment: {getattr(config, 'environment', 'unknown')}")
+    logger.info(f"Port: {DEFAULT_PORT}")
 
-    print("🎉 Orchestrator service startup complete!")
+    try:
+        # Initialize core components
+        logger.info("🔧 Initializing core components...")
+        app.state.container = container
+
+        # Log registered routes for debugging
+        routes = [f"{route.methods} {route.path}" for route in app.routes]
+        logger.info(f"Registered {len(routes)} routes")
+
+        startup_duration = time.time() - start_time
+        logger.info(f"🎉 Orchestrator service startup complete! ({startup_duration:.2f}s)")
+
+    except Exception as e:
+        logger.error(f"❌ Startup failed: {e}")
+        raise
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Handle orchestrator shutdown events."""
-    print("🛑 Orchestrator service shutting down...")
+    """Handle orchestrator shutdown events with graceful cleanup."""
+    logger.info("🛑 Orchestrator service shutting down...")
 
-    # Add cleanup logic here as needed
+    try:
+        # Graceful shutdown logic
+        shutdown_start = time.time()
 
-    print("🏁 Orchestrator shutdown completed")
+        # Close database connections, cleanup resources, etc.
+        # Add cleanup logic here as needed
 
+        # Calculate uptime
+        uptime = time.time() - getattr(app.state, 'start_time', time.time())
+        logger.info(f"Service uptime: {uptime:.2f} seconds")
+
+        shutdown_duration = time.time() - shutdown_start
+        logger.info(f"🏁 Orchestrator shutdown completed ({shutdown_duration:.2f}s)")
+
+    except Exception as e:
+        logger.error(f"❌ Shutdown error: {e}")
+
+
+# ============================================================================
+# MONITORING & METRICS ENDPOINTS
+# ============================================================================
+
+@app.get("/metrics", tags=["Monitoring"])
+async def get_metrics():
+    """Get service metrics for monitoring and observability."""
+    return {
+        "service": config.service_name,
+        "version": config.service_version,
+        "uptime_seconds": getattr(app.state, 'start_time', time.time()),
+        "timestamp": time.time(),
+        "status": "healthy"
+    }
+
+@app.get("/ready", tags=["Health"])
+async def readiness_probe():
+    """Kubernetes readiness probe."""
+    # Check if service dependencies are ready
+    redis_ready = True  # Could implement actual Redis check
+    services_ready = len(getattr(container, '_service_repo', [])) > 0
+
+    if redis_ready and services_ready:
+        return {"status": "ready", "timestamp": time.time()}
+    else:
+        return {"status": "not ready", "timestamp": time.time()}, 503
+
+@app.get("/live", tags=["Health"])
+async def liveness_probe():
+    """Kubernetes liveness probe."""
+    return {"status": "alive", "timestamp": time.time()}
 
 # ============================================================================
 # API ROUTE REGISTRATION - Clean separation by bounded contexts

@@ -1,9 +1,23 @@
 """Analysis Controller - Handles core document analysis endpoints."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 
 from ...application.dto import ErrorResponse, PerformAnalysisRequest
 from ...application.use_cases import PerformAnalysisUseCase
+from ...domain.exceptions import (
+    AnalysisException,
+    AnalysisExecutionException,
+    AnalysisTimeoutException,
+    DocumentException,
+    DocumentNotFoundException,
+    ValidationException,
+    ExternalServiceException,
+)
 from ...domain.services import AnalysisService
 from ...infrastructure.repositories import AnalysisRepository, DocumentRepository
 from ...modules.analysis_handlers import analysis_handlers
@@ -42,23 +56,77 @@ class AnalysisController:
     def _setup_routes(self):
         """Set up API routes."""
 
-        @self.router.post("/analyze")
+        @self.router.post(
+            "/analyze",
+            summary="Analyze Documents",
+            description="Performs comprehensive document analysis using various detectors to identify consistency issues, quality problems, and maintenance concerns across multiple document sources and types.",
+            response_description="Analysis results with findings, metrics, and recommendations",
+            responses={
+                200: {
+                    "description": "Analysis completed successfully",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "success": True,
+                                "message": "Document analysis completed",
+                                "data": {
+                                    "analysis_id": "analysis-123",
+                                    "status": "completed",
+                                    "findings": [],
+                                    "metrics": {"processing_time": 2.5}
+                                }
+                            }
+                        }
+                    }
+                },
+                400: {"description": "Invalid analysis request parameters"},
+                404: {"description": "Document not found"},
+                408: {"description": "Analysis request timeout"},
+                500: {"description": "Internal analysis error"}
+            }
+        )
         async def analyze_documents(req: AnalysisRequest):
-            """Analyze documents for consistency and issues with configurable detectors.
-
-            Performs comprehensive document analysis using various detectors to identify
-            consistency issues, quality problems, and maintenance concerns across
-            multiple document sources and types.
-            """
+            """Analyze documents for consistency and issues with configurable detectors."""
             return await analysis_handlers.handle_analyze_documents(req)
 
-        @self.router.post("/analyze/semantic-similarity")
+        @self.router.post(
+            "/analyze/semantic-similarity",
+            summary="Analyze Semantic Similarity",
+            description="Uses advanced embedding techniques to detect conceptually similar content across documents, helping identify redundancies and consolidation opportunities.",
+            response_description="Semantic similarity analysis results with similarity scores and matched documents",
+            responses={
+                200: {
+                    "description": "Semantic similarity analysis completed",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "success": True,
+                                "message": "Semantic similarity analysis completed successfully",
+                                "data": {
+                                    "analysis": {
+                                        "analysis_id": "analysis-456",
+                                        "analysis_type": "semantic_similarity",
+                                        "status": "completed",
+                                        "results": {
+                                            "similarities": [],
+                                            "threshold": 0.8,
+                                            "metric": "cosine"
+                                        },
+                                        "findings": []
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                400: {"description": "Invalid semantic similarity request"},
+                404: {"description": "Document not found"},
+                408: {"description": "Analysis timeout"},
+                500: {"description": "Semantic analysis failed"}
+            }
+        )
         async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
-            """Analyze semantic similarity between documents using embeddings.
-
-            Uses advanced embedding techniques to detect conceptually similar content
-            across documents, helping identify redundancies and consolidation opportunities.
-            """
+            """Analyze semantic similarity between documents using embeddings."""
             try:
                 # Convert to our application request format
                 app_request = PerformAnalysisRequest(
@@ -89,10 +157,42 @@ class AnalysisController:
                     findings=result.findings or [],
                 )
 
-                return SuccessResponse.with_data(response.dict())
+                return create_success_response({
+                    "analysis": response.dict(),
+                    "message": "Semantic similarity analysis completed successfully"
+                })
 
+            except ValidationException as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Validation error: {e.message}"
+                )
+            except DocumentNotFoundException as e:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Document not found: {e.message}"
+                )
+            except AnalysisTimeoutException as e:
+                raise HTTPException(
+                    status_code=408,
+                    detail=f"Analysis timeout: {e.message}"
+                )
+            except AnalysisExecutionException as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Analysis execution failed: {e.message}"
+                )
+            except ExternalServiceException as e:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"External service error: {e.message}"
+                )
             except Exception as e:
-                return ErrorResponse.from_exception(e).to_dict()
+                # Catch any unexpected errors
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Unexpected error during semantic similarity analysis: {str(e)}"
+                )
 
         @self.router.post("/analyze/sentiment")
         async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):

@@ -246,6 +246,213 @@ except ImportError:
     )
     from modules.report_handlers import report_handlers
 
+# ============================================================================
+# ROUTER REGISTRATION
+# ============================================================================
+
+def register_api_routers(app):
+    """Register all API routers with proper OpenAPI documentation."""
+
+    # Import controllers
+    from .presentation.controllers.analysis_controller import AnalysisController
+    from .presentation.controllers.workflow_controller import WorkflowController
+    from .presentation.controllers.findings_controller import FindingsController
+    from .presentation.controllers.distributed_controller import DistributedController
+    from .presentation.controllers.integration_controller import IntegrationController
+    from .presentation.controllers.remediation_controller import RemediationController
+    from .presentation.controllers.reports_controller import ReportsController
+    from .presentation.controllers.repository_controller import RepositoryController
+    from .presentation.controllers.pr_confidence_controller import PRConfidenceController
+
+    # Initialize controllers
+    analysis_controller = AnalysisController()
+    workflow_controller = WorkflowController()
+    findings_controller = FindingsController()
+    # distributed_controller = DistributedController()  # Initialize when dependencies are available
+    # integration_controller = IntegrationController()  # Initialize when dependencies are available
+    # remediation_controller = RemediationController()  # Initialize when dependencies are available
+    # reports_controller = ReportsController()  # Initialize when dependencies are available
+    # repository_controller = RepositoryController()  # Initialize when dependencies are available
+    # pr_confidence_controller = PRConfidenceController()  # Initialize when dependencies are available
+
+    # Register routers with prefixes and tags
+    app.include_router(
+        analysis_controller.router,
+        prefix="/api/v1/analysis",
+        tags=["Analysis"],
+        responses={
+            400: {"description": "Bad Request - Invalid input parameters"},
+            404: {"description": "Not Found - Document or analysis not found"},
+            408: {"description": "Request Timeout - Analysis took too long"},
+            500: {"description": "Internal Server Error - Analysis failed"},
+        }
+    )
+
+    app.include_router(
+        workflow_controller.router,
+        prefix="/api/v1/workflows",
+        tags=["Workflows"],
+        responses={
+            400: {"description": "Bad Request - Invalid workflow parameters"},
+            404: {"description": "Not Found - Workflow not found"},
+            500: {"description": "Internal Server Error - Workflow processing failed"},
+        }
+    )
+
+    app.include_router(
+        findings_controller.router,
+        prefix="/api/v1/findings",
+        tags=["Findings"],
+        responses={
+            400: {"description": "Bad Request - Invalid filter parameters"},
+            500: {"description": "Internal Server Error - Findings retrieval failed"},
+        }
+    )
+
+    # Note: Other controllers need proper dependency injection setup
+    # They will be registered once their dependencies are properly configured
+
+
+# ============================================================================
+# GLOBAL ERROR HANDLERS
+# ============================================================================
+
+def install_error_handlers(app):
+    """Install global exception handlers for the FastAPI application."""
+
+    from fastapi import HTTPException, Request
+    from fastapi.responses import JSONResponse
+
+    from services.shared.presentation.responses import create_error_response
+
+    from .domain.exceptions import (
+        DomainException,
+        ValidationException,
+        AnalysisException,
+        AnalysisExecutionException,
+        AnalysisTimeoutException,
+        DocumentException,
+        DocumentNotFoundException,
+        FindingException,
+        RepositoryException,
+        ExternalServiceException,
+        AuthorizationException,
+        ResourceLimitExceededException,
+    )
+
+    @app.exception_handler(DomainException)
+    async def domain_exception_handler(request: Request, exc: DomainException):
+        """Handle domain-specific exceptions."""
+        return JSONResponse(
+            status_code=400,
+            content=create_error_response(
+                message=f"Domain error: {exc.message}",
+                error_code="DOMAIN_ERROR",
+                details=exc.details
+            )
+        )
+
+    @app.exception_handler(ValidationException)
+    async def validation_exception_handler(request: Request, exc: ValidationException):
+        """Handle validation exceptions."""
+        return JSONResponse(
+            status_code=400,
+            content=create_error_response(
+                message=f"Validation error: {exc.message}",
+                error_code="VALIDATION_ERROR",
+                details={"validation_errors": exc.validation_errors}
+            )
+        )
+
+    @app.exception_handler(DocumentNotFoundException)
+    async def document_not_found_handler(request: Request, exc: DocumentNotFoundException):
+        """Handle document not found exceptions."""
+        return JSONResponse(
+            status_code=404,
+            content=create_error_response(
+                message=f"Document not found: {exc.message}",
+                error_code="DOCUMENT_NOT_FOUND",
+                details=exc.details
+            )
+        )
+
+    @app.exception_handler(AnalysisTimeoutException)
+    async def analysis_timeout_handler(request: Request, exc: AnalysisTimeoutException):
+        """Handle analysis timeout exceptions."""
+        return JSONResponse(
+            status_code=408,
+            content=create_error_response(
+                message=f"Analysis timeout: {exc.message}",
+                error_code="ANALYSIS_TIMEOUT",
+                details=exc.details
+            )
+        )
+
+    @app.exception_handler(AnalysisExecutionException)
+    async def analysis_execution_handler(request: Request, exc: AnalysisExecutionException):
+        """Handle analysis execution exceptions."""
+        return JSONResponse(
+            status_code=500,
+            content=create_error_response(
+                message=f"Analysis execution failed: {exc.message}",
+                error_code="ANALYSIS_EXECUTION_ERROR",
+                details=exc.details
+            )
+        )
+
+    @app.exception_handler(ExternalServiceException)
+    async def external_service_handler(request: Request, exc: ExternalServiceException):
+        """Handle external service exceptions."""
+        return JSONResponse(
+            status_code=502,
+            content=create_error_response(
+                message=f"External service error: {exc.message}",
+                error_code="EXTERNAL_SERVICE_ERROR",
+                details=exc.details
+            )
+        )
+
+    @app.exception_handler(AuthorizationException)
+    async def authorization_handler(request: Request, exc: AuthorizationException):
+        """Handle authorization exceptions."""
+        return JSONResponse(
+            status_code=403,
+            content=create_error_response(
+                message=f"Authorization error: {exc.message}",
+                error_code="AUTHORIZATION_ERROR",
+                details=exc.details
+            )
+        )
+
+    @app.exception_handler(ResourceLimitExceededException)
+    async def resource_limit_handler(request: Request, exc: ResourceLimitExceededException):
+        """Handle resource limit exceeded exceptions."""
+        return JSONResponse(
+            status_code=429,
+            content=create_error_response(
+                message=f"Resource limit exceeded: {exc.message}",
+                error_code="RESOURCE_LIMIT_EXCEEDED",
+                details=exc.details
+            )
+        )
+
+    @app.exception_handler(Exception)
+    async def general_exception_handler(request: Request, exc: Exception):
+        """Handle any unhandled exceptions."""
+        # Log the error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unhandled exception in {request.url.path}: {str(exc)}", exc_info=True)
+
+        return JSONResponse(
+            status_code=500,
+            content=create_error_response(
+                message="An unexpected error occurred. Please try again later.",
+                error_code="INTERNAL_SERVER_ERROR",
+                details={"path": str(request.url.path)}
+            )
+        )
+
 # Create FastAPI app using standardized configuration
 app = FastAPI(
     title=config.service_description or SERVICE_TITLE,
@@ -260,6 +467,9 @@ setup_common_middleware(app, service_name=config.service_name)
 
 # Install standardized error handlers
 install_error_handlers(app)
+
+# Register API routers with proper REST structure
+register_api_routers(app)
 
 # Register standardized health endpoints
 register_health_endpoints(app, config.service_name, config.service_version)
