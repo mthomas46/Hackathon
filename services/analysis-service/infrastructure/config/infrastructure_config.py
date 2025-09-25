@@ -15,9 +15,7 @@ class InfrastructureConfig:
     # Component configurations
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
     cache: CacheConfig = field(default_factory=CacheConfig)
-    external_services: ExternalServiceConfig = field(
-        default_factory=ExternalServiceConfig
-    )
+    external_services: ExternalServiceConfig = field(default_factory=ExternalServiceConfig)
 
     # Environment settings
     environment: str = "development"

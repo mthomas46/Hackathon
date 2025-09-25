@@ -18,17 +18,13 @@ class DocumentService(BaseService[Document]):
     def _validate_entity(self, entity: Document) -> None:
         """Validate document entity using standardized validation."""
         if len(entity.content.text.encode("utf-8")) > self.max_document_size:
-            raise ValueError(
-                f"Document content exceeds maximum size of {self.max_document_size} bytes"
-            )
+            raise ValueError(f"Document content exceeds maximum size of {self.max_document_size} bytes")
         if not entity.title or not entity.title.strip():
             raise ValueError("Document title cannot be empty")
         if not entity.content or not entity.content.text.strip():
             raise ValueError("Document content cannot be empty")
 
-    async def _create_entity_from_data(
-        self, entity_id: str, data: Dict[str, Any]
-    ) -> Document:
+    async def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> Document:
         """Create document entity from data using standardized factory pattern."""
         return self.create_document(
             title=data.get("title", ""),
@@ -51,23 +47,17 @@ class DocumentService(BaseService[Document]):
         """Create a new document."""
         # Validate content size
         if len(content_text.encode("utf-8")) > self.max_document_size:
-            raise ValueError(
-                f"Document content exceeds maximum size of {self.max_document_size} bytes"
-            )
+            raise ValueError(f"Document content exceeds maximum size of {self.max_document_size} bytes")
 
         # Generate document ID
-        document_id = DocumentId(
-            f"doc_{datetime.now().timestamp()}_{hash(title) % 10000}"
-        )
+        document_id = DocumentId(f"doc_{datetime.now().timestamp()}_{hash(title) % 10000}")
 
         # Create content value object
         content = Content(text=content_text, format=content_format)
 
         # Create metadata
         now = datetime.now()
-        metadata = Metadata(
-            created_at=now, updated_at=now, author=author, tags=tags or []
-        )
+        metadata = Metadata(created_at=now, updated_at=now, author=author, tags=tags or [])
 
         # Create document entity
         document = Document(
@@ -80,15 +70,11 @@ class DocumentService(BaseService[Document]):
 
         return document
 
-    def update_document_content(
-        self, document: Document, new_content: str, new_format: Optional[str] = None
-    ) -> Document:
+    def update_document_content(self, document: Document, new_content: str, new_format: Optional[str] = None) -> Document:
         """Update document content."""
         # Validate content size
         if len(new_content.encode("utf-8")) > self.max_document_size:
-            raise ValueError(
-                f"Document content exceeds maximum size of {self.max_document_size} bytes"
-            )
+            raise ValueError(f"Document content exceeds maximum size of {self.max_document_size} bytes")
 
         # Create new content
         content_format = new_format or document.content.format
@@ -157,13 +143,9 @@ class DocumentService(BaseService[Document]):
             metadata_match = False
             if filters:
                 if "author" in filters and document.metadata.author:
-                    metadata_match = (
-                        filters["author"].lower() in document.metadata.author.lower()
-                    )
+                    metadata_match = filters["author"].lower() in document.metadata.author.lower()
                 if "tags" in filters:
-                    metadata_match = any(
-                        tag in document.metadata.tags for tag in filters["tags"]
-                    )
+                    metadata_match = any(tag in document.metadata.tags for tag in filters["tags"])
 
             if content_match or title_match or metadata_match:
                 results.append(document)

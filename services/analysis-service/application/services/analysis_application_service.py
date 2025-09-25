@@ -33,9 +33,7 @@ class AnalysisApplicationService:
         self.analysis_repository = analysis_repository
         self.finding_repository = finding_repository
 
-    async def perform_analysis(
-        self, document_id: str, analysis_type: str, configuration: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def perform_analysis(self, document_id: str, analysis_type: str, configuration: Dict[str, Any]) -> Dict[str, Any]:
         """Perform analysis on a document."""
         try:
             # Get document
@@ -52,9 +50,7 @@ class AnalysisApplicationService:
                 timeout_seconds=configuration.get("timeout_seconds", 300),
             )
 
-            analysis = self.analysis_service.create_analysis(
-                document, analysis_type_enum, analysis_config
-            )
+            analysis = self.analysis_service.create_analysis(document, analysis_type_enum, analysis_config)
 
             # Save analysis
             await self.analysis_repository.save(analysis)
@@ -97,12 +93,8 @@ class AnalysisApplicationService:
             "status": analysis.status.value,
             "result": analysis.result,
             "error_message": analysis.error_message,
-            "started_at": (
-                analysis.started_at.isoformat() if analysis.started_at else None
-            ),
-            "completed_at": (
-                analysis.completed_at.isoformat() if analysis.completed_at else None
-            ),
+            "started_at": (analysis.started_at.isoformat() if analysis.started_at else None),
+            "completed_at": (analysis.completed_at.isoformat() if analysis.completed_at else None),
             "duration": analysis.duration,
         }
 
@@ -177,9 +169,7 @@ class AnalysisApplicationService:
 
         return document.to_dict()
 
-    async def _process_findings(
-        self, analysis: Analysis, findings_data: List[Dict[str, Any]]
-    ) -> None:
+    async def _process_findings(self, analysis: Analysis, findings_data: List[Dict[str, Any]]) -> None:
         """Process findings from analysis result."""
         for finding_data in findings_data:
             finding = self.finding_service.create_finding(

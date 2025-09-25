@@ -56,17 +56,11 @@ compatibility_router = APIRouter(prefix="", tags=["compatibility"])
 # ============================================================================
 
 
-def add_deprecation_warning(
-    response_data: Dict[str, Any], endpoint: str, new_endpoint: Optional[str] = None
-) -> Dict[str, Any]:
+def add_deprecation_warning(response_data: Dict[str, Any], endpoint: str, new_endpoint: Optional[str] = None) -> Dict[str, Any]:
     """Add deprecation warning to response data."""
     warnings.warn(
         f"Endpoint '{endpoint}' is deprecated. "
-        + (
-            f"Consider using '{new_endpoint}' instead."
-            if new_endpoint
-            else "This endpoint will be removed in a future version."
-        ),
+        + (f"Consider using '{new_endpoint}' instead." if new_endpoint else "This endpoint will be removed in a future version."),
         DeprecationWarning,
         stacklevel=2,
     )
@@ -79,11 +73,7 @@ def add_deprecation_warning(
             {
                 "type": "deprecation",
                 "message": f"Endpoint '{endpoint}' is deprecated",
-                "recommended_action": (
-                    f"Use '{new_endpoint}' instead"
-                    if new_endpoint
-                    else "Migrate to new API version"
-                ),
+                "recommended_action": (f"Use '{new_endpoint}' instead" if new_endpoint else "Migrate to new API version"),
             }
         )
 
@@ -249,13 +239,9 @@ async def legacy_maintenance_forecast_endpoint(request: MaintenanceForecastReque
 async def legacy_portfolio_maintenance_forecast_endpoint(request: Dict[str, Any]):
     """LEGACY: Portfolio maintenance forecast - Original endpoint preserved."""
     try:
-        result = await AnalysisController.analyze_portfolio_maintenance_forecast(
-            request
-        )
+        result = await AnalysisController.analyze_portfolio_maintenance_forecast(request)
         result = ensure_backward_compatibility(result)
-        result = add_deprecation_warning(
-            result, "/analyze/maintenance/forecast/portfolio"
-        )
+        result = add_deprecation_warning(result, "/analyze/maintenance/forecast/portfolio")
         return result
     except Exception as e:
         logger.error(f"Error in legacy portfolio maintenance forecast endpoint: {e}")
@@ -281,9 +267,7 @@ async def legacy_portfolio_quality_degradation_endpoint(request: Dict[str, Any])
     try:
         result = await AnalysisController.analyze_portfolio_quality_degradation(request)
         result = ensure_backward_compatibility(result)
-        result = add_deprecation_warning(
-            result, "/analyze/quality/degradation/portfolio"
-        )
+        result = add_deprecation_warning(result, "/analyze/quality/degradation/portfolio")
         return result
     except Exception as e:
         logger.error(f"Error in legacy portfolio quality degradation endpoint: {e}")
@@ -727,9 +711,7 @@ async def legacy_natural_language_analysis_endpoint(request: Dict[str, Any]):
     try:
         result = await IntegrationController.natural_language_analysis(request)
         result = ensure_backward_compatibility(result)
-        result = add_deprecation_warning(
-            result, "/integration/natural-language-analysis"
-        )
+        result = add_deprecation_warning(result, "/integration/natural-language-analysis")
         return result
     except Exception as e:
         logger.error(f"Error in legacy natural language analysis endpoint: {e}")

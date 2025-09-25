@@ -12,9 +12,7 @@ class CrossRepositoryAnalyzer:
     def __init__(self):
         self._logger = get_logger()
 
-    async def analyze_repositories(
-        self, repositories: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    async def analyze_repositories(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze repositories."""
         self._logger.info(f"Analyzing {len(repositories)} repositories")
 

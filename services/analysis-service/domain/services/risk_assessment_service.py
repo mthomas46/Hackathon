@@ -299,7 +299,7 @@ class RiskAssessor:
             "change_frequency": "High change frequency - implement automated quality checks for updates",
             "trend_decline": "Quality declining at {:.3f} per month - investigate root causes",
             "finding_density": "High issue density - prioritize fixing existing problems before adding new content",
-            "stakeholder_impact": "High stakeholder impact - establish stricter review processes and quality gates"
+            "stakeholder_impact": "High stakeholder impact - establish stricter review processes and quality gates",
         }
 
         # Generate factor-specific recommendations

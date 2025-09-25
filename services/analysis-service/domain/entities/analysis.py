@@ -112,9 +112,7 @@ class Analysis:
             "status": self.status.value,
             "configuration": self.configuration,
             "started_at": self.started_at.isoformat() if self.started_at else None,
-            "completed_at": (
-                self.completed_at.isoformat() if self.completed_at else None
-            ),
+            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
             "result": self.result,
             "error_message": self.error_message,
             "created_at": self.created_at.isoformat(),

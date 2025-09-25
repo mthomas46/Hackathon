@@ -14,9 +14,7 @@ class BaseModel(PydanticBaseModel):
         """Pydantic configuration."""
 
         allow_population_by_field_name: bool = True
-        json_encoders: Dict[Type[Any], Callable[[Any], Any]] = {
-            datetime: lambda v: v.isoformat() if v else None
-        }
+        json_encoders: Dict[Type[Any], Callable[[Any], Any]] = {datetime: lambda v: v.isoformat() if v else None}
 
     def dict(self, **kwargs: Any) -> Dict[str, Any]:
         """Convert model to dictionary with enhanced options."""
@@ -39,9 +37,7 @@ class ValidationErrorDetail(BaseModel):
     message: str = Field(..., description="Human-readable error message")
     error_type: str = Field(..., description="Type of validation error")
     value: Optional[Any] = Field(None, description="Invalid value that was provided")
-    constraint: Optional[str] = Field(
-        None, description="Validation constraint that failed"
-    )
+    constraint: Optional[str] = Field(None, description="Validation constraint that failed")
 
     @field_validator("field")
     @classmethod
@@ -63,9 +59,7 @@ class ErrorDetail(BaseModel):
 
     code: str = Field(..., description="Error code for programmatic handling")
     message: str = Field(..., description="Human-readable error message")
-    details: Optional[Dict[str, Any]] = Field(
-        None, description="Additional error context"
-    )
+    details: Optional[Dict[str, Any]] = Field(None, description="Additional error context")
     timestamp: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="When the error occurred",
@@ -111,9 +105,7 @@ class ErrorResponse(BaseModel):
 
     success: bool = Field(False, description="Indicates if the operation failed")
     error: ErrorDetail = Field(..., description="Primary error information")
-    validation_errors: Optional[List[ValidationErrorDetail]] = Field(
-        None, description="Detailed validation errors"
-    )
+    validation_errors: Optional[List[ValidationErrorDetail]] = Field(None, description="Detailed validation errors")
     request_id: Optional[str] = Field(None, description="Request ID for tracking")
     timestamp: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc),
@@ -157,10 +149,7 @@ class ListResponse(BaseModel):
     def __init__(self, **data):
         super().__init__(**data)
         # Set pagination info based on items
-        if (
-            not hasattr(self.pagination, "total_items")
-            or self.pagination.total_items == 0
-        ):
+        if not hasattr(self.pagination, "total_items") or self.pagination.total_items == 0:
             self.pagination.total_items = len(self.items)
 
 
@@ -170,9 +159,7 @@ class RequestMetadata(BaseModel):
     request_id: Optional[str] = Field(None, description="Unique request identifier")
     user_id: Optional[str] = Field(None, description="User making the request")
     session_id: Optional[str] = Field(None, description="User session identifier")
-    client_version: Optional[str] = Field(
-        None, description="Client application version"
-    )
+    client_version: Optional[str] = Field(None, description="Client application version")
     user_agent: Optional[str] = Field(None, description="HTTP user agent string")
     ip_address: Optional[str] = Field(None, description="Client IP address")
     timestamp: Optional[datetime] = Field(
@@ -191,17 +178,11 @@ class RequestMetadata(BaseModel):
 class ResponseMetadata(BaseModel):
     """Common response metadata fields."""
 
-    request_id: Optional[str] = Field(
-        None, description="Request identifier from request"
-    )
-    processing_time_seconds: Optional[float] = Field(
-        None, ge=0, description="Time taken to process request"
-    )
+    request_id: Optional[str] = Field(None, description="Request identifier from request")
+    processing_time_seconds: Optional[float] = Field(None, ge=0, description="Time taken to process request")
     server_version: Optional[str] = Field(None, description="Server/API version")
     cache_status: Optional[str] = Field(None, description="Cache status (HIT/MISS)")
-    rate_limit_remaining: Optional[int] = Field(
-        None, ge=0, description="Remaining rate limit requests"
-    )
+    rate_limit_remaining: Optional[int] = Field(None, ge=0, description="Remaining rate limit requests")
     timestamp: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="When the response was generated",
@@ -228,19 +209,13 @@ class HealthStatus(BaseModel):
     service: str = Field(..., description="Service name")
     status: str = Field(..., description="Health status (healthy/unhealthy/degraded)")
     version: Optional[str] = Field(None, description="Service version")
-    uptime_seconds: Optional[int] = Field(
-        None, ge=0, description="Service uptime in seconds"
-    )
+    uptime_seconds: Optional[int] = Field(None, ge=0, description="Service uptime in seconds")
     last_check: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="When health was last checked",
     )
-    dependencies: Optional[Dict[str, str]] = Field(
-        None, description="Status of service dependencies"
-    )
-    metrics: Optional[Dict[str, Any]] = Field(
-        None, description="Health-related metrics"
-    )
+    dependencies: Optional[Dict[str, str]] = Field(None, description="Status of service dependencies")
+    metrics: Optional[Dict[str, Any]] = Field(None, description="Health-related metrics")
 
     @field_validator("status")
     @classmethod
@@ -264,9 +239,7 @@ class ServiceInfo(BaseModel):
     name: str = Field(..., description="Service name")
     version: str = Field(..., description="Service version")
     description: Optional[str] = Field(None, description="Service description")
-    capabilities: List[str] = Field(
-        default_factory=list, description="List of service capabilities"
-    )
+    capabilities: List[str] = Field(default_factory=list, description="List of service capabilities")
     endpoints: Optional[Dict[str, str]] = Field(None, description="Available endpoints")
     dependencies: Optional[List[str]] = Field(None, description="Service dependencies")
     environment: Optional[str] = Field(None, description="Deployment environment")
@@ -293,15 +266,9 @@ class AnalysisContext(BaseModel):
     analysis_type: str = Field(..., description="Type of analysis being performed")
     user_id: Optional[str] = Field(None, description="User requesting the analysis")
     session_id: Optional[str] = Field(None, description="User session identifier")
-    correlation_id: Optional[str] = Field(
-        None, description="Correlation ID for tracing"
-    )
-    parent_analysis_id: Optional[str] = Field(
-        None, description="Parent analysis if this is a sub-analysis"
-    )
-    metadata: Optional[Dict[str, Any]] = Field(
-        None, description="Additional context metadata"
-    )
+    correlation_id: Optional[str] = Field(None, description="Correlation ID for tracing")
+    parent_analysis_id: Optional[str] = Field(None, description="Parent analysis if this is a sub-analysis")
+    metadata: Optional[Dict[str, Any]] = Field(None, description="Additional context metadata")
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="When the analysis was initiated",

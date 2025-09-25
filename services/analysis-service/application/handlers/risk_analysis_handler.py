@@ -50,16 +50,10 @@ class RiskAnalysisHandler(BaseAnalysisHandler):
                 response = PortfolioRiskAssessmentResponse(
                     analysis_id=f"portfolio-risk-{int(datetime.now(timezone.utc).timestamp())}",
                     document_ids=request.document_ids,
-                    portfolio_risk_assessment=risk_result.get(
-                        "portfolio_risk_assessment", {}
-                    ),
+                    portfolio_risk_assessment=risk_result.get("portfolio_risk_assessment", {}),
                     high_risk_documents=risk_result.get("high_risk_documents", []),
-                    risk_mitigation_strategy=risk_result.get(
-                        "risk_mitigation_strategy", {}
-                    ),
-                    execution_time_seconds=risk_result.get(
-                        "execution_time_seconds", 0.0
-                    ),
+                    risk_mitigation_strategy=risk_result.get("risk_mitigation_strategy", {}),
+                    execution_time_seconds=risk_result.get("execution_time_seconds", 0.0),
                     error_message=None,
                 )
             else:  # Single document response
@@ -70,12 +64,8 @@ class RiskAnalysisHandler(BaseAnalysisHandler):
                     risk_score=risk_result.get("risk_score", 0.0),
                     risk_factors=risk_result.get("risk_factors", []),
                     risk_indicators=risk_result.get("risk_indicators", []),
-                    mitigation_recommendations=risk_result.get(
-                        "mitigation_recommendations", []
-                    ),
-                    execution_time_seconds=risk_result.get(
-                        "execution_time_seconds", 0.0
-                    ),
+                    mitigation_recommendations=risk_result.get("mitigation_recommendations", []),
+                    execution_time_seconds=risk_result.get("execution_time_seconds", 0.0),
                     error_message=None,
                 )
 
@@ -121,11 +111,7 @@ class RiskAnalysisHandler(BaseAnalysisHandler):
             total_risk_score += score
 
         avg_risk_score = total_risk_score / len(risk_factors) if risk_factors else 0
-        overall_risk_level = (
-            "high"
-            if avg_risk_score > 0.7
-            else "medium" if avg_risk_score > 0.4 else "low"
-        )
+        overall_risk_level = "high" if avg_risk_score > 0.7 else "medium" if avg_risk_score > 0.4 else "low"
 
         # Mock risk indicators
         risk_indicators = [
@@ -168,9 +154,7 @@ class RiskAnalysisHandler(BaseAnalysisHandler):
             "risk_indicators": risk_indicators,
             "mitigation_recommendations": mitigation_recommendations,
             "portfolio_risk_assessment": {"overall_portfolio_risk": overall_risk_level},
-            "high_risk_documents": (
-                ["doc-1", "doc-2"] if random.choice([True, False]) else []
-            ),
+            "high_risk_documents": (["doc-1", "doc-2"] if random.choice([True, False]) else []),
             "risk_mitigation_strategy": {"strategy": "proactive_monitoring"},
             "execution_time_seconds": random.uniform(1.5, 4.0),
         }

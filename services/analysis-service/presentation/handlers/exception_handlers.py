@@ -7,6 +7,7 @@ import logging
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
 from services.shared.presentation.responses import create_error_response
 
 from ...domain.exceptions import (
@@ -69,9 +70,7 @@ def register_exception_handlers(app):
         )
 
     @app.exception_handler(DocumentNotFoundException)
-    async def document_not_found_handler(
-        request: Request, exc: DocumentNotFoundException
-    ):
+    async def document_not_found_handler(request: Request, exc: DocumentNotFoundException):
         """Handle document not found exceptions."""
         logger.warning(
             f"Document not found in {request.url.path}: {exc.message}",
@@ -104,9 +103,7 @@ def register_exception_handlers(app):
         )
 
     @app.exception_handler(AnalysisExecutionException)
-    async def analysis_execution_handler(
-        request: Request, exc: AnalysisExecutionException
-    ):
+    async def analysis_execution_handler(request: Request, exc: AnalysisExecutionException):
         """Handle analysis execution exceptions."""
         logger.error(
             f"Analysis execution failed in {request.url.path}: {exc.message}",
@@ -152,9 +149,7 @@ def register_exception_handlers(app):
         )
 
     @app.exception_handler(ResourceLimitExceededException)
-    async def resource_limit_handler(
-        request: Request, exc: ResourceLimitExceededException
-    ):
+    async def resource_limit_handler(request: Request, exc: ResourceLimitExceededException):
         """Handle resource limit exceeded exceptions."""
         return JSONResponse(
             status_code=429,

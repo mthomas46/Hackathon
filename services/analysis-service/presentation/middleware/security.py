@@ -40,9 +40,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         ]
 
         # Compile regex patterns
-        self.compiled_patterns = [
-            re.compile(pattern, re.IGNORECASE) for pattern in self.suspicious_patterns
-        ]
+        self.compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in self.suspicious_patterns]
 
     async def dispatch(self, request: Request, call_next) -> Response:
         """Process request with security checks."""
@@ -65,9 +63,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
         for pattern in self.compiled_patterns:
             if pattern.search(url_path) or pattern.search(query_string):
-                await self._block_request(
-                    request, "Suspicious request pattern detected"
-                )
+                await self._block_request(request, "Suspicious request pattern detected")
 
         # Check request size
         content_length = request.headers.get("content-length")
@@ -136,9 +132,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 class CORSMiddleware(BaseHTTPMiddleware):
     """CORS middleware for cross-origin requests."""
 
-    def __init__(
-        self, app, allow_origins: List[str] = None, allow_credentials: bool = True
-    ):
+    def __init__(self, app, allow_origins: List[str] = None, allow_credentials: bool = True):
         """Initialize CORS middleware."""
         super().__init__(app)
         self.allow_origins = allow_origins or ["*"]
@@ -245,10 +239,7 @@ class SanitizationMiddleware(BaseHTTPMiddleware):
         ]
 
         # Compile patterns
-        self.all_patterns = [
-            (re.compile(pattern, re.IGNORECASE), "sql_injection")
-            for pattern in self.sql_injection_patterns
-        ] + [
+        self.all_patterns = [(re.compile(pattern, re.IGNORECASE), "sql_injection") for pattern in self.sql_injection_patterns] + [
             (re.compile(pattern, re.IGNORECASE), "xss") for pattern in self.xss_patterns
         ]
 

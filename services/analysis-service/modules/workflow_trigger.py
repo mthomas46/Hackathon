@@ -229,20 +229,15 @@ class WorkflowTrigger:
         # Categorize files
         for file_path in files_changed:
             if any(
-                re.search(pattern, file_path, re.IGNORECASE)
-                for pattern in self.trigger_rules["file_patterns"]["documentation"]
+                re.search(pattern, file_path, re.IGNORECASE) for pattern in self.trigger_rules["file_patterns"]["documentation"]
             ):
                 file_analysis["documentation_files"].append(file_path)
                 file_analysis["has_documentation_changes"] = True
-            elif any(
-                re.search(pattern, file_path, re.IGNORECASE)
-                for pattern in self.trigger_rules["file_patterns"]["code"]
-            ):
+            elif any(re.search(pattern, file_path, re.IGNORECASE) for pattern in self.trigger_rules["file_patterns"]["code"]):
                 file_analysis["code_files"].append(file_path)
                 file_analysis["has_code_changes"] = True
             elif any(
-                re.search(pattern, file_path, re.IGNORECASE)
-                for pattern in self.trigger_rules["file_patterns"]["configuration"]
+                re.search(pattern, file_path, re.IGNORECASE) for pattern in self.trigger_rules["file_patterns"]["configuration"]
             ):
                 file_analysis["config_files"].append(file_path)
                 file_analysis["has_config_changes"] = True
@@ -267,28 +262,16 @@ class WorkflowTrigger:
         }
 
         # Determine branch type
-        if any(
-            re.search(pattern, branch_name)
-            for pattern in self.trigger_rules["branch_patterns"]["main_branches"]
-        ):
+        if any(re.search(pattern, branch_name) for pattern in self.trigger_rules["branch_patterns"]["main_branches"]):
             branch_context["branch_type"] = "main"
             branch_context["is_main_branch"] = True
-        elif any(
-            re.search(pattern, branch_name)
-            for pattern in self.trigger_rules["branch_patterns"]["feature_branches"]
-        ):
+        elif any(re.search(pattern, branch_name) for pattern in self.trigger_rules["branch_patterns"]["feature_branches"]):
             branch_context["branch_type"] = "feature"
             branch_context["is_feature_branch"] = True
-        elif any(
-            re.search(pattern, branch_name)
-            for pattern in self.trigger_rules["branch_patterns"]["release_branches"]
-        ):
+        elif any(re.search(pattern, branch_name) for pattern in self.trigger_rules["branch_patterns"]["release_branches"]):
             branch_context["branch_type"] = "release"
             branch_context["is_release_branch"] = True
-        elif any(
-            re.search(pattern, branch_name)
-            for pattern in self.trigger_rules["branch_patterns"]["hotfix_branches"]
-        ):
+        elif any(re.search(pattern, branch_name) for pattern in self.trigger_rules["branch_patterns"]["hotfix_branches"]):
             branch_context["branch_type"] = "hotfix"
             branch_context["is_hotfix_branch"] = True
 
@@ -299,20 +282,11 @@ class WorkflowTrigger:
         lines_changed = event_data.get("lines_changed", 0)
         files_changed = len(event_data.get("files_changed", []))
 
-        if (
-            lines_changed >= self.trigger_rules["size_thresholds"]["large"]
-            or files_changed >= 20
-        ):
+        if lines_changed >= self.trigger_rules["size_thresholds"]["large"] or files_changed >= 20:
             return "large"
-        elif (
-            lines_changed >= self.trigger_rules["size_thresholds"]["medium"]
-            or files_changed >= 10
-        ):
+        elif lines_changed >= self.trigger_rules["size_thresholds"]["medium"] or files_changed >= 10:
             return "medium"
-        elif (
-            lines_changed >= self.trigger_rules["size_thresholds"]["small"]
-            or files_changed >= 1
-        ):
+        elif lines_changed >= self.trigger_rules["size_thresholds"]["small"] or files_changed >= 1:
             return "small"
         else:
             return "minimal"
@@ -347,9 +321,7 @@ class WorkflowTrigger:
         plan = {
             "analysis_types": event_context["analysis_types"],
             "priority": event_context["priority"],
-            "processing_mode": (
-                "async" if event_context.get("async_processing", True) else "sync"
-            ),
+            "processing_mode": ("async" if event_context.get("async_processing", True) else "sync"),
             "time_window": self._determine_time_window(event_context),
             "quality_checks": [],
             "consistency_checks": [],
@@ -412,9 +384,7 @@ class WorkflowTrigger:
         else:
             return "batch"
 
-    async def process_workflow_event(
-        self, event_data: Dict[str, Any], webhook_signature: Optional[str] = None
-    ) -> Dict[str, Any]:
+    async def process_workflow_event(self, event_data: Dict[str, Any], webhook_signature: Optional[str] = None) -> Dict[str, Any]:
         """Process a workflow event and trigger appropriate analyses."""
 
         start_time = time.time()
@@ -463,10 +433,7 @@ class WorkflowTrigger:
             self.analysis_queues[event_context["priority"]].append(workflow_id)
 
             # Process immediately if sync mode or critical
-            if (
-                analysis_plan["processing_mode"] == "sync"
-                or event_context["priority"] == "critical"
-            ):
+            if analysis_plan["processing_mode"] == "sync" or event_context["priority"] == "critical":
                 await self._process_workflow(workflow_id)
             else:
                 # Schedule async processing
@@ -479,9 +446,7 @@ class WorkflowTrigger:
                 "status": "accepted",
                 "priority": event_context["priority"],
                 "analysis_types": event_context["analysis_types"],
-                "estimated_processing_time": self._estimate_processing_time(
-                    analysis_plan
-                ),
+                "estimated_processing_time": self._estimate_processing_time(analysis_plan),
                 "processing_time": processing_time,
             }
 
@@ -550,9 +515,7 @@ class WorkflowTrigger:
         except Exception as e:
             logger.error(f"Async workflow processing failed for {workflow_id}: {e}")
 
-    async def _execute_analysis_plan(
-        self, analysis_plan: Dict[str, Any], event_context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _execute_analysis_plan(self, analysis_plan: Dict[str, Any], event_context: Dict[str, Any]) -> Dict[str, Any]:
         """Execute the analysis plan for a workflow."""
         results = {
             "quality_checks": {},
@@ -617,9 +580,7 @@ class WorkflowTrigger:
 
         return results
 
-    def _generate_workflow_summary(
-        self, results: Dict[str, Any], event_context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _generate_workflow_summary(self, results: Dict[str, Any], event_context: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a summary of workflow analysis results."""
         summary = {
             "total_analyses": 0,
@@ -640,12 +601,8 @@ class WorkflowTrigger:
                     summary["failed_analyses"] += 1
 
                 # Count findings and recommendations
-                summary["critical_findings"] += len(
-                    category_results.get("findings", [])
-                )
-                summary["recommendations_count"] += len(
-                    category_results.get("recommendations", [])
-                )
+                summary["critical_findings"] += len(category_results.get("findings", []))
+                summary["recommendations_count"] += len(category_results.get("recommendations", []))
 
         # Determine overall status
         if summary["failed_analyses"] > 0:
@@ -657,9 +614,7 @@ class WorkflowTrigger:
 
         return summary
 
-    def _validate_webhook_signature(
-        self, event_data: Dict[str, Any], signature: str
-    ) -> bool:
+    def _validate_webhook_signature(self, event_data: Dict[str, Any], signature: str) -> bool:
         """Validate webhook signature for security."""
         # This would implement proper webhook signature validation
         # For now, return True (implement actual validation based on webhook provider)
@@ -672,12 +627,10 @@ class WorkflowTrigger:
         # Add time for each analysis type
         time_multipliers = {
             "quality_checks": len(analysis_plan.get("quality_checks", [])) * 2.0,
-            "consistency_checks": len(analysis_plan.get("consistency_checks", []))
-            * 1.5,
+            "consistency_checks": len(analysis_plan.get("consistency_checks", [])) * 1.5,
             "impact_analysis": len(analysis_plan.get("impact_analysis", [])) * 3.0,
             "peer_review": len(analysis_plan.get("peer_review", [])) * 4.0,
-            "automated_remediation": len(analysis_plan.get("automated_remediation", []))
-            * 2.5,
+            "automated_remediation": len(analysis_plan.get("automated_remediation", [])) * 2.5,
         }
 
         total_time = base_time
@@ -696,9 +649,7 @@ class WorkflowTrigger:
 
     def get_queue_status(self) -> Dict[str, Any]:
         """Get the status of analysis queues."""
-        return {
-            priority: len(queue) for priority, queue in self.analysis_queues.items()
-        }
+        return {priority: len(queue) for priority, queue in self.analysis_queues.items()}
 
     def configure_webhook_secret(self, secret: str) -> None:
         """Configure webhook secret for signature validation."""
@@ -723,9 +674,7 @@ class WorkflowTrigger:
 workflow_trigger = WorkflowTrigger()
 
 
-async def process_workflow_event(
-    event_data: Dict[str, Any], webhook_signature: Optional[str] = None
-) -> Dict[str, Any]:
+async def process_workflow_event(event_data: Dict[str, Any], webhook_signature: Optional[str] = None) -> Dict[str, Any]:
     """Convenience function for processing workflow events.
 
     Args:

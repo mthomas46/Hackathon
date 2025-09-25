@@ -22,9 +22,7 @@ class AnalysisService:
         configuration: AnalysisConfiguration,
     ) -> Analysis:
         """Create a new analysis for a document."""
-        analysis_id = AnalysisId(
-            f"analysis_{datetime.now().timestamp()}_{document.id.value}"
-        )
+        analysis_id = AnalysisId(f"analysis_{datetime.now().timestamp()}_{document.id.value}")
 
         analysis = Analysis(
             id=analysis_id,
@@ -38,9 +36,7 @@ class AnalysisService:
     def execute_analysis(self, analysis: Analysis) -> Dict[str, Any]:
         """Execute an analysis using the appropriate engine."""
         if analysis.analysis_type not in self.analysis_engines:
-            raise ValueError(
-                f"No engine available for analysis type: {analysis.analysis_type}"
-            )
+            raise ValueError(f"No engine available for analysis type: {analysis.analysis_type}")
 
         engine = self.analysis_engines[analysis.analysis_type]
 
@@ -56,9 +52,7 @@ class AnalysisService:
         except Exception as e:
             raise RuntimeError(f"Analysis execution failed: {str(e)}")
 
-    def validate_analysis_configuration(
-        self, analysis_type: AnalysisType, configuration: AnalysisConfiguration
-    ) -> bool:
+    def validate_analysis_configuration(self, analysis_type: AnalysisType, configuration: AnalysisConfiguration) -> bool:
         """Validate analysis configuration."""
         if analysis_type.value not in self.analysis_engines:
             return False
@@ -70,9 +64,7 @@ class AnalysisService:
         """Get list of supported analysis types."""
         return list(self.analysis_engines.keys())
 
-    def estimate_analysis_time(
-        self, analysis_type: AnalysisType, document_size: int
-    ) -> float:
+    def estimate_analysis_time(self, analysis_type: AnalysisType, document_size: int) -> float:
         """Estimate execution time for an analysis."""
         if analysis_type.value not in self.analysis_engines:
             raise ValueError(f"Unsupported analysis type: {analysis_type.value}")

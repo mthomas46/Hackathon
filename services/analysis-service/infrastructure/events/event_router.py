@@ -45,9 +45,7 @@ class TopicBasedEventRouter(EventRouter):
         for pattern, handlers in self.routes.items():
             if self._matches_pattern(envelope.topic, pattern):
                 # Get handlers that can handle this event type
-                capable_handlers = self.handler_registry.get_handlers_for_event(
-                    envelope.event, envelope.topic
-                )
+                capable_handlers = self.handler_registry.get_handlers_for_event(envelope.event, envelope.topic)
 
                 # Filter to only those registered for this pattern
                 for handler in handlers:
@@ -113,10 +111,7 @@ class TopicBasedEventRouter(EventRouter):
 
     def get_routes(self) -> Dict[str, List[str]]:
         """Get all routing rules."""
-        return {
-            pattern: [h.__class__.__name__ for h in handlers]
-            for pattern, handlers in self.routes.items()
-        }
+        return {pattern: [h.__class__.__name__ for h in handlers] for pattern, handlers in self.routes.items()}
 
 
 class TypeBasedEventRouter(EventRouter):
@@ -170,10 +165,7 @@ class TypeBasedEventRouter(EventRouter):
 
     def get_routes(self) -> Dict[str, List[str]]:
         """Get all routing rules."""
-        return {
-            event_type.value: [h.__class__.__name__ for h in handlers]
-            for event_type, handlers in self.type_routes.items()
-        }
+        return {event_type.value: [h.__class__.__name__ for h in handlers] for event_type, handlers in self.type_routes.items()}
 
 
 class CompositeEventRouter(EventRouter):
@@ -255,15 +247,9 @@ class ConditionalEventRouter(EventRouter):
     async def route_event(self, envelope: EventEnvelope) -> List[EventHandler]:
         """Route event based on condition."""
         if self.condition(envelope):
-            return (
-                await self.true_router.route_event(envelope) if self.true_router else []
-            )
+            return await self.true_router.route_event(envelope) if self.true_router else []
         else:
-            return (
-                await self.false_router.route_event(envelope)
-                if self.false_router
-                else []
-            )
+            return await self.false_router.route_event(envelope) if self.false_router else []
 
     def add_route(self, pattern: str, handler: EventHandler) -> None:
         """Add route to both routers."""
@@ -274,12 +260,8 @@ class ConditionalEventRouter(EventRouter):
 
     def remove_route(self, pattern: str) -> bool:
         """Remove route from both routers."""
-        removed_true = (
-            self.true_router.remove_route(pattern) if self.true_router else False
-        )
-        removed_false = (
-            self.false_router.remove_route(pattern) if self.false_router else False
-        )
+        removed_true = self.true_router.remove_route(pattern) if self.true_router else False
+        removed_false = self.false_router.remove_route(pattern) if self.false_router else False
         return removed_true or removed_false
 
 
@@ -352,9 +334,7 @@ class EventDispatcher:
             for handler in handlers:
                 try:
                     await handler.handle(envelope.event, envelope)
-                    handler_results.append(
-                        {"handler": handler.__class__.__name__, "status": "success"}
-                    )
+                    handler_results.append({"handler": handler.__class__.__name__, "status": "success"})
                 except Exception as e:
                     handler_results.append(
                         {
@@ -438,15 +418,11 @@ class RoutingConditions:
         return lambda envelope: envelope.event.metadata.get(key) == value
 
     @staticmethod
-    def and_conditions(
-        *conditions: Callable[[EventEnvelope], bool]
-    ) -> Callable[[EventEnvelope], bool]:
+    def and_conditions(*conditions: Callable[[EventEnvelope], bool]) -> Callable[[EventEnvelope], bool]:
         """Combine conditions with AND logic."""
         return lambda envelope: all(condition(envelope) for condition in conditions)
 
     @staticmethod
-    def or_conditions(
-        *conditions: Callable[[EventEnvelope], bool]
-    ) -> Callable[[EventEnvelope], bool]:
+    def or_conditions(*conditions: Callable[[EventEnvelope], bool]) -> Callable[[EventEnvelope], bool]:
         """Combine conditions with OR logic."""
         return lambda envelope: any(condition(envelope) for condition in conditions)

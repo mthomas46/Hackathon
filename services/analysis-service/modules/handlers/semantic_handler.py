@@ -46,14 +46,9 @@ class SemanticAnalysisHandler(BaseAnalysisHandler):
                 targets=request.targets,
                 status="completed",
                 similarity_matrix=analysis_result.get("similarity_matrix", []),
-                similar_pairs=[
-                    SimilarityPair(**pair)
-                    for pair in analysis_result.get("similar_pairs", [])
-                ],
+                similar_pairs=[SimilarityPair(**pair) for pair in analysis_result.get("similar_pairs", [])],
                 summary=analysis_result.get("summary", {}),
-                execution_time_seconds=analysis_result.get(
-                    "execution_time_seconds", 0.0
-                ),
+                execution_time_seconds=analysis_result.get("execution_time_seconds", 0.0),
                 error_message=None,
             )
 
@@ -67,9 +62,7 @@ class SemanticAnalysisHandler(BaseAnalysisHandler):
             error_msg = f"Semantic similarity analysis failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
 
-            return await self._handle_error(
-                e, f"semantic-{int(datetime.now(timezone.utc).timestamp())}"
-            )
+            return await self._handle_error(e, f"semantic-{int(datetime.now(timezone.utc).timestamp())}")
 
     async def _mock_semantic_analysis(
         self,
@@ -110,21 +103,15 @@ class SemanticAnalysisHandler(BaseAnalysisHandler):
             "similar_pairs": similar_pairs,
             "summary": {
                 "total_pairs": len(similar_pairs),
-                "highly_similar_pairs": len(
-                    [p for p in similar_pairs if p["similarity"] >= 0.9]
-                ),
+                "highly_similar_pairs": len([p for p in similar_pairs if p["similarity"] >= 0.9]),
                 "average_similarity": (
-                    sum(p["similarity"] for p in similar_pairs) / len(similar_pairs)
-                    if similar_pairs
-                    else 0.0
+                    sum(p["similarity"] for p in similar_pairs) / len(similar_pairs) if similar_pairs else 0.0
                 ),
             },
             "execution_time_seconds": 1.5,
         }
 
-    async def handle_batch_semantic_analysis(
-        self, requests: List[SemanticSimilarityRequest]
-    ) -> List[AnalysisResult]:
+    async def handle_batch_semantic_analysis(self, requests: List[SemanticSimilarityRequest]) -> List[AnalysisResult]:
         """Handle batch semantic similarity analysis."""
         results = []
 
@@ -134,9 +121,7 @@ class SemanticAnalysisHandler(BaseAnalysisHandler):
 
         return results
 
-    async def get_semantic_similarity_matrix(
-        self, targets: List[str], embedding_model: str = "default"
-    ) -> Dict[str, Any]:
+    async def get_semantic_similarity_matrix(self, targets: List[str], embedding_model: str = "default") -> Dict[str, Any]:
         """Get semantic similarity matrix for targets."""
         request = SemanticSimilarityRequest(
             targets=targets,
@@ -152,15 +137,11 @@ class SemanticAnalysisHandler(BaseAnalysisHandler):
 
         return {
             "targets": targets,
-            "similarity_matrix": result.data.get("response", {}).get(
-                "similarity_matrix", []
-            ),
+            "similarity_matrix": result.data.get("response", {}).get("similarity_matrix", []),
             "execution_time_seconds": result.execution_time_seconds,
         }
 
-    async def find_most_similar(
-        self, target: str, candidates: List[str], top_k: int = 5
-    ) -> Dict[str, Any]:
+    async def find_most_similar(self, target: str, candidates: List[str], top_k: int = 5) -> Dict[str, Any]:
         """Find most similar documents to target from candidates."""
         all_targets = [target] + candidates
 
@@ -177,9 +158,7 @@ class SemanticAnalysisHandler(BaseAnalysisHandler):
         target_similarities = similarity_matrix[0][1:]  # Skip self-similarity
 
         # Get top-k most similar
-        similarities_with_indices = [
-            (i, sim) for i, sim in enumerate(target_similarities)
-        ]
+        similarities_with_indices = [(i, sim) for i, sim in enumerate(target_similarities)]
         similarities_with_indices.sort(key=lambda x: x[1], reverse=True)
 
         top_similar = []

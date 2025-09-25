@@ -102,17 +102,13 @@ class HandlerFactory:
                 handler = handler_class(handler_name=handler_type, **kwargs)
                 return handler
             except Exception as fallback_error:
-                raise RuntimeError(
-                    f"Failed to create handler {handler_type}: {e}, fallback also failed: {fallback_error}"
-                )
+                raise RuntimeError(f"Failed to create handler {handler_type}: {e}, fallback also failed: {fallback_error}")
 
     def get_available_handlers(self) -> List[str]:
         """Get list of available handler types."""
         return list(self._handler_classes.keys())
 
-    def register_handler(
-        self, handler_type: str, handler_class: Type[BaseAnalysisHandler]
-    ) -> None:
+    def register_handler(self, handler_type: str, handler_class: Type[BaseAnalysisHandler]) -> None:
         """Register a custom handler type."""
         self._handler_classes[handler_type] = handler_class
 

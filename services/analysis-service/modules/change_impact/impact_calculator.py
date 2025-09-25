@@ -75,23 +75,17 @@ class ImpactCalculator:
 
         # Combine impact scores
         overall_impact_score = (
-            content_impact["score"] * 0.4
-            + relationship_impact["score"] * 0.4
-            + stakeholder_impact["score"] * 0.2
+            content_impact["score"] * 0.4 + relationship_impact["score"] * 0.4 + stakeholder_impact["score"] * 0.2
         )
 
         # Determine impact level
         impact_level = self._determine_impact_level(overall_impact_score)
 
         # Generate recommendations
-        recommendations = self._generate_recommendations(
-            impact_level, content_impact, relationship_impact, stakeholder_impact
-        )
+        recommendations = self._generate_recommendations(impact_level, content_impact, relationship_impact, stakeholder_impact)
 
         # Calculate risk assessment
-        risk_assessment = self._assess_risks(
-            change_data, relationships, overall_impact_score
-        )
+        risk_assessment = self._assess_risks(change_data, relationships, overall_impact_score)
 
         return {
             "overall_impact_score": round(overall_impact_score, 3),
@@ -144,9 +138,7 @@ class ImpactCalculator:
             },
         }
 
-    def _calculate_relationship_impact(
-        self, relationships: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _calculate_relationship_impact(self, relationships: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate impact based on document relationships."""
         if not relationships:
             return {
@@ -160,9 +152,7 @@ class ImpactCalculator:
         avg_weight = total_weight / len(relationships)
 
         # Count high-impact relationships
-        high_impact_count = sum(
-            1 for rel in relationships if rel.get("impact_weight", 0) > 0.7
-        )
+        high_impact_count = sum(1 for rel in relationships if rel.get("impact_weight", 0) > 0.7)
 
         # Relationship type distribution
         relationship_types = {}
@@ -171,9 +161,7 @@ class ImpactCalculator:
             relationship_types[rel_type] = relationship_types.get(rel_type, 0) + 1
 
         # Calculate score based on relationship strength and count
-        relationship_factor = min(
-            1.0, len(relationships) / 10
-        )  # Cap at 10 relationships
+        relationship_factor = min(1.0, len(relationships) / 10)  # Cap at 10 relationships
         strength_factor = avg_weight
 
         score = (relationship_factor * 0.6) + (strength_factor * 0.4)
@@ -186,9 +174,7 @@ class ImpactCalculator:
             "average_weight": round(avg_weight, 3),
         }
 
-    def _calculate_stakeholder_impact(
-        self, stakeholder_groups: List[str]
-    ) -> Dict[str, Any]:
+    def _calculate_stakeholder_impact(self, stakeholder_groups: List[str]) -> Dict[str, Any]:
         """Calculate impact based on affected stakeholder groups."""
         if not stakeholder_groups:
             return {
@@ -261,24 +247,16 @@ class ImpactCalculator:
 
         # Add specific recommendations based on impact factors
         if content_impact["score"] > 0.7:
-            recommendations.append(
-                "Content changes are significant - consider phased rollout"
-            )
+            recommendations.append("Content changes are significant - consider phased rollout")
 
         if relationship_impact["total_relationships"] > 5:
-            recommendations.append(
-                "Many documents are affected - create comprehensive test plan"
-            )
+            recommendations.append("Many documents are affected - create comprehensive test plan")
 
         if stakeholder_impact["stakeholder_count"] > 3:
-            recommendations.append(
-                "Multiple stakeholder groups affected - schedule stakeholder meeting"
-            )
+            recommendations.append("Multiple stakeholder groups affected - schedule stakeholder meeting")
 
         if relationship_impact.get("high_impact_relationships", 0) > 0:
-            recommendations.append(
-                "High-impact relationships detected - conduct detailed dependency analysis"
-            )
+            recommendations.append("High-impact relationships detected - conduct detailed dependency analysis")
 
         return list(set(recommendations))  # Remove duplicates
 
@@ -302,9 +280,7 @@ class ImpactCalculator:
             )
 
         # Relationship-based risks
-        high_impact_rels = [
-            rel for rel in relationships if rel.get("impact_weight", 0) > 0.8
-        ]
+        high_impact_rels = [rel for rel in relationships if rel.get("impact_weight", 0) > 0.8]
         if high_impact_rels:
             risk_factors.append(
                 {

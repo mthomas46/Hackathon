@@ -60,11 +60,11 @@ def analyze_code_structure(changed_files: list) -> dict:
             continue
 
         # Analyze file type distribution
-        if filename.endswith('.py'):
+        if filename.endswith(".py"):
             file_type = "python"
-        elif filename.endswith('.js'):
+        elif filename.endswith(".js"):
             file_type = "javascript"
-        elif filename.endswith('.md'):
+        elif filename.endswith(".md"):
             file_type = "markdown"
         else:
             file_type = "unknown"
@@ -103,7 +103,7 @@ def analyze_file_content(file_data: dict, file_type: str) -> dict:
         "long_methods": [],
     }
 
-    lines = content.split('\n')
+    lines = content.split("\n")
     analysis["complexity"]["lines_of_code"] = len([line for line in lines if line.strip()])
 
     return analysis
@@ -243,9 +243,7 @@ class TestGenerateRefactoringSuggestions:
         structural_analysis = {}
         quality_analysis = {}
 
-        suggestions = generate_refactoring_suggestions(
-            code_analysis, structural_analysis, quality_analysis
-        )
+        suggestions = generate_refactoring_suggestions(code_analysis, structural_analysis, quality_analysis)
 
         assert "complex functions" in suggestions[0].lower()
 
@@ -255,9 +253,7 @@ class TestGenerateRefactoringSuggestions:
         structural_analysis = {"long_methods": ["method1"]}
         quality_analysis = {}
 
-        suggestions = generate_refactoring_suggestions(
-            code_analysis, structural_analysis, quality_analysis
-        )
+        suggestions = generate_refactoring_suggestions(code_analysis, structural_analysis, quality_analysis)
 
         assert "long methods" in suggestions[0].lower()
 

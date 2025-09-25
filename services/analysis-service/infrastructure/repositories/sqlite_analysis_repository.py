@@ -41,18 +41,10 @@ class SQLiteAnalysisRepository(SqlRepository[Analysis]):
             )
 
             # Create indexes for performance
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_analyses_document ON analyses(document_id)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_analyses_status ON analyses(status)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_analyses_type ON analyses(analysis_type)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_analyses_created ON analyses(created_at)"
-            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_analyses_document ON analyses(document_id)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_analyses_status ON analyses(status)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_analyses_type ON analyses(analysis_type)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_analyses_created ON analyses(created_at)")
 
     def _dict_to_entity(self, data: Dict[str, Any]) -> Analysis:
         """Convert database row to Analysis entity."""
@@ -63,16 +55,8 @@ class SQLiteAnalysisRepository(SqlRepository[Analysis]):
         result = json.loads(data.get("result", "null")) if data.get("result") else None
 
         # Parse dates
-        started_at = (
-            datetime.fromisoformat(data["started_at"])
-            if data.get("started_at")
-            else None
-        )
-        completed_at = (
-            datetime.fromisoformat(data["completed_at"])
-            if data.get("completed_at")
-            else None
-        )
+        started_at = datetime.fromisoformat(data["started_at"]) if data.get("started_at") else None
+        completed_at = datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
         created_at = datetime.fromisoformat(data["created_at"])
 
         return AnalysisFactory.create_analysis(
@@ -109,11 +93,7 @@ class SQLiteAnalysisRepository(SqlRepository[Analysis]):
                     analysis.status.value,
                     json.dumps(analysis.configuration),
                     analysis.started_at.isoformat() if analysis.started_at else None,
-                    (
-                        analysis.completed_at.isoformat()
-                        if analysis.completed_at
-                        else None
-                    ),
+                    (analysis.completed_at.isoformat() if analysis.completed_at else None),
                     json.dumps(analysis.result) if analysis.result else None,
                     analysis.error_message,
                     analysis.created_at.isoformat(),
@@ -202,9 +182,7 @@ class SQLiteAnalysisRepository(SqlRepository[Analysis]):
 
         # Parse dates
         started_at = datetime.fromisoformat(started_at_str) if started_at_str else None
-        completed_at = (
-            datetime.fromisoformat(completed_at_str) if completed_at_str else None
-        )
+        completed_at = datetime.fromisoformat(completed_at_str) if completed_at_str else None
         created_at = datetime.fromisoformat(created_at_str)
 
         # Parse JSON fields

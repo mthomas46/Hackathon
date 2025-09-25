@@ -708,7 +708,7 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
                 quality_score=result.quality_score,
                 sentiment=result.sentiment_analysis.get("sentiment", "unknown"),
                 processing_time=result.processing_time,
-            )
+            ),
         )
 
     except Exception as e:
@@ -728,7 +728,7 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
             content=create_error_response(
                 f"Sentiment analysis failed: {str(e)}",
                 error_code=ErrorCodes.ANALYSIS_FAILED,
-            )
+            ),
         )
 
 
@@ -750,16 +750,12 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
                         "success": True,
                         "message": "Tone analysis completed successfully",
                         "data": {
-                            "tone_metrics": {
-                                "formality_score": 0.75,
-                                "technical_complexity": 0.82,
-                                "readability_score": 0.68
-                            },
+                            "tone_metrics": {"formality_score": 0.75, "technical_complexity": 0.82, "readability_score": 0.68},
                             "writing_patterns": {
                                 "sentence_complexity": "moderate",
                                 "vocabulary_richness": 0.71,
-                                "emotional_expression": "neutral"
-                            }
+                                "emotional_expression": "neutral",
+                            },
                         },
                         "processing_time": 1.8,
                     }
@@ -809,7 +805,7 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
                 primary_tone=result.primary_tone,
                 analysis_scope=req.analysis_scope,
                 processing_time=result.processing_time,
-            )
+            ),
         )
 
     except Exception as e:
@@ -826,7 +822,7 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
 
         return JSONResponse(
             status_code=500,
-            content=create_error_response(f"Tone analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
+            content=create_error_response(f"Tone analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED),
         )
 
 
@@ -849,20 +845,16 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
                         "message": "Content quality analysis completed successfully",
                         "data": {
                             "quality_score": 0.85,
-                            "readability_metrics": {
-                                "flesch_reading_ease": 65.2,
-                                "grade_level": 8.5,
-                                "sentence_complexity": 0.72
-                            },
+                            "readability_metrics": {"flesch_reading_ease": 65.2, "grade_level": 8.5, "sentence_complexity": 0.72},
                             "structure_analysis": {
                                 "has_table_of_contents": True,
                                 "section_depth": 3,
-                                "formatting_consistency": 0.91
+                                "formatting_consistency": 0.91,
                             },
                             "recommendations": [
                                 "Consider simplifying technical terminology",
-                                "Add more examples for complex concepts"
-                            ]
+                                "Add more examples for complex concepts",
+                            ],
                         },
                         "processing_time": 2.1,
                     }
@@ -912,7 +904,7 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
                 quality_score=result.quality_assessment.get("overall_score", 0.0),
                 grade=result.quality_assessment.get("grade", "N/A"),
                 processing_time=result.processing_time,
-            )
+            ),
         )
 
     except Exception as e:
@@ -932,7 +924,7 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
             content=create_error_response(
                 f"Content quality analysis failed: {str(e)}",
                 error_code=ErrorCodes.ANALYSIS_FAILED,
-            )
+            ),
         )
 
 
@@ -954,24 +946,17 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
                         "success": True,
                         "message": "Trend analysis completed successfully",
                         "data": {
-                            "trend_patterns": {
-                                "quality_decline": 0.15,
-                                "issue_frequency": 0.23,
-                                "maintenance_effort": 0.31
-                            },
+                            "trend_patterns": {"quality_decline": 0.15, "issue_frequency": 0.23, "maintenance_effort": 0.31},
                             "predictions": {
                                 "next_review_date": "2025-02-15",
                                 "risk_level": "medium",
-                                "recommended_actions": [
-                                    "Schedule content review",
-                                    "Update outdated examples"
-                                ]
+                                "recommended_actions": ["Schedule content review", "Update outdated examples"],
                             },
                             "historical_analysis": {
                                 "total_analyses": 12,
                                 "average_quality_score": 0.78,
-                                "trend_direction": "improving"
-                            }
+                                "trend_direction": "improving",
+                            },
                         },
                         "processing_time": 3.2,
                     }
@@ -1122,21 +1107,14 @@ async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
                         "message": "Risk assessment completed successfully",
                         "data": {
                             "overall_risk_score": 0.67,
-                            "risk_factors": {
-                                "staleness_risk": 0.82,
-                                "quality_decline_risk": 0.45,
-                                "maintenance_burden": 0.71
-                            },
+                            "risk_factors": {"staleness_risk": 0.82, "quality_decline_risk": 0.45, "maintenance_burden": 0.71},
                             "risk_level": "high",
-                            "critical_issues": [
-                                "Document not updated in 18 months",
-                                "Quality score declined 25% over last year"
-                            ],
+                            "critical_issues": ["Document not updated in 18 months", "Quality score declined 25% over last year"],
                             "recommendations": [
                                 "Schedule immediate content review",
                                 "Update outdated technical information",
-                                "Consider document retirement if no longer relevant"
-                            ]
+                                "Consider document retirement if no longer relevant",
+                            ],
                         },
                         "processing_time": 2.8,
                     }
@@ -1281,19 +1259,19 @@ async def assess_portfolio_risk_endpoint(req: PortfolioRiskAssessmentRequest):
                             "maintenance_schedule": {
                                 "next_review_date": "2025-03-15",
                                 "maintenance_priority": "medium",
-                                "estimated_effort_days": 2.5
+                                "estimated_effort_days": 2.5,
                             },
                             "forecast_factors": {
                                 "quality_trend": "stable",
                                 "usage_frequency": "high",
                                 "business_impact": "medium",
-                                "technical_debt": 0.35
+                                "technical_debt": 0.35,
                             },
                             "recommendations": [
                                 "Schedule quarterly review",
                                 "Monitor for breaking changes in referenced APIs",
-                                "Consider automation for routine updates"
-                            ]
+                                "Consider automation for routine updates",
+                            ],
                         },
                         "processing_time": 3.1,
                     }

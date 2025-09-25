@@ -27,17 +27,9 @@ class GetDocumentQueryValidator(BaseValidator):
                 )
             )
         elif not query.document_id.strip():
-            errors.append(
-                self.create_error(
-                    "Document ID cannot be empty", "EMPTY_DOCUMENT_ID", "document_id"
-                )
-            )
+            errors.append(self.create_error("Document ID cannot be empty", "EMPTY_DOCUMENT_ID", "document_id"))
         elif len(query.document_id) > 500:
-            errors.append(
-                self.create_error(
-                    "Document ID is too long", "DOCUMENT_ID_TOO_LONG", "document_id"
-                )
-            )
+            errors.append(self.create_error("Document ID is too long", "DOCUMENT_ID_TOO_LONG", "document_id"))
 
         # Validate include_related if provided
         if hasattr(query, "include_related") and query.include_related is not None:
@@ -73,17 +65,9 @@ class GetAnalysisQueryValidator(BaseValidator):
                 )
             )
         elif not query.analysis_id.strip():
-            errors.append(
-                self.create_error(
-                    "Analysis ID cannot be empty", "EMPTY_ANALYSIS_ID", "analysis_id"
-                )
-            )
+            errors.append(self.create_error("Analysis ID cannot be empty", "EMPTY_ANALYSIS_ID", "analysis_id"))
         elif len(query.analysis_id) > 500:
-            errors.append(
-                self.create_error(
-                    "Analysis ID is too long", "ANALYSIS_ID_TOO_LONG", "analysis_id"
-                )
-            )
+            errors.append(self.create_error("Analysis ID is too long", "ANALYSIS_ID_TOO_LONG", "analysis_id"))
 
         # Validate include_details if provided
         if hasattr(query, "include_details") and query.include_details is not None:
@@ -155,11 +139,7 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
             elif len(query.document_id) > 500:
-                errors.append(
-                    self.create_error(
-                        "Document ID is too long", "DOCUMENT_ID_TOO_LONG", "document_id"
-                    )
-                )
+                errors.append(self.create_error("Document ID is too long", "DOCUMENT_ID_TOO_LONG", "document_id"))
 
         return errors
 
@@ -185,11 +165,7 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
             elif len(query.analysis_id) > 500:
-                errors.append(
-                    self.create_error(
-                        "Analysis ID is too long", "ANALYSIS_ID_TOO_LONG", "analysis_id"
-                    )
-                )
+                errors.append(self.create_error("Analysis ID is too long", "ANALYSIS_ID_TOO_LONG", "analysis_id"))
 
         return errors
 
@@ -199,11 +175,7 @@ class ListFindingsQueryValidator(BaseValidator):
 
         if hasattr(query, "severity") and query.severity is not None:
             if not isinstance(query.severity, str):
-                errors.append(
-                    self.create_error(
-                        "Severity must be a string", "INVALID_SEVERITY", "severity"
-                    )
-                )
+                errors.append(self.create_error("Severity must be a string", "INVALID_SEVERITY", "severity"))
             elif query.severity not in ["critical", "high", "medium", "low", "info"]:
                 errors.append(
                     self.create_error(
@@ -221,17 +193,9 @@ class ListFindingsQueryValidator(BaseValidator):
 
         if hasattr(query, "category") and query.category is not None:
             if not isinstance(query.category, str):
-                errors.append(
-                    self.create_error(
-                        "Category must be a string", "INVALID_CATEGORY", "category"
-                    )
-                )
+                errors.append(self.create_error("Category must be a string", "INVALID_CATEGORY", "category"))
             elif len(query.category) > 50:
-                errors.append(
-                    self.create_error(
-                        "Category is too long", "CATEGORY_TOO_LONG", "category"
-                    )
-                )
+                errors.append(self.create_error("Category is too long", "CATEGORY_TOO_LONG", "category"))
 
         return errors
 
@@ -243,11 +207,7 @@ class ListFindingsQueryValidator(BaseValidator):
         # Validate page parameter
         if hasattr(query, "page") and query.page is not None:
             if not isinstance(query.page, int) or query.page < 1:
-                errors.append(
-                    self.create_error(
-                        "Page must be a positive integer", "INVALID_PAGE", "page"
-                    )
-                )
+                errors.append(self.create_error("Page must be a positive integer", "INVALID_PAGE", "page"))
 
         # Validate page_size parameter
         if hasattr(query, "page_size") and query.page_size is not None:
@@ -321,12 +281,7 @@ class ListFindingsQueryValidator(BaseValidator):
         warnings = []
 
         # Check for conflicting parameters
-        if (
-            hasattr(query, "document_id")
-            and query.document_id
-            and hasattr(query, "analysis_id")
-            and query.analysis_id
-        ):
+        if hasattr(query, "document_id") and query.document_id and hasattr(query, "analysis_id") and query.analysis_id:
             warnings.append(
                 self.create_warning(
                     "Filtering by both document_id and analysis_id may return no results",

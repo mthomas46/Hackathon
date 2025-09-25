@@ -299,11 +299,7 @@ class ConfigurationService(ApplicationService):
         current_time = __import__("time").time()
 
         # Return cached config if still valid
-        if (
-            not force_reload
-            and self._config
-            and current_time - self._last_load_time < self._cache_ttl
-        ):
+        if not force_reload and self._config and current_time - self._last_load_time < self._cache_ttl:
             return self._config
 
         async with self.operation_context("load_config"):
@@ -315,9 +311,7 @@ class ConfigurationService(ApplicationService):
                     source_config = source.load()
                     config_data.update(source_config)
                 except Exception as e:
-                    self.logger.warning(
-                        f"Failed to load from {source.__class__.__name__}: {e}"
-                    )
+                    self.logger.warning(f"Failed to load from {source.__class__.__name__}: {e}")
 
             # Create configuration object
             self._config = ApplicationConfig.from_dict(config_data)
@@ -337,13 +331,9 @@ class ConfigurationService(ApplicationService):
                     try:
                         source.save(config_data)
                         saved_to_any = True
-                        self.logger.info(
-                            f"Configuration saved to {source.__class__.__name__}"
-                        )
+                        self.logger.info(f"Configuration saved to {source.__class__.__name__}")
                     except Exception as e:
-                        self.logger.error(
-                            f"Failed to save to {source.__class__.__name__}: {e}"
-                        )
+                        self.logger.error(f"Failed to save to {source.__class__.__name__}: {e}")
 
             if not saved_to_any:
                 raise ValueError("No writable configuration sources available")
@@ -418,16 +408,12 @@ class ConfigurationService(ApplicationService):
         issues = []
 
         # Check database URL format
-        if not config.database_url.startswith(
-            ("sqlite://", "postgresql://", "mysql://")
-        ):
+        if not config.database_url.startswith(("sqlite://", "postgresql://", "mysql://")):
             issues.append("Invalid database URL format")
 
         # Check service port range
         if not (1 <= config.service_port <= 65535):
-            issues.append(
-                f"Service port {config.service_port} is out of valid range (1-65535)"
-            )
+            issues.append(f"Service port {config.service_port} is out of valid range (1-65535)")
 
         # Check log level validity
         if config.log_level not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
@@ -460,9 +446,7 @@ class ConfigurationService(ApplicationService):
             }
 
             if validation_issues:
-                health["configuration"]["issues"] = validation_issues[
-                    :5
-                ]  # First 5 issues
+                health["configuration"]["issues"] = validation_issues[:5]  # First 5 issues
 
         except Exception as e:
             health["configuration"] = {"error": str(e)}

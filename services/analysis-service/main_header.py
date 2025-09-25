@@ -118,6 +118,7 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI, HTTPException
+
 from services.shared.infrastructure.config import load_service_config
 
 # ============================================================================

@@ -63,9 +63,7 @@ class InMemoryEventPublisher(EventPublisher):
         """Add event handler."""
         self.event_handlers.append(handler)
 
-    def get_published_events(
-        self, event_type: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    def get_published_events(self, event_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get published events, optionally filtered by type."""
         if event_type:
             return [e for e in self.published_events if e["event_type"] == event_type]
@@ -79,9 +77,7 @@ class InMemoryEventPublisher(EventPublisher):
 class RedisEventPublisher(EventPublisher):
     """Redis-based event publisher for production use."""
 
-    def __init__(
-        self, redis_client=None, channel_prefix: str = "analysis-service:events"
-    ):
+    def __init__(self, redis_client=None, channel_prefix: str = "analysis-service:events"):
         """Initialize Redis publisher."""
         self.redis = redis_client
         self.channel_prefix = channel_prefix
@@ -103,9 +99,7 @@ class RedisEventPublisher(EventPublisher):
 
             # Also store in a list for persistence (optional)
             await self.redis.lpush(f"{channel}:history", json.dumps(event_dict))
-            await self.redis.ltrim(
-                f"{channel}:history", 0, 999
-            )  # Keep last 1000 events
+            await self.redis.ltrim(f"{channel}:history", 0, 999)  # Keep last 1000 events
 
             logger.debug(f"Published event to Redis: {event.event_type.value}")
 
@@ -130,9 +124,7 @@ class RedisEventPublisher(EventPublisher):
 class KafkaEventPublisher(EventPublisher):
     """Kafka-based event publisher for high-throughput scenarios."""
 
-    def __init__(
-        self, kafka_producer=None, topic_prefix: str = "analysis-service-events"
-    ):
+    def __init__(self, kafka_producer=None, topic_prefix: str = "analysis-service-events"):
         """Initialize Kafka publisher."""
         self.producer = kafka_producer
         self.topic_prefix = topic_prefix
@@ -218,11 +210,7 @@ class EventPublisherFactory:
         publisher_type = config.get("type", "in_memory")
         publishers = []
 
-        if (
-            publisher_type == "in_memory"
-            or not config.get("redis")
-            or not config.get("kafka")
-        ):
+        if publisher_type == "in_memory" or not config.get("redis") or not config.get("kafka"):
             publishers.append(EventPublisherFactory.create_in_memory())
 
         if config.get("redis"):

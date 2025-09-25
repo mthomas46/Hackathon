@@ -50,14 +50,10 @@ class EventBus:
             # Publish to internal subscribers
             await self.subscriber.publish(event)
 
-            logger.debug(
-                f"Event published: {event.event_type.value} ({event.event_id})"
-            )
+            logger.debug(f"Event published: {event.event_type.value} ({event.event_id})")
 
         except Exception as e:
-            logger.error(
-                f"Failed to publish event {event.event_id}: {e}", exc_info=True
-            )
+            logger.error(f"Failed to publish event {event.event_id}: {e}", exc_info=True)
             raise
 
     async def publish_batch(self, events: List[ApplicationEvent]) -> None:
@@ -98,8 +94,7 @@ class EventBus:
             "running": self._running,
             "publisher_type": self.publisher.__class__.__name__,
             "subscriber_handler_count": sum(
-                self.subscriber.get_handler_count(event_type)
-                for event_type in self.subscriber.handlers.keys()
+                self.subscriber.get_handler_count(event_type) for event_type in self.subscriber.handlers.keys()
             ),
             "event_types_handled": len(self.subscriber.handlers),
         }
@@ -158,9 +153,7 @@ class CQRSIntegration:
         handler = self.query_handlers[query_type]
         return await handler(query)
 
-    def _create_command_failure_event(
-        self, command: Any, error: Exception
-    ) -> ApplicationEvent:
+    def _create_command_failure_event(self, command: Any, error: Exception) -> ApplicationEvent:
         """Create a command failure event."""
         from .application_events import AnalysisFailedEvent
 
@@ -187,9 +180,7 @@ class EventSourcingIntegration:
         self.event_store = event_store
         self.aggregate_events: Dict[str, List[ApplicationEvent]] = {}
 
-    async def save_events(
-        self, aggregate_id: str, events: List[ApplicationEvent]
-    ) -> None:
+    async def save_events(self, aggregate_id: str, events: List[ApplicationEvent]) -> None:
         """Save events for an aggregate."""
         if self.event_store:
             await self.event_store.save_events(aggregate_id, events)
@@ -250,9 +241,7 @@ class EventBusFactory:
         publisher = EventPublisherFactory.create_from_config(publisher_config)
 
         # Create subscriber
-        subscriber = EventSubscriber(
-            max_workers=config.get("subscriber", {}).get("max_workers", 5)
-        )
+        subscriber = EventSubscriber(max_workers=config.get("subscriber", {}).get("max_workers", 5))
 
         # Create handlers
         handler_config = config.get("handlers", {})

@@ -552,9 +552,7 @@ class PRReportGenerator:
         }
         """
 
-        templates["html"] = Template(
-            templates["html"].template.replace("{{ css_styles }}", self.css_styles)
-        )
+        templates["html"] = Template(templates["html"].template.replace("{{ css_styles }}", self.css_styles))
 
         return templates
 
@@ -582,17 +580,10 @@ class PRReportGenerator:
         # Convert complex objects to dictionaries for JSON serialization
         cross_ref_dict = {
             "overall_alignment_score": cross_reference_results.overall_alignment_score,
-            "requirement_alignment": dict(
-                cross_reference_results.requirement_alignment
-            ),
-            "documentation_consistency": dict(
-                cross_reference_results.documentation_consistency
-            ),
+            "requirement_alignment": dict(cross_reference_results.requirement_alignment),
+            "documentation_consistency": dict(cross_reference_results.documentation_consistency),
             "documentation_consistency_overall": (
-                sum(
-                    result.get("consistency_score", 0)
-                    for result in cross_reference_results.documentation_consistency.values()
-                )
+                sum(result.get("consistency_score", 0) for result in cross_reference_results.documentation_consistency.values())
                 / len(cross_reference_results.documentation_consistency)
                 if cross_reference_results.documentation_consistency
                 else 0
@@ -650,9 +641,7 @@ class PRReportGenerator:
             "confidence_level": report.confidence_level,
             "approval_recommendation": report.approval_recommendation,
             "component_scores": report.component_scores,
-            "cross_reference_results": type(
-                "obj", (object,), report.cross_reference_results
-            ),
+            "cross_reference_results": type("obj", (object,), report.cross_reference_results),
             "detected_gaps": report.detected_gaps,
             "risk_assessment": report.risk_assessment,
             "recommendations": report.recommendations,
@@ -661,9 +650,7 @@ class PRReportGenerator:
             "improvement_areas": report.improvement_areas,
             "analysis_duration": report.analysis_duration,
             "ai_provider": report.ai_provider,
-            "rationale": getattr(
-                report, "rationale", "Analysis completed successfully"
-            ),
+            "rationale": getattr(report, "rationale", "Analysis completed successfully"),
             "risk_factors": getattr(report, "risk_factors", []),
         }
 

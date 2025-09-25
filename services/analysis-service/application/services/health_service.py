@@ -327,9 +327,7 @@ class ApplicationHealth:
                 "total_checks": len(self.health_checks),
                 "critical_issues": len(critical_issues),
                 "degraded_services": len(degraded_services),
-                "healthy_checks": len(
-                    [r for r in results.values() if r["status"] == "healthy"]
-                ),
+                "healthy_checks": len([r for r in results.values() if r["status"] == "healthy"]),
             },
         }
 
@@ -461,11 +459,7 @@ class HealthService(ApplicationService):
         """Remove a health check."""
         async with self.operation_context("remove_health_check"):
             original_count = len(self.app_health.health_checks)
-            self.app_health.health_checks = [
-                hc
-                for hc in self.app_health.health_checks
-                if hc.name != health_check_name
-            ]
+            self.app_health.health_checks = [hc for hc in self.app_health.health_checks if hc.name != health_check_name]
 
             removed = len(self.app_health.health_checks) < original_count
             if removed:
@@ -543,13 +537,9 @@ class DependencyHealthCheck(HealthCheck):
                 import aiohttp
 
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        url, timeout=aiohttp.ClientTimeout(total=5)
-                    ) as response:
+                    async with session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as response:
                         dependency_status[name] = {
-                            "status": (
-                                "healthy" if response.status == 200 else "degraded"
-                            ),
+                            "status": ("healthy" if response.status == 200 else "degraded"),
                             "http_status": response.status,
                             "url": url,
                         }
@@ -562,20 +552,12 @@ class DependencyHealthCheck(HealthCheck):
                 }
 
         # Determine overall status
-        unhealthy_deps = [
-            name
-            for name, status in dependency_status.items()
-            if status["status"] == "unhealthy"
-        ]
+        unhealthy_deps = [name for name, status in dependency_status.items() if status["status"] == "unhealthy"]
 
         if unhealthy_deps:
             overall_status = "unhealthy"
         else:
-            degraded_deps = [
-                name
-                for name, status in dependency_status.items()
-                if status["status"] == "degraded"
-            ]
+            degraded_deps = [name for name, status in dependency_status.items() if status["status"] == "degraded"]
             overall_status = "degraded" if degraded_deps else "healthy"
 
         return {

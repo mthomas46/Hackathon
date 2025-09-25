@@ -44,24 +44,12 @@ class SQLiteFindingRepository(FindingRepository):
             )
 
             # Create indexes for performance
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_findings_document ON findings(document_id)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_findings_analysis ON findings(analysis_id)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_findings_severity ON findings(severity)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_findings_category ON findings(category)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_findings_resolved ON findings(resolved_at)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_findings_created ON findings(created_at)"
-            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_findings_document ON findings(document_id)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_findings_analysis ON findings(analysis_id)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_findings_severity ON findings(severity)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_findings_category ON findings(category)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_findings_resolved ON findings(resolved_at)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_findings_created ON findings(created_at)")
 
     async def save(self, finding: Finding) -> None:
         """Save a finding to SQLite."""
@@ -190,9 +178,7 @@ class SQLiteFindingRepository(FindingRepository):
 
         # Parse dates
         created_at = datetime.fromisoformat(created_at_str)
-        resolved_at = (
-            datetime.fromisoformat(resolved_at_str) if resolved_at_str else None
-        )
+        resolved_at = datetime.fromisoformat(resolved_at_str) if resolved_at_str else None
 
         # Parse JSON fields
         location = json.loads(location_json) if location_json else None

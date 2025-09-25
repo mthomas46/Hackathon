@@ -15,9 +15,7 @@ class AnalysisFactory:
         """Initialize factory with optional analysis service."""
         self.analysis_service = analysis_service or AnalysisService({})
 
-    def create_semantic_similarity_analysis(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_semantic_similarity_analysis(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create semantic similarity analysis."""
         config = self._merge_config(
             configuration,
@@ -33,13 +31,9 @@ class AnalysisFactory:
             },
         )
 
-        return self._create_analysis(
-            document_id, AnalysisType.SEMANTIC_SIMILARITY, config
-        )
+        return self._create_analysis(document_id, AnalysisType.SEMANTIC_SIMILARITY, config)
 
-    def create_sentiment_analysis(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_sentiment_analysis(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create sentiment analysis."""
         config = self._merge_config(
             configuration,
@@ -57,9 +51,7 @@ class AnalysisFactory:
 
         return self._create_analysis(document_id, AnalysisType.SENTIMENT, config)
 
-    def create_content_quality_analysis(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_content_quality_analysis(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create content quality analysis."""
         config = self._merge_config(
             configuration,
@@ -77,9 +69,7 @@ class AnalysisFactory:
 
         return self._create_analysis(document_id, AnalysisType.CONTENT_QUALITY, config)
 
-    def create_trend_analysis(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_trend_analysis(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create trend analysis."""
         config = self._merge_config(
             configuration,
@@ -98,9 +88,7 @@ class AnalysisFactory:
 
         return self._create_analysis(document_id, AnalysisType.TREND_ANALYSIS, config)
 
-    def create_risk_assessment(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_risk_assessment(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create risk assessment analysis."""
         config = self._merge_config(
             configuration,
@@ -118,9 +106,7 @@ class AnalysisFactory:
 
         return self._create_analysis(document_id, AnalysisType.RISK_ASSESSMENT, config)
 
-    def create_maintenance_forecast(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_maintenance_forecast(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create maintenance forecast analysis."""
         config = self._merge_config(
             configuration,
@@ -137,13 +123,9 @@ class AnalysisFactory:
             },
         )
 
-        return self._create_analysis(
-            document_id, AnalysisType.MAINTENANCE_FORECAST, config
-        )
+        return self._create_analysis(document_id, AnalysisType.MAINTENANCE_FORECAST, config)
 
-    def create_quality_degradation_detection(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_quality_degradation_detection(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create quality degradation detection analysis."""
         config = self._merge_config(
             configuration,
@@ -160,13 +142,9 @@ class AnalysisFactory:
             },
         )
 
-        return self._create_analysis(
-            document_id, AnalysisType.QUALITY_DEGRADATION, config
-        )
+        return self._create_analysis(document_id, AnalysisType.QUALITY_DEGRADATION, config)
 
-    def create_change_impact_analysis(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_change_impact_analysis(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create change impact analysis."""
         config = self._merge_config(
             configuration,
@@ -185,9 +163,7 @@ class AnalysisFactory:
 
         return self._create_analysis(document_id, AnalysisType.CHANGE_IMPACT, config)
 
-    def create_cross_repository_analysis(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_cross_repository_analysis(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create cross-repository analysis."""
         config = self._merge_config(
             configuration,
@@ -207,9 +183,7 @@ class AnalysisFactory:
 
         return self._create_analysis(document_id, AnalysisType.CROSS_REPOSITORY, config)
 
-    def create_automated_remediation(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_automated_remediation(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create automated remediation analysis."""
         config = self._merge_config(
             configuration,
@@ -226,13 +200,9 @@ class AnalysisFactory:
             },
         )
 
-        return self._create_analysis(
-            document_id, AnalysisType.AUTOMATED_REMEDIATION, config
-        )
+        return self._create_analysis(document_id, AnalysisType.AUTOMATED_REMEDIATION, config)
 
-    def create_comprehensive_analysis(
-        self, document_id: str, configuration: Optional[Dict[str, Any]] = None
-    ) -> Analysis:
+    def create_comprehensive_analysis(self, document_id: str, configuration: Optional[Dict[str, Any]] = None) -> Analysis:
         """Create comprehensive analysis with all detectors."""
         base_config = {
             "detectors": [
@@ -258,9 +228,7 @@ class AnalysisFactory:
         config = self._merge_config(configuration, base_config)
 
         # Custom analysis type for comprehensive analysis
-        return self._create_analysis(
-            document_id, AnalysisType.SEMANTIC_SIMILARITY, config
-        )
+        return self._create_analysis(document_id, AnalysisType.SEMANTIC_SIMILARITY, config)
 
     def create_custom_analysis(
         self,
@@ -313,9 +281,7 @@ class AnalysisFactory:
             configuration=analysis_config,  # Will be set by caller
         )
 
-    def _merge_config(
-        self, custom_config: Optional[Dict[str, Any]], default_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _merge_config(self, custom_config: Optional[Dict[str, Any]], default_config: Dict[str, Any]) -> Dict[str, Any]:
         """Merge custom configuration with defaults."""
         if not custom_config:
             return default_config.copy()

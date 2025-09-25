@@ -85,9 +85,7 @@ class FunctionEventHandler(EventHandler):
                 await self.func(event, envelope)
             else:
                 # Run sync function in thread pool
-                await asyncio.get_event_loop().run_in_executor(
-                    None, self.func, event, envelope
-                )
+                await asyncio.get_event_loop().run_in_executor(None, self.func, event, envelope)
 
             self._stats["events_handled"] += 1
 
@@ -256,9 +254,7 @@ class EventHandlerRegistry:
         self._handlers: Dict[str, List[EventHandler]] = {}
         self._handler_classes: Dict[str, Type[EventHandler]] = {}
 
-    def register_handler(
-        self, name: str, handler: EventHandler, topics: Optional[List[str]] = None
-    ) -> None:
+    def register_handler(self, name: str, handler: EventHandler, topics: Optional[List[str]] = None) -> None:
         """Register an event handler."""
         if topics is None:
             # Auto-determine topics based on event types
@@ -285,9 +281,7 @@ class EventHandlerRegistry:
 
         logger.info(f"Registered handler class '{name}': {handler_class.__name__}")
 
-    def create_handler(
-        self, name: str, config: Optional[Dict[str, Any]] = None
-    ) -> Optional[EventHandler]:
+    def create_handler(self, name: str, config: Optional[Dict[str, Any]] = None) -> Optional[EventHandler]:
         """Create handler instance from registered class."""
         if name not in self._handler_classes:
             return None
@@ -305,9 +299,7 @@ class EventHandlerRegistry:
         """Get all handlers for a topic."""
         return self._handlers.get(topic, []).copy()
 
-    def get_handlers_for_event(
-        self, event: DomainEvent, topic: str
-    ) -> List[EventHandler]:
+    def get_handlers_for_event(self, event: DomainEvent, topic: str) -> List[EventHandler]:
         """Get handlers that can handle a specific event."""
         handlers = self.get_handlers_for_topic(topic)
         return [h for h in handlers if h.can_handle(event)]
@@ -318,11 +310,7 @@ class EventHandlerRegistry:
             original_count = len(self._handlers[topic])
             # Note: This is a simplified removal - in practice you'd need
             # to identify handlers by a unique identifier
-            self._handlers[topic] = [
-                h
-                for h in self._handlers[topic]
-                if not hasattr(h, "_name") or getattr(h, "_name") != name
-            ]
+            self._handlers[topic] = [h for h in self._handlers[topic] if not hasattr(h, "_name") or getattr(h, "_name") != name]
 
             removed = len(self._handlers[topic]) < original_count
             if removed:

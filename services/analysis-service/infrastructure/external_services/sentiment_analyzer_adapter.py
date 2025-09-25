@@ -58,15 +58,11 @@ class SentimentAnalyzerAdapter(ABC):
         self._retry_config = config.get_retry_config()
 
     @abstractmethod
-    async def analyze_sentiment(
-        self, document_text: str, document_id: str
-    ) -> SentimentAnalysisResult:
+    async def analyze_sentiment(self, document_text: str, document_id: str) -> SentimentAnalysisResult:
         """Analyze sentiment of document."""
 
     @abstractmethod
-    async def analyze_tone(
-        self, document_text: str, document_id: str
-    ) -> Dict[str, Any]:
+    async def analyze_tone(self, document_text: str, document_id: str) -> Dict[str, Any]:
         """Analyze tone and writing style of document."""
 
     @abstractmethod
@@ -80,13 +76,9 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
     def __init__(self, config: ExternalServiceConfig):
         """Initialize local sentiment analyzer."""
         super().__init__(config)
-        self.confidence_threshold = config.get_sentiment_config().get(
-            "confidence_threshold", 0.6
-        )
+        self.confidence_threshold = config.get_sentiment_config().get("confidence_threshold", 0.6)
 
-    async def analyze_sentiment(
-        self, document_text: str, document_id: str
-    ) -> SentimentAnalysisResult:
+    async def analyze_sentiment(self, document_text: str, document_id: str) -> SentimentAnalysisResult:
         """Analyze sentiment using basic text processing."""
         start_time = time.time()
 
@@ -158,9 +150,7 @@ class LocalSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
         except Exception as e:
             raise SentimentAnalysisException("LocalSentimentAnalyzer", str(e))
 
-    async def analyze_tone(
-        self, document_text: str, document_id: str
-    ) -> Dict[str, Any]:
+    async def analyze_tone(self, document_text: str, document_id: str) -> Dict[str, Any]:
         """Analyze tone using basic text processing."""
         # Simple tone analysis
         text_lower = document_text.lower()
@@ -223,17 +213,11 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
     def __init__(self, config: ExternalServiceConfig):
         """Initialize transformers sentiment analyzer."""
         super().__init__(config)
-        self.model_name = config.get_sentiment_config().get(
-            "model", "cardiffnlp/twitter-roberta-base-sentiment-latest"
-        )
-        self.confidence_threshold = config.get_sentiment_config().get(
-            "confidence_threshold", 0.6
-        )
+        self.model_name = config.get_sentiment_config().get("model", "cardiffnlp/twitter-roberta-base-sentiment-latest")
+        self.confidence_threshold = config.get_sentiment_config().get("confidence_threshold", 0.6)
         self._model = None  # Lazy loading
 
-    async def analyze_sentiment(
-        self, document_text: str, document_id: str
-    ) -> SentimentAnalysisResult:
+    async def analyze_sentiment(self, document_text: str, document_id: str) -> SentimentAnalysisResult:
         """Analyze sentiment using transformers model."""
         start_time = time.time()
 
@@ -243,9 +227,7 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
                 await self._load_model()
 
             # Truncate text if too long (model has token limits)
-            truncated_text = (
-                document_text[:512] if len(document_text) > 512 else document_text
-            )
+            truncated_text = document_text[:512] if len(document_text) > 512 else document_text
 
             # Mock sentiment analysis (in real implementation, this would use the transformers model)
             sentiment_result = await self._analyze_with_model(truncated_text)
@@ -263,9 +245,7 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
         except Exception as e:
             raise SentimentAnalysisException("TransformersSentimentAnalyzer", str(e))
 
-    async def analyze_tone(
-        self, document_text: str, document_id: str
-    ) -> Dict[str, Any]:
+    async def analyze_tone(self, document_text: str, document_id: str) -> Dict[str, Any]:
         """Analyze tone using transformers model."""
         try:
             # Mock tone analysis
@@ -298,9 +278,7 @@ class TransformersSentimentAnalyzerAdapter(SentimentAnalyzerAdapter):
             # For now, we'll just set a flag
             self._model = "loaded"
         except Exception as e:
-            raise SentimentAnalysisException(
-                "TransformersSentimentAnalyzer", f"Failed to load model: {e}"
-            )
+            raise SentimentAnalysisException("TransformersSentimentAnalyzer", f"Failed to load model: {e}")
 
     async def _analyze_with_model(self, text: str) -> Dict[str, Any]:
         """Analyze text with the loaded model."""

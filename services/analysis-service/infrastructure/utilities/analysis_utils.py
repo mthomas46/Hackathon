@@ -37,12 +37,10 @@ def get_file_type(filename: str) -> str:
         (".rb",): "ruby",
         (".go",): "go",
         (".rs",): "rust",
-
         # Web/markup
         (".html", ".htm"): "html",
         (".css",): "css",
         (".md", ".markdown"): "markdown",
-
         # Data/config
         (".json",): "json",
         (".xml", ".yml", ".yaml"): "config",
@@ -54,6 +52,7 @@ def get_file_type(filename: str) -> str:
             return file_type
 
     return "unknown"
+
 
 def is_good_commit_message(message: str) -> bool:
     """Check if a commit message follows good practices."""
@@ -95,9 +94,7 @@ def is_conventional_commit(message: str) -> bool:
     return first_word in conventional_types
 
 
-def generate_refactoring_suggestions(
-    code_analysis: dict, structural_analysis: dict, quality_analysis: dict
-) -> dict:
+def generate_refactoring_suggestions(code_analysis: dict, structural_analysis: dict, quality_analysis: dict) -> dict:
     """Generate refactoring suggestions based on analysis results."""
     suggestions = []
 

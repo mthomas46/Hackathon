@@ -49,9 +49,7 @@ class DistributedAnalysisHandler(BaseAnalysisHandler):
                 )
                 operation = "submit"
 
-            analysis_id = (
-                f"distributed-{operation}-{int(datetime.now(timezone.utc).timestamp())}"
-            )
+            analysis_id = f"distributed-{operation}-{int(datetime.now(timezone.utc).timestamp())}"
 
             return self._create_analysis_result(
                 analysis_id=analysis_id,
@@ -62,9 +60,7 @@ class DistributedAnalysisHandler(BaseAnalysisHandler):
         except Exception as e:
             error_msg = f"Distributed analysis failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
-            return await self._handle_error(
-                e, f"distributed-{int(datetime.now(timezone.utc).timestamp())}"
-            )
+            return await self._handle_error(e, f"distributed-{int(datetime.now(timezone.utc).timestamp())}")
 
     async def _mock_distributed_submit(self, task_type, data, priority):
         """Mock distributed task submission."""

@@ -28,11 +28,7 @@ class SQLiteMigrationManager(MigrationManager):
     def _get_connection(self, task_id: Optional[int] = None) -> sqlite3.Connection:
         """Get database connection for current task."""
         if task_id is None:
-            task_id = (
-                asyncio.current_task().get_loop()._task_id
-                if asyncio.current_task()
-                else 0
-            )
+            task_id = asyncio.current_task().get_loop()._task_id if asyncio.current_task() else 0
 
         if task_id not in self._connection_pool:
             # Ensure database directory exists
@@ -54,11 +50,7 @@ class SQLiteMigrationManager(MigrationManager):
     def _close_connection(self, task_id: Optional[int] = None) -> None:
         """Close database connection for current task."""
         if task_id is None:
-            task_id = (
-                asyncio.current_task().get_loop()._task_id
-                if asyncio.current_task()
-                else 0
-            )
+            task_id = asyncio.current_task().get_loop()._task_id if asyncio.current_task() else 0
 
         if task_id in self._connection_pool:
             conn = self._connection_pool[task_id]
@@ -121,9 +113,7 @@ class SQLiteMigrationManager(MigrationManager):
 
             # Validate table name to prevent SQL injection
             if not self._is_valid_table_name(self.migration_table):
-                raise ValueError(
-                    f"Invalid migration table name: {self.migration_table}"
-                )
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
 
             # Get all completed migrations
             cursor.execute(
@@ -171,9 +161,7 @@ class SQLiteMigrationManager(MigrationManager):
                         else "1.0.0"
                     ),
                     (
-                        self.migrations.get(
-                            result.migration_id, Migration()
-                        ).migration_type.value
+                        self.migrations.get(result.migration_id, Migration()).migration_type.value
                         if result.migration_id in self.migrations
                         else "schema"
                     ),
@@ -213,9 +201,7 @@ class SQLiteMigrationManager(MigrationManager):
         context = SQLiteMigrationExecutionContext(conn)
         return context
 
-    async def execute_migration_with_tracking(
-        self, migration_id: str
-    ) -> MigrationResult:
+    async def execute_migration_with_tracking(self, migration_id: str) -> MigrationResult:
         """Execute a migration with full tracking."""
         migration = self.get_migration(migration_id)
         if not migration:
@@ -259,9 +245,7 @@ class SQLiteMigrationManager(MigrationManager):
 
             # Validate table name to prevent SQL injection
             if not self._is_valid_table_name(self.migration_table):
-                raise ValueError(
-                    f"Invalid migration table name: {self.migration_table}"
-                )
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
 
             cursor.execute(
                 f"""
@@ -304,9 +288,7 @@ class SQLiteMigrationManager(MigrationManager):
 
             # Validate table name to prevent SQL injection
             if not self._is_valid_table_name(self.migration_table):
-                raise ValueError(
-                    f"Invalid migration table name: {self.migration_table}"
-                )
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
 
             cursor.execute(
                 f"""
@@ -340,9 +322,7 @@ class SQLiteMigrationManager(MigrationManager):
         finally:
             self._close_connection()
 
-    async def rollback_migration_with_tracking(
-        self, migration_id: str
-    ) -> MigrationResult:
+    async def rollback_migration_with_tracking(self, migration_id: str) -> MigrationResult:
         """Rollback a migration with tracking."""
         migration = self.get_migration(migration_id)
         if not migration:
@@ -386,9 +366,7 @@ class SQLiteMigrationManager(MigrationManager):
 
             # Validate table name to prevent SQL injection
             if not self._is_valid_table_name(self.migration_table):
-                raise ValueError(
-                    f"Invalid migration table name: {self.migration_table}"
-                )
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
 
             # Delete old records but keep the most recent of each migration
             cursor.execute(
@@ -455,9 +433,7 @@ class SQLiteMigrationManager(MigrationManager):
 
             # Validate table name to prevent SQL injection
             if not self._is_valid_table_name(self.migration_table):
-                raise ValueError(
-                    f"Invalid migration table name: {self.migration_table}"
-                )
+                raise ValueError(f"Invalid migration table name: {self.migration_table}")
 
             # Get migration table info
             cursor.execute(

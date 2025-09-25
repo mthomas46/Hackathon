@@ -96,9 +96,7 @@ class QualityDegradationDetector:
             },
         }
 
-    def _extract_quality_metrics(
-        self, analysis_history: List[Dict[str, Any]]
-    ) -> pd.DataFrame:
+    def _extract_quality_metrics(self, analysis_history: List[Dict[str, Any]]) -> pd.DataFrame:
         """Extract and structure quality metrics from analysis history."""
         if not analysis_history:
             return pd.DataFrame()
@@ -135,9 +133,7 @@ class QualityDegradationDetector:
                 "high_findings": entry.get("high_findings", 0),
                 "medium_findings": entry.get("medium_findings", 0),
                 "low_findings": entry.get("low_findings", 0),
-                "semantic_similarity_score": entry.get(
-                    "semantic_similarity_score", np.nan
-                ),
+                "semantic_similarity_score": entry.get("semantic_similarity_score", np.nan),
             }
 
             # Calculate derived metrics
@@ -159,9 +155,7 @@ class QualityDegradationDetector:
 
         return df
 
-    def _calculate_trend_analysis(
-        self, quality_scores: pd.Series, window_days: int = 30
-    ) -> Dict[str, Any]:
+    def _calculate_trend_analysis(self, quality_scores: pd.Series, window_days: int = 30) -> Dict[str, Any]:
         """Calculate trend analysis for quality scores."""
         if len(quality_scores) < 3:
             return {
@@ -214,9 +208,7 @@ class QualityDegradationDetector:
             "confidence": float(confidence),
         }
 
-    def _calculate_volatility_analysis(
-        self, quality_scores: pd.Series
-    ) -> Dict[str, Any]:
+    def _calculate_volatility_analysis(self, quality_scores: pd.Series) -> Dict[str, Any]:
         """Calculate volatility analysis for quality scores."""
         if len(quality_scores) < 3:
             return {
@@ -232,9 +224,7 @@ class QualityDegradationDetector:
 
         # Calculate baseline volatility (earlier period)
         baseline_scores = quality_scores.head(max(1, len(quality_scores) - 10))
-        baseline_volatility = (
-            baseline_scores.std() if len(baseline_scores) > 1 else current_volatility
-        )
+        baseline_volatility = baseline_scores.std() if len(baseline_scores) > 1 else current_volatility
 
         # Calculate volatility change
         if baseline_volatility > 0:
@@ -251,9 +241,7 @@ class QualityDegradationDetector:
             "volatility_ratio": float(volatility_ratio),
         }
 
-    def _detect_degradation_events(
-        self, quality_scores: pd.Series, threshold: float = -0.05
-    ) -> List[Dict[str, Any]]:
+    def _detect_degradation_events(self, quality_scores: pd.Series, threshold: float = -0.05) -> List[Dict[str, Any]]:
         """Detect significant degradation events in quality scores."""
         if len(quality_scores) < 5:
             return []
@@ -263,18 +251,12 @@ class QualityDegradationDetector:
 
         # Calculate rolling means for smoothing
         window_size = min(5, len(scores_array))
-        rolling_mean = (
-            pd.Series(scores_array).rolling(window=window_size, center=True).mean()
-        )
+        rolling_mean = pd.Series(scores_array).rolling(window=window_size, center=True).mean()
 
         # Find significant drops
         for i in range(window_size, len(scores_array)):
             current_score = scores_array[i]
-            previous_score = (
-                rolling_mean.iloc[i - window_size]
-                if i >= window_size
-                else scores_array[i - 1]
-            )
+            previous_score = rolling_mean.iloc[i - window_size] if i >= window_size else scores_array[i - 1]
 
             if not (np.isnan(current_score) or np.isnan(previous_score)):
                 change = current_score - previous_score
@@ -288,11 +270,7 @@ class QualityDegradationDetector:
                             "percent_change": float(change_percent),
                             "previous_score": float(previous_score),
                             "current_score": float(current_score),
-                            "severity": (
-                                "critical"
-                                if change_percent <= threshold * 2
-                                else "warning"
-                            ),
+                            "severity": ("critical" if change_percent <= threshold * 2 else "warning"),
                         }
                     )
 
@@ -314,11 +292,7 @@ class QualityDegradationDetector:
         trend_slope = trend_analysis.get("slope", 0)
         trend_confidence = trend_analysis.get("confidence", 0)
 
-        if (
-            trend_slope
-            < self.degradation_thresholds["trend_slope"]["critical_threshold"]
-            and trend_confidence > 0.7
-        ):
+        if trend_slope < self.degradation_thresholds["trend_slope"]["critical_threshold"] and trend_confidence > 0.7:
             severity_score += 0.4
             severity_factors.append(
                 {
@@ -327,11 +301,7 @@ class QualityDegradationDetector:
                     "description": f"Steep negative trend (slope: {trend_slope:.4f})",
                 }
             )
-        elif (
-            trend_slope
-            < self.degradation_thresholds["trend_slope"]["warning_threshold"]
-            and trend_confidence > 0.6
-        ):
+        elif trend_slope < self.degradation_thresholds["trend_slope"]["warning_threshold"] and trend_confidence > 0.6:
             severity_score += 0.2
             severity_factors.append(
                 {
@@ -344,10 +314,7 @@ class QualityDegradationDetector:
         # Volatility-based severity
         volatility_ratio = volatility_analysis.get("volatility_ratio", 1.0)
 
-        if (
-            volatility_ratio
-            >= self.degradation_thresholds["volatility_increase"]["critical_threshold"]
-        ):
+        if volatility_ratio >= self.degradation_thresholds["volatility_increase"]["critical_threshold"]:
             severity_score += 0.3
             severity_factors.append(
                 {
@@ -356,10 +323,7 @@ class QualityDegradationDetector:
                     "description": f"High volatility increase ({volatility_ratio:.1f}x baseline)",
                 }
             )
-        elif (
-            volatility_ratio
-            >= self.degradation_thresholds["volatility_increase"]["warning_threshold"]
-        ):
+        elif volatility_ratio >= self.degradation_thresholds["volatility_increase"]["warning_threshold"]:
             severity_score += 0.15
             severity_factors.append(
                 {
@@ -371,10 +335,7 @@ class QualityDegradationDetector:
 
         # Finding rate severity
         finding_slope = finding_trend.get("slope", 0)
-        if (
-            finding_slope
-            > self.degradation_thresholds["finding_rate_increase"]["critical_threshold"]
-        ):
+        if finding_slope > self.degradation_thresholds["finding_rate_increase"]["critical_threshold"]:
             severity_score += 0.2
             severity_factors.append(
                 {
@@ -383,10 +344,7 @@ class QualityDegradationDetector:
                     "description": f"Significant increase in findings (slope: {finding_slope:.2f})",
                 }
             )
-        elif (
-            finding_slope
-            > self.degradation_thresholds["finding_rate_increase"]["warning_threshold"]
-        ):
+        elif finding_slope > self.degradation_thresholds["finding_rate_increase"]["warning_threshold"]:
             severity_score += 0.1
             severity_factors.append(
                 {
@@ -403,9 +361,7 @@ class QualityDegradationDetector:
             severity_factors.append(
                 {
                     "factor": "degradation_events",
-                    "severity": (
-                        "warning" if len(degradation_events) < 3 else "critical"
-                    ),
+                    "severity": ("warning" if len(degradation_events) < 3 else "critical"),
                     "description": f"{len(degradation_events)} significant degradation events detected",
                 }
             )
@@ -475,9 +431,7 @@ class QualityDegradationDetector:
                 "message": config["message"],
                 "severity_score": severity_score,
                 "timestamp": time.time(),
-                "recommendations": self._generate_alert_recommendations(
-                    overall_severity, severity_assessment
-                ),
+                "recommendations": self._generate_alert_recommendations(overall_severity, severity_assessment),
             }
 
             # Add escalation logic based on time since last alert
@@ -485,52 +439,34 @@ class QualityDegradationDetector:
                 if time_since_last_alert < 7 * 24 * 3600:  # Less than 7 days
                     alert["escalation"] = "Recent alert exists - monitor trend"
                 elif time_since_last_alert > 30 * 24 * 3600:  # More than 30 days
-                    alert["escalation"] = (
-                        "Long time since last alert - review monitoring"
-                    )
+                    alert["escalation"] = "Long time since last alert - review monitoring"
 
             alerts.append(alert)
 
         return alerts
 
-    def _generate_alert_recommendations(
-        self, severity: str, severity_assessment: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_alert_recommendations(self, severity: str, severity_assessment: Dict[str, Any]) -> List[str]:
         """Generate recommendations based on alert severity."""
 
         recommendations = []
         severity_factors = severity_assessment.get("severity_factors", [])
 
         if severity == "critical":
-            recommendations.append(
-                "🚨 IMMEDIATE ACTION REQUIRED: Schedule comprehensive quality review within 1 week"
-            )
-            recommendations.append(
-                "Allocate dedicated resources for quality improvement"
-            )
-            recommendations.append(
-                "Consider involving senior technical writers or subject matter experts"
-            )
+            recommendations.append("🚨 IMMEDIATE ACTION REQUIRED: Schedule comprehensive quality review within 1 week")
+            recommendations.append("Allocate dedicated resources for quality improvement")
+            recommendations.append("Consider involving senior technical writers or subject matter experts")
 
         elif severity == "high":
-            recommendations.append(
-                "⚠️ HIGH PRIORITY: Schedule quality assessment within 2-4 weeks"
-            )
+            recommendations.append("⚠️ HIGH PRIORITY: Schedule quality assessment within 2-4 weeks")
             recommendations.append("Review recent changes and their impact on quality")
             recommendations.append("Implement targeted quality improvement measures")
 
         elif severity == "medium":
-            recommendations.append(
-                "📊 MEDIUM PRIORITY: Include in next quarterly quality review cycle"
-            )
-            recommendations.append(
-                "Monitor quality metrics closely for further degradation"
-            )
+            recommendations.append("📊 MEDIUM PRIORITY: Include in next quarterly quality review cycle")
+            recommendations.append("Monitor quality metrics closely for further degradation")
 
         elif severity == "low":
-            recommendations.append(
-                "👁️ LOW PRIORITY: Continue regular quality monitoring"
-            )
+            recommendations.append("👁️ LOW PRIORITY: Continue regular quality monitoring")
             recommendations.append("Note quality variations for trend analysis")
 
         # Factor-specific recommendations
@@ -539,21 +475,13 @@ class QualityDegradationDetector:
             factor["severity"]
 
             if factor_type == "trend_slope":
-                recommendations.append(
-                    "Analyze causes of quality decline and implement corrective measures"
-                )
+                recommendations.append("Analyze causes of quality decline and implement corrective measures")
             elif factor_type == "volatility_increase":
-                recommendations.append(
-                    "Investigate sources of quality instability and stabilize processes"
-                )
+                recommendations.append("Investigate sources of quality instability and stabilize processes")
             elif factor_type == "finding_rate_increase":
-                recommendations.append(
-                    "Address increasing documentation issues proactively"
-                )
+                recommendations.append("Address increasing documentation issues proactively")
             elif factor_type == "degradation_events":
-                recommendations.append(
-                    "Review recent changes that may have caused quality drops"
-                )
+                recommendations.append("Review recent changes that may have caused quality drops")
 
         return recommendations[:6]  # Limit to 6 recommendations
 
@@ -591,17 +519,13 @@ class QualityDegradationDetector:
 
             # Analyze quality score trends
             quality_scores = metrics_df["quality_score"].dropna()
-            trend_analysis = self._calculate_trend_analysis(
-                quality_scores, baseline_period_days
-            )
+            trend_analysis = self._calculate_trend_analysis(quality_scores, baseline_period_days)
 
             # Analyze volatility
             volatility_analysis = self._calculate_volatility_analysis(quality_scores)
 
             # Detect degradation events
-            degradation_events = self._detect_degradation_events(
-                quality_scores, -alert_threshold
-            )
+            degradation_events = self._detect_degradation_events(quality_scores, -alert_threshold)
 
             # Analyze finding trends
             finding_counts = metrics_df["total_findings"].dropna()
@@ -619,9 +543,7 @@ class QualityDegradationDetector:
             # Generate alerts if degradation detected
             alerts = []
             if severity_assessment["requires_attention"]:
-                alerts = self._generate_degradation_alerts(
-                    severity_assessment, trend_analysis
-                )
+                alerts = self._generate_degradation_alerts(severity_assessment, trend_analysis)
 
             # Calculate analysis period
             if len(metrics_df) > 0:
@@ -649,9 +571,7 @@ class QualityDegradationDetector:
             }
 
         except Exception as e:
-            logger.error(
-                f"Quality degradation detection failed for document {document_id}: {e}"
-            )
+            logger.error(f"Quality degradation detection failed for document {document_id}: {e}")
             return {
                 "error": "Quality degradation detection failed",
                 "message": str(e),
@@ -692,9 +612,7 @@ class QualityDegradationDetector:
                 doc_id = doc.get("document_id", f"doc_{len(degradation_results)}")
                 analysis_history = doc.get("analysis_history", [])
 
-                result = await self.detect_quality_degradation(
-                    doc_id, analysis_history, baseline_period_days, alert_threshold
-                )
+                result = await self.detect_quality_degradation(doc_id, analysis_history, baseline_period_days, alert_threshold)
 
                 if "error" not in result:
                     degradation_results.append(result)
@@ -720,21 +638,11 @@ class QualityDegradationDetector:
             total_documents = len(documents)
             analyzed_documents = len(degradation_results)
 
-            degradation_detected = sum(
-                1 for r in degradation_results if r["degradation_detected"]
-            )
-            degradation_rate = (
-                degradation_detected / analyzed_documents
-                if analyzed_documents > 0
-                else 0
-            )
+            degradation_detected = sum(1 for r in degradation_results if r["degradation_detected"])
+            degradation_rate = degradation_detected / analyzed_documents if analyzed_documents > 0 else 0
 
             avg_severity_score = (
-                sum(
-                    r["severity_assessment"]["severity_score"]
-                    for r in degradation_results
-                )
-                / analyzed_documents
+                sum(r["severity_assessment"]["severity_score"] for r in degradation_results) / analyzed_documents
                 if analyzed_documents > 0
                 else 0
             )
@@ -776,9 +684,7 @@ class QualityDegradationDetector:
                 "processing_time": time.time() - start_time,
             }
 
-    def update_detection_thresholds(
-        self, custom_thresholds: Dict[str, Dict[str, Any]]
-    ) -> bool:
+    def update_detection_thresholds(self, custom_thresholds: Dict[str, Dict[str, Any]]) -> bool:
         """Update quality degradation detection thresholds."""
         try:
             for threshold_name, config in custom_thresholds.items():

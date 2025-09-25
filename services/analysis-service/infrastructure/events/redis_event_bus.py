@@ -33,9 +33,7 @@ class RedisEventBus(EventBus):
         self.serializer = serializer
         self.channel_prefix = channel_prefix
         self.consumer_group = consumer_group
-        self.consumer_name = (
-            consumer_name or f"consumer_{threading.current_thread().ident}"
-        )
+        self.consumer_name = consumer_name or f"consumer_{threading.current_thread().ident}"
         self.max_connections = max_connections
 
         # Connection pool for pub/sub
@@ -48,9 +46,7 @@ class RedisEventBus(EventBus):
         self.messages_received = 0
         self.errors_count = 0
 
-    async def publish(
-        self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None
-    ) -> None:
+    async def publish(self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None) -> None:
         """Publish an event to Redis."""
         if not self.redis:
             raise RuntimeError("Redis client not configured")
@@ -152,9 +148,7 @@ class RedisEventBus(EventBus):
 
         # Start subscriber task if not already running
         if topic not in self._subscriber_tasks or self._subscriber_tasks[topic].done():
-            self._subscriber_tasks[topic] = asyncio.create_task(
-                self._subscribe_topic(topic, **kwargs)
-            )
+            self._subscriber_tasks[topic] = asyncio.create_task(self._subscribe_topic(topic, **kwargs))
 
     async def unsubscribe(self, topic: str, handler: Callable) -> None:
         """Unsubscribe from events on a topic."""
@@ -230,9 +224,7 @@ class RedisEventBus(EventBus):
         try:
             # Get all channels with our prefix
             channels = await self.redis.pubsub_channels(f"{self.channel_prefix}*")
-            return [
-                ch.decode("utf-8").replace(self.channel_prefix, "") for ch in channels
-            ]
+            return [ch.decode("utf-8").replace(self.channel_prefix, "") for ch in channels]
         except Exception:
             return []
 
@@ -249,9 +241,7 @@ class RedisEventBus(EventBus):
                 "status": "healthy",
                 "redis_connected": True,
                 "active_subscriptions": len(self._subscriber_tasks),
-                "registered_handlers": sum(
-                    len(handlers) for handlers in self._handlers.values()
-                ),
+                "registered_handlers": sum(len(handlers) for handlers in self._handlers.values()),
                 "messages_published": self.messages_published,
                 "messages_received": self.messages_received,
                 "errors_count": self.errors_count,
@@ -354,9 +344,7 @@ class RedisStreamEventBus(EventBus):
         self.redis = redis_client
         self.stream_prefix = stream_prefix
         self.consumer_group = consumer_group
-        self.consumer_name = (
-            consumer_name or f"consumer_{threading.current_thread().ident}"
-        )
+        self.consumer_name = consumer_name or f"consumer_{threading.current_thread().ident}"
         self.batch_size = batch_size
         self.block_timeout = block_timeout
 
@@ -368,9 +356,7 @@ class RedisStreamEventBus(EventBus):
         self.messages_processed = 0
         self.errors_count = 0
 
-    async def publish(
-        self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None
-    ) -> None:
+    async def publish(self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None) -> None:
         """Publish event to Redis Stream."""
         if not self.redis:
             raise RuntimeError("Redis client not configured")
@@ -458,9 +444,7 @@ class RedisStreamEventBus(EventBus):
 
         # Start consumer task if not already running
         if topic not in self._subscriber_tasks or self._subscriber_tasks[topic].done():
-            self._subscriber_tasks[topic] = asyncio.create_task(
-                self._consume_stream(topic, **kwargs)
-            )
+            self._subscriber_tasks[topic] = asyncio.create_task(self._consume_stream(topic, **kwargs))
 
     async def unsubscribe(self, topic: str, handler: Callable) -> None:
         """Unsubscribe from Redis Stream."""
@@ -488,9 +472,7 @@ class RedisStreamEventBus(EventBus):
         try:
             # Create consumer group if it doesn't exist
             try:
-                await self.redis.xgroup_create(
-                    stream_key, self.consumer_group, "$", mkstream=True
-                )
+                await self.redis.xgroup_create(stream_key, self.consumer_group, "$", mkstream=True)
             except Exception:
                 # Group might already exist
                 pass
@@ -515,25 +497,19 @@ class RedisStreamEventBus(EventBus):
                         for message_id, message_data in message_list:
                             try:
                                 # Deserialize envelope
-                                envelope = self._deserialize_envelope(
-                                    message_data["data"]
-                                )
+                                envelope = self._deserialize_envelope(message_data["data"])
 
                                 # Handle message
                                 await self._handle_message(envelope, topic)
 
                                 # Acknowledge message
-                                await self.redis.xack(
-                                    stream_key, self.consumer_group, message_id
-                                )
+                                await self.redis.xack(stream_key, self.consumer_group, message_id)
 
                                 last_id = message_id
 
                             except Exception as e:
                                 self.errors_count += 1
-                                print(
-                                    f"Error processing stream message {message_id}: {e}"
-                                )
+                                print(f"Error processing stream message {message_id}: {e}")
 
                 except asyncio.CancelledError:
                     raise
@@ -590,9 +566,7 @@ class RedisStreamEventBus(EventBus):
                 "status": "healthy",
                 "redis_connected": True,
                 "active_consumers": len(self._subscriber_tasks),
-                "registered_handlers": sum(
-                    len(handlers) for handlers in self._handlers.values()
-                ),
+                "registered_handlers": sum(len(handlers) for handlers in self._handlers.values()),
                 "messages_published": self.messages_published,
                 "messages_processed": self.messages_processed,
                 "errors_count": self.errors_count,

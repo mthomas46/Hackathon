@@ -70,11 +70,7 @@ class InMemoryAnalysisRepository(AnalysisRepository):
 
     async def get_by_status(self, status: str) -> List[Analysis]:
         """Get analyses by status from memory."""
-        return [
-            analysis
-            for analysis in self._analyses.values()
-            if analysis.status.value == status
-        ]
+        return [analysis for analysis in self._analyses.values() if analysis.status.value == status]
 
     async def delete(self, analysis_id: str) -> bool:
         """Delete an analysis from memory."""

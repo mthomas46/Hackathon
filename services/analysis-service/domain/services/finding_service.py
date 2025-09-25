@@ -52,9 +52,7 @@ class FindingService:
 
         return dict(categorized)
 
-    def filter_findings_by_severity(
-        self, findings: List[Finding], min_severity: Severity
-    ) -> List[Finding]:
+    def filter_findings_by_severity(self, findings: List[Finding], min_severity: Severity) -> List[Finding]:
         """Filter findings by minimum severity level."""
         severity_order = {
             Severity.INFO: 1,
@@ -66,15 +64,9 @@ class FindingService:
 
         min_level = severity_order[min_severity]
 
-        return [
-            finding
-            for finding in findings
-            if severity_order[finding.severity] >= min_level
-        ]
+        return [finding for finding in findings if severity_order[finding.severity] >= min_level]
 
-    def filter_findings_by_category(
-        self, findings: List[Finding], categories: List[str]
-    ) -> List[Finding]:
+    def filter_findings_by_category(self, findings: List[Finding], categories: List[str]) -> List[Finding]:
         """Filter findings by category."""
         return [finding for finding in findings if finding.category in categories]
 
@@ -126,9 +118,7 @@ class FindingService:
 
         return sorted(findings, key=priority_key)
 
-    def get_findings_by_document(
-        self, findings: List[Finding]
-    ) -> Dict[str, List[Finding]]:
+    def get_findings_by_document(self, findings: List[Finding]) -> Dict[str, List[Finding]]:
         """Group findings by document ID."""
         grouped = defaultdict(list)
 
@@ -137,9 +127,7 @@ class FindingService:
 
         return dict(grouped)
 
-    def get_high_priority_findings(
-        self, findings: List[Finding], max_items: int = 10
-    ) -> List[Finding]:
+    def get_high_priority_findings(self, findings: List[Finding], max_items: int = 10) -> List[Finding]:
         """Get top priority findings."""
         prioritized = self.prioritize_findings(findings)
         return prioritized[:max_items]
@@ -164,9 +152,7 @@ class FindingService:
             "performance",
             "usability",
         ]:
-            issues.append(
-                "Invalid category - must be one of: consistency, quality, security, performance, usability"
-            )
+            issues.append("Invalid category - must be one of: consistency, quality, security, performance, usability")
 
         return issues
 

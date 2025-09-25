@@ -25,11 +25,7 @@ class RemediationHandler(BaseAnalysisHandler):
                     remediate_document,
                 )
 
-                handler_func = (
-                    preview_remediation
-                    if getattr(request, "preview", False)
-                    else remediate_document
-                )
+                handler_func = preview_remediation if getattr(request, "preview", False) else remediate_document
             except ImportError:
                 handler_func = self._mock_remediation
 
@@ -52,9 +48,7 @@ class RemediationHandler(BaseAnalysisHandler):
         except Exception as e:
             error_msg = f"Remediation failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
-            return await self._handle_error(
-                e, f"remediation-{int(datetime.now(timezone.utc).timestamp())}"
-            )
+            return await self._handle_error(e, f"remediation-{int(datetime.now(timezone.utc).timestamp())}")
 
     async def _mock_remediation(self, **kwargs) -> Dict[str, Any]:
         """Mock remediation for testing purposes."""

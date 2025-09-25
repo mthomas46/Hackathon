@@ -19,9 +19,7 @@ class ApplicationMetrics:
         self.max_samples = max_samples
         self.counters: Dict[str, int] = defaultdict(int)
         self.gauges: Dict[str, float] = {}
-        self.histograms: Dict[str, deque] = defaultdict(
-            lambda: deque(maxlen=max_samples)
-        )
+        self.histograms: Dict[str, deque] = defaultdict(lambda: deque(maxlen=max_samples))
         self.timers: Dict[str, List[float]] = defaultdict(list)
 
         # Start time for uptime calculation
@@ -124,9 +122,7 @@ class ApplicationMetrics:
         return {
             "counters": dict(self.counters),
             "gauges": dict(self.gauges),
-            "histograms": {
-                name: self.get_histogram_stats(name) for name in self.histograms
-            },
+            "histograms": {name: self.get_histogram_stats(name) for name in self.histograms},
             "uptime_seconds": time.time() - self.start_time,
         }
 
@@ -178,29 +174,19 @@ class MonitoringService(ApplicationService):
                 await asyncio.sleep(self.collection_interval)
 
                 # CPU metrics
-                self.metrics.set_gauge(
-                    "system_cpu_percent", psutil.cpu_percent(interval=1)
-                )
+                self.metrics.set_gauge("system_cpu_percent", psutil.cpu_percent(interval=1))
 
                 # Memory metrics
                 memory = psutil.virtual_memory()
                 self.metrics.set_gauge("system_memory_percent", memory.percent)
-                self.metrics.set_gauge(
-                    "system_memory_used_mb", memory.used / 1024 / 1024
-                )
-                self.metrics.set_gauge(
-                    "system_memory_available_mb", memory.available / 1024 / 1024
-                )
+                self.metrics.set_gauge("system_memory_used_mb", memory.used / 1024 / 1024)
+                self.metrics.set_gauge("system_memory_available_mb", memory.available / 1024 / 1024)
 
                 # Disk metrics
                 disk = psutil.disk_usage("/")
                 self.metrics.set_gauge("system_disk_percent", disk.percent)
-                self.metrics.set_gauge(
-                    "system_disk_used_gb", disk.used / 1024 / 1024 / 1024
-                )
-                self.metrics.set_gauge(
-                    "system_disk_free_gb", disk.free / 1024 / 1024 / 1024
-                )
+                self.metrics.set_gauge("system_disk_used_gb", disk.used / 1024 / 1024 / 1024)
+                self.metrics.set_gauge("system_disk_free_gb", disk.free / 1024 / 1024 / 1024)
 
                 # Network metrics (basic)
                 net = psutil.net_io_counters()
@@ -211,9 +197,7 @@ class MonitoringService(ApplicationService):
                 # Process metrics
                 process = psutil.Process()
                 self.metrics.set_gauge("process_cpu_percent", process.cpu_percent())
-                self.metrics.set_gauge(
-                    "process_memory_mb", process.memory_info().rss / 1024 / 1024
-                )
+                self.metrics.set_gauge("process_memory_mb", process.memory_info().rss / 1024 / 1024)
                 self.metrics.set_gauge("process_threads", process.num_threads())
 
             except asyncio.CancelledError:
@@ -221,9 +205,7 @@ class MonitoringService(ApplicationService):
             except Exception as e:
                 self.logger.error(f"Error collecting system metrics: {e}")
 
-    async def record_operation_start(
-        self, operation: str, context: Optional[ServiceContext] = None
-    ) -> str:
+    async def record_operation_start(self, operation: str, context: Optional[ServiceContext] = None) -> str:
         """Record operation start."""
         timer_id = self.metrics.start_timer(operation)
 
@@ -313,9 +295,7 @@ class MonitoringService(ApplicationService):
         # Calculate success rate
         total_ops = summary["total_operations"]
         if total_ops > 0:
-            summary["operation_success_rate"] = (
-                summary["successful_operations"] / total_ops
-            )
+            summary["operation_success_rate"] = summary["successful_operations"] / total_ops
         else:
             summary["operation_success_rate"] = 1.0
 
@@ -359,9 +339,7 @@ class MonitoringService(ApplicationService):
 
         if summary["system"]["disk_percent"] > 95:
             health_status = "critical"
-            issues.append(
-                f"Low disk space: {100 - summary['system']['disk_percent']}% free"
-            )
+            issues.append(f"Low disk space: {100 - summary['system']['disk_percent']}% free")
 
         return {
             "status": health_status,
@@ -384,9 +362,7 @@ class MonitoringService(ApplicationService):
         try:
             health_status = await self.get_health_status()
             health["monitoring"] = {
-                "metrics_collected": len(self.metrics.counters)
-                + len(self.metrics.gauges)
-                + len(self.metrics.histograms),
+                "metrics_collected": len(self.metrics.counters) + len(self.metrics.gauges) + len(self.metrics.histograms),
                 "system_metrics_enabled": True,
                 "collection_interval_seconds": self.collection_interval,
                 "health_status": health_status["status"],

@@ -116,9 +116,7 @@ class AIOHTTPConnectionPool(HTTPConnectionPool):
             return f"{self.base_url}/{url.lstrip('/')}"
         return url
 
-    async def request_with_retry(
-        self, method: str, url: str, **kwargs
-    ) -> aiohttp.ClientResponse:
+    async def request_with_retry(self, method: str, url: str, **kwargs) -> aiohttp.ClientResponse:
         """Make HTTP request with retry logic."""
         url = self._build_url(url)
         max_retries = self.retry_config["max_retries"]
@@ -179,9 +177,7 @@ class HTTPPoolFactory:
         headers: Optional[Dict[str, str]] = None,
     ) -> HTTPConnectionPool:
         """Create basic HTTP connection pool."""
-        config = ConnectionPoolConfig(
-            min_size=1, max_size=max_connections, acquire_timeout=timeout_seconds
-        )
+        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=timeout_seconds)
 
         timeout = aiohttp.ClientTimeout(total=timeout_seconds)
 
@@ -196,9 +192,7 @@ class HTTPPoolFactory:
         enable_retries: bool = True,
     ) -> AIOHTTPConnectionPool:
         """Create advanced HTTP connection pool with retry logic."""
-        config = ConnectionPoolConfig(
-            min_size=1, max_size=max_connections, acquire_timeout=timeout_seconds
-        )
+        config = ConnectionPoolConfig(min_size=1, max_size=max_connections, acquire_timeout=timeout_seconds)
 
         timeout = aiohttp.ClientTimeout(total=timeout_seconds)
 
@@ -235,9 +229,7 @@ class HTTPPoolFactory:
             }
         )
 
-        return HTTPPoolFactory.create_advanced_pool(
-            base_url=service_url, headers=headers, **kwargs
-        )
+        return HTTPPoolFactory.create_advanced_pool(base_url=service_url, headers=headers, **kwargs)
 
 
 class CircuitBreakerHTTPPool(AIOHTTPConnectionPool):
@@ -261,9 +253,7 @@ class CircuitBreakerHTTPPool(AIOHTTPConnectionPool):
         self.last_failure_time = None
         self.state = "closed"  # closed, open, half-open
 
-    async def request_with_retry(
-        self, method: str, url: str, **kwargs
-    ) -> aiohttp.ClientResponse:
+    async def request_with_retry(self, method: str, url: str, **kwargs) -> aiohttp.ClientResponse:
         """Make request with circuit breaker protection."""
         if self.state == "open":
             if self._should_attempt_reset():
@@ -304,8 +294,6 @@ class CircuitBreakerHTTPPool(AIOHTTPConnectionPool):
             "state": self.state,
             "failure_count": self.failure_count,
             "failure_threshold": self.failure_threshold,
-            "last_failure_time": (
-                self.last_failure_time.isoformat() if self.last_failure_time else None
-            ),
+            "last_failure_time": (self.last_failure_time.isoformat() if self.last_failure_time else None),
             "recovery_timeout": self.recovery_timeout,
         }
