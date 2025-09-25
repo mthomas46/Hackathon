@@ -22,9 +22,55 @@ from .dtos import (
 router = APIRouter()
 
 
-@router.post("/register", response_model=ServiceInfoResponse)
+@router.post(
+    "/register",
+    response_model=ServiceInfoResponse,
+    summary="Register Service",
+    description="Register a new service with the orchestrator registry. The service will be added to the service discovery system and made available for orchestration.",
+    status_code=201,
+    responses={
+        201: {
+            "description": "Service registered successfully",
+            "model": ServiceInfoResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "service_id": "user-service-123",
+                        "name": "User Service",
+                        "description": "Manages user accounts and authentication",
+                        "category": "authentication",
+                        "base_url": "https://api.example.com/users",
+                        "status": "active",
+                        "capabilities": ["user_management", "authentication"],
+                        "registered_at": "2024-01-01T12:00:00Z"
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Invalid request data or service already exists",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Service with this name already exists"}
+                }
+            }
+        },
+        500: {
+            "description": "Internal server error",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Failed to register service: database connection error"}
+                }
+            }
+        }
+    }
+)
 async def register_service(request: ServiceRegistrationRequest):
-    """Register a new service with the registry."""
+    """Register a new service with the orchestrator registry.
+
+    This endpoint allows services to register themselves with the orchestrator,
+    making them discoverable and available for workflow orchestration.
+    """
     try:
         from ....application.service_registry.commands import RegisterServiceCommand
 
@@ -89,7 +135,47 @@ async def get_service(service_name: str):
         raise HTTPException(status_code=500, detail=f"Failed to get service: {str(e)}")
 
 
-@router.get("/services", response_model=ServiceListResponse)
+@router.get(
+    "/services",
+    response_model=ServiceListResponse,
+    summary="List Services",
+    description="Retrieve a paginated list of services registered with the orchestrator. Supports filtering by category, capability, and status.",
+    responses={
+        200: {
+            "description": "Services retrieved successfully",
+            "model": ServiceListResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "services": [
+                            {
+                                "service_id": "user-service-123",
+                                "name": "User Service",
+                                "description": "Manages user accounts",
+                                "category": "authentication",
+                                "base_url": "https://api.example.com/users",
+                                "status": "active",
+                                "capabilities": ["user_management"],
+                                "registered_at": "2024-01-01T12:00:00Z"
+                            }
+                        ],
+                        "total_count": 1,
+                        "limit": 50,
+                        "offset": 0
+                    }
+                }
+            }
+        },
+        400: {
+            "description": "Invalid query parameters",
+            "content": {
+                "application/json": {
+                    "example": {"detail": "Invalid limit parameter: must be between 1 and 1000"}
+                }
+            }
+        }
+    }
+)
 async def list_services(
     category: Optional[str] = None,
     capability: Optional[str] = None,
@@ -97,7 +183,18 @@ async def list_services(
     limit: int = 50,
     offset: int = 0,
 ):
-    """List services in the registry with optional filters."""
+    """List services in the registry with optional filters.
+
+    This endpoint provides paginated access to the service registry with support for
+    filtering by service category, required capabilities, and operational status.
+
+    Query Parameters:
+    - category: Filter services by category (e.g., 'api', 'worker', 'database')
+    - capability: Filter services that have a specific capability
+    - status: Filter by service status ('active', 'inactive', 'error')
+    - limit: Maximum number of services to return (1-1000, default: 50)
+    - offset: Number of services to skip for pagination (default: 0)
+    """
     try:
         from ....application.service_registry.queries import ListServicesQuery
 

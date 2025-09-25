@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 from uuid import uuid4
 
-from ..utilities import utc_now
+from ..infrastructure.utilities.utilities import utc_now
 
 logger = logging.getLogger(__name__)
 

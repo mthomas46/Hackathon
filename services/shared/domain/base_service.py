@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
 from .base_repository import BaseRepository, EntityNotFoundError, RepositoryError
-from ..utilities import utc_now
+from ..infrastructure.utilities.utilities import utc_now
 
 logger = logging.getLogger(__name__)
 

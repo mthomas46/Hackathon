@@ -12,10 +12,39 @@ from fastapi import FastAPI
 from services.shared.infrastructure.config import DocStoreConfig, load_service_config
 from services.shared.utilities import ServiceException, ValidationException
 from services.shared.utilities import setup_common_middleware
-from services.shared.presentation.responses import create_success_response
+from services.shared.presentation.responses import create_success_response, create_error_response
 from services.shared.utilities import create_validation_error
 
 from .api.routes import router as api_router
+
+# ============================================================================
+# DOMAIN EXCEPTIONS - Doc Store specific exceptions
+# ============================================================================
+from .domain.exceptions import (
+    DocStoreException,
+    DocumentException,
+    DocumentNotFoundException,
+    DocumentValidationException,
+    DocumentSizeExceededException,
+    DocumentContentTypeException,
+    VersioningException,
+    VersionNotFoundException,
+    VersionConflictException,
+    TaggingException,
+    TagNotFoundException,
+    InvalidTagException,
+    RelationshipsException,
+    RelationshipNotFoundException,
+    CircularReferenceException,
+    BulkOperationException,
+    BulkOperationTimeoutException,
+    AnalyticsException,
+    InvalidAnalyticsQueryException,
+    LifecycleException,
+    InvalidLifecycleTransitionException,
+    NotificationsException,
+    NotificationDeliveryException,
+)
 
 # ============================================================================
 # NEW DOMAIN-DRIVEN ARCHITECTURE - Clean separation of concerns
@@ -48,26 +77,173 @@ app = FastAPI(
 setup_common_middleware(app, service_name=config.service_name)
 
 
-# Add standardized error handling
-@app.exception_handler(ServiceException)
-async def service_exception_handler(request, exc: ServiceException):
-    from services.shared.presentation.responses import create_error_response
+# ============================================================================
+# COMPREHENSIVE ERROR HANDLING - Domain-specific exception handlers
+# ============================================================================
 
-    return create_error_response(
-        message=str(exc),
-        error_code=exc.__class__.__name__,
-        request_id=getattr(exc, "request_id", None),
+from fastapi import Request, HTTPException
+from fastapi.responses import JSONResponse
+
+
+@app.exception_handler(DocStoreException)
+async def docstore_exception_handler(request: Request, exc: DocStoreException):
+    """Handle Doc Store domain exceptions."""
+    return JSONResponse(
+        status_code=400,
+        content=create_error_response(
+            message=f"Doc Store error: {exc.message}",
+            error_code="DOC_STORE_ERROR",
+            details=exc.details
+        )
+    )
+
+
+@app.exception_handler(DocumentNotFoundException)
+async def document_not_found_handler(request: Request, exc: DocumentNotFoundException):
+    """Handle document not found exceptions."""
+    return JSONResponse(
+        status_code=404,
+        content=create_error_response(
+            message=f"Document not found: {exc.message}",
+            error_code="DOCUMENT_NOT_FOUND",
+            details=exc.details
+        )
+    )
+
+
+@app.exception_handler(DocumentValidationException)
+async def document_validation_handler(request: Request, exc: DocumentValidationException):
+    """Handle document validation exceptions."""
+    return JSONResponse(
+        status_code=400,
+        content=create_error_response(
+            message=f"Document validation failed: {exc.message}",
+            error_code="DOCUMENT_VALIDATION_ERROR",
+            details={"validation_errors": exc.validation_errors}
+        )
+    )
+
+
+@app.exception_handler(DocumentSizeExceededException)
+async def document_size_handler(request: Request, exc: DocumentSizeExceededException):
+    """Handle document size exceeded exceptions."""
+    return JSONResponse(
+        status_code=413,
+        content=create_error_response(
+            message=f"Document too large: {exc.message}",
+            error_code="DOCUMENT_SIZE_EXCEEDED",
+            details=exc.details
+        )
+    )
+
+
+@app.exception_handler(VersionNotFoundException)
+async def version_not_found_handler(request: Request, exc: VersionNotFoundException):
+    """Handle version not found exceptions."""
+    return JSONResponse(
+        status_code=404,
+        content=create_error_response(
+            message=f"Version not found: {exc.message}",
+            error_code="VERSION_NOT_FOUND",
+            details=exc.details
+        )
+    )
+
+
+@app.exception_handler(VersionConflictException)
+async def version_conflict_handler(request: Request, exc: VersionConflictException):
+    """Handle version conflict exceptions."""
+    return JSONResponse(
+        status_code=409,
+        content=create_error_response(
+            message=f"Version conflict: {exc.message}",
+            error_code="VERSION_CONFLICT",
+            details=exc.details
+        )
+    )
+
+
+@app.exception_handler(BulkOperationTimeoutException)
+async def bulk_timeout_handler(request: Request, exc: BulkOperationTimeoutException):
+    """Handle bulk operation timeout exceptions."""
+    return JSONResponse(
+        status_code=408,
+        content=create_error_response(
+            message=f"Bulk operation timeout: {exc.message}",
+            error_code="BULK_OPERATION_TIMEOUT",
+            details=exc.details
+        )
+    )
+
+
+@app.exception_handler(InvalidLifecycleTransitionException)
+async def lifecycle_transition_handler(request: Request, exc: InvalidLifecycleTransitionException):
+    """Handle invalid lifecycle transition exceptions."""
+    return JSONResponse(
+        status_code=400,
+        content=create_error_response(
+            message=f"Invalid lifecycle transition: {exc.message}",
+            error_code="INVALID_LIFECYCLE_TRANSITION",
+            details=exc.details
+        )
+    )
+
+
+@app.exception_handler(NotificationDeliveryException)
+async def notification_delivery_handler(request: Request, exc: NotificationDeliveryException):
+    """Handle notification delivery exceptions."""
+    return JSONResponse(
+        status_code=502,
+        content=create_error_response(
+            message=f"Notification delivery failed: {exc.message}",
+            error_code="NOTIFICATION_DELIVERY_FAILED",
+            details=exc.details
+        )
+    )
+
+
+# Legacy exception handlers for backward compatibility
+@app.exception_handler(ServiceException)
+async def service_exception_handler(request: Request, exc: ServiceException):
+    """Handle shared service exceptions."""
+    return JSONResponse(
+        status_code=500,
+        content=create_error_response(
+            message=str(exc),
+            error_code=exc.__class__.__name__,
+            details={"request_id": getattr(exc, "request_id", None)}
+        )
     )
 
 
 @app.exception_handler(ValidationException)
-async def validation_exception_handler(request, exc: ValidationException):
-    from services.shared.presentation.responses import create_error_response
+async def validation_exception_handler(request: Request, exc: ValidationException):
+    """Handle shared validation exceptions."""
+    return JSONResponse(
+        status_code=400,
+        content=create_error_response(
+            message=str(exc),
+            error_code="VALIDATION_ERROR",
+            details={"request_id": getattr(exc, "request_id", None)}
+        )
+    )
 
-    return create_error_response(
-        message=str(exc),
-        error_code="ValidationError",
-        request_id=getattr(exc, "request_id", None),
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Handle any unhandled exceptions."""
+    # Log the error for debugging
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.error(f"Unhandled exception in {request.url.path}: {str(exc)}", exc_info=True)
+
+    return JSONResponse(
+        status_code=500,
+        content=create_error_response(
+            message="An unexpected error occurred. Please try again later.",
+            error_code="INTERNAL_SERVER_ERROR",
+            details={"path": str(request.url.path)}
+        )
     )
 
 
@@ -165,6 +341,28 @@ def custom_healthy_response(service_name: str, version: str = "1.0.0", **kwargs)
 import services.shared.monitoring.health
 
 services.shared.monitoring.health.healthy_response = custom_healthy_response
+
+# ============================================================================
+# METRICS ENDPOINT - Prometheus monitoring
+# ============================================================================
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint for monitoring."""
+    # This would integrate with a proper metrics collection system
+    # For now, return basic service health metrics
+    return f"""# HELP doc_store_info Service information
+# TYPE doc_store_info gauge
+doc_store_info{{version="{config.service_version}",service="doc-store"}} 1
+
+# HELP doc_store_up Service availability
+# TYPE doc_store_up gauge
+doc_store_up 1
+
+# HELP doc_store_health_status Health check status
+# TYPE doc_store_health_status gauge
+doc_store_health_status 1
+"""
 
 # ============================================================================
 # MAIN ENTRY POINT - Clean service startup

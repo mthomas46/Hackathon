@@ -5,6 +5,18 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
+
+from ..domain.exceptions import (
+    WorkflowError,
+    WorkflowNotFoundError,
+    WorkflowExecutionError,
+    WorkflowValidationError,
+)
+
 from ..modules.workflow_handlers import workflow_handlers
 
 router = APIRouter()
@@ -59,10 +71,30 @@ async def run_workflow(req: WorkflowRunRequest):
     """Execute a workflow using the enhanced workflow handlers."""
     try:
         result = await workflow_handlers.handle_workflow_run(req)
-        return result
-    except Exception as e:
+        return create_success_response({
+            "workflow_result": result,
+            "message": "Workflow executed successfully"
+        })
+    except WorkflowNotFoundError as e:
         raise HTTPException(
-            status_code=500, detail=f"Workflow execution failed: {str(e)}"
+            status_code=404,
+            detail=f"Workflow not found: {e}"
+        )
+    except WorkflowValidationError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Workflow validation failed: {e}"
+        )
+    except WorkflowExecutionError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Workflow execution failed: {e}"
+        )
+    except Exception as e:
+        # Catch any unexpected errors
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error during workflow execution: {str(e)}"
         )
 
 

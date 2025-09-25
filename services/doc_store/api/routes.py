@@ -61,14 +61,67 @@ notifications_handlers = NotificationsHandlers()
 
 
 # Document endpoints
-@router.post("/documents")
+@router.post(
+    "/documents",
+    summary="Create Document",
+    description="Create a new document in the document store with content, metadata, and optional custom ID.",
+    response_description="Successfully created document with ID, content hash, and metadata",
+    responses={
+        201: {
+            "description": "Document created successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Document created successfully",
+                        "data": {
+                            "id": "doc-123",
+                            "content_hash": "abc123...",
+                            "created_at": "2024-01-01T00:00:00"
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid document data or validation error"},
+        413: {"description": "Document content too large"},
+        500: {"description": "Internal server error during document creation"}
+    }
+)
 async def create_document(request: DocumentRequest):
     """Create a new document."""
     result = await document_handlers.handle_create_document(request)
     return create_success_response(data=result, message="Document created successfully")
 
 
-@router.get("/documents/{document_id}")
+@router.get(
+    "/documents/{document_id}",
+    summary="Get Document",
+    description="Retrieve a document by its unique ID including content, metadata, and version information.",
+    response_description="Document data with content, metadata, and timestamps",
+    responses={
+        200: {
+            "description": "Document retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Document retrieved successfully",
+                        "data": {
+                            "id": "doc-123",
+                            "content": "# Document content...",
+                            "content_hash": "abc123...",
+                            "metadata": {"author": "user", "tags": []},
+                            "created_at": "2024-01-01T00:00:00"
+                        }
+                    }
+                }
+            }
+        },
+        404: {"description": "Document not found"},
+        500: {"description": "Internal server error during document retrieval"}
+    }
+)
 async def get_document(document_id: str):
     """Get document by ID."""
     result = await document_handlers.handle_get_document(document_id)
@@ -77,9 +130,44 @@ async def get_document(document_id: str):
     )
 
 
-@router.get("/documents")
+@router.get(
+    "/documents",
+    summary="List Documents",
+    description="Retrieve a paginated list of documents with optional filtering and sorting capabilities.",
+    response_description="Paginated list of documents with metadata",
+    responses={
+        200: {
+            "description": "Documents retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Documents retrieved successfully",
+                        "data": {
+                            "items": [
+                                {
+                                    "id": "doc-123",
+                                    "title": "Document 1",
+                                    "content_hash": "abc123...",
+                                    "created_at": "2024-01-01T00:00:00"
+                                }
+                            ],
+                            "total": 100,
+                            "page": 1,
+                            "page_size": 50,
+                            "total_pages": 2
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid pagination parameters"},
+        500: {"description": "Internal server error during document listing"}
+    }
+)
 async def list_documents(
-    limit: int = Query(50, ge=1, le=1000), offset: int = Query(0, ge=0)
+    limit: int = Query(50, ge=1, le=1000, description="Number of documents per page"),
+    offset: int = Query(0, ge=0, description="Number of documents to skip")
 ):
     """List documents with pagination."""
     result = await document_handlers.handle_list_documents(limit, offset)

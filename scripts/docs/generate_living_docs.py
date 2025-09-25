@@ -20,7 +20,7 @@ from typing import Dict, List, Any, Optional
 import logging
 
 # Add scripts directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
 
 from audit_framework import AuditFramework, AuditResults
 
@@ -43,7 +43,7 @@ class LivingDocumentationGenerator:
         self.templates_dir.mkdir(parents=True, exist_ok=True)
         self.services_dir.mkdir(parents=True, exist_ok=True)
 
-    def generate_service_documentation(self, service_name: str, force_update: bool = False) -> bool:
+    async def generate_service_documentation(self, service_name: str, force_update: bool = False) -> bool:
         """Generate documentation for a specific service."""
         try:
             logger.info(f"Generating living documentation for service: {service_name}")
@@ -66,7 +66,7 @@ class LivingDocumentationGenerator:
             logger.error(f"Failed to generate documentation for {service_name}: {e}")
             return False
 
-    def generate_all_services_documentation(self, force_update: bool = False) -> Dict[str, bool]:
+    async def generate_all_services_documentation(self, force_update: bool = False) -> Dict[str, bool]:
         """Generate documentation for all services."""
         results = {}
         services = self.audit_framework.discover_services()
@@ -79,7 +79,7 @@ class LivingDocumentationGenerator:
 
         return results
 
-    def update_existing_documentation(self) -> Dict[str, bool]:
+    async def update_existing_documentation(self) -> Dict[str, bool]:
         """Update all existing service documentation."""
         results = {}
         existing_docs = list(self.services_dir.glob("*.md"))
@@ -420,7 +420,7 @@ async def main():
             if success:
                 logger.info(f"Successfully generated documentation for {args.service}")
                 # Generate index
-                await generator.generate_index_documentation({args.service: success})
+                generator.generate_index_documentation({args.service: success})
             else:
                 logger.error(f"Failed to generate documentation for {args.service}")
                 sys.exit(1)

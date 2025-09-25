@@ -10,6 +10,7 @@ Usage:
 
 import sys
 import os
+import asyncio
 from pathlib import Path
 
 # Add the scripts directory to Python path
@@ -18,5 +19,5 @@ sys.path.insert(0, str(Path(__file__).parent))
 from audit_framework import main
 
 if __name__ == '__main__':
-    exit_code = main()
+    exit_code = asyncio.run(main())
     sys.exit(exit_code)
