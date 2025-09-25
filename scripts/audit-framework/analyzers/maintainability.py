@@ -10,8 +10,35 @@ from pathlib import Path
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
-from ..config import AuditProfile, get_thresholds_for_profile
-from ..models import ServiceInfo
+# Handle imports for both module and script execution
+try:
+    from ..config import AuditProfile, get_thresholds_for_profile
+    from ..models import ServiceInfo
+except ImportError:
+    import sys
+    from pathlib import Path
+    current_dir = Path(__file__).parent.parent
+    sys.path.insert(0, str(current_dir))
+
+    from config import AuditProfile
+    from config.thresholds import get_thresholds_for_profile
+
+    # Create a simple ServiceInfo if models doesn't exist
+    from dataclasses import dataclass
+    from pathlib import Path
+    from typing import Dict, Any
+
+    @dataclass
+    class ServiceInfo:
+        name: str
+        path: Path
+        type: str = "python"
+        status: str = "unknown"
+        metadata: Dict[str, Any] = None
+
+        def __post_init__(self):
+            if self.metadata is None:
+                self.metadata = {}
 
 
 @dataclass
@@ -776,7 +803,7 @@ class MaintainabilityAnalyzer:
     def _identify_issues(self, scores: Dict[str, float]) -> List[str]:
         """Identify maintainability issues"""
         issues = []
-        if scores.get('documentation', 0) < self.thresholds['maintainability']['docstring_coverage_required']:
+        if scores.get('documentation', 0) < self.thresholds['dimensions']['maintainability']['docstring_coverage_required']:
             issues.append("Insufficient documentation coverage")
         if scores.get('organization', 0) < 70:
             issues.append("Poor code organization and structure")
@@ -791,8 +818,8 @@ class MaintainabilityAnalyzer:
     def _generate_recommendations(self, scores: Dict[str, float]) -> List[str]:
         """Generate maintainability recommendations"""
         recommendations = []
-        if scores.get('documentation', 0) < self.thresholds['maintainability']['docstring_coverage_required']:
-            recommendations.append(f"Increase docstring coverage to at least {self.thresholds['maintainability']['docstring_coverage_required']}%")
+        if scores.get('documentation', 0) < self.thresholds['dimensions']['maintainability']['docstring_coverage_required']:
+            recommendations.append(f"Increase docstring coverage to at least {self.thresholds['dimensions']['maintainability']['docstring_coverage_required']}%")
         if scores.get('organization', 0) < 80:
             recommendations.append("Improve code organization with better directory structure")
         if scores.get('error_handling', 0) < 80:

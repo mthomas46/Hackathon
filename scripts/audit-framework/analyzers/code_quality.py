@@ -9,8 +9,35 @@ from pathlib import Path
 from typing import Dict, Any, List, Tuple
 from dataclasses import dataclass
 
-from ..config import AuditProfile, get_thresholds_for_profile
-from ..models import ServiceInfo
+# Handle imports for both module and script execution
+try:
+    from ..config import AuditProfile, get_thresholds_for_profile
+    from ..models import ServiceInfo
+except ImportError:
+    import sys
+    from pathlib import Path
+    current_dir = Path(__file__).parent.parent
+    sys.path.insert(0, str(current_dir))
+
+    from config import AuditProfile
+    from config.thresholds import get_thresholds_for_profile
+
+    # Create a simple ServiceInfo if models doesn't exist
+    from dataclasses import dataclass
+    from pathlib import Path
+    from typing import Dict, Any
+
+    @dataclass
+    class ServiceInfo:
+        name: str
+        path: Path
+        type: str = "python"
+        status: str = "unknown"
+        metadata: Dict[str, Any] = None
+
+        def __post_init__(self):
+            if self.metadata is None:
+                self.metadata = {}
 
 
 @dataclass
