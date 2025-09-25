@@ -6,7 +6,7 @@ CQRS-optimized repository with read/write separation.
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import SqlRepository, InMemoryRepository
+from services.shared.utilities import InMemoryRepository, SqlRepository
 
 from ...domain.entities import Document
 

@@ -57,11 +57,11 @@ class FeatureExtractor:
 
         # Common technical patterns
         patterns = [
-            r'\b[A-Z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b',  # CamelCase
-            r'\b[A-Z]{2,}\b',  # UPPERCASE acronyms
-            r'`[^`]+`',  # Code snippets
-            r'\b\d+\.\d+\.\d+\b',  # Version numbers
-            r'\bAPI\b|\bREST\b|\bHTTP\b|\bJSON\b|\bXML\b',  # Tech terms
+            r"\b[A-Z][a-zA-Z0-9]*[A-Z][a-zA-Z0-9]*\b",  # CamelCase
+            r"\b[A-Z]{2,}\b",  # UPPERCASE acronyms
+            r"`[^`]+`",  # Code snippets
+            r"\b\d+\.\d+\.\d+\b",  # Version numbers
+            r"\bAPI\b|\bREST\b|\bHTTP\b|\bJSON\b|\bXML\b",  # Tech terms
         ]
 
         technical_terms = []
@@ -71,7 +71,9 @@ class FeatureExtractor:
 
         # Remove duplicates and filter
         unique_terms = list(set(technical_terms))
-        return [term for term in unique_terms if len(term) > 2][:50]  # Limit to 50 terms
+        return [term for term in unique_terms if len(term) > 2][
+            :50
+        ]  # Limit to 50 terms
 
     def _identify_stakeholder_groups(self, document_data: Dict[str, Any]) -> List[str]:
         """Identify stakeholder groups affected by the document."""
@@ -109,7 +111,9 @@ class FeatureExtractor:
 
         return list(set(stakeholders))  # Remove duplicates
 
-    def _get_fallback_features(self, document_data: Dict[str, Any], content: str) -> Dict[str, Any]:
+    def _get_fallback_features(
+        self, document_data: Dict[str, Any], content: str
+    ) -> Dict[str, Any]:
         """Get basic features when advanced extraction is not available."""
         return {
             "technical_terms": [],

@@ -20,11 +20,7 @@ from typing import Any, Callable, Dict, List, Optional
 import aiohttp
 import psutil
 
-from ..caching.intelligent_caching import get_cache_metrics
 from ..core.constants_new import ServiceNames
-from ..enterprise.enterprise_integration import service_registry
-from ..enterprise.error_handling import EnterpriseErrorHandler
-from ..monitoring.logging import fire_and_forget
 
 
 class HealthStatus(Enum):
@@ -118,7 +114,21 @@ class SystemMetrics:
 class HealthMonitor:
     """Comprehensive health monitoring system."""
 
-    def __init__(self):
+    def __init__(
+        self,
+        service_registry=None,
+        error_handler=None,
+        logger=None,
+        cache_metrics_func=None
+    ):
+        """Initialize HealthMonitor with optional dependency injection.
+
+        Args:
+            service_registry: Service registry for service discovery
+            error_handler: Error handler for error statistics
+            logger: Logger function for structured logging
+            cache_metrics_func: Function to get cache metrics
+        """
         self.services_health: Dict[str, ServiceHealth] = {}
         self.system_metrics = SystemMetrics()
         self.health_check_interval = 30  # seconds
@@ -131,6 +141,12 @@ class HealthMonitor:
             "disk_usage_percent": 90.0,  # 90%
         }
         self.alerts: List[Dict[str, Any]] = []
+
+        # Injected dependencies with defaults
+        self.service_registry = service_registry
+        self.error_handler = error_handler
+        self.logger = logger or fire_and_forget
+        self.cache_metrics_func = cache_metrics_func or get_cache_metrics
         self._monitoring_task: Optional[asyncio.Task] = None
         self._metrics_task: Optional[asyncio.Task] = None
 
@@ -139,7 +155,7 @@ class HealthMonitor:
         self._monitoring_task = asyncio.create_task(self._health_check_loop())
         self._metrics_task = asyncio.create_task(self._metrics_collection_loop())
 
-        fire_and_forget("info", "Health monitoring started", "health_monitor")
+        self.logger("info", "Health monitoring started", "health_monitor")
 
     async def stop_monitoring(self):
         """Stop health monitoring."""
@@ -148,7 +164,7 @@ class HealthMonitor:
         if self._metrics_task:
             self._metrics_task.cancel()
 
-        fire_and_forget("info", "Health monitoring stopped", "health_monitor")
+        self.logger("info", "Health monitoring stopped", "health_monitor")
 
     async def register_service(
         self,
@@ -171,13 +187,13 @@ class HealthMonitor:
         self.services_health[service_name] = health_info
 
         # Register with service registry
-        await service_registry.register_service(
+        await self.service_registry.register_service(
             service_name,
             {"health_endpoint": f"{endpoint}/health"},
             {"role": role.value, "monitored": True},
         )
 
-        fire_and_forget(
+        self.logger(
             "info",
             f"Service {service_name} registered for health monitoring",
             "health_monitor",
@@ -200,7 +216,7 @@ class HealthMonitor:
                 await self._check_alerts()
 
             except Exception as e:
-                fire_and_forget(
+                self.logger(
                     "error", f"Health check loop error: {e}", "health_monitor"
                 )
 
@@ -248,7 +264,7 @@ class HealthMonitor:
             health_info.last_check = datetime.now()
             health_info.error_count += 1
 
-            fire_and_forget(
+            self.logger(
                 "warning",
                 f"Health check failed for {service_name}: {e}",
                 "health_monitor",
@@ -378,7 +394,7 @@ class HealthMonitor:
         for alert in alerts:
             severity = alert.get("severity", "info")
             if severity in ["warning", "critical"]:
-                fire_and_forget(severity, alert["message"], "health_monitor")
+                self.logger(severity, alert["message"], "health_monitor")
 
     async def _metrics_collection_loop(self):
         """Continuous metrics collection loop."""
@@ -393,7 +409,7 @@ class HealthMonitor:
                 await self._store_metrics_history()
 
             except Exception as e:
-                fire_and_forget(
+                self.logger(
                     "error", f"Metrics collection error: {e}", "health_monitor"
                 )
 
@@ -410,7 +426,10 @@ class HealthMonitor:
         # Collect per-service detailed metrics
         for service_name, health_info in self.services_health.items():
             # Update request count from error handler if available
-            error_stats = enterprise_error_handler.get_error_statistics(service_name)
+            error_stats = (
+                self.error_handler.get_error_statistics(service_name)
+                if self.error_handler else {"total_errors": 0, "error_types": {}}
+            )
             if error_stats.get("services", {}).get(service_name):
                 service_stats = error_stats["services"][service_name]
                 health_info.error_count = service_stats.get("total_errors", 0)
@@ -423,14 +442,14 @@ class HealthMonitor:
         # This would typically store to a time-series database
         # For now, we'll just log significant changes
         if self.system_metrics.system_memory_usage_percent > 80:
-            fire_and_forget(
+            self.logger(
                 "warning",
                 f"High system memory usage: {self.system_metrics.system_memory_usage_percent}%",
                 "health_monitor",
             )
 
         if self.system_metrics.system_cpu_usage_percent > 80:
-            fire_and_forget(
+            self.logger(
                 "warning",
                 f"High system CPU usage: {self.system_metrics.system_cpu_usage_percent}%",
                 "health_monitor",
@@ -456,7 +475,7 @@ class HealthMonitor:
 
     def get_performance_dashboard(self) -> Dict[str, Any]:
         """Get comprehensive performance dashboard data."""
-        cache_metrics = get_cache_metrics()
+        cache_metrics = self.cache_metrics_func()
 
         dashboard = {
             "system_overview": self.system_metrics.to_dict(),
@@ -473,7 +492,10 @@ class HealthMonitor:
                 for name, health in self.services_health.items()
             },
             "cache_performance": cache_metrics,
-            "error_summary": enterprise_error_handler.get_error_statistics(),
+            "error_summary": (
+                self.error_handler.get_error_statistics()
+                if self.error_handler else {"total_errors": 0, "error_types": {}}
+            ),
             "alert_summary": {
                 "total_alerts": len(self.alerts),
                 "critical_alerts": len(
@@ -509,14 +531,14 @@ class ServiceDiscovery:
         self._setup_discovery_methods()
         self._discovery_task = asyncio.create_task(self._discovery_loop())
 
-        fire_and_forget("info", "Service discovery started", "service_discovery")
+        self.logger("info", "Service discovery started", "service_discovery")
 
     async def stop_discovery(self):
         """Stop automated service discovery."""
         if self._discovery_task:
             self._discovery_task.cancel()
 
-        fire_and_forget("info", "Service discovery stopped", "service_discovery")
+        self.logger("info", "Service discovery stopped", "service_discovery")
 
     def _setup_discovery_methods(self):
         """Setup service discovery methods."""
@@ -538,7 +560,7 @@ class ServiceDiscovery:
                         discovered = await discovery_method()
                         await self._process_discovered_services(discovered)
                     except Exception as e:
-                        fire_and_forget(
+                        self.logger(
                             "warning",
                             f"Discovery method failed: {e}",
                             "service_discovery",
@@ -548,7 +570,7 @@ class ServiceDiscovery:
                 await self._update_service_registry()
 
             except Exception as e:
-                fire_and_forget(
+                self.logger(
                     "error", f"Service discovery loop error: {e}", "service_discovery"
                 )
 
@@ -640,7 +662,7 @@ class ServiceDiscovery:
         for service_name, service_info in discovered.items():
             if service_name not in self.discovered_services:
                 self.discovered_services[service_name] = service_info
-                fire_and_forget(
+                self.logger(
                     "info",
                     f"Discovered new service: {service_name} at {service_info['endpoint']}",
                     "service_discovery",
@@ -653,7 +675,7 @@ class ServiceDiscovery:
     async def _update_service_registry(self):
         """Update service registry with discovered services."""
         for service_name, service_info in self.discovered_services.items():
-            await service_registry.register_service(
+            await self.service_registry.register_service(
                 service_name,
                 {"base_url": service_info["endpoint"]},
                 {
@@ -674,7 +696,7 @@ class ServiceDiscovery:
             "discovered_at": datetime.now().isoformat(),
         }
 
-        await service_registry.register_service(
+        await self.service_registry.register_service(
             service_name, {"base_url": endpoint}, {"discovery_method": "manual"}
         )
 
@@ -867,7 +889,7 @@ async def initialize_operational_excellence():
     # Start service discovery
     await service_discovery.start_discovery()
 
-    fire_and_forget("info", "Operational excellence initialized successfully", "system")
+    self.logger("info", "Operational excellence initialized successfully", "system")
 
 
 async def shutdown_operational_excellence():
@@ -875,7 +897,7 @@ async def shutdown_operational_excellence():
     await health_monitor.stop_monitoring()
     await service_discovery.stop_discovery()
 
-    fire_and_forget("info", "Operational excellence shutdown completed", "system")
+    self.logger("info", "Operational excellence shutdown completed", "system")
 
 
 # Import os for environment variable access

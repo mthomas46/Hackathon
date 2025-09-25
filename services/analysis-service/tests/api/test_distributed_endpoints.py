@@ -431,7 +431,9 @@ class TestDistributedEndpoints:
             assert "auto_scaling_thresholds" in data
 
     @pytest.mark.asyncio
-    async def test_distributed_endpoints_validation_errors(self, client):
+    async def test_distributed_endpoints_with_invalid_data_raises_validation_error_errors(
+        self, client
+    ):
         """Test validation errors in distributed endpoints."""
         # Test invalid task type
         invalid_task = {"task_type": "invalid_task_type", "data": {"test": "data"}}

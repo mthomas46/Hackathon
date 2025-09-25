@@ -11,7 +11,7 @@ from ...domain.value_objects.metrics import AnalysisMetrics, QualityMetrics
 class TestConfidenceValueObject:
     """Test cases for Confidence value object."""
 
-    def test_confidence_creation_valid_values(self):
+    def test_confidence_with_valid_data_succeeds_valid_values(self):
         """Test creating confidence with valid values."""
         confidence = Confidence(0.85)
         assert confidence.value == 0.85
@@ -22,7 +22,7 @@ class TestConfidenceValueObject:
         confidence = Confidence(1.0)
         assert confidence.value == 1.0
 
-    def test_confidence_creation_invalid_values(self):
+    def test_confidence_with_valid_data_succeeds_invalid_values(self):
         """Test creating confidence with invalid values."""
         with pytest.raises(ValueError):
             Confidence(-0.1)
@@ -105,7 +105,7 @@ class TestAnalysisTypeValueObject:
 class TestLocationValueObjects:
     """Test cases for location value objects."""
 
-    def test_file_location_creation(self, file_location: FileLocation):
+    def test_file_location_with_valid_data_succeeds(self, file_location: FileLocation):
         """Test creating file location."""
         assert file_location.file_path == "/src/main.py"
         assert file_location.line_number == 42
@@ -116,7 +116,7 @@ class TestLocationValueObjects:
         assert "/src/main.py" in str_repr
         assert "42" in str_repr
 
-    def test_code_location_creation(self, code_location: CodeLocation):
+    def test_code_location_with_valid_data_succeeds(self, code_location: CodeLocation):
         """Test creating code location."""
         assert code_location.file_path == "/src/utils.py"
         assert code_location.start_line == 10
@@ -124,7 +124,7 @@ class TestLocationValueObjects:
         assert code_location.start_column == 5
         assert code_location.end_column == 25
 
-    def test_code_location_validation(self):
+    def test_code_location_with_invalid_data_raises_validation_error(self):
         """Test code location validation."""
         # Valid location
         location = CodeLocation(
@@ -156,13 +156,15 @@ class TestLocationValueObjects:
 class TestAnalysisMetricsValueObject:
     """Test cases for AnalysisMetrics value object."""
 
-    def test_analysis_metrics_creation(self, analysis_metrics: AnalysisMetrics):
+    def test_analysis_metrics_with_valid_data_succeeds(
+        self, analysis_metrics: AnalysisMetrics
+    ):
         """Test creating analysis metrics."""
         assert analysis_metrics.processing_time_seconds == 3.5
         assert analysis_metrics.memory_usage_mb == 75.0
         assert analysis_metrics.confidence_score == 0.82
 
-    def test_analysis_metrics_validation(self):
+    def test_analysis_metrics_with_invalid_data_raises_validation_error(self):
         """Test analysis metrics validation."""
         # Valid metrics
         metrics = AnalysisMetrics(
@@ -199,14 +201,16 @@ class TestAnalysisMetricsValueObject:
 class TestQualityMetricsValueObject:
     """Test cases for QualityMetrics value object."""
 
-    def test_quality_metrics_creation(self, quality_metrics: QualityMetrics):
+    def test_quality_metrics_with_valid_data_succeeds(
+        self, quality_metrics: QualityMetrics
+    ):
         """Test creating quality metrics."""
         assert quality_metrics.readability_score == 85.0
         assert quality_metrics.complexity_score == 25.0
         assert quality_metrics.maintainability_index == 78.0
         assert quality_metrics.duplication_percentage == 5.2
 
-    def test_quality_metrics_validation(self):
+    def test_quality_metrics_with_invalid_data_raises_validation_error(self):
         """Test quality metrics validation."""
         # Test boundary values
         metrics = QualityMetrics(

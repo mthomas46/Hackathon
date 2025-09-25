@@ -14,9 +14,8 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from .change_impact.feature_extractor import FeatureExtractor
-from .change_impact.relationship_analyzer import RelationshipAnalyzer
 from .change_impact.impact_calculator import ImpactCalculator
-
+from .change_impact.relationship_analyzer import RelationshipAnalyzer
 
 logger = logging.getLogger(__name__)
 
@@ -36,17 +35,15 @@ class ChangeImpactAnalyzer:
         self.relationship_analyzer = RelationshipAnalyzer()
         self.impact_calculator = ImpactCalculator()
         self.initialized = (
-            self.feature_extractor.initialized and
-            self.relationship_analyzer.initialized
+            self.feature_extractor.initialized
+            and self.relationship_analyzer.initialized
         )
 
         if not self.initialized:
             logger.warning("Some change impact analysis components not available")
 
     def analyze_change_impact(
-        self,
-        change_data: Dict[str, Any],
-        related_documents: List[Dict[str, Any]]
+        self, change_data: Dict[str, Any], related_documents: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Analyze the impact of a document change.
 
@@ -63,14 +60,13 @@ class ChangeImpactAnalyzer:
         try:
             # Extract features from changed document
             changed_doc_features = self.feature_extractor.extract_document_features(
-                change_data.get("document", {}),
-                change_data.get("content", "")
+                change_data.get("document", {}), change_data.get("content", "")
             )
 
             # Analyze relationships with other documents
             relationships = self.relationship_analyzer.analyze_relationships(
                 related_documents + [change_data.get("document", {})],
-                change_data.get("document", {}).get("id", "")
+                change_data.get("document", {}).get("id", ""),
             )
 
             # Extract stakeholder groups
@@ -94,9 +90,7 @@ class ChangeImpactAnalyzer:
             return self._get_fallback_analysis(change_data, related_documents)
 
     def _get_fallback_analysis(
-        self,
-        change_data: Dict[str, Any],
-        related_documents: List[Dict[str, Any]]
+        self, change_data: Dict[str, Any], related_documents: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Provide basic analysis when advanced components are not available."""
         return {
@@ -107,17 +101,18 @@ class ChangeImpactAnalyzer:
                 "recommendations": [
                     "Advanced change impact analysis not available",
                     "Conduct manual review of related documents",
-                    "Test changes in development environment first"
+                    "Test changes in development environment first",
                 ],
                 "risk_assessment": {
                     "risk_level": "medium",
-                    "mitigation_required": True
-                }
+                    "mitigation_required": True,
+                },
             },
             "features": {},
             "relationships": {"relationships": [], "total_relationships": 0},
             "processing_time": 0.0,
         }
+
 
 # Legacy methods removed - functionality moved to specialized components:
 # - _get_default_impact_thresholds() -> ImpactCalculator._get_default_impact_thresholds()

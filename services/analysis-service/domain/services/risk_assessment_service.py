@@ -173,7 +173,9 @@ class RiskAssessor:
 
         return risk_scores
 
-    def _extract_risk_factor_values(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _extract_risk_factor_values(
+        self, document_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Extract or estimate values for all risk factors."""
         factor_values = {}
 
@@ -201,7 +203,9 @@ class RiskAssessor:
 
         return factor_values
 
-    def _extract_finding_density(self, value: Any, document_data: Dict[str, Any]) -> float:
+    def _extract_finding_density(
+        self, value: Any, document_data: Dict[str, Any]
+    ) -> float:
         """Extract or estimate finding density."""
         if value:
             return value
@@ -219,7 +223,9 @@ class RiskAssessor:
 
         return 0.5
 
-    def _extract_stakeholder_impact(self, value: Any, document_data: Dict[str, Any]) -> str:
+    def _extract_stakeholder_impact(
+        self, value: Any, document_data: Dict[str, Any]
+    ) -> str:
         """Extract or estimate stakeholder impact."""
         if value:
             return value
@@ -235,7 +241,9 @@ class RiskAssessor:
 
         return "low"
 
-    def _extract_usage_frequency(self, value: Any, document_data: Dict[str, Any]) -> int:
+    def _extract_usage_frequency(
+        self, value: Any, document_data: Dict[str, Any]
+    ) -> int:
         """Extract or estimate usage frequency."""
         if value:
             return value

@@ -1,7 +1,6 @@
 """Analysis Controller - Handles core document analysis endpoints."""
 
 from fastapi import APIRouter, HTTPException
-
 from services.shared.presentation.responses import (
     create_error_response,
     create_success_response,
@@ -17,8 +16,8 @@ from ...domain.exceptions import (
     AnalysisTimeoutException,
     DocumentException,
     DocumentNotFoundException,
-    ValidationException,
     ExternalServiceException,
+    ValidationException,
 )
 from ...domain.services import AnalysisService
 from ...infrastructure.repositories import AnalysisRepository, DocumentRepository
@@ -76,17 +75,17 @@ class AnalysisController:
                                     "analysis_id": "analysis-123",
                                     "status": "completed",
                                     "findings": [],
-                                    "metrics": {"processing_time": 2.5}
-                                }
+                                    "metrics": {"processing_time": 2.5},
+                                },
                             }
                         }
-                    }
+                    },
                 },
                 400: {"description": "Invalid analysis request parameters"},
                 404: {"description": "Document not found"},
                 408: {"description": "Analysis request timeout"},
-                500: {"description": "Internal analysis error"}
-            }
+                500: {"description": "Internal analysis error"},
+            },
         )
         async def analyze_documents(req: AnalysisRequest):
             """Analyze documents for consistency and issues with configurable detectors."""
@@ -113,20 +112,20 @@ class AnalysisController:
                                         "results": {
                                             "similarities": [],
                                             "threshold": 0.8,
-                                            "metric": "cosine"
+                                            "metric": "cosine",
                                         },
-                                        "findings": []
+                                        "findings": [],
                                     }
-                                }
+                                },
                             }
                         }
-                    }
+                    },
                 },
                 400: {"description": "Invalid semantic similarity request"},
                 404: {"description": "Document not found"},
                 408: {"description": "Analysis timeout"},
-                500: {"description": "Semantic analysis failed"}
-            }
+                500: {"description": "Semantic analysis failed"},
+            },
         )
         async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
             """Analyze semantic similarity between documents using embeddings."""
@@ -160,41 +159,38 @@ class AnalysisController:
                     findings=result.findings or [],
                 )
 
-                return create_success_response({
-                    "analysis": response.dict(),
-                    "message": "Semantic similarity analysis completed successfully"
-                })
+                return create_success_response(
+                    {
+                        "analysis": response.dict(),
+                        "message": "Semantic similarity analysis completed successfully",
+                    }
+                )
 
             except ValidationException as e:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"Validation error: {e.message}"
+                    status_code=400, detail=f"Validation error: {e.message}"
                 )
             except DocumentNotFoundException as e:
                 raise HTTPException(
-                    status_code=404,
-                    detail=f"Document not found: {e.message}"
+                    status_code=404, detail=f"Document not found: {e.message}"
                 )
             except AnalysisTimeoutException as e:
                 raise HTTPException(
-                    status_code=408,
-                    detail=f"Analysis timeout: {e.message}"
+                    status_code=408, detail=f"Analysis timeout: {e.message}"
                 )
             except AnalysisExecutionException as e:
                 raise HTTPException(
-                    status_code=500,
-                    detail=f"Analysis execution failed: {e.message}"
+                    status_code=500, detail=f"Analysis execution failed: {e.message}"
                 )
             except ExternalServiceException as e:
                 raise HTTPException(
-                    status_code=502,
-                    detail=f"External service error: {e.message}"
+                    status_code=502, detail=f"External service error: {e.message}"
                 )
             except Exception as e:
                 # Catch any unexpected errors
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Unexpected error during semantic similarity analysis: {str(e)}"
+                    detail=f"Unexpected error during semantic similarity analysis: {str(e)}",
                 )
 
         @self.router.post("/analyze/sentiment")

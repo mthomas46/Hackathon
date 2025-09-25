@@ -21,7 +21,7 @@ from ...application.events.event_subscriber import EventSubscriber
 class TestApplicationEvents:
     """Test cases for Application Events."""
 
-    def test_application_event_creation(self):
+    def test_application_event_with_valid_data_succeeds(self):
         """Test creating base application event."""
         event = ApplicationEvent(
             event_id="event-123",
@@ -36,7 +36,7 @@ class TestApplicationEvents:
         assert event.correlation_id == "corr-456"
         assert event.metadata == {"source": "test"}
 
-    def test_analysis_requested_event_creation(self):
+    def test_analysis_requested_event_with_valid_data_succeeds(self):
         """Test creating analysis requested event."""
         event = AnalysisRequestedEvent(
             event_id="event-123",
@@ -56,7 +56,7 @@ class TestApplicationEvents:
         assert event.priority == "high"
         assert event.configuration == {"threshold": 0.8}
 
-    def test_analysis_completed_event_creation(self):
+    def test_analysis_completed_event_with_valid_data_succeeds(self):
         """Test creating analysis completed event."""
         event = AnalysisCompletedEvent(
             event_id="event-123",
@@ -76,7 +76,7 @@ class TestApplicationEvents:
         assert event.execution_time_seconds == 2.5
         assert event.findings_count == 3
 
-    def test_analysis_failed_event_creation(self):
+    def test_analysis_failed_event_with_valid_data_succeeds(self):
         """Test creating analysis failed event."""
         event = AnalysisFailedEvent(
             event_id="event-123",
@@ -94,7 +94,7 @@ class TestApplicationEvents:
         assert event.error_code == "NETWORK_ERROR"
         assert event.retry_count == 2
 
-    def test_document_created_event_creation(self):
+    def test_document_created_event_with_valid_data_succeeds(self):
         """Test creating document created event."""
         event = DocumentCreatedEvent(
             event_id="event-123",
@@ -110,7 +110,7 @@ class TestApplicationEvents:
         assert event.repository_id == "repo-456"
         assert event.author == "user-789"
 
-    def test_finding_created_event_creation(self):
+    def test_finding_created_event_with_valid_data_succeeds(self):
         """Test creating finding created event."""
         event = FindingCreatedEvent(
             event_id="event-123",
@@ -172,7 +172,7 @@ class TestApplicationEvents:
 class TestEventBus:
     """Test cases for EventBus."""
 
-    def test_event_bus_creation(self):
+    def test_event_bus_with_valid_data_succeeds(self):
         """Test creating event bus."""
         bus = EventBus()
         assert bus is not None
@@ -308,7 +308,7 @@ class TestEventBus:
 class TestEventPublisher:
     """Test cases for EventPublisher."""
 
-    def test_event_publisher_creation(self):
+    def test_event_publisher_with_valid_data_succeeds(self):
         """Test creating event publisher."""
         publisher = EventPublisher()
         assert publisher is not None
@@ -400,7 +400,7 @@ class TestEventPublisher:
 class TestEventSubscriber:
     """Test cases for EventSubscriber."""
 
-    def test_event_subscriber_creation(self):
+    def test_event_subscriber_with_valid_data_succeeds(self):
         """Test creating event subscriber."""
         subscriber = EventSubscriber()
         assert subscriber is not None

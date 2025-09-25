@@ -8,7 +8,6 @@ from typing import Any, Dict
 
 # Using standardized analysis-service domain entities
 from ..domain.entities import Finding
-
 from .analysis_logic import generate_summary_report, generate_trends_report
 from .shared_utils import get_analysis_service_client
 

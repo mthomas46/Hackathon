@@ -55,7 +55,19 @@ class ServiceClients:
     - Service URL resolution from configuration
     """
 
-    def __init__(self, timeout: int = 30):
+    def __init__(
+        self,
+        timeout: int = 30,
+        circuit_breaker: Optional["CircuitBreaker"] = None,
+        retry_policy: Optional[Dict[str, Any]] = None
+    ):
+        """Initialize ServiceClients with optional dependency injection.
+
+        Args:
+            timeout: Request timeout in seconds
+            circuit_breaker: Optional circuit breaker instance for fault tolerance
+            retry_policy: Optional retry policy configuration
+        """
         # Read defaults from shared config with env override
         try:
             self.timeout = int(
@@ -68,28 +80,19 @@ class ServiceClients:
             )
         except Exception:
             self.timeout = timeout
-        try:
-            self.retry_attempts = int(
-                get_config_value(
-                    "retry_attempts",
-                    3,
-                    section="http_client",
-                    env_key="HTTP_RETRY_ATTEMPTS",
-                )
-            )
-        except Exception:
-            self.retry_attempts = 3
-        try:
-            self.retry_base_ms = int(
-                get_config_value(
-                    "retry_base_ms",
-                    150,
-                    section="http_client",
-                    env_key="HTTP_RETRY_BASE_MS",
-                )
-            )
-        except Exception:
-            self.retry_base_ms = 150
+
+        # Accept injected dependencies or create defaults
+        self.circuit_breaker = circuit_breaker
+        self.retry_policy = retry_policy or {
+            "attempts": int(get_config_value(
+                "retry_attempts", 3, section="http_client", env_key="HTTP_RETRY_ATTEMPTS"
+            )),
+            "base_delay_ms": int(get_config_value(
+                "retry_base_ms", 150, section="http_client", env_key="HTTP_RETRY_BASE_MS"
+            )),
+        }
+
+        # Legacy circuit_enabled flag for backward compatibility
         raw_circuit = get_config_value(
             "circuit_enabled",
             False,
@@ -849,12 +852,14 @@ class ServiceClients:
 
             async def _op():
                 if self.circuit_enabled:
-                    cb = CircuitBreaker()
+                    cb = self.circuit_breaker or CircuitBreaker()
                     return await with_circuit(cb, _call)
                 return await _call()
 
             return await with_retries(
-                _op, attempts=self.retry_attempts, base_delay_ms=self.retry_base_ms
+                _op,
+                attempts=self.retry_policy["attempts"],
+                base_delay_ms=self.retry_policy["base_delay_ms"]
             )
 
     async def get_json(
@@ -882,10 +887,12 @@ class ServiceClients:
 
             async def _op():
                 if self.circuit_enabled:
-                    cb = CircuitBreaker()
+                    cb = self.circuit_breaker or CircuitBreaker()
                     return await with_circuit(cb, _call)
                 return await _call()
 
             return await with_retries(
-                _op, attempts=self.retry_attempts, base_delay_ms=self.retry_base_ms
+                _op,
+                attempts=self.retry_policy["attempts"],
+                base_delay_ms=self.retry_policy["base_delay_ms"]
             )

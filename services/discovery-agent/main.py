@@ -135,19 +135,6 @@ app = FastAPI(
             "description": "Performance monitoring and analytics dashboard"
         }
     ]
-        {
-            "name": "health",
-            "description": "Service health monitoring and status"
-        },
-        {
-            "name": "bulk",
-            "description": "Bulk operations for multiple services"
-        },
-        {
-            "name": "validation",
-            "description": "Endpoint and service validation"
-        },
-    ]
 )
 
 # Setup standardized middleware and utilities
@@ -325,8 +312,15 @@ async def fetch_openapi_spec_with_fallback(
 )
 async def discover_service(request: DiscoverRequest):
     """Enhanced single service discovery with network URL normalization"""
+    import logging
+    logger = logging.getLogger(__name__)
+
     try:
-        print(f"🔍 Starting discovery for service: {request.name}")
+        logger.info(f"Starting discovery for service: {request.name}", extra={
+            'service_name': request.name,
+            'base_url': request.base_url,
+            'correlation_id': getattr(request, 'correlation_id', None)
+        })
 
         # Normalize URLs for Docker networking
         original_base_url = request.base_url
@@ -337,7 +331,7 @@ async def discover_service(request: DiscoverRequest):
             else None
         )
 
-        print(f"🔗 URL normalization: {original_base_url} → {normalized_base_url}")
+        logger.debug(f"URL normalization: {original_base_url} → {normalized_base_url}")
 
         # Fetch OpenAPI spec with fallback
         spec = None
@@ -390,7 +384,11 @@ async def discover_service(request: DiscoverRequest):
         return create_success_response(discovery_data)
 
     except Exception as e:
-        print(f"❌ Discovery failed for {request.name}: {e}")
+        logger.error(f"Discovery failed for service {request.name}: {str(e)}", exc_info=True, extra={
+            'service_name': request.name,
+            'error_type': type(e).__name__,
+            'correlation_id': getattr(request, 'correlation_id', None)
+        })
         return create_error_response(
             message="Failed to discover endpoints",
             error_code=ErrorCodes.INTERNAL_ERROR,

@@ -15,7 +15,9 @@ from ...domain.value_objects.confidence import Confidence
 class TestAnalysisService:
     """Test cases for AnalysisService domain service."""
 
-    def test_analysis_service_creation(self, analysis_repository, document_repository):
+    def test_analysis_service_with_valid_data_succeeds(
+        self, analysis_repository, document_repository
+    ):
         """Test creating analysis service."""
         service = AnalysisService(analysis_repository, document_repository)
 
@@ -104,7 +106,7 @@ class TestAnalysisService:
 class TestDocumentService:
     """Test cases for DocumentService domain service."""
 
-    def test_document_service_creation(self, document_repository):
+    def test_document_service_with_valid_data_succeeds(self, document_repository):
         """Test creating document service."""
         service = DocumentService(document_repository)
 
@@ -181,7 +183,7 @@ class TestDocumentService:
 class TestFindingService:
     """Test cases for FindingService domain service."""
 
-    def test_finding_service_creation(self, finding_repository):
+    def test_finding_service_with_valid_data_succeeds(self, finding_repository):
         """Test creating finding service."""
         service = FindingService(finding_repository)
 
@@ -339,7 +341,9 @@ class TestDomainServiceErrorHandling:
         assert sample_analysis.status == AnalysisStatus.COMPLETED
 
     @pytest.mark.asyncio
-    async def test_document_service_validation_errors(self, document_service):
+    async def test_document_service_with_invalid_data_raises_validation_error_errors(
+        self, document_service
+    ):
         """Test document service validation errors."""
         # Test creating document with invalid data
         invalid_data = {
@@ -353,7 +357,9 @@ class TestDomainServiceErrorHandling:
             await document_service.create_document(**invalid_data)
 
     @pytest.mark.asyncio
-    async def test_finding_service_constraint_validation(self, finding_service):
+    async def test_finding_service_constraint_with_invalid_data_raises_validation_error(
+        self, finding_service
+    ):
         """Test finding service constraint validation."""
         # Test creating finding with invalid confidence
         invalid_data = {

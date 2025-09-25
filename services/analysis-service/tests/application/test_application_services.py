@@ -65,12 +65,12 @@ from ...domain.value_objects.analysis_type import AnalysisType
 class TestApplicationService:
     """Test cases for base ApplicationService."""
 
-    def test_application_service_creation(self):
+    def test_application_service_with_valid_data_succeeds(self):
         """Test creating base application service."""
         service = ApplicationService()
         assert service is not None
 
-    def test_service_context_creation(self):
+    def test_service_context_with_valid_data_succeeds(self):
         """Test service context creation."""
         context = ServiceContext(
             service_name="test-service",
@@ -118,13 +118,13 @@ class TestApplicationService:
 class TestLoggingService:
     """Test cases for LoggingService."""
 
-    def test_logging_service_creation(self):
+    def test_logging_service_with_valid_data_succeeds(self):
         """Test creating logging service."""
         service = LoggingService()
         assert service is not None
         assert isinstance(service.logger, ApplicationLogger)
 
-    def test_application_logger_creation(self):
+    def test_application_logger_with_valid_data_succeeds(self):
         """Test application logger creation."""
         logger = ApplicationLogger("test-logger")
         assert logger.name == "test-logger"
@@ -202,13 +202,13 @@ class TestLoggingService:
 class TestCachingService:
     """Test cases for CachingService."""
 
-    def test_caching_service_creation(self):
+    def test_caching_service_with_valid_data_succeeds(self):
         """Test creating caching service."""
         service = CachingService()
         assert service is not None
         assert isinstance(service.cache, ApplicationCache)
 
-    def test_application_cache_creation(self):
+    def test_application_cache_with_valid_data_succeeds(self):
         """Test application cache creation."""
         cache = ApplicationCache(max_size=100, ttl_seconds=300)
         assert cache.max_size == 100
@@ -269,7 +269,7 @@ class TestCachingService:
         value = await cache.get("key4")
         assert value == "value4"
 
-    def test_cache_entry_creation(self):
+    def test_cache_entry_with_valid_data_succeeds(self):
         """Test cache entry creation."""
         entry = CacheEntry("test-value", ttl_seconds=60)
 
@@ -300,13 +300,13 @@ class TestCachingService:
 class TestMonitoringService:
     """Test cases for MonitoringService."""
 
-    def test_monitoring_service_creation(self):
+    def test_monitoring_service_with_valid_data_succeeds(self):
         """Test creating monitoring service."""
         service = MonitoringService()
         assert service is not None
         assert isinstance(service.metrics, ApplicationMetrics)
 
-    def test_application_metrics_creation(self):
+    def test_application_metrics_with_valid_data_succeeds(self):
         """Test application metrics creation."""
         metrics = ApplicationMetrics(service_name="test-service")
         assert metrics.service_name == "test-service"
@@ -356,7 +356,7 @@ class TestMonitoringService:
 class TestConfigurationService:
     """Test cases for ConfigurationService."""
 
-    def test_configuration_service_creation(self):
+    def test_configuration_service_with_valid_data_succeeds(self):
         """Test creating configuration service."""
         service = ConfigurationService()
         assert service is not None
@@ -407,13 +407,13 @@ class TestConfigurationService:
 class TestHealthService:
     """Test cases for HealthService."""
 
-    def test_health_service_creation(self):
+    def test_health_service_with_valid_data_succeeds(self):
         """Test creating health service."""
         service = HealthService()
         assert service is not None
         assert len(service._health_checks) == 0
 
-    def test_health_check_creation(self):
+    def test_health_check_with_valid_data_succeeds(self):
         """Test health check creation."""
 
         async def check_func():
@@ -492,13 +492,13 @@ class TestHealthService:
 class TestNotificationService:
     """Test cases for NotificationService."""
 
-    def test_notification_service_creation(self):
+    def test_notification_service_with_valid_data_succeeds(self):
         """Test creating notification service."""
         service = NotificationService()
         assert service is not None
         assert len(service._channels) == 0
 
-    def test_notification_channel_creation(self):
+    def test_notification_channel_with_valid_data_succeeds(self):
         """Test notification channel creation."""
         channel = NotificationChannel(
             name="email-channel",
@@ -582,12 +582,12 @@ class TestNotificationService:
 class TestTransactionService:
     """Test cases for TransactionService."""
 
-    def test_transaction_service_creation(self):
+    def test_transaction_service_with_valid_data_succeeds(self):
         """Test creating transaction service."""
         service = TransactionService()
         assert service is not None
 
-    def test_transaction_context_creation(self):
+    def test_transaction_context_with_valid_data_succeeds(self):
         """Test transaction context creation."""
         context = TransactionContext(
             transaction_id="tx-123",
@@ -659,7 +659,7 @@ class TestAnalysisApplicationService:
             "transaction_service": Mock(),
         }
 
-    def test_analysis_application_service_creation(
+    def test_analysis_application_service_with_valid_data_succeeds(
         self, mock_domain_services, mock_application_services
     ):
         """Test creating analysis application service."""

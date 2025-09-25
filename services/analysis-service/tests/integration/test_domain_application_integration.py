@@ -96,7 +96,7 @@ class TestDomainApplicationIntegration:
         }
 
     @pytest.mark.asyncio
-    async def test_document_creation_workflow(
+    async def test_document_with_valid_data_succeeds_workflow(
         self, domain_services, repositories, event_bus
     ):
         """Test complete document creation workflow from domain to application."""

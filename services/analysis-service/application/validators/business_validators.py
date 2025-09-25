@@ -197,7 +197,9 @@ class AnalysisBusinessValidator(BaseValidator):
 
         return ValidationResult.success()
 
-    async def _validate_document_reference(self, analysis: Analysis) -> tuple[list, list]:
+    async def _validate_document_reference(
+        self, analysis: Analysis
+    ) -> tuple[list, list]:
         """Validate document reference and content suitability."""
         errors = []
         warnings = []
@@ -206,7 +208,9 @@ class AnalysisBusinessValidator(BaseValidator):
             return errors, warnings
 
         try:
-            document = await self.document_repository.get_by_id(analysis.document_id.value)
+            document = await self.document_repository.get_by_id(
+                analysis.document_id.value
+            )
             if not document:
                 errors.append(
                     self.create_error(
@@ -236,9 +240,15 @@ class AnalysisBusinessValidator(BaseValidator):
         errors = []
 
         supported_types = [
-            "semantic_similarity", "sentiment", "content_quality",
-            "trend_analysis", "risk_assessment", "maintenance_forecast",
-            "quality_degradation", "change_impact", "cross_repository",
+            "semantic_similarity",
+            "sentiment",
+            "content_quality",
+            "trend_analysis",
+            "risk_assessment",
+            "maintenance_forecast",
+            "quality_degradation",
+            "change_impact",
+            "cross_repository",
             "automated_remediation",
         ]
 
@@ -273,9 +283,7 @@ class AnalysisBusinessValidator(BaseValidator):
         priority = analysis.configuration.get("priority", "normal")
         if priority not in ["low", "normal", "high", "critical"]:
             errors.append(
-                self.create_error(
-                    f"Invalid priority: {priority}", "INVALID_PRIORITY"
-                )
+                self.create_error(f"Invalid priority: {priority}", "INVALID_PRIORITY")
             )
 
         return errors, warnings
@@ -314,10 +322,8 @@ class AnalysisBusinessValidator(BaseValidator):
             return warnings
 
         try:
-            recent_analyses = (
-                await self.analysis_repository.find_by_document_and_type(
-                    analysis.document_id.value, analysis.analysis_type
-                )
+            recent_analyses = await self.analysis_repository.find_by_document_and_type(
+                analysis.document_id.value, analysis.analysis_type
             )
 
             # Filter for recent analyses (last 24 hours)
@@ -348,9 +354,7 @@ class AnalysisBusinessValidator(BaseValidator):
         if not analysis.started_at or not analysis.completed_at:
             return warnings
 
-        execution_time = (
-            analysis.completed_at - analysis.started_at
-        ).total_seconds()
+        execution_time = (analysis.completed_at - analysis.started_at).total_seconds()
 
         if execution_time > 3600:  # 1 hour
             warnings.append(
@@ -391,11 +395,15 @@ class FindingBusinessValidator(BaseValidator):
         warnings = []
 
         # Break down validation into focused methods
-        doc_errors, doc_warnings = await self._validate_finding_document_reference(finding)
+        doc_errors, doc_warnings = await self._validate_finding_document_reference(
+            finding
+        )
         errors.extend(doc_errors)
         warnings.extend(doc_warnings)
 
-        analysis_errors, analysis_warnings = await self._validate_finding_analysis_reference(finding)
+        analysis_errors, analysis_warnings = (
+            await self._validate_finding_analysis_reference(finding)
+        )
         errors.extend(analysis_errors)
         warnings.extend(analysis_warnings)
 
@@ -427,7 +435,9 @@ class FindingBusinessValidator(BaseValidator):
 
         return ValidationResult.success()
 
-    async def _validate_finding_document_reference(self, finding: Finding) -> tuple[list, list]:
+    async def _validate_finding_document_reference(
+        self, finding: Finding
+    ) -> tuple[list, list]:
         """Validate document reference for finding."""
         errors = []
         warnings = []
@@ -436,7 +446,9 @@ class FindingBusinessValidator(BaseValidator):
             return errors, warnings
 
         try:
-            document = await self.document_repository.get_by_id(finding.document_id.value)
+            document = await self.document_repository.get_by_id(
+                finding.document_id.value
+            )
             if not document:
                 errors.append(
                     self.create_error(
@@ -454,7 +466,9 @@ class FindingBusinessValidator(BaseValidator):
 
         return errors, warnings
 
-    async def _validate_finding_analysis_reference(self, finding: Finding) -> tuple[list, list]:
+    async def _validate_finding_analysis_reference(
+        self, finding: Finding
+    ) -> tuple[list, list]:
         """Validate analysis reference for finding."""
         errors = []
         warnings = []
@@ -463,7 +477,9 @@ class FindingBusinessValidator(BaseValidator):
             return errors, warnings
 
         try:
-            analysis = await self.analysis_repository.get_by_id(finding.analysis_id.value)
+            analysis = await self.analysis_repository.get_by_id(
+                finding.analysis_id.value
+            )
             if not analysis:
                 errors.append(
                     self.create_error(
@@ -516,8 +532,14 @@ class FindingBusinessValidator(BaseValidator):
         errors = []
 
         valid_categories = [
-            "consistency", "quality", "security", "performance",
-            "maintainability", "usability", "accessibility", "compatibility",
+            "consistency",
+            "quality",
+            "security",
+            "performance",
+            "maintainability",
+            "usability",
+            "accessibility",
+            "compatibility",
         ]
 
         if finding.category not in valid_categories:

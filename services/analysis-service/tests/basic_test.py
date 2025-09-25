@@ -36,6 +36,7 @@ def test_dictionary_access_membership_and_size():
 @pytest.mark.asyncio
 async def test_async_operations_execute_and_return_results():
     """Test that async operations execute properly and return expected results."""
+
     async def add_numbers(x, y):
         return x + y
 
@@ -84,21 +85,29 @@ class TestAnalysisService:
         pass  # Placeholder until fixture is available
 
 
-@pytest.mark.parametrize("input_value,expected", [
-    (1, 2),
-    (2, 4),
-    (3, 6),
-])
+@pytest.mark.parametrize(
+    "input_value,expected",
+    [
+        (1, 2),
+        (2, 4),
+        (3, 6),
+    ],
+)
 def test_doubling_numbers_with_parametrized_inputs(input_value, expected):
     """Test that doubling numbers works correctly with various inputs."""
     assert input_value * 2 == expected
 
 
-@pytest.mark.parametrize("input_text,expected_uppercase", [
-    ("hello", "HELLO"),
-    ("world", "WORLD"),
-    ("pytest", "PYTEST"),
-])
-def test_string_uppercase_conversion_with_various_inputs(input_text, expected_uppercase):
+@pytest.mark.parametrize(
+    "input_text,expected_uppercase",
+    [
+        ("hello", "HELLO"),
+        ("world", "WORLD"),
+        ("pytest", "PYTEST"),
+    ],
+)
+def test_string_uppercase_conversion_with_various_inputs(
+    input_text, expected_uppercase
+):
     """Test that string uppercase conversion works correctly with various inputs."""
     assert input_text.upper() == expected_uppercase
