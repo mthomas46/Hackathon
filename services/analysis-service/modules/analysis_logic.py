@@ -146,67 +146,17 @@ def detect_readme_drift(docs: List[Document]) -> List[Finding]:
         if not docs:
             return findings
 
-        # Performance optimization: Pre-filter and cache document properties
-        valid_docs = [
-            (d, d.title.lower() if d.title else "", d.content or "")
-            for d in docs
-            if d.content
-        ]
-
-        # Separate READMEs from other documentation
-        readmes = [
-            (d, title, content) for d, title, content in valid_docs if "readme" in title
-        ]
-        other_docs = [
-            (d, title, content)
-            for d, title, content in valid_docs
-            if "readme" not in title
-        ]
-
-        if not readmes or not other_docs:
+        # Prepare document data
+        doc_data = _prepare_document_data(docs)
+        if not doc_data["readmes"] or not doc_data["other_docs"]:
             return findings
 
-        # Performance optimization: Early exit for large datasets
-        if len(readmes) * len(other_docs) > 1000:  # Limit computational complexity
-            context["optimization"] = "early_exit_large_dataset"
+        # Performance check
+        if _should_skip_large_dataset(doc_data, context):
             return findings
 
-        for readme_doc, readme_title, readme_content in readmes:
-            # Performance optimization: Pre-calculate word sets for README
-            set(readme_content.lower().split())
-
-            for doc_doc, doc_title, doc_content in other_docs:
-                # Performance optimization: Skip obviously different documents
-                if (
-                    abs(len(readme_content) - len(doc_content))
-                    > len(readme_content) * 0.8
-                ):
-                    continue
-
-                # Calculate text overlap using optimized helper function
-                overlap = _extract_text_overlap(readme_content, doc_content)
-
-                # Check if overlap indicates potential drift
-                if overlap < DRIFT_OVERLAP_THRESHOLD:
-                    finding_id = f"drift:{readme_doc.id}:{doc_doc.id}"
-
-                    findings.append(
-                        _create_finding(
-                            finding_id=finding_id,
-                            finding_type=FINDING_TYPE_DRIFT,
-                            title="Documentation Drift Detected",
-                            description=f"Low content overlap between {readme_title} and {doc_title}",
-                            severity=SEVERITY_MEDIUM,
-                            source_refs=[
-                                {"id": readme_doc.id, "type": "document"},
-                                {"id": doc_doc.id, "type": "document"},
-                            ],
-                            evidence=[f"Content overlap ratio: {overlap:.3f}"],
-                            suggestion="Review and synchronize documentation to ensure consistency",
-                            score=int(overlap * 100),
-                            rationale=f"Low content overlap ({overlap:.3f}) suggests documentation drift requiring attention",
-                        )
-                    )
+        # Analyze drift between READMEs and other docs
+        findings.extend(_analyze_readme_drift(doc_data["readmes"], doc_data["other_docs"]))
 
         return findings
 
@@ -216,14 +166,82 @@ def detect_readme_drift(docs: List[Document]) -> List[Finding]:
         return []
 
 
-def detect_api_mismatches(
-    docs: List[Document], apis: List[Dict[str, Any]]
-) -> List[Finding]:
+def _prepare_document_data(docs: List[Document]) -> Dict[str, List]:
+    """Prepare and categorize document data for analysis."""
+    # Performance optimization: Pre-filter and cache document properties
+    valid_docs = [(d, d.title.lower() if d.title else "", d.content or "")
+                  for d in docs if d.content]
+
+    # Separate READMEs from other documentation
+    readmes = [(d, title, content) for d, title, content in valid_docs if "readme" in title]
+    other_docs = [(d, title, content) for d, title, content in valid_docs if "readme" not in title]
+
+    return {"readmes": readmes, "other_docs": other_docs}
+
+
+def _should_skip_large_dataset(doc_data: Dict[str, List], context: Dict) -> bool:
+    """Check if dataset is too large for efficient processing."""
+    readmes, other_docs = doc_data["readmes"], doc_data["other_docs"]
+    if len(readmes) * len(other_docs) > 1000:  # Limit computational complexity
+        context["optimization"] = "early_exit_large_dataset"
+        return True
+    return False
+
+
+def _analyze_readme_drift(readmes: List, other_docs: List) -> List[Finding]:
+    """Analyze drift between READMEs and other documentation."""
+    findings = []
+
+    for readme_doc, readme_title, readme_content in readmes:
+        readme_words = set(readme_content.lower().split())
+
+        for doc_doc, doc_title, doc_content in other_docs:
+            # Skip obviously different documents
+            if _should_skip_document_comparison(readme_content, doc_content):
+                continue
+
+            # Calculate text overlap
+            overlap = _extract_text_overlap(readme_content, doc_content)
+
+            # Check if overlap indicates potential drift
+            if overlap < DRIFT_OVERLAP_THRESHOLD:
+                findings.append(_create_drift_finding(
+                    readme_doc, readme_title, doc_doc, doc_title, overlap
+                ))
+
+    return findings
+
+
+def _should_skip_document_comparison(readme_content: str, doc_content: str) -> bool:
+    """Check if document comparison should be skipped based on size difference."""
+    return abs(len(readme_content) - len(doc_content)) > len(readme_content) * 0.8
+
+
+def _create_drift_finding(readme_doc, readme_title, doc_doc, doc_title, overlap):
+    """Create a drift finding between documents."""
+    finding_id = f"drift:{readme_doc.id}:{doc_doc.id}"
+
+    return _create_finding(
+        finding_id=finding_id,
+        finding_type=FINDING_TYPE_DRIFT,
+        title="Documentation Drift Detected",
+        description=f"Low content overlap between {readme_title} and {doc_title}",
+        severity=SEVERITY_MEDIUM,
+        source_refs=[
+            {"id": readme_doc.id, "type": "document"},
+            {"id": doc_doc.id, "type": "document"},
+        ],
+        evidence=[f"Content overlap ratio: {overlap:.3f}"],
+        suggestion="Review and synchronize documentation to ensure consistency",
+        score=int(overlap * 100),
+        rationale=f"Low content overlap ({overlap:.3f}) suggests documentation drift requiring attention",
+    )
+
+
+def detect_api_mismatches(docs: List[Document], apis: List[Dict[str, Any]]) -> List[Finding]:
     """Detect mismatches between API documentation and implementation with improved analysis."""
     findings = []
-    context = build_analysis_context(
-        "detect_api_mismatches", docs_count=len(docs), apis_count=len(apis)
-    )
+    context = build_analysis_context("detect_api_mismatches", docs_count=len(docs), apis_count=len(apis))
 
     try:
         if not docs and not apis:
@@ -247,9 +265,7 @@ def detect_api_mismatches(
                     description=f"API endpoint '{endpoint}' exists in implementation but lacks documentation",
                     severity=SEVERITY_HIGH,
                     source_refs=[{"id": endpoint, "type": "endpoint"}],
-                    evidence=[
-                        f"Endpoint {endpoint} found in API implementation but missing from documentation"
-                    ],
+                    evidence=[f"Endpoint {endpoint} found in API implementation but missing from documentation"],
                     suggestion="Add comprehensive documentation for this endpoint including parameters and responses",
                     score=CRITICAL_SCORE,
                     rationale="Undocumented endpoints create maintenance burden and usability issues for API consumers",
@@ -266,9 +282,7 @@ def detect_api_mismatches(
                     description=f"Documented endpoint '{endpoint}' lacks implementation",
                     severity=SEVERITY_HIGH,
                     source_refs=[{"id": endpoint, "type": "endpoint"}],
-                    evidence=[
-                        f"Endpoint {endpoint} documented but not found in API implementation"
-                    ],
+                    evidence=[f"Endpoint {endpoint} documented but not found in API implementation"],
                     suggestion="Implement the documented endpoint or remove it from documentation to avoid confusion",
                     score=HIGH_PRIORITY_SCORE,
                     rationale="Documentation promises functionality that doesn't exist, breaking developer expectations",
@@ -298,27 +312,21 @@ def _count_by_attribute(findings: List[Finding], attribute: str) -> Dict[str, in
     return counts
 
 
-def _filter_by_severity(
-    findings: List[Finding], severities: List[str]
-) -> List[Finding]:
+def _filter_by_severity(findings: List[Finding], severities: List[str]) -> List[Finding]:
     """Filter findings by severity levels."""
     return [f for f in findings if f.severity in severities]
 
 
 def _calculate_health_score(findings: List[Finding]) -> int:
     """Calculate documentation health score based on findings."""
-    high_priority_count = len(
-        _filter_by_severity(findings, [SEVERITY_CRITICAL, SEVERITY_HIGH])
-    )
+    high_priority_count = len(_filter_by_severity(findings, [SEVERITY_CRITICAL, SEVERITY_HIGH]))
     # Deduct 5 points per high-priority finding, minimum score of 0
     return max(0, 100 - (high_priority_count * 5))
 
 
 def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
     """Generate comprehensive summary report of findings with improved analysis."""
-    context = build_analysis_context(
-        "generate_summary_report", total_findings=len(findings)
-    )
+    context = build_analysis_context("generate_summary_report", total_findings=len(findings))
 
     try:
         if not findings:
@@ -337,9 +345,7 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
         type_counts = _count_by_attribute(findings, "type")
 
         critical_issues = _filter_by_severity(findings, [SEVERITY_CRITICAL])
-        high_priority = _filter_by_severity(
-            findings, [SEVERITY_CRITICAL, SEVERITY_HIGH]
-        )
+        high_priority = _filter_by_severity(findings, [SEVERITY_CRITICAL, SEVERITY_HIGH])
 
         health_score = _calculate_health_score(findings)
 
@@ -350,9 +356,7 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
         if high_priority:
             recommendations.append("⚠️ Address high-severity issues within 24 hours")
         if FINDING_TYPE_DRIFT in type_counts:
-            recommendations.append(
-                "📝 Consider documentation synchronization to reduce drift"
-            )
+            recommendations.append("📝 Consider documentation synchronization to reduce drift")
         if not recommendations:
             recommendations.append("✅ Documentation appears healthy")
 
@@ -368,9 +372,7 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
 
     except Exception as e:
         # Return a minimal report on error rather than failing completely
-        handle_analysis_error(
-            "generate summary report", e, total_findings=len(findings), **context
-        )
+        handle_analysis_error("generate summary report", e, total_findings=len(findings), **context)
         return {
             "total_findings": len(findings) if findings else 0,
             "severity_breakdown": {},
@@ -418,9 +420,7 @@ def _analyze_trends(findings: List[Finding]) -> Dict[str, Any]:
     # Generate insights based on analysis
     insights = []
     if drift_count > 0:
-        insights.append(
-            "📊 Drift detection is actively identifying documentation inconsistencies"
-        )
+        insights.append("📊 Drift detection is actively identifying documentation inconsistencies")
     if missing_doc_count > 0:
         insights.append("📝 API documentation gaps require ongoing attention")
     if missing_impl_count > 0:
@@ -436,13 +436,9 @@ def _analyze_trends(findings: List[Finding]) -> Dict[str, Any]:
     }
 
 
-def generate_trends_report(
-    findings: List[Finding], time_window: str = "7d"
-) -> Dict[str, Any]:
+def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> Dict[str, Any]:
     """Generate comprehensive trends report showing patterns over time."""
-    context = build_analysis_context(
-        "generate_trends_report", total_findings=len(findings), time_window=time_window
-    )
+    context = build_analysis_context("generate_trends_report", total_findings=len(findings), time_window=time_window)
 
     try:
         if not findings:
