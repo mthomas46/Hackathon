@@ -8,7 +8,7 @@ Following CQRS command pattern for clear intent expression.
 from dataclasses import dataclass
 from typing import Optional
 
-from ...domain.value_objects.audit_profile import AuditProfile
+from domain.value_objects.audit_profile import AuditProfile
 
 
 @dataclass

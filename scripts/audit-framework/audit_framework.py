@@ -34,35 +34,28 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import logging
 
-# Handle imports for both module and script execution
-try:
-    # When run as module - use DDD structure
-    from .domain import ServiceInfo, AnalysisResult, AuditProfile, ThresholdConfig, AuditService
-    from .application import AuditServiceUseCase, AuditServiceCommand
-    from .infrastructure import (
-        ArchitectureAnalyzer, CodeQualityAnalyzer,
-        PerformanceAnalyzer, MaintainabilityAnalyzer,
-        FileSystemService
-    )
-    from .config.profiles import profile_manager
-    from .config.thresholds import get_thresholds_for_profile
-except ImportError:
-    # When run as script, add current directory to path
-    import sys
-    from pathlib import Path
-    current_dir = Path(__file__).parent
+# Setup path for DDD imports
+import sys
+from pathlib import Path
+current_dir = Path(__file__).parent
+if str(current_dir) not in sys.path:
     sys.path.insert(0, str(current_dir))
 
-    # Import from DDD structure
-    from domain import ServiceInfo, AnalysisResult, AuditProfile, ThresholdConfig, AuditService
-    from application import AuditServiceUseCase, AuditServiceCommand
-    from infrastructure import (
-        ArchitectureAnalyzer, CodeQualityAnalyzer,
-        PerformanceAnalyzer, MaintainabilityAnalyzer,
-        FileSystemService
-    )
-    from config.profiles import profile_manager
-    from config.thresholds import get_thresholds_for_profile
+# Import from DDD structure
+from domain.entities.service_info import ServiceInfo
+from domain.entities.analysis_result import AnalysisResult
+from domain.value_objects.audit_profile import AuditProfile
+from domain.value_objects.thresholds import ThresholdConfig
+from domain.services.audit_service import AuditService
+from application.use_cases.audit_service_use_case import AuditServiceUseCase
+from application.commands.audit_service_command import AuditServiceCommand
+from infrastructure.analyzers import (
+    ArchitectureAnalyzer, CodeQualityAnalyzer,
+    PerformanceAnalyzer, MaintainabilityAnalyzer
+)
+from infrastructure.file_system import FileSystemService
+from config.profiles import profile_manager
+from config.thresholds import get_thresholds_for_profile
 
 # Enhanced reporting libraries
 try:
@@ -608,6 +601,7 @@ class AuditOrchestrator:
         service_name: str,
         profile_name: str = "standard"
     ) -> AnalysisResult:
+        print(f"DEBUG: audit_service_by_name called with service_name={service_name}, profile_name={profile_name}")
         """Audit a service by discovering it and running analysis.
 
         Args:
@@ -629,9 +623,11 @@ class AuditOrchestrator:
         )
 
         # Get audit profile
-        profile = profile_manager.get_profile(profile_name)
-        if not profile:
-            raise ValueError(f"Profile '{profile_name}' not found")
+        try:
+            profile = profile_manager.get_profile(profile_name)
+            print(f"DEBUG: Retrieved profile type: {type(profile)}, name: {getattr(profile, 'name', 'NO_NAME')}")
+        except ValueError as e:
+            raise ValueError(f"Profile '{profile_name}' not found") from e
 
         # Execute audit use case
         return await self.audit_use_case.execute(service_info, profile)
@@ -718,10 +714,6 @@ def main():
                 status_icon = "✅" if service.status == "active" else "⚠️"
                 print("20")
             return
-
-        # Get profile
-        profile = profile_manager.get_profile(getattr(args, 'profile', 'standard'))
-        framework = AuditFramework(profile)
 
         if args.command == 'audit':
             # Run single service audit using DDD orchestrator
