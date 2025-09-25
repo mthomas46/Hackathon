@@ -8,10 +8,10 @@ coordinating between domain services and infrastructure.
 import logging
 from typing import Dict, Any, Optional
 
-from ...domain.entities.service_info import ServiceInfo
-from ...domain.entities.analysis_result import AnalysisResult
-from ...domain.value_objects.audit_profile import AuditProfile
-from ...domain.services.audit_service import AuditService
+from domain.entities.service_info import ServiceInfo
+from domain.entities.analysis_result import AnalysisResult
+from domain.value_objects.audit_profile import AuditProfile
+from domain.services.audit_service import AuditService
 
 logger = logging.getLogger(__name__)
 
