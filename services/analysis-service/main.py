@@ -1030,7 +1030,56 @@ async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):
         return create_error_response(f"Trend analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
-@app.post("/analyze/trends/portfolio")
+@app.post(
+    "/analyze/trends/portfolio",
+    tags=["trends"],
+    summary="Analyze trends across a portfolio of documents",
+    description="""Performs comprehensive trend analysis across multiple documents to identify
+    portfolio-wide patterns, high-risk documents, and provide strategic recommendations
+    for documentation quality improvement.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Portfolio trend analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Portfolio trend analysis completed successfully",
+                        "data": {
+                            "portfolio_overview": {
+                                "total_documents": 25,
+                                "documents_analyzed": 25,
+                                "analysis_period_days": 90
+                            },
+                            "trend_patterns": {
+                                "overall_quality_trend": "improving",
+                                "risk_distribution": {
+                                    "low_risk": 15,
+                                    "medium_risk": 8,
+                                    "high_risk": 2
+                                },
+                                "common_issues": [
+                                    "Outdated technical content",
+                                    "Missing examples"
+                                ]
+                            },
+                            "recommendations": [
+                                "Focus maintenance efforts on high-risk documents",
+                                "Implement automated quality checks for new content",
+                                "Schedule quarterly portfolio reviews"
+                            ]
+                        },
+                        "processing_time": 4.5,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Portfolio trend analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
     """Analyze trends across a portfolio of documents.
 
@@ -1180,7 +1229,58 @@ async def assess_document_risk_endpoint(req: RiskAssessmentRequest):
         return create_error_response(f"Risk assessment failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
-@app.post("/analyze/risk/portfolio")
+@app.post(
+    "/analyze/risk/portfolio",
+    tags=["risk"],
+    summary="Assess risks across a portfolio of documents",
+    description="""Performs comprehensive risk assessment across multiple documents to identify
+    portfolio-wide risk patterns, high-risk documents, and strategic recommendations
+    for documentation quality management and resource allocation.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Portfolio risk assessment completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Portfolio risk assessment completed successfully",
+                        "data": {
+                            "portfolio_risk_overview": {
+                                "total_documents": 50,
+                                "high_risk_documents": 8,
+                                "medium_risk_documents": 15,
+                                "low_risk_documents": 27,
+                                "overall_portfolio_risk": "medium"
+                            },
+                            "risk_factors": {
+                                "primary_risk_drivers": [
+                                    "document_age",
+                                    "quality_score",
+                                    "change_frequency"
+                                ],
+                                "risk_distribution": {
+                                    "staleness_risk": 0.75,
+                                    "quality_decline_risk": 0.62,
+                                    "maintenance_burden": 0.58
+                                }
+                            },
+                            "recommendations": [
+                                "Prioritize review of 8 high-risk documents",
+                                "Implement quality gates for frequently changing documents",
+                                "Schedule portfolio-wide risk reassessment in 90 days"
+                            ]
+                        },
+                        "processing_time": 6.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Portfolio risk assessment failed", "model": ErrorResponse},
+    },
+)
 async def assess_portfolio_risk_endpoint(req: PortfolioRiskAssessmentRequest):
     """Assess risks across a portfolio of documents.
 
@@ -1339,7 +1439,85 @@ async def forecast_document_maintenance_endpoint(req: MaintenanceForecastRequest
         )
 
 
-@app.post("/analyze/maintenance/forecast/portfolio")
+@app.post(
+    "/analyze/maintenance/forecast/portfolio",
+    tags=["maintenance"],
+    summary="Forecast maintenance needs across a portfolio of documents",
+    description="""Provides comprehensive maintenance planning across multiple documents,
+    including prioritized schedules, resource allocation recommendations,
+    and strategic maintenance roadmaps for documentation portfolios.
+    Analyzes maintenance urgency, predicts optimal review dates, and
+    provides actionable recommendations for portfolio-wide documentation management.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Portfolio maintenance forecast completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Portfolio maintenance forecast completed successfully",
+                        "data": {
+                            "portfolio_summary": {
+                                "total_documents": 25,
+                                "forecasted_documents": 18,
+                                "average_urgency": 0.72,
+                                "maintenance_dates": 12,
+                                "high_priority_count": 5,
+                                "medium_priority_count": 8,
+                                "low_priority_count": 5,
+                            },
+                            "maintenance_schedule": [
+                                {
+                                    "date": "2025-01-15",
+                                    "documents": ["doc_001", "doc_005"],
+                                    "estimated_effort_days": 3.2,
+                                    "priority": "high",
+                                },
+                                {
+                                    "date": "2025-02-01",
+                                    "documents": ["doc_012", "doc_018"],
+                                    "estimated_effort_days": 2.8,
+                                    "priority": "medium",
+                                },
+                            ],
+                            "document_forecasts": [
+                                {
+                                    "document_id": "doc_001",
+                                    "maintenance_urgency": 0.85,
+                                    "next_review_date": "2025-01-15",
+                                    "maintenance_priority": "high",
+                                    "estimated_effort_days": 1.5,
+                                    "forecast_factors": {
+                                        "quality_trend": "declining",
+                                        "usage_frequency": "high",
+                                        "business_impact": "critical",
+                                        "technical_debt": 0.42,
+                                    },
+                                    "recommendations": [
+                                        "Immediate review required",
+                                        "Address critical quality issues",
+                                        "Update API references",
+                                    ],
+                                }
+                            ],
+                            "processing_time": 4.2,
+                            "forecast_timestamp": "2025-09-25T10:00:00Z",
+                        },
+                        "total_documents": 25,
+                        "forecasted_documents": 18,
+                        "average_urgency": 0.72,
+                        "maintenance_dates": 12,
+                        "processing_time": 4.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Portfolio maintenance forecast failed", "model": ErrorResponse},
+    },
+)
 async def forecast_portfolio_maintenance_endpoint(
     req: PortfolioMaintenanceForecastRequest,
 ):
@@ -1399,7 +1577,86 @@ async def forecast_portfolio_maintenance_endpoint(
         )
 
 
-@app.post("/analyze/quality/degradation")
+@app.post(
+    "/analyze/quality/degradation",
+    tags=["quality"],
+    summary="Detect quality degradation in documentation over time",
+    description="""Monitors documentation quality trends and detects when quality is degrading,
+    providing alerts and analysis of degradation patterns with actionable insights
+    for quality maintenance and improvement. Analyzes historical quality metrics,
+    identifies degradation trends, and provides early warning alerts.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Quality degradation detection completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Quality degradation detection completed successfully",
+                        "data": {
+                            "document_id": "doc_001",
+                            "degradation_detected": True,
+                            "severity_assessment": {
+                                "overall_severity": "high",
+                                "degradation_rate": 0.15,
+                                "trend_confidence": 0.89,
+                                "risk_level": "critical",
+                            },
+                            "trend_analysis": {
+                                "quality_trend": "declining",
+                                "slope": -0.023,
+                                "correlation_coefficient": 0.78,
+                                "significant_change": True,
+                            },
+                            "volatility_analysis": {
+                                "volatility_score": 0.34,
+                                "stability_period_days": 45,
+                                "recent_spikes": 2,
+                            },
+                            "degradation_events": [
+                                {
+                                    "date": "2025-08-15",
+                                    "severity": "medium",
+                                    "description": "Significant quality drop detected",
+                                    "causes": ["API reference outdated", "Formatting issues"],
+                                }
+                            ],
+                            "finding_trend": {
+                                "total_findings_increase": 12,
+                                "critical_findings_increase": 3,
+                                "trend_period_days": 90,
+                            },
+                            "analysis_period_days": 90,
+                            "data_points": 45,
+                            "baseline_period_days": 30,
+                            "alert_threshold": 0.1,
+                            "alerts": [
+                                {
+                                    "alert_type": "quality_degradation",
+                                    "severity": "high",
+                                    "message": "Documentation quality declining at 15% per month",
+                                    "recommended_action": "Immediate review and update required",
+                                    "confidence": 0.89,
+                                }
+                            ],
+                            "processing_time": 2.8,
+                            "detection_timestamp": "2025-09-25T10:00:00Z",
+                        },
+                        "document_id": "doc_001",
+                        "degradation_detected": True,
+                        "severity_level": "high",
+                        "alerts_count": 1,
+                        "processing_time": 2.8,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Quality degradation detection failed", "model": ErrorResponse},
+    },
+)
 async def detect_document_quality_degradation_endpoint(
     req: QualityDegradationDetectionRequest,
 ):
@@ -1532,7 +1789,85 @@ async def monitor_portfolio_quality_degradation_endpoint(
         )
 
 
-@app.post("/analyze/change/impact")
+@app.post(
+    "/analyze/change/impact",
+    tags=["impact"],
+    summary="Analyze the impact of changes to documentation on related content",
+    description="""Performs comprehensive change impact analysis to understand how document changes
+    affect related content, dependencies, and stakeholders. Provides actionable insights
+    for change management and risk mitigation. Identifies cascading effects, breaking changes,
+    and provides recommendations for safe document updates.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Change impact analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Change impact analysis completed successfully",
+                        "data": {
+                            "document_id": "doc_001",
+                            "change_description": "Updated API endpoint URL and added new parameters",
+                            "document_features": {
+                                "content_type": "api_documentation",
+                                "technical_depth": "high",
+                                "audience": "developers",
+                                "dependencies_count": 8,
+                            },
+                            "impact_analysis": {
+                                "overall_impact": {
+                                    "impact_level": "high",
+                                    "risk_score": 0.78,
+                                    "affected_documents_count": 12,
+                                    "breaking_changes": True,
+                                    "estimated_effort_days": 5.5,
+                                },
+                                "impact_categories": {
+                                    "technical": 0.85,
+                                    "business": 0.72,
+                                    "stakeholder": 0.65,
+                                },
+                                "change_classification": "major_update",
+                            },
+                            "related_documents_analysis": {
+                                "directly_referenced": ["doc_005", "doc_012"],
+                                "indirectly_affected": ["doc_018", "doc_023", "doc_045"],
+                                "cascade_risk": 0.6,
+                                "update_sequence": ["doc_005", "doc_012", "doc_001"],
+                            },
+                            "recommendations": [
+                                {
+                                    "priority": "high",
+                                    "category": "communication",
+                                    "description": "Notify all API consumers about breaking changes",
+                                    "effort_estimate": "2-3 hours",
+                                    "risk_mitigation": "Reduces adoption friction",
+                                },
+                                {
+                                    "priority": "medium",
+                                    "category": "testing",
+                                    "description": "Perform integration testing with dependent services",
+                                    "effort_estimate": "1-2 days",
+                                    "risk_mitigation": "Prevents production issues",
+                                },
+                            ],
+                            "processing_time": 3.2,
+                            "analysis_timestamp": "2025-09-25T10:00:00Z",
+                        },
+                        "document_id": "doc_001",
+                        "impact_level": "high",
+                        "affected_documents": 12,
+                        "processing_time": 3.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Change impact analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_document_change_impact_endpoint(req: ChangeImpactAnalysisRequest):
     """Analyze the impact of changes to documentation on related content.
 
