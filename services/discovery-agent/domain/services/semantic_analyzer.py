@@ -191,17 +191,35 @@ class SemanticToolAnalyzer:
         }
 
     def _rule_based_semantic_analysis(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Rule-based semantic analysis as fallback"""
+        """Rule-based semantic analysis as fallback when LLM is unavailable.
+
+        Performs comprehensive semantic analysis using keyword matching and
+        scoring algorithms to categorize tools and identify capabilities.
+        """
+        # Extract and prepare text for analysis
         combined_text = self._prepare_tool_text_for_analysis(tool)
+
+        # Score semantic categories based on keyword matching
         semantic_matches = self._score_semantic_categories(combined_text)
         semantic_matches.sort(key=lambda x: x["score"], reverse=True)
 
+        # Determine primary category and collect capabilities
+        analysis_results = self._process_semantic_matches(semantic_matches)
+
+        return self._build_semantic_analysis_result(
+            tool, semantic_matches, **analysis_results
+        )
+
+    def _process_semantic_matches(self, semantic_matches: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process semantic matches to extract primary category and capabilities."""
         primary_category = self._determine_primary_category(semantic_matches)
         capabilities, use_cases = self._collect_capabilities_and_use_cases(semantic_matches)
 
-        return self._build_semantic_analysis_result(
-            tool, semantic_matches, primary_category, capabilities, use_cases
-        )
+        return {
+            "primary_category": primary_category,
+            "capabilities": capabilities,
+            "use_cases": use_cases
+        }
 
     def _prepare_tool_text_for_analysis(self, tool: Dict[str, Any]) -> str:
         """Prepare combined text from tool attributes for analysis"""
@@ -212,55 +230,96 @@ class SemanticToolAnalyzer:
         return f"{tool_name} {description} {path} {category}"
 
     def _score_semantic_categories(self, combined_text: str) -> List[Dict[str, Any]]:
-        """Score semantic categories based on keyword matching"""
+        """Score semantic categories based on keyword matching and relevance.
+
+        Evaluates each semantic category against the combined tool text,
+        calculating relevance scores and filtering out low-confidence matches.
+        """
         semantic_matches = []
 
-        for sem_category, category_data in self.semantic_categories.items():
-            score = self._calculate_category_score(sem_category, category_data, combined_text)
+        for category_name, category_data in self.semantic_categories.items():
+            score = self._calculate_category_score(category_name, category_data, combined_text)
 
-            if score >= 2:
-                semantic_matches.append(
-                    {
-                        "category": sem_category,
-                        "score": score,
-                        "capabilities": category_data["capabilities"],
-                        "use_cases": category_data["use_cases"],
-                    }
-                )
+            if self._is_category_relevant(score):
+                match_data = self._create_semantic_match(category_name, score, category_data)
+                semantic_matches.append(match_data)
 
         return semantic_matches
 
+    def _is_category_relevant(self, score: int) -> bool:
+        """Determine if a category score indicates relevance."""
+        return score >= 2
+
+    def _create_semantic_match(
+        self, category_name: str, score: int, category_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Create a semantic match data structure."""
+        return {
+            "category": category_name,
+            "score": score,
+            "capabilities": category_data["capabilities"],
+            "use_cases": category_data["use_cases"],
+        }
+
     def _calculate_category_score(self, sem_category: str, category_data: Dict[str, Any], combined_text: str) -> int:
-        """Calculate score for a semantic category"""
+        """Calculate relevance score for a semantic category.
+
+        Uses multiple scoring mechanisms to determine how well a category
+        matches the tool's semantic content.
+        """
         score = 0
 
-        # Keyword matching
-        for keyword in category_data["keywords"]:
-            if keyword in combined_text:
-                score += 2
+        # Score based on keyword matches
+        score += self._calculate_keyword_score(category_data["keywords"], combined_text)
 
-        # Category name matching
-        if sem_category.replace("_", " ") in combined_text:
-            score += 3
+        # Score based on category name matches
+        score += self._calculate_category_name_score(sem_category, combined_text)
 
         return score
+
+    def _calculate_keyword_score(self, keywords: List[str], combined_text: str) -> int:
+        """Calculate score based on keyword matches."""
+        score = 0
+        for keyword in keywords:
+            if keyword in combined_text:
+                score += 2
+        return score
+
+    def _calculate_category_name_score(self, category_name: str, combined_text: str) -> int:
+        """Calculate score based on category name matches."""
+        readable_category = category_name.replace("_", " ")
+        return 3 if readable_category in combined_text else 0
 
     def _determine_primary_category(self, semantic_matches: List[Dict[str, Any]]) -> str:
         """Determine the primary semantic category"""
         return semantic_matches[0]["category"] if semantic_matches else "utility"
 
     def _collect_capabilities_and_use_cases(self, semantic_matches: List[Dict[str, Any]]) -> tuple:
-        """Collect capabilities and use cases from top semantic matches"""
+        """Collect and deduplicate capabilities and use cases from semantic matches.
+
+        Aggregates capabilities and use cases from the top 3 most relevant
+        semantic matches, removing duplicates to provide clean lists.
+        """
         capabilities = []
         use_cases = []
 
-        # Collect from top 3 matches
-        for match in semantic_matches[:3]:
+        # Collect from top 3 most relevant matches
+        top_matches = self._get_top_semantic_matches(semantic_matches, limit=3)
+
+        for match in top_matches:
             capabilities.extend(match["capabilities"])
             use_cases.extend(match["use_cases"])
 
-        # Remove duplicates
-        return list(set(capabilities)), list(set(use_cases))
+        # Remove duplicates while preserving order
+        return self._deduplicate_list(capabilities), self._deduplicate_list(use_cases)
+
+    def _get_top_semantic_matches(self, semantic_matches: List[Dict[str, Any]], limit: int = 3) -> List[Dict[str, Any]]:
+        """Get the top N semantic matches by relevance."""
+        return semantic_matches[:limit]
+
+    def _deduplicate_list(self, items: List[str]) -> List[str]:
+        """Remove duplicates from list while preserving order."""
+        return list(dict.fromkeys(items))
 
     def _build_semantic_analysis_result(
         self, tool: Dict[str, Any], semantic_matches: List[Dict[str, Any]],
