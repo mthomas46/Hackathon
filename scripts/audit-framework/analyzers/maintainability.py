@@ -60,6 +60,7 @@ class MaintainabilityAnalysisResult:
     logging_practices: Dict[str, Any]
     issues: List[str]
     recommendations: List[str]
+    architecture_quality_score: float = 0.0
 
 
 class MaintainabilityAnalyzer:
@@ -79,19 +80,24 @@ class MaintainabilityAnalyzer:
             'devops': await self._check_devops_readiness(service)
         }
 
+        # Calculate architectural quality bonus
+        architecture_bonus = self._check_architecture_quality(service)
+
         # Calculate weighted maintainability score
-        documentation_weight = 0.35
-        organization_weight = 0.25
+        documentation_weight = 0.30  # Reduced to make room for architecture
+        organization_weight = 0.20
         error_handling_weight = 0.15
         scalability_weight = 0.15
         devops_weight = 0.10
+        architecture_weight = 0.10  # New architectural quality dimension
 
         maintainability_score = (
             scores['documentation'] * documentation_weight +
             scores['organization'] * organization_weight +
             scores['error_handling'] * error_handling_weight +
             scores['scalability'] * scalability_weight +
-            scores['devops'] * devops_weight
+            scores['devops'] * devops_weight +
+            architecture_bonus * architecture_weight
         )
 
         return MaintainabilityAnalysisResult(
@@ -101,6 +107,7 @@ class MaintainabilityAnalyzer:
             error_handling_score=scores['error_handling'],
             devops_readiness_score=scores['devops'],
             scalability_score=scores['scalability'],
+            architecture_quality_score=architecture_bonus,
             linting_quality=await self._analyze_linting_quality(service),
             test_quality=await self._analyze_test_quality(service),
             test_quality_metrics=self._analyze_test_quality_metrics(service),
@@ -187,15 +194,23 @@ class MaintainabilityAnalyzer:
                         tree = ast.parse(content)
 
                         for node in ast.walk(tree):
-                            if isinstance(node, ast.FunctionDef) and not node.name.startswith('_'):
+                            if isinstance(node, ast.FunctionDef):
                                 total_functions += 1
-                                if ast.get_docstring(node):
+                                docstring = ast.get_docstring(node)
+                                if docstring:
                                     documented_functions += 1
+                                    # Bonus for comprehensive docstrings (Args, Returns, Raises sections)
+                                    if all(section in docstring for section in ['Args:', 'Returns:']):
+                                        documented_functions += 0.5  # Bonus for quality
 
                             elif isinstance(node, ast.ClassDef):
                                 total_classes += 1
-                                if ast.get_docstring(node):
+                                docstring = ast.get_docstring(node)
+                                if docstring:
                                     documented_classes += 1
+                                    # Bonus for comprehensive class docstrings
+                                    if len(docstring.split()) > 10:  # Substantial documentation
+                                        documented_classes += 0.5
 
                     except Exception:
                         continue
@@ -275,9 +290,12 @@ class MaintainabilityAnalyzer:
         error_patterns = {
             'bare_except': 0,
             'generic_exception': 0,
+            'specific_exceptions': 0,
+            'domain_exceptions': 0,
             'missing_finally': 0,
             'unhandled_exceptions': 0,
-            'good_error_handling': 0
+            'good_error_handling': 0,
+            'exception_hierarchy': 0
         }
 
         for root, dirs, files in os.walk(str(service.path)):
@@ -299,7 +317,37 @@ class MaintainabilityAnalyzer:
 
                             # Check for generic Exception catching
                             elif 'except Exception' in line_strip:
-                                error_patterns['generic_exception'] += 1
+                                # Check if this is followed by raising a more specific exception (good practice)
+                                is_transforming_exception = False
+                                for next_line in lines[i+1:i+5]:  # Check next few lines
+                                    next_strip = next_line.strip()
+                                    if next_strip.startswith('raise ') and ('Exception' not in next_strip or '(' in next_strip):
+                                        is_transforming_exception = True
+                                        break
+                                    elif next_strip and not next_strip.startswith('#'):
+                                        break  # Stop at first non-comment line
+
+                                if is_transforming_exception:
+                                    error_patterns['specific_exceptions'] += 1
+                                else:
+                                    error_patterns['generic_exception'] += 1
+
+                            # Check for specific domain exceptions (good practice)
+                            elif 'except ' in line_strip and 'Exception' in line_strip and '(' not in line_strip:
+                                if any(domain_indicator in line_strip for domain_indicator in [
+                                    'ValidationException', 'DomainException', 'BusinessRuleViolation',
+                                    'DocumentException', 'AnalysisException', 'RepositoryException',
+                                    'ExternalServiceException', 'ConfigurationException', 'AuthorizationException',
+                                    'ResourceLimitExceededException'
+                                ]):
+                                    error_patterns['domain_exceptions'] += 1
+                                else:
+                                    error_patterns['specific_exceptions'] += 1
+
+                            # Check for exception hierarchy patterns (custom exception classes)
+                            elif 'class ' in line_strip and 'Exception' in line_strip:
+                                if 'DomainException' in line_strip or 'Exception' in line_strip:
+                                    error_patterns['exception_hierarchy'] += 1
 
                             # Check for try blocks without proper error handling
                             elif line_strip.startswith('try:'):
@@ -322,14 +370,90 @@ class MaintainabilityAnalyzer:
                     except Exception:
                         continue
 
-        # Apply penalties
-        score -= min(30, error_patterns['bare_except'] * 5)
-        score -= min(20, error_patterns['generic_exception'] * 3)
-        score -= min(25, error_patterns['unhandled_exceptions'] * 4)
-        score -= min(15, error_patterns['missing_finally'] * 2)
+        # Apply penalties for bad practices
+        score -= min(30, error_patterns['bare_except'] * 5)  # Bare except is very bad
+        score -= min(15, error_patterns['generic_exception'] * 2)  # Generic exception is bad but can be acceptable
+        score -= min(25, error_patterns['unhandled_exceptions'] * 4)  # Unhandled exceptions are serious
+        score -= min(10, error_patterns['missing_finally'] * 2)  # Missing finally is minor issue
 
-        # Bonus for good error handling
-        score += min(20, error_patterns['good_error_handling'] * 2)
+        # Bonus for good practices
+        score += min(15, error_patterns['specific_exceptions'] * 3)  # Specific exceptions are good
+        score += min(25, error_patterns['domain_exceptions'] * 4)  # Domain exceptions are excellent
+        score += min(20, error_patterns['exception_hierarchy'] * 5)  # Exception hierarchy is outstanding
+        score += min(10, error_patterns['good_error_handling'] * 2)  # General good error handling
+
+        return max(0, min(100, score))
+
+    def _check_architecture_quality(self, service: ServiceInfo) -> float:
+        """Check architectural quality indicators and patterns"""
+        score = 0.0
+
+        architecture_indicators = {
+            'utility_modules': 0,
+            'domain_exceptions': 0,
+            'ddd_patterns': 0,
+            'separation_concerns': 0,
+            'dependency_injection': 0,
+            'service_layers': 0
+        }
+
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py') and not file.startswith('test_'):
+                    file_path = Path(root) / file
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+
+                        # Check for utility modules (common patterns we implemented)
+                        if any(util_pattern in file.lower() for util_pattern in [
+                            'utils', 'utilities', 'helpers', 'common', 'shared'
+                        ]):
+                            if any(util_function in content for util_function in [
+                                'def create_', 'def validate_', 'def handle_', 'def safe_'
+                            ]):
+                                architecture_indicators['utility_modules'] += 1
+
+                        # Check for domain exception hierarchies
+                        if 'domain/exceptions' in str(file_path) or 'exceptions/domain' in str(file_path):
+                            if 'class ' in content and 'Exception' in content and 'DomainException' in content:
+                                architecture_indicators['domain_exceptions'] += 1
+
+                        # Check for DDD patterns (entities, services, repositories)
+                        path_parts = str(file_path).lower()
+                        if any(ddd_pattern in path_parts for ddd_pattern in [
+                            '/domain/', '/entities/', '/services/', '/repositories/', '/value_objects/'
+                        ]):
+                            architecture_indicators['ddd_patterns'] += 1
+
+                        # Check for separation of concerns (different layer imports)
+                        if ('from .domain' in content or 'from ..domain' in content) and \
+                           ('from .infrastructure' in content or 'from ..infrastructure' in content) and \
+                           ('from .presentation' in content or 'from ..presentation' in content):
+                            architecture_indicators['separation_concerns'] += 1
+
+                        # Check for dependency injection patterns
+                        if any(di_pattern in content for di_pattern in [
+                            'def __init__(self,', 'self.', 'inject', 'container'
+                        ]) and 'from typing import' in content:
+                            architecture_indicators['dependency_injection'] += 1
+
+                        # Check for service layer patterns
+                        if 'class ' in content and any(service_pattern in content for service_pattern in [
+                            'Service', 'Handler', 'Controller', 'Repository'
+                        ]):
+                            if 'async def' in content or 'def ' in content:
+                                architecture_indicators['service_layers'] += 1
+
+                    except Exception:
+                        continue
+
+        # Calculate architecture score
+        score += min(30, architecture_indicators['utility_modules'] * 10)  # Utility modules are valuable
+        score += min(25, architecture_indicators['domain_exceptions'] * 8)  # Domain exceptions show maturity
+        score += min(20, architecture_indicators['ddd_patterns'] * 5)  # DDD patterns are good
+        score += min(15, architecture_indicators['separation_concerns'] * 15)  # Clean architecture is excellent
+        score += min(10, architecture_indicators['dependency_injection'] * 5)  # DI is good practice
 
         return max(0, min(100, score))
 
