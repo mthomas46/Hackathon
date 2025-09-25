@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
+from services.shared.constants_new import ServiceNames
 from services.shared.presentation.responses import (
     create_error_response,
     create_success_response,
@@ -27,8 +28,15 @@ from services.shared.utilities.error_handling import (
 
 # Global configuration for discovery agent
 _DEFAULT_TIMEOUT = 30
-_ORCHESTRATOR_URL_ENV = EnvVars.ORCHESTRATOR_URL_ENV
+_ORCHESTRATOR_URL_ENV = "ORCHESTRATOR_URL"
 _DEFAULT_ORCHESTRATOR_URL = "http://orchestrator:5099"
+
+# Standardized timeout constants to eliminate magic numbers
+TIMEOUT_HEALTH_CHECK = 5
+TIMEOUT_OPENAPI_FETCH = 10
+TIMEOUT_LLM_ANALYSIS = 20
+TIMEOUT_TOOL_REGISTRATION = 15
+TIMEOUT_SERVICE_DISCOVERY = 30
 
 
 def get_default_timeout() -> int:
@@ -44,6 +52,37 @@ def get_orchestrator_url() -> str:
 def get_discovery_clients(timeout: int = _DEFAULT_TIMEOUT) -> ServiceClients:
     """Create and return a ServiceClients instance with proper timeout."""
     return ServiceClients(timeout=timeout)
+
+
+# Centralized ServiceClients import handling to eliminate duplication
+try:
+    from services.shared.clients import ServiceClients as SharedServiceClients
+    SERVICE_CLIENTS_AVAILABLE = True
+except ImportError:
+    SharedServiceClients = None
+    SERVICE_CLIENTS_AVAILABLE = False
+
+
+def get_service_clients(timeout: int = _DEFAULT_TIMEOUT) -> Optional[Any]:
+    """Get ServiceClients instance with fallback handling.
+
+    This centralized function eliminates the need for try/except blocks
+    in every file that needs to use ServiceClients.
+    """
+    if SERVICE_CLIENTS_AVAILABLE and SharedServiceClients:
+        return SharedServiceClients(timeout=timeout)
+    return None
+
+
+def safe_service_clients_call(timeout: int = _DEFAULT_TIMEOUT) -> Any:
+    """Get ServiceClients instance, raising an exception if not available."""
+    clients = get_service_clients(timeout)
+    if clients is None:
+        raise ServiceException(
+            "ServiceClients not available - required for service communication",
+            "DEPENDENCY_ERROR"
+        )
+    return clients
 
 
 def handle_discovery_error(

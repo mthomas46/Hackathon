@@ -7,11 +7,7 @@ using the log-collector service for centralized logging and metrics collection.
 import uuid
 from typing import Any, Dict, Optional
 
-try:
-    from services.shared.clients import ServiceClients
-except ImportError:
-    # Fallback for when running in Docker or different environment
-    ServiceClients = None
+from ..domain.services.shared_utils import safe_service_clients_call, TIMEOUT_HEALTH_CHECK
 
 
 class DiscoveryAgentMonitoring:
@@ -19,7 +15,7 @@ class DiscoveryAgentMonitoring:
 
     def __init__(self, log_collector_url: str = "http://localhost:5080"):
         self.log_collector_url = log_collector_url
-        self.service_client = ServiceClients()
+        self.service_client = safe_service_clients_call()
         self.monitoring_session_id = str(uuid.uuid4())
 
         # Monitoring metrics
@@ -55,7 +51,7 @@ class DiscoveryAgentMonitoring:
                 # Send to log-collector
                 url = f"{self.log_collector_url}/logs"
 
-                async with session.post(url, json=log_entry, timeout=5) as response:
+                async with session.post(url, json=log_entry, timeout=TIMEOUT_HEALTH_CHECK) as response:
                     if response.status == 200:
                         return True
                     else:
@@ -249,7 +245,7 @@ class DiscoveryAgentMonitoring:
         try:
             async with self.service_client.session() as session:
                 async with session.get(
-                    f"{self.log_collector_url}/health", timeout=3
+                    f"{self.log_collector_url}/health", timeout=TIMEOUT_HEALTH_CHECK
                 ) as response:
                     if response.status == 200:
                         return "healthy"
