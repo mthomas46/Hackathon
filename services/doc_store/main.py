@@ -9,11 +9,11 @@ from fastapi import FastAPI
 # ============================================================================
 # STANDARDIZED SHARED INFRASTRUCTURE - Using consolidated utilities
 # ============================================================================
-from services.shared.infrastructure.config import DocStoreConfig, load_service_config
-from services.shared.utilities import ServiceException, ValidationException
-from services.shared.utilities import setup_common_middleware
-from services.shared.presentation.responses import create_success_response, create_error_response
-from services.shared.utilities import create_validation_error
+from services.shared.infrastructure.config.config import DocStoreConfig, load_service_config
+from services.shared.infrastructure.utilities.error_handling import ServiceException, ValidationException
+from services.shared.infrastructure.utilities.middleware import setup_common_middleware
+from services.shared.infrastructure.utilities.error_handling import create_standard_success_response as create_success_response, create_standard_error_response as create_error_response
+from services.shared.infrastructure.utilities.validation_utils import validate_required_fields
 
 from .presentation.api.routes import router as api_router
 
