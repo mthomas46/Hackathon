@@ -5,8 +5,8 @@ Handles versioning and history-related HTTP requests.
 
 from typing import Any, Dict, Optional
 
-from ...core.handler import BaseHandler
-from .service import VersioningService
+from .base_handler import BaseHandler
+from ...domain.versioning.service import VersioningService
 
 
 class VersioningHandlers(BaseHandler):

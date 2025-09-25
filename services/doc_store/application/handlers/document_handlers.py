@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import HTTPException
 
-from ...core.models import (
+from ...presentation.dto.models import (
     DocumentListResponse,
     DocumentRequest,
     DocumentResponse,
@@ -22,7 +22,7 @@ from ...domain.exceptions import (
     DocumentValidationException,
     DocumentSizeExceededException,
 )
-from .service import DocumentService
+from ...domain.documents.service import DocumentService
 
 
 class AbstractDocumentHandlers(ABC):

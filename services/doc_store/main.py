@@ -15,7 +15,7 @@ from services.shared.utilities import setup_common_middleware
 from services.shared.presentation.responses import create_success_response, create_error_response
 from services.shared.utilities import create_validation_error
 
-from .api.routes import router as api_router
+from .presentation.api.routes import router as api_router
 
 # ============================================================================
 # DOMAIN EXCEPTIONS - Doc Store specific exceptions
