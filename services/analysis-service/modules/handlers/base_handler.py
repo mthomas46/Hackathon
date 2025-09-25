@@ -104,16 +104,12 @@ class BaseAnalysisHandler(ABC):
         service_client = await self._get_service_client()
 
         if not service_client:
-            await self._logger.warning(
-                "Service client not available", handler=self.handler_name
-            )
+            await self._logger.warning("Service client not available", handler=self.handler_name)
             return documents
 
         for doc_id in document_ids:
             try:
-                doc_data = await service_client.get_json(
-                    f"{service_client.doc_store_url()}/documents/{doc_id}"
-                )
+                doc_data = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{doc_id}")
                 if doc_data:
                     # Try to create Document object, fallback to dict
                     try:
@@ -174,9 +170,7 @@ class BaseAnalysisHandler(ABC):
     ) -> AnalysisResult:
         """Handle errors consistently across handlers."""
         error_message: str = f"{type(error).__name__}: {str(error)}"
-        self.logger.error(
-            f"Analysis {analysis_id} failed: {error_message}", extra=context
-        )
+        self.logger.error(f"Analysis {analysis_id} failed: {error_message}", extra=context)
 
         # Publish error event
         await self._publish_event(
@@ -190,9 +184,7 @@ class BaseAnalysisHandler(ABC):
             },
         )
 
-        return self._create_analysis_result(
-            analysis_id=analysis_id, error_message=error_message
-        )
+        return self._create_analysis_result(analysis_id=analysis_id, error_message=error_message)
 
     async def _log_analysis_start(
         self,
@@ -265,9 +257,7 @@ class BaseAnalysisHandler(ABC):
 
     async def execute_with_timing(self, request: Any) -> AnalysisResult:
         """Execute analysis with timing and error handling."""
-        analysis_id: str = getattr(
-            request, "analysis_id", f"{self.handler_name}-{int(time.time())}"
-        )
+        analysis_id: str = getattr(request, "analysis_id", f"{self.handler_name}-{int(time.time())}")
         analysis_type: str = self.handler_name.replace("_", "-")
 
         start_time: float = time.time()
@@ -315,9 +305,7 @@ class HandlerRegistry:
         """List all registered handler types."""
         return list(self._handlers.keys())
 
-    async def execute_analysis(
-        self, analysis_type: str, request: Any
-    ) -> Optional[AnalysisResult]:
+    async def execute_analysis(self, analysis_type: str, request: Any) -> Optional[AnalysisResult]:
         """Execute analysis using appropriate handler."""
         handler = self.get_handler(analysis_type)
         if not handler:
@@ -329,9 +317,7 @@ class HandlerRegistry:
                     analysis_type=analysis_type,
                 )
             except Exception:
-                logger.error(
-                    f"No handler registered for analysis type: {analysis_type}"
-                )
+                logger.error(f"No handler registered for analysis type: {analysis_type}")
             return None
 
         return await handler.execute_with_timing(request)

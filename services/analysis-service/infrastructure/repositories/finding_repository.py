@@ -74,17 +74,11 @@ class InMemoryFindingRepository(FindingRepository):
 
     async def get_by_category(self, category: str) -> List[Finding]:
         """Get findings by category from memory."""
-        return [
-            finding
-            for finding in self._findings.values()
-            if finding.category == category
-        ]
+        return [finding for finding in self._findings.values() if finding.category == category]
 
     async def get_unresolved(self) -> List[Finding]:
         """Get all unresolved findings from memory."""
-        return [
-            finding for finding in self._findings.values() if not finding.is_resolved()
-        ]
+        return [finding for finding in self._findings.values() if not finding.is_resolved()]
 
     async def delete(self, finding_id: str) -> bool:
         """Delete a finding from memory."""

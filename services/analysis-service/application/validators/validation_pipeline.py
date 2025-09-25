@@ -66,9 +66,7 @@ class ValidationPipeline:
         # Extract command type from validator name
         validator_name = validator.__class__.__name__
         if validator_name.endswith("Validator"):
-            command_name = validator_name.replace("Validator", "").replace(
-                "Command", "Command"
-            )
+            command_name = validator_name.replace("Validator", "").replace("Command", "Command")
             # This is a simplified mapping - in practice you'd want a more robust system
             command_type = self._get_command_type_from_name(command_name)
             if command_type:
@@ -80,9 +78,7 @@ class ValidationPipeline:
         # Extract query type from validator name
         validator_name = validator.__class__.__name__
         if validator_name.endswith("Validator"):
-            query_name = validator_name.replace("Validator", "").replace(
-                "Query", "Query"
-            )
+            query_name = validator_name.replace("Validator", "").replace("Query", "Query")
             query_type = self._get_query_type_from_name(query_name)
             if query_type:
                 self.query_validators[query_type] = validator
@@ -113,9 +109,7 @@ class ValidationPipeline:
         }
         return query_mappings.get(name)
 
-    async def validate_command(
-        self, command: Any, context: Optional[ValidationContext] = None
-    ) -> ValidationResult:
+    async def validate_command(self, command: Any, context: Optional[ValidationContext] = None) -> ValidationResult:
         """Validate a command using registered validators."""
         command_type = type(command)
         context = context or ValidationContext()
@@ -141,9 +135,7 @@ class ValidationPipeline:
 
         return result
 
-    async def validate_query(
-        self, query: Any, context: Optional[ValidationContext] = None
-    ) -> ValidationResult:
+    async def validate_query(self, query: Any, context: Optional[ValidationContext] = None) -> ValidationResult:
         """Validate a query using registered validators."""
         query_type = type(query)
         context = context or ValidationContext()
@@ -196,9 +188,7 @@ class ValidationPipeline:
 
         return result
 
-    async def validate_all(
-        self, command_or_query: Any, context: Optional[ValidationContext] = None
-    ) -> ValidationResult:
+    async def validate_all(self, command_or_query: Any, context: Optional[ValidationContext] = None) -> ValidationResult:
         """Validate using all applicable validators."""
         context = context or ValidationContext()
 
@@ -285,15 +275,11 @@ class ValidationMiddleware:
         if not result.is_valid:
             raise ValidationException(result)
 
-    async def validate_business_rules(
-        self, entity: Any, entity_type: str
-    ) -> List[ValidationError]:
+    async def validate_business_rules(self, entity: Any, entity_type: str) -> List[ValidationError]:
         """Validate business rules and return warnings/errors."""
         context = ValidationContext()
 
-        result = await self.validation_pipeline.validate_business_rules(
-            entity, entity_type, context
-        )
+        result = await self.validation_pipeline.validate_business_rules(entity, entity_type, context)
 
         return result.errors + result.warnings
 

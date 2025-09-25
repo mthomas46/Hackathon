@@ -53,9 +53,7 @@ class PRConfidenceAnalysisService:
     def __init__(self):
         self.service_client = get_analysis_service_client()
 
-    async def analyze_pr_confidence(
-        self, request: PRConfidenceAnalysisRequest
-    ) -> PRConfidenceAnalysisResponse:
+    async def analyze_pr_confidence(self, request: PRConfidenceAnalysisRequest) -> PRConfidenceAnalysisResponse:
         """
         Perform comprehensive PR confidence analysis.
 
@@ -160,9 +158,7 @@ class PRConfidenceAnalysisService:
     ) -> Any:
         """Perform cross-reference analysis between PR and requirements."""
         # Use the cross-reference analyzer
-        return pr_cross_reference_analyzer.perform_comprehensive_cross_reference(
-            pr_data, jira_data or {}, confluence_docs or []
-        )
+        return pr_cross_reference_analyzer.perform_comprehensive_cross_reference(pr_data, jira_data or {}, confluence_docs or [])
 
     async def _calculate_confidence_score(
         self,
@@ -202,9 +198,7 @@ class PRConfidenceAnalysisService:
             {
                 "overall_alignment_score": cross_ref_results.overall_alignment_score,
                 "requirements_alignment": {"gaps": cross_ref_results.identified_gaps},
-                "documentation_consistency": {
-                    "issues": cross_ref_results.consistency_issues
-                },
+                "documentation_consistency": {"issues": cross_ref_results.consistency_issues},
             },
         )
 

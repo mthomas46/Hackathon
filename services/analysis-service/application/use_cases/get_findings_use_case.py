@@ -34,9 +34,7 @@ class FindingsQueryResult:
 class GetFindingsUseCase:
     """Use case for retrieving findings."""
 
-    def __init__(
-        self, finding_service: FindingService, finding_repository: FindingRepository
-    ):
+    def __init__(self, finding_service: FindingService, finding_repository: FindingRepository):
         """Initialize use case with dependencies."""
         self.finding_service = finding_service
         self.finding_repository = finding_repository
@@ -60,9 +58,7 @@ class GetFindingsUseCase:
 
         has_more = end_idx < total_count
 
-        return FindingsQueryResult(
-            findings=paginated_findings, total_count=total_count, has_more=has_more
-        )
+        return FindingsQueryResult(findings=paginated_findings, total_count=total_count, has_more=has_more)
 
     async def get_by_document(self, document_id: str) -> List[Finding]:
         """Get all findings for a specific document."""
@@ -78,9 +74,7 @@ class GetFindingsUseCase:
         all_findings = await self.finding_repository.get_all()
         return self.finding_service.get_high_priority_findings(all_findings, limit)
 
-    def _apply_filters(
-        self, findings: List[Finding], query: GetFindingsQuery
-    ) -> List[Finding]:
+    def _apply_filters(self, findings: List[Finding], query: GetFindingsQuery) -> List[Finding]:
         """Apply filters to findings list."""
         filtered = findings
 
@@ -105,13 +99,9 @@ class GetFindingsUseCase:
         """Convert finding to response DTO."""
         return FindingResponse.from_domain(finding)
 
-    def to_list_response(
-        self, result: FindingsQueryResult, query: GetFindingsQuery
-    ) -> FindingListResponse:
+    def to_list_response(self, result: FindingsQueryResult, query: GetFindingsQuery) -> FindingListResponse:
         """Convert query result to list response DTO."""
-        finding_responses = [
-            FindingResponse.from_domain(finding) for finding in result.findings
-        ]
+        finding_responses = [FindingResponse.from_domain(finding) for finding in result.findings]
 
         filters = {
             "document_id": query.document_id,

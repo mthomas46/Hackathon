@@ -72,9 +72,7 @@ class CreateDocumentUseCase:
                 )
 
             # Validate for creation
-            creation_validation = self.document_validator.validate_for_creation(
-                document
-            )
+            creation_validation = self.document_validator.validate_for_creation(document)
             if not creation_validation.is_valid:
                 return CreateDocumentResult(
                     document=document,
@@ -88,9 +86,7 @@ class CreateDocumentUseCase:
             # Save document
             await self.document_repository.save(document)
 
-            return CreateDocumentResult(
-                document=document, is_valid=True, validation_errors=[]
-            )
+            return CreateDocumentResult(document=document, is_valid=True, validation_errors=[])
 
         except Exception as e:
             # Log error and re-raise
@@ -102,10 +98,7 @@ class CreateDocumentUseCase:
         # Check for duplicate titles (simplified - in real app this would be more sophisticated)
         existing_docs = await self.document_repository.get_all()
         for existing_doc in existing_docs:
-            if (
-                existing_doc.title.lower() == document.title.lower()
-                and existing_doc.metadata.author == document.metadata.author
-            ):
+            if existing_doc.title.lower() == document.title.lower() and existing_doc.metadata.author == document.metadata.author:
                 raise DocumentValidationException(
                     document.id.value,
                     ["Document with same title and author already exists"],

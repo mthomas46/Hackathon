@@ -69,9 +69,7 @@ class RelationshipAnalyzer:
             },
         }
 
-    def analyze_relationships(
-        self, documents: List[Dict[str, Any]], changed_document_id: str
-    ) -> Dict[str, Any]:
+    def analyze_relationships(self, documents: List[Dict[str, Any]], changed_document_id: str) -> Dict[str, Any]:
         """Analyze relationships between documents."""
         if not self.initialized:
             return self._get_fallback_relationships(documents, changed_document_id)
@@ -84,9 +82,7 @@ class RelationshipAnalyzer:
             if doc["id"] == changed_document_id:
                 continue
 
-            relationship = self._determine_relationship_type(
-                documents, changed_document_id, doc["id"]
-            )
+            relationship = self._determine_relationship_type(documents, changed_document_id, doc["id"])
 
             if relationship:
                 relationships.append(
@@ -104,14 +100,10 @@ class RelationshipAnalyzer:
             "relationships": relationships,
             "relationship_graph": relationship_graph,
             "total_relationships": len(relationships),
-            "relationship_types": list(
-                set(r["relationship_type"] for r in relationships)
-            ),
+            "relationship_types": list(set(r["relationship_type"] for r in relationships)),
         }
 
-    def _build_relationship_graph(
-        self, documents: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _build_relationship_graph(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Build a graph of document relationships."""
         if not self.initialized or not nx:
             return {"nodes": [], "edges": []}
@@ -141,17 +133,13 @@ class RelationshipAnalyzer:
                 "nodes": list(G.nodes(data=True)),
                 "edges": list(G.edges(data=True)),
                 "density": nx.density(G),
-                "connected_components": nx.number_connected_components(
-                    G.to_undirected()
-                ),
+                "connected_components": nx.number_connected_components(G.to_undirected()),
             }
         except Exception as e:
             logger.error(f"Error building relationship graph: {e}")
             return {"nodes": [], "edges": []}
 
-    def _calculate_simple_similarity(
-        self, doc1: Dict[str, Any], doc2: Dict[str, Any]
-    ) -> float:
+    def _calculate_simple_similarity(self, doc1: Dict[str, Any], doc2: Dict[str, Any]) -> float:
         """Calculate simple similarity between two documents."""
         if not self.initialized:
             return 0.0
@@ -211,9 +199,7 @@ class RelationshipAnalyzer:
 
         return None
 
-    def _check_reference_links(
-        self, source_doc: Dict[str, Any], target_doc: Dict[str, Any]
-    ) -> bool:
+    def _check_reference_links(self, source_doc: Dict[str, Any], target_doc: Dict[str, Any]) -> bool:
         """Check if source document references target document."""
         source_content = source_doc.get("content", "").lower()
         target_title = target_doc.get("title", "").lower()
@@ -221,9 +207,7 @@ class RelationshipAnalyzer:
 
         return target_title in source_content or target_id in source_content
 
-    def _find_shared_terms(
-        self, doc1: Dict[str, Any], doc2: Dict[str, Any]
-    ) -> List[str]:
+    def _find_shared_terms(self, doc1: Dict[str, Any], doc2: Dict[str, Any]) -> List[str]:
         """Find shared technical terms between documents."""
         # This is a simplified implementation
         content1 = doc1.get("content", "").lower()
@@ -234,13 +218,9 @@ class RelationshipAnalyzer:
         words2 = set(content2.split())
 
         shared = words1.intersection(words2)
-        return [word for word in shared if len(word) > 3][
-            :10
-        ]  # Technical terms likely > 3 chars
+        return [word for word in shared if len(word) > 3][:10]  # Technical terms likely > 3 chars
 
-    def _get_fallback_relationships(
-        self, documents: List[Dict[str, Any]], changed_document_id: str
-    ) -> Dict[str, Any]:
+    def _get_fallback_relationships(self, documents: List[Dict[str, Any]], changed_document_id: str) -> Dict[str, Any]:
         """Get basic relationship analysis when advanced analysis is not available."""
         relationships = []
 

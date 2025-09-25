@@ -123,9 +123,7 @@ class ErrorResponse:
     timestamp: datetime = field(default_factory=datetime.now)
 
     @classmethod
-    def from_exception(
-        cls, exception: Exception, error_code: str = "INTERNAL_ERROR"
-    ) -> "ErrorResponse":
+    def from_exception(cls, exception: Exception, error_code: str = "INTERNAL_ERROR") -> "ErrorResponse":
         """Create error response from exception."""
         return cls(
             error_code=error_code,
@@ -175,9 +173,7 @@ class PaginatedResponse:
     has_previous: bool
 
     @classmethod
-    def create(
-        cls, items: List[Any], total: int, page: int, page_size: int
-    ) -> "PaginatedResponse":
+    def create(cls, items: List[Any], total: int, page: int, page_size: int) -> "PaginatedResponse":
         """Create paginated response."""
         total_pages = (total + page_size - 1) // page_size  # Ceiling division
 
@@ -245,9 +241,7 @@ class FindingListResponse:
             "unresolved_count": sum(1 for f in findings if not f.is_resolved),
         }
 
-        return cls(
-            findings=findings, pagination=pagination, filters=filters, summary=summary
-        )
+        return cls(findings=findings, pagination=pagination, filters=filters, summary=summary)
 
     @staticmethod
     def _calculate_severity_breakdown(
@@ -286,9 +280,7 @@ class AnalysisResultResponse:
     completed_at: datetime
 
     @classmethod
-    def create(
-        cls, analysis, findings: List[FindingResponse]
-    ) -> "AnalysisResultResponse":
+    def create(cls, analysis, findings: List[FindingResponse]) -> "AnalysisResultResponse":
         """Create analysis result response."""
         return cls(
             analysis_id=analysis.id.value,
@@ -312,9 +304,7 @@ class HealthCheckResponse:
     metrics: Dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def healthy(
-        cls, services: Dict[str, str], metrics: Dict[str, Any] = None
-    ) -> "HealthCheckResponse":
+    def healthy(cls, services: Dict[str, str], metrics: Dict[str, Any] = None) -> "HealthCheckResponse":
         """Create healthy response."""
         return cls(
             status="healthy",

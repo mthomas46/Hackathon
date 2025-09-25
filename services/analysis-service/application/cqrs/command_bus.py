@@ -44,9 +44,7 @@ class CommandBus:
         command_id = getattr(command, "command_id", str(uuid4()))
 
         if command_type not in self._handlers:
-            raise ValueError(
-                f"No handler registered for command: {command_type.__name__}"
-            )
+            raise ValueError(f"No handler registered for command: {command_type.__name__}")
 
         try:
             # Execute command
@@ -56,9 +54,7 @@ class CommandBus:
             # Publish events if available
             await self._publish_command_events(command, result, command_id)
 
-            logger.info(
-                f"Command executed successfully: {command_type.__name__} ({command_id})"
-            )
+            logger.info(f"Command executed successfully: {command_type.__name__} ({command_id})")
             return result
 
         except Exception as e:
@@ -70,9 +66,7 @@ class CommandBus:
             )
             raise
 
-    async def _publish_command_events(
-        self, command: Any, result: Any, command_id: str
-    ) -> None:
+    async def _publish_command_events(self, command: Any, result: Any, command_id: str) -> None:
         """Publish events resulting from command execution."""
         if not self.event_bus:
             return
@@ -109,9 +103,7 @@ class CommandBus:
         # Store events for this command
         self._command_events[command_id] = events_to_publish
 
-    async def _publish_command_failure_event(
-        self, command: Any, error: Exception, command_id: str
-    ) -> None:
+    async def _publish_command_failure_event(self, command: Any, error: Exception, command_id: str) -> None:
         """Publish command failure event."""
         if not self.event_bus:
             return

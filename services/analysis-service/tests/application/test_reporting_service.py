@@ -109,9 +109,7 @@ class TestCalculatePrHealthScore:
         structural_analysis = {}
         quality_analysis = {"quality_score": 1.0}
 
-        score = calculate_pr_health_score(
-            code_analysis, commit_analysis, structural_analysis, quality_analysis
-        )
+        score = calculate_pr_health_score(code_analysis, commit_analysis, structural_analysis, quality_analysis)
 
         assert 0.8 <= score <= 1.0
 
@@ -133,9 +131,7 @@ class TestCalculatePrHealthScore:
         structural_analysis = {"structural_risks": ["risk1", "risk2"]}
         quality_analysis = {"quality_score": 0.1}
 
-        score = calculate_pr_health_score(
-            code_analysis, commit_analysis, structural_analysis, quality_analysis
-        )
+        score = calculate_pr_health_score(code_analysis, commit_analysis, structural_analysis, quality_analysis)
 
         assert 0.0 <= score <= 0.3
 
@@ -149,12 +145,15 @@ class TestCalculatePrHealthScore:
 class TestDeterminePrRiskLevel:
     """Test PR risk level determination."""
 
-    @pytest.mark.parametrize("score,expected", [
-        (0.9, "low"),
-        (0.7, "medium"),
-        (0.5, "high"),
-        (0.3, "critical"),
-    ])
+    @pytest.mark.parametrize(
+        "score,expected",
+        [
+            (0.9, "low"),
+            (0.7, "medium"),
+            (0.5, "high"),
+            (0.3, "critical"),
+        ],
+    )
     def test_determine_pr_risk_level_various_scores(self, score, expected):
         """Test risk level determination for various scores."""
         assert determine_pr_risk_level(score) == expected
@@ -177,12 +176,15 @@ class TestFormatTimestamp:
 class TestGetTypeIcon:
     """Test document type icon retrieval."""
 
-    @pytest.mark.parametrize("doc_type,expected", [
-        ("python", "🐍"),
-        ("javascript", "🟨"),
-        ("markdown", "📝"),
-        ("unknown", "📄"),
-    ])
+    @pytest.mark.parametrize(
+        "doc_type,expected",
+        [
+            ("python", "🐍"),
+            ("javascript", "🟨"),
+            ("markdown", "📝"),
+            ("unknown", "📄"),
+        ],
+    )
     def test_get_type_icon_known_types(self, doc_type, expected):
         """Test icon retrieval for known document types."""
         assert get_type_icon(doc_type) == expected

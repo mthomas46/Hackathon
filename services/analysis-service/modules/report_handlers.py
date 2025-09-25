@@ -23,22 +23,16 @@ class ReportHandlers:
 
             if req.kind == "summary":
                 # Fetch recent findings
-                findings_data = await service_client.get_json(
-                    f"{service_client.analysis_service_url()}/findings"
-                )
+                findings_data = await service_client.get_json(f"{service_client.analysis_service_url()}/findings")
                 findings = [Finding(**f) for f in findings_data.get("findings", [])]
 
                 report = generate_summary_report(findings)
 
             elif req.kind == "trends":
                 # Fetch findings with time window
-                time_window = (
-                    req.payload.get("time_window", "7d") if req.payload else "7d"
-                )
+                time_window = req.payload.get("time_window", "7d") if req.payload else "7d"
                 try:
-                    findings_data = await service_client.get_json(
-                        f"{service_client.analysis_service_url()}/findings"
-                    )
+                    findings_data = await service_client.get_json(f"{service_client.analysis_service_url()}/findings")
                     findings = [Finding(**f) for f in findings_data.get("findings", [])]
                 except Exception:
                     # For testing/development, provide mock findings if service call fails

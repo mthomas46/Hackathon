@@ -77,9 +77,7 @@ class ApplicationService(ABC):
         return self._running
 
     @asynccontextmanager
-    async def operation_context(
-        self, operation_name: str, context: Optional[ServiceContext] = None
-    ):
+    async def operation_context(self, operation_name: str, context: Optional[ServiceContext] = None):
         """Context manager for service operations with monitoring."""
         if context is None:
             context = ServiceContext()
@@ -146,16 +144,11 @@ class ApplicationService(ABC):
             "service": self.service_name,
             "status": "healthy" if self._running else "stopped",
             "timestamp": current_time,
-            "uptime": (
-                current_time - self._last_health_check
-                if self._last_health_check > 0
-                else 0
-            ),
+            "uptime": (current_time - self._last_health_check if self._last_health_check > 0 else 0),
             "operations": {
                 "total": self._operation_count,
                 "errors": self._error_count,
-                "success_rate": (self._operation_count - self._error_count)
-                / max(1, self._operation_count),
+                "success_rate": (self._operation_count - self._error_count) / max(1, self._operation_count),
             },
         }
 
@@ -184,9 +177,7 @@ class ApplicationService(ABC):
 
         await self.event_bus.publish(event)
 
-    async def _publish_operation_event(
-        self, event_type: str, operation_name: str, context: ServiceContext, **kwargs
-    ) -> None:
+    async def _publish_operation_event(self, event_type: str, operation_name: str, context: ServiceContext, **kwargs) -> None:
         """Publish operation-related event."""
         if not self.event_bus:
             return
@@ -260,14 +251,8 @@ class ServiceRegistry:
         """Unregister a service."""
         if service_name in self.services:
             del self.services[service_name]
-            self._startup_order = [
-                (name, pri) for name, pri in self._startup_order if name != service_name
-            ]
-            self._shutdown_order = [
-                (name, pri)
-                for name, pri in self._shutdown_order
-                if name != service_name
-            ]
+            self._startup_order = [(name, pri) for name, pri in self._startup_order if name != service_name]
+            self._shutdown_order = [(name, pri) for name, pri in self._shutdown_order if name != service_name]
             logger.info(f"Unregistered service: {service_name}")
 
     async def start_all(self) -> None:
@@ -280,9 +265,7 @@ class ServiceRegistry:
                 await service.start()
                 logger.info(f"Started service: {service_name}")
             except Exception as e:
-                logger.error(
-                    f"Failed to start service {service_name}: {e}", exc_info=True
-                )
+                logger.error(f"Failed to start service {service_name}: {e}", exc_info=True)
                 raise
 
         logger.info("All services started")
@@ -297,9 +280,7 @@ class ServiceRegistry:
                 await service.stop()
                 logger.info(f"Stopped service: {service_name}")
             except Exception as e:
-                logger.error(
-                    f"Error stopping service {service_name}: {e}", exc_info=True
-                )
+                logger.error(f"Error stopping service {service_name}: {e}", exc_info=True)
 
         logger.info("All services stopped")
 

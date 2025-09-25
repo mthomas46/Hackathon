@@ -1,6 +1,7 @@
 """Analysis Controller - Handles core document analysis endpoints."""
 
 from fastapi import APIRouter, HTTPException
+
 from services.shared.presentation.responses import (
     create_error_response,
     create_success_response,
@@ -167,25 +168,15 @@ class AnalysisController:
                 )
 
             except ValidationException as e:
-                raise HTTPException(
-                    status_code=400, detail=f"Validation error: {e.message}"
-                )
+                raise HTTPException(status_code=400, detail=f"Validation error: {e.message}")
             except DocumentNotFoundException as e:
-                raise HTTPException(
-                    status_code=404, detail=f"Document not found: {e.message}"
-                )
+                raise HTTPException(status_code=404, detail=f"Document not found: {e.message}")
             except AnalysisTimeoutException as e:
-                raise HTTPException(
-                    status_code=408, detail=f"Analysis timeout: {e.message}"
-                )
+                raise HTTPException(status_code=408, detail=f"Analysis timeout: {e.message}")
             except AnalysisExecutionException as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Analysis execution failed: {e.message}"
-                )
+                raise HTTPException(status_code=500, detail=f"Analysis execution failed: {e.message}")
             except ExternalServiceException as e:
-                raise HTTPException(
-                    status_code=502, detail=f"External service error: {e.message}"
-                )
+                raise HTTPException(status_code=502, detail=f"External service error: {e.message}")
             except Exception as e:
                 # Catch any unexpected errors
                 raise HTTPException(

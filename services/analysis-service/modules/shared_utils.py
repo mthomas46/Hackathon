@@ -7,9 +7,13 @@ to eliminate redundancy and ensure consistency.
 import os
 from typing import Any, Dict
 
+# Using standardized constants and error codes
+# EnvVars, ErrorCodes, ServiceNames now handled by standardized config system
+
+# Fallback definitions for when shared services are not available
 try:
-    # Using standardized constants and error codes
-    # EnvVars, ErrorCodes, ServiceNames now handled by standardized config system
+    # Try to import from shared services
+    pass
 except ImportError:
     # Fallback for testing or when shared services are not available
     class ErrorCodes:
@@ -58,9 +62,7 @@ def _validate_float_env_var(var_name: str, default: str) -> float:
         return float(default)
 
 
-def _validate_int_env_var(
-    var_name: str, default: str, min_val: int = 0, max_val: int = 100
-) -> int:
+def _validate_int_env_var(var_name: str, default: str, min_val: int = 0, max_val: int = 100) -> int:
     """Safely validate and convert environment variable to int."""
     value = os.environ.get(var_name, default)
     try:
@@ -73,16 +75,10 @@ def _validate_int_env_var(
         return int(default)
 
 
-_DEFAULT_DRIFT_OVERLAP_THRESHOLD = _validate_float_env_var(
-    "DRIFT_OVERLAP_THRESHOLD", "0.1"
-)
+_DEFAULT_DRIFT_OVERLAP_THRESHOLD = _validate_float_env_var("DRIFT_OVERLAP_THRESHOLD", "0.1")
 _DEFAULT_CRITICAL_SCORE = _validate_int_env_var("CRITICAL_SCORE", "90", 0, 100)
-_DEFAULT_HIGH_PRIORITY_SCORE = _validate_int_env_var(
-    "HIGH_PRIORITY_SCORE", "80", 0, 100
-)
-_DEFAULT_MEDIUM_PRIORITY_SCORE = _validate_int_env_var(
-    "MEDIUM_PRIORITY_SCORE", "50", 0, 100
-)
+_DEFAULT_HIGH_PRIORITY_SCORE = _validate_int_env_var("HIGH_PRIORITY_SCORE", "80", 0, 100)
+_DEFAULT_MEDIUM_PRIORITY_SCORE = _validate_int_env_var("MEDIUM_PRIORITY_SCORE", "50", 0, 100)
 
 
 def get_analysis_service_client():
@@ -113,9 +109,7 @@ def get_service_url(service_name: str, default_url: str) -> str:
     return os.environ.get(env_var, default_url) if env_var else default_url
 
 
-def handle_analysis_error(
-    operation: str, error: Exception, **context
-) -> Dict[str, Any]:
+def handle_analysis_error(operation: str, error: Exception, **context) -> Dict[str, Any]:
     """Standardized error handling for analysis operations."""
     fire_and_forget(
         "error",
@@ -130,9 +124,7 @@ def handle_analysis_error(
     )
 
 
-def create_analysis_success_response(
-    operation: str, data: Any, **context
-) -> Dict[str, Any]:
+def create_analysis_success_response(operation: str, data: Any, **context) -> Dict[str, Any]:
     """Standardized success response creation for analysis operations."""
     fire_and_forget(
         "info",
@@ -140,18 +132,12 @@ def create_analysis_success_response(
         ServiceNames.ANALYSIS_SERVICE,
         context,
     )
-    return create_success_response(
-        f"Analysis {operation} completed successfully", data, **context
-    )
+    return create_success_response(f"Analysis {operation} completed successfully", data, **context)
 
 
-def _create_analysis_error_response(
-    message: str, error_code: str, details: Dict[str, Any]
-) -> Dict[str, Any]:
+def _create_analysis_error_response(message: str, error_code: str, details: Dict[str, Any]) -> Dict[str, Any]:
     """Create standardized error response for analysis operations."""
-    fire_and_forget(
-        "error", f"Analysis error: {message}", ServiceNames.ANALYSIS_SERVICE, details
-    )
+    fire_and_forget("error", f"Analysis error: {message}", ServiceNames.ANALYSIS_SERVICE, details)
     return create_error_response(message, error_code=error_code, details=details)
 
 
@@ -165,9 +151,7 @@ def build_analysis_context(operation: str, **kwargs) -> Dict[str, Any]:
 def validate_analysis_targets(targets: list) -> None:
     """Validate analysis targets and raise exception if invalid."""
     if not targets:
-        raise ValidationException(
-            "No targets specified for analysis", {"targets": ["Cannot be empty"]}
-        )
+        raise ValidationException("No targets specified for analysis", {"targets": ["Cannot be empty"]})
 
     for target in targets:
         if not isinstance(target, str):

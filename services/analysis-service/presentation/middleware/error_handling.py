@@ -31,9 +31,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             # Handle unexpected exceptions
             return await self._handle_unexpected_exception(request, exc)
 
-    async def _handle_http_exception(
-        self, request: Request, exc: HTTPException
-    ) -> JSONResponse:
+    async def _handle_http_exception(self, request: Request, exc: HTTPException) -> JSONResponse:
         """Handle FastAPI HTTP exceptions."""
         # Map HTTP status codes to error codes
         status_to_error_code = {
@@ -58,9 +56,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
         return JSONResponse(status_code=exc.status_code, content=error_response.dict())
 
-    async def _handle_unexpected_exception(
-        self, request: Request, exc: Exception
-    ) -> JSONResponse:
+    async def _handle_unexpected_exception(self, request: Request, exc: Exception) -> JSONResponse:
         """Handle unexpected exceptions."""
         # Log the full exception
         logger.error(
@@ -85,9 +81,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
 
         return JSONResponse(status_code=500, content=error_response.dict())
 
-    async def _log_error(
-        self, request: Request, exc: Exception, error_code: str
-    ) -> None:
+    async def _log_error(self, request: Request, exc: Exception, error_code: str) -> None:
         """Log error with appropriate level."""
         log_data = {
             "method": request.method,
@@ -131,9 +125,7 @@ class DomainExceptionHandler:
     """Handler for domain-specific exceptions."""
 
     @staticmethod
-    def handle_validation_error(
-        exc: Exception, request_id: Optional[str] = None
-    ) -> JSONResponse:
+    def handle_validation_error(exc: Exception, request_id: Optional[str] = None) -> JSONResponse:
         """Handle domain validation errors."""
         error_response = ErrorResponse(
             error={
@@ -147,9 +139,7 @@ class DomainExceptionHandler:
         return JSONResponse(status_code=400, content=error_response.dict())
 
     @staticmethod
-    def handle_not_found_error(
-        exc: Exception, request_id: Optional[str] = None
-    ) -> JSONResponse:
+    def handle_not_found_error(exc: Exception, request_id: Optional[str] = None) -> JSONResponse:
         """Handle domain not found errors."""
         error_response = ErrorResponse(
             error={"field": None, "message": str(exc), "code": ErrorCode.NOT_FOUND},
@@ -159,9 +149,7 @@ class DomainExceptionHandler:
         return JSONResponse(status_code=404, content=error_response.dict())
 
     @staticmethod
-    def handle_business_rule_error(
-        exc: Exception, request_id: Optional[str] = None
-    ) -> JSONResponse:
+    def handle_business_rule_error(exc: Exception, request_id: Optional[str] = None) -> JSONResponse:
         """Handle domain business rule violations."""
         error_response = ErrorResponse(
             error={"field": None, "message": str(exc), "code": ErrorCode.CONFLICT},

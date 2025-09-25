@@ -99,9 +99,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
             # Record successful request metrics
             duration = time.time() - start_time
-            self.metrics.record_request(
-                request.method, request.url.path, duration, response.status_code
-            )
+            self.metrics.record_request(request.method, request.url.path, duration, response.status_code)
 
             # Add metrics headers
             response.headers["X-Response-Time"] = f"{duration:.3f}s"
@@ -111,9 +109,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         except Exception:
             # Record error metrics
             duration = time.time() - start_time
-            self.metrics.record_request(
-                request.method, request.url.path, duration, 500
-            )  # Internal server error
+            self.metrics.record_request(request.method, request.url.path, duration, 500)  # Internal server error
 
             # Re-raise the exception
             raise
@@ -211,9 +207,7 @@ class MetricsEndpoint:
     def __init__(self, metrics_middleware: MetricsMiddleware):
         """Initialize metrics endpoint."""
         self.middleware = metrics_middleware
-        self.exporter = PrometheusMetricsExporter(
-            self.middleware.get_metrics_collector()
-        )
+        self.exporter = PrometheusMetricsExporter(self.middleware.get_metrics_collector())
 
     async def get_metrics(self) -> str:
         """Get metrics in Prometheus format."""

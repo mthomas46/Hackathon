@@ -13,23 +13,17 @@ class IntegrationHandlers:
     """Handles integration operations."""
 
     @staticmethod
-    async def handle_analyze_with_prompt(
-        target_id: str, prompt_category: str, prompt_name: str, **variables
-    ) -> Dict[str, Any]:
+    async def handle_analyze_with_prompt(target_id: str, prompt_category: str, prompt_name: str, **variables) -> Dict[str, Any]:
         """Analyze using a prompt from Prompt Store."""
         try:
             service_client = get_analysis_service_client()
 
             # Get prompt from Prompt Store
-            prompt_data = await service_client.get_prompt(
-                prompt_category, prompt_name, **variables
-            )
+            prompt_data = await service_client.get_prompt(prompt_category, prompt_name, **variables)
 
             # Get target document
             if target_id.startswith("doc:"):
-                doc_response = await service_client.get_json(
-                    f"{service_client.doc_store_url()}/documents/{target_id}"
-                )
+                doc_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{target_id}")
                 content = doc_response.get("content", "")
             else:
                 return _create_analysis_error_response(
@@ -116,9 +110,7 @@ class IntegrationHandlers:
         """Get available prompt categories for analysis."""
         try:
             service_client = get_analysis_service_client()
-            categories = await service_client.get_json(
-                f"{service_client.prompt_store_url()}/prompts/categories"
-            )
+            categories = await service_client.get_json(f"{service_client.prompt_store_url()}/prompts/categories")
             return categories
         except Exception as e:
             return _create_analysis_error_response(

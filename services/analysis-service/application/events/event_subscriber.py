@@ -41,17 +41,13 @@ class EventSubscriber:
                 self.handlers[event_type] = []
             self.handlers[event_type].append(handler)
 
-        logger.info(
-            f"Subscribed handler {handler.__class__.__name__} to {len(handler.event_types)} event types"
-        )
+        logger.info(f"Subscribed handler {handler.__class__.__name__} to {len(handler.event_types)} event types")
 
     async def unsubscribe(self, handler: EventHandler) -> None:
         """Unsubscribe a handler from events."""
         for event_type in handler.event_types:
             if event_type in self.handlers:
-                self.handlers[event_type] = [
-                    h for h in self.handlers[event_type] if h != handler
-                ]
+                self.handlers[event_type] = [h for h in self.handlers[event_type] if h != handler]
 
         logger.info(f"Unsubscribed handler {handler.__class__.__name__}")
 
@@ -80,9 +76,7 @@ class EventSubscriber:
                     exc_info=result,
                 )
 
-    async def _handle_event(
-        self, handler: EventHandler, event: ApplicationEvent
-    ) -> None:
+    async def _handle_event(self, handler: EventHandler, event: ApplicationEvent) -> None:
         """Handle a single event with a handler."""
         try:
             await handler.handle(event)
@@ -179,14 +173,8 @@ class MetricsEventHandler(EventHandler):
         return {
             "event_counts": self.event_counts.copy(),
             "total_events": sum(self.event_counts.values()),
-            "processing_times": (
-                self.processing_times.copy() if self.processing_times else []
-            ),
-            "avg_processing_time": (
-                sum(self.processing_times) / len(self.processing_times)
-                if self.processing_times
-                else 0
-            ),
+            "processing_times": (self.processing_times.copy() if self.processing_times else []),
+            "avg_processing_time": (sum(self.processing_times) / len(self.processing_times) if self.processing_times else 0),
         }
 
 
@@ -234,9 +222,7 @@ class NotificationEventHandler(EventHandler):
         """Notify about new finding."""
         severity = getattr(event, "severity", "unknown")
         if severity in ["critical", "high"]:
-            message = (
-                f"High priority finding created: {getattr(event, 'description', '')}"
-            )
+            message = f"High priority finding created: {getattr(event, 'description', '')}"
             await self.notification_service.send_notification(
                 recipient="team@company.com",
                 subject=f"Analysis Service - {severity.title()} Finding",
@@ -316,25 +302,15 @@ class EventHandlerFactory:
         handlers = []
 
         if config.get("logging", {}).get("enabled", True):
-            handlers.append(
-                EventHandlerFactory.create_logging_handler(
-                    config["logging"].get("level", logging.INFO)
-                )
-            )
+            handlers.append(EventHandlerFactory.create_logging_handler(config["logging"].get("level", logging.INFO)))
 
         if config.get("metrics", {}).get("enabled", True):
             handlers.append(EventHandlerFactory.create_metrics_handler())
 
         if config.get("notifications", {}).get("enabled", False):
-            handlers.append(
-                EventHandlerFactory.create_notification_handler(
-                    config["notifications"].get("service")
-                )
-            )
+            handlers.append(EventHandlerFactory.create_notification_handler(config["notifications"].get("service")))
 
         if config.get("audit", {}).get("enabled", False):
-            handlers.append(
-                EventHandlerFactory.create_audit_handler(config["audit"].get("service"))
-            )
+            handlers.append(EventHandlerFactory.create_audit_handler(config["audit"].get("service")))
 
         return handlers

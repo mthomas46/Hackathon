@@ -150,20 +150,14 @@ class PickleEventSerializer(EventSerializer):
                 # Only allow specific safe classes
                 if module in safe_classes and name in safe_classes[module]:
                     return super().find_class(module, name)
-                elif module == "builtins" and name in safe_classes.get(
-                    "builtins", set()
-                ):
+                elif module == "builtins" and name in safe_classes.get("builtins", set()):
                     return super().find_class(module, name)
-                elif module == "datetime" and name in safe_classes.get(
-                    "datetime", set()
-                ):
+                elif module == "datetime" and name in safe_classes.get("datetime", set()):
                     return super().find_class(module, name)
                 elif module == "uuid" and name in safe_classes.get("uuid", set()):
                     return super().find_class(module, name)
                 else:
-                    raise pickle.UnpicklingError(
-                        f"Attempted to unpickle unsafe class: {module}.{name}"
-                    )
+                    raise pickle.UnpicklingError(f"Attempted to unpickle unsafe class: {module}.{name}")
 
         # Use StringIO to create a file-like object from bytes
         import io
@@ -193,9 +187,7 @@ class CompressedJSONEventSerializer(JSONEventSerializer):
         json_data = super().serialize(envelope)
         compressed = io.BytesIO()
 
-        with gzip.GzipFile(
-            fileobj=compressed, mode="wb", compresslevel=self.compression_level
-        ) as f:
+        with gzip.GzipFile(fileobj=compressed, mode="wb", compresslevel=self.compression_level) as f:
             f.write(json_data.encode("utf-8"))
 
         return base64.b64encode(compressed.getvalue()).decode("ascii")
@@ -232,9 +224,7 @@ class MessagePackEventSerializer(EventSerializer):
 
             self.msgpack = msgpack
         except ImportError:
-            raise ImportError(
-                "msgpack package is required for MessagePackEventSerializer"
-            )
+            raise ImportError("msgpack package is required for MessagePackEventSerializer")
 
     def serialize(self, envelope: EventEnvelope) -> str:
         """Serialize event envelope to MessagePack."""
@@ -373,9 +363,7 @@ class SchemaVersionedEventSerializer(JSONEventSerializer):
         """Add schema migration handler."""
         self._migration_handlers[from_version] = handler
 
-    def _migrate_schema(
-        self, data: Dict[str, Any], from_version: str
-    ) -> Dict[str, Any]:
+    def _migrate_schema(self, data: Dict[str, Any], from_version: str) -> Dict[str, Any]:
         """Migrate schema from old version to current."""
         if from_version in self._migration_handlers:
             return self._migration_handlers[from_version](data)

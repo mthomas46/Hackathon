@@ -316,15 +316,11 @@ class {class_name}(IndexMigration):
             "sql:migration": "Raw SQL migration",
         }
 
-    def generate_migration_from_template(
-        self, template_type: str, migration_id: str, name: str, **kwargs
-    ) -> str:
+    def generate_migration_from_template(self, template_type: str, migration_id: str, name: str, **kwargs) -> str:
         """Generate migration from template type."""
         if template_type.startswith("schema:"):
             operation = template_type.split(":", 1)[1]
-            return self.generate_schema_migration(
-                migration_id, name, operation=operation, **kwargs
-            )
+            return self.generate_schema_migration(migration_id, name, operation=operation, **kwargs)
         elif template_type == "data:migration":
             return self.generate_data_migration(migration_id, name, **kwargs)
         elif template_type == "index:create":
@@ -339,9 +335,7 @@ class MigrationCommandGenerator:
     """Generates command-line migration commands."""
 
     @staticmethod
-    def generate_create_command(
-        migration_type: str, name: str, output_dir: str = "migrations"
-    ) -> str:
+    def generate_create_command(migration_type: str, name: str, output_dir: str = "migrations") -> str:
         """Generate migration creation command."""
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         migration_id = f"{timestamp}_{name.lower().replace(' ', '_')}"
@@ -366,9 +360,7 @@ print(f"Migration created: {{file_path}}")
 """
 
     @staticmethod
-    def generate_execute_command(
-        migration_ids: Optional[list] = None, dry_run: bool = False
-    ) -> str:
+    def generate_execute_command(migration_ids: Optional[list] = None, dry_run: bool = False) -> str:
         """Generate migration execution command."""
         args = []
         if migration_ids:

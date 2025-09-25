@@ -25,11 +25,7 @@ class ImpactAnalysisHandler(BaseAnalysisHandler):
                     analyze_portfolio_change_impact,
                 )
 
-                analyzer_func = (
-                    analyze_portfolio_change_impact
-                    if hasattr(request, "document_ids")
-                    else analyze_change_impact
-                )
+                analyzer_func = analyze_portfolio_change_impact if hasattr(request, "document_ids") else analyze_change_impact
             except ImportError:
                 analyzer_func = self._mock_impact_analysis
 
@@ -53,9 +49,7 @@ class ImpactAnalysisHandler(BaseAnalysisHandler):
         except Exception as e:
             error_msg = f"Impact analysis failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
-            return await self._handle_error(
-                e, f"impact-{int(datetime.now(timezone.utc).timestamp())}"
-            )
+            return await self._handle_error(e, f"impact-{int(datetime.now(timezone.utc).timestamp())}")
 
     async def _mock_impact_analysis(self, **kwargs) -> Dict[str, Any]:
         """Mock impact analysis for testing purposes."""
@@ -66,9 +60,7 @@ class ImpactAnalysisHandler(BaseAnalysisHandler):
             "impact_level": random.choice(["low", "medium", "high", "critical"]),
             "stakeholders": [f"stakeholder-{i}" for i in range(random.randint(1, 3))],
             "risk_assessment": {"level": random.choice(["low", "medium", "high"])},
-            "recommendations": [
-                f"Recommendation {i}" for i in range(random.randint(1, 3))
-            ],
+            "recommendations": [f"Recommendation {i}" for i in range(random.randint(1, 3))],
             "execution_time_seconds": random.uniform(1.0, 3.0),
         }
 

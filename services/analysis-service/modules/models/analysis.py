@@ -12,12 +12,8 @@ class AnalysisRequest(BaseModel):
 
     targets: List[str] = Field(..., description="Document IDs or API IDs to analyze")
     analysis_type: str = Field("consistency", description="Type of analysis to perform")
-    options: Optional[Dict[str, Any]] = Field(
-        None, description="Additional analysis options"
-    )
-    correlation_id: Optional[str] = Field(
-        None, description="Correlation ID for request tracing"
-    )
+    options: Optional[Dict[str, Any]] = Field(None, description="Additional analysis options")
+    correlation_id: Optional[str] = Field(None, description="Correlation ID for request tracing")
 
     @field_validator("targets")
     @classmethod
@@ -35,22 +31,16 @@ class AnalysisRequest(BaseModel):
     @classmethod
     def validate_analysis_type(cls, v):
         if v not in ["consistency", "reporting", "combined"]:
-            raise ValueError(
-                "Analysis type must be one of: consistency, reporting, combined"
-            )
+            raise ValueError("Analysis type must be one of: consistency, reporting, combined")
         return v
 
 
 class ReportRequest(BaseModel):
     """Input for report generation."""
 
-    kind: str = Field(
-        ..., description="Report type (summary, life_of_ticket, pr_confidence, trends)"
-    )
+    kind: str = Field(..., description="Report type (summary, life_of_ticket, pr_confidence, trends)")
     format: str = Field("json", description="Output format")
-    payload: Optional[Dict[str, Any]] = Field(
-        None, description="Report-specific parameters"
-    )
+    payload: Optional[Dict[str, Any]] = Field(None, description="Report-specific parameters")
 
     @field_validator("kind")
     @classmethod
@@ -72,16 +62,10 @@ class ReportRequest(BaseModel):
 class DocumentDumpRequest(BaseModel):
     """Input for document dump report generation."""
 
-    documents: List[Dict[str, Any]] = Field(
-        ..., description="List of documents to include in the dump report"
-    )
+    documents: List[Dict[str, Any]] = Field(..., description="List of documents to include in the dump report")
     format: str = Field("markdown", description="Output format (markdown, html, json)")
-    include_metadata: bool = Field(
-        True, description="Whether to include document metadata"
-    )
-    include_content: bool = Field(
-        True, description="Whether to include document content"
-    )
+    include_metadata: bool = Field(True, description="Whether to include document metadata")
+    include_content: bool = Field(True, description="Whether to include document content")
     group_by_type: bool = Field(
         True,
         description="Whether to group documents by type (confluence, jira, pull_request)",
@@ -91,20 +75,14 @@ class DocumentDumpRequest(BaseModel):
         description="Field to sort documents by (dateCreated, dateUpdated, title)",
     )
     sort_order: str = Field("desc", description="Sort order (asc, desc)")
-    filter_by_type: Optional[List[str]] = Field(
-        None, description="Filter documents by type (confluence, jira, pull_request)"
-    )
-    filter_by_category: Optional[List[str]] = Field(
-        None, description="Filter documents by category"
-    )
+    filter_by_type: Optional[List[str]] = Field(None, description="Filter documents by type (confluence, jira, pull_request)")
+    filter_by_category: Optional[List[str]] = Field(None, description="Filter documents by category")
 
 
 class NotifyOwnersRequest(BaseModel):
     """Input for notification operations."""
 
-    findings: List[Dict[str, Any]] = Field(
-        ..., description="Findings to notify owners about"
-    )
+    findings: List[Dict[str, Any]] = Field(..., description="Findings to notify owners about")
     channels: List[str] = Field(["email"], description="Notification channels to use")
     priority: str = Field("medium", description="Notification priority level")
 
@@ -137,22 +115,12 @@ class NotifyOwnersRequest(BaseModel):
 class FindingsResponse(BaseModel):
     """Response model for findings."""
 
-    findings: List[Dict[str, Any]] = Field(
-        default_factory=list, description="List of findings"
-    )
+    findings: List[Dict[str, Any]] = Field(default_factory=list, description="List of findings")
     count: int = Field(0, description="Total number of findings")
-    severity_counts: Dict[str, int] = Field(
-        default_factory=dict, description="Findings by severity"
-    )
-    type_counts: Dict[str, int] = Field(
-        default_factory=dict, description="Findings by type"
-    )
-    analysis_id: Optional[str] = Field(
-        None, description="Analysis ID that generated these findings"
-    )
-    execution_time_seconds: Optional[float] = Field(
-        None, description="Time taken to generate findings"
-    )
+    severity_counts: Dict[str, int] = Field(default_factory=dict, description="Findings by severity")
+    type_counts: Dict[str, int] = Field(default_factory=dict, description="Findings by type")
+    analysis_id: Optional[str] = Field(None, description="Analysis ID that generated these findings")
+    execution_time_seconds: Optional[float] = Field(None, description="Time taken to generate findings")
 
 
 class SemanticSimilarityRequest(BaseModel):
@@ -160,9 +128,7 @@ class SemanticSimilarityRequest(BaseModel):
 
     targets: List[str] = Field(..., description="Documents to compare for similarity")
     threshold: float = Field(0.8, ge=0.0, le=1.0, description="Similarity threshold")
-    embedding_model: str = Field(
-        "sentence-transformers/all-MiniLM-L6-v2", description="Embedding model to use"
-    )
+    embedding_model: str = Field("sentence-transformers/all-MiniLM-L6-v2", description="Embedding model to use")
     similarity_metric: str = Field("cosine", description="Similarity metric to use")
     options: Optional[Dict[str, Any]] = Field(None, description="Additional options")
 
@@ -182,9 +148,7 @@ class SimilarityPair(BaseModel):
     source: str = Field(..., description="Source document ID")
     target: str = Field(..., description="Target document ID")
     similarity: float = Field(..., ge=0.0, le=1.0, description="Similarity score")
-    confidence: Optional[float] = Field(
-        None, ge=0.0, le=1.0, description="Confidence in similarity score"
-    )
+    confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="Confidence in similarity score")
 
     @field_validator("similarity")
     @classmethod
@@ -214,38 +178,22 @@ class SemanticSimilarityResponse(BaseModel):
     """Response for semantic similarity analysis."""
 
     analysis_id: str = Field(..., description="Unique analysis identifier")
-    analysis_type: str = Field(
-        "semantic_similarity", description="Type of analysis performed"
-    )
+    analysis_type: str = Field("semantic_similarity", description="Type of analysis performed")
     targets: List[str] = Field(..., description="Documents that were analyzed")
     status: str = Field("completed", description="Analysis status")
-    similarity_matrix: List[List[float]] = Field(
-        default_factory=list, description="Similarity matrix"
-    )
-    similar_pairs: List[SimilarityPair] = Field(
-        default_factory=list, description="Highly similar document pairs"
-    )
-    summary: Dict[str, Any] = Field(
-        default_factory=dict, description="Analysis summary"
-    )
-    execution_time_seconds: float = Field(
-        ..., description="Time taken to complete analysis"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if analysis failed"
-    )
+    similarity_matrix: List[List[float]] = Field(default_factory=list, description="Similarity matrix")
+    similar_pairs: List[SimilarityPair] = Field(default_factory=list, description="Highly similar document pairs")
+    summary: Dict[str, Any] = Field(default_factory=dict, description="Analysis summary")
+    execution_time_seconds: float = Field(..., description="Time taken to complete analysis")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")
 
 
 class SentimentAnalysisRequest(BaseModel):
     """Request for sentiment analysis."""
 
     document_id: str = Field(..., description="Document ID to analyze")
-    analysis_options: Optional[Dict[str, Any]] = Field(
-        None, description="Analysis options"
-    )
-    include_detailed_scores: bool = Field(
-        True, description="Include detailed sentiment scores"
-    )
+    analysis_options: Optional[Dict[str, Any]] = Field(None, description="Analysis options")
+    include_detailed_scores: bool = Field(True, description="Include detailed sentiment scores")
     language: str = Field("en", description="Document language")
 
 
@@ -260,9 +208,7 @@ class SentimentScores(BaseModel):
 class DetailedAnalysis(BaseModel):
     """Model for detailed sentiment analysis."""
 
-    sentence_sentiments: List[Dict[str, Any]] = Field(
-        default_factory=list, description="Sentiment per sentence"
-    )
+    sentence_sentiments: List[Dict[str, Any]] = Field(default_factory=list, description="Sentiment per sentence")
     overall_tone: str = Field(..., description="Overall document tone")
     readability_score: float = Field(..., description="Document readability score")
 
@@ -273,31 +219,19 @@ class SentimentAnalysisResponse(BaseModel):
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was analyzed")
     sentiment: str = Field(..., description="Overall sentiment")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence in sentiment analysis"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in sentiment analysis")
     scores: SentimentScores = Field(..., description="Detailed sentiment scores")
-    detailed_analysis: DetailedAnalysis = Field(
-        ..., description="Detailed analysis results"
-    )
-    execution_time_seconds: float = Field(
-        ..., description="Time taken to complete analysis"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if analysis failed"
-    )
+    detailed_analysis: DetailedAnalysis = Field(..., description="Detailed analysis results")
+    execution_time_seconds: float = Field(..., description="Time taken to complete analysis")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")
 
 
 class ToneAnalysisRequest(BaseModel):
     """Request for tone analysis."""
 
     document_id: str = Field(..., description="Document ID to analyze")
-    analysis_options: Optional[Dict[str, Any]] = Field(
-        None, description="Analysis options"
-    )
-    include_detailed_scores: bool = Field(
-        True, description="Include detailed tone scores"
-    )
+    analysis_options: Optional[Dict[str, Any]] = Field(None, description="Analysis options")
+    include_detailed_scores: bool = Field(True, description="Include detailed tone scores")
     language: str = Field("en", description="Document language")
 
 
@@ -307,25 +241,13 @@ class ToneAnalysisResponse(BaseModel):
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was analyzed")
     overall_tone: str = Field(..., description="Overall document tone")
-    tone_confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence in tone analysis"
-    )
-    tone_distribution: Dict[str, float] = Field(
-        default_factory=dict, description="Tone distribution"
-    )
-    key_phrases: List[str] = Field(
-        default_factory=list, description="Key phrases affecting tone"
-    )
-    writing_style: Dict[str, Any] = Field(
-        default_factory=dict, description="Writing style analysis"
-    )
+    tone_confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in tone analysis")
+    tone_distribution: Dict[str, float] = Field(default_factory=dict, description="Tone distribution")
+    key_phrases: List[str] = Field(default_factory=list, description="Key phrases affecting tone")
+    writing_style: Dict[str, Any] = Field(default_factory=dict, description="Writing style analysis")
     readability_score: float = Field(..., description="Document readability score")
-    execution_time_seconds: float = Field(
-        ..., description="Time taken to complete analysis"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if analysis failed"
-    )
+    execution_time_seconds: float = Field(..., description="Time taken to complete analysis")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")
 
 
 class ContentQualityRequest(BaseModel):
@@ -349,27 +271,17 @@ class ContentQualityRequest(BaseModel):
         ]
         invalid_checks = [check for check in v if check not in valid_checks]
         if invalid_checks:
-            raise ValueError(
-                f"Invalid quality checks: {invalid_checks}. Valid: {valid_checks}"
-            )
+            raise ValueError(f"Invalid quality checks: {invalid_checks}. Valid: {valid_checks}")
         return v
 
 
 class QualityBreakdown(BaseModel):
     """Model for quality analysis breakdown."""
 
-    readability: Dict[str, Any] = Field(
-        default_factory=dict, description="Readability analysis"
-    )
-    grammar: Dict[str, Any] = Field(
-        default_factory=dict, description="Grammar analysis"
-    )
-    structure: Dict[str, Any] = Field(
-        default_factory=dict, description="Structure analysis"
-    )
-    completeness: Dict[str, Any] = Field(
-        default_factory=dict, description="Completeness analysis"
-    )
+    readability: Dict[str, Any] = Field(default_factory=dict, description="Readability analysis")
+    grammar: Dict[str, Any] = Field(default_factory=dict, description="Grammar analysis")
+    structure: Dict[str, Any] = Field(default_factory=dict, description="Structure analysis")
+    completeness: Dict[str, Any] = Field(default_factory=dict, description="Completeness analysis")
 
 
 class Recommendation(BaseModel):
@@ -384,15 +296,9 @@ class Recommendation(BaseModel):
 class ImprovementSuggestion(BaseModel):
     """Model for improvement suggestions."""
 
-    high_priority: List[str] = Field(
-        default_factory=list, description="High priority suggestions"
-    )
-    medium_priority: List[str] = Field(
-        default_factory=list, description="Medium priority suggestions"
-    )
-    low_priority: List[str] = Field(
-        default_factory=list, description="Low priority suggestions"
-    )
+    high_priority: List[str] = Field(default_factory=list, description="High priority suggestions")
+    medium_priority: List[str] = Field(default_factory=list, description="Medium priority suggestions")
+    low_priority: List[str] = Field(default_factory=list, description="Low priority suggestions")
 
 
 class ContentQualityResponse(BaseModel):
@@ -400,33 +306,19 @@ class ContentQualityResponse(BaseModel):
 
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was analyzed")
-    overall_score: float = Field(
-        ..., ge=0.0, le=100.0, description="Overall quality score"
-    )
-    quality_breakdown: QualityBreakdown = Field(
-        ..., description="Detailed quality breakdown"
-    )
-    recommendations: List[Recommendation] = Field(
-        default_factory=list, description="Quality recommendations"
-    )
-    improvement_suggestions: ImprovementSuggestion = Field(
-        ..., description="Improvement suggestions"
-    )
-    execution_time_seconds: float = Field(
-        ..., description="Time taken to complete analysis"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if analysis failed"
-    )
+    overall_score: float = Field(..., ge=0.0, le=100.0, description="Overall quality score")
+    quality_breakdown: QualityBreakdown = Field(..., description="Detailed quality breakdown")
+    recommendations: List[Recommendation] = Field(default_factory=list, description="Quality recommendations")
+    improvement_suggestions: ImprovementSuggestion = Field(..., description="Improvement suggestions")
+    execution_time_seconds: float = Field(..., description="Time taken to complete analysis")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")
 
 
 class TrendAnalysisRequest(BaseModel):
     """Request for trend analysis."""
 
     document_id: str = Field(..., description="Document ID to analyze")
-    time_range_days: int = Field(
-        90, ge=1, le=365, description="Analysis time range in days"
-    )
+    time_range_days: int = Field(90, ge=1, le=365, description="Analysis time range in days")
     trend_metrics: List[str] = Field(..., description="Metrics to analyze for trends")
     forecast_days: int = Field(30, ge=1, le=180, description="Days to forecast")
     options: Optional[Dict[str, Any]] = Field(None, description="Additional options")
@@ -435,9 +327,7 @@ class TrendAnalysisRequest(BaseModel):
 class TrendData(BaseModel):
     """Model for trend data."""
 
-    historical_data: List[Dict[str, Any]] = Field(
-        default_factory=list, description="Historical data points"
-    )
+    historical_data: List[Dict[str, Any]] = Field(default_factory=list, description="Historical data points")
     current_value: float = Field(..., description="Current metric value")
     trend_direction: str = Field(..., description="Trend direction")
     trend_slope: float = Field(..., description="Trend slope")
@@ -449,9 +339,7 @@ class ForecastData(BaseModel):
     """Model for forecast data."""
 
     forecasted_value: float = Field(..., description="Forecasted value")
-    confidence_interval: Dict[str, float] = Field(
-        ..., description="Confidence interval"
-    )
+    confidence_interval: Dict[str, float] = Field(..., description="Confidence interval")
 
 
 class TrendAnalysisResponse(BaseModel):
@@ -460,33 +348,19 @@ class TrendAnalysisResponse(BaseModel):
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_id: str = Field(..., description="Document that was analyzed")
     time_range_days: int = Field(..., description="Analysis time range")
-    trend_data: Dict[str, TrendData] = Field(
-        default_factory=dict, description="Trend analysis data"
-    )
-    key_insights: List[str] = Field(
-        default_factory=list, description="Key insights from analysis"
-    )
-    recommendations: List[str] = Field(
-        default_factory=list, description="Trend-based recommendations"
-    )
-    forecast_accuracy: float = Field(
-        ..., ge=0.0, le=1.0, description="Forecast accuracy score"
-    )
-    execution_time_seconds: float = Field(
-        ..., description="Time taken to complete analysis"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if analysis failed"
-    )
+    trend_data: Dict[str, TrendData] = Field(default_factory=dict, description="Trend analysis data")
+    key_insights: List[str] = Field(default_factory=list, description="Key insights from analysis")
+    recommendations: List[str] = Field(default_factory=list, description="Trend-based recommendations")
+    forecast_accuracy: float = Field(..., ge=0.0, le=1.0, description="Forecast accuracy score")
+    execution_time_seconds: float = Field(..., description="Time taken to complete analysis")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")
 
 
 class PortfolioTrendAnalysisRequest(BaseModel):
     """Request for portfolio trend analysis."""
 
     document_ids: List[str] = Field(..., description="Document IDs to analyze")
-    time_range_days: int = Field(
-        90, ge=1, le=365, description="Analysis time range in days"
-    )
+    time_range_days: int = Field(90, ge=1, le=365, description="Analysis time range in days")
     trend_metrics: List[str] = Field(..., description="Metrics to analyze for trends")
     forecast_days: int = Field(30, ge=1, le=180, description="Days to forecast")
     options: Optional[Dict[str, Any]] = Field(None, description="Additional options")
@@ -498,21 +372,9 @@ class PortfolioTrendAnalysisResponse(BaseModel):
     analysis_id: str = Field(..., description="Unique analysis identifier")
     document_ids: List[str] = Field(..., description="Documents that were analyzed")
     time_range_days: int = Field(..., description="Analysis time range")
-    portfolio_trend_data: Dict[str, Any] = Field(
-        default_factory=dict, description="Portfolio trend data"
-    )
-    key_insights: List[str] = Field(
-        default_factory=list, description="Key insights from analysis"
-    )
-    recommendations: List[str] = Field(
-        default_factory=list, description="Trend-based recommendations"
-    )
-    forecast_accuracy: float = Field(
-        ..., ge=0.0, le=1.0, description="Forecast accuracy score"
-    )
-    execution_time_seconds: float = Field(
-        ..., description="Time taken to complete analysis"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if analysis failed"
-    )
+    portfolio_trend_data: Dict[str, Any] = Field(default_factory=dict, description="Portfolio trend data")
+    key_insights: List[str] = Field(default_factory=list, description="Key insights from analysis")
+    recommendations: List[str] = Field(default_factory=list, description="Trend-based recommendations")
+    forecast_accuracy: float = Field(..., ge=0.0, le=1.0, description="Forecast accuracy score")
+    execution_time_seconds: float = Field(..., description="Time taken to complete analysis")
+    error_message: Optional[str] = Field(None, description="Error message if analysis failed")

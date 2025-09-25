@@ -79,9 +79,7 @@ class DocumentBusinessValidator(BaseValidator):
         # Check for duplicate titles (if repository available)
         if self.document_repository:
             try:
-                existing_docs = await self.document_repository.find_by_title(
-                    document.title
-                )
+                existing_docs = await self.document_repository.find_by_title(document.title)
                 existing_docs = [doc for doc in existing_docs if doc.id != document.id]
 
                 if existing_docs:
@@ -117,9 +115,7 @@ class DocumentBusinessValidator(BaseValidator):
         warnings = []
 
         # Check for stale content
-        days_since_update = (
-            datetime.now(timezone.utc) - document.metadata.updated_at
-        ).days
+        days_since_update = (datetime.now(timezone.utc) - document.metadata.updated_at).days
         if days_since_update > 365:  # 1 year
             warnings.append(
                 self.create_warning(
@@ -197,9 +193,7 @@ class AnalysisBusinessValidator(BaseValidator):
 
         return ValidationResult.success()
 
-    async def _validate_document_reference(
-        self, analysis: Analysis
-    ) -> tuple[list, list]:
+    async def _validate_document_reference(self, analysis: Analysis) -> tuple[list, list]:
         """Validate document reference and content suitability."""
         errors = []
         warnings = []
@@ -208,9 +202,7 @@ class AnalysisBusinessValidator(BaseValidator):
             return errors, warnings
 
         try:
-            document = await self.document_repository.get_by_id(
-                analysis.document_id.value
-            )
+            document = await self.document_repository.get_by_id(analysis.document_id.value)
             if not document:
                 errors.append(
                     self.create_error(
@@ -273,18 +265,12 @@ class AnalysisBusinessValidator(BaseValidator):
         # Check timeout is reasonable
         timeout = analysis.configuration.get("timeout_seconds", 300)
         if timeout > 1800:  # 30 minutes
-            warnings.append(
-                self.create_warning(
-                    f"Analysis timeout of {timeout}s is quite long", "LONG_TIMEOUT"
-                )
-            )
+            warnings.append(self.create_warning(f"Analysis timeout of {timeout}s is quite long", "LONG_TIMEOUT"))
 
         # Check priority is valid
         priority = analysis.configuration.get("priority", "normal")
         if priority not in ["low", "normal", "high", "critical"]:
-            errors.append(
-                self.create_error(f"Invalid priority: {priority}", "INVALID_PRIORITY")
-            )
+            errors.append(self.create_error(f"Invalid priority: {priority}", "INVALID_PRIORITY"))
 
         return errors, warnings
 
@@ -328,11 +314,7 @@ class AnalysisBusinessValidator(BaseValidator):
 
             # Filter for recent analyses (last 24 hours)
             recent_cutoff = datetime.now(timezone.utc).timestamp() - (24 * 60 * 60)
-            recent_similar = [
-                a
-                for a in recent_analyses
-                if a.created_at.timestamp() > recent_cutoff and a.id != analysis.id
-            ]
+            recent_similar = [a for a in recent_analyses if a.created_at.timestamp() > recent_cutoff and a.id != analysis.id]
 
             if recent_similar:
                 warnings.append(
@@ -395,15 +377,11 @@ class FindingBusinessValidator(BaseValidator):
         warnings = []
 
         # Break down validation into focused methods
-        doc_errors, doc_warnings = await self._validate_finding_document_reference(
-            finding
-        )
+        doc_errors, doc_warnings = await self._validate_finding_document_reference(finding)
         errors.extend(doc_errors)
         warnings.extend(doc_warnings)
 
-        analysis_errors, analysis_warnings = (
-            await self._validate_finding_analysis_reference(finding)
-        )
+        analysis_errors, analysis_warnings = await self._validate_finding_analysis_reference(finding)
         errors.extend(analysis_errors)
         warnings.extend(analysis_warnings)
 
@@ -435,9 +413,7 @@ class FindingBusinessValidator(BaseValidator):
 
         return ValidationResult.success()
 
-    async def _validate_finding_document_reference(
-        self, finding: Finding
-    ) -> tuple[list, list]:
+    async def _validate_finding_document_reference(self, finding: Finding) -> tuple[list, list]:
         """Validate document reference for finding."""
         errors = []
         warnings = []
@@ -446,9 +422,7 @@ class FindingBusinessValidator(BaseValidator):
             return errors, warnings
 
         try:
-            document = await self.document_repository.get_by_id(
-                finding.document_id.value
-            )
+            document = await self.document_repository.get_by_id(finding.document_id.value)
             if not document:
                 errors.append(
                     self.create_error(
@@ -466,9 +440,7 @@ class FindingBusinessValidator(BaseValidator):
 
         return errors, warnings
 
-    async def _validate_finding_analysis_reference(
-        self, finding: Finding
-    ) -> tuple[list, list]:
+    async def _validate_finding_analysis_reference(self, finding: Finding) -> tuple[list, list]:
         """Validate analysis reference for finding."""
         errors = []
         warnings = []
@@ -477,9 +449,7 @@ class FindingBusinessValidator(BaseValidator):
             return errors, warnings
 
         try:
-            analysis = await self.analysis_repository.get_by_id(
-                finding.analysis_id.value
-            )
+            analysis = await self.analysis_repository.get_by_id(finding.analysis_id.value)
             if not analysis:
                 errors.append(
                     self.create_error(
@@ -543,11 +513,7 @@ class FindingBusinessValidator(BaseValidator):
         ]
 
         if finding.category not in valid_categories:
-            errors.append(
-                self.create_error(
-                    f"Invalid category: {finding.category}", "INVALID_CATEGORY"
-                )
-            )
+            errors.append(self.create_error(f"Invalid category: {finding.category}", "INVALID_CATEGORY"))
 
         return errors
 
@@ -556,18 +522,10 @@ class FindingBusinessValidator(BaseValidator):
         warnings = []
 
         if len(finding.description) < 10:
-            warnings.append(
-                self.create_warning(
-                    "Finding description is very short", "SHORT_DESCRIPTION"
-                )
-            )
+            warnings.append(self.create_warning("Finding description is very short", "SHORT_DESCRIPTION"))
 
         if len(finding.description) > 500:
-            warnings.append(
-                self.create_warning(
-                    "Finding description is very long", "LONG_DESCRIPTION"
-                )
-            )
+            warnings.append(self.create_warning("Finding description is very long", "LONG_DESCRIPTION"))
 
         return warnings
 
@@ -610,11 +568,7 @@ class FindingBusinessValidator(BaseValidator):
         warnings = []
 
         if finding.suggestion and len(finding.suggestion) < 5:
-            warnings.append(
-                self.create_warning(
-                    "Finding suggestion is very brief", "BRIEF_SUGGESTION"
-                )
-            )
+            warnings.append(self.create_warning("Finding suggestion is very brief", "BRIEF_SUGGESTION"))
 
         return warnings
 

@@ -45,9 +45,7 @@ class WorkflowAnalysisHandler(BaseAnalysisHandler):
         except Exception as e:
             error_msg = f"Workflow analysis failed: {str(e)}"
             logger.error(error_msg, exc_info=True)
-            return await self._handle_error(
-                e, f"workflow-{int(datetime.now(timezone.utc).timestamp())}"
-            )
+            return await self._handle_error(e, f"workflow-{int(datetime.now(timezone.utc).timestamp())}")
 
     async def _mock_workflow_analysis(self, **kwargs) -> Dict[str, Any]:
         """Mock workflow analysis for testing purposes."""

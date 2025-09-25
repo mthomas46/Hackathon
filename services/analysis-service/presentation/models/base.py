@@ -32,9 +32,7 @@ class BaseResponse(BaseModel):
     """Base response model for all API responses."""
 
     status: ResponseStatus = Field(..., description="Response status")
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Response timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
     request_id: Optional[str] = Field(None, description="Unique request identifier")
 
     class Config:
@@ -57,9 +55,7 @@ class ErrorResponse(BaseResponse):
 
     status: ResponseStatus = ResponseStatus.ERROR
     error: ErrorDetail = Field(..., description="Error details")
-    details: Optional[List[ErrorDetail]] = Field(
-        None, description="Additional error details"
-    )
+    details: Optional[List[ErrorDetail]] = Field(None, description="Additional error details")
 
     @classmethod
     def from_exception(
@@ -85,9 +81,7 @@ class SuccessResponse(BaseResponse):
     message: Optional[str] = Field(None, description="Success message")
 
     @classmethod
-    def with_data(
-        cls, data: Any, message: Optional[str] = None, request_id: Optional[str] = None
-    ) -> "SuccessResponse":
+    def with_data(cls, data: Any, message: Optional[str] = None, request_id: Optional[str] = None) -> "SuccessResponse":
         """Create success response with data."""
         return cls(data=data, message=message, request_id=request_id)
 
@@ -133,9 +127,7 @@ class HealthResponse(BaseResponse):
     service: str = Field(..., description="Service name")
     version: str = Field(..., description="Service version")
     uptime: Optional[float] = Field(None, description="Service uptime in seconds")
-    dependencies: Optional[Dict[str, Any]] = Field(
-        None, description="Dependency health status"
-    )
+    dependencies: Optional[Dict[str, Any]] = Field(None, description="Dependency health status")
 
     @classmethod
     def healthy(

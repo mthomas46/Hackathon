@@ -51,29 +51,19 @@ class MaintenanceAnalysisHandler(BaseAnalysisHandler):
                     analysis_id=f"portfolio-maint-{int(datetime.now(timezone.utc).timestamp())}",
                     document_ids=request.document_ids,
                     portfolio_forecast=forecast_result.get("portfolio_forecast", {}),
-                    maintenance_schedule=forecast_result.get(
-                        "maintenance_schedule", {}
-                    ),
-                    resource_requirements=forecast_result.get(
-                        "resource_requirements", {}
-                    ),
-                    execution_time_seconds=forecast_result.get(
-                        "execution_time_seconds", 0.0
-                    ),
+                    maintenance_schedule=forecast_result.get("maintenance_schedule", {}),
+                    resource_requirements=forecast_result.get("resource_requirements", {}),
+                    execution_time_seconds=forecast_result.get("execution_time_seconds", 0.0),
                     error_message=None,
                 )
             else:  # Single document response
                 response = MaintenanceForecastResponse(
                     analysis_id=f"maint-{int(datetime.now(timezone.utc).timestamp())}",
                     document_id=request.document_id,
-                    maintenance_forecast=forecast_result.get(
-                        "maintenance_forecast", {}
-                    ),
+                    maintenance_forecast=forecast_result.get("maintenance_forecast", {}),
                     recommended_actions=forecast_result.get("recommended_actions", []),
                     priority_level=forecast_result.get("priority_level", "medium"),
-                    execution_time_seconds=forecast_result.get(
-                        "execution_time_seconds", 0.0
-                    ),
+                    execution_time_seconds=forecast_result.get("execution_time_seconds", 0.0),
                     error_message=None,
                 )
 
@@ -99,15 +89,11 @@ class MaintenanceAnalysisHandler(BaseAnalysisHandler):
         kwargs.get("forecast_period_days", 180)
 
         maintenance_forecast = {
-            "next_maintenance_date": (
-                datetime.now(timezone.utc) + timedelta(days=random.randint(30, 90))
-            ).isoformat(),
+            "next_maintenance_date": (datetime.now(timezone.utc) + timedelta(days=random.randint(30, 90))).isoformat(),
             "maintenance_probability": random.uniform(0.3, 0.9),
             "estimated_effort_days": random.uniform(1, 14),
             "risk_of_obsolescence": random.uniform(0.1, 0.8),
-            "update_frequency_recommendation": random.choice(
-                ["monthly", "quarterly", "biannual", "annual"]
-            ),
+            "update_frequency_recommendation": random.choice(["monthly", "quarterly", "biannual", "annual"]),
         }
 
         recommended_actions = [
@@ -140,6 +126,4 @@ class MaintenanceAnalysisHandler(BaseAnalysisHandler):
 from .base_handler import handler_registry
 
 handler_registry.register("maintenance_forecast", MaintenanceAnalysisHandler())
-handler_registry.register(
-    "portfolio_maintenance_forecast", MaintenanceAnalysisHandler()
-)
+handler_registry.register("portfolio_maintenance_forecast", MaintenanceAnalysisHandler())

@@ -169,8 +169,7 @@ def detect_readme_drift(docs: List[Document]) -> List[Finding]:
 def _prepare_document_data(docs: List[Document]) -> Dict[str, List]:
     """Prepare and categorize document data for analysis."""
     # Performance optimization: Pre-filter and cache document properties
-    valid_docs = [(d, d.title.lower() if d.title else "", d.content or "")
-                  for d in docs if d.content]
+    valid_docs = [(d, d.title.lower() if d.title else "", d.content or "") for d in docs if d.content]
 
     # Separate READMEs from other documentation
     readmes = [(d, title, content) for d, title, content in valid_docs if "readme" in title]
@@ -205,9 +204,7 @@ def _analyze_readme_drift(readmes: List, other_docs: List) -> List[Finding]:
 
             # Check if overlap indicates potential drift
             if overlap < DRIFT_OVERLAP_THRESHOLD:
-                findings.append(_create_drift_finding(
-                    readme_doc, readme_title, doc_doc, doc_title, overlap
-                ))
+                findings.append(_create_drift_finding(readme_doc, readme_title, doc_doc, doc_title, overlap))
 
     return findings
 

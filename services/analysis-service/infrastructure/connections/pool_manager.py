@@ -42,9 +42,7 @@ class ConnectionPoolManager:
         self._healthy_pools = 0
         self._unhealthy_pools = 0
 
-    async def register_pool(
-        self, name: str, pool: ConnectionPool, enable_monitoring: bool = True
-    ) -> None:
+    async def register_pool(self, name: str, pool: ConnectionPool, enable_monitoring: bool = True) -> None:
         """Register a connection pool."""
         async with self._lock:
             if name in self.pools:
@@ -209,8 +207,7 @@ class ConnectionPoolManager:
             "total_releases": total_releases,
             "total_failed_acquires": total_failed,
             "pool_utilization_rate": total_active / max(1, total_active + total_idle),
-            "acquire_success_rate": total_acquires
-            / max(1, total_acquires + total_failed),
+            "acquire_success_rate": total_acquires / max(1, total_acquires + total_failed),
         }
 
     async def health_check_all_pools(self) -> Dict[str, Any]:
@@ -251,9 +248,7 @@ class ConnectionPoolManager:
 
         return pool.acquire()
 
-    async def execute_with_pool(
-        self, pool_name: str, operation: callable, *args, **kwargs
-    ) -> Any:
+    async def execute_with_pool(self, pool_name: str, operation: callable, *args, **kwargs) -> Any:
         """Execute operation using a connection from specified pool."""
         async with self.acquire_connection(pool_name) as connection:
             return await operation(connection, *args, **kwargs)
@@ -334,9 +329,7 @@ class PoolManagerService:
         if pool_config is None:
             pool_config = self.pool_manager.create_pool_config()
 
-        pool = HTTPPoolFactory.create_advanced_pool(
-            base_url=base_url, max_connections=pool_config.max_size, headers=headers
-        )
+        pool = HTTPPoolFactory.create_advanced_pool(base_url=base_url, max_connections=pool_config.max_size, headers=headers)
         await self.pool_manager.register_pool(name, pool)
 
     async def register_redis_pool(
@@ -351,9 +344,7 @@ class PoolManagerService:
         if pool_config is None:
             pool_config = self.pool_manager.create_pool_config()
 
-        pool = RedisPoolFactory.create_pool_from_url(
-            redis_url, max_connections=pool_config.max_size
-        )
+        pool = RedisPoolFactory.create_pool_from_url(redis_url, max_connections=pool_config.max_size)
         await self.pool_manager.register_pool(name, pool)
 
     async def get_service_status(self) -> Dict[str, Any]:

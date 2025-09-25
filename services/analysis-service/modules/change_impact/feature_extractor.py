@@ -32,9 +32,7 @@ class FeatureExtractor:
         if not self.initialized:
             logger.warning("Feature extraction dependencies not available")
 
-    def extract_document_features(
-        self, document_data: Dict[str, Any], content: str
-    ) -> Dict[str, Any]:
+    def extract_document_features(self, document_data: Dict[str, Any], content: str) -> Dict[str, Any]:
         """Extract features from a document."""
         if not self.initialized:
             return self._get_fallback_features(document_data, content)
@@ -71,9 +69,7 @@ class FeatureExtractor:
 
         # Remove duplicates and filter
         unique_terms = list(set(technical_terms))
-        return [term for term in unique_terms if len(term) > 2][
-            :50
-        ]  # Limit to 50 terms
+        return [term for term in unique_terms if len(term) > 2][:50]  # Limit to 50 terms
 
     def _identify_stakeholder_groups(self, document_data: Dict[str, Any]) -> List[str]:
         """Identify stakeholder groups affected by the document."""
@@ -111,9 +107,7 @@ class FeatureExtractor:
 
         return list(set(stakeholders))  # Remove duplicates
 
-    def _get_fallback_features(
-        self, document_data: Dict[str, Any], content: str
-    ) -> Dict[str, Any]:
+    def _get_fallback_features(self, document_data: Dict[str, Any], content: str) -> Dict[str, Any]:
         """Get basic features when advanced extraction is not available."""
         return {
             "technical_terms": [],

@@ -126,9 +126,7 @@ class MaintenanceForecaster:
             },
         }
 
-    def _calculate_maintenance_urgency(
-        self, factor_name: str, value: Any, factor_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _calculate_maintenance_urgency(self, factor_name: str, value: Any, factor_config: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate maintenance urgency for a specific factor."""
         base_interval = factor_config.get("base_interval_days", 90)
         urgency_multiplier = factor_config.get("urgency_multiplier", 0.5)
@@ -151,16 +149,12 @@ class MaintenanceForecaster:
         elif forecast_impact == "linear_increase":
             # Linear relationship with value
             urgency_score = min(1.0, max(0.0, value / 365 * urgency_multiplier))
-            days_multiplier = max(
-                0.2, 1.0 - (value / 730)
-            )  # Reduce interval as age increases
+            days_multiplier = max(0.2, 1.0 - (value / 730))  # Reduce interval as age increases
             predicted_days = int(base_interval * days_multiplier)
 
         elif forecast_impact == "inverse_linear":
             # Higher values = less urgent (later maintenance)
-            urgency_score = min(
-                1.0, max(0.0, (100 - min(value, 100)) / 100 * urgency_multiplier)
-            )
+            urgency_score = min(1.0, max(0.0, (100 - min(value, 100)) / 100 * urgency_multiplier))
             days_multiplier = 1.0 + (value / 200)  # Increase interval with higher usage
             predicted_days = int(base_interval * days_multiplier)
 
@@ -180,9 +174,7 @@ class MaintenanceForecaster:
                 predicted_days = categories.get(value.lower(), base_interval)
                 urgency_score = min(
                     1.0,
-                    (base_interval - predicted_days)
-                    / base_interval
-                    * urgency_multiplier,
+                    (base_interval - predicted_days) / base_interval * urgency_multiplier,
                 )
             else:
                 predicted_days = base_interval
@@ -200,14 +192,10 @@ class MaintenanceForecaster:
             "urgency_score": round(urgency_score, 3),
             "predicted_days": predicted_days,
             "confidence": 0.8,  # Simplified confidence
-            "recommendation": self._generate_factor_recommendation(
-                factor_name, urgency_score, predicted_days
-            ),
+            "recommendation": self._generate_factor_recommendation(factor_name, urgency_score, predicted_days),
         }
 
-    def _generate_factor_recommendation(
-        self, factor_name: str, urgency_score: float, predicted_days: int
-    ) -> str:
+    def _generate_factor_recommendation(self, factor_name: str, urgency_score: float, predicted_days: int) -> str:
         """Generate recommendation based on factor analysis."""
         if urgency_score >= 0.8:
             urgency_level = "immediate"
@@ -226,9 +214,7 @@ class MaintenanceForecaster:
             return f"{urgency_level.capitalize()} update needed - document is {predicted_days} days overdue"
         elif factor_name == "usage_frequency":
             if urgency_score < 0.3:
-                return (
-                    "Low priority - document has high usage, maintain current schedule"
-                )
+                return "Low priority - document has high usage, maintain current schedule"
             else:
                 return f"{urgency_level.capitalize()} review recommended despite high usage"
         elif factor_name == "quality_trend":
@@ -255,9 +241,7 @@ class MaintenanceForecaster:
         # Calculate forecasts for each factor
         for factor_name, factor_config in self.maintenance_factors.items():
             value = factor_values.get(factor_name)
-            forecast = self._calculate_maintenance_urgency(
-                factor_name, value, factor_config
-            )
+            forecast = self._calculate_maintenance_urgency(factor_name, value, factor_config)
 
             factor_forecasts[factor_name] = {
                 "value": value,
@@ -295,9 +279,7 @@ class MaintenanceForecaster:
 
         return factor_values
 
-    def _extract_risk_score(
-        self, value: Any, analysis_history: Optional[List[Dict[str, Any]]]
-    ) -> float:
+    def _extract_risk_score(self, value: Any, analysis_history: Optional[List[Dict[str, Any]]]) -> float:
         """Extract or estimate risk score."""
         if not value and analysis_history:
             latest_analysis = analysis_history[-1] if analysis_history else {}
@@ -319,9 +301,7 @@ class MaintenanceForecaster:
 
         return 180  # Default to 6 months
 
-    def _extract_usage_frequency(
-        self, value: Any, document_data: Dict[str, Any]
-    ) -> int:
+    def _extract_usage_frequency(self, value: Any, document_data: Dict[str, Any]) -> int:
         """Extract or estimate usage frequency."""
         if value:
             return value
@@ -336,9 +316,7 @@ class MaintenanceForecaster:
             return 40
         return 20  # Default
 
-    def _extract_quality_trend(
-        self, value: Any, analysis_history: Optional[List[Dict[str, Any]]]
-    ) -> float:
+    def _extract_quality_trend(self, value: Any, analysis_history: Optional[List[Dict[str, Any]]]) -> float:
         """Extract or calculate quality trend slope."""
         if value or not analysis_history or len(analysis_history) < 3:
             return value or 0.0
@@ -358,9 +336,7 @@ class MaintenanceForecaster:
 
         return 0.0
 
-    def _extract_business_criticality(
-        self, value: Any, document_data: Dict[str, Any]
-    ) -> str:
+    def _extract_business_criticality(self, value: Any, document_data: Dict[str, Any]) -> str:
         """Extract or estimate business criticality."""
         if value:
             return value
@@ -376,9 +352,7 @@ class MaintenanceForecaster:
 
         return "medium"
 
-    def _aggregate_maintenance_forecast(
-        self, factor_forecasts: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _aggregate_maintenance_forecast(self, factor_forecasts: Dict[str, Any]) -> Dict[str, Any]:
         """Aggregate factor forecasts into overall maintenance schedule."""
         total_weight = 0
         weighted_days = 0
@@ -429,22 +403,16 @@ class MaintenanceForecaster:
             priority_level = "minimal"
 
         # Calculate confidence based on data completeness
-        data_completeness = sum(
-            1 for f in factor_forecasts.values() if f["value"] is not None
-        ) / len(factor_forecasts)
+        data_completeness = sum(1 for f in factor_forecasts.values() if f["value"] is not None) / len(factor_forecasts)
         confidence = min(0.95, 0.5 + (data_completeness * 0.4))
 
         # Generate maintenance schedule
-        maintenance_schedule = self._generate_maintenance_schedule(
-            overall_days, priority_level, urgent_factors
-        )
+        maintenance_schedule = self._generate_maintenance_schedule(overall_days, priority_level, urgent_factors)
 
         return {
             "overall_forecast": {
                 "predicted_days": overall_days,
-                "predicted_date": (
-                    datetime.now() + timedelta(days=overall_days)
-                ).isoformat(),
+                "predicted_date": (datetime.now() + timedelta(days=overall_days)).isoformat(),
                 "urgency_score": round(overall_urgency, 3),
                 "priority_level": priority_level,
                 "confidence": round(confidence, 3),
@@ -469,9 +437,7 @@ class MaintenanceForecaster:
             "next_maintenance_date": predicted_date.isoformat(),
             "next_maintenance_days": predicted_days,
             "priority_level": priority_level,
-            "maintenance_type": self._determine_maintenance_type(
-                priority_level, urgent_factors
-            ),
+            "maintenance_type": self._determine_maintenance_type(priority_level, urgent_factors),
             "milestones": [],
         }
 
@@ -519,9 +485,7 @@ class MaintenanceForecaster:
 
         return schedule
 
-    def _determine_maintenance_type(
-        self, priority_level: str, urgent_factors: List[Dict[str, Any]]
-    ) -> str:
+    def _determine_maintenance_type(self, priority_level: str, urgent_factors: List[Dict[str, Any]]) -> str:
         """Determine the type of maintenance required."""
         if priority_level == "critical":
             return "major_overhaul"
@@ -539,9 +503,7 @@ class MaintenanceForecaster:
         else:
             return "routine_maintenance"
 
-    def _generate_maintenance_recommendations(
-        self, forecast_data: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_maintenance_recommendations(self, forecast_data: Dict[str, Any]) -> List[str]:
         """Generate actionable maintenance recommendations."""
         recommendations = []
         overall_forecast = forecast_data["overall_forecast"]
@@ -551,66 +513,40 @@ class MaintenanceForecaster:
         predicted_days = overall_forecast["predicted_days"]
 
         if priority_level == "critical":
-            recommendations.append(
-                "🚨 CRITICAL: Immediate maintenance required - schedule within 1 week"
-            )
-            recommendations.append(
-                "Allocate dedicated resources for comprehensive documentation overhaul"
-            )
-            recommendations.append(
-                "Consider involving multiple stakeholders for critical review"
-            )
+            recommendations.append("🚨 CRITICAL: Immediate maintenance required - schedule within 1 week")
+            recommendations.append("Allocate dedicated resources for comprehensive documentation overhaul")
+            recommendations.append("Consider involving multiple stakeholders for critical review")
 
         elif priority_level == "high":
-            recommendations.append(
-                "⚠️ HIGH PRIORITY: Schedule maintenance within 2-4 weeks"
-            )
+            recommendations.append("⚠️ HIGH PRIORITY: Schedule maintenance within 2-4 weeks")
             recommendations.append("Focus on high-risk areas identified in assessment")
-            recommendations.append(
-                "Prepare rollback plan for significant content changes"
-            )
+            recommendations.append("Prepare rollback plan for significant content changes")
 
         elif priority_level == "medium":
-            recommendations.append(
-                "📅 MEDIUM PRIORITY: Plan maintenance for next quarterly cycle"
-            )
-            recommendations.append(
-                "Monitor closely and escalate if risk factors increase"
-            )
+            recommendations.append("📅 MEDIUM PRIORITY: Plan maintenance for next quarterly cycle")
+            recommendations.append("Monitor closely and escalate if risk factors increase")
 
         else:
-            recommendations.append(
-                "✅ LOW PRIORITY: Include in regular maintenance schedule"
-            )
+            recommendations.append("✅ LOW PRIORITY: Include in regular maintenance schedule")
             recommendations.append("Monitor for any changes in risk factors")
 
         # Factor-specific recommendations
         for factor in urgent_factors[:3]:  # Top 3 urgent factors
             factor_name = factor["factor"]
             if factor_name == "risk_score":
-                recommendations.append(
-                    "Address high-risk issues identified in recent assessments"
-                )
+                recommendations.append("Address high-risk issues identified in recent assessments")
             elif factor_name == "document_age":
-                recommendations.append(
-                    "Review content relevance and update outdated information"
-                )
+                recommendations.append("Review content relevance and update outdated information")
             elif factor_name == "quality_trend":
-                recommendations.append(
-                    "Investigate and correct causes of quality degradation"
-                )
+                recommendations.append("Investigate and correct causes of quality degradation")
 
         # Add timeline recommendations
         if predicted_days <= 30:
-            recommendations.append(
-                "Short timeline - consider breaking maintenance into phases"
-            )
+            recommendations.append("Short timeline - consider breaking maintenance into phases")
         elif predicted_days <= 90:
             recommendations.append("Moderate timeline - plan resources accordingly")
         else:
-            recommendations.append(
-                "Long timeline - monitor risk factors and adjust as needed"
-            )
+            recommendations.append("Long timeline - monitor risk factors and adjust as needed")
 
         return recommendations[:8]  # Limit to 8 recommendations
 
@@ -632,9 +568,7 @@ class MaintenanceForecaster:
 
         try:
             # Generate maintenance forecast
-            forecast_data = self._forecast_maintenance_schedule(
-                document_data, analysis_history
-            )
+            forecast_data = self._forecast_maintenance_schedule(document_data, analysis_history)
 
             # Generate recommendations
             recommendations = self._generate_maintenance_recommendations(forecast_data)
@@ -650,9 +584,7 @@ class MaintenanceForecaster:
             }
 
         except Exception as e:
-            logger.error(
-                f"Maintenance forecasting failed for document {document_id}: {e}"
-            )
+            logger.error(f"Maintenance forecasting failed for document {document_id}: {e}")
             return {
                 "error": "Maintenance forecasting failed",
                 "message": str(e),
@@ -689,9 +621,7 @@ class MaintenanceForecaster:
 
             for doc in documents:
                 doc_id = doc.get("document_id", f"doc_{len(document_forecasts)}")
-                forecast = await self.forecast_document_maintenance(
-                    doc_id, doc, doc.get("analysis_history")
-                )
+                forecast = await self.forecast_document_maintenance(doc_id, doc, doc.get("analysis_history"))
 
                 if "error" not in forecast:
                     document_forecasts.append(forecast)
@@ -718,9 +648,7 @@ class MaintenanceForecaster:
                 }
 
             # Calculate portfolio summary
-            avg_urgency = (
-                sum(urgency_scores) / len(urgency_scores) if urgency_scores else 0
-            )
+            avg_urgency = sum(urgency_scores) / len(urgency_scores) if urgency_scores else 0
             maintenance_schedule = []
 
             # Sort dates and create maintenance schedule
@@ -770,9 +698,7 @@ class MaintenanceForecaster:
                 "processing_time": time.time() - start_time,
             }
 
-    def update_maintenance_factors(
-        self, custom_factors: Dict[str, Dict[str, Any]]
-    ) -> bool:
+    def update_maintenance_factors(self, custom_factors: Dict[str, Dict[str, Any]]) -> bool:
         """Update maintenance forecasting factors configuration."""
         try:
             for factor_name, config in custom_factors.items():
@@ -784,15 +710,11 @@ class MaintenanceForecaster:
                     if all(key in config for key in required_keys):
                         self.maintenance_factors[factor_name] = config
                     else:
-                        logger.warning(
-                            f"Invalid configuration for maintenance factor {factor_name}"
-                        )
+                        logger.warning(f"Invalid configuration for maintenance factor {factor_name}")
                         continue
 
             # Re-normalize weights to ensure they sum to 1.0
-            total_weight = sum(
-                factor["weight"] for factor in self.maintenance_factors.values()
-            )
+            total_weight = sum(factor["weight"] for factor in self.maintenance_factors.values())
             if total_weight > 0:
                 for factor in self.maintenance_factors.values():
                     factor["weight"] = factor["weight"] / total_weight
@@ -823,14 +745,10 @@ async def forecast_document_maintenance(
     Returns:
         Maintenance forecast results
     """
-    return await maintenance_forecaster.forecast_document_maintenance(
-        document_id, document_data, analysis_history
-    )
+    return await maintenance_forecaster.forecast_document_maintenance(document_id, document_data, analysis_history)
 
 
-async def forecast_portfolio_maintenance(
-    documents: List[Dict[str, Any]], group_by: str = "document_type"
-) -> Dict[str, Any]:
+async def forecast_portfolio_maintenance(documents: List[Dict[str, Any]], group_by: str = "document_type") -> Dict[str, Any]:
     """Convenience function for portfolio maintenance forecasting.
 
     Args:
@@ -840,6 +758,4 @@ async def forecast_portfolio_maintenance(
     Returns:
         Portfolio maintenance forecast results
     """
-    return await maintenance_forecaster.forecast_portfolio_maintenance(
-        documents, group_by
-    )
+    return await maintenance_forecaster.forecast_portfolio_maintenance(documents, group_by)

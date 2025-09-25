@@ -102,14 +102,10 @@ class DocumentFactory:
         """Create document from API request data."""
         return self.create_from_json(request_data)
 
-    def create_from_repository_commit(
-        self, repository_id: str, commit_data: Dict[str, Any], file_path: str
-    ) -> Document:
+    def create_from_repository_commit(self, repository_id: str, commit_data: Dict[str, Any], file_path: str) -> Document:
         """Create document from repository commit data."""
         # This would be used when integrating with version control systems
-        title = commit_data.get(
-            "title", f"Commit: {commit_data.get('hash', 'unknown')[:8]}"
-        )
+        title = commit_data.get("title", f"Commit: {commit_data.get('hash', 'unknown')[:8]}")
 
         # Extract content from commit
         content = commit_data.get("content", "")
@@ -145,9 +141,7 @@ class DocumentFactory:
         """Create an empty document for later population."""
         return self.create_from_text(title=title, text="", content_format="markdown")
 
-    def create_document_from_template(
-        self, template_name: str, parameters: Dict[str, Any]
-    ) -> Document:
+    def create_document_from_template(self, template_name: str, parameters: Dict[str, Any]) -> Document:
         """Create document from predefined template."""
         templates = {
             "readme": self._create_readme_template,

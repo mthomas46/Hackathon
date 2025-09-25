@@ -62,9 +62,7 @@ class CacheBackend(ABC):
         """Get value from cache."""
 
     @abstractmethod
-    async def set(
-        self, key: str, value: Any, ttl_seconds: Optional[int] = None
-    ) -> None:
+    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
         """Set value in cache."""
 
     @abstractmethod
@@ -114,9 +112,7 @@ class InMemoryCacheBackend(CacheBackend):
 
             return None
 
-    async def set(
-        self, key: str, value: Any, ttl_seconds: Optional[int] = None
-    ) -> None:
+    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
         """Set value in cache."""
         async with self.lock:
             # Remove if exists
@@ -216,9 +212,7 @@ class RedisCacheBackend(CacheBackend):
 
                 entry.access()
                 # Update access info in Redis
-                await self.redis.set(
-                    redis_key, json.dumps(entry.to_dict()), ex=entry.ttl_seconds
-                )
+                await self.redis.set(redis_key, json.dumps(entry.to_dict()), ex=entry.ttl_seconds)
 
                 return entry.value
 
@@ -227,9 +221,7 @@ class RedisCacheBackend(CacheBackend):
 
         return None
 
-    async def set(
-        self, key: str, value: Any, ttl_seconds: Optional[int] = None
-    ) -> None:
+    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
         """Set value in Redis."""
         if not self.redis:
             return
@@ -355,9 +347,7 @@ class ApplicationCache:
 
         return None
 
-    async def set(
-        self, key: str, value: Any, ttl_seconds: Optional[int] = None
-    ) -> None:
+    async def set(self, key: str, value: Any, ttl_seconds: Optional[int] = None) -> None:
         """Set value in all backends."""
         ttl = ttl_seconds or self.default_ttl
 
@@ -465,9 +455,7 @@ class CachingService(ApplicationService):
             except Exception as e:
                 self.logger.error(f"Error in cache cleanup: {e}")
 
-    async def get(
-        self, key: str, context: Optional[ServiceContext] = None
-    ) -> Optional[Any]:
+    async def get(self, key: str, context: Optional[ServiceContext] = None) -> Optional[Any]:
         """Get value from cache."""
         async with self.operation_context("cache_get", context):
             return await self.cache.get(key)
@@ -539,9 +527,7 @@ class CachingService(ApplicationService):
 
                 if hasattr(backend, "max_size"):
                     backend_stats["max_size"] = backend.max_size
-                    backend_stats["utilization"] = (
-                        backend_stats["size"] / backend.max_size
-                    )
+                    backend_stats["utilization"] = backend_stats["size"] / backend.max_size
 
                 stats[f"backend_{i}"] = backend_stats
 

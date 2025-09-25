@@ -130,18 +130,14 @@ class ContentQualityScorer:
         if stopwords:
             stop_words = set(stopwords.words("english"))
             stop_word_count = sum(1 for word in words_no_punct if word in stop_words)
-            stop_word_ratio = (
-                stop_word_count / len(words_no_punct) if words_no_punct else 0
-            )
+            stop_word_ratio = stop_word_count / len(words_no_punct) if words_no_punct else 0
         else:
             stop_word_ratio = 0.3  # Default estimate
 
         # Flesch-Kincaid Grade Level
         syllables = self._count_syllables(text)
         if sentence_count > 0 and word_count > 0:
-            fk_grade = (
-                0.39 * avg_sentence_length + 11.8 * (syllables / word_count) - 15.59
-            )
+            fk_grade = 0.39 * avg_sentence_length + 11.8 * (syllables / word_count) - 15.59
             fk_grade = max(0, min(20, fk_grade))  # Clamp to reasonable range
         else:
             fk_grade = 10  # Default
@@ -214,9 +210,7 @@ class ContentQualityScorer:
         else:
             return "very_difficult"
 
-    def _assess_content_structure(
-        self, text: str, sentences: List[str]
-    ) -> Dict[str, Any]:
+    def _assess_content_structure(self, text: str, sentences: List[str]) -> Dict[str, Any]:
         """Assess content structure and organization."""
         structure_score = 0.5  # Base score
 
@@ -242,9 +236,7 @@ class ContentQualityScorer:
         list_indicators = ["-", "*", "•", "1.", "2.", "3."]
         list_count = 0
         for sentence in sentences:
-            if any(
-                sentence.strip().startswith(indicator) for indicator in list_indicators
-            ):
+            if any(sentence.strip().startswith(indicator) for indicator in list_indicators):
                 list_count += 1
 
         list_density = list_count / len(sentences) if sentences else 0
@@ -269,12 +261,7 @@ class ContentQualityScorer:
             "in conclusion",
         ]
 
-        transition_count = sum(
-            1
-            for sentence in sentences
-            for transition in transitions
-            if transition in sentence.lower()
-        )
+        transition_count = sum(1 for sentence in sentences for transition in transitions if transition in sentence.lower())
 
         transition_density = transition_count / len(sentences) if sentences else 0
         structure_score += min(0.15, transition_density * 3)  # Max 0.15 points
@@ -306,9 +293,7 @@ class ContentQualityScorer:
         else:
             return "outstanding"
 
-    def _assess_content_completeness(
-        self, text: str, document: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _assess_content_completeness(self, text: str, document: Dict[str, Any]) -> Dict[str, Any]:
         """Assess content completeness and coverage."""
         completeness_score = 0.5  # Base score
 
@@ -345,9 +330,7 @@ class ContentQualityScorer:
         # Check for links/references
         link_count = len(re.findall(r"http[s]?://", text))
         if link_count > 0:
-            completeness_score += min(
-                0.1, link_count * 0.02
-            )  # Up to 0.1 for references
+            completeness_score += min(0.1, link_count * 0.02)  # Up to 0.1 for references
 
         # Check document length (too short might indicate incomplete)
         word_count = len(text.split())
@@ -366,9 +349,7 @@ class ContentQualityScorer:
             "code_references": code_count > 0,
             "link_count": link_count,
             "word_count": word_count,
-            "completeness_level": self._interpret_completeness_level(
-                completeness_score
-            ),
+            "completeness_level": self._interpret_completeness_level(completeness_score),
         }
 
     def _interpret_completeness_level(self, completeness_score: float) -> str:
@@ -384,9 +365,7 @@ class ContentQualityScorer:
         else:
             return "thorough"
 
-    def _assess_technical_accuracy(
-        self, text: str, document: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _assess_technical_accuracy(self, text: str, document: Dict[str, Any]) -> Dict[str, Any]:
         """Assess technical accuracy and correctness."""
         accuracy_score = 0.7  # Base score (assume mostly correct unless issues found)
 
@@ -422,17 +401,13 @@ class ContentQualityScorer:
             if sentence and sentence[0].isupper():
                 proper_capitalization += 1
 
-        capitalization_ratio = (
-            proper_capitalization / len(sentences) if sentences else 1.0
-        )
+        capitalization_ratio = proper_capitalization / len(sentences) if sentences else 1.0
         if capitalization_ratio < 0.8:
             accuracy_score -= 0.1  # Penalty for poor capitalization
             found_issues.append("poor_sentence_capitalization")
 
         # Check for excessive use of caps (shouting)
-        caps_ratio = (
-            sum(1 for char in text if char.isupper()) / len(text) if text else 0
-        )
+        caps_ratio = sum(1 for char in text if char.isupper()) / len(text) if text else 0
         if caps_ratio > 0.1:
             accuracy_score -= 0.05  # Small penalty for excessive caps
             found_issues.append("excessive_capitalization")
@@ -526,23 +501,15 @@ class ContentQualityScorer:
 
         # Readability recommendations
         if readability_data["readability_score"] < 0.6:
-            recommendations.append(
-                "Improve readability by using shorter sentences and simpler words"
-            )
+            recommendations.append("Improve readability by using shorter sentences and simpler words")
         if readability_data["flesch_kincaid_grade"] > 12:
-            recommendations.append(
-                "Consider simplifying complex technical terms or adding explanations"
-            )
+            recommendations.append("Consider simplifying complex technical terms or adding explanations")
 
         # Structure recommendations
         if structure_data["structure_score"] < 0.4:
-            recommendations.append(
-                "Add headings and subheadings to improve document structure"
-            )
+            recommendations.append("Add headings and subheadings to improve document structure")
         if structure_data["transition_count"] < 2:
-            recommendations.append(
-                "Add transition words to improve flow between sections"
-            )
+            recommendations.append("Add transition words to improve flow between sections")
 
         # Completeness recommendations
         missing_elements = set(
@@ -555,9 +522,7 @@ class ContentQualityScorer:
             ]
         ) - set(completeness_data["found_elements"])
         if missing_elements:
-            recommendations.append(
-                f"Consider adding sections for: {', '.join(list(missing_elements)[:3])}"
-            )
+            recommendations.append(f"Consider adding sections for: {', '.join(list(missing_elements)[:3])}")
 
         # Accuracy recommendations
         if accuracy_data["issue_count"] > 0:
@@ -567,9 +532,7 @@ class ContentQualityScorer:
 
         # Default recommendations if none specific
         if not recommendations:
-            recommendations.append(
-                "Content quality is good - consider adding more examples or references"
-            )
+            recommendations.append("Content quality is good - consider adding more examples or references")
 
         return recommendations[:5]  # Limit to top 5 recommendations
 

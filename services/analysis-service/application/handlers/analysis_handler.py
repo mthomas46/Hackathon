@@ -13,9 +13,7 @@ class AnalysisHandler:
         """Initialize handler with application service."""
         self.analysis_service = analysis_application_service
 
-    async def handle_analyze_request(
-        self, request_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def handle_analyze_request(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle document analysis request."""
         try:
             document_id = request_data.get("document_id")
@@ -25,9 +23,7 @@ class AnalysisHandler:
             if not document_id:
                 return {"error": "Document ID is required", "status": "error"}
 
-            result = await self.analysis_service.perform_analysis(
-                document_id, analysis_type, configuration
-            )
+            result = await self.analysis_service.perform_analysis(document_id, analysis_type, configuration)
 
             return {
                 "status": "success",
@@ -92,9 +88,7 @@ class AnalysisHandler:
             category = query_params.get("category")
             severity = query_params.get("severity")
 
-            findings = await self.analysis_service.get_findings(
-                document_id=document_id, category=category, severity=severity
-            )
+            findings = await self.analysis_service.get_findings(document_id=document_id, category=category, severity=severity)
 
             return {
                 "status": "success",
@@ -117,9 +111,7 @@ class AnalysisHandler:
                 "timestamp": datetime.now().isoformat(),
             }
 
-    async def handle_create_document(
-        self, request_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def handle_create_document(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle create document request."""
         try:
             title = request_data.get("title")

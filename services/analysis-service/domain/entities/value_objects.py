@@ -103,10 +103,7 @@ class Metrics:
             raise ValueError("Execution time cannot be negative")
         if self.memory_usage_mb is not None and self.memory_usage_mb < 0:
             raise ValueError("Memory usage cannot be negative")
-        if (
-            self.cpu_usage_percent is not None
-            and not 0 <= self.cpu_usage_percent <= 100
-        ):
+        if self.cpu_usage_percent is not None and not 0 <= self.cpu_usage_percent <= 100:
             raise ValueError("CPU usage must be between 0 and 100")
         if self.accuracy_score is not None and not 0.0 <= self.accuracy_score <= 1.0:
             raise ValueError("Accuracy score must be between 0.0 and 1.0")

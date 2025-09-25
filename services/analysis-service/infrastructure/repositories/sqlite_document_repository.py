@@ -39,15 +39,9 @@ class SQLiteDocumentRepository(DocumentRepository):
             )
 
             # Create indexes for performance
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_documents_author ON documents(author)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_documents_repository ON documents(repository_id)"
-            )
-            conn.execute(
-                "CREATE INDEX IF NOT EXISTS idx_documents_updated ON documents(updated_at)"
-            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_documents_author ON documents(author)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_documents_repository ON documents(repository_id)")
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_documents_updated ON documents(updated_at)")
 
     async def save(self, document: Document) -> None:
         """Save a document to SQLite."""

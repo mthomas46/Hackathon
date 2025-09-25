@@ -34,17 +34,12 @@ class ChangeImpactAnalyzer:
         self.feature_extractor = FeatureExtractor()
         self.relationship_analyzer = RelationshipAnalyzer()
         self.impact_calculator = ImpactCalculator()
-        self.initialized = (
-            self.feature_extractor.initialized
-            and self.relationship_analyzer.initialized
-        )
+        self.initialized = self.feature_extractor.initialized and self.relationship_analyzer.initialized
 
         if not self.initialized:
             logger.warning("Some change impact analysis components not available")
 
-    def analyze_change_impact(
-        self, change_data: Dict[str, Any], related_documents: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def analyze_change_impact(self, change_data: Dict[str, Any], related_documents: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Analyze the impact of a document change.
 
         Args:
@@ -89,9 +84,7 @@ class ChangeImpactAnalyzer:
             logger.error(f"Error in change impact analysis: {e}")
             return self._get_fallback_analysis(change_data, related_documents)
 
-    def _get_fallback_analysis(
-        self, change_data: Dict[str, Any], related_documents: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+    def _get_fallback_analysis(self, change_data: Dict[str, Any], related_documents: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Provide basic analysis when advanced components are not available."""
         return {
             "success": False,

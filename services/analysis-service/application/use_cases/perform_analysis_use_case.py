@@ -239,9 +239,7 @@ class PerformAnalysisUseCase:
                 events=events,
             )
 
-    async def _process_findings(
-        self, analysis: Analysis, findings_data: List[Dict[str, Any]]
-    ) -> List[Finding]:
+    async def _process_findings(self, analysis: Analysis, findings_data: List[Dict[str, Any]]) -> List[Finding]:
         """Process findings from analysis result."""
         findings = []
 
@@ -265,8 +263,6 @@ class PerformAnalysisUseCase:
 
     def to_response(self, result: PerformAnalysisResult) -> AnalysisResultResponse:
         """Convert result to response DTO."""
-        findings_responses = [
-            FindingResponse.from_domain(finding) for finding in result.findings
-        ]
+        findings_responses = [FindingResponse.from_domain(finding) for finding in result.findings]
 
         return AnalysisResultResponse.create(result.analysis, findings_responses)

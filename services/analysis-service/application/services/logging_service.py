@@ -75,9 +75,7 @@ class StructuredFormatter(logging.Formatter):
 class ApplicationLogger(logging.LoggerAdapter):
     """Application logger with context and correlation tracking."""
 
-    def __init__(
-        self, logger: logging.Logger, context: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self, logger: logging.Logger, context: Optional[Dict[str, Any]] = None):
         """Initialize application logger."""
         super().__init__(logger, context or {})
 
@@ -196,9 +194,7 @@ class LoggingService(ApplicationService):
         if self.structured:
             formatter = StructuredFormatter()
         else:
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
         # Console handler
         if self.enable_console:
@@ -211,9 +207,7 @@ class LoggingService(ApplicationService):
         if self.enable_file:
             # Application log file
             app_log_file = self.log_directory / "analysis_service.log"
-            file_handler = RotatingFileHandler(
-                app_log_file, maxBytes=self.max_file_size, backupCount=self.backup_count
-            )
+            file_handler = RotatingFileHandler(app_log_file, maxBytes=self.max_file_size, backupCount=self.backup_count)
             file_handler.setLevel(self.log_level)
             file_handler.setFormatter(formatter)
             root_logger.addHandler(file_handler)
@@ -234,9 +228,7 @@ class LoggingService(ApplicationService):
         logger = logging.getLogger(name)
         return ApplicationLogger(logger, self.app_logger.extra)
 
-    def create_operation_logger(
-        self, operation: str, context: ServiceContext
-    ) -> ApplicationLogger:
+    def create_operation_logger(self, operation: str, context: ServiceContext) -> ApplicationLogger:
         """Create logger for operation with context."""
         return self.app_logger.with_context(
             operation=operation,
@@ -253,20 +245,12 @@ class LoggingService(ApplicationService):
             root_logger = logging.getLogger()
             handler_count = len(root_logger.handlers)
 
-            self.app_logger.log_performance_metric(
-                "logging_handlers", handler_count, service="logging_service"
-            )
+            self.app_logger.log_performance_metric("logging_handlers", handler_count, service="logging_service")
 
             # Log log directory size if file logging is enabled
             if self.enable_file and self.log_directory.exists():
-                total_size = sum(
-                    f.stat().st_size
-                    for f in self.log_directory.glob("*.log")
-                    if f.is_file()
-                )
-                self.app_logger.log_performance_metric(
-                    "log_directory_size_bytes", total_size, service="logging_service"
-                )
+                total_size = sum(f.stat().st_size for f in self.log_directory.glob("*.log") if f.is_file())
+                self.app_logger.log_performance_metric("log_directory_size_bytes", total_size, service="logging_service")
 
         except Exception as e:
             # Don't let metrics logging break the service
@@ -362,11 +346,7 @@ class LogAggregator:
 
     def get_logs_by_correlation_id(self, correlation_id: str) -> List[Dict[str, Any]]:
         """Get logs by correlation ID."""
-        return [
-            entry
-            for entry in self.log_entries
-            if entry.get("correlation_id") == correlation_id
-        ]
+        return [entry for entry in self.log_entries if entry.get("correlation_id") == correlation_id]
 
     def get_error_rate(self, time_window_minutes: int = 60) -> float:
         """Calculate error rate in the last time window."""

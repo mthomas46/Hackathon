@@ -23,22 +23,16 @@ class DistributedTaskResponse(BaseModel):
     analysis_id: str = Field(..., description="Unique analysis identifier")
     task_id: str = Field(..., description="Task ID")
     status: str = Field(..., description="Task status")
-    estimated_completion_seconds: float = Field(
-        ..., description="Estimated completion time"
-    )
+    estimated_completion_seconds: float = Field(..., description="Estimated completion time")
     queue_position: int = Field(..., description="Queue position")
-    error_message: Optional[str] = Field(
-        None, description="Error message if submission failed"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if submission failed")
 
 
 class BatchTasksRequest(BaseModel):
     """Request for batch task submission."""
 
     tasks: List[Dict[str, Any]] = Field(..., description="List of tasks to submit")
-    batch_options: Optional[Dict[str, Any]] = Field(
-        None, description="Batch processing options"
-    )
+    batch_options: Optional[Dict[str, Any]] = Field(None, description="Batch processing options")
 
 
 class BatchTasksResponse(BaseModel):
@@ -47,16 +41,10 @@ class BatchTasksResponse(BaseModel):
     analysis_id: str = Field(..., description="Unique analysis identifier")
     batch_id: str = Field(..., description="Batch ID")
     task_count: int = Field(..., description="Number of tasks submitted")
-    submitted_tasks: List[str] = Field(
-        default_factory=list, description="Submitted task IDs"
-    )
+    submitted_tasks: List[str] = Field(default_factory=list, description="Submitted task IDs")
     status: str = Field(..., description="Batch status")
-    estimated_completion_seconds: float = Field(
-        ..., description="Estimated completion time"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if submission failed"
-    )
+    estimated_completion_seconds: float = Field(..., description="Estimated completion time")
+    error_message: Optional[str] = Field(None, description="Error message if submission failed")
 
 
 class TaskStatusRequest(BaseModel):
@@ -75,9 +63,7 @@ class TaskStatusResponse(BaseModel):
     started_at: Optional[str] = Field(None, description="Task start time")
     completed_at: Optional[str] = Field(None, description="Task completion time")
     result: Optional[Any] = Field(None, description="Task result")
-    error_message: Optional[str] = Field(
-        None, description="Error message if task failed"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if task failed")
 
 
 class CancelTaskRequest(BaseModel):
@@ -93,14 +79,10 @@ class WorkersStatusResponse(BaseModel):
     total_workers: int = Field(..., description="Total number of workers")
     active_workers: int = Field(..., description="Number of active workers")
     idle_workers: int = Field(..., description="Number of idle workers")
-    workers: List[Dict[str, Any]] = Field(
-        default_factory=list, description="Worker details"
-    )
+    workers: List[Dict[str, Any]] = Field(default_factory=list, description="Worker details")
     average_cpu_usage: float = Field(..., description="Average CPU usage")
     average_memory_usage: float = Field(..., description="Average memory usage")
-    error_message: Optional[str] = Field(
-        None, description="Error message if status check failed"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if status check failed")
 
 
 class ProcessingStatsResponse(BaseModel):
@@ -111,9 +93,7 @@ class ProcessingStatsResponse(BaseModel):
     tasks_completed: int = Field(..., description="Tasks completed")
     tasks_failed: int = Field(..., description="Tasks failed")
     tasks_cancelled: int = Field(..., description="Tasks cancelled")
-    average_processing_time_seconds: float = Field(
-        ..., description="Average processing time"
-    )
+    average_processing_time_seconds: float = Field(..., description="Average processing time")
     throughput_tasks_per_minute: float = Field(..., description="Throughput rate")
     queue_length: int = Field(..., description="Current queue length")
     oldest_task_age_seconds: float = Field(..., description="Age of oldest task")
@@ -122,17 +102,13 @@ class ProcessingStatsResponse(BaseModel):
     system_uptime_seconds: int = Field(..., description="System uptime")
     memory_usage_mb: float = Field(..., description="Memory usage")
     cpu_usage_percentage: float = Field(..., description="CPU usage")
-    error_message: Optional[str] = Field(
-        None, description="Error message if stats check failed"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if stats check failed")
 
 
 class ScaleWorkersRequest(BaseModel):
     """Request for worker scaling."""
 
-    target_worker_count: int = Field(
-        ..., ge=1, le=50, description="Target number of workers"
-    )
+    target_worker_count: int = Field(..., ge=1, le=50, description="Target number of workers")
     scaling_reason: Optional[str] = Field(None, description="Reason for scaling")
 
 
@@ -143,12 +119,8 @@ class ScaleWorkersResponse(BaseModel):
     previous_worker_count: int = Field(..., description="Previous worker count")
     new_worker_count: int = Field(..., description="New worker count")
     scaling_reason: str = Field(..., description="Reason for scaling")
-    estimated_scaling_time_seconds: float = Field(
-        ..., description="Estimated scaling time"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if scaling failed"
-    )
+    estimated_scaling_time_seconds: float = Field(..., description="Estimated scaling time")
+    error_message: Optional[str] = Field(None, description="Error message if scaling failed")
 
 
 class LoadBalancingStrategyRequest(BaseModel):
@@ -164,9 +136,7 @@ class LoadBalancingStrategyResponse(BaseModel):
     previous_strategy: str = Field(..., description="Previous strategy")
     new_strategy: str = Field(..., description="New strategy")
     changed_at: str = Field(..., description="When strategy was changed")
-    error_message: Optional[str] = Field(
-        None, description="Error message if configuration failed"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if configuration failed")
 
 
 class QueueStatusResponse(BaseModel):
@@ -174,18 +144,12 @@ class QueueStatusResponse(BaseModel):
 
     analysis_id: str = Field(..., description="Unique analysis identifier")
     queue_length: int = Field(..., description="Current queue length")
-    priority_distribution: Dict[str, int] = Field(
-        default_factory=dict, description="Priority distribution"
-    )
+    priority_distribution: Dict[str, int] = Field(default_factory=dict, description="Priority distribution")
     oldest_task_age_seconds: float = Field(..., description="Age of oldest task")
     queue_efficiency: float = Field(..., description="Queue efficiency")
     processing_rate: float = Field(..., description="Processing rate")
-    estimated_empty_time_seconds: float = Field(
-        ..., description="Estimated time to empty queue"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if status check failed"
-    )
+    estimated_empty_time_seconds: float = Field(..., description="Estimated time to empty queue")
+    error_message: Optional[str] = Field(None, description="Error message if status check failed")
 
 
 class LoadBalancingConfigRequest(BaseModel):
@@ -193,9 +157,7 @@ class LoadBalancingConfigRequest(BaseModel):
 
     strategy: Optional[str] = Field(None, description="Load balancing strategy")
     worker_count: Optional[int] = Field(None, ge=1, le=50, description="Worker count")
-    max_queue_size: Optional[int] = Field(
-        None, ge=10, le=10000, description="Max queue size"
-    )
+    max_queue_size: Optional[int] = Field(None, ge=10, le=10000, description="Max queue size")
     enable_auto_scaling: Optional[bool] = Field(None, description="Enable auto scaling")
 
 
@@ -208,6 +170,4 @@ class LoadBalancingConfigResponse(BaseModel):
     max_queue_size: Optional[int] = Field(None, description="Configured max queue size")
     enable_auto_scaling: bool = Field(..., description="Auto scaling enabled")
     configured_at: str = Field(..., description="When configuration was applied")
-    error_message: Optional[str] = Field(
-        None, description="Error message if configuration failed"
-    )
+    error_message: Optional[str] = Field(None, description="Error message if configuration failed")

@@ -83,56 +83,37 @@ class PRConfidenceScorer:
         component_scores = {}
 
         # 1. Requirements Alignment Score
-        component_scores["requirements_alignment"] = cross_reference_results.get(
-            "overall_alignment_score", 0.5
-        )
+        component_scores["requirements_alignment"] = cross_reference_results.get("overall_alignment_score", 0.5)
 
         # 2. Code Quality Score
-        component_scores["code_quality"] = self._calculate_code_quality_score(
-            pr_data, code_analysis_results
-        )
+        component_scores["code_quality"] = self._calculate_code_quality_score(pr_data, code_analysis_results)
 
         # 3. Testing Completeness Score
-        component_scores["testing_completeness"] = self._calculate_testing_score(
-            pr_data
-        )
+        component_scores["testing_completeness"] = self._calculate_testing_score(pr_data)
 
         # 4. Documentation Consistency Score
-        component_scores["documentation_consistency"] = cross_reference_results.get(
-            "documentation_consistency", {}
-        ).get("overall_score", 0.5)
+        component_scores["documentation_consistency"] = cross_reference_results.get("documentation_consistency", {}).get(
+            "overall_score", 0.5
+        )
 
         # 5. Security Compliance Score
-        component_scores["security_compliance"] = self._calculate_security_score(
-            pr_data
-        )
+        component_scores["security_compliance"] = self._calculate_security_score(pr_data)
 
         # Calculate weighted overall score
-        overall_score = sum(
-            score * self.weights[component]
-            for component, score in component_scores.items()
-        )
+        overall_score = sum(score * self.weights[component] for component, score in component_scores.items())
 
         # Determine confidence level and approval recommendation
         confidence_level = self._determine_confidence_level(overall_score)
-        approval_recommendation = self._determine_approval_recommendation(
-            overall_score, component_scores
-        )
+        approval_recommendation = self._determine_approval_recommendation(overall_score, component_scores)
 
         # Identify risk factors and concerns
-        risk_factors = self._identify_risk_factors(
-            component_scores, cross_reference_results
-        )
-        critical_concerns = self._identify_critical_concerns(
-            component_scores, cross_reference_results
-        )
+        risk_factors = self._identify_risk_factors(component_scores, cross_reference_results)
+        critical_concerns = self._identify_critical_concerns(component_scores, cross_reference_results)
         strengths = self._identify_strengths(component_scores)
         improvement_areas = self._identify_improvement_areas(component_scores)
 
         # Generate rationale
-        rationale = self._generate_rationale(
-            overall_score, component_scores, risk_factors
-        )
+        rationale = self._generate_rationale(overall_score, component_scores, risk_factors)
 
         return ConfidenceScore(
             overall_score=overall_score,
@@ -158,18 +139,11 @@ class PRConfidenceScorer:
         files_changed = pr_data.get("files_changed", [])
 
         # Check for code review indicators
-        if any(
-            indicator in pr_description
-            for indicator in self.quality_indicators["code_review"]
-        ):
+        if any(indicator in pr_description for indicator in self.quality_indicators["code_review"]):
             score += 0.1
 
         # Check file types and complexity
-        code_files = [
-            f
-            for f in files_changed
-            if any(ext in f for ext in [".py", ".js", ".java", ".go", ".rb"])
-        ]
+        code_files = [f for f in files_changed if any(ext in f for ext in [".py", ".js", ".java", ".go", ".rb"])]
         test_files = [f for f in files_changed if "test" in f.lower()]
 
         if len(code_files) > 10:  # Large PR
@@ -198,26 +172,14 @@ class PRConfidenceScorer:
         files_changed = pr_data.get("files_changed", [])
 
         # Check for testing indicators in description
-        testing_indicators = sum(
-            1
-            for indicator in self.quality_indicators["testing"]
-            if indicator in pr_description
-        )
+        testing_indicators = sum(1 for indicator in self.quality_indicators["testing"] if indicator in pr_description)
 
         if testing_indicators > 0:
             score += min(0.3, testing_indicators * 0.1)
 
         # Check for test files
-        test_files = [
-            f
-            for f in files_changed
-            if any(term in f.lower() for term in ["test", "spec"])
-        ]
-        code_files = [
-            f
-            for f in files_changed
-            if any(ext in f for ext in [".py", ".js", ".java", ".go"])
-        ]
+        test_files = [f for f in files_changed if any(term in f.lower() for term in ["test", "spec"])]
+        code_files = [f for f in files_changed if any(ext in f for ext in [".py", ".js", ".java", ".go"])]
 
         if test_files:
             test_ratio = len(test_files) / max(len(code_files), 1)
@@ -238,30 +200,19 @@ class PRConfidenceScorer:
         files_changed = pr_data.get("files_changed", [])
 
         # Check for security-related changes
-        security_changes = [
-            f
-            for f in files_changed
-            if any(term in f.lower() for term in ["auth", "security", "encrypt"])
-        ]
+        security_changes = [f for f in files_changed if any(term in f.lower() for term in ["auth", "security", "encrypt"])]
 
         if security_changes:
             score += 0.2  # Security-related changes get higher scrutiny
 
         # Check for security indicators in description
-        security_indicators = sum(
-            1
-            for indicator in self.quality_indicators["security"]
-            if indicator in pr_description
-        )
+        security_indicators = sum(1 for indicator in self.quality_indicators["security"] if indicator in pr_description)
 
         if security_indicators > 0:
             score += min(0.2, security_indicators * 0.1)
 
         # Penalty for potential security risks
-        if any(
-            risk_term in pr_description
-            for risk_term in ["hack", "vulnerability", "exploit"]
-        ):
+        if any(risk_term in pr_description for risk_term in ["hack", "vulnerability", "exploit"]):
             score -= 0.3
 
         return max(0.0, min(1.0, score))
@@ -308,9 +259,7 @@ class PRConfidenceScorer:
 
         # Low alignment score
         if component_scores.get("requirements_alignment", 1.0) < 0.6:
-            risks.append(
-                "Low requirements alignment may indicate incomplete implementation"
-            )
+            risks.append("Low requirements alignment may indicate incomplete implementation")
 
         # Poor testing
         if component_scores.get("testing_completeness", 1.0) < 0.5:
@@ -372,9 +321,7 @@ class PRConfidenceScorer:
 
         return strengths
 
-    def _identify_improvement_areas(
-        self, component_scores: Dict[str, float]
-    ) -> List[str]:
+    def _identify_improvement_areas(self, component_scores: Dict[str, float]) -> List[str]:
         """Identify areas that need improvement."""
         improvements = []
 
@@ -397,41 +344,26 @@ class PRConfidenceScorer:
         """Generate human-readable rationale for the confidence score."""
         confidence_level = self._determine_confidence_level(overall_score)
 
-        rationale_parts = [
-            f"Overall confidence score of {overall_score:.1%} indicates "
-        ]
+        rationale_parts = [f"Overall confidence score of {overall_score:.1%} indicates "]
 
         if confidence_level == ConfidenceLevel.HIGH:
             rationale_parts.append("high confidence in the PR implementation. ")
         elif confidence_level == ConfidenceLevel.MEDIUM:
-            rationale_parts.append(
-                "moderate confidence with some areas needing attention. "
-            )
+            rationale_parts.append("moderate confidence with some areas needing attention. ")
         elif confidence_level == ConfidenceLevel.LOW:
             rationale_parts.append("low confidence requiring significant review. ")
         else:
             rationale_parts.append("critical concerns requiring immediate attention. ")
 
         # Add component breakdown
-        top_components = sorted(
-            component_scores.items(), key=lambda x: x[1], reverse=True
-        )
+        top_components = sorted(component_scores.items(), key=lambda x: x[1], reverse=True)
         rationale_parts.append("Key factors: ")
-        rationale_parts.append(
-            ", ".join(
-                [
-                    f"{comp.replace('_', ' ')} ({score:.1%})"
-                    for comp, score in top_components[:3]
-                ]
-            )
-        )
+        rationale_parts.append(", ".join([f"{comp.replace('_', ' ')} ({score:.1%})" for comp, score in top_components[:3]]))
         rationale_parts.append(". ")
 
         # Add risk assessment
         if risk_factors:
-            rationale_parts.append(
-                f"Identified {len(risk_factors)} risk factor(s) to consider."
-            )
+            rationale_parts.append(f"Identified {len(risk_factors)} risk factor(s) to consider.")
 
         return "".join(rationale_parts)
 

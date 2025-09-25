@@ -130,9 +130,7 @@ class EventBus(ABC):
     """Abstract event bus interface."""
 
     @abstractmethod
-    async def publish(
-        self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None
-    ) -> None:
+    async def publish(self, event: Union[DomainEvent, EventEnvelope], topic: Optional[str] = None) -> None:
         """Publish an event."""
 
     @abstractmethod
@@ -182,9 +180,7 @@ class EventPublisher:
         if topic is None:
             topic = self._get_default_topic(event)
 
-        envelope = EventEnvelope(
-            event=event, topic=topic, partition_key=partition_key, headers=headers or {}
-        )
+        envelope = EventEnvelope(event=event, topic=topic, partition_key=partition_key, headers=headers or {})
 
         await self.event_bus.publish(envelope)
 
@@ -198,9 +194,7 @@ class EventPublisher:
         envelopes = []
         for event in events:
             event_topic = topic or self._get_default_topic(event)
-            envelope = EventEnvelope(
-                event=event, topic=event_topic, partition_key=partition_key
-            )
+            envelope = EventEnvelope(event=event, topic=event_topic, partition_key=partition_key)
             envelopes.append(envelope)
 
         await self.event_bus.publish_batch(envelopes, topic)
@@ -371,9 +365,7 @@ class EventPublishingService(ApplicationService):
                     extra={
                         "event_count": len(events),
                         "topic": topic,
-                        "event_types": [
-                            e.event_type.value for e in events[:5]
-                        ],  # First 5 for logging
+                        "event_types": [e.event_type.value for e in events[:5]],  # First 5 for logging
                     },
                 )
 
@@ -401,9 +393,7 @@ class EventPublishingService(ApplicationService):
                 f"Subscribed to events on topic: {topic}",
                 extra={
                     "topic": topic,
-                    "event_types": (
-                        [et.value for et in event_types] if event_types else None
-                    ),
+                    "event_types": ([et.value for et in event_types] if event_types else None),
                 },
             )
 
@@ -439,9 +429,7 @@ class EventPublishingService(ApplicationService):
                     },
                 )
         except Exception as dlq_error:
-            self.logger.error(
-                f"Failed to send event to dead letter queue: {dlq_error}", exc_info=True
-            )
+            self.logger.error(f"Failed to send event to dead letter queue: {dlq_error}", exc_info=True)
 
     async def get_statistics(self) -> Dict[str, Any]:
         """Get event publishing statistics."""
@@ -451,10 +439,7 @@ class EventPublishingService(ApplicationService):
             "events_retried": self.events_retried,
             "dead_letter_count": self.dead_letter_count,
             "subscription_count": self.subscriber.get_subscription_count(),
-            "success_rate": (
-                self.events_published
-                / max(1, self.events_published + self.events_failed)
-            ),
+            "success_rate": (self.events_published / max(1, self.events_published + self.events_failed)),
         }
 
     async def health_check(self) -> Dict[str, Any]:

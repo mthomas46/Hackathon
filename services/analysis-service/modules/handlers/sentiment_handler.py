@@ -43,9 +43,7 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
             analysis_result = await analyze_document_sentiment(
                 document_id=request.document_id,
                 analysis_options=getattr(request, "analysis_options", {}),
-                include_detailed_scores=getattr(
-                    request, "include_detailed_scores", True
-                ),
+                include_detailed_scores=getattr(request, "include_detailed_scores", True),
                 language=getattr(request, "language", "en"),
             )
 
@@ -60,9 +58,7 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
                     key_phrases=analysis_result.get("key_phrases", []),
                     writing_style=analysis_result.get("writing_style", {}),
                     readability_score=analysis_result.get("readability_score", 0.0),
-                    execution_time_seconds=analysis_result.get(
-                        "execution_time_seconds", 0.0
-                    ),
+                    execution_time_seconds=analysis_result.get("execution_time_seconds", 0.0),
                     error_message=None,
                 )
             else:
@@ -72,12 +68,8 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
                     sentiment=analysis_result.get("sentiment", "neutral"),
                     confidence=analysis_result.get("confidence", 0.0),
                     scores=SentimentScores(**analysis_result.get("scores", {})),
-                    detailed_analysis=DetailedAnalysis(
-                        **analysis_result.get("detailed_analysis", {})
-                    ),
-                    execution_time_seconds=analysis_result.get(
-                        "execution_time_seconds", 0.0
-                    ),
+                    detailed_analysis=DetailedAnalysis(**analysis_result.get("detailed_analysis", {})),
+                    execution_time_seconds=analysis_result.get("execution_time_seconds", 0.0),
                     error_message=None,
                 )
 
@@ -144,9 +136,7 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
                     "end_position": 65,
                 },
             ],
-            "overall_tone": random.choice(
-                ["professional", "casual", "formal", "technical"]
-            ),
+            "overall_tone": random.choice(["professional", "casual", "formal", "technical"]),
             "readability_score": random.uniform(60.0, 90.0),
             "emotional_intensity": random.uniform(0.1, 0.8),
             "subjectivity_score": random.uniform(0.2, 0.9),
@@ -160,9 +150,7 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
             "execution_time_seconds": random.uniform(0.5, 2.0),
         }
 
-    async def handle_batch_sentiment_analysis(
-        self, requests: List[SentimentAnalysisRequest]
-    ) -> List[AnalysisResult]:
+    async def handle_batch_sentiment_analysis(self, requests: List[SentimentAnalysisRequest]) -> List[AnalysisResult]:
         """Handle batch sentiment analysis."""
         results = []
 
@@ -172,22 +160,16 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
 
         return results
 
-    async def analyze_document_tone(
-        self, request: ToneAnalysisRequest
-    ) -> AnalysisResult:
+    async def analyze_document_tone(self, request: ToneAnalysisRequest) -> AnalysisResult:
         """Analyze document tone specifically."""
         return await self.handle(request)
 
-    async def get_sentiment_distribution(
-        self, document_ids: List[str]
-    ) -> Dict[str, Any]:
+    async def get_sentiment_distribution(self, document_ids: List[str]) -> Dict[str, Any]:
         """Get sentiment distribution across multiple documents."""
         results = []
 
         for doc_id in document_ids:
-            request = SentimentAnalysisRequest(
-                document_id=doc_id, analysis_options={"include_detailed_scores": False}
-            )
+            request = SentimentAnalysisRequest(document_id=doc_id, analysis_options={"include_detailed_scores": False})
             result = await self.handle(request)
             results.append(result)
 
@@ -207,23 +189,15 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
                     total_confidence += confidence
                     successful_analyses += 1
 
-        avg_confidence = (
-            total_confidence / successful_analyses if successful_analyses > 0 else 0.0
-        )
+        avg_confidence = total_confidence / successful_analyses if successful_analyses > 0 else 0.0
 
         return {
             "document_count": len(document_ids),
             "successful_analyses": successful_analyses,
             "sentiment_distribution": sentiment_counts,
             "average_confidence": avg_confidence,
-            "dominant_sentiment": (
-                max(sentiment_counts, key=sentiment_counts.get)
-                if sentiment_counts
-                else None
-            ),
-            "execution_time_seconds": sum(
-                r.execution_time_seconds or 0 for r in results
-            ),
+            "dominant_sentiment": (max(sentiment_counts, key=sentiment_counts.get) if sentiment_counts else None),
+            "execution_time_seconds": sum(r.execution_time_seconds or 0 for r in results),
         }
 
     async def detect_emotional_intensity(self, document_id: str) -> Dict[str, Any]:
@@ -248,15 +222,11 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
             "document_id": document_id,
             "emotional_intensity": detailed_analysis.get("emotional_intensity", 0.0),
             "subjectivity_score": detailed_analysis.get("subjectivity_score", 0.0),
-            "sentiment_volatility": self._calculate_sentiment_volatility(
-                detailed_analysis
-            ),
+            "sentiment_volatility": self._calculate_sentiment_volatility(detailed_analysis),
             "execution_time_seconds": result.execution_time_seconds,
         }
 
-    def _calculate_sentiment_volatility(
-        self, detailed_analysis: Dict[str, Any]
-    ) -> float:
+    def _calculate_sentiment_volatility(self, detailed_analysis: Dict[str, Any]) -> float:
         """Calculate sentiment volatility from detailed analysis."""
         sentence_sentiments = detailed_analysis.get("sentence_sentiments", [])
 
@@ -267,9 +237,7 @@ class SentimentAnalysisHandler(BaseAnalysisHandler):
         mean_confidence = sum(confidences) / len(confidences)
 
         # Calculate variance in confidence scores
-        variance = sum((c - mean_confidence) ** 2 for c in confidences) / len(
-            confidences
-        )
+        variance = sum((c - mean_confidence) ** 2 for c in confidences) / len(confidences)
 
         # Return volatility as square root of variance (standard deviation)
         return variance**0.5

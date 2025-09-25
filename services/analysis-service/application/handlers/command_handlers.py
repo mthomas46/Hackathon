@@ -61,9 +61,7 @@ class CreateDocumentCommandHandler(CommandHandler[CreateDocumentCommand]):
         # Validate for creation
         creation_validation = self.document_validator.validate_for_creation(document)
         if not creation_validation.is_valid:
-            raise ValueError(
-                f"Document creation validation failed: {creation_validation.errors}"
-            )
+            raise ValueError(f"Document creation validation failed: {creation_validation.errors}")
 
         # Save document
         await self.document_repository.save(document)
@@ -99,11 +97,7 @@ class UpdateDocumentCommandHandler(CommandHandler):
             pass
 
         if command.content is not None:
-            document.update_content(
-                document.content.__class__(
-                    text=command.content, format=command.content.format
-                )
-            )
+            document.update_content(document.content.__class__(text=command.content, format=command.content.format))
 
         if command.metadata is not None:
             from datetime import datetime
@@ -258,9 +252,7 @@ class CreateFindingCommandHandler(CommandHandler):
 class UpdateFindingCommandHandler(CommandHandler):
     """Handler for updating findings."""
 
-    def __init__(
-        self, finding_validator: FindingValidator, finding_repository: FindingRepository
-    ):
+    def __init__(self, finding_validator: FindingValidator, finding_repository: FindingRepository):
         """Initialize handler with dependencies."""
         self.finding_validator = finding_validator
         self.finding_repository = finding_repository

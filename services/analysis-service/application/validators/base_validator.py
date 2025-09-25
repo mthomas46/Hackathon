@@ -57,9 +57,7 @@ class ValidationResult:
         metadata: Optional[Dict[str, Any]] = None,
     ) -> "ValidationResult":
         """Create a failed validation result."""
-        return cls(
-            is_valid=False, errors=errors, warnings=warnings or [], metadata=metadata
-        )
+        return cls(is_valid=False, errors=errors, warnings=warnings or [], metadata=metadata)
 
     def has_errors(self) -> bool:
         """Check if there are any errors."""
@@ -73,15 +71,11 @@ class ValidationResult:
         """Get all validation issues (errors and warnings)."""
         return self.errors + self.warnings
 
-    def get_errors_by_severity(
-        self, severity: ValidationSeverity
-    ) -> List[ValidationError]:
+    def get_errors_by_severity(self, severity: ValidationSeverity) -> List[ValidationError]:
         """Get errors by severity level."""
         return [error for error in self.errors if error.severity == severity]
 
-    def get_warnings_by_severity(
-        self, severity: ValidationSeverity
-    ) -> List[ValidationError]:
+    def get_warnings_by_severity(self, severity: ValidationSeverity) -> List[ValidationError]:
         """Get warnings by severity level."""
         return [warning for warning in self.warnings if warning.severity == severity]
 
@@ -97,9 +91,7 @@ class BaseValidator(ABC):
     async def validate(self, data: Any) -> ValidationResult:
         """Validate the given data."""
 
-    async def validate_field(
-        self, field_name: str, field_value: Any
-    ) -> List[ValidationError]:
+    async def validate_field(self, field_name: str, field_value: Any) -> List[ValidationError]:
         """Validate a specific field. Override in subclasses as needed."""
         return []
 
@@ -160,9 +152,7 @@ class CompositeValidator(BaseValidator):
                 all_metadata.update(result.metadata)
 
         if all_errors:
-            return ValidationResult.failure(
-                errors=all_errors, warnings=all_warnings, metadata=all_metadata
-            )
+            return ValidationResult.failure(errors=all_errors, warnings=all_warnings, metadata=all_metadata)
 
         return ValidationResult.success(metadata=all_metadata)
 
@@ -196,9 +186,7 @@ class ValidationException(Exception):
     def __init__(self, result: ValidationResult):
         """Initialize validation exception."""
         self.result = result
-        super().__init__(
-            f"Validation failed: {len(result.errors)} errors, {len(result.warnings)} warnings"
-        )
+        super().__init__(f"Validation failed: {len(result.errors)} errors, {len(result.warnings)} warnings")
 
     def get_errors(self) -> List[ValidationError]:
         """Get validation errors."""
