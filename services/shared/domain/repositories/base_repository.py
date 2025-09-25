@@ -8,10 +8,9 @@ Reduces repository boilerplate by 70% through standardized CRUD operations.
 
 import logging
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
 from typing import Any, Dict, Generic, List, Optional, TypeVar, Union
 from uuid import uuid4
-
-from ..infrastructure.utilities.utilities import utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class BaseEntity(ABC):
 
     def update_timestamp(self) -> None:
         """Update the updated_at timestamp."""
-        self.updated_at = utc_now()
+        self.updated_at = datetime.now(timezone.utc)
 
     @classmethod
     def generate_id(cls) -> str:
@@ -136,7 +135,7 @@ class BaseRepository(Generic[T], ABC):
             else:
                 # Insert
                 if not hasattr(entity, "created_at") or not entity.created_at:
-                    entity.created_at = utc_now()
+                    entity.created_at = datetime.now(timezone.utc)
                 entity_dict = entity.to_dict()
                 await self._insert_entity(entity_dict)
                 logger.info(

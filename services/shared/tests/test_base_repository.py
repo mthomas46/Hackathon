@@ -14,7 +14,7 @@ from abc import ABC
 from unittest.mock import MagicMock, patch, AsyncMock
 from typing import Dict, Any, List, Optional
 
-from services.shared.domain.base_repository import (
+from services.shared.domain.repositories.base_repository import (
     BaseRepository,
     SqlRepository,
     InMemoryRepository,
