@@ -87,9 +87,7 @@ class TestPerformanceValidation:
 
         async def make_concurrent_request(request_id: int):
             """Make a single concurrent request."""
-            request = SemanticSimilarityRequest(
-                targets=[f"doc-{request_id}-1", f"doc-{request_id}-2"], threshold=0.8
-            )
+            request = SemanticSimilarityRequest(targets=[f"doc-{request_id}-1", f"doc-{request_id}-2"], threshold=0.8)
 
             with patch(
                 "services.analysis_service.presentation.controllers.analysis_controller.analysis_handlers.handle_semantic_similarity_analysis"
@@ -125,9 +123,7 @@ class TestPerformanceValidation:
 
         # Verify all requests were processed
         successful_requests = sum(1 for _, call_count in results if call_count == 1)
-        assert (
-            successful_requests == 10
-        ), f"Only {successful_requests}/10 requests succeeded"
+        assert successful_requests == 10, f"Only {successful_requests}/10 requests succeeded"
 
     def test_memory_usage_under_load(self):
         """Test memory usage during high load scenarios."""
@@ -246,15 +242,11 @@ class TestPerformanceValidation:
         # Check average response times
         if cache_hits:
             avg_hit_time = statistics.mean(cache_hits)
-            assert (
-                avg_hit_time < 0.01
-            ), f"Average cache hit too slow: {avg_hit_time:.3f}s"
+            assert avg_hit_time < 0.01, f"Average cache hit too slow: {avg_hit_time:.3f}s"
 
         if cache_misses:
             avg_miss_time = statistics.mean(cache_misses)
-            assert (
-                avg_miss_time < 0.1
-            ), f"Average cache miss too slow: {avg_miss_time:.3f}s"
+            assert avg_miss_time < 0.1, f"Average cache miss too slow: {avg_miss_time:.3f}s"
 
     async def _simulate_cache_hit(self, operation_id: int) -> float:
         """Simulate cache hit."""
@@ -373,9 +365,7 @@ class TestPerformanceValidation:
 
             scaling_results[load_level] = {
                 "total_time": total_time,
-                "avg_time_per_operation": (
-                    total_time / load_level if load_level > 0 else 0
-                ),
+                "avg_time_per_operation": (total_time / load_level if load_level > 0 else 0),
                 "memory_usage_mb": memory_usage,
                 "cpu_percent": cpu_percent,
                 "operations_completed": len(results),
@@ -403,14 +393,10 @@ class TestPerformanceValidation:
             low_load = scaling_results[load_levels[0]]
             high_load = scaling_results[load_levels[-1]]
 
-            efficiency_ratio = (
-                high_load["avg_time_per_operation"] / low_load["avg_time_per_operation"]
-            )
+            efficiency_ratio = high_load["avg_time_per_operation"] / low_load["avg_time_per_operation"]
 
             # Efficiency ratio should be less than 2 (allowing for some overhead)
-            assert (
-                efficiency_ratio < 2.0
-            ), f"Poor scaling efficiency: {efficiency_ratio:.2f}x slower at high load"
+            assert efficiency_ratio < 2.0, f"Poor scaling efficiency: {efficiency_ratio:.2f}x slower at high load"
 
     async def _simulate_load_operation(self, operation_id: int) -> str:
         """Simulate load operation with variable complexity."""
@@ -437,14 +423,8 @@ class TestPerformanceValidation:
             async def run_with_errors():
                 tasks = []
                 for i in range(100):  # 100 operations
-                    should_error = (
-                        (i % (1 / target_error_rate)) < 1
-                        if target_error_rate > 0
-                        else False
-                    )
-                    task = asyncio.create_task(
-                        self._simulate_operation_with_error(i, should_error)
-                    )
+                    should_error = (i % (1 / target_error_rate)) < 1 if target_error_rate > 0 else False
+                    task = asyncio.create_task(self._simulate_operation_with_error(i, should_error))
                     tasks.append(task)
 
                 results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -463,9 +443,7 @@ class TestPerformanceValidation:
                 "failed": failed,
                 "actual_error_rate": actual_error_rate,
                 "total_time": total_time,
-                "avg_time_per_operation": (
-                    total_time / 100 if successful + failed > 0 else 0
-                ),
+                "avg_time_per_operation": (total_time / 100 if successful + failed > 0 else 0),
             }
 
             # Validate error rate is within acceptable range
@@ -480,13 +458,9 @@ class TestPerformanceValidation:
             if error_rate > 0:
                 slowdown_ratio = results["avg_time_per_operation"] / no_error_time
                 # Error handling should not slow down operations by more than 50%
-                assert (
-                    slowdown_ratio < 1.5
-                ), f"Error handling too slow at {error_rate} error rate: {slowdown_ratio:.2f}x slower"
+                assert slowdown_ratio < 1.5, f"Error handling too slow at {error_rate} error rate: {slowdown_ratio:.2f}x slower"
 
-    async def _simulate_operation_with_error(
-        self, operation_id: int, should_error: bool
-    ) -> str:
+    async def _simulate_operation_with_error(self, operation_id: int, should_error: bool) -> str:
         """Simulate operation that may raise an error."""
         await asyncio.sleep(0.01)  # Base processing time
 
@@ -534,24 +508,14 @@ class TestPerformanceValidation:
         # Validate throughput stability
         if throughput_measurements:
             avg_throughput = statistics.mean(throughput_measurements)
-            throughput_stddev = (
-                statistics.stdev(throughput_measurements)
-                if len(throughput_measurements) > 1
-                else 0
-            )
-            throughput_variation = (
-                throughput_stddev / avg_throughput if avg_throughput > 0 else 0
-            )
+            throughput_stddev = statistics.stdev(throughput_measurements) if len(throughput_measurements) > 1 else 0
+            throughput_variation = throughput_stddev / avg_throughput if avg_throughput > 0 else 0
 
             # Throughput variation should be less than 20%
-            assert (
-                throughput_variation < 0.2
-            ), f"Throughput too unstable: {throughput_variation:.2f} variation"
+            assert throughput_variation < 0.2, f"Throughput too unstable: {throughput_variation:.2f} variation"
 
             # Average throughput should be reasonable
-            assert (
-                avg_throughput > 5
-            ), f"Throughput too low: {avg_throughput:.1f} ops/5sec"
+            assert avg_throughput > 5, f"Throughput too low: {avg_throughput:.1f} ops/5sec"
 
         # Validate total operations completed
         expected_min_operations = 100  # At least 100 operations in 30 seconds
@@ -612,9 +576,7 @@ class TestPerformanceValidation:
         memory_after_gc = post_gc_memory - initial_memory
 
         # After GC, memory should be closer to initial
-        assert (
-            memory_after_gc < memory_increase
-        ), "Memory not properly cleaned up after GC"
+        assert memory_after_gc < memory_increase, "Memory not properly cleaned up after GC"
 
     def test_cpu_utilization_under_load(self):
         """Test CPU utilization patterns under load."""
@@ -645,10 +607,7 @@ class TestPerformanceValidation:
                 # Run CPU work in thread pool to avoid blocking event loop
                 with ThreadPoolExecutor(max_workers=4) as executor:
                     loop = asyncio.get_event_loop()
-                    cpu_tasks = [
-                        loop.run_in_executor(executor, cpu_work, scenario["intensity"])
-                        for _ in range(4)
-                    ]
+                    cpu_tasks = [loop.run_in_executor(executor, cpu_work, scenario["intensity"]) for _ in range(4)]
                     results = await asyncio.gather(*cpu_tasks)
 
                 return results
@@ -665,9 +624,7 @@ class TestPerformanceValidation:
                 "cpu_percent": cpu_percent,
                 "expected_max": scenario["expected_max_cpu"],
                 "results_computed": len(results),
-                "status": (
-                    "pass" if cpu_percent <= scenario["expected_max_cpu"] else "fail"
-                ),
+                "status": ("pass" if cpu_percent <= scenario["expected_max_cpu"] else "fail"),
             }
 
             # Validate CPU usage
@@ -680,9 +637,7 @@ class TestPerformanceValidation:
         heavy_cpu = cpu_results["heavy_cpu"]["cpu_percent"]
 
         # Heavy CPU should use more CPU than light (allowing for system variance)
-        assert (
-            heavy_cpu > light_cpu * 0.8
-        ), f"CPU scaling not working: heavy {heavy_cpu}% vs light {light_cpu}%"
+        assert heavy_cpu > light_cpu * 0.8, f"CPU scaling not working: heavy {heavy_cpu}% vs light {light_cpu}%"
 
     def test_network_simulation_performance(self):
         """Test performance with simulated network conditions."""
@@ -737,26 +692,18 @@ class TestPerformanceValidation:
             successful, failed = asyncio.run(simulate_network_operations())
             total_time = monitor.stop()
 
-            success_rate = (
-                successful / (successful + failed) if (successful + failed) > 0 else 0
-            )
+            success_rate = successful / (successful + failed) if (successful + failed) > 0 else 0
 
             network_results[condition["name"]] = {
                 "successful": successful,
                 "failed": failed,
                 "success_rate": success_rate,
                 "total_time": total_time,
-                "avg_time_per_operation": (
-                    total_time / (successful + failed)
-                    if (successful + failed) > 0
-                    else 0
-                ),
+                "avg_time_per_operation": (total_time / (successful + failed) if (successful + failed) > 0 else 0),
             }
 
             # Validate performance under network conditions
-            expected_success_rate = (
-                1.0 - condition["packet_loss"] - 0.05
-            )  # Allow some tolerance
+            expected_success_rate = 1.0 - condition["packet_loss"] - 0.05  # Allow some tolerance
             assert (
                 success_rate >= expected_success_rate
             ), f"Success rate too low for {condition['name']}: {success_rate:.2f} < {expected_success_rate:.2f}"
@@ -765,13 +712,9 @@ class TestPerformanceValidation:
         fast_time = network_results["fast_network"]["avg_time_per_operation"]
         slow_time = network_results["slow_network"]["avg_time_per_operation"]
 
-        assert (
-            fast_time < slow_time * 0.5
-        ), f"Fast network not faster: {fast_time:.3f}s vs {slow_time:.3f}s"
+        assert fast_time < slow_time * 0.5, f"Fast network not faster: {fast_time:.3f}s vs {slow_time:.3f}s"
 
-    async def _simulate_network_request(
-        self, request_id: int, latency: float, jitter: float, packet_loss: float
-    ):
+    async def _simulate_network_request(self, request_id: int, latency: float, jitter: float, packet_loss: float):
         """Simulate network request with specified conditions."""
         import random
 

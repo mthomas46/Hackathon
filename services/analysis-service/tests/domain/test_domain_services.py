@@ -15,9 +15,7 @@ from ...domain.value_objects.confidence import Confidence
 class TestAnalysisService:
     """Test cases for AnalysisService domain service."""
 
-    def test_analysis_service_with_valid_data_succeeds(
-        self, analysis_repository, document_repository
-    ):
+    def test_analysis_service_with_valid_data_succeeds(self, analysis_repository, document_repository):
         """Test creating analysis service."""
         service = AnalysisService(analysis_repository, document_repository)
 
@@ -25,9 +23,7 @@ class TestAnalysisService:
         assert service.document_repository == document_repository
 
     @pytest.mark.asyncio
-    async def test_start_analysis_success(
-        self, analysis_service, document_repository, sample_document
-    ):
+    async def test_start_analysis_success(self, analysis_service, document_repository, sample_document):
         """Test starting analysis successfully."""
         # Setup
         await document_repository.save(sample_document)
@@ -35,9 +31,7 @@ class TestAnalysisService:
         analysis_type = AnalysisType.SEMANTIC_SIMILARITY
 
         # Execute
-        analysis = await analysis_service.start_analysis(
-            document_id=sample_document.id, analysis_type=analysis_type
-        )
+        analysis = await analysis_service.start_analysis(document_id=sample_document.id, analysis_type=analysis_type)
 
         # Assert
         assert analysis.document_id == sample_document.id
@@ -48,9 +42,7 @@ class TestAnalysisService:
     async def test_start_analysis_document_not_found(self, analysis_service):
         """Test starting analysis with non-existent document."""
         with pytest.raises(ValueError, match="Document not found"):
-            await analysis_service.start_analysis(
-                document_id="non-existent-doc", analysis_type=AnalysisType.CODE_QUALITY
-            )
+            await analysis_service.start_analysis(document_id="non-existent-doc", analysis_type=AnalysisType.CODE_QUALITY)
 
     @pytest.mark.asyncio
     async def test_complete_analysis_success(self, analysis_service, sample_analysis):
@@ -113,9 +105,7 @@ class TestDocumentService:
         assert service.document_repository == document_repository
 
     @pytest.mark.asyncio
-    async def test_create_document_success(
-        self, document_service, sample_document_data
-    ):
+    async def test_create_document_success(self, document_service, sample_document_data):
         """Test creating document successfully."""
         # Execute
         document = await document_service.create_document(**sample_document_data)
@@ -146,9 +136,7 @@ class TestDocumentService:
         new_content = "# Updated Content\n\nThis is updated content."
 
         # Execute
-        updated_doc = await document_service.update_document_content(
-            document_id=sample_document.id, new_content=new_content
-        )
+        updated_doc = await document_service.update_document_content(document_id=sample_document.id, new_content=new_content)
 
         # Assert
         assert updated_doc.content == new_content
@@ -164,9 +152,7 @@ class TestDocumentService:
         assert archived_doc.status == DocumentStatus.ARCHIVED
 
     @pytest.mark.asyncio
-    async def test_get_documents_by_repository(
-        self, document_service, test_data_populator
-    ):
+    async def test_get_documents_by_repository(self, document_service, test_data_populator):
         """Test getting documents by repository."""
         # Setup test data
         test_data_populator.create_test_documents(3)
@@ -205,12 +191,8 @@ class TestFindingService:
         """Test getting findings by analysis."""
         # Setup test data
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses(
-            [doc.id for doc in documents], 1
-        )
-        test_data_populator.create_test_findings(
-            [analysis.id for analysis in analyses], 3
-        )
+        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 3)
 
         analysis_id = analyses[0].id
 
@@ -227,17 +209,11 @@ class TestFindingService:
         """Test getting findings by severity."""
         # Setup test data with different severities
         documents = test_data_populator.create_test_documents(1)
-        analyses = test_data_populator.create_test_analyses(
-            [doc.id for doc in documents], 1
-        )
-        test_data_populator.create_test_findings(
-            [analysis.id for analysis in analyses], 1
-        )
+        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 1)
+        test_data_populator.create_test_findings([analysis.id for analysis in analyses], 1)
 
         # Execute
-        high_severity_findings = await finding_service.get_findings_by_severity(
-            FindingSeverity.HIGH
-        )
+        high_severity_findings = await finding_service.get_findings_by_severity(FindingSeverity.HIGH)
 
         # Assert
         for finding in high_severity_findings:
@@ -262,9 +238,7 @@ class TestFindingService:
         resolution_notes = "Fixed by refactoring the code"
 
         # Execute
-        resolved_finding = await finding_service.resolve_finding(
-            finding_id=sample_finding.id, resolution_notes=resolution_notes
-        )
+        resolved_finding = await finding_service.resolve_finding(finding_id=sample_finding.id, resolution_notes=resolution_notes)
 
         # Assert
         assert resolved_finding.resolved_at is not None
@@ -275,18 +249,14 @@ class TestDomainServiceIntegration:
     """Test integration between domain services."""
 
     @pytest.mark.asyncio
-    async def test_analysis_workflow_integration(
-        self, analysis_service, document_service, finding_service, test_data_populator
-    ):
+    async def test_analysis_workflow_integration(self, analysis_service, document_service, finding_service, test_data_populator):
         """Test complete analysis workflow integration."""
         # Setup test document
         documents = test_data_populator.create_test_documents(1)
         document = documents[0]
 
         # Start analysis
-        analysis = await analysis_service.start_analysis(
-            document_id=document.id, analysis_type=AnalysisType.SEMANTIC_SIMILARITY
-        )
+        analysis = await analysis_service.start_analysis(document_id=document.id, analysis_type=AnalysisType.SEMANTIC_SIMILARITY)
 
         assert analysis.status == AnalysisStatus.RUNNING
 
@@ -302,18 +272,12 @@ class TestDomainServiceIntegration:
         assert completed_analysis.results == results
 
     @pytest.mark.asyncio
-    async def test_cross_service_data_consistency(
-        self, analysis_service, document_service, finding_service, test_data_populator
-    ):
+    async def test_cross_service_data_consistency(self, analysis_service, document_service, finding_service, test_data_populator):
         """Test data consistency across services."""
         # Setup test data
         documents = test_data_populator.create_test_documents(2)
-        analyses = test_data_populator.create_test_analyses(
-            [doc.id for doc in documents], 2
-        )
-        findings = test_data_populator.create_test_findings(
-            [analysis.id for analysis in analyses], 2
-        )
+        analyses = test_data_populator.create_test_analyses([doc.id for doc in documents], 2)
+        findings = test_data_populator.create_test_findings([analysis.id for analysis in analyses], 2)
 
         # Verify document-analysis relationship
         for analysis in analyses:
@@ -332,18 +296,14 @@ class TestDomainServiceErrorHandling:
     """Test error handling in domain services."""
 
     @pytest.mark.asyncio
-    async def test_analysis_service_concurrent_access(
-        self, analysis_service, sample_analysis
-    ):
+    async def test_analysis_service_concurrent_access(self, analysis_service, sample_analysis):
         """Test concurrent access to analysis service."""
         # This test would need proper async concurrency testing
         # For now, just test basic functionality
         assert sample_analysis.status == AnalysisStatus.COMPLETED
 
     @pytest.mark.asyncio
-    async def test_document_service_with_invalid_data_raises_validation_error_errors(
-        self, document_service
-    ):
+    async def test_document_service_with_invalid_data_raises_validation_error_errors(self, document_service):
         """Test document service validation errors."""
         # Test creating document with invalid data
         invalid_data = {
@@ -357,9 +317,7 @@ class TestDomainServiceErrorHandling:
             await document_service.create_document(**invalid_data)
 
     @pytest.mark.asyncio
-    async def test_finding_service_constraint_with_invalid_data_raises_validation_error(
-        self, finding_service
-    ):
+    async def test_finding_service_constraint_with_invalid_data_raises_validation_error(self, finding_service):
         """Test finding service constraint validation."""
         # Test creating finding with invalid confidence
         invalid_data = {
@@ -399,24 +357,18 @@ class TestDomainServicePerformance:
         # Perform bulk analysis starts
         analyses = []
         for doc in documents:
-            analysis = await analysis_service.start_analysis(
-                document_id=doc.id, analysis_type=AnalysisType.CODE_QUALITY
-            )
+            analysis = await analysis_service.start_analysis(document_id=doc.id, analysis_type=AnalysisType.CODE_QUALITY)
             analyses.append(analysis)
 
         performance_timer.stop()
 
         # Assert reasonable performance (less than 1 second for 10 operations)
-        performance_timer.assert_less_than(
-            1.0, "Bulk analysis operations took too long"
-        )
+        performance_timer.assert_less_than(1.0, "Bulk analysis operations took too long")
 
         assert len(analyses) == 10
 
     @pytest.mark.asyncio
-    async def test_document_service_query_performance(
-        self, document_service, test_data_populator, performance_timer
-    ):
+    async def test_document_service_query_performance(self, document_service, test_data_populator, performance_timer):
         """Test document query performance."""
         # Setup test data
         test_data_populator.create_test_documents(50)

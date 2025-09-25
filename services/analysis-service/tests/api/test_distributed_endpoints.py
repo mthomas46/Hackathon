@@ -102,9 +102,7 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.post(
-                "/distributed/tasks", json=sample_task_request.dict()
-            )
+            response = client.post("/distributed/tasks", json=sample_task_request.dict())
 
             assert response.status_code == 200
             data = response.json()
@@ -128,9 +126,7 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.post(
-                "/distributed/tasks/batch", json=sample_batch_tasks_request.dict()
-            )
+            response = client.post("/distributed/tasks/batch", json=sample_batch_tasks_request.dict())
 
             assert response.status_code == 200
             data = response.json()
@@ -267,9 +263,7 @@ class TestDistributedEndpoints:
     @pytest.mark.asyncio
     async def test_scale_workers_success(self, client):
         """Test successful worker scaling."""
-        scale_request = ScaleWorkersRequest(
-            target_worker_count=8, scaling_reason="high_load", immediate=True
-        )
+        scale_request = ScaleWorkersRequest(target_worker_count=8, scaling_reason="high_load", immediate=True)
 
         with patch(
             "services.analysis_service.presentation.controllers.distributed_controller.distributed_handlers.handle_scale_workers"
@@ -283,9 +277,7 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.post(
-                "/distributed/workers/scale", json=scale_request.dict()
-            )
+            response = client.post("/distributed/workers/scale", json=scale_request.dict())
 
             assert response.status_code == 200
             data = response.json()
@@ -329,9 +321,7 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.put(
-                "/distributed/load-balancing/strategy", json=strategy_request.dict()
-            )
+            response = client.put("/distributed/load-balancing/strategy", json=strategy_request.dict())
 
             assert response.status_code == 200
             data = response.json()
@@ -391,9 +381,7 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.put(
-                "/distributed/load-balancing/config", json=config_request.dict()
-            )
+            response = client.put("/distributed/load-balancing/config", json=config_request.dict())
 
             assert response.status_code == 200
             data = response.json()
@@ -431,9 +419,7 @@ class TestDistributedEndpoints:
             assert "auto_scaling_thresholds" in data
 
     @pytest.mark.asyncio
-    async def test_distributed_endpoints_with_invalid_data_raises_validation_error_errors(
-        self, client
-    ):
+    async def test_distributed_endpoints_with_invalid_data_raises_validation_error_errors(self, client):
         """Test validation errors in distributed endpoints."""
         # Test invalid task type
         invalid_task = {"task_type": "invalid_task_type", "data": {"test": "data"}}
@@ -452,9 +438,7 @@ class TestDistributedEndpoints:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_distributed_endpoints_error_handling(
-        self, client, sample_task_request
-    ):
+    async def test_distributed_endpoints_error_handling(self, client, sample_task_request):
         """Test error handling in distributed endpoints."""
         # Test handler error
         with patch(
@@ -462,9 +446,7 @@ class TestDistributedEndpoints:
         ) as mock_handler:
             mock_handler.side_effect = Exception("Handler error")
 
-            response = client.post(
-                "/distributed/tasks", json=sample_task_request.dict()
-            )
+            response = client.post("/distributed/tasks", json=sample_task_request.dict())
 
             # Should handle error gracefully
             assert response.status_code in [400, 500]
@@ -522,9 +504,7 @@ class TestDistributedEndpoints:
         assert response.status_code in [200, 413, 429]
 
     @pytest.mark.asyncio
-    async def test_distributed_endpoints_metrics_collection(
-        self, client, sample_task_request
-    ):
+    async def test_distributed_endpoints_metrics_collection(self, client, sample_task_request):
         """Test metrics collection in distributed endpoints."""
         with patch(
             "services.analysis_service.presentation.controllers.distributed_controller.distributed_handlers.handle_submit_distributed_task"
@@ -536,9 +516,7 @@ class TestDistributedEndpoints:
             }
             mock_handler.return_value = mock_response
 
-            response = client.post(
-                "/distributed/tasks", json=sample_task_request.dict()
-            )
+            response = client.post("/distributed/tasks", json=sample_task_request.dict())
 
             assert response.status_code == 200
 
@@ -581,9 +559,7 @@ class TestDistributedEndpoints:
             mock_handler.return_value = mock_response
 
             for i in range(3):
-                response = client.post(
-                    "/distributed/tasks", json=sample_task_request.dict()
-                )
+                response = client.post("/distributed/tasks", json=sample_task_request.dict())
                 responses.append(response)
 
         # All responses should be consistent

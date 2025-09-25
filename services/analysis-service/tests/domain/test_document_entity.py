@@ -11,9 +11,7 @@ from ...domain.entities.document import Document, DocumentStatus
 class TestDocumentEntity:
     """Test cases for Document entity."""
 
-    def test_document_creation_with_valid_data_succeeds(
-        self, sample_document_data: Dict[str, Any]
-    ):
+    def test_document_creation_with_valid_data_succeeds(self, sample_document_data: Dict[str, Any]):
         """Test creating a document with valid data."""
         doc = Document(**sample_document_data)
 

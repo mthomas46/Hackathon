@@ -106,8 +106,6 @@ def test_doubling_numbers_with_parametrized_inputs(input_value, expected):
         ("pytest", "PYTEST"),
     ],
 )
-def test_string_uppercase_conversion_with_various_inputs(
-    input_text, expected_uppercase
-):
+def test_string_uppercase_conversion_with_various_inputs(input_text, expected_uppercase):
     """Test that string uppercase conversion works correctly with various inputs."""
     assert input_text.upper() == expected_uppercase

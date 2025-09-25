@@ -21,9 +21,7 @@ class TestFindingRepositoryInterface:
 
     def test_repository_interface_definition(self):
         """Test that FindingRepository defines the expected interface."""
-        repo_methods = [
-            method for method in dir(FindingRepository) if not method.startswith("_")
-        ]
+        repo_methods = [method for method in dir(FindingRepository) if not method.startswith("_")]
 
         expected_methods = [
             "save",
@@ -36,9 +34,7 @@ class TestFindingRepositoryInterface:
         ]
 
         for method in expected_methods:
-            assert (
-                method in repo_methods
-            ), f"Method {method} should be defined in FindingRepository"
+            assert method in repo_methods, f"Method {method} should be defined in FindingRepository"
 
 
 class TestInMemoryFindingRepository:
@@ -292,9 +288,7 @@ class TestInMemoryFindingRepository:
 
         retrieved = await repository.get_by_id("recommendation-finding")
         assert retrieved is not None
-        assert (
-            retrieved.recommendation == "Consider using more descriptive variable names"
-        )
+        assert retrieved.recommendation == "Consider using more descriptive variable names"
 
     @pytest.mark.asyncio
     async def test_finding_with_metadata(self, repository):
@@ -491,9 +485,7 @@ class TestFindingRepositoryIntegration:
             findings.append(finding)
 
         # Verify the relationship
-        analysis_findings = await finding_repo.get_by_analysis_id(
-            "integration-analysis"
-        )
+        analysis_findings = await finding_repo.get_by_analysis_id("integration-analysis")
         assert len(analysis_findings) == 3
 
         for finding in analysis_findings:
@@ -552,11 +544,7 @@ class TestFindingRepositoryIntegration:
                 document_id="bulk-doc",
                 title=f"Bulk Finding {i}",
                 description=f"Description {i}",
-                severity=(
-                    FindingSeverity.LOW
-                    if i % 3 == 0
-                    else FindingSeverity.MEDIUM if i % 3 == 1 else FindingSeverity.HIGH
-                ),
+                severity=(FindingSeverity.LOW if i % 3 == 0 else FindingSeverity.MEDIUM if i % 3 == 1 else FindingSeverity.HIGH),
                 confidence=Confidence(0.5 + (i % 50) * 0.01),
                 category="bulk_test",
             )
@@ -751,17 +739,11 @@ class TestFindingRepositoryEdgeCases:
             "rule_id": "COMPLEX-001",
             "tags": [f"tag-{i}" for i in range(100)],  # 100 tags
             "code_snippet": "x" * 5000,  # 5KB code snippet
-            "related_findings": [
-                f"finding-{i}" for i in range(200)
-            ],  # 200 related findings
+            "related_findings": [f"finding-{i}" for i in range(200)],  # 200 related findings
             "analysis_context": {
                 "file_dependencies": [f"/src/dep-{i}.py" for i in range(50)],
-                "function_calls": [
-                    {"name": f"func-{i}", "line": i * 10} for i in range(100)
-                ],
-                "variable_usage": {
-                    f"var-{i}": [f"usage-{j}" for j in range(20)] for i in range(30)
-                },
+                "function_calls": [{"name": f"func-{i}", "line": i * 10} for i in range(100)],
+                "variable_usage": {f"var-{i}": [f"usage-{j}" for j in range(20)] for i in range(30)},
             },
             "performance_impact": {
                 "complexity_increase": 25.5,

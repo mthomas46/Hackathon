@@ -227,10 +227,7 @@ class TestFindingEntity:
         severity_weight = 0.7
         confidence_weight = 0.3
 
-        expected_priority = (
-            finding_entity.severity_score * severity_weight
-            + finding_entity.confidence.value * confidence_weight
-        )
+        expected_priority = finding_entity.severity_score * severity_weight + finding_entity.confidence.value * confidence_weight
 
         assert finding_entity.priority_score == expected_priority
 
@@ -239,14 +236,10 @@ class TestFindingEntity:
         # Mock the created_at to be older
         from unittest.mock import patch
 
-        past_time = datetime.now(timezone.utc).timestamp() - (
-            5 * 24 * 60 * 60
-        )  # 5 days ago
+        past_time = datetime.now(timezone.utc).timestamp() - (5 * 24 * 60 * 60)  # 5 days ago
 
         with patch("time.time", return_value=past_time):
-            finding_entity.created_at = datetime.fromtimestamp(
-                past_time, tz=timezone.utc
-            )
+            finding_entity.created_at = datetime.fromtimestamp(past_time, tz=timezone.utc)
 
         age_days = finding_entity.age_days
         assert age_days >= 5  # Should be at least 5 days

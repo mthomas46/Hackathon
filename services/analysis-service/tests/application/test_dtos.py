@@ -56,23 +56,17 @@ class TestRequestDTOs:
     def test_create_document_request_with_invalid_data_raises_validation_error(self):
         """Test create document request validation."""
         # Valid request
-        request = CreateDocumentRequest(
-            title="Valid Title", content="Valid content", repository_id="repo-123"
-        )
+        request = CreateDocumentRequest(title="Valid Title", content="Valid content", repository_id="repo-123")
 
         assert request.is_valid()
 
         # Invalid request - empty title
-        request = CreateDocumentRequest(
-            title="", content="Valid content", repository_id="repo-123"
-        )
+        request = CreateDocumentRequest(title="", content="Valid content", repository_id="repo-123")
 
         assert not request.is_valid()
 
         # Invalid request - empty content
-        request = CreateDocumentRequest(
-            title="Valid Title", content="", repository_id="repo-123"
-        )
+        request = CreateDocumentRequest(title="Valid Title", content="", repository_id="repo-123")
 
         assert not request.is_valid()
 
@@ -92,9 +86,7 @@ class TestRequestDTOs:
 
     def test_delete_document_request_with_valid_data_succeeds(self):
         """Test creating delete document request."""
-        request = DeleteDocumentRequest(
-            document_id="doc-123", reason="No longer needed", force=False
-        )
+        request = DeleteDocumentRequest(document_id="doc-123", reason="No longer needed", force=False)
 
         assert request.document_id == "doc-123"
         assert request.reason == "No longer needed"
@@ -120,9 +112,7 @@ class TestRequestDTOs:
 
     def test_cancel_analysis_request_with_valid_data_succeeds(self):
         """Test creating cancel analysis request."""
-        request = CancelAnalysisRequest(
-            analysis_id="analysis-123", reason="User requested cancellation", force=True
-        )
+        request = CancelAnalysisRequest(analysis_id="analysis-123", reason="User requested cancellation", force=True)
 
         assert request.analysis_id == "analysis-123"
         assert request.reason == "User requested cancellation"
@@ -130,9 +120,7 @@ class TestRequestDTOs:
 
     def test_get_document_request_with_valid_data_succeeds(self):
         """Test creating get document request."""
-        request = GetDocumentRequest(
-            document_id="doc-123", include_metadata=True, include_history=False
-        )
+        request = GetDocumentRequest(document_id="doc-123", include_metadata=True, include_history=False)
 
         assert request.document_id == "doc-123"
         assert request.include_metadata is True
@@ -162,9 +150,7 @@ class TestRequestDTOs:
 
     def test_get_analysis_request_with_valid_data_succeeds(self):
         """Test creating get analysis request."""
-        request = GetAnalysisRequest(
-            analysis_id="analysis-123", include_details=True, include_findings=True
-        )
+        request = GetAnalysisRequest(analysis_id="analysis-123", include_details=True, include_findings=True)
 
         assert request.analysis_id == "analysis-123"
         assert request.include_details is True
@@ -308,9 +294,7 @@ class TestResponseDTOs:
             ),
         ]
 
-        response = FindingsListResponse(
-            findings=findings, total_count=2, limit=10, offset=0
-        )
+        response = FindingsListResponse(findings=findings, total_count=2, limit=10, offset=0)
 
         assert len(response.findings) == 2
         assert response.total_count == 2
@@ -389,9 +373,7 @@ class TestResponseDTOs:
         """Test creating paginated response."""
         items = [{"id": "item-1"}, {"id": "item-2"}, {"id": "item-3"}]
 
-        response = PaginatedResponse(
-            items=items, total_count=100, limit=10, offset=0, has_more=True
-        )
+        response = PaginatedResponse(items=items, total_count=100, limit=10, offset=0, has_more=True)
 
         assert len(response.items) == 3
         assert response.total_count == 100
@@ -493,9 +475,7 @@ class TestDTOConversion:
         # This would typically be done in command handlers
         # For testing, we verify the DTO structure is correct
 
-        request = CreateDocumentRequest(
-            title="Test Document", content="Test content", repository_id="repo-123"
-        )
+        request = CreateDocumentRequest(title="Test Document", content="Test content", repository_id="repo-123")
 
         # Verify DTO has all required fields for entity creation
         assert hasattr(request, "title")
@@ -529,15 +509,11 @@ class TestDTOErrorHandling:
         """Test DTO creation with invalid data."""
         # Test with missing required fields
         with pytest.raises(ValueError):
-            CreateDocumentRequest(
-                title=None, content="Valid content", repository_id="repo-123"
-            )  # Invalid
+            CreateDocumentRequest(title=None, content="Valid content", repository_id="repo-123")  # Invalid
 
     def test_dto_with_invalid_data_raises_validation_error_error_messages(self):
         """Test validation error messages in DTOs."""
-        request = CreateDocumentRequest(
-            title="", content="Valid content", repository_id="repo-123"
-        )  # Invalid
+        request = CreateDocumentRequest(title="", content="Valid content", repository_id="repo-123")  # Invalid
 
         errors = request.validate()
         assert len(errors) > 0
@@ -601,9 +577,7 @@ class TestDTOPagination:
         assert response.total_pages == 0
 
         # Last page
-        response = PaginatedResponse(
-            items=[{"id": "item-1"}], total_count=25, limit=10, offset=20
-        )
+        response = PaginatedResponse(items=[{"id": "item-1"}], total_count=25, limit=10, offset=20)
 
         assert response.has_more is False  # 25 total, 20 offset + 1 item = 21
         assert response.current_page == 3  # offset 20 / limit 10 + 1
