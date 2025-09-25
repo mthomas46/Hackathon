@@ -16,6 +16,18 @@ from .shared_utils import (
     TIMEOUT_HEALTH_CHECK,
     fire_and_forget
 )
+from ..exceptions.domain_exceptions import (
+    ServiceDiscoveryException,
+    OpenAPISpecException,
+    EndpointExtractionException,
+    ToolGenerationException,
+    ToolValidationException,
+    CategorizationException,
+    TimeoutException,
+    NetworkException,
+    ParsingException,
+    ValidationException,
+)
 
 
 class ToolDiscoveryService:
@@ -87,6 +99,15 @@ class ToolDiscoveryService:
                 "categories": tool_categories or [],
             }
 
+        except OpenAPISpecException as e:
+            # Re-raise OpenAPI-specific exceptions
+            raise
+        except NetworkException as e:
+            # Re-raise network-specific exceptions
+            raise
+        except TimeoutException as e:
+            # Re-raise timeout exceptions
+            raise
         except Exception as e:
             error_msg = f"Failed to discover tools for {service_name}: {str(e)}"
             fire_and_forget(
@@ -99,15 +120,20 @@ class ToolDiscoveryService:
                     "openapi_url": openapi_url,
                 },
             )
-            raise Exception(error_msg)
+            raise ServiceDiscoveryException(service_name, str(e), {
+                "service_url": service_url,
+                "openapi_url": openapi_url,
+            })
 
     async def _fetch_openapi_spec(self, spec_url: str) -> Dict[str, Any]:
         """Fetch OpenAPI specification from URL."""
         try:
             response = await self.service_client.get_json(spec_url)
             return response
+        except TimeoutError as e:
+            raise TimeoutException("fetch_openapi_spec", TIMEOUT_OPENAPI_FETCH, {"spec_url": spec_url})
         except Exception as e:
-            raise Exception(f"Failed to fetch OpenAPI spec from {spec_url}: {str(e)}")
+            raise OpenAPISpecException(spec_url, str(e), {"operation": "fetch_spec"})
 
     def _extract_endpoints(self, spec: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Extract and normalize endpoint definitions from OpenAPI specification.

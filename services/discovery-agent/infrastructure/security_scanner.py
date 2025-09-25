@@ -7,6 +7,13 @@ using the secure-analyzer service integration.
 from typing import Any, Dict, List
 
 from ..domain.services.shared_utils import safe_service_clients_call, TIMEOUT_OPENAPI_FETCH
+from ..domain.exceptions.domain_exceptions import (
+    SecurityScanException,
+    LLMAnalysisException,
+    TimeoutException,
+    ParsingException,
+    ValidationException,
+)
 
 
 class ToolSecurityScanner:
@@ -27,7 +34,19 @@ class ToolSecurityScanner:
         }
 
     async def scan_tool_security(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Scan a single tool for security vulnerabilities"""
+        """Perform comprehensive security analysis on a discovered tool.
+
+        Analyzes tool definitions for potential security vulnerabilities, injection risks,
+        authentication issues, and data exposure problems using both automated scanning
+        and secure-analyzer service integration.
+
+        Args:
+            tool: Tool definition containing name, description, parameters, etc.
+
+        Returns:
+            Dict containing security scan results: risk_level, vulnerabilities,
+            recommendations, and secure_analyzer integration results
+        """
 
         security_analysis = {
             "tool_name": tool["name"],
@@ -66,7 +85,17 @@ class ToolSecurityScanner:
         return security_analysis
 
     def _analyze_injection_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for injection vulnerabilities"""
+        """Analyze tool parameters and paths for injection vulnerabilities.
+
+        Examines tool endpoints, parameters, and request bodies for patterns
+        that could indicate SQL injection, command injection, or script injection risks.
+
+        Args:
+            tool: Tool definition to analyze for injection risks
+
+        Returns:
+            List of identified injection vulnerabilities with severity and recommendations
+        """
         vulnerabilities = []
 
         # Check path for injection-prone patterns
@@ -116,7 +145,17 @@ class ToolSecurityScanner:
         return vulnerabilities
 
     def _analyze_auth_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool for authentication/authorization risks"""
+        """Analyze tool for authentication and authorization vulnerabilities.
+
+        Examines tool parameters and endpoints for authentication bypass risks,
+        improper authorization checks, and credential exposure issues.
+
+        Args:
+            tool: Tool definition to analyze for authentication risks
+
+        Returns:
+            List of authentication-related vulnerabilities with severity levels
+        """
         vulnerabilities = []
 
         path = tool.get("path", "").lower()
@@ -267,11 +306,10 @@ class ToolSecurityScanner:
                             "error": f"Secure-analyzer returned {response.status}: {error_text}",
                         }
 
+        except TimeoutError as e:
+            raise TimeoutException("secure_analyzer_scan", TIMEOUT_OPENAPI_FETCH, {"tool_name": tool_name})
         except Exception as e:
-            return {
-                "success": False,
-                "error": f"Failed to connect to secure-analyzer: {str(e)}",
-            }
+            raise SecurityScanException(tool_name, f"Failed to connect to secure-analyzer: {str(e)}")
 
     def _calculate_risk_level(
         self, vulnerabilities: List[Dict], secure_analyzer_result: Dict
