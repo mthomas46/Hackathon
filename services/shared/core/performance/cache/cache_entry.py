@@ -2,6 +2,7 @@
 
 import asyncio
 import hashlib
+import logging
 import pickle  # nosec: Required for controlled cache serialization
 import threading
 from abc import ABC, abstractmethod
@@ -60,7 +61,10 @@ class CacheEntry:
                 )
             )
             return value_size + metadata_size
-        except Exception:
+        except Exception as e:
+            # Log the error but return default size estimate
+            logger = logging.getLogger(__name__)
+            logger.debug(f"Failed to calculate cache entry size: {e}")
             return 1024  # Default size estimate
 
 

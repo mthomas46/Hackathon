@@ -35,8 +35,9 @@ class TimeoutManager:
         try:
             return await asyncio.wait_for(coro(), timeout=timeout)
         except asyncio.TimeoutError:
+            from .error_handling import TimeoutException
             logger.error(f"{operation_name} timed out after {timeout}s")
-            raise
+            raise TimeoutException(operation_name, timeout)
         except Exception as e:
             logger.error(f"{operation_name} failed: {e}")
             raise
@@ -49,8 +50,9 @@ class TimeoutManager:
             async with asyncio.timeout(timeout):
                 yield
         except asyncio.TimeoutError:
+            from .error_handling import TimeoutException
             logger.error(f"{operation_name} timed out after {timeout}s")
-            raise
+            raise TimeoutException(operation_name, timeout)
         except Exception as e:
             logger.error(f"{operation_name} failed: {e}")
             raise
@@ -66,8 +68,9 @@ class TimeoutManager:
                     async with asyncio.timeout(timeout):
                         return await func(*args, **kwargs)
                 except asyncio.TimeoutError:
+                    from .error_handling import TimeoutException
                     logger.error(f"{operation_name} timed out after {timeout}s")
-                    raise
+                    raise TimeoutException(operation_name, timeout)
                 except Exception as e:
                     logger.error(f"{operation_name} failed: {e}")
                     raise
@@ -131,8 +134,9 @@ class StartupTimeout:
                         func_name = getattr(func, "__name__", str(func))
                         logger.warning(f"Startup function {func_name} failed: {e}")
         except asyncio.TimeoutError:
+            from .error_handling import TimeoutException
             logger.error("Overall startup timed out")
-            raise
+            raise TimeoutException("startup", timeout)
         except Exception as e:
             logger.error(f"Critical startup error: {e}")
             # Allow service to start in degraded state

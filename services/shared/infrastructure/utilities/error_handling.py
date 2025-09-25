@@ -278,6 +278,87 @@ class DatabaseException(ServiceException):
         )
 
 
+class CacheException(ServiceException):
+    """Exception for cache-related errors."""
+
+    def __init__(self, operation: str, key: Optional[str] = None, original_error: Optional[str] = None):
+        message = f"Cache operation failed: {operation}"
+        if key:
+            message += f" (key: {key})"
+        super().__init__(
+            message,
+            "cache_error",
+            500,
+            {"operation": operation, "key": key, "original_error": original_error},
+        )
+
+
+class ConfigurationException(ServiceException):
+    """Exception for configuration-related errors."""
+
+    def __init__(self, config_key: str, message: str = None):
+        if message is None:
+            message = f"Configuration error for key: {config_key}"
+        super().__init__(
+            message,
+            "configuration_error",
+            500,
+            {"config_key": config_key},
+        )
+
+
+class ConnectionException(ServiceException):
+    """Exception for connection/network-related errors."""
+
+    def __init__(self, service_name: str, operation: str, original_error: Optional[str] = None):
+        message = f"Connection failed to {service_name} during {operation}"
+        super().__init__(
+            message,
+            "connection_error",
+            503,
+            {"service": service_name, "operation": operation, "original_error": original_error},
+        )
+
+
+class SerializationException(ServiceException):
+    """Exception for serialization/deserialization errors."""
+
+    def __init__(self, operation: str, data_type: str, original_error: Optional[str] = None):
+        message = f"Serialization failed during {operation} for {data_type}"
+        super().__init__(
+            message,
+            "serialization_error",
+            500,
+            {"operation": operation, "data_type": data_type, "original_error": original_error},
+        )
+
+
+class TimeoutException(ServiceException):
+    """Exception for timeout errors."""
+
+    def __init__(self, operation: str, timeout_seconds: float):
+        message = f"Operation timed out after {timeout_seconds} seconds: {operation}"
+        super().__init__(
+            message,
+            "timeout_error",
+            504,
+            {"operation": operation, "timeout_seconds": timeout_seconds},
+        )
+
+
+class CircuitBreakerOpenException(ServiceException):
+    """Exception for circuit breaker open state."""
+
+    def __init__(self, service_name: str):
+        message = f"Circuit breaker is open for service: {service_name}"
+        super().__init__(
+            message,
+            "circuit_breaker_open",
+            503,
+            {"service": service_name},
+        )
+
+
 # ============================================================================
 # ERROR HANDLING UTILITIES
 # ============================================================================
