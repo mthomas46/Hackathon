@@ -28,7 +28,16 @@ class DocStoreLangGraphIntegration:
 
     async def initialize_langgraph_tools(self) -> Dict[str, BaseTool]:
         """Initialize LangGraph tools for document store."""
+        return {
+            "store_document": await self._create_store_document_tool(),
+            "retrieve_document": await self._create_retrieve_document_tool(),
+            "search_documents": await self._create_search_documents_tool(),
+            "get_workflow_documents": await self._create_workflow_documents_tool(),
+            "create_document_relationship": await self._create_document_relationship_tool(),
+        }
 
+    async def _create_store_document_tool(self) -> BaseTool:
+        """Create the store document LangGraph tool."""
         @tool
         async def store_document_langgraph(
             content: str,
@@ -92,6 +101,10 @@ class DocStoreLangGraphIntegration:
                 )
                 return {"success": False, "error": str(e)}
 
+        return store_document_langgraph
+
+    async def _create_retrieve_document_tool(self) -> BaseTool:
+        """Create the retrieve document LangGraph tool."""
         @tool
         async def retrieve_document_langgraph(
             doc_id: str, workflow_context: Optional[Dict[str, Any]] = None
@@ -131,6 +144,10 @@ class DocStoreLangGraphIntegration:
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
+        return retrieve_document_langgraph
+
+    async def _create_search_documents_tool(self) -> BaseTool:
+        """Create the search documents LangGraph tool."""
         @tool
         async def search_documents_langgraph(
             query: str,
@@ -172,6 +189,10 @@ class DocStoreLangGraphIntegration:
                 )
                 return {"success": False, "error": str(e)}
 
+        return search_documents_langgraph
+
+    async def _create_workflow_documents_tool(self) -> BaseTool:
+        """Create the get workflow documents LangGraph tool."""
         @tool
         async def get_workflow_documents_langgraph(workflow_id: str) -> Dict[str, Any]:
             """Get all documents associated with a specific workflow."""
@@ -214,6 +235,10 @@ class DocStoreLangGraphIntegration:
                 )
                 return {"success": False, "error": str(e)}
 
+        return get_workflow_documents_langgraph
+
+    async def _create_document_relationship_tool(self) -> BaseTool:
+        """Create the document relationship LangGraph tool."""
         @tool
         async def create_document_relationship_langgraph(
             doc_id_1: str,
@@ -245,13 +270,7 @@ class DocStoreLangGraphIntegration:
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
-        return {
-            "store_document_langgraph": store_document_langgraph,
-            "retrieve_document_langgraph": retrieve_document_langgraph,
-            "search_documents_langgraph": search_documents_langgraph,
-            "get_workflow_documents_langgraph": get_workflow_documents_langgraph,
-            "create_document_relationship_langgraph": create_document_relationship_langgraph,
-        }
+        return create_document_relationship_langgraph
 
     async def handle_langgraph_workflow_message(
         self, message: BaseMessage

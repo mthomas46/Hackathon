@@ -8,6 +8,8 @@ from services.shared.presentation.responses import (
 )
 
 from ...application.dto import ErrorResponse, PerformAnalysisRequest
+from ...application.handlers import analysis_handlers
+from ...application.services import AnalysisApplicationService
 from ...application.use_cases import PerformAnalysisUseCase
 from ...domain.exceptions import (
     AnalysisException,
@@ -20,7 +22,6 @@ from ...domain.exceptions import (
 )
 from ...domain.services import AnalysisService
 from ...infrastructure.repositories import AnalysisRepository, DocumentRepository
-from ...modules.analysis_handlers import analysis_handlers
 from ...presentation.models.analysis import (
     AnalysisRequest,
     ContentQualityRequest,
@@ -41,12 +42,14 @@ class AnalysisController:
     def __init__(
         self,
         perform_analysis_use_case: PerformAnalysisUseCase,
+        analysis_application_service: AnalysisApplicationService,
         document_repository: DocumentRepository,
         analysis_repository: AnalysisRepository,
         analysis_service: AnalysisService,
     ):
         """Initialize controller with dependencies."""
         self.perform_analysis_use_case = perform_analysis_use_case
+        self.analysis_application_service = analysis_application_service
         self.document_repository = document_repository
         self.analysis_repository = analysis_repository
         self.analysis_service = analysis_service

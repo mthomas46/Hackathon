@@ -162,133 +162,92 @@ class RiskAssessor:
         """Assess individual risk factors for a document."""
         risk_scores = {}
 
+        # Extract values for all risk factors
+        factor_values = self._extract_risk_factor_values(document_data)
+
+        # Calculate risk scores for each factor
         for factor_name, factor_config in self.risk_factors.items():
+            value = factor_values.get(factor_name)
+            risk_score = self._calculate_risk_score(factor_name, value, factor_config)
+            risk_scores[factor_name] = risk_score
+
+        return risk_scores
+
+    def _extract_risk_factor_values(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Extract or estimate values for all risk factors."""
+        factor_values = {}
+
+        for factor_name in self.risk_factors.keys():
             value = document_data.get(factor_name)
 
             if factor_name == "document_age":
-                # Calculate age if not provided
-                last_modified = document_data.get("last_modified")
-                if last_modified and isinstance(last_modified, str):
-                    try:
-                        last_mod_date = pd.to_datetime(last_modified)
-                        value = (pd.Timestamp.now() - last_mod_date).days
-                    except Exception:
-                        value = 180  # Default to 6 months
-                elif not value:
-                    value = 180
-
+                value = self._extract_document_age(value, document_data)
             elif factor_name == "complexity_score":
-                # Estimate complexity if not provided
-                if not value:
-                    # Simple heuristic based on content length and technical terms
-                    content = document_data.get("content", "")
-                    technical_terms = [
-                        "api",
-                        "database",
-                        "algorithm",
-                        "configuration",
-                        "deployment",
-                        "authentication",
-                        "authorization",
-                    ]
-                    term_count = sum(
-                        1 for term in technical_terms if term.lower() in content.lower()
-                    )
-                    value = min(1.0, len(content) / 10000 + term_count / 10)
-
+                value = self._extract_complexity_score(value, document_data)
             elif factor_name == "change_frequency":
-                # Use modification history if available
-                if not value:
-                    modifications = document_data.get("modification_history", [])
-                    if modifications:
-                        days_span = 365  # Last year
-                        value = len(modifications) / (
-                            days_span / 30
-                        )  # Changes per month
-                    else:
-                        value = 1  # Default monthly change
-
+                value = self._extract_change_frequency(value, document_data)
             elif factor_name == "quality_score":
-                if not value:
-                    # Use current analysis if available
-                    analysis_results = document_data.get("recent_analysis", [])
-                    if analysis_results:
-                        latest = analysis_results[-1]
-                        value = latest.get("quality_score", 0.7)
-                    else:
-                        value = 0.7
-
+                value = self._extract_quality_score(value, document_data)
             elif factor_name == "trend_decline":
-                # Calculate from historical data
-                if not value:
-                    analysis_results = document_data.get("analysis_history", [])
-                    if len(analysis_results) >= 3:
-                        scores = [
-                            r.get("quality_score", 0.7) for r in analysis_results[-10:]
-                        ]
-                        if scores:
-                            from sklearn.linear_model import LinearRegression
-
-                            X = np.arange(len(scores)).reshape(-1, 1)
-                            y = np.array(scores)
-                            model = LinearRegression()
-                            model.fit(X, y)
-                            value = max(
-                                0, -model.coef_[0]
-                            )  # Only positive decline rates
-                    else:
-                        value = 0.01  # Small default decline
-
+                value = self._extract_trend_decline(value, document_data)
             elif factor_name == "finding_density":
-                if not value:
-                    analysis_results = document_data.get("recent_analysis", [])
-                    if analysis_results:
-                        latest = analysis_results[-1]
-                        findings = latest.get("total_findings", 0)
-                        content_length = len(document_data.get("content", ""))
-                        if content_length > 0:
-                            value = findings / (
-                                content_length / 1000
-                            )  # Findings per 1000 chars
-                        else:
-                            value = 0.5
-
+                value = self._extract_finding_density(value, document_data)
             elif factor_name == "stakeholder_impact":
-                if not value:
-                    # Estimate based on document type and content
-                    doc_type = document_data.get("document_type", "").lower()
-                    content = document_data.get("content", "").lower()
-
-                    if "api" in doc_type or "security" in content:
-                        value = "high"
-                    elif "user" in doc_type or "guide" in content:
-                        value = "medium"
-                    else:
-                        value = "low"
-
+                value = self._extract_stakeholder_impact(value, document_data)
             elif factor_name == "usage_frequency":
-                if not value:
-                    # Estimate based on access patterns or document type
-                    doc_type = document_data.get("document_type", "").lower()
-                    if "api" in doc_type or "reference" in doc_type:
-                        value = 50  # Higher usage
-                    elif "tutorial" in doc_type or "getting-started" in doc_type:
-                        value = 20  # Moderate usage
-                    else:
-                        value = 5  # Lower usage
+                value = self._extract_usage_frequency(value, document_data)
 
-            # Calculate risk score for this factor
-            risk_score = self._calculate_risk_factor_score(
-                factor_name, value, factor_config
-            )
-            risk_scores[factor_name] = {
-                "value": value,
-                "risk_score": risk_score,
-                "weight": factor_config["weight"],
-                "description": factor_config["description"],
-            }
+            factor_values[factor_name] = value
 
-        return risk_scores
+        return factor_values
+
+    def _extract_finding_density(self, value: Any, document_data: Dict[str, Any]) -> float:
+        """Extract or estimate finding density."""
+        if value:
+            return value
+
+        analysis_results = document_data.get("recent_analysis", [])
+        if not analysis_results:
+            return 0.5
+
+        latest = analysis_results[-1]
+        findings = latest.get("total_findings", 0)
+        content_length = len(document_data.get("content", ""))
+
+        if content_length > 0:
+            return findings / (content_length / 1000)  # Findings per 1000 chars
+
+        return 0.5
+
+    def _extract_stakeholder_impact(self, value: Any, document_data: Dict[str, Any]) -> str:
+        """Extract or estimate stakeholder impact."""
+        if value:
+            return value
+
+        # Estimate based on document type and content
+        doc_type = document_data.get("document_type", "").lower()
+        content = document_data.get("content", "").lower()
+
+        if "api" in doc_type or "security" in content:
+            return "high"
+        elif "user" in doc_type or "guide" in content:
+            return "medium"
+
+        return "low"
+
+    def _extract_usage_frequency(self, value: Any, document_data: Dict[str, Any]) -> int:
+        """Extract or estimate usage frequency."""
+        if value:
+            return value
+
+        # Estimate based on access patterns or document type
+        doc_type = document_data.get("document_type", "").lower()
+        if "api" in doc_type or "reference" in doc_type:
+            return 50  # Higher usage
+        elif "tutorial" in doc_type or "getting-started" in doc_type:
+            return 20  # Moderate usage
+
+        return 5  # Lower usage
 
     def _calculate_overall_risk_score(
         self, risk_scores: Dict[str, Any]

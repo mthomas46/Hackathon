@@ -1,0 +1,326 @@
+name: Quality Gates & Service Auditing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly comprehensive audit on Monday at 2 AM UTC
+    - cron: '0 2 * * 1'
+
+env:
+  PYTHON_VERSION: '3.13'
+
+jobs:
+  audit-services:
+    name: Service Quality Audit
+    runs-on: ubuntu-latest
+    outputs:
+      shared-score: ${{ steps.audit.outputs.shared-score }}
+      doc-store-score: ${{ steps.audit.outputs.doc-store-score }}
+      discovery-agent-score: ${{ steps.audit.outputs.discovery-agent-score }}
+      analysis-service-score: ${{ steps.audit.outputs.analysis-service-score }}
+      orchestrator-score: ${{ steps.audit.outputs.orchestrator-score }}
+      critical-issues: ${{ steps.audit.outputs.critical-issues }}
+      quality-gate-passed: ${{ steps.quality-gate.outputs.result }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Install audit framework dependencies
+        pip install radon bandit psutil rich coverage interrogate mypy pylint safety pydeps
+
+    - name: Run comprehensive service audit
+      id: audit
+      run: |
+        echo "🔍 Running comprehensive service audit..."
+
+        # Run individual service audits and collect results
+        mkdir -p audit-results
+
+        # Audit shared service
+        echo "Auditing shared service..."
+        python scripts/audit-framework/audit_cli.py audit --service shared --output json > audit-results/shared-audit.json
+        SHARED_SCORE=$(jq -r '.overall_score' audit-results/shared-audit.json)
+        SHARED_CRITICAL=$(jq -r '.critical_issues | length' audit-results/shared-audit.json)
+
+        # Audit doc_store service
+        echo "Auditing doc_store service..."
+        python scripts/audit-framework/audit_cli.py audit --service doc_store --output json > audit-results/doc-store-audit.json
+        DOC_STORE_SCORE=$(jq -r '.overall_score' audit-results/doc-store-audit.json)
+        DOC_STORE_CRITICAL=$(jq -r '.critical_issues | length' audit-results/doc-store-audit.json)
+
+        # Audit discovery-agent service
+        echo "Auditing discovery-agent service..."
+        python scripts/audit-framework/audit_cli.py audit --service discovery-agent --output json > audit-results/discovery-agent-audit.json
+        DISCOVERY_AGENT_SCORE=$(jq -r '.overall_score' audit-results/discovery-agent-audit.json)
+        DISCOVERY_AGENT_CRITICAL=$(jq -r '.critical_issues | length' audit-results/discovery-agent-audit.json)
+
+        # Audit analysis-service
+        echo "Auditing analysis-service..."
+        python scripts/audit-framework/audit_cli.py audit --service analysis-service --output json > audit-results/analysis-service-audit.json
+        ANALYSIS_SERVICE_SCORE=$(jq -r '.overall_score' audit-results/analysis-service-audit.json)
+        ANALYSIS_SERVICE_CRITICAL=$(jq -r '.critical_issues | length' audit-results/analysis-service-audit.json)
+
+        # Audit orchestrator service
+        echo "Auditing orchestrator service..."
+        python scripts/audit-framework/audit_cli.py audit --service orchestrator --output json > audit-results/orchestrator-audit.json
+        ORCHESTRATOR_SCORE=$(jq -r '.overall_score' audit-results/orchestrator-audit.json)
+        ORCHESTRATOR_CRITICAL=$(jq -r '.critical_issues | length' audit-results/orchestrator-audit.json)
+
+        # Calculate total critical issues
+        TOTAL_CRITICAL=$((SHARED_CRITICAL + DOC_STORE_CRITICAL + DISCOVERY_AGENT_CRITICAL + ANALYSIS_SERVICE_CRITICAL + ORCHESTRATOR_CRITICAL))
+
+        # Set outputs for next jobs
+        echo "shared-score=$SHARED_SCORE" >> $GITHUB_OUTPUT
+        echo "doc-store-score=$DOC_STORE_SCORE" >> $GITHUB_OUTPUT
+        echo "discovery-agent-score=$DISCOVERY_AGENT_SCORE" >> $GITHUB_OUTPUT
+        echo "analysis-service-score=$ANALYSIS_SERVICE_SCORE" >> $GITHUB_OUTPUT
+        echo "orchestrator-score=$ORCHESTRATOR_SCORE" >> $GITHUB_OUTPUT
+        echo "critical-issues=$TOTAL_CRITICAL" >> $GITHUB_OUTPUT
+
+        # Helper functions
+        _get_grade() {
+          local score=$1
+          if (( $(echo "$score >= 90" | bc -l) )); then echo "A"
+          elif (( $(echo "$score >= 80" | bc -l) )); then echo "B"
+          elif (( $(echo "$score >= 70" | bc -l) )); then echo "C"
+          elif (( $(echo "$score >= 60" | bc -l) )); then echo "D"
+          else echo "F"
+          fi
+        }
+
+        _count_passing_services() {
+          local count=0
+          for score in "$@"; do
+            if (( $(echo "$score >= 60" | bc -l) )); then
+              ((count++))
+            fi
+          done
+          echo $count
+        }
+
+        _check_quality_gates() {
+          local shared=$1 doc_store=$2 discovery=$3 analysis=$4 orchestrator=$5 total_critical=$6
+          local min_score=60 max_critical=5 min_passing=3
+
+          local passing=$(_count_passing_services "$shared" "$doc_store" "$discovery" "$analysis" "$orchestrator")
+
+          if (( passing >= min_passing )) && (( total_critical <= max_critical )); then
+            echo "✅ **Quality Gates PASSED**"
+            echo "   - Services meeting standards: $passing/5"
+            echo "   - Critical issues within limit: $total_critical ≤ $max_critical"
+          else
+            echo "❌ **Quality Gates FAILED**"
+            echo "   - Services meeting standards: $passing/5 (required: $min_passing+)"
+            echo "   - Critical issues: $total_critical (limit: $max_critical)"
+          fi
+        }
+
+        # Generate summary report
+        cat > audit-results/audit-summary.md << EOF
+        # 🚀 Service Quality Audit Report
+
+        Generated on: $(date -u)
+
+        ## 📊 Service Scores
+
+        | Service | Score | Grade | Critical Issues |
+        |---------|-------|-------|----------------|
+        | shared | $SHARED_SCORE | $(_get_grade $SHARED_SCORE) | $SHARED_CRITICAL |
+        | doc_store | $DOC_STORE_SCORE | $(_get_grade $DOC_STORE_SCORE) | $DOC_STORE_CRITICAL |
+        | discovery-agent | $DISCOVERY_AGENT_SCORE | $(_get_grade $DISCOVERY_AGENT_SCORE) | $DISCOVERY_AGENT_CRITICAL |
+        | analysis-service | $ANALYSIS_SERVICE_SCORE | $(_get_grade $ANALYSIS_SERVICE_SCORE) | $ANALYSIS_SERVICE_CRITICAL |
+        | orchestrator | $ORCHESTRATOR_SCORE | $(_get_grade $ORCHESTRATOR_SCORE) | $ORCHESTRATOR_CRITICAL |
+
+        ## 🎯 Quality Metrics
+
+        - **Total Critical Issues**: $TOTAL_CRITICAL
+        - **Average Score**: $(echo "scale=2; ($SHARED_SCORE + $DOC_STORE_SCORE + $DISCOVERY_AGENT_SCORE + $ANALYSIS_SERVICE_SCORE + $ORCHESTRATOR_SCORE) / 5" | bc)
+        - **Services Meeting Standards**: $(_count_passing_services $SHARED_SCORE $DOC_STORE_SCORE $DISCOVERY_AGENT_SCORE $ANALYSIS_SERVICE_SCORE $ORCHESTRATOR_SCORE)/5
+
+        ## 📋 Quality Gate Results
+
+        $(_check_quality_gates $SHARED_SCORE $DOC_STORE_SCORE $DISCOVERY_AGENT_SCORE $ANALYSIS_SERVICE_SCORE $ORCHESTRATOR_SCORE $TOTAL_CRITICAL)
+        EOF
+
+        # Display summary
+        cat audit-results/audit-summary.md
+
+    - name: Upload audit results
+      uses: actions/upload-artifact@v3
+      with:
+        name: audit-results
+        path: audit-results/
+        retention-days: 30
+
+    - name: Quality gate check
+      id: quality-gate
+      run: |
+        # Quality thresholds
+        MIN_SCORE=60.0  # Minimum acceptable score (grade C)
+        MAX_CRITICAL=5  # Maximum acceptable critical issues
+        MIN_SERVICES_PASSING=3  # Minimum services that must pass
+
+        SHARED_SCORE=${{ steps.audit.outputs.shared-score }}
+        DOC_STORE_SCORE=${{ steps.audit.outputs.doc-store-score }}
+        DISCOVERY_AGENT_SCORE=${{ steps.audit.outputs.discovery-agent-score }}
+        ANALYSIS_SERVICE_SCORE=${{ steps.audit.outputs.analysis-service-score }}
+        ORCHESTRATOR_SCORE=${{ steps.audit.outputs.orchestrator-score }}
+        TOTAL_CRITICAL=${{ steps.audit.outputs.critical-issues }}
+
+        # Count services meeting minimum score
+        PASSING_SERVICES=0
+        for score in "$SHARED_SCORE" "$DOC_STORE_SCORE" "$DISCOVERY_AGENT_SCORE" "$ANALYSIS_SERVICE_SCORE" "$ORCHESTRATOR_SCORE"; do
+          if (( $(echo "$score >= $MIN_SCORE" | bc -l) )); then
+            ((PASSING_SERVICES++))
+          fi
+        done
+
+        # Check quality gates
+        if (( $(echo "$SHARED_SCORE >= $MIN_SCORE" | bc -l) )) && \
+           (( $(echo "$DOC_STORE_SCORE >= $MIN_SCORE" | bc -l) )) && \
+           (( $(echo "$DISCOVERY_AGENT_SCORE >= $MIN_SCORE" | bc -l) )) && \
+           (( $(echo "$ANALYSIS_SERVICE_SCORE >= $MIN_SCORE" | bc -l) )) && \
+           (( $(echo "$ORCHESTRATOR_SCORE >= $MIN_SCORE" | bc -l) )) && \
+           (( TOTAL_CRITICAL <= MAX_CRITICAL )) && \
+           (( PASSING_SERVICES >= MIN_SERVICES_PASSING )); then
+          echo "result=passed" >> $GITHUB_OUTPUT
+          echo "✅ All quality gates passed!"
+        else
+          echo "result=failed" >> $GITHUB_OUTPUT
+          echo "❌ Quality gates failed!"
+          echo "Requirements:"
+          echo "  - Minimum score: $MIN_SCORE (all services)"
+          echo "  - Maximum critical issues: $MAX_CRITICAL (total)"
+          echo "  - Services passing: $MIN_SERVICES_PASSING+"
+          echo ""
+          echo "Current status:"
+          echo "  - Services at or above $MIN_SCORE: $PASSING_SERVICES/5"
+          echo "  - Total critical issues: $TOTAL_CRITICAL"
+          exit 1
+        fi
+
+  quality-report:
+    name: Generate Quality Report
+    runs-on: ubuntu-latest
+    needs: audit-services
+    if: always()
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download audit results
+      uses: actions/download-artifact@v3
+      with:
+        name: audit-results
+
+    - name: Generate detailed quality report
+      run: |
+        echo "# 📊 Detailed Service Quality Report" > quality-report.md
+        echo "" >> quality-report.md
+        echo "Generated: $(date -u)" >> quality-report.md
+        echo "" >> quality-report.md
+
+        # Add quality gate status
+        if [ "${{ needs.audit-services.outputs.quality-gate-passed }}" = "passed" ]; then
+          echo "🎉 **Quality Gates: PASSED**" >> quality-report.md
+        else
+          echo "⚠️ **Quality Gates: FAILED**" >> quality-report.md
+        fi
+        echo "" >> quality-report.md
+
+        # Add service details
+        echo "## 🔍 Service Details" >> quality-report.md
+        echo "" >> quality-report.md
+
+        for service_json in *-audit.json; do
+          if [ -f "$service_json" ]; then
+            service_name=$(basename "$service_json" -audit.json)
+            score=$(jq -r '.overall_score' "$service_json")
+            grade=$(jq -r '.grade' "$service_json")
+            critical_count=$(jq '.critical_issues | length' "$service_json")
+
+            echo "### $service_name" >> quality-report.md
+            echo "- **Score**: $score/100" >> quality-report.md
+            echo "- **Grade**: $grade" >> quality-report.md
+            echo "- **Critical Issues**: $critical_count" >> quality-report.md
+
+            if [ "$critical_count" -gt 0 ]; then
+              echo "- **Issues**:" >> quality-report.md
+              jq -r '.critical_issues[].issue' "$service_json" | while read -r issue; do
+                echo "  - $issue" >> quality-report.md
+              done
+            fi
+            echo "" >> quality-report.md
+          fi
+        done
+
+        # Add recommendations
+        echo "## 🎯 Recommendations" >> quality-report.md
+        echo "" >> quality-report.md
+
+        if [ "${{ needs.audit-services.outputs.quality-gate-passed }}" = "failed" ]; then
+          echo "### Immediate Actions Required" >> quality-report.md
+          echo "1. Address critical issues in failing services" >> quality-report.md
+          echo "2. Improve scores to meet minimum thresholds" >> quality-report.md
+          echo "3. Run local audits to debug issues: \`python scripts/audit-framework/audit_cli.py audit --service <service>\`" >> quality-report.md
+          echo "4. Review action plans in audit output for specific fixes" >> quality-report.md
+        else
+          echo "### Maintenance Recommendations" >> quality-report.md
+          echo "1. Continue monitoring service quality" >> quality-report.md
+          echo "2. Address any minor issues before they become critical" >> quality-report.md
+          echo "3. Run audits regularly to maintain quality standards" >> quality-report.md
+        fi
+        echo "" >> quality-report.md
+
+    - name: Upload quality report
+      uses: actions/upload-artifact@v3
+      with:
+        name: quality-report
+        path: quality-report.md
+        retention-days: 30
+
+  enforce-gates:
+    name: Enforce Quality Gates
+    runs-on: ubuntu-latest
+    needs: [audit-services, quality-report]
+    if: failure() && (github.event_name == 'pull_request' || github.event_name == 'push')
+
+    steps:
+    - name: Quality gates failed
+      run: |
+        echo "❌ Quality gates have failed!"
+        echo ""
+        echo "This PR/merge cannot proceed until quality standards are met."
+        echo ""
+        echo "Quality Requirements:"
+        echo "  - All services must score 60+ (Grade C or better)"
+        echo "  - Total critical issues must be ≤ 5"
+        echo "  - At least 3 services must pass minimum standards"
+        echo ""
+        echo "Run the following locally to debug:"
+        echo "  python scripts/audit-framework/audit_cli.py audit --service <service-name>"
+        echo ""
+        echo "Check the 'audit-results' and 'quality-report' artifacts for details."
+        exit 1

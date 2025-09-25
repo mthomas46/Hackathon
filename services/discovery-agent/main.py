@@ -69,11 +69,63 @@ config = load_service_config(
 # ============================================================================
 
 app = FastAPI(
-    title=config.service_description or "Enhanced Discovery Agent",
-    description="Advanced service discovery with ecosystem integration",
+    title=config.service_description or "Discovery Agent Service",
+    description="""
+    A comprehensive service discovery and tool registration service built with Domain-Driven Design principles.
+
+    ## Features
+
+    * **Service Discovery**: Automatically discover services and their capabilities
+    * **Tool Registration**: Register discovered tools with orchestrators and workflows
+    * **OpenAPI Integration**: Parse and analyze OpenAPI specifications
+    * **Health Monitoring**: Monitor service health and availability
+    * **Bulk Operations**: Process multiple services simultaneously
+    * **Ecosystem Integration**: Work with Docker networks and service meshes
+    * **RESTful API**: Complete REST API with OpenAPI/Swagger documentation
+
+    ## Authentication
+
+    All endpoints require authentication via JWT tokens or API keys.
+
+    ## Rate Limiting
+
+    API endpoints are rate-limited to ensure fair usage and system stability.
+    """,
     version=config.service_version,
     docs_url="/docs",
     redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Discovery Agent Team",
+        "email": "discovery@company.com",
+        "url": "https://discovery.company.com/support"
+    },
+    license_info={
+        "name": "Proprietary",
+        "url": "https://discovery.company.com/license"
+    },
+    tags_metadata=[
+        {
+            "name": "discovery",
+            "description": "Service and tool discovery operations"
+        },
+        {
+            "name": "registration",
+            "description": "Tool registration and ecosystem integration"
+        },
+        {
+            "name": "health",
+            "description": "Service health monitoring and status"
+        },
+        {
+            "name": "bulk",
+            "description": "Bulk operations for multiple services"
+        },
+        {
+            "name": "validation",
+            "description": "Endpoint and service validation"
+        },
+    ]
 )
 
 # Setup standardized middleware and utilities
@@ -155,7 +207,7 @@ async def fetch_openapi_spec_with_fallback(
     for path in common_paths:
         urls_to_try.append(f"{base_url}{path}")
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=config.timeouts.service_discovery) as client:
         for url in urls_to_try:
             try:
                 print(f"🔍 Trying to fetch OpenAPI spec from: {url}")
@@ -178,7 +230,7 @@ async def fetch_openapi_spec_with_fallback(
 # ============================================================================
 
 
-@app.post("/discover")
+@app.post("/discover", tags=["discovery"])
 async def discover_service(request: DiscoverRequest):
     """Enhanced single service discovery with network URL normalization"""
     try:
@@ -258,7 +310,7 @@ async def discover_service(request: DiscoverRequest):
         )
 
 
-@app.post("/discover-ecosystem")
+@app.post("/discover-ecosystem", tags=["bulk"])
 async def discover_ecosystem(request: BulkDiscoverRequest):
     """Comprehensive ecosystem discovery for multiple services"""
     try:
@@ -294,7 +346,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
                         health_url = (
                             f"http://{service['name']}:{service['port']}/health"
                         )
-                        async with httpx.AsyncClient(timeout=5.0) as client:
+                        async with httpx.AsyncClient(timeout=config.timeouts.health_check) as client:
                             response = await client.get(health_url)
                             if response.status_code == 200:
                                 services_to_discover.append(service_data)
@@ -402,7 +454,7 @@ async def discover_ecosystem(request: BulkDiscoverRequest):
         )
 
 
-@app.get("/registry/stats")
+@app.get("/registry/stats", tags=["health"])
 async def get_registry_stats():
     """Get basic registry statistics"""
     try:
@@ -464,7 +516,7 @@ async def discover_services_v1(request: BulkDiscoverRequest):
 
                 try:
                     # Check service health
-                    async with httpx.AsyncClient(timeout=3.0) as client:
+                    async with httpx.AsyncClient(timeout=config.timeouts.tool_registration) as client:
                         response = await client.get(health_url)
                         is_healthy = response.status_code == 200
 
@@ -498,7 +550,7 @@ async def discover_services_v1(request: BulkDiscoverRequest):
             if request.include_health_check:
                 try:
                     health_url = f"{service_url}/health"
-                    async with httpx.AsyncClient(timeout=3.0) as client:
+                    async with httpx.AsyncClient(timeout=config.timeouts.tool_registration) as client:
                         response = await client.get(health_url)
                         health_status = (
                             "healthy" if response.status_code == 200 else "unhealthy"
@@ -649,4 +701,4 @@ async def startup_event():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=5045)
+    uvicorn.run(app, host=config.server.host, port=config.server.port)

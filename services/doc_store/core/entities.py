@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 # Import standardized base entity
-from services.shared.utilities import BaseEntity
+from services.shared.domain.base_repository import BaseEntity
 
 
 @dataclass

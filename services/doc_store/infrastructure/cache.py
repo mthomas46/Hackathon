@@ -169,46 +169,70 @@ class DocStoreCache:
             invalidated_keys = []
 
             # Invalidate local cache
-            keys_to_remove = []
-            for key, entry in self.local_cache.items():
-                should_remove = False
-
-                if tags and any(tag in entry.tags for tag in tags):
-                    should_remove = True
-
-                if patterns and any(pattern in key for pattern in patterns):
-                    should_remove = True
-
-                if should_remove:
-                    keys_to_remove.append(key)
-                    invalidated_keys.append(key)
-
-            for key in keys_to_remove:
-                del self.local_cache[key]
+            local_invalidated = await self._invalidate_local_cache(tags, patterns)
+            invalidated_keys.extend(local_invalidated)
 
             # Invalidate Redis cache
-            if self.redis_client and (tags or patterns):
-                try:
-                    # Get all keys matching patterns
-                    redis_keys = []
-                    if patterns:
-                        for pattern in patterns:
-                            keys = await self.redis_client.keys(pattern)
-                            redis_keys.extend(keys)
-
-                    # For tag-based invalidation, we'd need to scan all keys
-                    # This is a simplified implementation
-                    for key in redis_keys:
-                        await self.redis_client.delete(key)
-                        await self.redis_client.delete(f"{key}:meta")
-
-                except Exception:
-                    pass
+            redis_invalidated = await self._invalidate_redis_cache(tags, patterns)
+            invalidated_keys.extend(redis_invalidated)
 
             self.stats.evictions += len(invalidated_keys)
 
         except Exception:
             pass
+
+    async def _invalidate_local_cache(
+        self, tags: Optional[List[str]], patterns: Optional[List[str]]
+    ) -> List[str]:
+        """Invalidate entries from local cache."""
+        invalidated_keys = []
+        keys_to_remove = []
+
+        for key, entry in self.local_cache.items():
+            if self._should_invalidate_entry(key, entry, tags, patterns):
+                keys_to_remove.append(key)
+                invalidated_keys.append(key)
+
+        for key in keys_to_remove:
+            del self.local_cache[key]
+
+        return invalidated_keys
+
+    async def _invalidate_redis_cache(
+        self, tags: Optional[List[str]], patterns: Optional[List[str]]
+    ) -> List[str]:
+        """Invalidate entries from Redis cache."""
+        if not self.redis_client or not (tags or patterns):
+            return []
+
+        try:
+            redis_keys = []
+            if patterns:
+                for pattern in patterns:
+                    keys = await self.redis_client.keys(pattern)
+                    redis_keys.extend(keys)
+
+            # Delete matching keys
+            for key in redis_keys:
+                await self.redis_client.delete(key)
+                await self.redis_client.delete(f"{key}:meta")
+
+            return [key.decode() if isinstance(key, bytes) else key for key in redis_keys]
+
+        except Exception:
+            return []
+
+    def _should_invalidate_entry(
+        self, key: str, entry: CacheEntry, tags: Optional[List[str]], patterns: Optional[List[str]]
+    ) -> bool:
+        """Check if a cache entry should be invalidated."""
+        if tags and any(tag in entry.tags for tag in tags):
+            return True
+
+        if patterns and any(pattern in key for pattern in patterns):
+            return True
+
+        return False
 
     async def get_stats(self) -> Dict[str, Any]:
         """Get comprehensive cache statistics."""

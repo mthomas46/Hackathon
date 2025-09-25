@@ -51,6 +51,7 @@ from .domain.exceptions import (
 # ============================================================================
 from .db.schema import init_database
 from .infrastructure.cache import docstore_cache
+from .infrastructure.di.container import container
 
 # ============================================================================
 # CONFIGURATION - Using standardized config system
@@ -67,10 +68,85 @@ config = load_service_config(
 # ============================================================================
 app = FastAPI(
     title="Doc Store Service",
-    description="Document storage and analysis service with advanced features",
+    description="""
+    A comprehensive document storage and analysis service built with Domain-Driven Design principles.
+
+    ## Features
+
+    * **Document Management**: Store, retrieve, and manage documents with full lifecycle support
+    * **Advanced Search**: Full-text search with semantic similarity and relevance scoring
+    * **Version Control**: Complete document versioning with diff tracking and rollback
+    * **Analytics**: Document quality analysis, trends, and predictive maintenance
+    * **Tagging System**: Flexible hierarchical tagging with validation and auto-completion
+    * **Relationships**: Complex document relationships and dependency management
+    * **Bulk Operations**: High-performance batch operations with progress tracking
+    * **Lifecycle Management**: Automated document lifecycle transitions and cleanup
+    * **Real-time Notifications**: Event-driven notifications for document changes
+    * **RESTful API**: Complete REST API with OpenAPI/Swagger documentation
+
+    ## Authentication
+
+    All endpoints require authentication via JWT tokens or API keys.
+
+    ## Rate Limiting
+
+    API endpoints are rate-limited to ensure fair usage and system stability.
+    """,
     version=config.service_version,
     docs_url="/docs",
     redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Doc Store Team",
+        "email": "docstore@company.com",
+        "url": "https://docstore.company.com/support"
+    },
+    license_info={
+        "name": "Proprietary",
+        "url": "https://docstore.company.com/license"
+    },
+    tags_metadata=[
+        {
+            "name": "documents",
+            "description": "Core document operations: create, read, update, delete"
+        },
+        {
+            "name": "search",
+            "description": "Advanced search and discovery operations"
+        },
+        {
+            "name": "analytics",
+            "description": "Document analytics and quality assessment"
+        },
+        {
+            "name": "versioning",
+            "description": "Document version control and history"
+        },
+        {
+            "name": "tagging",
+            "description": "Document tagging and categorization"
+        },
+        {
+            "name": "relationships",
+            "description": "Document relationships and dependencies"
+        },
+        {
+            "name": "bulk",
+            "description": "Bulk operations for multiple documents"
+        },
+        {
+            "name": "lifecycle",
+            "description": "Document lifecycle management"
+        },
+        {
+            "name": "notifications",
+            "description": "Event notifications and webhooks"
+        },
+        {
+            "name": "health",
+            "description": "Service health and monitoring"
+        }
+    ]
 )
 
 # Setup standardized middleware and utilities
@@ -296,12 +372,6 @@ async def health_check():
     )
 
 
-# Skip custom health endpoint registration - using simple one above
-# from services.shared.monitoring.health import create_health_endpoint, create_system_health_endpoint, create_dependency_health_endpoint
-# app.get("/health")(create_health_endpoint(health_manager))
-# Skip all shared health endpoints
-# app.get("/health/system")(create_system_health_endpoint(health_manager))
-# app.get("/health/dependency/{service_name}")(create_dependency_health_endpoint(health_manager))
 
 
 # ============================================================================

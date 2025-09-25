@@ -248,87 +248,15 @@ class MaintenanceForecaster:
     ) -> Dict[str, Any]:
         """Forecast maintenance schedule based on multiple factors."""
         factor_forecasts = {}
-        total_weight = 0
-        weighted_days = 0
-        max_urgency = 0
-        urgent_factors = []
 
+        # Extract factor values for all maintenance factors
+        factor_values = self._extract_factor_values(document_data, analysis_history)
+
+        # Calculate forecasts for each factor
         for factor_name, factor_config in self.maintenance_factors.items():
-            value = document_data.get(factor_name)
+            value = factor_values.get(factor_name)
+            forecast = self._calculate_maintenance_urgency(factor_name, value, factor_config)
 
-            # Extract or estimate factor values
-            if factor_name == "risk_score":
-                if not value and analysis_history:
-                    # Use latest risk assessment if available
-                    latest_analysis = analysis_history[-1] if analysis_history else {}
-                    value = latest_analysis.get("overall_risk", {}).get(
-                        "overall_score", 0.5
-                    )
-                elif not value:
-                    value = 0.5  # Default moderate risk
-
-            elif factor_name == "document_age":
-                last_modified = document_data.get("last_modified")
-                if last_modified and isinstance(last_modified, str):
-                    try:
-                        last_mod_date = pd.to_datetime(last_modified)
-                        value = (pd.Timestamp.now() - last_mod_date).days
-                    except Exception:
-                        value = 180
-                elif not value:
-                    value = 180
-
-            elif factor_name == "usage_frequency":
-                if not value:
-                    # Estimate based on document type and access patterns
-                    doc_type = document_data.get("document_type", "").lower()
-                    if "api" in doc_type:
-                        value = 80
-                    elif "tutorial" in doc_type:
-                        value = 60
-                    elif "reference" in doc_type:
-                        value = 40
-                    else:
-                        value = 20
-
-            elif factor_name == "quality_trend":
-                if not value and analysis_history and len(analysis_history) >= 3:
-                    # Calculate quality trend from history
-                    scores = []
-                    for entry in analysis_history[-10:]:  # Last 10 entries
-                        if "quality_score" in entry:
-                            scores.append(entry["quality_score"])
-
-                    if len(scores) >= 3:
-                        X = np.arange(len(scores)).reshape(-1, 1)
-                        y = np.array(scores)
-                        model = LinearRegression()
-                        model.fit(X, y)
-                        value = model.coef_[0]  # Trend slope
-                    else:
-                        value = 0.0
-                elif not value:
-                    value = 0.0
-
-            elif factor_name == "business_criticality":
-                if not value:
-                    # Estimate based on content and metadata
-                    stakeholder_impact = document_data.get(
-                        "stakeholder_impact", "medium"
-                    )
-                    content = document_data.get("content", "").lower()
-
-                    if "security" in content or "compliance" in content:
-                        value = "high"
-                    elif stakeholder_impact in ["high", "critical"]:
-                        value = stakeholder_impact
-                    else:
-                        value = "medium"
-
-            # Calculate forecast for this factor
-            forecast = self._calculate_maintenance_urgency(
-                factor_name, value, factor_config
-            )
             factor_forecasts[factor_name] = {
                 "value": value,
                 "forecast": forecast,
@@ -336,11 +264,135 @@ class MaintenanceForecaster:
                 "description": factor_config["description"],
             }
 
-            # Aggregate for overall forecast
-            weight = factor_config["weight"]
+        # Aggregate overall forecast
+        return self._aggregate_maintenance_forecast(factor_forecasts)
+
+    def _extract_factor_values(
+        self,
+        document_data: Dict[str, Any],
+        analysis_history: Optional[List[Dict[str, Any]]]
+    ) -> Dict[str, Any]:
+        """Extract or estimate values for all maintenance factors."""
+        factor_values = {}
+
+        for factor_name in self.maintenance_factors.keys():
+            value = document_data.get(factor_name)
+
+            if factor_name == "risk_score":
+                value = self._extract_risk_score(value, analysis_history)
+            elif factor_name == "document_age":
+                value = self._extract_document_age(value, document_data)
+            elif factor_name == "usage_frequency":
+                value = self._extract_usage_frequency(value, document_data)
+            elif factor_name == "quality_trend":
+                value = self._extract_quality_trend(value, analysis_history)
+            elif factor_name == "business_criticality":
+                value = self._extract_business_criticality(value, document_data)
+
+            factor_values[factor_name] = value
+
+        return factor_values
+
+    def _extract_risk_score(
+        self,
+        value: Any,
+        analysis_history: Optional[List[Dict[str, Any]]]
+    ) -> float:
+        """Extract or estimate risk score."""
+        if not value and analysis_history:
+            latest_analysis = analysis_history[-1] if analysis_history else {}
+            return latest_analysis.get("overall_risk", {}).get("overall_score", 0.5)
+        return value or 0.5
+
+    def _extract_document_age(self, value: Any, document_data: Dict[str, Any]) -> int:
+        """Extract or calculate document age in days."""
+        if value:
+            return value
+
+        last_modified = document_data.get("last_modified")
+        if last_modified and isinstance(last_modified, str):
+            try:
+                last_mod_date = pd.to_datetime(last_modified)
+                return (pd.Timestamp.now() - last_mod_date).days
+            except Exception:
+                pass
+
+        return 180  # Default to 6 months
+
+    def _extract_usage_frequency(self, value: Any, document_data: Dict[str, Any]) -> int:
+        """Extract or estimate usage frequency."""
+        if value:
+            return value
+
+        # Estimate based on document type and access patterns
+        doc_type = document_data.get("document_type", "").lower()
+        if "api" in doc_type:
+            return 80
+        elif "tutorial" in doc_type:
+            return 60
+        elif "reference" in doc_type:
+            return 40
+        return 20  # Default
+
+    def _extract_quality_trend(
+        self,
+        value: Any,
+        analysis_history: Optional[List[Dict[str, Any]]]
+    ) -> float:
+        """Extract or calculate quality trend slope."""
+        if value or not analysis_history or len(analysis_history) < 3:
+            return value or 0.0
+
+        # Calculate quality trend from history using linear regression
+        scores = []
+        for entry in analysis_history[-10:]:  # Last 10 entries
+            if "quality_score" in entry:
+                scores.append(entry["quality_score"])
+
+        if len(scores) >= 3:
+            X = np.arange(len(scores)).reshape(-1, 1)
+            y = np.array(scores)
+            model = LinearRegression()
+            model.fit(X, y)
+            return model.coef_[0]  # Trend slope
+
+        return 0.0
+
+    def _extract_business_criticality(self, value: Any, document_data: Dict[str, Any]) -> str:
+        """Extract or estimate business criticality."""
+        if value:
+            return value
+
+        # Estimate based on content and metadata
+        stakeholder_impact = document_data.get("stakeholder_impact", "medium")
+        content = document_data.get("content", "").lower()
+
+        if "security" in content or "compliance" in content:
+            return "high"
+        elif stakeholder_impact in ["high", "critical"]:
+            return stakeholder_impact
+
+        return "medium"
+
+    def _aggregate_maintenance_forecast(self, factor_forecasts: Dict[str, Any]) -> Dict[str, Any]:
+        """Aggregate factor forecasts into overall maintenance schedule."""
+        total_weight = 0
+        weighted_days = 0
+        max_urgency = 0
+        urgent_factors = []
+
+        for factor_name, factor_data in factor_forecasts.items():
+            forecast = factor_data["forecast"]
+            weight = factor_data["weight"]
+
+            # Aggregate weighted values
             total_weight += weight
             weighted_days += forecast["predicted_days"] * weight
             max_urgency = max(max_urgency, forecast["urgency_score"])
+
+            # Track urgent factors
+            if forecast["urgency_score"] >= 0.8:
+                urgent_factors.append(factor_name)
 
             if forecast["urgency_score"] >= 0.6:
                 urgent_factors.append(

@@ -110,7 +110,33 @@ class ListFindingsQueryValidator(BaseValidator):
         errors = []
         warnings = []
 
-        # Validate document_id if provided
+        # Break down validation into focused methods
+        errors.extend(self._validate_document_id(query))
+        errors.extend(self._validate_analysis_id(query))
+        errors.extend(self._validate_severity(query))
+        errors.extend(self._validate_category(query))
+
+        pagination_errors, pagination_warnings = self._validate_pagination(query)
+        errors.extend(pagination_errors)
+        warnings.extend(pagination_warnings)
+
+        errors.extend(self._validate_date_filters(query))
+        errors.extend(self._validate_sort_parameters(query))
+
+        filter_warnings = self._validate_filter_conflicts(query)
+        warnings.extend(filter_warnings)
+
+        if errors:
+            return ValidationResult.failure(errors, warnings)
+        elif warnings:
+            return ValidationResult.success(metadata={"warnings": warnings})
+
+        return ValidationResult.success()
+
+    def _validate_document_id(self, query: ListFindingsQuery) -> list:
+        """Validate document_id parameter."""
+        errors = []
+
         if hasattr(query, "document_id") and query.document_id is not None:
             if not isinstance(query.document_id, str):
                 errors.append(
@@ -135,7 +161,12 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
 
-        # Validate analysis_id if provided
+        return errors
+
+    def _validate_analysis_id(self, query: ListFindingsQuery) -> list:
+        """Validate analysis_id parameter."""
+        errors = []
+
         if hasattr(query, "analysis_id") and query.analysis_id is not None:
             if not isinstance(query.analysis_id, str):
                 errors.append(
@@ -160,7 +191,12 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
 
-        # Validate severity if provided
+        return errors
+
+    def _validate_severity(self, query: ListFindingsQuery) -> list:
+        """Validate severity parameter."""
+        errors = []
+
         if hasattr(query, "severity") and query.severity is not None:
             if not isinstance(query.severity, str):
                 errors.append(
@@ -177,7 +213,12 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
 
-        # Validate category if provided
+        return errors
+
+    def _validate_category(self, query: ListFindingsQuery) -> list:
+        """Validate category parameter."""
+        errors = []
+
         if hasattr(query, "category") and query.category is not None:
             if not isinstance(query.category, str):
                 errors.append(
@@ -192,7 +233,14 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
 
-        # Validate pagination parameters
+        return errors
+
+    def _validate_pagination(self, query: ListFindingsQuery) -> tuple[list, list]:
+        """Validate pagination parameters."""
+        errors = []
+        warnings = []
+
+        # Validate page parameter
         if hasattr(query, "page") and query.page is not None:
             if not isinstance(query.page, int) or query.page < 1:
                 errors.append(
@@ -201,6 +249,7 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
 
+        # Validate page_size parameter
         if hasattr(query, "page_size") and query.page_size is not None:
             if not isinstance(query.page_size, int) or query.page_size < 1:
                 errors.append(
@@ -219,7 +268,12 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
 
-        # Validate date filters
+        return errors, warnings
+
+    def _validate_date_filters(self, query: ListFindingsQuery) -> list:
+        """Validate date filter parameters."""
+        errors = []
+
         if hasattr(query, "from_date") and query.from_date is not None:
             if hasattr(query, "to_date") and query.to_date is not None:
                 if query.from_date > query.to_date:
@@ -231,7 +285,13 @@ class ListFindingsQueryValidator(BaseValidator):
                         )
                     )
 
-        # Validate sort parameters
+        return errors
+
+    def _validate_sort_parameters(self, query: ListFindingsQuery) -> list:
+        """Validate sort parameters."""
+        errors = []
+
+        # Validate sort_by parameter
         if hasattr(query, "sort_by") and query.sort_by is not None:
             valid_sort_fields = ["created_at", "severity", "category", "confidence"]
             if query.sort_by not in valid_sort_fields:
@@ -243,6 +303,7 @@ class ListFindingsQueryValidator(BaseValidator):
                     )
                 )
 
+        # Validate sort_order parameter
         if hasattr(query, "sort_order") and query.sort_order is not None:
             if query.sort_order not in ["asc", "desc"]:
                 errors.append(
@@ -252,6 +313,12 @@ class ListFindingsQueryValidator(BaseValidator):
                         "sort_order",
                     )
                 )
+
+        return errors
+
+    def _validate_filter_conflicts(self, query: ListFindingsQuery) -> list:
+        """Validate for conflicting filter parameters."""
+        warnings = []
 
         # Check for conflicting parameters
         if (
@@ -267,12 +334,7 @@ class ListFindingsQueryValidator(BaseValidator):
                 )
             )
 
-        if errors:
-            return ValidationResult.failure(errors, warnings)
-        elif warnings:
-            return ValidationResult.success(metadata={"warnings": warnings})
-
-        return ValidationResult.success()
+        return warnings
 
 
 class GetDocumentByIdQueryValidator(GetDocumentQueryValidator):

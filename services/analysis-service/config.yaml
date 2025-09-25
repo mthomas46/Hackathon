@@ -20,3 +20,15 @@ services:
   prompt_store_url: ${PROMPT_STORE_URL:-http://prompt-store:5110}
   interpreter_url: ${INTERPRETER_URL:-http://interpreter:5120}
   orchestrator_url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
+
+# Timeouts and limits (in seconds/units)
+timeouts:
+  service_client: ${SERVICE_CLIENT_TIMEOUT:-30}
+  analysis_processing: ${ANALYSIS_PROCESSING_TIMEOUT:-300}
+  workflow_processing: ${WORKFLOW_PROCESSING_TIMEOUT:-120}
+  findings_retrieval: ${FINDINGS_RETRIEVAL_TIMEOUT:-60}
+
+limits:
+  max_lines_added_threshold: ${MAX_LINES_ADDED_THRESHOLD:-1000}
+  quality_score_weight: ${QUALITY_SCORE_WEIGHT:-30}
+  max_document_id_length: ${MAX_DOCUMENT_ID_LENGTH:-500}

@@ -4,7 +4,15 @@
 # Override server port for discovery-agent
 server:
   port: 5045
+  host: ${SERVER_HOST:-127.0.0.1}
 
 # Discovery-agent specific settings
 orchestrator:
   url: ${ORCHESTRATOR_URL:-http://orchestrator:5099}
+
+# Timeouts and intervals (in seconds)
+timeouts:
+  service_discovery: ${SERVICE_DISCOVERY_TIMEOUT:-30.0}
+  health_check: ${HEALTH_CHECK_TIMEOUT:-5.0}
+  tool_registration: ${TOOL_REGISTRATION_TIMEOUT:-3.0}
+  endpoint_validation: ${ENDPOINT_VALIDATION_TIMEOUT:-3.0}

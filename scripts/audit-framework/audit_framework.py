@@ -252,6 +252,17 @@ class AuditFramework:
         # Analyze endpoints for REST compliance
         endpoint_results = self._analyze_endpoints_for_rest_compliance(service)
 
+        # New enhanced analyses
+        complexity_results = self._analyze_cyclomatic_complexity(service)
+        coupling_results = self._analyze_dependency_coupling(service)
+        dead_code_results = self._analyze_dead_code(service)
+        test_quality_metrics = self._analyze_test_quality_metrics(service)
+        domain_boundaries = self._analyze_domain_boundaries(service)
+        api_docs_quality = self._analyze_api_documentation_quality(service)
+        code_documentation = self._analyze_code_documentation(service)
+        config_management = self._analyze_configuration_management(service)
+        logging_practices = self._analyze_logging_practices(service)
+
         scores = {
             'ddd_compliance': await self._check_ddd_compliance(service),
             'rest_compliance': await self._check_rest_compliance(service),
@@ -276,6 +287,15 @@ class AuditFramework:
             'test_quality': test_quality_results,
             'linting_quality': linting_results,
             'endpoint_analysis': endpoint_results,
+            'complexity_analysis': complexity_results,
+            'dependency_coupling': coupling_results,
+            'dead_code_analysis': dead_code_results,
+            'test_quality_metrics': test_quality_metrics,
+            'domain_boundaries': domain_boundaries,
+            'api_documentation': api_docs_quality,
+            'code_documentation': code_documentation,
+            'configuration_management': config_management,
+            'logging_practices': logging_practices,
             'issues': self._identify_architecture_issues(scores),
             'recommendations': self._generate_architecture_recommendations(scores)
         }
@@ -1259,6 +1279,784 @@ class AuditFramework:
             score -= 15
 
         return max(0, score)
+
+    def _analyze_cyclomatic_complexity(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze cyclomatic complexity of functions and methods."""
+        complexity_results = {
+            'high_complexity_functions': [],
+            'total_functions_analyzed': 0,
+            'complexity_distribution': {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0},
+            'average_complexity': 0.0,
+            'recommendations': []
+        }
+
+        total_complexity = 0
+
+        # Find Python files to analyze
+        python_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py') and not file.startswith('test_') and not file.startswith('__'):
+                    python_files.append(Path(root) / file)
+
+        for file_path in python_files[:20]:  # Limit to first 20 files for performance
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                tree = ast.parse(content, filename=str(file_path))
+                functions = []
+
+                # Extract all function definitions
+                for node in ast.walk(tree):
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        functions.append(node)
+
+                for func_node in functions:
+                    complexity = self._calculate_cyclomatic_complexity(func_node)
+                    complexity_results['total_functions_analyzed'] += 1
+                    total_complexity += complexity
+
+                    # Categorize complexity
+                    if complexity <= 5:
+                        complexity_results['complexity_distribution']['low'] += 1
+                    elif complexity <= 10:
+                        complexity_results['complexity_distribution']['medium'] += 1
+                    elif complexity <= 15:
+                        complexity_results['complexity_distribution']['high'] += 1
+                    else:
+                        complexity_results['complexity_distribution']['very_high'] += 1
+
+                    # Flag high complexity functions
+                    if complexity > 10:
+                        complexity_results['high_complexity_functions'].append({
+                            'file': str(file_path.relative_to(service.path)),
+                            'function': func_node.name,
+                            'complexity': complexity,
+                            'line': func_node.lineno
+                        })
+
+                        if complexity > 15:
+                            complexity_results['recommendations'].append(
+                                f"Break down {func_node.name} in {file_path.name} (complexity: {complexity}) into smaller functions"
+                            )
+
+            except Exception as e:
+                # Skip files that can't be parsed
+                continue
+
+        if complexity_results['total_functions_analyzed'] > 0:
+            complexity_results['average_complexity'] = total_complexity / complexity_results['total_functions_analyzed']
+
+        return complexity_results
+
+    def _calculate_cyclomatic_complexity(self, func_node: ast.FunctionDef) -> int:
+        """Calculate cyclomatic complexity for a function."""
+        complexity = 1  # Base complexity
+
+        for node in ast.walk(func_node):
+            # Control flow statements that increase complexity
+            if isinstance(node, (ast.If, ast.IfExp, ast.While, ast.For, ast.AsyncFor)):
+                complexity += 1
+            elif isinstance(node, ast.BoolOp) and isinstance(node.op, ast.And):
+                # Each 'and' in boolean expressions
+                complexity += len(node.values) - 1
+            elif isinstance(node, ast.BoolOp) and isinstance(node.op, ast.Or):
+                # Each 'or' in boolean expressions
+                complexity += len(node.values) - 1
+            elif isinstance(node, (ast.Try, ast.ExceptHandler)):
+                complexity += 1
+            elif isinstance(node, ast.Assert):
+                complexity += 1
+
+        return complexity
+
+    def _analyze_dependency_coupling(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze import dependencies to identify tight coupling."""
+        coupling_results = {
+            'circular_dependencies': [],
+            'tightly_coupled_modules': [],
+            'high_import_count_modules': [],
+            'dependency_injection_suggestions': [],
+            'recommendations': []
+        }
+
+        # Analyze imports in each Python file
+        module_imports = {}
+        module_dependencies = {}
+
+        python_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py') and not file.startswith('__'):
+                    file_path = Path(root) / file
+                    python_files.append(file_path)
+
+        for file_path in python_files[:30]:  # Limit analysis for performance
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                lines = content.split('\n')
+                imports = []
+                from_imports = []
+
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith('import '):
+                        imports.append(line)
+                    elif line.startswith('from ') and ' import ' in line:
+                        from_imports.append(line)
+
+                rel_path = file_path.relative_to(service.path)
+                module_name = str(rel_path).replace('/', '.').replace('.py', '')
+
+                all_imports = imports + from_imports
+                module_imports[module_name] = all_imports
+                module_dependencies[module_name] = len(all_imports)
+
+                # Check for high import counts
+                if len(all_imports) > 15:
+                    coupling_results['high_import_count_modules'].append({
+                        'module': module_name,
+                        'import_count': len(all_imports),
+                        'imports': all_imports[:5]  # Show first 5
+                    })
+                    coupling_results['recommendations'].append(
+                        f"Reduce imports in {module_name} ({len(all_imports)} imports) - consider splitting module"
+                    )
+
+                # Check for tight coupling patterns
+                external_imports = [imp for imp in all_imports if not any(local in imp for local in ['services.', service.name + '.'])]
+                if len(external_imports) > 10:
+                    coupling_results['tightly_coupled_modules'].append({
+                        'module': module_name,
+                        'external_imports': len(external_imports)
+                    })
+                    coupling_results['dependency_injection_suggestions'].append(
+                        f"Consider dependency injection for {module_name} - high external coupling ({len(external_imports)} external imports)"
+                    )
+
+            except Exception as e:
+                continue
+
+        # Simple circular dependency detection (basic)
+        # This is a simplified version - real circular dependency detection is complex
+        for module, deps in module_dependencies.items():
+            if deps > 20:  # Arbitrary threshold for potential circular issues
+                coupling_results['recommendations'].append(
+                    f"Review dependencies for {module} - may have circular dependency issues"
+                )
+
+        return coupling_results
+
+    def _analyze_dead_code(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze for dead/unused code."""
+        dead_code_results = {
+            'unused_functions': [],
+            'unused_classes': [],
+            'unreachable_code': [],
+            'commented_code': [],
+            'dead_code_lines': 0,
+            'recommendations': []
+        }
+
+        python_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py') and not file.startswith('test_'):
+                    python_files.append(Path(root) / file)
+
+        for file_path in python_files[:20]:  # Limit for performance
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                lines = content.split('\n')
+                dead_lines = 0
+
+                # Analyze each line for dead code patterns
+                for i, line in enumerate(lines):
+                    stripped = line.strip()
+
+                    # Check for commented code blocks
+                    if stripped.startswith('#') and len(stripped) > 10:  # Substantial commented code
+                        # Look for patterns that suggest commented-out executable code
+                        if any(keyword in stripped.lower() for keyword in ['def ', 'class ', 'import ', 'if ', 'for ', 'while ']):
+                            dead_code_results['commented_code'].append({
+                                'file': str(file_path.relative_to(service.path)),
+                                'line': i + 1,
+                                'content': stripped[:50]
+                            })
+                            dead_lines += 1
+
+                    # Check for unreachable code after return/raise/break/continue
+                    elif stripped and not stripped.startswith('#'):
+                        # Simple heuristic: code after return statements
+                        if i > 0 and lines[i-1].strip().startswith(('return ', 'raise ', 'break', 'continue')):
+                            if not any(keyword in stripped for keyword in ['else:', 'except:', 'finally:']):
+                                dead_code_results['unreachable_code'].append({
+                                    'file': str(file_path.relative_to(service.path)),
+                                    'line': i + 1,
+                                    'content': stripped[:50]
+                                })
+                                dead_lines += 1
+
+                if dead_lines > 10:
+                    dead_code_results['recommendations'].append(
+                        f"Clean up dead/commented code in {file_path.name} ({dead_lines} lines)"
+                    )
+
+                dead_code_results['dead_code_lines'] += dead_lines
+
+            except Exception as e:
+                continue
+
+        # Generate recommendations
+        if dead_code_results['commented_code']:
+            dead_code_results['recommendations'].append(
+                f"Remove {len(dead_code_results['commented_code'])} blocks of commented code"
+            )
+
+        if dead_code_results['unreachable_code']:
+            dead_code_results['recommendations'].append(
+                f"Remove {len(dead_code_results['unreachable_code'])} unreachable code blocks"
+            )
+
+        return dead_code_results
+
+    def _analyze_test_quality_metrics(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze test quality beyond basic coverage."""
+        test_quality_results = {
+            'test_naming_issues': [],
+            'isolation_issues': [],
+            'flaky_test_indicators': [],
+            'parameterization_suggestions': [],
+            'test_structure_issues': [],
+            'recommendations': []
+        }
+
+        # Find test files
+        test_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.startswith('test_') and file.endswith('.py'):
+                    test_files.append(Path(root) / file)
+
+        for test_file in test_files[:15]:  # Limit for performance
+            try:
+                with open(test_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                lines = content.split('\n')
+                test_functions = []
+                test_classes = []
+
+                # Extract test functions and classes
+                for line in lines:
+                    stripped = line.strip()
+                    if stripped.startswith('def test_'):
+                        test_functions.append(stripped.split('(')[0].replace('def ', ''))
+                    elif stripped.startswith('class Test'):
+                        test_classes.append(stripped.split('(')[0].replace('class ', ''))
+
+                # Analyze test naming
+                for test_func in test_functions:
+                    # Check if test name follows good conventions
+                    if len(test_func) < 10:  # Very short test names
+                        test_quality_results['test_naming_issues'].append({
+                            'file': str(test_file.relative_to(service.path)),
+                            'test': test_func,
+                            'issue': 'Test name too short - should describe what it tests'
+                        })
+
+                    # Check for test name patterns that suggest poor naming
+                    if any(word in test_func.lower() for word in ['test', 'check', 'verify', 'validate']):
+                        test_quality_results['test_naming_issues'].append({
+                            'file': str(test_file.relative_to(service.path)),
+                            'test': test_func,
+                            'issue': 'Test name should describe behavior, not just "test"'
+                        })
+
+                # Check for test isolation issues
+                global_vars = []
+                for line in lines:
+                    if line.strip().startswith(('global ', 'nonlocal ')):
+                        global_vars.append(line.strip())
+
+                if global_vars:
+                    test_quality_results['isolation_issues'].append({
+                        'file': str(test_file.relative_to(service.path)),
+                        'issue': f"Global variables detected ({len(global_vars)}) - may cause test isolation issues"
+                    })
+
+                # Look for flaky test patterns
+                if 'time.sleep(' in content or 'random.' in content:
+                    test_quality_results['flaky_test_indicators'].append({
+                        'file': str(test_file.relative_to(service.path)),
+                        'issue': 'Potential flaky test - uses timing or randomness'
+                    })
+
+                # Check for parameterization opportunities
+                similar_tests = []
+                test_bases = {}
+                for test_func in test_functions:
+                    # Extract base name (remove numbers, common suffixes)
+                    base = test_func.replace('test_', '').split('_')[0]
+                    if base in test_bases:
+                        test_bases[base].append(test_func)
+                    else:
+                        test_bases[base] = [test_func]
+
+                # Find test groups that could be parameterized
+                for base, tests in test_bases.items():
+                    if len(tests) > 3:  # 3+ similar tests
+                        test_quality_results['parameterization_suggestions'].append({
+                            'file': str(test_file.relative_to(service.path)),
+                            'base': base,
+                            'count': len(tests),
+                            'tests': tests[:3]  # Show first 3
+                        })
+
+            except Exception as e:
+                continue
+
+        # Generate recommendations
+        if test_quality_results['test_naming_issues']:
+            test_quality_results['recommendations'].append(
+                f"Improve test naming for {len(test_quality_results['test_naming_issues'])} tests"
+            )
+
+        if test_quality_results['parameterization_suggestions']:
+            test_quality_results['recommendations'].append(
+                f"Consider parameterization for {len(test_quality_results['parameterization_suggestions'])} test groups"
+            )
+
+        if test_quality_results['isolation_issues']:
+            test_quality_results['recommendations'].append(
+                f"Fix test isolation issues in {len(test_quality_results['isolation_issues'])} test files"
+            )
+
+        return test_quality_results
+
+    def _analyze_domain_boundaries(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze domain entity encapsulation and boundaries."""
+        domain_results = {
+            'anemic_entities': [],
+            'missing_aggregate_roots': [],
+            'domain_logic_leaks': [],
+            'entity_encapsulation_issues': [],
+            'aggregate_suggestions': [],
+            'recommendations': []
+        }
+
+        # Find domain files
+        domain_files = list(service.path.rglob("**/domain/**/*.py"))
+
+        for domain_file in domain_files[:15]:  # Limit for performance
+            try:
+                with open(domain_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # Analyze domain entities
+                tree = ast.parse(content, filename=str(domain_file))
+
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.ClassDef):
+                        class_name = node.class_name
+
+                        # Check if it's an entity (has id field or similar)
+                        is_entity = False
+                        has_business_methods = False
+                        method_count = 0
+                        property_count = 0
+
+                        for item in node.body:
+                            if isinstance(item, ast.AnnAssign) or isinstance(item, ast.Assign):
+                                # Check for ID fields
+                                if hasattr(item, 'targets') and item.targets:
+                                    target_name = getattr(item.targets[0], 'id', '')
+                                    if 'id' in target_name.lower() or 'identifier' in target_name.lower():
+                                        is_entity = True
+                            elif isinstance(item, ast.FunctionDef):
+                                method_count += 1
+                                method_name = item.name
+                                # Check for business methods (not just getters/setters)
+                                if not method_name.startswith('_') and method_name not in ['__init__', '__str__', '__repr__']:
+                                    has_business_methods = True
+                            elif isinstance(item, ast.AsyncFunctionDef):
+                                method_count += 1
+                                has_business_methods = True
+
+                        if is_entity:
+                            # Check for anemic domain model
+                            if method_count <= 3 and not has_business_methods:
+                                domain_results['anemic_entities'].append({
+                                    'file': str(domain_file.relative_to(service.path)),
+                                    'entity': class_name,
+                                    'method_count': method_count
+                                })
+                                domain_results['recommendations'].append(
+                                    f"Add business logic to anemic entity {class_name} in {domain_file.name}"
+                                )
+
+                            # Suggest aggregate root candidates
+                            if 'aggregate' in class_name.lower() or method_count > 5:
+                                domain_results['aggregate_suggestions'].append({
+                                    'file': str(domain_file.relative_to(service.path)),
+                                    'entity': class_name,
+                                    'complexity_score': method_count
+                                })
+
+                # Check for domain logic leaks
+                if 'infrastructure' in str(domain_file) or 'presentation' in str(domain_file):
+                    domain_results['domain_logic_leaks'].append({
+                        'file': str(domain_file.relative_to(service.path)),
+                        'issue': 'Domain logic found outside domain layer'
+                    })
+                    domain_results['recommendations'].append(
+                        f"Move domain logic from {domain_file.name} back to domain layer"
+                    )
+
+            except Exception as e:
+                continue
+
+        return domain_results
+
+    def _analyze_api_documentation_quality(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze OpenAPI/Swagger documentation quality."""
+        api_docs_results = {
+            'incomplete_descriptions': [],
+            'missing_parameters': [],
+            'poor_response_docs': [],
+            'missing_examples': [],
+            'documentation_score': 0,
+            'total_endpoints': 0,
+            'recommendations': []
+        }
+
+        # This builds on the existing endpoint analysis
+        endpoint_analysis = self._analyze_endpoints_for_rest_compliance(service)
+        api_docs_results['total_endpoints'] = endpoint_analysis.get('total_endpoints', 0)
+
+        if api_docs_results['total_endpoints'] == 0:
+            return api_docs_results
+
+        # Calculate documentation quality score
+        rest_compliant = endpoint_analysis.get('rest_compliance_rate', 0)
+        openapi_compliant = endpoint_analysis.get('openapi_compliance_rate', 0)
+        standards_compliant = endpoint_analysis.get('standard_compliance_rate', 0)
+
+        # Weighted documentation score
+        api_docs_results['documentation_score'] = (
+            rest_compliant * 0.3 +
+            openapi_compliant * 0.4 +
+            standards_compliant * 0.3
+        )
+
+        # Generate specific recommendations
+        if openapi_compliant < 60:
+            api_docs_results['recommendations'].append(
+                "Add comprehensive OpenAPI/Swagger documentation to API endpoints"
+            )
+            api_docs_results['incomplete_descriptions'].append("Missing summary/description annotations")
+
+        if rest_compliant < 70:
+            api_docs_results['recommendations'].append(
+                "Improve REST architectural documentation and examples"
+            )
+
+        if standards_compliant < 75:
+            api_docs_results['recommendations'].append(
+                "Document project-specific API standards and conventions"
+            )
+
+        return api_docs_results
+
+    def _analyze_code_documentation(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze code documentation quality."""
+        docs_results = {
+            'functions_without_docs': [],
+            'classes_without_docs': [],
+            'poor_docstrings': [],
+            'docstring_coverage': 0.0,
+            'total_functions': 0,
+            'documented_functions': 0,
+            'recommendations': []
+        }
+
+        python_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py') and not file.startswith('test_') and not file.startswith('__'):
+                    python_files.append(Path(root) / file)
+
+        for file_path in python_files[:15]:  # Limit for performance
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                tree = ast.parse(content, filename=str(file_path))
+
+                for node in ast.walk(tree):
+                    if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                        docs_results['total_functions'] += 1
+
+                        # Check for docstring
+                        has_docstring = False
+                        if node.body and isinstance(node.body[0], ast.Expr):
+                            if isinstance(node.body[0].value, ast.Str):
+                                has_docstring = True
+                                docstring = node.body[0].value.s
+
+                                # Check docstring quality
+                                if len(docstring) < 10:
+                                    docs_results['poor_docstrings'].append({
+                                        'file': str(file_path.relative_to(service.path)),
+                                        'name': node.name,
+                                        'type': 'class' if isinstance(node, ast.ClassDef) else 'function',
+                                        'docstring_length': len(docstring)
+                                    })
+
+                        if has_docstring:
+                            docs_results['documented_functions'] += 1
+                        else:
+                            if isinstance(node, ast.ClassDef):
+                                docs_results['classes_without_docs'].append({
+                                    'file': str(file_path.relative_to(service.path)),
+                                    'class': node.name
+                                })
+                            else:
+                                docs_results['functions_without_docs'].append({
+                                    'file': str(file_path.relative_to(service.path)),
+                                    'function': node.name
+                                })
+
+            except Exception as e:
+                continue
+
+        # Calculate coverage
+        if docs_results['total_functions'] > 0:
+            docs_results['docstring_coverage'] = (docs_results['documented_functions'] / docs_results['total_functions']) * 100
+
+        # Generate recommendations
+        if docs_results['docstring_coverage'] < 70:
+            docs_results['recommendations'].append(
+                f"Improve docstring coverage ({docs_results['docstring_coverage']:.1f}%) - add documentation to {len(docs_results['functions_without_docs'])} functions"
+            )
+
+        if docs_results['classes_without_docs']:
+            docs_results['recommendations'].append(
+                f"Add docstrings to {len(docs_results['classes_without_docs'])} undocumented classes"
+            )
+
+        if docs_results['poor_docstrings']:
+            docs_results['recommendations'].append(
+                f"Improve {len(docs_results['poor_docstrings'])} inadequate docstrings"
+            )
+
+        return docs_results
+
+    def _analyze_configuration_management(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze configuration management practices."""
+        config_results = {
+            'hardcoded_values': [],
+            'missing_env_vars': [],
+            'inconsistent_config_patterns': [],
+            'security_concerns': [],
+            'recommendations': []
+        }
+
+        python_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py') and not file.startswith('test_'):
+                    python_files.append(Path(root) / file)
+
+        for file_path in python_files[:20]:  # Limit for performance
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                lines = content.split('\n')
+
+                for i, line in enumerate(lines):
+                    stripped = line.strip()
+
+                    # Check for hardcoded values that should be config
+                    # URLs, ports, secrets, etc.
+                    if any(pattern in stripped.lower() for pattern in [
+                        'localhost:', '127.0.0.1:', 'http://', 'https://',
+                        'password=', 'secret=', 'key=', 'token=',
+                        ':8080', ':5432', ':6379'  # Common ports
+                    ]) and not any(safe in stripped.lower() for safe in [
+                        'getenv', 'environ', 'config', 'settings', 'os.getenv'
+                    ]):
+                        config_results['hardcoded_values'].append({
+                            'file': str(file_path.relative_to(service.path)),
+                            'line': i + 1,
+                            'content': stripped[:50]
+                        })
+
+                    # Check for inconsistent environment variable access
+                    if 'os.environ[' in stripped and 'get(' not in stripped:
+                        config_results['inconsistent_config_patterns'].append({
+                            'file': str(file_path.relative_to(service.path)),
+                            'line': i + 1,
+                            'pattern': 'Direct os.environ access without default'
+                        })
+
+                # Check for missing configuration validation
+                if 'config' in content.lower() or 'settings' in content.lower():
+                    if 'validate' not in content.lower() and 'pydantic' not in content.lower():
+                        config_results['missing_env_vars'].append({
+                            'file': str(file_path.relative_to(service.path)),
+                            'issue': 'Configuration used but not validated'
+                        })
+
+            except Exception as e:
+                continue
+
+        # Generate recommendations
+        if config_results['hardcoded_values']:
+            config_results['recommendations'].append(
+                f"Replace {len(config_results['hardcoded_values'])} hardcoded values with environment variables"
+            )
+
+        if config_results['inconsistent_config_patterns']:
+            config_results['recommendations'].append(
+                f"Standardize environment variable access patterns in {len(config_results['inconsistent_config_patterns'])} locations"
+            )
+
+        if config_results['security_concerns']:
+            config_results['recommendations'].append(
+                f"Address {len(config_results['security_concerns'])} configuration security issues"
+            )
+
+        return config_results
+
+    def _analyze_logging_practices(self, service: ServiceInfo) -> Dict[str, Any]:
+        """Analyze logging best practices."""
+        logging_results = {
+            'missing_error_logging': [],
+            'inconsistent_log_levels': [],
+            'excessive_logging': [],
+            'insufficient_logging': [],
+            'structured_logging_opportunities': [],
+            'recommendations': []
+        }
+
+        python_files = []
+        for root, dirs, files in os.walk(str(service.path)):
+            for file in files:
+                if file.endswith('.py') and not file.startswith('test_'):
+                    python_files.append(Path(root) / file)
+
+        for file_path in python_files[:15]:  # Limit for performance
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                lines = content.split('\n')
+                log_statements = []
+                exception_handlers = []
+
+                for i, line in enumerate(lines):
+                    stripped = line.strip()
+
+                    # Find logging statements
+                    if any(log_func in stripped for log_func in ['logger.', 'logging.', 'log.']):
+                        log_statements.append((i, stripped))
+
+                    # Find exception handlers
+                    if 'except ' in stripped or 'except:' in stripped:
+                        exception_handlers.append(i)
+
+                # Check for missing error logging in exception handlers
+                for exc_line in exception_handlers:
+                    # Look for logging in the next few lines
+                    has_logging = False
+                    for j in range(exc_line, min(exc_line + 10, len(lines))):
+                        if any(log_func in lines[j] for log_func in ['logger.error', 'logging.error', 'log.error']):
+                            has_logging = True
+                            break
+
+                    if not has_logging:
+                        logging_results['missing_error_logging'].append({
+                            'file': str(file_path.relative_to(service.path)),
+                            'line': exc_line + 1
+                        })
+
+                # Check for logging level consistency
+                levels_used = set()
+                for _, log_stmt in log_statements:
+                    for level in ['debug', 'info', 'warning', 'error', 'critical']:
+                        if f'.{level}(' in log_stmt:
+                            levels_used.add(level)
+
+                if len(levels_used) > 4:  # Too many different levels
+                    logging_results['inconsistent_log_levels'].append({
+                        'file': str(file_path.relative_to(service.path)),
+                        'levels': list(levels_used)
+                    })
+
+                # Check for excessive logging
+                if len(log_statements) > 20:  # Arbitrary threshold
+                    logging_results['excessive_logging'].append({
+                        'file': str(file_path.relative_to(service.path)),
+                        'count': len(log_statements)
+                    })
+
+                # Check for insufficient logging in key areas
+                important_functions = ['save', 'delete', 'update', 'create', 'process', 'handle']
+                important_func_lines = []
+                for i, line in enumerate(lines):
+                    if any(f'def {func}' in line for func in important_functions):
+                        important_func_lines.append(i)
+
+                logged_important_funcs = 0
+                for func_line in important_func_lines:
+                    # Check if function has logging
+                    func_has_logging = False
+                    for log_line, _ in log_statements:
+                        if func_line <= log_line <= func_line + 20:  # Within function
+                            func_has_logging = True
+                            break
+                    if func_has_logging:
+                        logged_important_funcs += 1
+
+                if len(important_func_lines) > 0 and logged_important_funcs / len(important_func_lines) < 0.3:
+                    logging_results['insufficient_logging'].append({
+                        'file': str(file_path.relative_to(service.path)),
+                        'important_functions': len(important_func_lines),
+                        'logged_functions': logged_important_funcs
+                    })
+
+            except Exception as e:
+                continue
+
+        # Generate recommendations
+        if logging_results['missing_error_logging']:
+            logging_results['recommendations'].append(
+                f"Add error logging to {len(logging_results['missing_error_logging'])} exception handlers"
+            )
+
+        if logging_results['inconsistent_log_levels']:
+            logging_results['recommendations'].append(
+                f"Standardize logging levels in {len(logging_results['inconsistent_log_levels'])} files"
+            )
+
+        if logging_results['excessive_logging']:
+            logging_results['recommendations'].append(
+                f"Review excessive logging in {len(logging_results['excessive_logging'])} files"
+            )
+
+        if logging_results['insufficient_logging']:
+            logging_results['recommendations'].append(
+                f"Add logging to critical functions in {len(logging_results['insufficient_logging'])} files"
+            )
+
+        return logging_results
 
     async def _analyze_linting_quality(self, service: ServiceInfo) -> Dict[str, Any]:
         """Analyze code quality using linting tools."""
@@ -3799,6 +4597,193 @@ class AuditFramework:
             openapi_penalty = min((70 - openapi_compliance_rate) * 0.15, 10)  # Up to 10 points penalty
             overall_score -= openapi_penalty
 
+        # New enhanced analysis penalties and bonuses
+        complexity_analysis = results.architecture.get('complexity_analysis', {})
+        dependency_coupling = results.architecture.get('dependency_coupling', {})
+        dead_code_analysis = results.architecture.get('dead_code_analysis', {})
+        test_quality_metrics = results.architecture.get('test_quality_metrics', {})
+        domain_boundaries = results.architecture.get('domain_boundaries', {})
+        api_documentation = results.architecture.get('api_documentation', {})
+        code_documentation = results.architecture.get('code_documentation', {})
+        configuration_management = results.architecture.get('configuration_management', {})
+        logging_practices = results.architecture.get('logging_practices', {})
+
+        # Cyclomatic complexity penalties
+        high_complexity_count = len(complexity_analysis.get('high_complexity_functions', []))
+        if high_complexity_count > 0:
+            complexity_penalty = min(high_complexity_count * 0.5, 5)  # 0.5 points per high complexity function
+            overall_score -= complexity_penalty
+
+        # Dependency coupling penalties
+        high_import_modules = len(dependency_coupling.get('high_import_count_modules', []))
+        if high_import_modules > 0:
+            coupling_penalty = min(high_import_modules * 1.0, 5)  # 1 point per module with high imports
+            overall_score -= coupling_penalty
+
+        # Dead code penalties
+        dead_code_lines = dead_code_analysis.get('dead_code_lines', 0)
+        if dead_code_lines > 50:
+            dead_code_penalty = min((dead_code_lines - 50) * 0.02, 3)  # 2% penalty per line over 50
+            overall_score -= dead_code_penalty
+
+        # Test quality metrics penalties
+        test_naming_issues = len(test_quality_metrics.get('test_naming_issues', []))
+        isolation_issues = len(test_quality_metrics.get('isolation_issues', []))
+        flaky_indicators = len(test_quality_metrics.get('flaky_test_indicators', []))
+
+        test_quality_penalty = min((test_naming_issues + isolation_issues + flaky_indicators) * 0.3, 4)
+        overall_score -= test_quality_penalty
+
+        # Domain boundary penalties
+        anemic_entities = len(domain_boundaries.get('anemic_entities', []))
+        domain_leaks = len(domain_boundaries.get('domain_logic_leaks', []))
+
+        domain_penalty = min((anemic_entities + domain_leaks) * 0.8, 4)
+        overall_score -= domain_penalty
+
+        # API documentation penalties
+        api_docs_score = api_documentation.get('documentation_score', 0)
+        if api_docs_score < 60:
+            api_docs_penalty = min((60 - api_docs_score) * 0.1, 6)
+            overall_score -= api_docs_penalty
+
+        # Code documentation penalties
+        docstring_coverage = code_documentation.get('docstring_coverage', 0)
+        if docstring_coverage < 50:
+            doc_penalty = min((50 - docstring_coverage) * 0.05, 3)
+            overall_score -= doc_penalty
+
+        # Configuration management penalties
+        hardcoded_values = len(configuration_management.get('hardcoded_values', []))
+        inconsistent_patterns = len(configuration_management.get('inconsistent_config_patterns', []))
+
+        config_penalty = min((hardcoded_values + inconsistent_patterns) * 0.5, 5)
+        overall_score -= config_penalty
+
+        # Logging practices penalties
+        missing_error_logging = len(logging_practices.get('missing_error_logging', []))
+        excessive_logging = len(logging_practices.get('excessive_logging', []))
+        insufficient_logging = len(logging_practices.get('insufficient_logging', []))
+
+        logging_penalty = min((missing_error_logging + excessive_logging + insufficient_logging) * 0.4, 4)
+        overall_score -= logging_penalty
+
+        # Enhanced bonuses for excellent performance across all new analysis areas
+        bonuses_applied = 0
+
+        # Code quality bonuses
+        if complexity_analysis.get('average_complexity', 10) <= 8:
+            overall_score += 2  # Bonus for low average complexity
+            bonuses_applied += 2
+
+        # Documentation bonuses
+        if docstring_coverage >= 80:
+            overall_score += 2  # Bonus for excellent code documentation
+            bonuses_applied += 2
+
+        if api_docs_score >= 80:
+            overall_score += 1  # Bonus for excellent API documentation
+            bonuses_applied += 1
+
+        # Test quality bonuses
+        parameterization_suggestions = len(test_quality_metrics.get('parameterization_suggestions', []))
+        if parameterization_suggestions == 0:
+            overall_score += 1  # Bonus for well-structured tests
+            bonuses_applied += 1
+
+        test_naming_issues = len(test_quality_metrics.get('test_naming_issues', []))
+        if test_naming_issues == 0:
+            overall_score += 1  # Bonus for excellent test naming
+            bonuses_applied += 1
+
+        # Architecture and design bonuses
+        anemic_entities = len(domain_boundaries.get('anemic_entities', []))
+        domain_leaks = len(domain_boundaries.get('domain_logic_leaks', []))
+        if anemic_entities == 0 and domain_leaks == 0:
+            overall_score += 2  # Bonus for proper domain boundaries
+            bonuses_applied += 2
+
+        # Dependency management bonuses
+        high_import_modules = len(dependency_coupling.get('high_import_count_modules', []))
+        tightly_coupled_modules = len(dependency_coupling.get('tightly_coupled_modules', []))
+        if high_import_modules == 0 and tightly_coupled_modules == 0:
+            overall_score += 1  # Bonus for clean dependency management
+            bonuses_applied += 1
+
+        # Code cleanliness bonuses
+        dead_code_lines = dead_code_analysis.get('dead_code_lines', 0)
+        if dead_code_lines <= 10:
+            overall_score += 1  # Bonus for clean codebase
+            bonuses_applied += 1
+
+        # Configuration management bonuses
+        hardcoded_values = len(configuration_management.get('hardcoded_values', []))
+        inconsistent_patterns = len(configuration_management.get('inconsistent_config_patterns', []))
+        if hardcoded_values == 0 and inconsistent_patterns == 0:
+            overall_score += 1  # Bonus for excellent configuration management
+            bonuses_applied += 1
+
+        # Logging excellence bonuses
+        missing_error_logging = len(logging_practices.get('missing_error_logging', []))
+        excessive_logging = len(logging_practices.get('excessive_logging', []))
+        insufficient_logging = len(logging_practices.get('insufficient_logging', []))
+        inconsistent_log_levels = len(logging_practices.get('inconsistent_log_levels', []))
+        if all(count == 0 for count in [missing_error_logging, excessive_logging, insufficient_logging, inconsistent_log_levels]):
+            overall_score += 1  # Bonus for excellent logging practices
+            bonuses_applied += 1
+
+        # Major excellence bonus for outstanding performance across multiple areas
+        if bonuses_applied >= 8:  # If 8+ bonuses applied
+            overall_score += 3  # Major bonus for comprehensive excellence
+
+        # Critical issue penalties - severe penalties for major problems
+        critical_issues_count = 0
+
+        # Critical complexity issues
+        very_high_complexity = len([f for f in complexity_analysis.get('high_complexity_functions', [])
+                                   if f.get('complexity', 0) >= 20])
+        if very_high_complexity > 0:
+            critical_penalty = min(very_high_complexity * 2, 8)  # 2 points per very high complexity function
+            overall_score -= critical_penalty
+            critical_issues_count += very_high_complexity
+
+        # Critical dead code issues
+        if dead_code_lines > 200:
+            critical_penalty = min((dead_code_lines - 200) * 0.05, 10)  # Major penalty for excessive dead code
+            overall_score -= critical_penalty
+            critical_issues_count += 1
+
+        # Critical test quality issues
+        total_test_issues = (test_naming_issues + isolation_issues + flaky_indicators +
+                           len(test_quality_metrics.get('isolation_issues', [])))
+        if total_test_issues > 50:
+            critical_penalty = min((total_test_issues - 50) * 0.1, 5)  # Penalty for poor test quality
+            overall_score -= critical_penalty
+            critical_issues_count += 1
+
+        # Critical documentation issues
+        if docstring_coverage < 20:
+            overall_score -= 5  # Major penalty for critically low documentation
+            critical_issues_count += 1
+
+        if api_docs_score < 20:
+            overall_score -= 5  # Major penalty for undocumented APIs
+            critical_issues_count += 1
+
+        # Critical configuration issues
+        if hardcoded_values > 10:
+            overall_score -= 5  # Major penalty for extensive hardcoded values
+            critical_issues_count += 1
+
+        # Critical logging issues
+        if missing_error_logging > 30:
+            overall_score -= 4  # Major penalty for missing error logging
+            critical_issues_count += 1
+
+        # Overall critical issues penalty
+        if critical_issues_count > 3:
+            overall_score -= min(critical_issues_count - 3, 5)  # Additional penalty for multiple critical issues
+
         # Penalties for poor project standards compliance
         if standard_compliance_rate < 75:
             standard_penalty = min((75 - standard_compliance_rate) * 0.12, 6)  # Up to 6 points penalty
@@ -3862,6 +4847,90 @@ class AuditFramework:
                 'issue': 'Poor error handling',
                 'severity': 'critical',
                 'description': 'Error handling score below 40 - unreliable service'
+            })
+
+        # New critical issues from enhanced analysis methods
+        architecture_data = results.architecture
+
+        # Critical complexity issues
+        complexity_analysis = architecture_data.get('complexity_analysis', {})
+        very_high_complexity = len([f for f in complexity_analysis.get('high_complexity_functions', [])
+                                   if f.get('complexity', 0) >= 25])
+        if very_high_complexity > 0:
+            critical_issues.append({
+                'dimension': 'complexity',
+                'issue': f'Extremely high complexity functions ({very_high_complexity} functions ≥ 25 complexity)',
+                'severity': 'critical',
+                'description': 'Functions with complexity ≥ 25 are extremely difficult to maintain and test'
+            })
+
+        # Critical dead code issues
+        dead_code_analysis = architecture_data.get('dead_code_analysis', {})
+        dead_code_lines = dead_code_analysis.get('dead_code_lines', 0)
+        if dead_code_lines > 300:
+            critical_issues.append({
+                'dimension': 'code_quality',
+                'issue': f'Excessive dead code ({dead_code_lines} lines)',
+                'severity': 'critical',
+                'description': 'Over 300 lines of dead/commented code indicates severe maintenance issues'
+            })
+
+        # Critical test quality issues
+        test_quality_metrics = architecture_data.get('test_quality_metrics', {})
+        test_issues = len(test_quality_metrics.get('test_naming_issues', []))
+        isolation_issues = len(test_quality_metrics.get('isolation_issues', []))
+        flaky_tests = len(test_quality_metrics.get('flaky_test_indicators', []))
+        total_test_issues = test_issues + isolation_issues + flaky_tests
+
+        if total_test_issues > 100:
+            critical_issues.append({
+                'dimension': 'testing',
+                'issue': f'Severe test quality issues ({total_test_issues} issues)',
+                'severity': 'critical',
+                'description': 'Over 100 test quality issues indicate unreliable testing infrastructure'
+            })
+
+        # Critical documentation issues
+        code_documentation = architecture_data.get('code_documentation', {})
+        docstring_coverage = code_documentation.get('docstring_coverage', 0)
+        if docstring_coverage < 10:
+            critical_issues.append({
+                'dimension': 'documentation',
+                'issue': f'Critically low documentation ({docstring_coverage:.1f}% coverage)',
+                'severity': 'critical',
+                'description': 'Less than 10% docstring coverage makes code extremely difficult to maintain'
+            })
+
+        api_documentation = architecture_data.get('api_documentation', {})
+        api_docs_score = api_documentation.get('documentation_score', 0)
+        if api_docs_score < 10:
+            critical_issues.append({
+                'dimension': 'api_documentation',
+                'issue': f'Undocumented APIs ({api_docs_score:.1f} score)',
+                'severity': 'critical',
+                'description': 'APIs with less than 10 documentation score are unusable for integration'
+            })
+
+        # Critical configuration issues
+        configuration_management = architecture_data.get('configuration_management', {})
+        hardcoded_values = len(configuration_management.get('hardcoded_values', []))
+        if hardcoded_values > 20:
+            critical_issues.append({
+                'dimension': 'configuration',
+                'issue': f'Extensive hardcoded configuration ({hardcoded_values} instances)',
+                'severity': 'critical',
+                'description': 'Over 20 hardcoded configuration values create deployment and security risks'
+            })
+
+        # Critical logging issues
+        logging_practices = architecture_data.get('logging_practices', {})
+        missing_error_logging = len(logging_practices.get('missing_error_logging', []))
+        if missing_error_logging > 50:
+            critical_issues.append({
+                'dimension': 'logging',
+                'issue': f'Missing error logging ({missing_error_logging} locations)',
+                'severity': 'critical',
+                'description': 'Over 50 missing error logging locations make debugging impossible'
             })
 
         return critical_issues
@@ -3941,6 +5010,128 @@ class AuditFramework:
                 'title': 'Enhance DevOps readiness',
                 'description': 'Add Docker, CI/CD, and monitoring configuration',
                 'effort_days': 7,
+                'impact': 'medium'
+            })
+
+        # New recommendations from enhanced analysis methods
+        architecture_data = results.architecture
+
+        # Complexity recommendations
+        complexity_analysis = architecture_data.get('complexity_analysis', {})
+        high_complexity_count = len(complexity_analysis.get('high_complexity_functions', []))
+        if high_complexity_count > 0:
+            recommendations.append({
+                'dimension': 'code_quality',
+                'priority': 'high',
+                'title': f'Refactor {high_complexity_count} high-complexity functions',
+                'description': 'Break down functions with complexity >10 into smaller, focused methods',
+                'effort_days': max(2, high_complexity_count * 1),  # 1 day per function
+                'impact': 'high'
+            })
+
+        # Dependency coupling recommendations
+        dependency_coupling = architecture_data.get('dependency_coupling', {})
+        high_import_modules = len(dependency_coupling.get('high_import_count_modules', []))
+        if high_import_modules > 0:
+            recommendations.append({
+                'dimension': 'architecture',
+                'priority': 'medium',
+                'title': f'Reduce coupling in {high_import_modules} modules',
+                'description': 'Refactor modules with excessive imports and consider dependency injection',
+                'effort_days': max(3, high_import_modules * 2),
+                'impact': 'medium'
+            })
+
+        # Dead code recommendations
+        dead_code_analysis = architecture_data.get('dead_code_analysis', {})
+        dead_code_lines = dead_code_analysis.get('dead_code_lines', 0)
+        if dead_code_lines > 50:
+            recommendations.append({
+                'dimension': 'maintainability',
+                'priority': 'low',
+                'title': f'Remove {dead_code_lines} lines of dead code',
+                'description': 'Clean up commented and unreachable code to improve maintainability',
+                'effort_days': max(1, dead_code_lines // 100),  # 1 day per 100 lines
+                'impact': 'low'
+            })
+
+        # Test quality recommendations
+        test_quality_metrics = architecture_data.get('test_quality_metrics', {})
+        test_issues = len(test_quality_metrics.get('test_naming_issues', []))
+        parameterization_needed = len(test_quality_metrics.get('parameterization_suggestions', []))
+        if test_issues > 10 or parameterization_needed > 0:
+            recommendations.append({
+                'dimension': 'testing',
+                'priority': 'medium',
+                'title': f'Improve test quality ({test_issues} naming issues)',
+                'description': 'Fix test naming conventions and implement parameterization where appropriate',
+                'effort_days': max(2, (test_issues // 20) + parameterization_needed),
+                'impact': 'medium'
+            })
+
+        # Domain boundary recommendations
+        domain_boundaries = architecture_data.get('domain_boundaries', {})
+        anemic_entities = len(domain_boundaries.get('anemic_entities', []))
+        domain_leaks = len(domain_boundaries.get('domain_logic_leaks', []))
+        if anemic_entities > 0 or domain_leaks > 0:
+            recommendations.append({
+                'dimension': 'architecture',
+                'priority': 'high',
+                'title': f'Fix domain boundaries ({anemic_entities} anemic entities, {domain_leaks} leaks)',
+                'description': 'Add business logic to anemic entities and move leaked domain logic back to domain layer',
+                'effort_days': max(3, (anemic_entities + domain_leaks) * 1),
+                'impact': 'high'
+            })
+
+        # API documentation recommendations
+        api_documentation = architecture_data.get('api_documentation', {})
+        api_docs_score = api_documentation.get('documentation_score', 0)
+        if api_docs_score < 70:
+            recommendations.append({
+                'dimension': 'documentation',
+                'priority': 'high',
+                'title': f'Improve API documentation (score: {api_docs_score:.1f})',
+                'description': 'Add comprehensive OpenAPI/Swagger documentation to API endpoints',
+                'effort_days': 4,
+                'impact': 'high'
+            })
+
+        # Code documentation recommendations
+        code_documentation = architecture_data.get('code_documentation', {})
+        docstring_coverage = code_documentation.get('docstring_coverage', 0)
+        if docstring_coverage < 70:
+            recommendations.append({
+                'dimension': 'documentation',
+                'priority': 'medium',
+                'title': f'Improve code documentation ({docstring_coverage:.1f}% coverage)',
+                'description': 'Add docstrings to functions and classes for better maintainability',
+                'effort_days': 3,
+                'impact': 'medium'
+            })
+
+        # Configuration management recommendations
+        configuration_management = architecture_data.get('configuration_management', {})
+        hardcoded_values = len(configuration_management.get('hardcoded_values', []))
+        if hardcoded_values > 5:
+            recommendations.append({
+                'dimension': 'security',
+                'priority': 'high',
+                'title': f'Fix {hardcoded_values} hardcoded configuration values',
+                'description': 'Replace hardcoded values with environment variables for security and flexibility',
+                'effort_days': max(1, hardcoded_values // 5),
+                'impact': 'high'
+            })
+
+        # Logging recommendations
+        logging_practices = architecture_data.get('logging_practices', {})
+        missing_error_logging = len(logging_practices.get('missing_error_logging', []))
+        if missing_error_logging > 10:
+            recommendations.append({
+                'dimension': 'maintainability',
+                'priority': 'medium',
+                'title': f'Add error logging to {missing_error_logging} locations',
+                'description': 'Implement proper error logging in exception handlers for better debugging',
+                'effort_days': max(2, missing_error_logging // 10),
                 'impact': 'medium'
             })
 
@@ -4236,23 +5427,39 @@ async def main():
 
 
 def _display_rich_audit_results(console: Console, results: AuditResults):
-    """Display audit results using rich formatting."""
-    # Header
+    """Display audit results using rich formatting with comprehensive score breakdown."""
+    # Header with final grade prominently displayed
+    grade_color = {
+        'A': 'green', 'B': 'blue', 'C': 'yellow', 'D': 'red', 'F': 'red'
+    }.get(results.grade, 'white')
+
     title = f"🎯 Service Audit: {results.service_name}"
     console.print(Panel.fit(
-        f"[bold green]Score: {results.overall_score:.1f}/100[/bold green]\n"
-        f"[bold blue]Grade: {results.grade}[/bold blue]\n"
+        f"[bold {grade_color}]FINAL GRADE: {results.grade}[/bold {grade_color}]\n"
+        f"[bold green]Overall Score: {results.overall_score:.1f}/100[/bold green]\n"
         f"[dim]Audit Date: {results.audit_date}[/dim]",
         title=title
     ))
 
-    # Score breakdown table
-    table = Table(title="📊 Dimension Scores")
-    table.add_column("Dimension", style="cyan")
-    table.add_column("Score", style="green")
-    table.add_column("Weight", style="yellow")
-    table.add_column("Contribution", style="magenta")
+    # Critical Issues Alert
+    if results.critical_issues:
+        console.print(f"\n🚨 [bold red]CRITICAL ISSUES: {len(results.critical_issues)}[/bold red]")
+        for issue in results.critical_issues[:3]:  # Show top 3
+            console.print(f"  • {issue['issue']}")
+        if len(results.critical_issues) > 3:
+            console.print(f"  • ... and {len(results.critical_issues) - 3} more")
 
+    # Score Calculation Overview
+    console.print(f"\n[bold cyan]📊 SCORE CALCULATION BREAKDOWN[/bold cyan]")
+
+    # Base dimension scores table
+    dim_table = Table(title="Base Dimension Scores")
+    dim_table.add_column("Dimension", style="cyan", min_width=15)
+    dim_table.add_column("Raw Score", style="green", justify="right")
+    dim_table.add_column("Weight", style="yellow", justify="right")
+    dim_table.add_column("Weighted", style="magenta", justify="right")
+
+    base_score = 0
     dimensions = [
         ("Architecture", results.architecture.get('score', 0), 30),
         ("Code Quality", results.code_quality.get('score', 0), 25),
@@ -4262,26 +5469,360 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
 
     for dim_name, score, weight in dimensions:
         contribution = score * weight / 100
-        table.add_row(
+        base_score += contribution
+        dim_table.add_row(
             dim_name,
             f"{score:.1f}",
             f"{weight}%",
             f"{contribution:.1f}"
         )
 
-    console.print(table)
+    console.print(dim_table)
+    console.print(f"[dim]Base Score (weighted dimensions): {base_score:.1f}[/dim]")
 
-    # Detailed Code Quality Breakdown
+    # Score Adjustments Table - showing all penalties and bonuses
+    console.print(f"\n[bold cyan]⚖️ SCORE ADJUSTMENTS[/bold cyan]")
+
+    adjustments_table = Table(title="Penalties & Bonuses Applied")
+    adjustments_table.add_column("Category", style="cyan", min_width=25)
+    adjustments_table.add_column("Factor", style="white", min_width=30)
+    adjustments_table.add_column("Impact", style="red", justify="right", min_width=10)
+    adjustments_table.add_column("Details", style="yellow", min_width=40)
+
+    total_adjustments = 0
+    architecture_data = results.architecture
+
+    # Architecture-specific adjustments
+    ddd_compliance = architecture_data.get('ddd_compliance', 0)
+    ddd_bonus = (ddd_compliance - 50) * 0.1
+    if ddd_bonus != 0:
+        adjustments_table.add_row(
+            "Architecture", "DDD Compliance Bonus", f"{ddd_bonus:+.1f}",
+            f"DDD score: {ddd_compliance:.1f} ({'+' if ddd_bonus > 0 else ''}{ddd_bonus:.1f} adjustment)"
+        )
+        total_adjustments += ddd_bonus
+
+    ddd_issues = architecture_data.get('ddd_issues', [])
+    ddd_penalty = min(len(ddd_issues) * 0.5, 5)
+    if ddd_penalty > 0:
+        adjustments_table.add_row(
+            "Architecture", "DDD Violations", f"-{ddd_penalty:.1f}",
+            f"{len(ddd_issues)} DDD architecture violations"
+        )
+        total_adjustments -= ddd_penalty
+
+    # Test quality adjustments
+    test_quality = architecture_data.get('test_quality', {})
+    test_failures = test_quality.get('test_failures', 0)
+    test_coverage = test_quality.get('test_coverage', 0.0)
+
+    if test_failures > 0:
+        test_failure_penalty = min(test_failures * 0.5, 8)
+        adjustments_table.add_row(
+            "Testing", "Test Failures", f"-{test_failure_penalty:.1f}",
+            f"{test_failures} failing tests"
+        )
+        total_adjustments -= test_failure_penalty
+
+    coverage_bonus = 0
+    if test_coverage >= 80:
+        coverage_bonus = 3
+    elif test_coverage >= 70:
+        coverage_bonus = 2
+    elif test_coverage >= 60:
+        coverage_bonus = 1
+    elif test_coverage >= 40:
+        coverage_bonus = -1
+    elif test_coverage >= 20:
+        coverage_bonus = -2
+    else:
+        coverage_bonus = -3
+
+    if coverage_bonus != 0:
+        adjustments_table.add_row(
+            "Testing", "Test Coverage", f"{coverage_bonus:+.1f}",
+            f"Coverage: {test_coverage:.1f}%"
+        )
+        total_adjustments += coverage_bonus
+
+    # Linting adjustments
+    linting_quality = architecture_data.get('linting_quality', {})
+    total_lint_issues = linting_quality.get('total_issues', 0)
+    pylint_score = linting_quality.get('pylint_score', 5.0)
+
+    lint_penalty = 0
+    if total_lint_issues > 50:
+        lint_penalty = min((total_lint_issues - 50) * 0.05, 5)
+    elif total_lint_issues > 20:
+        lint_penalty = min((total_lint_issues - 20) * 0.02, 2)
+
+    if lint_penalty > 0:
+        adjustments_table.add_row(
+            "Code Quality", "Linting Issues", f"-{lint_penalty:.1f}",
+            f"{total_lint_issues} linting issues"
+        )
+        total_adjustments -= lint_penalty
+
+    pylint_bonus = 0
+    if pylint_score >= 8.0:
+        pylint_bonus = 2
+    elif pylint_score >= 6.0:
+        pylint_bonus = 1
+    elif pylint_score < 4.0:
+        pylint_bonus = -2
+    elif pylint_score < 3.0:
+        pylint_bonus = -3
+
+    if pylint_bonus != 0:
+        adjustments_table.add_row(
+            "Code Quality", "Pylint Score", f"{pylint_bonus:+.1f}",
+            f"Score: {pylint_score:.1f}/10"
+        )
+        total_adjustments += pylint_bonus
+
+    # Endpoint compliance adjustments
+    endpoint_analysis = architecture_data.get('endpoint_analysis', {})
+    rest_rate = endpoint_analysis.get('rest_compliance_rate', 100)
+    openapi_rate = endpoint_analysis.get('openapi_compliance_rate', 100)
+
+    if rest_rate < 80:
+        rest_penalty = min((80 - rest_rate) * 0.1, 8)
+        adjustments_table.add_row(
+            "API", "REST Compliance", f"-{rest_penalty:.1f}",
+            f"REST compliance: {rest_rate:.1f}%"
+        )
+        total_adjustments -= rest_penalty
+
+    if openapi_rate < 70:
+        openapi_penalty = min((70 - openapi_rate) * 0.15, 10)
+        adjustments_table.add_row(
+            "API", "OpenAPI Compliance", f"-{openapi_penalty:.1f}",
+            f"OpenAPI compliance: {openapi_rate:.1f}%"
+        )
+        total_adjustments -= openapi_penalty
+
+    # Enhanced analysis method adjustments
+    # Complexity
+    complexity_analysis = architecture_data.get('complexity_analysis', {})
+    high_complexity_count = len(complexity_analysis.get('high_complexity_functions', []))
+    avg_complexity = complexity_analysis.get('average_complexity', 10)
+
+    if high_complexity_count > 0:
+        complexity_penalty = min(high_complexity_count * 0.5, 5)
+        adjustments_table.add_row(
+            "Complexity", "High Complexity Functions", f"-{complexity_penalty:.1f}",
+            f"{high_complexity_count} functions with complexity >10"
+        )
+        total_adjustments -= complexity_penalty
+
+    if avg_complexity <= 8:
+        adjustments_table.add_row(
+            "Complexity", "Low Average Complexity", "+2.0",
+            f"Average complexity: {avg_complexity:.1f} ≤ 8"
+        )
+        total_adjustments += 2
+
+    # Dependency coupling
+    dependency_coupling = architecture_data.get('dependency_coupling', {})
+    high_import_modules = len(dependency_coupling.get('high_import_count_modules', []))
+    if high_import_modules > 0:
+        coupling_penalty = min(high_import_modules * 1.0, 5)
+        adjustments_table.add_row(
+            "Architecture", "High Import Modules", f"-{coupling_penalty:.1f}",
+            f"{high_import_modules} modules with excessive imports"
+        )
+        total_adjustments -= coupling_penalty
+
+    # Dead code
+    dead_code_analysis = architecture_data.get('dead_code_analysis', {})
+    dead_code_lines = dead_code_analysis.get('dead_code_lines', 0)
+    if dead_code_lines > 50:
+        dead_penalty = min((dead_code_lines - 50) * 0.02, 3)
+        adjustments_table.add_row(
+            "Maintainability", "Dead Code", f"-{dead_penalty:.1f}",
+            f"{dead_code_lines} lines of dead/commented code"
+        )
+        total_adjustments -= dead_penalty
+
+    # Test quality metrics
+    test_quality_metrics = architecture_data.get('test_quality_metrics', {})
+    test_issues = len(test_quality_metrics.get('test_naming_issues', []))
+    isolation_issues = len(test_quality_metrics.get('isolation_issues', []))
+    flaky_indicators = len(test_quality_metrics.get('flaky_test_indicators', []))
+    total_test_issues = test_issues + isolation_issues + flaky_indicators
+
+    if total_test_issues > 0:
+        test_quality_penalty = min(total_test_issues * 0.3, 4)
+        adjustments_table.add_row(
+            "Testing", "Test Quality Issues", f"-{test_quality_penalty:.1f}",
+            f"{total_test_issues} test quality issues (naming, isolation, flaky)"
+        )
+        total_adjustments -= test_quality_penalty
+
+    # Domain boundaries
+    domain_boundaries = architecture_data.get('domain_boundaries', {})
+    anemic_entities = len(domain_boundaries.get('anemic_entities', []))
+    domain_leaks = len(domain_boundaries.get('domain_logic_leaks', []))
+    domain_penalty = min((anemic_entities + domain_leaks) * 0.8, 4)
+
+    if domain_penalty > 0:
+        adjustments_table.add_row(
+            "Architecture", "Domain Boundary Issues", f"-{domain_penalty:.1f}",
+            f"{anemic_entities} anemic entities, {domain_leaks} domain leaks"
+        )
+        total_adjustments -= domain_penalty
+
+    # API Documentation
+    api_documentation = architecture_data.get('api_documentation', {})
+    api_docs_score = api_documentation.get('documentation_score', 0)
+    if api_docs_score < 60:
+        api_docs_penalty = min((60 - api_docs_score) * 0.1, 6)
+        adjustments_table.add_row(
+            "Documentation", "API Documentation", f"-{api_docs_penalty:.1f}",
+            f"API docs score: {api_docs_score:.1f}/100"
+        )
+        total_adjustments -= api_docs_penalty
+
+    # Code Documentation
+    code_documentation = architecture_data.get('code_documentation', {})
+    docstring_coverage = code_documentation.get('docstring_coverage', 0)
+    if docstring_coverage < 50:
+        doc_penalty = min((50 - docstring_coverage) * 0.05, 3)
+        adjustments_table.add_row(
+            "Documentation", "Code Documentation", f"-{doc_penalty:.1f}",
+            f"Docstring coverage: {docstring_coverage:.1f}%"
+        )
+        total_adjustments -= doc_penalty
+
+    if docstring_coverage >= 80:
+        adjustments_table.add_row(
+            "Documentation", "Excellent Documentation", "+2.0",
+            f"Docstring coverage: {docstring_coverage:.1f}% ≥ 80%"
+        )
+        total_adjustments += 2
+
+    if api_docs_score >= 80:
+        adjustments_table.add_row(
+            "Documentation", "Excellent API Docs", "+1.0",
+            f"API docs score: {api_docs_score:.1f} ≥ 80"
+        )
+        total_adjustments += 1
+
+    # Configuration management
+    configuration_management = architecture_data.get('configuration_management', {})
+    hardcoded_values = len(configuration_management.get('hardcoded_values', []))
+    if hardcoded_values > 0:
+        config_penalty = min(hardcoded_values * 0.5, 5)
+        adjustments_table.add_row(
+            "Security", "Hardcoded Values", f"-{config_penalty:.1f}",
+            f"{hardcoded_values} hardcoded configuration values"
+        )
+        total_adjustments -= config_penalty
+
+    # Logging practices
+    logging_practices = architecture_data.get('logging_practices', {})
+    missing_error_logging = len(logging_practices.get('missing_error_logging', []))
+    excessive_logging = len(logging_practices.get('excessive_logging', []))
+    insufficient_logging = len(logging_practices.get('insufficient_logging', []))
+    logging_penalty = min((missing_error_logging + excessive_logging + insufficient_logging) * 0.4, 4)
+
+    if logging_penalty > 0:
+        adjustments_table.add_row(
+            "Logging", "Logging Issues", f"-{logging_penalty:.1f}",
+            f"{missing_error_logging} missing, {excessive_logging} excessive, {insufficient_logging} insufficient"
+        )
+        total_adjustments -= logging_penalty
+
+    # Excellence bonuses
+    bonuses_applied = 0
+    if avg_complexity <= 8:
+        bonuses_applied += 2
+    if docstring_coverage >= 80:
+        bonuses_applied += 2
+    if api_docs_score >= 80:
+        bonuses_applied += 1
+
+    parameterization_suggestions = len(test_quality_metrics.get('parameterization_suggestions', []))
+    if parameterization_suggestions == 0:
+        bonuses_applied += 1
+
+    anemic_entities = len(domain_boundaries.get('anemic_entities', []))
+    domain_leaks = len(domain_boundaries.get('domain_logic_leaks', []))
+    if anemic_entities == 0 and domain_leaks == 0:
+        bonuses_applied += 2
+
+    high_import_modules = len(dependency_coupling.get('high_import_count_modules', []))
+    tightly_coupled_modules = len(dependency_coupling.get('tightly_coupled_modules', []))
+    if high_import_modules == 0 and tightly_coupled_modules == 0:
+        bonuses_applied += 1
+
+    if dead_code_lines <= 10:
+        bonuses_applied += 1
+
+    hardcoded_values = len(configuration_management.get('hardcoded_values', []))
+    inconsistent_patterns = len(configuration_management.get('inconsistent_config_patterns', []))
+    if hardcoded_values == 0 and inconsistent_patterns == 0:
+        bonuses_applied += 1
+
+    missing_error_logging = len(logging_practices.get('missing_error_logging', []))
+    excessive_logging = len(logging_practices.get('excessive_logging', []))
+    insufficient_logging = len(logging_practices.get('insufficient_logging', []))
+    inconsistent_log_levels = len(logging_practices.get('inconsistent_log_levels', []))
+    if all(count == 0 for count in [missing_error_logging, excessive_logging, insufficient_logging, inconsistent_log_levels]):
+        bonuses_applied += 1
+
+    if bonuses_applied >= 8:
+        adjustments_table.add_row(
+            "Excellence", "Comprehensive Excellence", "+3.0",
+            f"8+ excellence criteria met across all categories"
+        )
+        total_adjustments += 3
+
+    # Critical issue penalties
+    critical_issues_count = len(results.critical_issues)
+    if critical_issues_count > 3:
+        critical_penalty = min(critical_issues_count - 3, 5)
+        adjustments_table.add_row(
+            "Critical", "Multiple Critical Issues", f"-{critical_penalty:.1f}",
+            f"{critical_issues_count} critical issues (additional penalty)"
+        )
+        total_adjustments -= critical_penalty
+
+    # Standards compliance penalty
+    standard_compliance_rate = endpoint_analysis.get('standard_compliance_rate', 100)
+    if standard_compliance_rate < 75:
+        standard_penalty = min((75 - standard_compliance_rate) * 0.12, 6)
+        adjustments_table.add_row(
+            "Standards", "Project Standards", f"-{standard_penalty:.1f}",
+            f"Project standards compliance: {standard_compliance_rate:.1f}%"
+        )
+        total_adjustments -= standard_penalty
+
+    console.print(adjustments_table)
+
+    # Final calculation summary
+    final_score = base_score + total_adjustments
+    console.print(f"\n[bold]SCORE SUMMARY:[/bold]")
+    console.print(f"  Base Score: {base_score:.1f}")
+    console.print(f"  Total Adjustments: {total_adjustments:+.1f}")
+    console.print(f"  [bold green]Final Score: {final_score:.1f} → Grade {results.grade}[/bold green]")
+
+    # 📋 DETAILED ANALYSIS SECTIONS
+    console.print(f"\n[bold cyan]📋 DETAILED ANALYSIS BREAKDOWN[/bold cyan]")
+
+    # Code Quality Section
     if results.code_quality:
-        cq_table = Table(title="🔧 Code Quality Details")
-        cq_table.add_column("Metric", style="cyan")
-        cq_table.add_column("Score", style="green")
+        console.print(f"\n[bold blue]🔧 CODE QUALITY METRICS[/bold blue]")
+        cq_table = Table(show_header=False, box=None)
+        cq_table.add_column("Metric", style="cyan", width=20)
+        cq_table.add_column("Score", style="green", width=10)
+        cq_table.add_column("Status", style="white", width=15)
 
         cq_metrics = [
-            ("Complexity", results.code_quality.get('complexity', 0)),
-            ("Testing", results.code_quality.get('testing', 0)),
-            ("Documentation", results.code_quality.get('documentation', 0)),
-            ("Security", results.code_quality.get('security', 0)),
+            ("Complexity Score", results.code_quality.get('complexity', 0)),
+            ("Testing Score", results.code_quality.get('testing', 0)),
+            ("Documentation Score", results.code_quality.get('documentation', 0)),
+            ("Security Score", results.code_quality.get('security', 0)),
             ("DRY Principle", results.code_quality.get('dry_principle', 0)),
             ("KISS Principle", results.code_quality.get('kiss_principle', 0)),
         ]
@@ -4289,297 +5830,490 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
         # Add coverage information if available
         coverage_data = results.code_quality.get('coverage_data', {})
         if coverage_data.get('overall_coverage', 0) > 0:
-            cq_metrics.append(("Test Coverage", coverage_data.get('overall_coverage', 0)))
+            cq_metrics.append(("Test Coverage %", coverage_data.get('overall_coverage', 0)))
 
         for metric, score in cq_metrics:
-            cq_table.add_row(metric, f"{score:.1f}")
+            status = "✅ Good" if score >= 70 else "⚠️  Needs Work" if score >= 50 else "❌ Poor"
+            cq_table.add_row(metric, f"{score:.1f}", status)
 
-        console.print()
         console.print(cq_table)
 
-    # DDD+REST Structure Analysis
-    architecture_data = results.architecture
-    if architecture_data.get('ddd_issues') or architecture_data.get('ddd_recommendations') or architecture_data.get('file_metrics'):
-        console.print("\n🏗️ [bold cyan]DDD Structure & Complexity Analysis[/bold cyan]")
+    # Architecture & Structure Analysis
+    console.print(f"\n[bold blue]🏗️ ARCHITECTURE & STRUCTURE ANALYSIS[/bold blue]")
 
-        # File metrics and complexity impact
-        file_metrics = architecture_data.get('file_metrics', {})
-        if file_metrics:
-            console.print("[blue]📊 Service Complexity:[/blue]")
-            total_files = file_metrics.get('total_files', 0)
-            monolithic_count = file_metrics.get('monolithic_files_count', 0)
-            large_dirs_count = file_metrics.get('large_directories_count', 0)
+    # Service Complexity Overview
+    file_metrics = architecture_data.get('file_metrics', {})
+    if file_metrics:
+        complexity_table = Table(show_header=False, box=None)
+        complexity_table.add_column("Metric", style="cyan", width=25)
+        complexity_table.add_column("Value", style="green", width=10)
+        complexity_table.add_column("Impact", style="red", width=15)
 
-            complexity_impact = 0
-            if monolithic_count > 0:
-                complexity_impact -= min(monolithic_count * 0.8, 5)
-            if large_dirs_count > 0:
-                complexity_impact -= min(large_dirs_count * 0.5, 3)
-            if total_files > 100:
-                complexity_impact -= min((total_files - 100) * 0.02, 5)
-            elif total_files > 50:
-                complexity_impact -= min((total_files - 50) * 0.01, 2)
+        total_files = file_metrics.get('total_files', 0)
+        monolithic_count = file_metrics.get('monolithic_files_count', 0)
+        large_dirs_count = file_metrics.get('large_directories_count', 0)
 
-                console.print(f"  • Total Files: {total_files}")
-            console.print(f"  • Monolithic Files: {monolithic_count}")
-            console.print(f"  • Large Directories: {large_dirs_count}")
+        complexity_impact = 0
+        if monolithic_count > 0:
+            complexity_impact -= min(monolithic_count * 0.8, 5)
+        if large_dirs_count > 0:
+            complexity_impact -= min(large_dirs_count * 0.5, 3)
+        if total_files > 100:
+            complexity_impact -= min((total_files - 100) * 0.02, 5)
+        elif total_files > 50:
+            complexity_impact -= min((total_files - 50) * 0.01, 2)
 
-            # Calculate DDD violation impact
-            ddd_issues = architecture_data.get('ddd_issues', [])
-            ddd_violation_penalty = min(len(ddd_issues) * 0.5, 5)
+        complexity_table.add_row("Total Files", str(total_files),
+                                f"{'❌ High' if total_files > 100 else '⚠️  Medium' if total_files > 50 else '✅ Good'}")
+        complexity_table.add_row("Monolithic Files", str(monolithic_count),
+                                f"-{min(monolithic_count * 0.8, 5):.1f} pts" if monolithic_count > 0 else "✅ None")
+        complexity_table.add_row("Large Directories", str(large_dirs_count),
+                                f"-{min(large_dirs_count * 0.5, 3):.1f} pts" if large_dirs_count > 0 else "✅ None")
 
-            # Calculate DDD conversion penalty (modules needing conversion)
-            ddd_conversion_modules = sum(1 for issue in ddd_issues
-                                       if "Modules requiring DDD conversion:" in issue)
-            ddd_conversion_penalty = min(ddd_conversion_modules * 0.3, 4) if ddd_conversion_modules > 0 else 0
+        console.print(complexity_table)
 
-            # Calculate test quality impact
-            test_quality = architecture_data.get('test_quality', {})
-            test_failures = test_quality.get('test_failures', 0)
-            test_coverage = test_quality.get('test_coverage', 0.0)
+    # DDD Compliance Summary
+    ddd_compliance = architecture_data.get('ddd_compliance', 0)
+    ddd_issues = architecture_data.get('ddd_issues', [])
+    console.print(f"\n[cyan]DDD Compliance: {ddd_compliance:.1f}/100[/cyan] ({len(ddd_issues)} issues)")
+    if ddd_issues:
+        console.print("  [red]Key Issues:[/red]")
+        for issue in ddd_issues[:3]:
+            console.print(f"  • {issue}")
+        if len(ddd_issues) > 3:
+            console.print(f"  • ... and {len(ddd_issues) - 3} more")
 
-            test_impact = 0
-            if test_failures > 0:
-                test_impact -= min(test_failures * 0.5, 8)
-            if test_coverage >= 80:
-                test_impact += 3
-            elif test_coverage >= 70:
-                test_impact += 2
-            elif test_coverage >= 60:
-                test_impact += 1
-            elif test_coverage >= 40:
-                test_impact -= 1
-            elif test_coverage >= 20:
-                test_impact -= 2
-            else:
-                test_impact -= 3
+    # Enhanced Analysis Sections - New Methods
+    console.print(f"\n[bold blue]🔍 ENHANCED ANALYSIS RESULTS[/bold blue]")
 
-            # Calculate linting quality impact
-            linting_quality = architecture_data.get('linting_quality', {})
-            total_lint_issues = linting_quality.get('total_issues', 0)
-            pylint_score = linting_quality.get('pylint_score', 5.0)
+    # 1. Cyclomatic Complexity Analysis
+    complexity_analysis = architecture_data.get('complexity_analysis', {})
+    if complexity_analysis:
+        console.print(f"\n[cyan]🌀 Cyclomatic Complexity:[/cyan]")
+        total_funcs = complexity_analysis.get('total_functions_analyzed', 0)
+        high_complexity = len(complexity_analysis.get('high_complexity_functions', []))
+        avg_complexity = complexity_analysis.get('average_complexity', 0)
 
-            linting_impact = 0
-            if total_lint_issues > 50:
-                linting_impact -= min((total_lint_issues - 50) * 0.05, 5)
-            elif total_lint_issues > 20:
-                linting_impact -= min((total_lint_issues - 20) * 0.02, 2)
+        console.print(f"  • Analyzed {total_funcs} functions")
+        console.print(f"  • {high_complexity} high-complexity functions (>10)")
+        console.print(f"  • Average complexity: {avg_complexity:.1f}")
+        if high_complexity > 0:
+            console.print(f"  • [red]Impact: -{min(high_complexity * 0.5, 5):.1f} points[/red]")
+        else:
+            console.print("  • [green]✅ Good complexity management[/green]")
 
-            if pylint_score >= 8.0:
-                linting_impact += 2
-            elif pylint_score >= 6.0:
-                linting_impact += 1
-            elif pylint_score < 4.0:
-                linting_impact -= 2
-            elif pylint_score < 3.0:
-                linting_impact -= 3
+    # 2. Dependency Coupling Analysis
+    dependency_coupling = architecture_data.get('dependency_coupling', {})
+    if dependency_coupling:
+        console.print(f"\n[cyan]🔗 Dependency Coupling:[/cyan]")
+        high_imports = len(dependency_coupling.get('high_import_count_modules', []))
+        tight_coupling = len(dependency_coupling.get('tightly_coupled_modules', []))
 
-            # Calculate endpoint compliance impact
-            endpoint_analysis = architecture_data.get('endpoint_analysis', {})
-            rest_rate = endpoint_analysis.get('rest_compliance_rate', 100)
-            openapi_rate = endpoint_analysis.get('openapi_compliance_rate', 100)
-            standard_rate = endpoint_analysis.get('standard_compliance_rate', 100)
+        console.print(f"  • {high_imports} modules with excessive imports")
+        console.print(f"  • {tight_coupling} tightly coupled modules")
+        if high_imports > 0 or tight_coupling > 0:
+            penalty = min(high_imports * 1.0 + tight_coupling * 0.5, 5)
+            console.print(f"  • [red]Impact: -{penalty:.1f} points[/red]")
+        else:
+            console.print("  • [green]✅ Clean dependency management[/green]")
 
-            endpoint_impact = 0
-            if rest_rate < 80:
-                endpoint_impact -= min((80 - rest_rate) * 0.1, 8)
-            if openapi_rate < 70:
-                endpoint_impact -= min((70 - openapi_rate) * 0.15, 10)
-            if standard_rate < 75:
-                endpoint_impact -= min((75 - standard_rate) * 0.12, 6)
+    # 3. Dead Code Analysis
+    dead_code_analysis = architecture_data.get('dead_code_analysis', {})
+    if dead_code_analysis:
+        console.print(f"\n[cyan]💀 Dead Code Analysis:[/cyan]")
+        dead_lines = dead_code_analysis.get('dead_code_lines', 0)
+        commented_code = len(dead_code_analysis.get('commented_code', []))
+        unreachable_code = len(dead_code_analysis.get('unreachable_code', []))
 
-            total_ddd_penalty = ddd_violation_penalty + ddd_conversion_penalty
-            total_impact = complexity_impact - total_ddd_penalty + test_impact + linting_impact + endpoint_impact
+        console.print(f"  • {dead_lines} lines of dead/commented code")
+        console.print(f"  • {commented_code} commented code blocks")
+        console.print(f"  • {unreachable_code} unreachable code blocks")
+        if dead_lines > 50:
+            penalty = min((dead_lines - 50) * 0.02, 3)
+            console.print(f"  • [red]Impact: -{penalty:.1f} points[/red]")
+        else:
+            console.print("  • [green]✅ Clean codebase[/green]")
 
-            if total_impact != 0:
-                impact_color = "red" if total_impact < 0 else "green"
-                console.print(f"  • [bold {impact_color}]Complexity Impact: {complexity_impact:+.1f}[/bold {impact_color}]")
-                if ddd_violation_penalty > 0:
-                    console.print(f"  • [bold red]DDD Violation Impact: -{ddd_violation_penalty:.1f}[/bold red]")
-                if ddd_conversion_penalty > 0:
-                    console.print(f"  • [bold red]DDD Conversion Impact: -{ddd_conversion_penalty:.1f} ({ddd_conversion_modules} modules)[/bold red]")
-                if test_impact != 0:
-                    test_color = "red" if test_impact < 0 else "green"
-                    console.print(f"  • [bold {test_color}]Test Quality Impact: {test_impact:+.1f} ({test_coverage:.0f}% coverage, {test_failures} failures)[/bold {test_color}]")
-                if endpoint_impact != 0:
-                    endpoint_color = "red" if endpoint_impact < 0 else "green"
-                    console.print(f"  • [bold {endpoint_color}]API Quality Impact: {endpoint_impact:+.1f} (REST: {rest_rate:.0f}%, OpenAPI: {openapi_rate:.0f}%, Standards: {standard_rate:.0f}%)[/bold {endpoint_color}]")
-                if linting_impact != 0:
-                    lint_color = "red" if linting_impact < 0 else "green"
-                    console.print(f"  • [bold {lint_color}]Linting Quality Impact: {linting_impact:+.1f} ({total_lint_issues} issues, {pylint_score:.1f}/10 score)[/bold {lint_color}]")
-                console.print(f"  • [bold {impact_color}]Total Score Impact: {total_impact:+.1f}[/bold {impact_color}]")
+    # 4. Test Quality Metrics
+    test_quality_metrics = architecture_data.get('test_quality_metrics', {})
+    if test_quality_metrics:
+        console.print(f"\n[cyan]🧪 Test Quality Metrics:[/cyan]")
+        naming_issues = len(test_quality_metrics.get('test_naming_issues', []))
+        isolation_issues = len(test_quality_metrics.get('isolation_issues', []))
+        flaky_tests = len(test_quality_metrics.get('flaky_test_indicators', []))
+        parameterization = len(test_quality_metrics.get('parameterization_suggestions', []))
 
-        if architecture_data.get('ddd_issues'):
-            # Separate DDD architecture violations from general structural issues
-            ddd_violations = [issue for issue in architecture_data['ddd_issues']
-                            if 'DDD architecture violations' in issue or
-                               'Missing required domain component' in issue or
-                               'forbidden in' in issue.lower()]
-            other_issues = [issue for issue in architecture_data['ddd_issues']
-                          if issue not in ddd_violations]
+        console.print(f"  • {naming_issues} test naming issues")
+        console.print(f"  • {isolation_issues} isolation issues")
+        console.print(f"  • {flaky_tests} flaky test indicators")
+        console.print(f"  • {parameterization} parameterization opportunities")
 
-            # Show expected DDD+REST structure
-            console.print("\n[blue]📋 Expected DDD+REST Structure:[/blue]")
-            console.print("  • domain/ - Business logic (entities, services, repositories)")
-            console.print("  • application/ - Use case orchestration (handlers, DTOs)")
-            console.print("  • infrastructure/ - External concerns (config, databases, APIs)")
-            console.print("  • presentation/ - HTTP layer (controllers, models, routes)")
+        total_issues = naming_issues + isolation_issues + flaky_tests
+        if total_issues > 0:
+            penalty = min(total_issues * 0.3, 4)
+            console.print(f"  • [red]Impact: -{penalty:.1f} points[/red]")
+        else:
+            console.print("  • [green]✅ Good test quality standards[/green]")
 
-            if ddd_violations:
-                console.print("\n[red]🚫 DDD Architecture Violations:[/red]")
-                for issue in ddd_violations[:3]:  # Show top 3 DDD violations
-                    console.print(f"  • {issue}")
+    # 5. Domain Boundary Analysis
+    domain_boundaries = architecture_data.get('domain_boundaries', {})
+    if domain_boundaries:
+        console.print(f"\n[cyan]🏛️ Domain Boundaries:[/cyan]")
+        anemic_entities = len(domain_boundaries.get('anemic_entities', []))
+        domain_leaks = len(domain_boundaries.get('domain_logic_leaks', []))
 
-            if other_issues:
-                console.print("\n[yellow]⚠️  Other Structural Issues:[/yellow]")
-                for issue in other_issues[:3]:  # Show top 3 other issues
-                    console.print(f"  • {issue}")
+        console.print(f"  • {anemic_entities} anemic entities")
+        console.print(f"  • {domain_leaks} domain logic leaks")
+        if anemic_entities > 0 or domain_leaks > 0:
+            penalty = min((anemic_entities + domain_leaks) * 0.8, 4)
+            console.print(f"  • [red]Impact: -{penalty:.1f} points[/red]")
+        else:
+            console.print("  • [green]✅ Proper domain encapsulation[/green]")
 
-        # Test Quality Analysis
-        test_quality = architecture_data.get('test_quality', {})
-        if test_quality and (test_quality.get('total_tests', 0) > 0 or test_quality.get('test_coverage', 0) > 0):
-            console.print("\n🧪 [bold blue]Test Quality Analysis[/bold blue]")
+    # 6. API Documentation Quality
+    api_documentation = architecture_data.get('api_documentation', {})
+    if api_documentation:
+        console.print(f"\n[cyan]📚 API Documentation:[/cyan]")
+        docs_score = api_documentation.get('documentation_score', 0)
+        total_endpoints = api_documentation.get('total_endpoints', 0)
 
-            total_tests = test_quality.get('total_tests', 0)
-            passed_tests = test_quality.get('passed_tests', 0)
-            failed_tests = test_quality.get('failed_tests', 0)
-            test_coverage = test_quality.get('test_coverage', 0.0)
-            error_message = test_quality.get('error_message')
+        console.print(f"  • {total_endpoints} endpoints analyzed")
+        console.print(f"  • Documentation score: {docs_score:.1f}/100")
+        if docs_score < 60:
+            penalty = min((60 - docs_score) * 0.1, 6)
+            console.print(f"  • [red]Impact: -{penalty:.1f} points[/red]")
+        else:
+            console.print("  • [green]✅ Good API documentation[/green]")
 
-            if total_tests > 0:
-                console.print(f"  • Test Results: {passed_tests} passed, {failed_tests} failed ({total_tests} total)")
+    # 7. Code Documentation Analysis
+    code_documentation = architecture_data.get('code_documentation', {})
+    if code_documentation:
+        console.print(f"\n[cyan]📖 Code Documentation:[/cyan]")
+        coverage = code_documentation.get('docstring_coverage', 0)
+        undocumented_functions = len(code_documentation.get('functions_without_docs', []))
+        undocumented_classes = len(code_documentation.get('classes_without_docs', []))
 
-            if test_coverage > 0:
-                coverage_color = "green" if test_coverage >= 70 else "yellow" if test_coverage >= 50 else "red"
-                console.print(f"  • Test Coverage: [bold {coverage_color}]{test_coverage:.1f}%[/bold {coverage_color}]")
+        console.print(f"  • Docstring coverage: {coverage:.1f}%")
+        console.print(f"  • {undocumented_functions} undocumented functions")
+        console.print(f"  • {undocumented_classes} undocumented classes")
+        if coverage < 50:
+            penalty = min((50 - coverage) * 0.05, 3)
+            console.print(f"  • [red]Impact: -{penalty:.1f} points[/red]")
+        elif coverage >= 80:
+            console.print("  • [green]Bonus: +2.0 points (excellent)[/green]")
+        else:
+            console.print("  • [yellow]⚠️  Needs improvement[/yellow]")
 
-            if error_message:
-                console.print(f"  • [yellow]Note: {error_message}[/yellow]")
+    # 8. Configuration Management
+    configuration_management = architecture_data.get('configuration_management', {})
+    if configuration_management:
+        console.print(f"\n[cyan]⚙️ Configuration Management:[/cyan]")
+        hardcoded_values = len(configuration_management.get('hardcoded_values', []))
+        inconsistent_patterns = len(configuration_management.get('inconsistent_config_patterns', []))
 
-            # Test quality recommendations
-            if failed_tests > 0:
-                console.print(f"  • [red]🚨 Fix {failed_tests} failing tests immediately[/red]")
+        console.print(f"  • {hardcoded_values} hardcoded values")
+        console.print(f"  • {inconsistent_patterns} inconsistent patterns")
+        if hardcoded_values > 0:
+            penalty = min(hardcoded_values * 0.5, 5)
+            console.print(f"  • [red]Impact: -{penalty:.1f} points[/red]")
+        else:
+            console.print("  • [green]✅ Good configuration practices[/green]")
 
-            if test_coverage < 70:
-                if test_coverage < 50:
-                    console.print("  • [red]❌ Critical: Test coverage below 50% - major risk[/red]")
-                elif test_coverage < 60:
-                    console.print("  • [orange]⚠️  Warning: Test coverage below 60% - increase coverage[/orange]")
-                else:
-                    console.print("  • [yellow]📈 Improve test coverage to reach 70%+ standard[/yellow]")
+    # 9. Logging Practices
+    logging_practices = architecture_data.get('logging_practices', {})
+    if logging_practices:
+        console.print(f"\n[cyan]📝 Logging Practices:[/cyan]")
+        missing_error_logging = len(logging_practices.get('missing_error_logging', []))
+        excessive_logging = len(logging_practices.get('excessive_logging', []))
+        insufficient_logging = len(logging_practices.get('insufficient_logging', []))
 
-        # REST API Endpoint Analysis
-        endpoint_analysis = architecture_data.get('endpoint_analysis', {})
-        if endpoint_analysis and endpoint_analysis.get('total_endpoints', 0) > 0:
-            console.print("\n🌐 [bold cyan]REST API Endpoint Analysis[/bold cyan]")
+        console.print(f"  • {missing_error_logging} missing error logs")
+        console.print(f"  • {excessive_logging} excessive logging locations")
+        console.print(f"  • {insufficient_logging} insufficient logging locations")
+        if missing_error_logging > 0 or excessive_logging > 0 or insufficient_logging > 0:
+            penalty = min((missing_error_logging + excessive_logging + insufficient_logging) * 0.4, 4)
+            console.print(f"  • [red]Impact: -{penalty:.1f} points[/red]")
+        else:
+            console.print("  • [green]✅ Good logging practices[/green]")
 
-            total_endpoints = endpoint_analysis.get('total_endpoints', 0)
-            rest_rate = endpoint_analysis.get('rest_compliance_rate', 0)
-            openapi_rate = endpoint_analysis.get('openapi_compliance_rate', 0)
-            standard_rate = endpoint_analysis.get('standard_compliance_rate', 0)
+    # Test Quality Analysis
+    test_quality = architecture_data.get('test_quality', {})
+    if test_quality and (test_quality.get('total_tests', 0) > 0 or test_quality.get('test_coverage', 0) > 0):
+        console.print(f"\n[bold blue]🧪 TESTING ANALYSIS[/bold blue]")
 
-            console.print(f"  • Total Endpoints: {total_endpoints}")
+        total_tests = test_quality.get('total_tests', 0)
+        passed_tests = test_quality.get('passed_tests', 0)
+        failed_tests = test_quality.get('failed_tests', 0)
+        test_coverage = test_quality.get('test_coverage', 0.0)
+        error_message = test_quality.get('error_message')
 
-            # REST compliance
-            rest_color = "green" if rest_rate >= 80 else "yellow" if rest_rate >= 60 else "red"
-            console.print(f"  • REST Compliance: [bold {rest_color}]{rest_rate:.1f}%[/bold {rest_color}]")
+        test_status_table = Table(show_header=False, box=None)
+        test_status_table.add_column("Metric", style="cyan", width=20)
+        test_status_table.add_column("Value", style="green", width=15)
+        test_status_table.add_column("Status", style="white", width=20)
 
-            # OpenAPI compliance
-            openapi_color = "green" if openapi_rate >= 80 else "yellow" if openapi_rate >= 60 else "red"
-            console.print(f"  • OpenAPI Compliance: [bold {openapi_color}]{openapi_rate:.1f}%[/bold {openapi_color}]")
+        test_status_table.add_row("Total Tests", str(total_tests), "✅ Good" if total_tests > 0 else "❌ None")
+        test_status_table.add_row("Passed/Failed", f"{passed_tests}/{failed_tests}",
+                                 "✅ All Passing" if failed_tests == 0 and total_tests > 0 else f"❌ {failed_tests} Failed")
+        test_status_table.add_row("Coverage", f"{test_coverage:.1f}%" if test_coverage > 0 else "N/A",
+                                 "✅ Excellent" if test_coverage >= 80 else "⚠️  Needs Work" if test_coverage >= 50 else "❌ Poor")
 
-            # Project standards compliance
-            standard_color = "green" if standard_rate >= 80 else "yellow" if standard_rate >= 60 else "red"
-            console.print(f"  • Project Standards: [bold {standard_color}]{standard_rate:.1f}%[/bold {standard_color}]")
+        console.print(test_status_table)
 
-            # Endpoint recommendations
-            if rest_rate < 70:
-                console.print("  • [red]🚨 Critical: Poor REST architectural compliance[/red]")
-            elif rest_rate < 80:
-                console.print("  • [orange]⚠️  Improve REST architectural patterns[/orange]")
+        if error_message:
+            console.print(f"  [yellow]Note: {error_message}[/yellow]")
 
-            if openapi_rate < 60:
-                console.print("  • [red]❌ Critical: Missing OpenAPI/Swagger documentation[/red]")
-            elif openapi_rate < 80:
-                console.print("  • [orange]⚠️  Add missing OpenAPI annotations[/orange]")
-            else:
-                console.print("  • [green]✅ Good OpenAPI documentation coverage[/green]")
+    # REST API Endpoint Analysis
+    endpoint_analysis = architecture_data.get('endpoint_analysis', {})
+    if endpoint_analysis and endpoint_analysis.get('total_endpoints', 0) > 0:
+        console.print(f"\n[bold blue]🌐 API ENDPOINT ANALYSIS[/bold blue]")
 
-            if standard_rate < 70:
-                console.print("  • [red]🚨 Critical: Not following project REST standards[/red]")
-            elif standard_rate < 80:
-                console.print("  • [orange]⚠️  Align with project REST conventions[/orange]")
-            else:
-                console.print("  • [green]✅ Following project REST standards[/green]")
+        total_endpoints = endpoint_analysis.get('total_endpoints', 0)
+        rest_rate = endpoint_analysis.get('rest_compliance_rate', 0)
+        openapi_rate = endpoint_analysis.get('openapi_compliance_rate', 0)
+        standard_rate = endpoint_analysis.get('standard_compliance_rate', 0)
 
-        # Linting Quality Analysis
-        linting_quality = architecture_data.get('linting_quality', {})
-        if linting_quality and not linting_quality.get('error_message'):
-            console.print("\n🔍 [bold yellow]Code Quality Analysis[/bold yellow]")
+        api_table = Table(show_header=False, box=None)
+        api_table.add_column("Metric", style="cyan", width=20)
+        api_table.add_column("Score", style="green", width=10)
+        api_table.add_column("Status", style="white", width=15)
 
-            flake8_issues = linting_quality.get('flake8_issues', 0)
-            pylint_score = linting_quality.get('pylint_score', 5.0)
-            total_issues = linting_quality.get('total_issues', 0)
+        api_table.add_row("Total Endpoints", str(total_endpoints), "✅ Good")
+        api_table.add_row("REST Compliance", f"{rest_rate:.1f}%",
+                         "✅ Good" if rest_rate >= 80 else "⚠️  Needs Work" if rest_rate >= 60 else "❌ Poor")
+        api_table.add_row("OpenAPI Compliance", f"{openapi_rate:.1f}%",
+                         "✅ Good" if openapi_rate >= 80 else "⚠️  Needs Work" if openapi_rate >= 60 else "❌ Poor")
+        api_table.add_row("Standards Compliance", f"{standard_rate:.1f}%",
+                         "✅ Good" if standard_rate >= 80 else "⚠️  Needs Work" if standard_rate >= 60 else "❌ Poor")
 
-            if flake8_issues > 0:
-                console.print(f"  • Flake8 Issues: {flake8_issues}")
+        console.print(api_table)
 
-            if pylint_score > 0:
-                score_color = "green" if pylint_score >= 7.0 else "yellow" if pylint_score >= 5.0 else "red"
-                console.print(f"  • Pylint Score: [bold {score_color}]{pylint_score:.1f}/10[/bold {score_color}]")
+    # Linting Quality Analysis
+    linting_quality = architecture_data.get('linting_quality', {})
+    if linting_quality:
+        console.print(f"\n[bold blue]🔍 LINTING & CODE QUALITY[/bold blue]")
 
-            # Linting quality recommendations
-            if total_issues > 50:
-                console.print("  • [red]🚨 Critical: Excessive linting issues - immediate cleanup required[/red]")
-            elif total_issues > 20:
-                console.print("  • [orange]⚠️  High linting issues - address code quality problems[/orange]")
+        flake8_issues = linting_quality.get('flake8_issues', 0)
+        pylint_score = linting_quality.get('pylint_score', 5.0)
+        total_issues = linting_quality.get('total_issues', 0)
 
-            if pylint_score < 5.0:
-                if pylint_score < 3.0:
-                    console.print("  • [red]❌ Critical: Very poor code quality - major refactoring needed[/red]")
-                else:
-                    console.print("  • [orange]⚠️  Poor code quality - improve coding standards[/orange]")
-            elif pylint_score >= 8.0:
-                console.print("  • [green]✅ Excellent code quality standards maintained[/green]")
+        lint_table = Table(show_header=False, box=None)
+        lint_table.add_column("Metric", style="cyan", width=20)
+        lint_table.add_column("Value", style="green", width=15)
+        lint_table.add_column("Status", style="white", width=20)
 
-        if architecture_data.get('ddd_recommendations'):
-            # Separate DDD conversion recommendations from general recommendations
-            conversion_recs = [rec for rec in architecture_data['ddd_recommendations']
-                             if any(keyword in rec.lower() for keyword in
-                                   ['split', 'break down', 'separate', 'extract', 'reduce complexity', 'move to'])]
-            other_recs = [rec for rec in architecture_data['ddd_recommendations']
-                         if rec not in conversion_recs]
+        lint_table.add_row("Flake8 Issues", str(flake8_issues),
+                          "✅ Clean" if flake8_issues == 0 else "⚠️  Some Issues" if flake8_issues < 50 else "❌ Many Issues")
+        lint_table.add_row("Pylint Score", f"{pylint_score:.1f}/10",
+                          "✅ Excellent" if pylint_score >= 8.0 else "⚠️  Good" if pylint_score >= 6.0 else "❌ Poor")
 
-            if conversion_recs:
-                console.print("\n[orange]🔄 DDD Module Conversion Recommendations:[/orange]")
-                for rec in conversion_recs[:3]:  # Show top 3 conversion recommendations
-                    console.print(f"  • {rec}")
+        console.print(lint_table)
 
-            if other_recs:
-                console.print("\n[green]💡 DDD Structure Recommendations:[/green]")
-                for rec in other_recs[:3]:  # Show top 3 structure recommendations
-                    console.print(f"  • {rec}")
-
-    # Critical issues
-    if results.critical_issues:
-        console.print("\n[red]🚨 Critical Issues:[/red]")
-        for issue in results.critical_issues:
-            console.print(f"  • {issue['issue']}")
-    else:
-        console.print("\n[green]✅ No critical issues found![/green]")
-
-    # Priority improvements
+    # Priority improvements and recommendations
     if results.priority_improvements:
-        console.print(f"\n[blue]🎯 Priority Improvements ({results.estimated_effort_days} days):[/blue]")
+        console.print(f"\n[bold blue]🎯 PRIORITY IMPROVEMENTS ({results.estimated_effort_days} days total)[/bold blue]")
         for rec in results.priority_improvements[:5]:  # Show top 5
-            console.print(f"  • [{rec['priority'].upper()}] {rec['title']} ({rec['effort_days']} days)")
+            priority_color = {"high": "red", "medium": "yellow", "low": "green"}.get(rec.get('priority', 'medium'), 'white')
+            console.print(f"  [{priority_color}]{rec['priority'].upper()}[/{priority_color}] {rec['title']} ({rec['effort_days']} days)")
 
     # System metrics if available
     if results.performance.get('system_metrics'):
         metrics = results.performance['system_metrics']
-        console.print("\n[purple]💻 System Metrics:[/purple]")
-        console.print(f"  • CPU: {metrics.get('cpu_percent', 'N/A')}%")
+        console.print(f"\n[bold blue]💻 SYSTEM METRICS[/bold blue]")
+        console.print(f"  • CPU Usage: {metrics.get('cpu_percent', 'N/A')}%")
         console.print(f"  • Memory: {metrics.get('memory_percent', 'N/A')}% ({metrics.get('memory_used_gb', 'N/A')}GB used)")
+        console.print(f"  • Disk I/O: {metrics.get('disk_read_mb', 'N/A')}MB read, {metrics.get('disk_write_mb', 'N/A')}MB write")
+        console.print(f"  • Network: {metrics.get('network_sent_mb', 'N/A')}MB sent, {metrics.get('network_recv_mb', 'N/A')}MB received")
+
+    # Comprehensive Action Plan Summary
+    console.print(f"\n[bold cyan]📋 ACTION PLAN SUMMARY[/bold cyan]")
+    console.print("Specific strategies to address identified issues:")
+
+    architecture_data = results.architecture
+
+    # 1. Complexity Issues
+    complexity_analysis = architecture_data.get('complexity_analysis', {})
+    high_complexity_count = len(complexity_analysis.get('high_complexity_functions', []))
+    if high_complexity_count > 0:
+        console.print(f"\n[cyan]🌀 Complexity Reduction:[/cyan]")
+        console.print(f"  • Break down {high_complexity_count} high-complexity functions (>10)")
+        console.print("  • Strategy: Extract smaller functions, use early returns, simplify conditionals")
+        console.print("  • Tools: Use radon cc <file> to identify complex functions")
+        console.print("  • Goal: Reduce complexity score by 20-40 points")
+
+    # 2. Architecture & DDD Issues
+    ddd_compliance = architecture_data.get('ddd_compliance', 100)
+    if ddd_compliance < 80:
+        console.print(f"\n[cyan]🏗️ Architecture Refactoring:[/cyan]")
+        console.print("  • Implement Domain-Driven Design principles")
+        console.print("  • Create domain/entities/, domain/services/, domain/repositories/")
+        console.print("  • Move business logic from infrastructure to domain layer")
+        console.print("  • Break down monolithic files (>500 lines) into smaller modules")
+        console.print("  • Expected Impact: +15-25 points to architecture score")
+
+    # 3. Dependency Coupling Issues
+    dependency_coupling = architecture_data.get('dependency_coupling', {})
+    high_import_modules = len(dependency_coupling.get('high_import_count_modules', []))
+    if high_import_modules > 0:
+        console.print(f"\n[cyan]🔗 Dependency Injection:[/cyan]")
+        console.print(f"  • Refactor {high_import_modules} tightly coupled modules")
+        console.print("  • Implement dependency injection pattern")
+        console.print("  • Create interfaces/abstractions between layers")
+        console.print("  • Use factories or service locators for dependencies")
+        console.print("  • Result: Improved testability and maintainability")
+
+    # 4. Dead Code Cleanup
+    dead_code_analysis = architecture_data.get('dead_code_analysis', {})
+    dead_lines = dead_code_analysis.get('dead_code_lines', 0)
+    if dead_lines > 50:
+        console.print(f"\n[cyan]💀 Code Cleanup:[/cyan]")
+        console.print(f"  • Remove {dead_lines} lines of dead/commented code")
+        console.print("  • Use tools: coverage.py, vulture for unused code detection")
+        console.print("  • Remove unreachable code after return/raise statements")
+        console.print("  • Clean up old commented code blocks")
+        console.print("  • Benefit: Improved code readability and reduced maintenance burden")
+
+    # 5. Test Quality Improvements
+    test_quality_metrics = architecture_data.get('test_quality_metrics', {})
+    test_issues = len(test_quality_metrics.get('test_naming_issues', []))
+    if test_issues > 0:
+        console.print(f"\n[cyan]🧪 Test Quality Enhancement:[/cyan]")
+        console.print(f"  • Fix {test_issues} poorly named test functions")
+        console.print("  • Naming convention: test_<behavior>_<condition>_<expected_result>")
+        console.print("  • Implement parameterized tests using @pytest.mark.parametrize")
+        console.print("  • Add test isolation with proper fixtures and mocking")
+        console.print("  • Target: 80%+ test coverage with meaningful test names")
+
+    # 6. Domain Boundary Fixes
+    domain_boundaries = architecture_data.get('domain_boundaries', {})
+    anemic_entities = len(domain_boundaries.get('anemic_entities', []))
+    if anemic_entities > 0:
+        console.print(f"\n[cyan]🏛️ Domain Logic Enhancement:[/cyan]")
+        console.print(f"  • Add business logic to {anemic_entities} anemic entities")
+        console.print("  • Move validation, business rules to entity methods")
+        console.print("  • Implement value objects for complex data structures")
+        console.print("  • Create domain services for cross-entity business logic")
+        console.print("  • Outcome: Rich domain model with proper encapsulation")
+
+    # 7. API Documentation Improvements
+    api_documentation = architecture_data.get('api_documentation', {})
+    api_docs_score = api_documentation.get('documentation_score', 100)
+    if api_docs_score < 80:
+        console.print(f"\n[cyan]📚 API Documentation:[/cyan]")
+        console.print(f"  • Improve API documentation score from {api_docs_score:.1f} to 90+")
+        console.print("  • Add comprehensive OpenAPI/Swagger annotations")
+        console.print("  • Include response examples and error schemas")
+        console.print("  • Document all parameters, request/response models")
+        console.print("  • Generate API docs: /docs endpoint for interactive documentation")
+
+    # 8. Code Documentation Strategy
+    code_documentation = architecture_data.get('code_documentation', {})
+    docstring_coverage = code_documentation.get('docstring_coverage', 100)
+    if docstring_coverage < 70:
+        console.print(f"\n[cyan]📖 Code Documentation:[/cyan]")
+        console.print(f"  • Increase docstring coverage from {docstring_coverage:.1f}% to 90%")
+        console.print("  • Add Google/NumPy style docstrings to all functions/classes")
+        console.print("  • Document parameters, return types, exceptions, examples")
+        console.print("  • Use type hints (mypy) for better IDE support")
+        console.print("  • Tools: interrogate for coverage, sphinx for documentation generation")
+
+    # 9. Configuration Management Fixes
+    configuration_management = architecture_data.get('configuration_management', {})
+    hardcoded_values = len(configuration_management.get('hardcoded_values', []))
+    if hardcoded_values > 0:
+        console.print(f"\n[cyan]⚙️ Configuration Security:[/cyan]")
+        console.print(f"  • Replace {hardcoded_values} hardcoded configuration values")
+        console.print("  • Use environment variables with pydantic-settings")
+        console.print("  • Implement configuration validation")
+        console.print("  • Create .env.example file for required variables")
+        console.print("  • Security benefit: No sensitive data in code repository")
+
+    # 10. Logging Best Practices
+    logging_practices = architecture_data.get('logging_practices', {})
+    missing_error_logging = len(logging_practices.get('missing_error_logging', []))
+    if missing_error_logging > 0:
+        console.print(f"\n[cyan]📝 Logging Excellence:[/cyan]")
+        console.print(f"  • Add error logging to {missing_error_logging} exception handlers")
+        console.print("  • Implement structured logging with correlation IDs")
+        console.print("  • Use appropriate log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL")
+        console.print("  • Add contextual information to log messages")
+        console.print("  • Centralize logging configuration for consistency")
+
+    # 11. REST API Compliance
+    endpoint_analysis = architecture_data.get('endpoint_analysis', {})
+    rest_rate = endpoint_analysis.get('rest_compliance_rate', 100)
+    if rest_rate < 80:
+        console.print(f"\n[cyan]🌐 REST API Standards:[/cyan]")
+        console.print(f"  • Improve REST compliance from {rest_rate:.1f}% to 90%+")
+        console.print("  • Use proper HTTP methods: GET, POST, PUT, DELETE")
+        console.print("  • Implement standard status codes (200, 201, 400, 404, 500)")
+        console.print("  • Use consistent resource naming (/users, /users/{id})")
+        console.print("  • Add proper error response formats")
+
+    # 12. Code Quality Tools
+    linting_quality = architecture_data.get('linting_quality', {})
+    total_lint_issues = linting_quality.get('total_issues', 0)
+    if total_lint_issues > 50:
+        console.print(f"\n[cyan]🔍 Code Quality Tools:[/cyan]")
+        console.print(f"  • Fix {total_lint_issues} linting issues")
+        console.print("  • Run: black . && isort . && flake8 . && pylint .")
+        console.print("  • Set up pre-commit hooks for automated quality checks")
+        console.print("  • Configure CI/CD pipeline with quality gates")
+        console.print("  • Maintain code quality standards consistently")
+
+    # Implementation Timeline
+    console.print(f"\n[bold yellow]⏰ IMPLEMENTATION TIMELINE[/bold yellow]")
+    console.print(f"Estimated total effort: {results.estimated_effort_days} days")
+
+    # Group recommendations by timeline
+    high_priority = [r for r in results.priority_improvements if r.get('priority') == 'high']
+    medium_priority = [r for r in results.priority_improvements if r.get('priority') == 'medium']
+    low_priority = [r for r in results.priority_improvements if r.get('priority') == 'low']
+
+    if high_priority:
+        high_effort = sum(r.get('effort_days', 0) for r in high_priority)
+        console.print(f"  • Week 1-2 (High Priority): {len(high_priority)} items, {high_effort} days")
+        for rec in high_priority[:3]:
+            console.print(f"    - {rec['title']}")
+
+    if medium_priority:
+        medium_effort = sum(r.get('effort_days', 0) for r in medium_priority)
+        console.print(f"  • Week 3-4 (Medium Priority): {len(medium_priority)} items, {medium_effort} days")
+        for rec in medium_priority[:2]:
+            console.print(f"    - {rec['title']}")
+
+    if low_priority:
+        low_effort = sum(r.get('effort_days', 0) for r in low_priority)
+        console.print(f"  • Ongoing (Low Priority): {len(low_priority)} items, {low_effort} days")
+        for rec in low_priority[:2]:
+            console.print(f"    - {rec['title']}")
+
+    # Success Metrics
+    console.print(f"\n[bold green]🎯 SUCCESS METRICS[/bold green]")
+    console.print("Track improvement with these targets:")
+    console.print(f"  • Score Improvement: {results.overall_score:.1f} → 80+ (target grade: B or A)")
+    console.print("  • Critical Issues: {len(results.critical_issues)} → 0 (zero tolerance)")
+    console.print("  • Test Coverage: → 80%+ with meaningful tests")
+    console.print("  • Documentation: → 90%+ coverage with quality docstrings")
+    console.print("  • Complexity: → Average <8, no functions >15")
+    console.print("  • Architecture: → DDD compliance 80%+")
+
+    # LLM-Friendly Summary
+    console.print(f"\n[bold cyan]🤖 LLM SUMMARY[/bold cyan]")
+    console.print(f"Service: {results.service_name}")
+    console.print(f"Grade: {results.grade} (Score: {results.overall_score:.1f}/100)")
+    console.print(f"Critical Issues: {len(results.critical_issues)}")
+    console.print(f"Priority Actions: {len(results.priority_improvements)}")
+    console.print(f"Estimated Effort: {results.estimated_effort_days} days")
+
+    if results.critical_issues:
+        console.print("Critical Issues:")
+        for issue in results.critical_issues[:3]:
+            console.print(f"  - {issue['issue']}")
+
+    console.print("Top Recommendations:")
+    for rec in results.priority_improvements[:3]:
+        console.print(f"  - {rec['title']} ({rec['priority']} priority, {rec['effort_days']} days)")
 
 
 def _display_rich_comparison(console: Console, results_list: List[AuditResults]):

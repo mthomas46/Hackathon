@@ -5,7 +5,7 @@ Consolidated route definitions for all endpoints.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 # Using standardized response system
 from services.shared.presentation.responses import (
@@ -40,12 +40,21 @@ from ..domain.analytics.handlers import AnalyticsHandlers
 from ..domain.bulk.handlers import BulkOperationsHandlers
 
 # Import handlers from domains
-from ..domain.documents.handlers import document_handlers
+from ..domain.documents.handlers import AbstractDocumentHandlers
 from ..domain.lifecycle.handlers import LifecycleHandlers
 from ..domain.notifications.handlers import NotificationsHandlers
 from ..domain.relationships.handlers import RelationshipsHandlers
 from ..domain.tagging.handlers import TaggingHandlers
 from ..domain.versioning.handlers import VersioningHandlers
+
+# Dependency injection container
+from ..infrastructure.di.container import container
+
+
+# Dependency functions for injection
+def get_document_handlers() -> AbstractDocumentHandlers:
+    """Get document handlers from dependency container."""
+    return container.document_handlers
 
 # Create router
 router = APIRouter(prefix="/api/v1", tags=["docstore"])
@@ -63,6 +72,7 @@ notifications_handlers = NotificationsHandlers()
 # Document endpoints
 @router.post(
     "/documents",
+    tags=["documents"],
     summary="Create Document",
     description="Create a new document in the document store with content, metadata, and optional custom ID.",
     response_description="Successfully created document with ID, content hash, and metadata",
@@ -88,7 +98,10 @@ notifications_handlers = NotificationsHandlers()
         500: {"description": "Internal server error during document creation"}
     }
 )
-async def create_document(request: DocumentRequest):
+async def create_document(
+    request: DocumentRequest,
+    document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
+):
     """Create a new document."""
     result = await document_handlers.handle_create_document(request)
     return create_success_response(data=result, message="Document created successfully")
@@ -96,6 +109,7 @@ async def create_document(request: DocumentRequest):
 
 @router.get(
     "/documents/{document_id}",
+    tags=["documents"],
     summary="Get Document",
     description="Retrieve a document by its unique ID including content, metadata, and version information.",
     response_description="Document data with content, metadata, and timestamps",
@@ -122,7 +136,10 @@ async def create_document(request: DocumentRequest):
         500: {"description": "Internal server error during document retrieval"}
     }
 )
-async def get_document(document_id: str):
+async def get_document(
+    document_id: str,
+    document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
+):
     """Get document by ID."""
     result = await document_handlers.handle_get_document(document_id)
     return create_success_response(
@@ -167,7 +184,8 @@ async def get_document(document_id: str):
 )
 async def list_documents(
     limit: int = Query(50, ge=1, le=1000, description="Number of documents per page"),
-    offset: int = Query(0, ge=0, description="Number of documents to skip")
+    offset: int = Query(0, ge=0, description="Number of documents to skip"),
+    document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
 ):
     """List documents with pagination."""
     result = await document_handlers.handle_list_documents(limit, offset)
@@ -180,34 +198,213 @@ async def list_documents(
     )
 
 
-@router.patch("/documents/{document_id}/metadata")
-async def update_document_metadata(document_id: str, request: MetadataUpdateRequest):
+@router.patch(
+    "/documents/{document_id}/metadata",
+    tags=["documents"],
+    summary="Update Document Metadata",
+    description="Update specific metadata fields for an existing document without modifying the content.",
+    response_description="Successfully updated document metadata",
+    responses={
+        200: {
+            "description": "Metadata updated successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Document metadata updated successfully",
+                        "data": {
+                            "id": "doc-123",
+                            "updated_fields": ["tags", "author"],
+                            "updated_at": "2024-01-01T12:00:00"
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid metadata or validation error"},
+        404: {"description": "Document not found"},
+        500: {"description": "Internal server error during metadata update"}
+    }
+)
+async def update_document_metadata(
+    document_id: str,
+    request: MetadataUpdateRequest,
+    document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
+):
     """Update document metadata."""
     return await document_handlers.handle_update_metadata(document_id, request)
 
 
-@router.delete("/documents/{document_id}")
-async def delete_document(document_id: str):
+@router.delete(
+    "/documents/{document_id}",
+    tags=["documents"],
+    summary="Delete Document",
+    description="Permanently delete a document and all its versions from the document store.",
+    response_description="Successfully deleted document",
+    responses={
+        200: {
+            "description": "Document deleted successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Document deleted successfully",
+                        "data": {
+                            "id": "doc-123",
+                            "deleted_at": "2024-01-01T12:00:00",
+                            "versions_removed": 3
+                        }
+                    }
+                }
+            }
+        },
+        404: {"description": "Document not found"},
+        409: {"description": "Document cannot be deleted due to existing relationships"},
+        500: {"description": "Internal server error during document deletion"}
+    }
+)
+async def delete_document(
+    document_id: str,
+    document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
+):
     """Delete document by ID."""
     return await document_handlers.handle_delete_document(document_id)
 
 
 # Search endpoints
-@router.post("/search", response_model=SearchResponse)
-async def search_documents(request: SearchRequest):
+@router.post(
+    "/search",
+    tags=["search"],
+    summary="Search Documents",
+    description="Perform advanced search across documents using full-text search, filters, and semantic similarity.",
+    response_description="Search results with relevance scoring and metadata",
+    response_model=SearchResponse,
+    responses={
+        200: {
+            "description": "Search completed successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Search completed successfully",
+                        "data": {
+                            "query": "machine learning",
+                            "total_results": 25,
+                            "results": [
+                                {
+                                    "document_id": "doc-123",
+                                    "score": 0.95,
+                                    "title": "ML Algorithms Guide",
+                                    "snippet": "...machine learning algorithms...",
+                                    "metadata": {"tags": ["ml", "algorithms"]}
+                                }
+                            ],
+                            "facets": {"tags": ["ml", "ai", "data"]},
+                            "took_ms": 150
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid search query or parameters"},
+        500: {"description": "Internal server error during search"}
+    }
+)
+async def search_documents(
+    request: SearchRequest,
+    document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
+):
     """Search documents by content."""
     return await document_handlers.handle_search_documents(request)
 
 
 # Quality endpoints
-@router.get("/documents/quality", response_model=QualityResponse)
-async def get_quality_metrics(limit: int = Query(1000, ge=1, le=10000)):
+@router.get(
+    "/documents/quality",
+    tags=["analytics"],
+    summary="Get Document Quality Metrics",
+    description="Retrieve quality metrics and analysis for documents in the store, including readability, completeness, and technical accuracy scores.",
+    response_description="Document quality metrics and analysis results",
+    response_model=QualityResponse,
+    responses={
+        200: {
+            "description": "Quality metrics retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Quality metrics retrieved successfully",
+                        "data": {
+                            "total_documents": 150,
+                            "average_quality_score": 0.78,
+                            "quality_distribution": {
+                                "excellent": 45,
+                                "good": 60,
+                                "fair": 30,
+                                "poor": 15
+                            },
+                            "top_issues": ["missing_metadata", "inconsistent_formatting"],
+                            "recommendations": ["Add document templates", "Implement quality gates"]
+                        }
+                    }
+                }
+            }
+        },
+        500: {"description": "Internal server error during quality analysis"}
+    }
+)
+async def get_quality_metrics(
+    limit: int = Query(1000, ge=1, le=10000),
+    document_handlers: AbstractDocumentHandlers = Depends(get_document_handlers)
+):
     """Get document quality metrics."""
     return await document_handlers.handle_get_quality_metrics(limit)
 
 
 # Analytics endpoints
-@router.get("/analytics/summary")
+@router.get(
+    "/analytics/summary",
+    tags=["analytics"],
+    summary="Get Analytics Summary",
+    description="Retrieve comprehensive analytics summary including document counts, usage patterns, quality trends, and system performance metrics.",
+    response_description="Complete analytics summary with trends and insights",
+    responses={
+        200: {
+            "description": "Analytics summary retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Analytics summary retrieved successfully",
+                        "data": {
+                            "document_stats": {
+                                "total_documents": 1250,
+                                "active_documents": 1180,
+                                "archived_documents": 70
+                            },
+                            "usage_patterns": {
+                                "daily_creates": 25,
+                                "weekly_searches": 450,
+                                "top_tags": ["api", "tutorial", "reference"]
+                            },
+                            "quality_trends": {
+                                "average_score": 0.82,
+                                "improvement_rate": 0.05,
+                                "quality_distribution": {"excellent": 40, "good": 35, "fair": 20, "poor": 5}
+                            },
+                            "system_performance": {
+                                "average_response_time": 150,
+                                "uptime_percentage": 99.9,
+                                "error_rate": 0.01
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        500: {"description": "Internal server error during analytics retrieval"}
+    }
+)
 async def get_analytics_summary(
     start_date: Optional[str] = None, end_date: Optional[str] = None
 ):
@@ -217,7 +414,44 @@ async def get_analytics_summary(
 
 
 # Versioning endpoints
-@router.get("/documents/{document_id}/versions")
+@router.get(
+    "/documents/{document_id}/versions",
+    tags=["versioning"],
+    summary="Get Document Versions",
+    description="Retrieve the complete version history for a document, including changes, authors, and timestamps.",
+    response_description="Paginated list of document versions with change details",
+    responses={
+        200: {
+            "description": "Document versions retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Document versions retrieved",
+                        "data": {
+                            "items": [
+                                {
+                                    "version_number": 3,
+                                    "created_at": "2024-01-01T12:00:00",
+                                    "author": "user@example.com",
+                                    "change_type": "content_update",
+                                    "change_summary": "Updated API documentation",
+                                    "content_hash": "def456..."
+                                }
+                            ],
+                            "total": 3,
+                            "page": 1,
+                            "page_size": 50,
+                            "total_pages": 1
+                        }
+                    }
+                }
+            }
+        },
+        404: {"description": "Document not found"},
+        500: {"description": "Internal server error during version retrieval"}
+    }
+)
 async def get_document_versions(
     document_id: str, limit: int = Query(50, ge=1, le=100), offset: int = Query(0, ge=0)
 ):
@@ -234,7 +468,36 @@ async def get_document_versions(
     )
 
 
-@router.post("/documents/{document_id}/versions/rollback")
+@router.post(
+    "/documents/{document_id}/versions/rollback",
+    tags=["versioning"],
+    summary="Rollback Document Version",
+    description="Rollback a document to a previous version, creating a new version with the rolled-back content.",
+    response_description="Successfully rolled back document with new version details",
+    responses={
+        200: {
+            "description": "Document rolled back successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Document rolled back successfully",
+                        "data": {
+                            "document_id": "doc-123",
+                            "rolled_back_to_version": 2,
+                            "new_version_number": 4,
+                            "rollback_reason": "Incorrect API documentation",
+                            "rolled_back_at": "2024-01-01T12:00:00"
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid rollback request or version not found"},
+        404: {"description": "Document not found"},
+        500: {"description": "Internal server error during rollback"}
+    }
+)
 async def rollback_document_version(document_id: str, request: VersionRollbackRequest):
     """Rollback document to previous version."""
     result = await versioning_handlers.handle_rollback_to_version(
@@ -283,13 +546,74 @@ async def get_relationship_statistics():
 
 
 # Tagging endpoints
-@router.post("/documents/{document_id}/tags", response_model=SuccessResponse)
+@router.post(
+    "/documents/{document_id}/tags",
+    tags=["tagging"],
+    summary="Tag Document",
+    description="Add tags to a document for better organization and searchability.",
+    response_description="Successfully tagged document with applied tags",
+    response_model=SuccessResponse,
+    responses={
+        200: {
+            "description": "Document tagged successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Document tagged successfully",
+                        "data": {
+                            "document_id": "doc-123",
+                            "applied_tags": ["api", "reference", "v2"],
+                            "tagged_at": "2024-01-01T12:00:00"
+                        }
+                    }
+                }
+            }
+        },
+        404: {"description": "Document not found"},
+        500: {"description": "Internal server error during tagging"}
+    }
+)
 async def tag_document(document_id: str, request: TagRequest):
     """Automatically tag a document."""
     return await tagging_handlers.handle_tag_document(document_id)
 
 
-@router.get("/tags/search", response_model=SuccessResponse)
+@router.get(
+    "/tags/search",
+    tags=["tagging"],
+    summary="Search by Tags",
+    description="Find documents that match specific tag combinations using advanced tag-based search.",
+    response_description="Documents matching the tag search criteria",
+    response_model=SuccessResponse,
+    responses={
+        200: {
+            "description": "Tag search completed successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Tag search completed successfully",
+                        "data": {
+                            "query": {"tags": ["api", "v2"], "operator": "AND"},
+                            "total_results": 15,
+                            "results": [
+                                {
+                                    "document_id": "doc-123",
+                                    "title": "API Reference v2",
+                                    "tags": ["api", "reference", "v2"],
+                                    "score": 1.0
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid tag search parameters"},
+        500: {"description": "Internal server error during tag search"}
+    }
+)
 async def search_by_tags(request: TagSearchRequest):
     """Search documents by tags."""
     return await tagging_handlers.handle_search_by_tags(
@@ -298,7 +622,36 @@ async def search_by_tags(request: TagSearchRequest):
 
 
 # Lifecycle endpoints
-@router.post("/lifecycle/policies")
+@router.post(
+    "/lifecycle/policies",
+    tags=["lifecycle"],
+    summary="Create Lifecycle Policy",
+    description="Create a new lifecycle policy to automate document transitions and cleanup.",
+    response_description="Successfully created lifecycle policy",
+    responses={
+        201: {
+            "description": "Lifecycle policy created successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Lifecycle policy created successfully",
+                        "data": {
+                            "policy_id": "policy-123",
+                            "name": "Standard Document Lifecycle",
+                            "rules": [
+                                {"phase": "active", "retention_days": 365},
+                                {"phase": "archive", "retention_days": 1825}
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid policy configuration"},
+        500: {"description": "Internal server error during policy creation"}
+    }
+)
 async def create_lifecycle_policy(request: LifecyclePolicyRequest):
     """Create lifecycle policy."""
     return await lifecycle_handlers.handle_create_policy(
@@ -310,7 +663,36 @@ async def create_lifecycle_policy(request: LifecyclePolicyRequest):
     )
 
 
-@router.post("/documents/{document_id}/lifecycle/transition")
+@router.post(
+    "/documents/{document_id}/lifecycle/transition",
+    tags=["lifecycle"],
+    summary="Transition Document Phase",
+    description="Manually transition a document to a different lifecycle phase (active, archive, delete).",
+    response_description="Successfully transitioned document to new phase",
+    responses={
+        200: {
+            "description": "Document transitioned successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Document transitioned successfully",
+                        "data": {
+                            "document_id": "doc-123",
+                            "from_phase": "active",
+                            "to_phase": "archive",
+                            "transitioned_at": "2024-01-01T12:00:00",
+                            "reason": "Manual archive request"
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid transition or phase not allowed"},
+        404: {"description": "Document not found"},
+        500: {"description": "Internal server error during transition"}
+    }
+)
 async def transition_document_phase(
     document_id: str, request: LifecycleTransitionRequest
 ):
@@ -356,7 +738,36 @@ async def get_notification_stats():
 
 
 # Bulk operations endpoints
-@router.post("/bulk/documents", response_model=SuccessResponse)
+@router.post(
+    "/bulk/documents",
+    tags=["bulk"],
+    summary="Bulk Create Documents",
+    description="Create multiple documents in a single batch operation for improved performance.",
+    response_description="Bulk operation initiated with operation ID and status",
+    response_model=SuccessResponse,
+    responses={
+        202: {
+            "description": "Bulk operation accepted and queued",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Bulk document creation initiated",
+                        "data": {
+                            "operation_id": "bulk-123",
+                            "status": "queued",
+                            "total_documents": 50,
+                            "estimated_completion": "2024-01-01T12:05:00"
+                        }
+                    }
+                }
+            }
+        },
+        400: {"description": "Invalid bulk request or document data"},
+        429: {"description": "Too many concurrent bulk operations"},
+        500: {"description": "Internal server error during bulk operation initiation"}
+    }
+)
 async def create_documents_bulk(request: BulkDocumentRequest):
     """Create multiple documents in bulk."""
     return await bulk_handlers.handle_bulk_create_documents(request.documents)

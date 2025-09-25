@@ -37,21 +37,57 @@ config = load_service_config(service_type="shared")
 app = FastAPI(
     title="Shared Infrastructure Service",
     description="""
-    Shared infrastructure service demonstrating proper usage of ecosystem utilities.
+    A comprehensive shared infrastructure service that provides common utilities, patterns, and reference implementations for the entire service ecosystem.
 
-    This service showcases:
-    - Comprehensive error handling with custom exceptions
-    - Structured logging with correlation IDs
-    - Health checks and monitoring
-    - Standardized response formats
-    - Configuration management
-    - Middleware integration
+    ## Features
 
-    Use this as a reference for implementing proper service architecture.
+    * **Error Handling**: Comprehensive exception handling with custom error types and proper HTTP status codes
+    * **Logging**: Structured logging with correlation IDs and performance monitoring
+    * **Health Checks**: Service health monitoring and dependency validation
+    * **Configuration**: Centralized configuration management with environment variable support
+    * **Middleware**: CORS, authentication, and request tracking middleware
+    * **Response Formatting**: Standardized API response formats across all services
+    * **Domain Patterns**: Reference implementations of DDD patterns, CQRS, and repository patterns
+
+    ## Usage
+
+    This service serves as a reference implementation and utility provider for other services in the ecosystem. It demonstrates proper service architecture patterns that should be followed by all services.
+
+    ## Authentication
+
+    All endpoints support standardized authentication middleware.
+
+    ## Monitoring
+
+    Comprehensive logging and health check endpoints are available for monitoring service status.
     """,
     version=config.service_version,
     docs_url="/docs",
     redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Shared Infrastructure Team",
+        "email": "shared@company.com",
+        "url": "https://shared.company.com/support"
+    },
+    license_info={
+        "name": "Proprietary",
+        "url": "https://shared.company.com/license"
+    },
+    tags_metadata=[
+        {
+            "name": "health",
+            "description": "Service health monitoring and status checks"
+        },
+        {
+            "name": "utilities",
+            "description": "Shared utility functions and reference implementations"
+        },
+        {
+            "name": "patterns",
+            "description": "Reference implementations of architectural patterns"
+        },
+    ]
 )
 
 # Configure CORS
@@ -103,7 +139,7 @@ register_health_endpoints(app, "shared", config.service_version)
 # DEMONSTRATION ENDPOINTS
 # ============================================================================
 
-@app.get("/")
+@app.get("/", tags=["health"])
 async def root():
     """Root endpoint demonstrating successful response format."""
     return create_success_response(
