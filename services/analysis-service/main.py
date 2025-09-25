@@ -3498,7 +3498,60 @@ async def process_workflow_event_endpoint(req: WorkflowEventRequest):
         )
 
 
-@app.get("/workflows/{workflow_id}")
+@app.get(
+    "/workflows/{workflow_id}",
+    tags=["workflows"],
+    summary="Get the status of a workflow analysis",
+    description="""Retrieves the current status, progress, and results of a workflow-triggered
+    analysis. Useful for monitoring long-running analyses, checking completion status,
+    and retrieving analysis results. Supports real-time monitoring of distributed analysis jobs.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Workflow status retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Workflow status: completed",
+                        "data": {
+                            "workflow_id": "wf_001",
+                            "status": "completed",
+                            "priority": "high",
+                            "created_at": "2025-09-25T09:30:00Z",
+                            "processed_at": "2025-09-25T09:30:15Z",
+                            "completed_at": "2025-09-25T09:35:22Z",
+                            "analysis_plan": {
+                                "analysis_type": "comprehensive",
+                                "documents_count": 15,
+                                "estimated_duration": 320,
+                                "quality_checks": ["syntax", "semantics", "completeness"],
+                                "parallel_processing": True,
+                            },
+                            "results": {
+                                "documents_processed": 15,
+                                "issues_found": 23,
+                                "quality_score": 0.78,
+                                "processing_time": 307.2,
+                                "recommendations": [
+                                    "Review critical issues in 3 documents",
+                                    "Schedule maintenance for low-quality docs",
+                                    "Update API references in legacy documentation",
+                                ],
+                            },
+                            "error": None,
+                        },
+                        "status": "completed",
+                        "priority": "high",
+                    }
+                }
+            },
+        },
+        404: {"description": "Workflow not found", "model": ErrorResponse},
+        500: {"description": "Workflow status retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_workflow_status_endpoint(workflow_id: str):
     """Get the status of a workflow analysis.
 
@@ -3560,7 +3613,82 @@ async def get_workflow_status_endpoint(workflow_id: str):
         )
 
 
-@app.get("/workflows/queue/status")
+@app.get(
+    "/workflows/queue/status",
+    tags=["workflows"],
+    summary="Get the status of workflow analysis queues",
+    description="""Provides an overview of the current workflow processing queues, including
+    queue lengths, active workflows, processing capacity, and recent events.
+    Useful for monitoring system load, identifying bottlenecks, and capacity planning.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Workflow queue status retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Queue status: 8 queued, 3 active workflows",
+                        "data": {
+                            "queues": {
+                                "high_priority": {
+                                    "length": 2,
+                                    "active": 1,
+                                    "capacity": 5,
+                                    "avg_processing_time": 45.2,
+                                },
+                                "normal_priority": {
+                                    "length": 6,
+                                    "active": 2,
+                                    "capacity": 10,
+                                    "avg_processing_time": 78.5,
+                                },
+                                "low_priority": {
+                                    "length": 12,
+                                    "active": 0,
+                                    "capacity": 20,
+                                    "avg_processing_time": 120.8,
+                                },
+                            },
+                            "total_queued": 20,
+                            "active_workflows": 3,
+                            "system_capacity": {
+                                "max_concurrent": 15,
+                                "current_utilization": 0.2,
+                                "available_slots": 12,
+                            },
+                            "recent_events": [
+                                {
+                                    "event_type": "workflow_completed",
+                                    "workflow_id": "wf_015",
+                                    "timestamp": "2025-09-25T10:25:00Z",
+                                    "processing_time": 67.3,
+                                },
+                                {
+                                    "event_type": "workflow_started",
+                                    "workflow_id": "wf_016",
+                                    "timestamp": "2025-09-25T10:24:15Z",
+                                    "priority": "high",
+                                },
+                                {
+                                    "event_type": "queue_threshold_exceeded",
+                                    "queue": "normal_priority",
+                                    "timestamp": "2025-09-25T10:20:00Z",
+                                    "threshold": 8,
+                                    "current_length": 10,
+                                },
+                            ],
+                        },
+                        "total_queued": 20,
+                        "active_workflows": 3,
+                    }
+                }
+            },
+        },
+        500: {"description": "Workflow queue status retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_workflow_queue_status_endpoint():
     """Get the status of workflow analysis queues.
 
@@ -3916,7 +4044,40 @@ async def get_analysis_frameworks_endpoint():
         )
 
 
-@app.post("/distributed/tasks")
+@app.post(
+    "/distributed/tasks",
+    tags=["distributed"],
+    summary="Submit a task for distributed processing",
+    description="""Submits analysis tasks to be processed asynchronously across multiple workers,
+    enabling high-performance parallel processing of large document analysis workloads.
+    Supports various analysis types with automatic load balancing and fault tolerance.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        201: {
+            "description": "Distributed task submitted successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Distributed task comprehensive_analysis submitted successfully",
+                        "data": {
+                            "task_id": "task_001",
+                            "task_type": "comprehensive_analysis",
+                            "status": "queued",
+                            "priority": "normal",
+                            "submitted_at": "2025-09-25T10:30:00Z",
+                            "estimated_completion": "2025-09-25T11:15:00Z",
+                        },
+                        "task_id": "task_001",
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid task request", "model": ErrorResponse},
+        500: {"description": "Distributed task submission failed", "model": ErrorResponse},
+    },
+)
 async def submit_distributed_task_endpoint(req: DistributedTaskRequest):
     """Submit a task for distributed processing.
 
