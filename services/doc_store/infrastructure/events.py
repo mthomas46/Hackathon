@@ -53,13 +53,23 @@ class EventEmitter:
         self._middleware: List[Callable[[Event], Awaitable[Event]]] = []
 
     def on(self, event_type: str, handler: EventHandler) -> None:
-        """Register event handler."""
+        """Register event handler.
+
+        Args:
+            event_type: Type of event to listen for
+            handler: Async function to handle the event
+        """
         if event_type not in self._handlers:
             self._handlers[event_type] = []
         self._handlers[event_type].append(handler)
 
     def off(self, event_type: str, handler: EventHandler) -> None:
-        """Unregister event handler."""
+        """Unregister event handler.
+
+        Args:
+            event_type: Type of event to stop listening for
+            handler: Handler function to remove
+        """
         if event_type in self._handlers:
             try:
                 self._handlers[event_type].remove(handler)
@@ -69,11 +79,25 @@ class EventEmitter:
                 pass
 
     def use(self, middleware: Callable[[Event], Awaitable[Event]]) -> None:
-        """Add middleware function."""
+        """Add middleware function.
+
+        Middleware functions are called before event handlers and can
+        modify the event or prevent its emission.
+
+        Args:
+            middleware: Async function that takes an event and returns a modified event
+        """
         self._middleware.append(middleware)
 
     async def emit(self, event: Event) -> None:
-        """Emit event to all registered handlers."""
+        """Emit event to all registered handlers.
+
+        Applies middleware in order, then calls all handlers for the event type.
+        Errors in individual handlers don't prevent other handlers from executing.
+
+        Args:
+            event: Event to emit
+        """
         try:
             # Apply middleware
             processed_event = event
@@ -109,7 +133,21 @@ class NotificationManager:
         user_id: Optional[str] = None,
         data: Optional[Dict[str, Any]] = None,
     ) -> str:
-        """Emit an event and return event ID."""
+        """Emit an event and return event ID.
+
+        Creates an event, stores it in history, emits it to handlers,
+        and triggers webhooks if configured.
+
+        Args:
+            event_type: Type of event (e.g., 'created', 'updated', 'deleted')
+            entity_type: Type of entity (e.g., 'document', 'user')
+            entity_id: ID of the entity
+            user_id: Optional ID of the user who triggered the event
+            data: Optional additional event data
+
+        Returns:
+            Unique event ID
+        """
         import uuid
 
         event = Event(

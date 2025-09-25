@@ -54,7 +54,14 @@ class DocStoreCache:
         self.response_times: List[float] = []
 
     async def initialize(self) -> bool:
-        """Initialize cache connections."""
+        """Initialize cache connections.
+
+        Attempts to establish Redis connection if available and configured.
+        Falls back gracefully if Redis is unavailable.
+
+        Returns:
+            bool: True if Redis connection was established, False otherwise
+        """
         if REDIS_AVAILABLE and self.redis_url:
             try:
                 self.redis_client = await aioredis.from_url(self.redis_url)
@@ -69,7 +76,19 @@ class DocStoreCache:
     async def get(
         self, operation: str, params: Dict[str, Any], tags: Optional[List[str]] = None
     ) -> Optional[Any]:
-        """Get cached value with performance monitoring."""
+        """Get cached value with performance monitoring.
+
+        Retrieves value from cache using multi-level lookup (Redis -> local).
+        Updates hit statistics and access times.
+
+        Args:
+            operation: Cache operation identifier
+            params: Parameters for cache key generation
+            tags: Optional tags for cache invalidation
+
+        Returns:
+            Cached value if found, None otherwise
+        """
         start_time = time.time()
         cache_key = self._generate_cache_key(operation, params)
 
@@ -164,7 +183,15 @@ class DocStoreCache:
     async def invalidate(
         self, tags: Optional[List[str]] = None, patterns: Optional[List[str]] = None
     ) -> None:
-        """Invalidate cache entries by tags or patterns."""
+        """Invalidate cache entries by tags or patterns.
+
+        Removes cache entries matching specified tags or key patterns.
+        Works across both Redis and local cache levels.
+
+        Args:
+            tags: List of tags to match for invalidation
+            patterns: List of key patterns to match (supports wildcards)
+        """
         try:
             invalidated_keys = []
 
@@ -184,7 +211,15 @@ class DocStoreCache:
     async def _invalidate_local_cache(
         self, tags: Optional[List[str]], patterns: Optional[List[str]]
     ) -> List[str]:
-        """Invalidate entries from local cache."""
+        """Invalidate entries from local cache.
+
+        Args:
+            tags: Tags to match for invalidation
+            patterns: Key patterns to match
+
+        Returns:
+            List of invalidated cache keys
+        """
         invalidated_keys = []
         keys_to_remove = []
 
@@ -201,7 +236,15 @@ class DocStoreCache:
     async def _invalidate_redis_cache(
         self, tags: Optional[List[str]], patterns: Optional[List[str]]
     ) -> List[str]:
-        """Invalidate entries from Redis cache."""
+        """Invalidate entries from Redis cache.
+
+        Args:
+            tags: Tags to match for invalidation
+            patterns: Key patterns to match (supports Redis patterns)
+
+        Returns:
+            List of invalidated cache keys
+        """
         if not self.redis_client or not (tags or patterns):
             return []
 
@@ -225,7 +268,17 @@ class DocStoreCache:
     def _should_invalidate_entry(
         self, key: str, entry: CacheEntry, tags: Optional[List[str]], patterns: Optional[List[str]]
     ) -> bool:
-        """Check if a cache entry should be invalidated."""
+        """Check if a cache entry should be invalidated.
+
+        Args:
+            key: Cache key
+            entry: Cache entry object
+            tags: Tags to check for matches
+            patterns: Key patterns to check for matches
+
+        Returns:
+            True if entry should be invalidated, False otherwise
+        """
         if tags and any(tag in entry.tags for tag in tags):
             return True
 

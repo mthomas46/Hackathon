@@ -22,12 +22,31 @@ class BaseService(Generic[T], ABC):
 
     @abstractmethod
     def _validate_entity(self, entity: T) -> None:
-        """Validate entity before saving."""
+        """Validate entity before saving.
+
+        Args:
+            entity: Entity to validate
+
+        Raises:
+            ValidationError: If entity validation fails
+        """
 
     def create_entity(
         self, entity_data: Dict[str, Any], entity_id: Optional[str] = None
     ) -> T:
-        """Create a new entity with validation."""
+        """Create a new entity with validation.
+
+        Args:
+            entity_data: Data to create entity from
+            entity_id: Optional entity ID, generated if not provided
+
+        Returns:
+            Created entity
+
+        Raises:
+            ValidationError: If entity data is invalid
+            DuplicateError: If entity already exists
+        """
         # Generate ID if not provided
         if not entity_id:
             entity_id = str(uuid.uuid4())
@@ -44,11 +63,29 @@ class BaseService(Generic[T], ABC):
         return entity
 
     def get_entity(self, entity_id: str) -> Optional[T]:
-        """Get entity by ID."""
-        return self.repository.get_by_id(entity_id)
+        """Get entity by ID.
+
+        Args:
+            entity_id: Entity identifier
+
+        Returns:
+            Entity if found, None otherwise
+        """
+        return self.repository.find_by_id(entity_id)
 
     def update_entity(self, entity_id: str, updates: Dict[str, Any]) -> T:
-        """Update entity with validation."""
+        """Update entity with validation.
+
+        Args:
+            entity_id: Entity identifier
+            updates: Fields to update
+
+        Returns:
+            Updated entity
+
+        Raises:
+            ServiceException: If entity not found or update fails
+        """
         # Get existing entity
         entity = self.repository.get_by_id(entity_id)
         if not entity:
@@ -66,14 +103,29 @@ class BaseService(Generic[T], ABC):
         return entity
 
     def delete_entity(self, entity_id: str) -> None:
-        """Delete entity by ID."""
+        """Delete entity by ID.
+
+        Args:
+            entity_id: Entity identifier to delete
+
+        Raises:
+            ServiceException: If entity not found
+        """
         if not self.repository.exists(entity_id):
             raise ServiceException(f"Entity {entity_id} not found", "NOT_FOUND")
 
         self.repository.delete_by_id(entity_id)
 
     def list_entities(self, limit: int = 50, offset: int = 0) -> Dict[str, Any]:
-        """List entities with pagination."""
+        """List entities with pagination.
+
+        Args:
+            limit: Maximum number of entities to return
+            offset: Number of entities to skip
+
+        Returns:
+            Dictionary containing items, total count, and pagination info
+        """
         entities = self.repository.get_all(limit, offset)
         total_count = self.repository.count()
         has_more = (offset + len(entities)) < total_count
@@ -88,10 +140,23 @@ class BaseService(Generic[T], ABC):
 
     @abstractmethod
     def _create_entity_from_data(self, entity_id: str, data: Dict[str, Any]) -> T:
-        """Create entity instance from data dictionary."""
+        """Create entity instance from data dictionary.
+
+        Args:
+            entity_id: Unique identifier for the entity
+            data: Dictionary containing entity data
+
+        Returns:
+            New entity instance
+        """
 
     def _apply_updates(self, entity: T, updates: Dict[str, Any]) -> None:
-        """Apply updates to entity."""
+        """Apply updates to entity.
+
+        Args:
+            entity: Entity to update
+            updates: Dictionary of field updates
+        """
         for key, value in updates.items():
             if hasattr(entity, key):
                 setattr(entity, key, value)
