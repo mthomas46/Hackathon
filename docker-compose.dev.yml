@@ -838,6 +838,41 @@ volumes:
   dashboard_logs:
     driver: local
 
+  # Audit framework volumes
+  audit-reports:
+    driver: local
+
+# ============================================================================
+# AUDIT FRAMEWORK SERVICE
+# ============================================================================
+
+  audit-framework:
+    build:
+      context: .
+      dockerfile: Dockerfile.audit
+    container_name: hackathon-audit-framework
+    volumes:
+      - .:/app
+      - audit-reports:/app/audit-reports
+    environment:
+      - PYTHONPATH=/app
+      - AUDIT_CONFIG=/app/config/audit-config.yaml
+      - REPORTS_DIR=/app/audit-reports
+      - CI=${CI:-false}
+    profiles:
+      - audit
+      - development
+      - ci
+    command: ["python3", "scripts/audit-framework/audit_cli.py", "--help"]
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "python3", "-c", "from audit_framework import AuditFramework; print('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
 # ============================================================================
 # NETWORKS
 # ============================================================================

@@ -1,0 +1,85 @@
+# 🚀 Audit Framework Docker Image
+# Enterprise-grade audit framework for CI/CD pipeline integration
+
+FROM python:3.13-slim
+
+# Metadata
+LABEL maintainer="DevOps Team"
+LABEL description="Audit Framework for LLM Documentation Ecosystem"
+LABEL version="1.0"
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app
+ENV AUDIT_CONFIG=/app/config/audit-config.yaml
+ENV REPORTS_DIR=/app/audit-reports
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    jq \
+    parallel \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+COPY scripts/audit-framework/requirements-audit.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r scripts/audit-framework/requirements-audit.txt
+
+# Copy application code
+COPY . .
+
+# Create directories for audit artifacts
+RUN mkdir -p audit-reports ci_reports
+
+# Set permissions
+RUN chmod +x scripts/audit-framework/audit_cli.py
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python3 -c "from audit_framework import AuditFramework; print('Audit framework healthy')" || exit 1
+
+# Default command
+CMD ["python3", "scripts/audit-framework/audit_cli.py", "--help"]
+
+# ========================================
+# 📋 USAGE EXAMPLES
+# ========================================
+#
+# Build the image:
+# docker build -f Dockerfile.audit -t audit-framework .
+#
+# Run quick audit:
+# docker run --rm -v $(pwd):/app audit-framework audit --service shared --profile ci_fast --output json
+#
+# Run comprehensive audit:
+# docker run --rm -v $(pwd):/app audit-framework audit --service shared --profile ci_comprehensive --output full
+#
+# Run all services audit:
+# docker run --rm -v $(pwd):/app audit-framework audit --service shared --profile standard --output json > shared-audit.json
+#
+# CI/CD usage:
+# docker run --rm \
+#   -v $(pwd):/app \
+#   -e CI=true \
+#   -e GITHUB_SHA=$GITHUB_SHA \
+#   audit-framework audit --service shared --profile ci_fast --output json
+#
+# ========================================
+# 🔧 CONFIGURATION
+# ========================================
+#
+# The container expects:
+# - /app mounted with project root
+# - AUDIT_CONFIG environment variable (default: /app/config/audit-config.yaml)
+# - REPORTS_DIR environment variable (default: /app/audit-reports)
+#
+# Configuration file should be mounted or built into the image

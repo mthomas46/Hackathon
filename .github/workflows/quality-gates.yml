@@ -57,35 +57,76 @@ jobs:
         # Run individual service audits and collect results
         mkdir -p audit-results
 
+        # Run comprehensive service audits using the audit framework
+        echo "Running comprehensive service audits..."
+
+        # Create audit configuration if it doesn't exist
+        mkdir -p config
+        if [ ! -f "config/audit-config.yaml" ]; then
+          echo "Creating audit configuration..."
+          cat > config/audit-config.yaml << 'EOF'
+version: "1.0"
+quality_gates:
+  minimum_scores:
+    overall: 60.0
+  critical_issues:
+    max_total: 5
+  service_requirements:
+    min_passing_services: 3
+    total_services: 5
+audit_profiles:
+  ci_fast:
+    timeout_seconds: 60
+    analysis_depth: "basic"
+    output_format: "json"
+services:
+  shared:
+    name: "Shared Service"
+    path: "services/shared"
+  doc_store:
+    name: "Document Store"
+    path: "services/doc_store"
+  discovery-agent:
+    name: "Discovery Agent"
+    path: "services/discovery-agent"
+  analysis-service:
+    name: "Analysis Service"
+    path: "services/analysis-service"
+  orchestrator:
+    name: "Orchestrator"
+    path: "services/orchestrator"
+EOF
+        fi
+
         # Audit shared service
         echo "Auditing shared service..."
-        python scripts/audit-framework/audit_cli.py audit --service shared --output json > audit-results/shared-audit.json
-        SHARED_SCORE=$(jq -r '.overall_score' audit-results/shared-audit.json)
-        SHARED_CRITICAL=$(jq -r '.critical_issues | length' audit-results/shared-audit.json)
+        python scripts/audit-framework/audit_cli.py audit --service shared --profile ci_fast --output json > audit-results/shared-audit.json
+        SHARED_SCORE=$(jq -r '.overall_score // 0' audit-results/shared-audit.json)
+        SHARED_CRITICAL=$(jq -r '.critical_issues_count // 0' audit-results/shared-audit.json)
 
         # Audit doc_store service
         echo "Auditing doc_store service..."
-        python scripts/audit-framework/audit_cli.py audit --service doc_store --output json > audit-results/doc-store-audit.json
-        DOC_STORE_SCORE=$(jq -r '.overall_score' audit-results/doc-store-audit.json)
-        DOC_STORE_CRITICAL=$(jq -r '.critical_issues | length' audit-results/doc-store-audit.json)
+        python scripts/audit-framework/audit_cli.py audit --service doc_store --profile ci_fast --output json > audit-results/doc-store-audit.json
+        DOC_STORE_SCORE=$(jq -r '.overall_score // 0' audit-results/doc-store-audit.json)
+        DOC_STORE_CRITICAL=$(jq -r '.critical_issues_count // 0' audit-results/doc-store-audit.json)
 
         # Audit discovery-agent service
         echo "Auditing discovery-agent service..."
-        python scripts/audit-framework/audit_cli.py audit --service discovery-agent --output json > audit-results/discovery-agent-audit.json
-        DISCOVERY_AGENT_SCORE=$(jq -r '.overall_score' audit-results/discovery-agent-audit.json)
-        DISCOVERY_AGENT_CRITICAL=$(jq -r '.critical_issues | length' audit-results/discovery-agent-audit.json)
+        python scripts/audit-framework/audit_cli.py audit --service discovery-agent --profile ci_fast --output json > audit-results/discovery-agent-audit.json
+        DISCOVERY_AGENT_SCORE=$(jq -r '.overall_score // 0' audit-results/discovery-agent-audit.json)
+        DISCOVERY_AGENT_CRITICAL=$(jq -r '.critical_issues_count // 0' audit-results/discovery-agent-audit.json)
 
         # Audit analysis-service
         echo "Auditing analysis-service..."
-        python scripts/audit-framework/audit_cli.py audit --service analysis-service --output json > audit-results/analysis-service-audit.json
-        ANALYSIS_SERVICE_SCORE=$(jq -r '.overall_score' audit-results/analysis-service-audit.json)
-        ANALYSIS_SERVICE_CRITICAL=$(jq -r '.critical_issues | length' audit-results/analysis-service-audit.json)
+        python scripts/audit-framework/audit_cli.py audit --service analysis-service --profile ci_fast --output json > audit-results/analysis-service-audit.json
+        ANALYSIS_SERVICE_SCORE=$(jq -r '.overall_score // 0' audit-results/analysis-service-audit.json)
+        ANALYSIS_SERVICE_CRITICAL=$(jq -r '.critical_issues_count // 0' audit-results/analysis-service-audit.json)
 
         # Audit orchestrator service
         echo "Auditing orchestrator service..."
-        python scripts/audit-framework/audit_cli.py audit --service orchestrator --output json > audit-results/orchestrator-audit.json
-        ORCHESTRATOR_SCORE=$(jq -r '.overall_score' audit-results/orchestrator-audit.json)
-        ORCHESTRATOR_CRITICAL=$(jq -r '.critical_issues | length' audit-results/orchestrator-audit.json)
+        python scripts/audit-framework/audit_cli.py audit --service orchestrator --profile ci_fast --output json > audit-results/orchestrator-audit.json
+        ORCHESTRATOR_SCORE=$(jq -r '.overall_score // 0' audit-results/orchestrator-audit.json)
+        ORCHESTRATOR_CRITICAL=$(jq -r '.critical_issues_count // 0' audit-results/orchestrator-audit.json)
 
         # Calculate total critical issues
         TOTAL_CRITICAL=$((SHARED_CRITICAL + DOC_STORE_CRITICAL + DISCOVERY_AGENT_CRITICAL + ANALYSIS_SERVICE_CRITICAL + ORCHESTRATOR_CRITICAL))

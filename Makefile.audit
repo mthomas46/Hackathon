@@ -1,0 +1,253 @@
+# 🚀 Audit Framework Integration Makefile
+# Comprehensive audit targets for CI/CD pipeline integration
+
+PYTHON ?= python3
+VENV ?= venv_audit
+AUDIT_CLI ?= scripts/audit-framework/audit_cli.py
+AUDIT_CONFIG ?= config/audit-config.yaml
+REPORTS_DIR ?= audit-reports
+
+# Colors for output
+RED := \033[0;31m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+BLUE := \033[0;34m
+PURPLE := \033[0;35m
+CYAN := \033[0;36m
+NC := \033[0m # No Color
+
+.PHONY: help audit audit-all audit-services audit-ci audit-quick audit-comprehensive audit-parallel audit-report audit-clean audit-setup audit-validate audit-benchmark audit-trend audit-config audit-debug audit-docker audit-pre-commit
+
+help: ## Show audit framework commands
+	@echo "$(BLUE)🚀 Audit Framework Commands$(NC)"
+	@echo "============================"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "$(CYAN)%-25s$(NC) %s\n", $$1, $$2}'
+
+# ========================================
+# 🔧 AUDIT ENVIRONMENT SETUP
+# ========================================
+
+audit-setup: ## Set up audit framework environment and dependencies
+	@echo "$(BLUE)🔧 Setting up Audit Framework Environment...$(NC)"
+	$(PYTHON) -m venv $(VENV)
+	source $(VENV)/bin/activate && pip install -U pip
+	source $(VENV)/bin/activate && pip install -r scripts/audit-framework/requirements-audit.txt
+	source $(VENV)/bin/activate && pip install -r requirements.txt
+	@echo "$(GREEN)✅ Audit environment ready$(NC)"
+	@echo "Run 'source $(VENV)/bin/activate' to activate the audit environment"
+
+audit-validate: ## Validate audit framework installation and configuration
+	@echo "$(BLUE)🔍 Validating Audit Framework...$(NC)"
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) --help > /dev/null 2>&1 && echo "✅ CLI working" || echo "❌ CLI failed"
+	source $(VENV)/bin/activate && python3 -c "import yaml; yaml.safe_load(open('$(AUDIT_CONFIG)'))" 2>/dev/null && echo "✅ Config valid" || echo "❌ Config invalid"
+	source $(VENV)/bin/activate && python3 -c "from audit_framework import AuditFramework; print('✅ Framework imports')" 2>/dev/null || echo "❌ Framework import failed"
+	@echo "$(GREEN)✅ Audit framework validation completed$(NC)"
+
+# ========================================
+# 🔍 INDIVIDUAL SERVICE AUDITS
+# ========================================
+
+audit-shared: ## Audit shared service
+	@echo "$(BLUE)🔍 Auditing Shared Service...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service shared --profile standard --output full > $(REPORTS_DIR)/shared-audit.json
+	@echo "$(GREEN)✅ Shared service audit completed$(NC)"
+
+audit-doc-store: ## Audit document store service
+	@echo "$(BLUE)🔍 Auditing Document Store Service...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service doc_store --profile standard --output full > $(REPORTS_DIR)/doc-store-audit.json
+	@echo "$(GREEN)✅ Document store audit completed$(NC)"
+
+audit-discovery-agent: ## Audit discovery agent service
+	@echo "$(BLUE)🔍 Auditing Discovery Agent Service...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service discovery-agent --profile standard --output full > $(REPORTS_DIR)/discovery-agent-audit.json
+	@echo "$(GREEN)✅ Discovery agent audit completed$(NC)"
+
+audit-analysis-service: ## Audit analysis service
+	@echo "$(BLUE)🔍 Auditing Analysis Service...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service analysis-service --profile standard --output full > $(REPORTS_DIR)/analysis-service-audit.json
+	@echo "$(GREEN)✅ Analysis service audit completed$(NC)"
+
+audit-orchestrator: ## Audit orchestrator service
+	@echo "$(BLUE)🔍 Auditing Orchestrator Service...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service orchestrator --profile standard --output full > $(REPORTS_DIR)/orchestrator-audit.json
+	@echo "$(GREEN)✅ Orchestrator audit completed$(NC)"
+
+# ========================================
+# 🔬 COMPREHENSIVE AUDIT TARGETS
+# ========================================
+
+audit-services: audit-shared audit-doc-store audit-discovery-agent audit-analysis-service audit-orchestrator ## Audit all services sequentially
+	@echo "$(GREEN)🎉 All services audited successfully$(NC)"
+
+audit-parallel: ## Audit all services in parallel (requires GNU parallel)
+	@echo "$(BLUE)🔬 Running Parallel Service Audits...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && parallel --no-notice 'python3 $(AUDIT_CLI) audit --service {} --profile standard --output full > $(REPORTS_DIR)/{}-audit.json' ::: shared doc_store discovery-agent analysis-service orchestrator
+	@echo "$(GREEN)✅ Parallel audits completed$(NC)"
+
+audit-all: audit-parallel audit-report ## Complete audit suite (parallel + reporting)
+	@echo "$(GREEN)🎯 Complete audit suite finished$(NC)"
+
+# ========================================
+# ⚡ CI/CD OPTIMIZED AUDITS
+# ========================================
+
+audit-ci: ## CI-optimized audit (fast profile, JSON output)
+	@echo "$(BLUE)⚡ Running CI Audit (Fast Profile)...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service shared --profile ci_fast --output json > $(REPORTS_DIR)/ci-audit.json
+	@echo "$(GREEN)✅ CI audit completed$(NC)"
+
+audit-quick: ## Quick audit for development (relaxed profile)
+	@echo "$(BLUE)⚡ Running Quick Audit (Relaxed Profile)...$(NC)"
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service shared --profile relaxed --output rich
+	@echo "$(GREEN)✅ Quick audit completed$(NC)"
+
+audit-comprehensive: ## Comprehensive audit for releases (comprehensive profile)
+	@echo "$(BLUE)🔬 Running Comprehensive Audit...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service shared --profile ci_comprehensive --output full > $(REPORTS_DIR)/comprehensive-audit.json
+	@echo "$(GREEN)✅ Comprehensive audit completed$(NC)"
+
+# ========================================
+# 📊 REPORTING AND ANALYSIS
+# ========================================
+
+audit-report: ## Generate comprehensive audit reports
+	@echo "$(BLUE)📊 Generating Audit Reports...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 scripts/audit-framework/audit_cli.py compare --services shared,doc_store,discovery-agent,analysis-service,orchestrator --output markdown > $(REPORTS_DIR)/audit-comparison.md
+	source $(VENV)/bin/activate && python3 scripts/audit-framework/audit_cli.py trend --service shared --period 7days --output json > $(REPORTS_DIR)/audit-trends.json 2>/dev/null || echo "Trend analysis not available"
+	@echo "$(GREEN)✅ Audit reports generated in $(REPORTS_DIR)$(NC)"
+
+audit-benchmark: ## Run audit performance benchmark
+	@echo "$(BLUE)📈 Running Audit Performance Benchmark...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && echo "Benchmark started: $$(date)" > $(REPORTS_DIR)/benchmark.log
+	source $(VENV)/bin/activate && time python3 $(AUDIT_CLI) audit --service shared --profile ci_comprehensive --output json > /dev/null 2>> $(REPORTS_DIR)/benchmark.log
+	source $(VENV)/bin/activate && echo "Benchmark completed: $$(date)" >> $(REPORTS_DIR)/benchmark.log
+	@echo "$(GREEN)✅ Benchmark completed - check $(REPORTS_DIR)/benchmark.log$(NC)"
+
+audit-trend: ## Analyze audit trends over time
+	@echo "$(BLUE)📈 Analyzing Audit Trends...$(NC)"
+	source $(VENV)/bin/activate && mkdir -p $(REPORTS_DIR)
+	source $(VENV)/bin/activate && python3 scripts/audit-framework/audit_cli.py trend --service shared --period 30days --output markdown > $(REPORTS_DIR)/trend-analysis.md 2>/dev/null || echo "Trend data not available"
+	@echo "$(GREEN)✅ Trend analysis completed$(NC)"
+
+# ========================================
+# 🔧 CONFIGURATION AND DEBUGGING
+# ========================================
+
+audit-config: ## Validate and display audit configuration
+	@echo "$(BLUE)⚙️ Audit Configuration$(NC)"
+	@echo "======================="
+	@echo ""
+	@echo "Config File: $(AUDIT_CONFIG)"
+	@echo "CLI Tool: $(AUDIT_CLI)"
+	@echo "Reports Dir: $(REPORTS_DIR)"
+	@echo "Python: $(PYTHON)"
+	@echo "Virtual Env: $(VENV)"
+	@echo ""
+	@if [ -f "$(AUDIT_CONFIG)" ]; then \
+		$(PYTHON) -c "import yaml; \
+		try: \
+			with open('$(AUDIT_CONFIG)', 'r') as f: \
+				config = yaml.safe_load(f); \
+			print('✅ Configuration loaded successfully'); \
+			print(f'Version: {config.get(\"version\", \"unknown\")}'); \
+			print(f'Services configured: {len(config.get(\"services\", {}))}'); \
+			print(f'Quality gates: {len(config.get(\"quality_gates\", {}))}'); \
+			print(f'Audit profiles: {len(config.get(\"audit_profiles\", {}))}'); \
+		except Exception as e: \
+			print(f'❌ Configuration error: {e}'); \
+		" 2>/dev/null || echo "⚠️  Python/yaml not available, checking file existence only"; \
+	else \
+		echo "❌ Configuration file not found: $(AUDIT_CONFIG)"; \
+	fi
+	@echo ""
+	@if [ -f "$(AUDIT_CLI)" ]; then \
+		echo "✅ Audit CLI tool found"; \
+	else \
+		echo "❌ Audit CLI tool not found: $(AUDIT_CLI)"; \
+	fi
+	@if [ -d "$(REPORTS_DIR)" ]; then \
+		echo "✅ Reports directory exists"; \
+	else \
+		echo "⚠️  Reports directory not found (will be created on first run)"; \
+	fi
+	@echo "$(GREEN)✅ Configuration check completed$(NC)"
+
+audit-debug: ## Debug audit framework with verbose output
+	@echo "$(BLUE)🐛 Debug Mode - Running Audit with Verbose Output...$(NC)"
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service shared --profile standard --output full --verbose 2>&1 | head -50
+	@echo "$(GREEN)✅ Debug output completed (showing first 50 lines)$(NC)"
+
+audit-docker: ## Run audit in Docker container
+	@echo "$(BLUE)🐳 Running Audit in Docker...$(NC)"
+	docker build -f Dockerfile.audit -t audit-framework .
+	docker run --rm -v $$(pwd):/app audit-framework audit --service shared --profile standard --output json
+	@echo "$(GREEN)✅ Docker audit completed$(NC)"
+
+# ========================================
+# 🔒 QUALITY GATES AND ENFORCEMENT
+# ========================================
+
+audit-quality-gate: ## Check quality gates against audit results
+	@echo "$(BLUE)🚨 Checking Quality Gates...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/audit-framework/audit_cli.py quality-gate --config $(AUDIT_CONFIG) --reports $(REPORTS_DIR)
+	@echo "$(GREEN)✅ Quality gate check completed$(NC)"
+
+audit-enforce: ## Enforce quality standards (fail if gates not met)
+	@echo "$(BLUE)🚫 Enforcing Quality Standards...$(NC)"
+	source $(VENV)/bin/activate && python3 scripts/audit-framework/audit_cli.py quality-gate --config $(AUDIT_CONFIG) --reports $(REPORTS_DIR) --enforce || (echo "$(RED)❌ Quality gates failed - build blocked$(NC)" && exit 1)
+	@echo "$(GREEN)✅ Quality standards met$(NC)"
+
+audit-pre-commit: ## Run audit as pre-commit hook
+	@echo "$(BLUE)🔒 Running Pre-commit Audit...$(NC)"
+	source $(VENV)/bin/activate && python3 $(AUDIT_CLI) audit --service shared --profile ci_fast --output json > /dev/null && echo "✅ Pre-commit audit passed" || (echo "❌ Pre-commit audit failed" && exit 1)
+
+# ========================================
+# 🧹 CLEANUP AND MAINTENANCE
+# ========================================
+
+audit-clean: ## Clean audit artifacts and temporary files
+	@echo "$(BLUE)🧹 Cleaning Audit Artifacts...$(NC)"
+	rm -rf $(REPORTS_DIR)/*.log
+	find $(REPORTS_DIR) -name "*.json" -mtime +30 -delete 2>/dev/null || true
+	@echo "$(GREEN)✅ Audit cleanup completed$(NC)"
+
+audit-maintenance: ## Run audit framework maintenance tasks
+	@echo "$(BLUE)🔧 Running Audit Maintenance...$(NC)"
+	source $(VENV)/bin/activate && pip install --upgrade -r scripts/audit-framework/requirements-audit.txt
+	source $(VENV)/bin/activate && python3 -c "import sys; print(f'Python version: {sys.version}') ; import radon, bandit, psutil; print('✅ Core dependencies OK')"
+	@echo "Checking configuration..."
+	source $(VENV)/bin/activate && python3 -c "import yaml; yaml.safe_load(open('$(AUDIT_CONFIG)')); print('✅ Config valid')"
+	@echo "$(GREEN)✅ Audit maintenance completed$(NC)"
+
+# ========================================
+# 📋 INTEGRATION TARGETS
+# ========================================
+
+# Integration with main Makefile
+audit: audit-quick ## Quick audit (alias for audit-quick)
+
+# CI/CD pipeline integration
+ci-audit: audit-setup audit-services audit-quality-gate ## Complete CI/CD audit pipeline
+	@echo "$(GREEN)🎯 CI/CD audit pipeline completed$(NC)"
+
+# Development workflow integration
+dev-audit: audit-setup audit-quick ## Development audit workflow
+	@echo "$(GREEN)🎉 Development audit completed$(NC)"
+
+# Pre-deployment checks
+pre-deploy-audit: audit-setup audit-comprehensive audit-quality-gate ## Pre-deployment audit validation
+	@echo "$(GREEN)🚀 Pre-deployment audit validation passed$(NC)"
+
+# Default target
+.DEFAULT_GOAL := help
