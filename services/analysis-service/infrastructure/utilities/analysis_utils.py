@@ -24,38 +24,36 @@ def extract_content_from_patch(patch: str) -> str:
 
 def get_file_type(filename: str) -> str:
     """Determine file type from filename."""
-    if filename.endswith((".py", ".pyc")):
-        return "python"
-    elif filename.endswith((".js", ".jsx")):
-        return "javascript"
-    elif filename.endswith((".ts", ".tsx")):
-        return "typescript"
-    elif filename.endswith((".java",)):
-        return "java"
-    elif filename.endswith((".cpp", ".c++", ".cc", ".cxx", ".hpp", ".h")):
-        return "cpp"
-    elif filename.endswith((".cs",)):
-        return "csharp"
-    elif filename.endswith((".php",)):
-        return "php"
-    elif filename.endswith((".rb",)):
-        return "ruby"
-    elif filename.endswith((".go",)):
-        return "go"
-    elif filename.endswith((".rs",)):
-        return "rust"
-    elif filename.endswith((".html", ".htm")):
-        return "html"
-    elif filename.endswith((".css",)):
-        return "css"
-    elif filename.endswith((".md", ".markdown")):
-        return "markdown"
-    elif filename.endswith((".json",)):
-        return "json"
-    elif filename.endswith((".xml", ".yml", ".yaml")):
-        return "config"
-    else:
-        return "unknown"
+    # File extension to type mapping
+    extension_map = {
+        # Programming languages
+        (".py", ".pyc"): "python",
+        (".js", ".jsx"): "javascript",
+        (".ts", ".tsx"): "typescript",
+        (".java",): "java",
+        (".cpp", ".c++", ".cc", ".cxx", ".hpp", ".h"): "cpp",
+        (".cs",): "csharp",
+        (".php",): "php",
+        (".rb",): "ruby",
+        (".go",): "go",
+        (".rs",): "rust",
+
+        # Web/markup
+        (".html", ".htm"): "html",
+        (".css",): "css",
+        (".md", ".markdown"): "markdown",
+
+        # Data/config
+        (".json",): "json",
+        (".xml", ".yml", ".yaml"): "config",
+    }
+
+    # Check each extension group
+    for extensions, file_type in extension_map.items():
+        if filename.endswith(extensions):
+            return file_type
+
+    return "unknown"
 
 def is_good_commit_message(message: str) -> bool:
     """Check if a commit message follows good practices."""
