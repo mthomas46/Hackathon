@@ -115,6 +115,22 @@ class AnalysisExecutionException(AnalysisException):
         self.error_message = error_message
 
 
+class AnalysisOperationException(AnalysisException):
+    """Exception during analysis operation that should return empty results."""
+
+    def __init__(self, operation: str, error_message: str, context: Optional[Dict[str, Any]] = None):
+        """Initialize analysis operation exception."""
+        message = f"Analysis operation '{operation}' failed: {error_message}"
+        details = context or {}
+        details.update({
+            "operation": operation,
+            "error_message": error_message,
+        })
+        super().__init__(message, details)
+        self.operation = operation
+        self.error_message = error_message
+
+
 class AnalysisTimeoutException(AnalysisException):
     """Exception when analysis times out."""
 

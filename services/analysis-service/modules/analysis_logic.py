@@ -33,6 +33,7 @@ from .shared_utils import (
     handle_analysis_error,
 )
 from .error_handling_utils import create_error_response, handle_analysis_error
+from ..domain.exceptions.domain_exceptions import AnalysisOperationException
 
 # Constants for analysis thresholds and scoring (using shared configuration)
 DRIFT_OVERLAP_THRESHOLD = get_drift_overlap_threshold()
@@ -163,7 +164,12 @@ def detect_readme_drift(docs: List[Document]) -> List[Finding]:
 
     except Exception as e:
         # Log error and return empty findings rather than failing completely
-        handle_analysis_error("detect README drift", e, doc_count=len(docs), **context)
+        operation_exception = AnalysisOperationException(
+            operation="detect_readme_drift",
+            error_message=str(e),
+            context={"doc_count": len(docs), **context}
+        )
+        handle_analysis_error("detect README drift", operation_exception, doc_count=len(docs), **context)
         return []
 
 
@@ -291,9 +297,14 @@ def detect_api_mismatches(docs: List[Document], apis: List[Dict[str, Any]]) -> L
 
     except Exception as e:
         # Log error and return empty findings rather than failing completely
+        operation_exception = AnalysisOperationException(
+            operation="detect_api_mismatches",
+            error_message=str(e),
+            context={"docs_count": len(docs), "apis_count": len(apis), **context}
+        )
         handle_analysis_error(
             "detect API mismatches",
-            e,
+            operation_exception,
             docs_count=len(docs),
             apis_count=len(apis),
             **context,
@@ -370,7 +381,12 @@ def generate_summary_report(findings: List[Finding]) -> Dict[str, Any]:
 
     except Exception as e:
         # Return a minimal report on error rather than failing completely
-        handle_analysis_error("generate summary report", e, total_findings=len(findings), **context)
+        operation_exception = AnalysisOperationException(
+            operation="generate_summary_report",
+            error_message=str(e),
+            context={"total_findings": len(findings), **context}
+        )
+        handle_analysis_error("generate summary report", operation_exception, total_findings=len(findings), **context)
         return {
             "total_findings": len(findings) if findings else 0,
             "severity_breakdown": {},
@@ -471,9 +487,14 @@ def generate_trends_report(findings: List[Finding], time_window: str = "7d") -> 
 
     except Exception as e:
         # Return a minimal report on error rather than failing completely
+        operation_exception = AnalysisOperationException(
+            operation="generate_trends_report",
+            error_message=str(e),
+            context={"total_findings": len(findings), "time_window": time_window, **context}
+        )
         handle_analysis_error(
             "generate trends report",
-            e,
+            operation_exception,
             total_findings=len(findings),
             time_window=time_window,
             **context,
