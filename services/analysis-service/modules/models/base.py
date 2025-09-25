@@ -17,14 +17,28 @@ class BaseModel(PydanticBaseModel):
         json_encoders: Dict[Type[Any], Callable[[Any], Any]] = {datetime: lambda v: v.isoformat() if v else None}
 
     def dict(self, **kwargs: Any) -> Dict[str, Any]:
-        """Convert model to dictionary with enhanced options."""
+        """Convert model to dictionary with enhanced options.
+
+        Args:
+            **kwargs: Additional arguments passed to Pydantic's dict method
+
+        Returns:
+            Dictionary representation of the model
+        """
         # Default to exclude None values and use alias
         kwargs.setdefault("exclude_none", True)
         kwargs.setdefault("by_alias", True)
         return super().dict(**kwargs)
 
     def json(self, **kwargs: Any) -> str:
-        """Convert model to JSON with enhanced options."""
+        """Convert model to JSON with enhanced options.
+
+        Args:
+            **kwargs: Additional arguments passed to Pydantic's json method
+
+        Returns:
+            JSON string representation of the model
+        """
         kwargs.setdefault("exclude_none", True)
         kwargs.setdefault("by_alias", True)
         return super().json(**kwargs)
@@ -42,6 +56,17 @@ class ValidationErrorDetail(BaseModel):
     @field_validator("field")
     @classmethod
     def validate_field(cls, v):
+        """Validate field name for validation errors.
+
+        Args:
+            v: Field value to validate
+
+        Returns:
+            Validated field name
+
+        Raises:
+            ValueError: If field is empty or not a string
+        """
         if not v or not isinstance(v, str):
             raise ValueError("Field must be a non-empty string")
         return v.strip()
@@ -115,6 +140,17 @@ class ErrorResponse(BaseModel):
     @field_validator("validation_errors")
     @classmethod
     def validate_validation_errors(cls, v):
+        """Validate validation errors list.
+
+        Args:
+            v: Validation errors list to validate
+
+        Returns:
+            Validated validation errors list
+
+        Raises:
+            ValueError: If validation errors is not a list or exceeds max length
+        """
         if v is not None and (not isinstance(v, list) or len(v) > 100):
             raise ValueError("Validation errors must be a list with max 100 items")
         return v
@@ -170,6 +206,14 @@ class RequestMetadata(BaseModel):
     @field_validator("request_id")
     @classmethod
     def validate_request_id(cls, v):
+        """Validate request ID format.
+
+        Args:
+            v: Request ID value to validate
+
+        Returns:
+            Validated request ID
+        """
         if v is not None and (not isinstance(v, str) or len(v.strip()) < 8):
             raise ValueError("Request ID must be at least 8 characters if provided")
         return v.strip() if v else None
@@ -277,6 +321,17 @@ class AnalysisContext(BaseModel):
     @field_validator("analysis_id")
     @classmethod
     def validate_analysis_id(cls, v):
+        """Validate analysis ID format.
+
+        Args:
+            v: Analysis ID value to validate
+
+        Returns:
+            Validated analysis ID
+
+        Raises:
+            ValueError: If analysis ID format is invalid
+        """
         if not v or not isinstance(v, str) or len(v.strip()) < 8:
             raise ValueError("Analysis ID must be at least 8 characters")
         return v.strip()
