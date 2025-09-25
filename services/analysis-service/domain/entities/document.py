@@ -65,36 +65,64 @@ class Document:
             raise ValueError("Document title too long (max 200 characters)")
 
     def update_content(self, new_content: Content) -> None:
-        """Update document content."""
+        """Update document content.
+
+        Args:
+            new_content: New content object to replace current content
+        """
         self.content = new_content
         # In a real implementation, this would trigger domain events
 
     def update_metadata(self, new_metadata: Metadata) -> None:
-        """Update document metadata."""
+        """Update document metadata.
+
+        Args:
+            new_metadata: New metadata object to replace current metadata
+        """
         self.metadata = new_metadata
 
     def add_tag(self, tag: str) -> None:
-        """Add a tag to the document."""
+        """Add a tag to the document.
+
+        Args:
+            tag: Tag string to add (duplicates are ignored)
+        """
         if tag not in self.metadata.tags:
             self.metadata.tags.append(tag)
 
     def remove_tag(self, tag: str) -> None:
-        """Remove a tag from the document."""
+        """Remove a tag from the document.
+
+        Args:
+            tag: Tag string to remove (no-op if tag doesn't exist)
+        """
         if tag in self.metadata.tags:
             self.metadata.tags.remove(tag)
 
     @property
     def is_recently_updated(self) -> bool:
-        """Check if document was updated recently (within last 24 hours)."""
+        """Check if document was updated recently.
+
+        Returns:
+            True if document was updated within the last 24 hours
+        """
         return (datetime.now() - self.metadata.updated_at).days < 1
 
     @property
     def word_count(self) -> int:
-        """Get word count of document content."""
+        """Get word count of document content.
+
+        Returns:
+            Number of words in the document content
+        """
         return len(self.content.text.split())
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert document to dictionary representation."""
+        """Convert document to dictionary representation.
+
+        Returns:
+            Dictionary containing document data with serialized timestamps
+        """
         return {
             "id": self.id.value,
             "title": self.title,
