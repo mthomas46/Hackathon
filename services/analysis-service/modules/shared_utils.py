@@ -84,14 +84,15 @@ _DEFAULT_MEDIUM_PRIORITY_SCORE = _validate_int_env_var("MEDIUM_PRIORITY_SCORE", 
 def get_analysis_service_client():
     """Get analysis service client with standardized error handling."""
     from services.shared.utilities import get_service_client
+    from .error_handling_utils import handle_analysis_error
 
     try:
         return get_service_client()
     except Exception as e:
-        fire_and_forget(
-            "error",
-            f"Failed to get analysis service client: {e}",
-            ServiceNames.ANALYSIS_SERVICE,
+        handle_analysis_error(
+            "get_analysis_service_client",
+            e,
+            service_name=ServiceNames.ANALYSIS_SERVICE
         )
         raise
 
