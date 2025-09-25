@@ -296,6 +296,7 @@ class AuditFramework:
             'code_documentation': code_documentation,
             'configuration_management': config_management,
             'logging_practices': logging_practices,
+            'directory_analysis': getattr(self, '_directory_analysis', {}),
             'issues': self._identify_architecture_issues(scores),
             'recommendations': self._generate_architecture_recommendations(scores)
         }
@@ -405,12 +406,20 @@ class AuditFramework:
             },
             'presentation': {
                 'description': 'HTTP/API layer - REST endpoints, request/response handling',
-                'required': ['controllers'],
-                'recommended': ['models', 'middleware', 'routes', 'api'],
-                'optional': ['web', 'templates', 'responses', 'requests', 'schemas'],
+                'required': ['controllers', 'routes'],
+                'recommended': ['models', 'middleware', 'api', 'schemas', 'responses'],
+                'optional': ['web', 'templates', 'requests', 'dto', 'serializers'],
                 'forbidden': ['entities', 'repositories', 'domain_services', 'config', 'cache',
-                            'external_services', 'migrations', 'handlers', 'dto'],
+                            'external_services', 'migrations', 'handlers', 'business_logic'],
                 'forbidden_reason': 'Business logic in domain/application, infrastructure concerns elsewhere'
+            },
+            'presentation/routes': {
+                'description': 'Route definitions organized by domain/feature',
+                'required': ['__init__.py'],
+                'recommended': ['analysis', 'documents', 'workflows', 'reports', 'health'],
+                'optional': ['auth', 'users', 'admin', 'monitoring', 'metrics'],
+                'forbidden': ['entities', 'repositories', 'services', 'config', 'cache'],
+                'forbidden_reason': 'Routes should only contain endpoint definitions and imports'
             }
         }
 
@@ -452,6 +461,80 @@ class AuditFramework:
             layer_score += 5  # Bonus for having at least 3 layers
 
         score += min(10, layer_score)
+
+        # Check routes directory structure (8 points)
+        routes_score = 0
+        routes_dirs = [d for d in all_dirs if 'presentation/routes' in d or 'routes' in d.split('/')]
+
+        if routes_dirs:
+            routes_score += 3  # Routes directory exists
+
+            # Check for proper routes organization
+            routes_subdirs = []
+            for dir_path in routes_dirs:
+                parts = dir_path.split('/')
+                if len(parts) >= 3 and parts[-2] == 'routes':
+                    routes_subdirs.append(parts[-1])
+
+            # Check for domain/feature-based organization
+            domain_features = ['analysis', 'documents', 'workflows', 'reports', 'health', 'auth', 'admin']
+            feature_routes = sum(1 for subdir in routes_subdirs if subdir in domain_features)
+
+            if feature_routes > 0:
+                routes_score += 3  # Feature-based routes organization
+                if len(routes_subdirs) >= 3:
+                    routes_score += 2  # Multiple feature areas
+
+            # Check for __init__.py in routes directory
+            routes_init_found = False
+            for root, dirs, files in os.walk(str(service.path)):
+                if 'routes' in Path(root).relative_to(service.path).parts:
+                    if '__init__.py' in files:
+                        routes_init_found = True
+                        break
+
+            if routes_init_found:
+                routes_score += 2  # Proper Python package structure
+            else:
+                issues_found.append("Missing __init__.py in routes directory")
+                recommendations.append("Add __init__.py to routes directory for proper Python package")
+
+            # Check for oversized route files
+            large_route_files = []
+            for root, dirs, files in os.walk(str(service.path)):
+                if 'routes' in Path(root).relative_to(service.path).parts:
+                    for file in files:
+                        if file.endswith('.py') and not file.startswith('__'):
+                            file_path = Path(root) / file
+                            try:
+                                with open(file_path, 'r', encoding='utf-8') as f:
+                                    line_count = len(f.readlines())
+                                    if line_count > 300:  # Routes files shouldn't be too large
+                                        large_route_files.append(f"{file_path.relative_to(service.path)} ({line_count} lines)")
+                                        routes_score -= 0.5
+                            except:
+                                continue
+
+            if large_route_files:
+                issues_found.append(f"Large route files detected: {', '.join(large_route_files[:2])}")
+                recommendations.append("Split large route files into smaller domain-specific files")
+
+        else:
+            issues_found.append("Missing routes directory - required for DDD+REST architecture")
+            recommendations.append("Create presentation/routes/ directory with domain-organized route files")
+            routes_score -= 8  # Major penalty for missing routes
+
+        score += max(0, routes_score)
+
+        # Store directory analysis results for reporting
+        self._directory_analysis = {
+            'routes_score': routes_score,
+            'total_files': total_files,
+            'monolithic_files': len(monolithic_files),
+            'large_directories': len(large_directories),
+            'issues': issues_found,
+            'recommendations': recommendations
+        }
 
         # Check for DDD+REST anti-patterns
         antipattern_penalty = 0
@@ -1026,26 +1109,52 @@ class AuditFramework:
             'endpoint_issues': [],
             'rest_violations': [],
             'openapi_violations': [],
-            'standard_violations': []
+            'standard_violations': [],
+            'endpoint_details': [],  # New: detailed endpoint information
+            'compliant_endpoints': [],  # New: list of compliant endpoints
+            'non_compliant_endpoints': []  # New: list of non-compliant endpoints
         }
 
-        # Find FastAPI route files
+        # Find FastAPI route files with comprehensive detection
         route_files = []
+        all_python_files = []
         for root, dirs, files in os.walk(str(service.path)):
             for file in files:
                 if file.endswith('.py'):
                     file_path = Path(root) / file
+                    all_python_files.append(file_path)
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             content = f.read()
-                            # Look for FastAPI router patterns
-                            if ('@router.' in content or '@app.' in content or
-                                'APIRouter' in content or 'FastAPI' in content):
-                                route_files.append(file_path)
+                            # Look for FastAPI router patterns - expanded detection
+                            has_fastapi_patterns = (
+                                '@router.' in content or '@app.' in content or
+                                'APIRouter' in content or 'FastAPI' in content or
+                                'fastapi' in content.lower() or
+                                'from fastapi' in content or
+                                'import fastapi' in content
+                            )
+
+                            # Prioritize routes directory files (DDD+REST structure)
+                            is_in_routes_dir = 'presentation/routes' in str(file_path.relative_to(service.path)) or 'routes' in str(file_path.relative_to(service.path)).split('/')
+
+                            if has_fastapi_patterns:
+                                # Routes directory files get priority (add to front of list)
+                                if is_in_routes_dir:
+                                    route_files.insert(0, file_path)
+                                else:
+                                    route_files.append(file_path)
                     except Exception:
                         continue
 
-        for route_file in route_files[:10]:  # Limit analysis to first 10 files
+        # Validation: Ensure comprehensive endpoint detection
+        endpoint_detection_validation = self._validate_endpoint_detection_completeness(
+            service, route_files, all_python_files
+        )
+        endpoint_analysis['endpoint_detection_validation'] = endpoint_detection_validation
+
+        # Analyze up to 20 route files (increased limit for better coverage)
+        for route_file in route_files[:20]:
             try:
                 with open(route_file, 'r', encoding='utf-8') as f:
                     content = f.read()
@@ -1055,6 +1164,9 @@ class AuditFramework:
                 endpoint_blocks = self._extract_endpoint_blocks(content)
                 for i, block in enumerate(endpoint_blocks):
                     endpoint_analysis['total_endpoints'] += 1
+
+                    # Extract endpoint details
+                    endpoint_info = self._extract_endpoint_info(block, route_file)
                     issues = self._analyze_single_endpoint(block, route_file)
 
                     # Check REST compliance
@@ -1068,8 +1180,11 @@ class AuditFramework:
                     openapi_score = self._check_openapi_compliance_for_endpoint(block)
                     if openapi_score >= 80:
                         endpoint_analysis['openapi_compliant_endpoints'] += 1
+                        endpoint_analysis['compliant_endpoints'].append(endpoint_info)
                     else:
                         endpoint_analysis['openapi_violations'].extend([f"{route_file.name}: {v}" for v in issues.get('openapi', [])])
+                        endpoint_info['compliance_issues'] = issues.get('openapi', [])
+                        endpoint_analysis['non_compliant_endpoints'].append(endpoint_info)
 
                     # Check project standards
                     standard_score = self._check_project_standards_for_endpoint(block)
@@ -1077,6 +1192,16 @@ class AuditFramework:
                         endpoint_analysis['project_standard_compliant_endpoints'] += 1
                     else:
                         endpoint_analysis['standard_violations'].extend([f"{route_file.name}: {v}" for v in issues.get('standards', [])])
+
+                    # Store detailed endpoint information
+                    endpoint_info.update({
+                        'rest_score': rest_score,
+                        'openapi_score': openapi_score,
+                        'standard_score': standard_score,
+                        'file': str(route_file),
+                        'line_number': self._get_endpoint_line_number(content, block)
+                    })
+                    endpoint_analysis['endpoint_details'].append(endpoint_info)
 
 
 
@@ -1140,6 +1265,142 @@ class AuditFramework:
                 i += 1
 
         return blocks
+
+    def _extract_endpoint_info(self, endpoint_block: str, file_path: Path) -> Dict[str, Any]:
+        """Extract basic information about an endpoint."""
+        info = {
+            'path': 'unknown',
+            'method': 'unknown',
+            'function_name': 'unknown'
+        }
+
+        # Extract path
+        import re
+        path_match = re.search(r'["\'](/[^"\']*)["\']', endpoint_block)
+        if path_match:
+            info['path'] = path_match.group(1)
+
+        # Extract method from decorator
+        method_match = re.search(r'@(?:app|router)\.(\w+)\(', endpoint_block)
+        if method_match:
+            info['method'] = method_match.group(1).upper()
+
+        # Extract function name
+        func_match = re.search(r'(?:async )?def (\w+)\s*\(', endpoint_block)
+        if func_match:
+            info['function_name'] = func_match.group(1)
+
+        return info
+
+    def _get_endpoint_line_number(self, content: str, endpoint_block: str) -> int:
+        """Get the line number where an endpoint starts."""
+        lines = content.split('\n')
+        block_lines = endpoint_block.split('\n')
+        if block_lines:
+            first_line = block_lines[0].strip()
+            for i, line in enumerate(lines):
+                if line.strip() == first_line:
+                    return i + 1
+        return 0
+
+    def _validate_endpoint_detection_completeness(self, service: ServiceInfo, route_files: List[Path], all_python_files: List[Path]) -> Dict[str, Any]:
+        """Validate that endpoint detection is comprehensive and no endpoints are missed."""
+        validation_results = {
+            'total_python_files': len(all_python_files),
+            'detected_route_files': len(route_files),
+            'missed_endpoints': [],
+            'detection_gaps': [],
+            'recommendations': []
+        }
+
+        # Count total @app. and @router. decorators across all files
+        total_decorators_found = 0
+        decorator_locations = []
+
+        for file_path in all_python_files:
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+
+                # Count all FastAPI decorators
+                lines = content.split('\n')
+                for i, line in enumerate(lines):
+                    stripped = line.strip()
+                    if stripped.startswith('@app.') or stripped.startswith('@router.'):
+                        # Check if it's followed by HTTP methods
+                        if any(method in stripped.lower() for method in ['get(', 'post(', 'put(', 'delete(', 'patch(', 'websocket(']):
+                            total_decorators_found += 1
+                            decorator_locations.append({
+                                'file': str(file_path.relative_to(service.path)),
+                                'line': i + 1,
+                                'decorator': stripped,
+                                'path': self._extract_path_from_decorator(stripped, lines, i)
+                            })
+
+            except Exception as e:
+                validation_results['detection_gaps'].append(f"Error reading {file_path}: {str(e)}")
+
+        validation_results['total_decorators_found'] = total_decorators_found
+        validation_results['decorator_locations'] = decorator_locations
+
+        # Cross-reference with detected route files
+        detected_decorators = 0
+        for route_file in route_files:
+            try:
+                with open(route_file, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    detected_decorators += len([line for line in content.split('\n')
+                                              if line.strip().startswith('@app.') or line.strip().startswith('@router.')])
+            except Exception:
+                pass
+
+        validation_results['decorators_in_detected_files'] = detected_decorators
+
+        # Identify potential gaps
+        if total_decorators_found > detected_decorators:
+            gap_count = total_decorators_found - detected_decorators
+            validation_results['detection_gaps'].append(
+                f"Potential gap: {total_decorators_found} total decorators found, "
+                f"but only {detected_decorators} decorators in detected route files "
+                f"(gap of {gap_count} endpoints)"
+            )
+            validation_results['recommendations'].append(
+                "Expand route file detection patterns to include all FastAPI-related files"
+            )
+
+        # Check for files with decorators not in route_files
+        route_file_names = {f.name for f in route_files}
+        missed_files = []
+        for decorator in decorator_locations:
+            file_name = Path(decorator['file']).name
+            if file_name not in route_file_names:
+                missed_files.append(decorator)
+
+        if missed_files:
+            validation_results['missed_endpoints'] = missed_files
+            validation_results['detection_gaps'].append(
+                f"Found {len(missed_files)} endpoints in files not detected as route files"
+            )
+            validation_results['recommendations'].append(
+                "Review endpoint detection logic to ensure all FastAPI files are included"
+            )
+
+        return validation_results
+
+    def _extract_path_from_decorator(self, decorator_line: str, lines: List[str], line_index: int) -> str:
+        """Extract the endpoint path from a decorator line."""
+        # Look for path in the decorator or next few lines
+        path_match = re.search(r'["\'](/[^"\']*)["\']', decorator_line)
+        if path_match:
+            return path_match.group(1)
+
+        # Check next few lines for the path
+        for i in range(line_index + 1, min(line_index + 5, len(lines))):
+            path_match = re.search(r'["\'](/[^"\']*)["\']', lines[i])
+            if path_match:
+                return path_match.group(1)
+
+        return "unknown"
 
     def _analyze_single_endpoint(self, endpoint_block: str, file_path: Path) -> Dict[str, List[str]]:
         """Analyze a single endpoint block for various compliance issues."""
@@ -5805,6 +6066,21 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
         )
         total_adjustments -= coupling_penalty
 
+    # Routes directory structure (DDD+REST compliance)
+    ddd_compliance = architecture_data.get('ddd_compliance', 0)
+    if ddd_compliance < 100:  # Only penalize if not perfect DDD compliance
+        # Check if routes directory exists and is properly structured
+        directory_analysis = architecture_data.get('directory_analysis', {})
+        routes_score = directory_analysis.get('routes_score', 0)
+
+        if routes_score < 8:  # Less than perfect routes score
+            routes_penalty = min((8 - routes_score) * 0.5, 4)  # Max 4 points penalty
+            adjustments_table.add_row(
+                "Architecture", "Missing Routes Structure", f"-{routes_penalty:.1f}",
+                f"DDD+REST routes directory not properly implemented (score: {routes_score}/8)"
+            )
+            total_adjustments -= routes_penalty
+
     # Dead code
     dead_code_analysis = architecture_data.get('dead_code_analysis', {})
     dead_code_lines = dead_code_analysis.get('dead_code_lines', 0)
@@ -6259,6 +6535,56 @@ def _display_rich_audit_results(console: Console, results: AuditResults):
                          "✅ Good" if standard_rate >= 80 else "⚠️  Needs Work" if standard_rate >= 60 else "❌ Poor")
 
         console.print(api_table)
+
+        # Endpoint Detection Validation
+        detection_validation = endpoint_analysis.get('endpoint_detection_validation', {})
+        if detection_validation:
+            detection_issues = detection_validation.get('detection_gaps', [])
+            missed_endpoints = detection_validation.get('missed_endpoints', [])
+            recommendations = detection_validation.get('recommendations', [])
+
+            if detection_issues or missed_endpoints:
+                console.print(f"\n[bold yellow]⚠️  ENDPOINT DETECTION VALIDATION[/bold yellow]")
+                for issue in detection_issues:
+                    console.print(f"  • {issue}")
+
+                if missed_endpoints:
+                    console.print(f"  [bold red]Missed Endpoints ({len(missed_endpoints)}):[/bold red]")
+                    for endpoint in missed_endpoints[:3]:
+                        console.print(f"    • {endpoint.get('file', 'unknown')}:{endpoint.get('line', '?')} - {endpoint.get('path', 'unknown')}")
+                    if len(missed_endpoints) > 3:
+                        console.print(f"    • ... and {len(missed_endpoints) - 3} more")
+
+                if recommendations:
+                    console.print("  [bold green]Recommendations:[/bold green]")
+                    for rec in recommendations:
+                        console.print(f"    • {rec}")
+
+        # Detailed endpoint information
+        compliant_endpoints = endpoint_analysis.get('compliant_endpoints', [])
+        non_compliant_endpoints = endpoint_analysis.get('non_compliant_endpoints', [])
+
+        if compliant_endpoints or non_compliant_endpoints:
+            console.print(f"\n[bold green]✅ COMPLIANT ENDPOINTS ({len(compliant_endpoints)})[/bold green]")
+            for endpoint in compliant_endpoints[:10]:  # Show first 10
+                console.print(f"  • [{endpoint.get('method', 'UNK')}] {endpoint.get('path', 'unknown')} "
+                             f"({endpoint.get('function_name', 'unknown')}) - "
+                             f"OpenAPI: {endpoint.get('openapi_score', 0):.0f}")
+
+            if len(compliant_endpoints) > 10:
+                console.print(f"  • ... and {len(compliant_endpoints) - 10} more compliant endpoints")
+
+            if non_compliant_endpoints:
+                console.print(f"\n[bold red]❌ NON-COMPLIANT ENDPOINTS ({len(non_compliant_endpoints)})[/bold red]")
+                for endpoint in non_compliant_endpoints:
+                    console.print(f"  • [{endpoint.get('method', 'UNK')}] {endpoint.get('path', 'unknown')} "
+                                 f"({endpoint.get('function_name', 'unknown')}) - "
+                                 f"OpenAPI: {endpoint.get('openapi_score', 0):.0f}")
+                    issues = endpoint.get('compliance_issues', [])
+                    if issues:
+                        console.print(f"    [dim red]Issues: {', '.join(issues[:2])}[/dim red]")
+                        if len(issues) > 2:
+                            console.print(f"    [dim red]... and {len(issues) - 2} more issues[/dim red]")
 
     # Linting Quality Analysis
     linting_quality = architecture_data.get('linting_quality', {})
