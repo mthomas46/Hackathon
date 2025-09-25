@@ -594,6 +594,54 @@ class BuildCacheOptimizer:
     def create_dockerignore_template(self) -> str:
         """Generate a .dockerignore template for the service."""
         template = """# Docker Build Context Exclusions
+# Exclude unnecessary files to reduce build context size
+# Version control
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+docs/
+README*
+CHANGELOG*
+
+# Tests
+tests/
+test_*
+*_test.py
+.pytest_cache/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+"""
 # Convenience functions
 def analyze_dockerfile_cache(service_path: str = None) -> Dict[str, Any]:
     """Analyze Dockerfile for cache optimization opportunities."""
@@ -616,7 +664,7 @@ def create_dockerignore_template() -> str:
 
 # CLI integration
 def main():
-    """CLI interface for build cache optimization."""
+    # CLI interface for build cache optimization
     import argparse
 
     parser = argparse.ArgumentParser(description="Docker Build Cache Optimizer")
@@ -626,13 +674,18 @@ def main():
         help="Analyze current Dockerfile for optimizations",
     )
     parser.add_argument(
-        "--optimize", action="store_true", help="Generate optimized Dockerfile"
+        "--optimize",
+        action="store_true",
+        help="Generate optimized Dockerfile"
     )
     parser.add_argument(
-        "--dockerignore", action="store_true", help="Generate .dockerignore template"
+        "--dockerignore",
+        action="store_true",
+        help="Generate .dockerignore template"
     )
     parser.add_argument(
-        "--path", help="Path to service directory (default: current directory)"
+        "--path",
+        help="Path to service directory (default: current directory)"
     )
 
     args = parser.parse_args()

@@ -548,13 +548,6 @@ class TrendAnalyzer:
 
             # Calculate portfolio summary
             portfolio_summary = self._calculate_portfolio_summary(document_groups, document_trends)
-            else:
-                portfolio_summary = {
-                    "total_documents": len(document_groups),
-                    "analyzed_documents": 0,
-                    "overall_trend": "insufficient_data",
-                    "message": "Not enough historical data for trend analysis",
-                }
 
             processing_time = time.time() - start_time
 
