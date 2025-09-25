@@ -8,7 +8,7 @@ YELLOW := \033[1;33m
 BLUE := \033[0;34m
 NC := \033[0m # No Color
 
-.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test
+.PHONY: help test docs docs-serve timeline ecosystem ecosystem-validate ecosystem-health ecosystem-clean validate-health-endpoints validate-health-continuous validate-config-drift validate-config-drift-auto validate-api-contracts validate-api-compare setup-logging validate-logging monitor-services health-check-all logs-view logs-clean simulation simulation-run simulation-test simulation-docker simulation-stop simulation-status dashboard dashboard-start dashboard-stop dashboard-logs dashboard-health dashboard-test audit audit-all audit-services audit-ci audit-quick audit-comprehensive audit-parallel audit-report audit-clean audit-setup audit-validate audit-benchmark audit-trend audit-config audit-debug audit-docker audit-pre-commit audit-quality-gate audit-enforce
 
 help: ## Show this help message
 	@echo "🚀 Hackathon Ecosystem Commands"
@@ -410,6 +410,123 @@ dashboard-test: ## Run unified API dashboard tests
 	@echo "$(BLUE)🧪 Running Unified API Dashboard Tests...$(NC)"
 	cd services/unified-api-dashboard && python -m pytest tests/ -v --tb=short
 	@echo "$(GREEN)✅ Dashboard tests completed$(NC)"
+
+# ========================================
+# 🔍 AUDIT FRAMEWORK INTEGRATION
+# ========================================
+
+audit: ## Run quick service audit
+	@echo "$(BLUE)🔍 Running Quick Service Audit...$(NC)"
+	$(MAKE) -f Makefile.audit audit-quick
+	@echo "$(GREEN)✅ Quick audit completed$(NC)"
+
+audit-all: ## Run comprehensive audit of all services
+	@echo "$(BLUE)🔬 Running Comprehensive Service Audit...$(NC)"
+	$(MAKE) -f Makefile.audit audit-all
+	@echo "$(GREEN)✅ Comprehensive audit completed$(NC)"
+
+audit-services: ## Audit all services individually
+	@echo "$(BLUE)🔍 Auditing All Services...$(NC)"
+	$(MAKE) -f Makefile.audit audit-services
+	@echo "$(GREEN)✅ All services audited$(NC)"
+
+audit-ci: ## CI-optimized audit pipeline
+	@echo "$(BLUE)⚡ Running CI Audit Pipeline...$(NC)"
+	$(MAKE) -f Makefile.audit ci-audit
+	@echo "$(GREEN)✅ CI audit pipeline completed$(NC)"
+
+audit-quick: ## Quick audit for development
+	@echo "$(BLUE)⚡ Running Quick Development Audit...$(NC)"
+	$(MAKE) -f Makefile.audit audit-quick
+	@echo "$(GREEN)✅ Quick audit completed$(NC)"
+
+audit-comprehensive: ## Comprehensive audit for releases
+	@echo "$(BLUE)🔬 Running Comprehensive Release Audit...$(NC)"
+	$(MAKE) -f Makefile.audit audit-comprehensive
+	@echo "$(GREEN)✅ Comprehensive audit completed$(NC)"
+
+audit-parallel: ## Run audits in parallel
+	@echo "$(BLUE)🔬 Running Parallel Audits...$(NC)"
+	$(MAKE) -f Makefile.audit audit-parallel
+	@echo "$(GREEN)✅ Parallel audits completed$(NC)"
+
+audit-report: ## Generate audit reports
+	@echo "$(BLUE)📊 Generating Audit Reports...$(NC)"
+	$(MAKE) -f Makefile.audit audit-report
+	@echo "$(GREEN)✅ Audit reports generated$(NC)"
+
+audit-clean: ## Clean audit artifacts
+	@echo "$(BLUE)🧹 Cleaning Audit Artifacts...$(NC)"
+	$(MAKE) -f Makefile.audit audit-clean
+	@echo "$(GREEN)✅ Audit cleanup completed$(NC)"
+
+audit-setup: ## Set up audit framework environment
+	@echo "$(BLUE)🔧 Setting up Audit Environment...$(NC)"
+	$(MAKE) -f Makefile.audit audit-setup
+	@echo "$(GREEN)✅ Audit environment ready$(NC)"
+
+audit-validate: ## Validate audit framework
+	@echo "$(BLUE)🔍 Validating Audit Framework...$(NC)"
+	$(MAKE) -f Makefile.audit audit-validate
+	@echo "$(GREEN)✅ Audit validation completed$(NC)"
+
+audit-benchmark: ## Run audit performance benchmark
+	@echo "$(BLUE)📈 Running Audit Benchmark...$(NC)"
+	$(MAKE) -f Makefile.audit audit-benchmark
+	@echo "$(GREEN)✅ Audit benchmark completed$(NC)"
+
+audit-trend: ## Analyze audit trends
+	@echo "$(BLUE)📈 Analyzing Audit Trends...$(NC)"
+	$(MAKE) -f Makefile.audit audit-trend
+	@echo "$(GREEN)✅ Trend analysis completed$(NC)"
+
+audit-config: ## Show audit configuration
+	@echo "$(BLUE)⚙️ Audit Configuration$(NC)"
+	$(MAKE) -f Makefile.audit audit-config
+
+audit-debug: ## Debug audit framework
+	@echo "$(BLUE)🐛 Debug Audit Framework...$(NC)"
+	$(MAKE) -f Makefile.audit audit-debug
+	@echo "$(GREEN)✅ Debug completed$(NC)"
+
+audit-docker: ## Run audit in Docker
+	@echo "$(BLUE)🐳 Running Audit in Docker...$(NC)"
+	$(MAKE) -f Makefile.audit audit-docker
+	@echo "$(GREEN)✅ Docker audit completed$(NC)"
+
+audit-pre-commit: ## Run audit as pre-commit hook
+	@echo "$(BLUE)🔒 Running Pre-commit Audit...$(NC)"
+	$(MAKE) -f Makefile.audit audit-pre-commit
+	@echo "$(GREEN)✅ Pre-commit audit completed$(NC)"
+
+audit-quality-gate: ## Check quality gates
+	@echo "$(BLUE)🚨 Checking Quality Gates...$(NC)"
+	$(MAKE) -f Makefile.audit audit-quality-gate
+	@echo "$(GREEN)✅ Quality gate check completed$(NC)"
+
+audit-enforce: ## Enforce quality standards
+	@echo "$(BLUE)🚫 Enforcing Quality Standards...$(NC)"
+	$(MAKE) -f Makefile.audit audit-enforce
+	@echo "$(GREEN)✅ Quality standards enforced$(NC)"
+
+# ========================================
+# 🔄 INTEGRATED WORKFLOWS
+# ========================================
+
+# Development workflow with audit
+dev-setup: ecosystem-setup setup-logging audit-setup ## Complete development setup with audit
+	@echo "$(GREEN)🎉 Development environment with audit ready!$(NC)"
+
+# CI/CD workflow with audit
+ci-validate: ecosystem-validate audit-ci audit-quality-gate ## CI validation with audit
+	@echo "$(GREEN)✅ CI validation with audit passed$(NC)"
+
+ci-test: ci-validate test audit-services ## CI testing with comprehensive audit
+	@echo "$(GREEN)✅ CI testing with audit passed$(NC)"
+
+# Pre-deployment with audit
+pre-deploy: validate-all ecosystem-health audit-comprehensive audit-enforce ## Pre-deployment validation with audit
+	@echo "$(GREEN)🚀 Pre-deployment validation with audit passed$(NC)"
 
 # Default target
 .DEFAULT_GOAL := help
