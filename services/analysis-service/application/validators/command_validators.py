@@ -18,8 +18,23 @@ class CreateDocumentCommandValidator(BaseValidator):
         """Validate CreateDocumentCommand."""
         errors = []
 
-        # Validate title
-        if not command.title or not isinstance(command.title, str):
+        # Validate each field
+        errors.extend(self._validate_title(command.title))
+        errors.extend(self._validate_content(command.content))
+        errors.extend(self._validate_author(command.author))
+        errors.extend(self._validate_tags(command.tags))
+        errors.extend(self._validate_metadata(command.metadata))
+
+        if errors:
+            return ValidationResult.failure(errors)
+
+        return ValidationResult.success()
+
+    def _validate_title(self, title) -> list:
+        """Validate document title."""
+        errors = []
+
+        if not title or not isinstance(title, str):
             errors.append(
                 self.create_error(
                     "Document title is required and must be a string",
@@ -27,13 +42,9 @@ class CreateDocumentCommandValidator(BaseValidator):
                     "title",
                 )
             )
-        elif len(command.title.strip()) == 0:
-            errors.append(
-                self.create_error(
-                    "Document title cannot be empty", "EMPTY_TITLE", "title"
-                )
-            )
-        elif len(command.title) > 200:
+        elif len(title.strip()) == 0:
+            errors.append(self.create_error("Document title cannot be empty", "EMPTY_TITLE", "title"))
+        elif len(title) > 200:
             errors.append(
                 self.create_error(
                     "Document title cannot exceed 200 characters",
@@ -42,8 +53,13 @@ class CreateDocumentCommandValidator(BaseValidator):
                 )
             )
 
-        # Validate content
-        if not command.content or not isinstance(command.content, str):
+        return errors
+
+    def _validate_content(self, content) -> list:
+        """Validate document content."""
+        errors = []
+
+        if not content or not isinstance(content, str):
             errors.append(
                 self.create_error(
                     "Document content is required and must be a string",
@@ -51,21 +67,18 @@ class CreateDocumentCommandValidator(BaseValidator):
                     "content",
                 )
             )
-        elif len(command.content.strip()) == 0:
-            errors.append(
-                self.create_error(
-                    "Document content cannot be empty", "EMPTY_CONTENT", "content"
-                )
-            )
+        elif len(content.strip()) == 0:
+            errors.append(self.create_error("Document content cannot be empty", "EMPTY_CONTENT", "content"))
 
-        # Validate author
-        if command.author and not isinstance(command.author, str):
-            errors.append(
-                self.create_error(
-                    "Document author must be a string", "INVALID_AUTHOR", "author"
-                )
-            )
-        elif command.author and len(command.author) > 100:
+        return errors
+
+    def _validate_author(self, author) -> list:
+        """Validate document author."""
+        errors = []
+
+        if author and not isinstance(author, str):
+            errors.append(self.create_error("Document author must be a string", "INVALID_AUTHOR", "author"))
+        elif author and len(author) > 100:
             errors.append(
                 self.create_error(
                     "Document author cannot exceed 100 characters",
@@ -74,44 +87,58 @@ class CreateDocumentCommandValidator(BaseValidator):
                 )
             )
 
-        # Validate tags
-        if command.tags:
-            if not isinstance(command.tags, list):
+        return errors
+
+    def _validate_tags(self, tags) -> list:
+        """Validate document tags."""
+        errors = []
+
+        if tags:
+            if not isinstance(tags, list):
+                errors.append(self.create_error("Document tags must be a list", "INVALID_TAGS", "tags"))
+            else:
+                errors.extend(self._validate_individual_tags(tags))
+
+        return errors
+
+    def _validate_individual_tags(self, tags) -> list:
+        """Validate individual tag items."""
+        errors = []
+
+        for i, tag in enumerate(tags):
+            if not isinstance(tag, str):
                 errors.append(
                     self.create_error(
-                        "Document tags must be a list", "INVALID_TAGS", "tags"
+                        f"Tag at index {i} must be a string",
+                        "INVALID_TAG_TYPE",
+                        f"tags[{i}]",
                     )
                 )
-            else:
-                for i, tag in enumerate(command.tags):
-                    if not isinstance(tag, str):
-                        errors.append(
-                            self.create_error(
-                                f"Tag at index {i} must be a string",
-                                "INVALID_TAG_TYPE",
-                                f"tags[{i}]",
-                            )
-                        )
-                    elif len(tag) > 50:
-                        errors.append(
-                            self.create_error(
-                                f"Tag '{tag}' exceeds maximum length of 50 characters",
-                                "TAG_TOO_LONG",
-                                f"tags[{i}]",
-                            )
-                        )
-                    elif not re.match(r"^[a-zA-Z0-9_-]+$", tag):
-                        errors.append(
-                            self.create_error(
-                                f"Tag '{tag}' contains invalid characters. Only alphanumeric, underscore, and hyphen are allowed",
-                                "INVALID_TAG_FORMAT",
-                                f"tags[{i}]",
-                            )
-                        )
+            elif len(tag) > 50:
+                errors.append(
+                    self.create_error(
+                        f"Tag '{tag}' exceeds maximum length of 50 characters",
+                        "TAG_TOO_LONG",
+                        f"tags[{i}]",
+                    )
+                )
+            elif not re.match(r"^[a-zA-Z0-9_-]+$", tag):
+                errors.append(
+                    self.create_error(
+                        f"Tag '{tag}' contains invalid characters. Only alphanumeric, underscore, and hyphen are allowed",
+                        "INVALID_TAG_FORMAT",
+                        f"tags[{i}]",
+                    )
+                )
 
-        # Validate metadata
-        if command.metadata:
-            if not isinstance(command.metadata, dict):
+        return errors
+
+    def _validate_metadata(self, metadata) -> list:
+        """Validate document metadata."""
+        errors = []
+
+        if metadata:
+            if not isinstance(metadata, dict):
                 errors.append(
                     self.create_error(
                         "Document metadata must be a dictionary",
@@ -119,7 +146,7 @@ class CreateDocumentCommandValidator(BaseValidator):
                         "metadata",
                     )
                 )
-            elif len(str(command.metadata)) > 10000:  # Rough size check
+            elif len(str(metadata)) > 10000:  # Rough size check
                 errors.append(
                     self.create_error(
                         "Document metadata is too large",
@@ -128,10 +155,7 @@ class CreateDocumentCommandValidator(BaseValidator):
                     )
                 )
 
-        if errors:
-            return ValidationResult.failure(errors)
-
-        return ValidationResult.success()
+        return errors
 
 
 class UpdateDocumentCommandValidator(BaseValidator):
@@ -151,26 +175,14 @@ class UpdateDocumentCommandValidator(BaseValidator):
                 )
             )
         elif not command.document_id.strip():
-            errors.append(
-                self.create_error(
-                    "Document ID cannot be empty", "EMPTY_DOCUMENT_ID", "document_id"
-                )
-            )
+            errors.append(self.create_error("Document ID cannot be empty", "EMPTY_DOCUMENT_ID", "document_id"))
 
         # Validate title if provided
         if hasattr(command, "title") and command.title is not None:
             if not isinstance(command.title, str):
-                errors.append(
-                    self.create_error(
-                        "Document title must be a string", "INVALID_TITLE", "title"
-                    )
-                )
+                errors.append(self.create_error("Document title must be a string", "INVALID_TITLE", "title"))
             elif len(command.title.strip()) == 0:
-                errors.append(
-                    self.create_error(
-                        "Document title cannot be empty", "EMPTY_TITLE", "title"
-                    )
-                )
+                errors.append(self.create_error("Document title cannot be empty", "EMPTY_TITLE", "title"))
             elif len(command.title) > 200:
                 errors.append(
                     self.create_error(
@@ -191,20 +203,12 @@ class UpdateDocumentCommandValidator(BaseValidator):
                     )
                 )
             elif len(command.content.strip()) == 0:
-                errors.append(
-                    self.create_error(
-                        "Document content cannot be empty", "EMPTY_CONTENT", "content"
-                    )
-                )
+                errors.append(self.create_error("Document content cannot be empty", "EMPTY_CONTENT", "content"))
 
         # Validate tags if provided
         if hasattr(command, "tags") and command.tags is not None:
             if not isinstance(command.tags, list):
-                errors.append(
-                    self.create_error(
-                        "Document tags must be a list", "INVALID_TAGS", "tags"
-                    )
-                )
+                errors.append(self.create_error("Document tags must be a list", "INVALID_TAGS", "tags"))
             else:
                 for i, tag in enumerate(command.tags):
                     if not isinstance(tag, str):
@@ -247,11 +251,7 @@ class PerformAnalysisCommandValidator(BaseValidator):
                 )
             )
         elif not command.document_id.strip():
-            errors.append(
-                self.create_error(
-                    "Document ID cannot be empty", "EMPTY_DOCUMENT_ID", "document_id"
-                )
-            )
+            errors.append(self.create_error("Document ID cannot be empty", "EMPTY_DOCUMENT_ID", "document_id"))
 
         # Validate analysis_type
         if not command.analysis_type or not isinstance(command.analysis_type, str):
@@ -328,11 +328,7 @@ class PerformAnalysisCommandValidator(BaseValidator):
         # Validate timeout_seconds
         if hasattr(command, "timeout_seconds") and command.timeout_seconds is not None:
             if not isinstance(command.timeout_seconds, (int, float)):
-                errors.append(
-                    self.create_error(
-                        "Timeout must be a number", "INVALID_TIMEOUT", "timeout_seconds"
-                    )
-                )
+                errors.append(self.create_error("Timeout must be a number", "INVALID_TIMEOUT", "timeout_seconds"))
             elif command.timeout_seconds < 10 or command.timeout_seconds > 3600:
                 errors.append(
                     self.create_error(
