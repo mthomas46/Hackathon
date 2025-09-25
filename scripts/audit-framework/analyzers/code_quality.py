@@ -48,6 +48,9 @@ class CodeQualityAnalysisResult:
     testing_score: float
     linting_score: float
     duplication_score: float
+    security_score: float
+    dry_principle_score: float
+    kiss_principle_score: float
     test_coverage: float
     cyclomatic_complexity: Dict[str, Any]
     test_quality_metrics: Dict[str, Any]
@@ -117,6 +120,9 @@ class CodeQualityAnalyzer:
             testing_score=scores['testing'],
             linting_score=scores['linting'],
             duplication_score=scores['duplication'],
+            security_score=security_score,
+            dry_principle_score=dry_score,
+            kiss_principle_score=kiss_score,
             test_coverage=testing_details.get('coverage_data', {}).get('overall_coverage', 0),
             cyclomatic_complexity=self._analyze_cyclomatic_complexity(service),
             test_quality_metrics=self._analyze_test_quality_metrics(service),
