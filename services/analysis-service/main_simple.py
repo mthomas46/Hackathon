@@ -37,12 +37,32 @@ register_health_endpoints(app, "analysis-service")
 
 
 # Basic analysis endpoint
-@app.get("/")
+@app.get(
+    "/",
+    tags=["root"],
+    summary="Root endpoint for analysis service",
+    description="""Basic health check endpoint that confirms the analysis service is running
+    and operational. Returns a simple status message.""",
+    response_model=dict,
+    responses={
+        200: {"description": "Service is operational", "content": {"application/json": {"example": {"message": "Analysis Service is running"}}}},
+    },
+)
 async def root():
     return create_success_response(data={"message": "Analysis Service is running"}, message="Service operational")
 
 
-@app.get("/api/analysis/status")
+@app.get(
+    "/api/analysis/status",
+    tags=["status"],
+    summary="Get basic analysis service status",
+    description="""Retrieves basic operational status of the analysis service including
+    service name, operational status, version, and available features.""",
+    response_model=dict,
+    responses={
+        200: {"description": "Service status retrieved successfully", "content": {"application/json": {"example": {"service": "analysis-service", "status": "operational", "version": "1.0.0", "features": ["code_analysis", "quality_metrics", "security_scanning"]}}}},
+    },
+)
 async def analysis_status():
     return create_success_response(
         data={
@@ -55,7 +75,18 @@ async def analysis_status():
     )
 
 
-@app.get("/api/v1/analysis/status")
+@app.get(
+    "/api/v1/analysis/status",
+    tags=["status"],
+    summary="Get comprehensive analysis service status (v1)",
+    description="""Retrieves comprehensive status information about the analysis service including
+    health metrics, available analysis capabilities, system resources, and
+    operational statistics. Used for monitoring and operational visibility.""",
+    response_model=dict,
+    responses={
+        200: {"description": "Comprehensive service status retrieved successfully", "content": {"application/json": {"example": {"service": "analysis-service", "version": "1.0.0", "status": "healthy", "capabilities": {"sentiment_analysis": True, "semantic_similarity": True}}}}},
+    },
+)
 async def get_analysis_status_v1():
     """Get comprehensive status of analysis service capabilities and current state."""
 
@@ -125,7 +156,17 @@ async def get_analysis_status_v1():
     return analysis_status
 
 
-@app.post("/api/analysis/analyze")
+@app.post(
+    "/api/analysis/analyze",
+    tags=["analysis"],
+    summary="Perform basic code analysis",
+    description="""Performs simplified code analysis providing basic quality metrics,
+    security checks, and maintainability assessment.""",
+    response_model=dict,
+    responses={
+        200: {"description": "Analysis completed successfully", "content": {"application/json": {"example": {"analysis_id": "analysis_123", "status": "completed", "results": {"quality_score": 85, "security_issues": 0, "maintainability": "high"}}}}},
+    },
+)
 async def analyze_code():
     """Simplified analysis endpoint"""
     return create_success_response(
