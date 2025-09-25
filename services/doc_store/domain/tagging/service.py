@@ -6,8 +6,13 @@ Handles semantic tagging, content analysis, and taxonomy management.
 import re
 from typing import Any, Dict, List, Optional
 
-from ...core.entities import DocumentTag, SemanticEntity, TaxonomyNode
-from services.shared.utilities import BaseService
+from ...entities import DocumentTag, SemanticEntity, TaxonomyNode
+from services.shared.domain.services.base_service import BaseService
+from ...exceptions.domain_exceptions import (
+    TagNotFoundException,
+    InvalidTagException,
+    DocumentNotFoundException,
+)
 from .repository import TaggingRepository
 
 
@@ -20,15 +25,23 @@ class TaggingService(BaseService[DocumentTag]):
         super().__init__(TaggingRepository(get_document_connection_string()))
 
     def _validate_entity(self, entity: DocumentTag) -> None:
-        """Validate document tag."""
+        """Validate document tag.
+
+        Args:
+            entity: DocumentTag entity to validate
+
+        Raises:
+            InvalidTagException: If tag validation fails
+            DocumentNotFoundException: If document ID is missing
+        """
         if not entity.document_id:
-            raise ValueError("Document ID is required")
+            raise DocumentNotFoundException(entity.document_id or "unknown")
 
         if not entity.tag:
-            raise ValueError("Tag is required")
+            raise InvalidTagException("Tag name is required")
 
         if not (0 <= entity.confidence <= 1):
-            raise ValueError("Confidence must be between 0 and 1")
+            raise InvalidTagException("Confidence must be between 0 and 1")
 
     def _create_entity_from_data(
         self, entity_id: str, data: Dict[str, Any]

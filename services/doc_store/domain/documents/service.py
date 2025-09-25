@@ -12,8 +12,21 @@ from services.shared.domain.exceptions import (
     create_duplicate_error,
 )
 
+from ..exceptions.domain_exceptions import (
+    DocumentNotFoundException,
+    DocumentValidationException,
+    DocumentSizeExceededException,
+)
+from ..common.error_utils import handle_validation_error
+
 from ..entities import Document
 from ..repository import DocumentRepository
+from ..common.validation_utils import (
+    validate_required_string,
+    validate_metadata,
+    validate_content_size,
+    validate_correlation_id,
+)
 
 
 class DocumentService(BaseService[Document]):
@@ -33,26 +46,24 @@ class DocumentService(BaseService[Document]):
         super().__init__(repository)
 
     def _validate_entity(self, entity: Document) -> None:
-        """Validate document using standardized error handling."""
-        # Content validation
-        if not entity.content or not entity.content.strip():
-            raise create_validation_error("content", "Document content cannot be empty")
+        """Validate document using standardized validation utilities."""
+        try:
+            # Content validation using common utilities
+            validate_required_string(entity.content, "content")
+            validate_content_size(entity.content, "content")
 
-        if len(entity.content) > 10485760:  # 10MB limit
-            raise create_validation_error(
-                "content", "Document content exceeds 10MB limit"
-            )
-
-        # Metadata validation
-        self._validate_metadata(entity.metadata)
+            # Metadata validation using common utilities
+            validate_metadata(entity.metadata)
+        except Exception as e:
+            raise DocumentValidationException(str(e))
 
     async def _create_entity_from_data(
         self, entity_id: str, data: Dict[str, Any]
     ) -> Document:
         """Create document entity with business logic."""
-        content = data.get("content", "").strip()
-        if not content:
-            raise create_validation_error("content", "Document content cannot be empty")
+        # Validate and clean content using common utilities
+        content = validate_required_string(data.get("content", ""), "content")
+        validate_content_size(content, "content")
 
         # Calculate content hash for duplicate detection
         content_hash = self._calculate_content_hash(content)
@@ -62,12 +73,16 @@ class DocumentService(BaseService[Document]):
         if existing:
             return existing  # Return existing document
 
+        # Validate metadata and correlation ID
+        metadata = validate_metadata(data.get("metadata", {}))
+        correlation_id = validate_correlation_id(data.get("correlation_id"))
+
         return Document(
             id=entity_id,
             content=content,
             content_hash=content_hash,
-            metadata=data.get("metadata", {}),
-            correlation_id=data.get("correlation_id"),
+            metadata=metadata,
+            correlation_id=correlation_id,
         )
 
     async def _check_duplicates(self, entity: Document) -> None:
@@ -82,23 +97,6 @@ class DocumentService(BaseService[Document]):
 
         return hashlib.sha256(content.encode()).hexdigest()
 
-    def _validate_metadata(self, metadata: Dict[str, Any]) -> None:
-        """Validate document metadata."""
-        if not isinstance(metadata, dict):
-            raise create_validation_error("metadata", "Metadata must be a dictionary")
-
-        # Business rule: Max 50 metadata keys
-        if len(metadata) > 50:
-            raise create_validation_error(
-                "metadata", "Metadata cannot have more than 50 keys"
-            )
-
-        # Validate metadata key names (business rule)
-        for key in metadata.keys():
-            if not isinstance(key, str) or len(key) > 100:
-                raise create_validation_error(
-                    "metadata", f"Metadata key '{key}' is invalid"
-                )
 
     # Business-specific methods (not provided by base class)
 

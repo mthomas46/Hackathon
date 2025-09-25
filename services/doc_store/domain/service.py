@@ -8,6 +8,11 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from services.shared.infrastructure.utilities.error_handling import ServiceException
+from ..exceptions.domain_exceptions import (
+    DocStoreException,
+    DocumentNotFoundException,
+    DocumentValidationException,
+)
 
 from .entities import BaseEntity
 
@@ -87,9 +92,9 @@ class BaseService(Generic[T], ABC):
             ServiceException: If entity not found or update fails
         """
         # Get existing entity
-        entity = self.repository.get_by_id(entity_id)
+        entity = self.repository.find_by_id(entity_id)
         if not entity:
-            raise ServiceException(f"Entity {entity_id} not found", "NOT_FOUND")
+            raise DocumentNotFoundException(entity_id)
 
         # Apply updates
         self._apply_updates(entity, updates)
@@ -109,10 +114,10 @@ class BaseService(Generic[T], ABC):
             entity_id: Entity identifier to delete
 
         Raises:
-            ServiceException: If entity not found
+            DocumentNotFoundException: If entity not found
         """
         if not self.repository.exists(entity_id):
-            raise ServiceException(f"Entity {entity_id} not found", "NOT_FOUND")
+            raise DocumentNotFoundException(entity_id)
 
         self.repository.delete_by_id(entity_id)
 
@@ -171,17 +176,26 @@ class BaseService(Generic[T], ABC):
             if field not in data or data[field] is None
         ]
         if missing_fields:
-            raise ServiceException(
+            raise DocumentValidationException(
                 f"Missing required fields: {', '.join(missing_fields)}",
-                "VALIDATION_ERROR",
+                missing_fields
             )
 
     def _validate_field_type(
         self, value: Any, field_name: str, expected_type: type
     ) -> None:
-        """Validate field type."""
+        """Validate field type.
+
+        Args:
+            value: Value to validate
+            field_name: Name of the field for error messages
+            expected_type: Expected type for the field
+
+        Raises:
+            DocumentValidationException: If field type is incorrect
+        """
         if not isinstance(value, expected_type):
-            raise ServiceException(
+            raise DocumentValidationException(
                 f"Field '{field_name}' must be of type {expected_type.__name__}",
-                "VALIDATION_ERROR",
+                [f"Field '{field_name}' has incorrect type"]
             )
