@@ -14,6 +14,7 @@ All services use these utilities to ensure consistent error handling,
 logging, and user experience across the entire ecosystem.
 """
 
+import asyncio
 import os
 import traceback
 from datetime import datetime, timezone
@@ -31,6 +32,145 @@ from ...presentation.api.responses import (
     format_validation_errors,
 )
 from services.shared.infrastructure.monitoring.logging import fire_and_forget
+
+# ============================================================================
+# COMMON ERROR HANDLING PATTERNS (REDUCING CODE DUPLICATION)
+# ============================================================================
+
+def safe_operation(operation_name: str = None, log_errors: bool = True, reraise: bool = False):
+    """Decorator for safe operations with standardized error handling.
+
+    Reduces code duplication by providing consistent error handling patterns
+    used throughout the shared service.
+
+    Args:
+        operation_name: Name of the operation for logging (auto-detected if None)
+        log_errors: Whether to log exceptions (default: True)
+        reraise: Whether to re-raise exceptions after logging (default: False)
+
+    Returns:
+        Decorator function
+
+    Example:
+        @safe_operation("database_query")
+        def get_user(user_id):
+            return db.query(user_id)
+    """
+    def decorator(func):
+        async def async_wrapper(*args, **kwargs):
+            op_name = operation_name or f"{func.__module__}.{func.__qualname__}"
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                if log_errors:
+                    logger.error(f"Error in {op_name}: {e}", exc_info=True)
+                if reraise:
+                    raise
+                return None
+
+        def sync_wrapper(*args, **kwargs):
+            op_name = operation_name or f"{func.__module__}.{func.__qualname__}"
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if log_errors:
+                    logger.error(f"Error in {op_name}: {e}", exc_info=True)
+                if reraise:
+                    raise
+                return None
+
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper
+        else:
+            return sync_wrapper
+    return decorator
+
+def safe_operation_with_fallback(operation_name: str = None, fallback_value=None, log_errors: bool = True):
+    """Decorator for safe operations with fallback values.
+
+    Similar to safe_operation but returns a fallback value instead of None.
+
+    Args:
+        operation_name: Name of the operation for logging
+        fallback_value: Value to return on error
+        log_errors: Whether to log exceptions
+
+    Returns:
+        Decorator function
+    """
+    def decorator(func):
+        async def async_wrapper(*args, **kwargs):
+            op_name = operation_name or f"{func.__module__}.{func.__qualname__}"
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                if log_errors:
+                    logger.warning(f"Operation {op_name} failed, using fallback: {e}")
+                return fallback_value
+
+        def sync_wrapper(*args, **kwargs):
+            op_name = operation_name or f"{func.__module__}.{func.__qualname__}"
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                if log_errors:
+                    logger.warning(f"Operation {op_name} failed, using fallback: {e}")
+                return fallback_value
+
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper
+        else:
+            return sync_wrapper
+    return decorator
+
+# ============================================================================
+# COMMON RESPONSE PATTERNS (REDUCING DUPLICATION)
+# ============================================================================
+
+def create_standard_error_response(message: str, error_code: str = "internal_error",
+                                 status_code: int = 500, details: Optional[Dict[str, Any]] = None) -> JSONResponse:
+    """Create a standardized error response.
+
+    Reduces duplication in error response creation across services.
+
+    Args:
+        message: Human-readable error message
+        error_code: Machine-readable error code
+        status_code: HTTP status code
+        details: Additional error details
+
+    Returns:
+        JSONResponse with standardized error format
+    """
+    error_response = ErrorResponse(
+        message=message,
+        error_code=error_code,
+        details=details or {},
+        timestamp=datetime.now(timezone.utc)
+    )
+    return JSONResponse(status_code=status_code, content=error_response.dict())
+
+def create_standard_success_response(data: Any, message: str = "Success",
+                                   status_code: int = 200) -> JSONResponse:
+    """Create a standardized success response.
+
+    Reduces duplication in success response creation across services.
+
+    Args:
+        data: Response data
+        message: Success message
+        status_code: HTTP status code
+
+    Returns:
+        JSONResponse with standardized success format
+    """
+    response_data = {
+        "status": "success",
+        "message": message,
+        "data": data,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    return JSONResponse(status_code=status_code, content=response_data)
 
 # ============================================================================
 # CUSTOM EXCEPTION CLASSES
