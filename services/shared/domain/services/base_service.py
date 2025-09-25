@@ -8,10 +8,10 @@ Reduces service boilerplate by 60% through standardized validation and error han
 
 import logging
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 
-from .base_repository import BaseRepository, EntityNotFoundError, RepositoryError
-from ..infrastructure.utilities.utilities import utc_now
+from ..repositories.base_repository import BaseRepository, EntityNotFoundError, RepositoryError
 
 logger = logging.getLogger(__name__)
 
