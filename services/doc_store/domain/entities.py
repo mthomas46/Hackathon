@@ -8,6 +8,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+from .exceptions.domain_exceptions import DocumentValidationException, DocumentSizeExceededException
+
 # Import standardized base entity
 from services.shared.domain.repositories.base_repository import BaseEntity
 
@@ -27,9 +29,9 @@ class Document(BaseEntity):
     def __post_init__(self):
         """Validate document after initialization."""
         if not self.content or not self.content.strip():
-            raise ValueError("Document content cannot be empty")
-        if len(self.content) > 10485760:  # 10MB limit
-            raise ValueError("Document content exceeds maximum size")
+            raise DocumentValidationException("Document content cannot be empty")
+        if len(self.content.encode('utf-8')) > 10485760:  # 10MB limit
+            raise DocumentSizeExceededException("Document content exceeds maximum size")
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary representation."""
