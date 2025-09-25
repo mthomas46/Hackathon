@@ -211,8 +211,22 @@ class PerformanceOptimizer:
         self, tool1: Dict[str, Any], tool2: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Analyze dependency relationship between two tools"""
+        # Check data flow dependencies first
+        data_flow_dep = self._analyze_data_flow_dependency(tool1, tool2)
+        if data_flow_dep["depends"]:
+            return data_flow_dep
 
-        # Data flow dependencies
+        # Check capability-based dependencies
+        capability_dep = self._analyze_capability_dependency(tool1, tool2)
+        if capability_dep["depends"]:
+            return capability_dep
+
+        return {"depends": False, "type": "none", "strength": 0.0}
+
+    def _analyze_data_flow_dependency(
+        self, tool1: Dict[str, Any], tool2: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Analyze data flow dependencies between tools"""
         data_patterns = [
             ("storage", "analysis", "data_dependency"),
             ("analysis", "storage", "result_persistence"),
@@ -226,33 +240,40 @@ class PerformanceOptimizer:
 
         for input_cat, output_cat, dep_type in data_patterns:
             if input_cat in category1 and output_cat in category2:
-                return {
-                    "depends": True,
-                    "type": dep_type,
-                    "direction": f"{tool1['name']} -> {tool2['name']}",
-                    "strength": 0.8,
-                }
+                return self._create_dependency_result(
+                    True, dep_type, f"{tool1['name']} -> {tool2['name']}", 0.8
+                )
             elif input_cat in category2 and output_cat in category1:
-                return {
-                    "depends": True,
-                    "type": dep_type,
-                    "direction": f"{tool2['name']} -> {tool1['name']}",
-                    "strength": 0.8,
-                }
+                return self._create_dependency_result(
+                    True, dep_type, f"{tool2['name']} -> {tool1['name']}", 0.8
+                )
 
-        # Capability-based dependencies
+        return {"depends": False, "type": "none", "strength": 0.0}
+
+    def _analyze_capability_dependency(
+        self, tool1: Dict[str, Any], tool2: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Analyze capability-based dependencies between tools"""
         caps1 = set(tool1.get("capabilities", []))
         caps2 = set(tool2.get("capabilities", []))
 
         if caps1 & caps2:  # Shared capabilities might indicate dependencies
-            return {
-                "depends": True,
-                "type": "capability_sharing",
-                "direction": f"{tool1['name']} ↔ {tool2['name']}",
-                "strength": 0.5,
-            }
+            return self._create_dependency_result(
+                True, "capability_sharing", f"{tool1['name']} ↔ {tool2['name']}", 0.5
+            )
 
         return {"depends": False, "type": "none", "strength": 0.0}
+
+    def _create_dependency_result(
+        self, depends: bool, dep_type: str, direction: str, strength: float
+    ) -> Dict[str, Any]:
+        """Create a standardized dependency result"""
+        return {
+            "depends": depends,
+            "type": dep_type,
+            "direction": direction,
+            "strength": strength,
+        }
 
     async def optimize_workflow_execution(
         self, workflow_spec: Dict[str, Any]

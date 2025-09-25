@@ -38,7 +38,9 @@ class TestPerformAnalysisUseCase:
         """Mock event bus for testing."""
         return Mock()
 
-    def test_use_case_creation(self, mock_services, mock_repositories, mock_event_bus):
+    def test_use_case_with_valid_data_succeeds(
+        self, mock_services, mock_repositories, mock_event_bus
+    ):
         """Test creating perform analysis use case."""
         use_case = PerformAnalysisUseCase(
             analysis_service=mock_services["analysis_service"],
@@ -52,7 +54,7 @@ class TestPerformAnalysisUseCase:
         assert use_case.analysis_service == mock_services["analysis_service"]
         assert use_case.event_bus == mock_event_bus
 
-    def test_command_creation(self):
+    def test_command_with_valid_data_succeeds(self):
         """Test perform analysis command creation."""
         command = PerformAnalysisCommand(
             document_id="doc-123",
@@ -293,7 +295,7 @@ class TestPerformAnalysisUseCase:
         mock_services["finding_service"].create_finding.assert_called_once()
         mock_repositories["finding_repository"].save.assert_called()
 
-    def test_result_creation(self):
+    def test_result_with_valid_data_succeeds(self):
         """Test perform analysis result creation."""
         mock_analysis = Mock()
         mock_findings = [Mock(), Mock()]
@@ -380,7 +382,9 @@ class TestCreateDocumentUseCase:
         """Mock event bus."""
         return Mock()
 
-    def test_use_case_creation(self, mock_document_repository, mock_event_bus):
+    def test_use_case_with_valid_data_succeeds(
+        self, mock_document_repository, mock_event_bus
+    ):
         """Test creating create document use case."""
         use_case = CreateDocumentUseCase(
             document_repository=mock_document_repository, event_bus=mock_event_bus
@@ -430,7 +434,7 @@ class TestGetDocumentUseCase:
         """Mock document repository."""
         return Mock()
 
-    def test_use_case_creation(self, mock_document_repository):
+    def test_use_case_with_valid_data_succeeds(self, mock_document_repository):
         """Test creating get document use case."""
         use_case = GetDocumentUseCase(document_repository=mock_document_repository)
         assert use_case.document_repository == mock_document_repository
@@ -477,7 +481,7 @@ class TestGetFindingsUseCase:
         """Mock finding repository."""
         return Mock()
 
-    def test_use_case_creation(self, mock_finding_repository):
+    def test_use_case_with_valid_data_succeeds(self, mock_finding_repository):
         """Test creating get findings use case."""
         use_case = GetFindingsUseCase(finding_repository=mock_finding_repository)
         assert use_case.finding_repository == mock_finding_repository
@@ -534,7 +538,9 @@ class TestCreateFindingUseCase:
         """Mock event bus."""
         return Mock()
 
-    def test_use_case_creation(self, mock_finding_repository, mock_event_bus):
+    def test_use_case_with_valid_data_succeeds(
+        self, mock_finding_repository, mock_event_bus
+    ):
         """Test creating create finding use case."""
         use_case = CreateFindingUseCase(
             finding_repository=mock_finding_repository, event_bus=mock_event_bus
@@ -645,7 +651,7 @@ class TestUseCaseErrorHandling:
 class TestUseCaseValidation:
     """Test input validation in use cases."""
 
-    def test_command_validation(self):
+    def test_command_with_invalid_data_raises_validation_error(self):
         """Test command input validation."""
         # Test that invalid command data is rejected
 

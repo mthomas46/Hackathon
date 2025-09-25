@@ -606,7 +606,6 @@ if __name__ == "__main__":
     async def main():
         try:
             results = await initialize_enterprise_ecosystem()
-            print(json.dumps(results, indent=2))
 
             # Keep running for monitoring
             while not enterprise_initializer.shutdown_event.is_set():

@@ -459,7 +459,9 @@ class TestAnalysisEndpoints:
             or "Access-Control-Allow-Origin" in headers
         )
 
-    def test_analysis_endpoint_content_type_validation(self, client):
+    def test_analysis_endpoint_content_type_with_invalid_data_raises_validation_error(
+        self, client
+    ):
         """Test that analysis endpoints validate content type."""
         request_data = {"targets": ["doc-1"], "threshold": 0.8}
 

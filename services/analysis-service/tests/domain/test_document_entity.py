@@ -11,7 +11,9 @@ from ...domain.entities.document import Document, DocumentStatus
 class TestDocumentEntity:
     """Test cases for Document entity."""
 
-    def test_document_creation_valid_data(self, sample_document_data: Dict[str, Any]):
+    def test_document_creation_with_valid_data_succeeds(
+        self, sample_document_data: Dict[str, Any]
+    ):
         """Test creating a document with valid data."""
         doc = Document(**sample_document_data)
 
@@ -27,7 +29,7 @@ class TestDocumentEntity:
         assert isinstance(doc.created_at, datetime)
         assert isinstance(doc.updated_at, datetime)
 
-    def test_document_creation_with_defaults(self):
+    def test_document_creation_with_defaults_succeeds(self):
         """Test creating a document with minimal required data."""
         minimal_data = {
             "id": "minimal-doc",
@@ -46,7 +48,9 @@ class TestDocumentEntity:
         assert doc.version == "1.0.0"  # Default version
         assert doc.metadata == {}  # Default empty metadata
 
-    def test_document_creation_validation(self):
+    def test_document_with_valid_data_succeeds_with_invalid_data_raises_validation_error(
+        self,
+    ):
         """Test document creation validation."""
         # Test missing required fields
         with pytest.raises(ValueError):
@@ -73,7 +77,7 @@ class TestDocumentEntity:
         sample_document.status = DocumentStatus.DELETED
         assert sample_document.status == DocumentStatus.DELETED
 
-    def test_document_content_validation(self):
+    def test_document_content_with_invalid_data_raises_validation_error(self):
         """Test document content validation."""
         # Test empty content
         with pytest.raises(ValueError):
@@ -319,7 +323,7 @@ Final paragraph."""
         assert "```python" in doc.content
         assert "def code_block():" in doc.content
 
-    def test_document_validation_edge_cases(self):
+    def test_document_with_invalid_data_raises_validation_error_edge_cases(self):
         """Test document validation edge cases."""
         # Test with very long title
         long_title = "A" * 1000

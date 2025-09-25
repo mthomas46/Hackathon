@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from services.shared.utilities import QueryHandler, QueryResult
+from services.shared.utilities import QueryHandler
 
 from ...domain.entities import Analysis, Document, Finding
 from ...infrastructure.repositories import (

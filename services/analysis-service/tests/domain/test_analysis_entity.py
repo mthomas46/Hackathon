@@ -14,7 +14,9 @@ from ...domain.value_objects.metrics import AnalysisMetrics
 class TestAnalysisEntity:
     """Test cases for Analysis entity."""
 
-    def test_analysis_creation_valid_data(self, sample_analysis_data: Dict[str, Any]):
+    def test_analysis_creation_with_valid_data_succeeds(
+        self, sample_analysis_data: Dict[str, Any]
+    ):
         """Test creating an analysis with valid data."""
         analysis = Analysis(**sample_analysis_data)
 
@@ -29,7 +31,7 @@ class TestAnalysisEntity:
         assert isinstance(analysis.created_at, datetime)
         assert isinstance(analysis.completed_at, datetime)
 
-    def test_analysis_creation_with_defaults(self):
+    def test_analysis_creation_with_defaults_succeeds(self):
         """Test creating an analysis with minimal required data."""
         minimal_data = {
             "id": "minimal-analysis",
@@ -47,7 +49,9 @@ class TestAnalysisEntity:
         assert analysis.results == {}
         assert analysis.metadata == {}
 
-    def test_analysis_creation_validation(self):
+    def test_analysis_with_valid_data_succeeds_with_invalid_data_raises_validation_error(
+        self,
+    ):
         """Test analysis creation validation."""
         with pytest.raises(ValueError):
             Analysis(
@@ -67,7 +71,7 @@ class TestAnalysisEntity:
         sample_analysis.status = AnalysisStatus.FAILED
         assert sample_analysis.status == AnalysisStatus.FAILED
 
-    def test_analysis_type_validation(self):
+    def test_analysis_type_with_invalid_data_raises_validation_error(self):
         """Test analysis type validation."""
         for analysis_type in AnalysisType:
             analysis = Analysis(

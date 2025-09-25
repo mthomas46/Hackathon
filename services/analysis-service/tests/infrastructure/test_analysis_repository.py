@@ -63,7 +63,7 @@ class TestInMemoryAnalysisRepository:
             metadata={"model": "bert"},
         )
 
-    def test_repository_creation(self, repository):
+    def test_repository_with_valid_data_succeeds(self, repository):
         """Test creating an in-memory analysis repository."""
         assert repository is not None
         assert isinstance(repository, AnalysisRepository)
@@ -294,7 +294,7 @@ class TestSQLiteAnalysisRepository:
         )
 
     @pytest.mark.asyncio
-    async def test_repository_creation(self, repository):
+    async def test_repository_with_valid_data_succeeds(self, repository):
         """Test creating a SQLite analysis repository."""
         assert repository is not None
         assert isinstance(repository, AnalysisRepository)

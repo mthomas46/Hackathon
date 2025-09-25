@@ -27,11 +27,11 @@ except ImportError:
 
 
 try:
+    from services.shared.monitoring.logging import fire_and_forget
     from services.shared.presentation.responses import (
         create_error_response,
         create_success_response,
     )
-    from services.shared.monitoring.logging import fire_and_forget
     from services.shared.utilities.error_handling import ValidationException
 except ImportError:
     # Fallback for testing or when shared services are not available

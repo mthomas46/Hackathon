@@ -7,8 +7,8 @@ This package contains the refactored components for change impact analysis:
 """
 
 from .feature_extractor import FeatureExtractor
-from .relationship_analyzer import RelationshipAnalyzer
 from .impact_calculator import ImpactCalculator
+from .relationship_analyzer import RelationshipAnalyzer
 
 __all__ = [
     "FeatureExtractor",

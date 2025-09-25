@@ -32,3 +32,8 @@ limits:
   max_lines_added_threshold: ${MAX_LINES_ADDED_THRESHOLD:-1000}
   quality_score_weight: ${QUALITY_SCORE_WEIGHT:-30}
   max_document_id_length: ${MAX_DOCUMENT_ID_LENGTH:-500}
+  default_findings_limit: ${DEFAULT_FINDINGS_LIMIT:-100}
+  max_findings_limit: ${MAX_FINDINGS_LIMIT:-1000}
+  max_message_length: ${MAX_MESSAGE_LENGTH:-100}
+  health_score_threshold: ${HEALTH_SCORE_THRESHOLD:-0.8}
+  analysis_confidence_threshold: ${ANALYSIS_CONFIDENCE_THRESHOLD:-0.8}

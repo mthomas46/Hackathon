@@ -118,19 +118,18 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI, HTTPException
-
-from services.shared.presentation.responses import (
-    create_error_response,
-    create_success_response,
-)
+from services.shared.infrastructure.config import load_service_config
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.monitoring.logging import fire_and_forget
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 from services.shared.utilities.error_handling import install_error_handlers
-from services.shared.infrastructure.config import load_service_config
 from services.shared.utilities.utilities import (
     attach_self_register,
     get_service_client,
@@ -249,4 +248,3 @@ except ImportError:
 # ============================================================================
 # ROUTER REGISTRATION
 # ============================================================================
-

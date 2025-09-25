@@ -192,31 +192,31 @@ class SemanticToolAnalyzer:
 
     def _rule_based_semantic_analysis(self, tool: Dict[str, Any]) -> Dict[str, Any]:
         """Rule-based semantic analysis as fallback"""
+        combined_text = self._prepare_tool_text_for_analysis(tool)
+        semantic_matches = self._score_semantic_categories(combined_text)
+        semantic_matches.sort(key=lambda x: x["score"], reverse=True)
 
+        primary_category = self._determine_primary_category(semantic_matches)
+        capabilities, use_cases = self._collect_capabilities_and_use_cases(semantic_matches)
+
+        return self._build_semantic_analysis_result(
+            tool, semantic_matches, primary_category, capabilities, use_cases
+        )
+
+    def _prepare_tool_text_for_analysis(self, tool: Dict[str, Any]) -> str:
+        """Prepare combined text from tool attributes for analysis"""
         tool_name = tool.get("name", "").lower()
         description = tool.get("description", "").lower()
         path = tool.get("path", "").lower()
         category = tool.get("category", "").lower()
+        return f"{tool_name} {description} {path} {category}"
 
-        # Combine text for analysis
-        combined_text = f"{tool_name} {description} {path} {category}"
-
+    def _score_semantic_categories(self, combined_text: str) -> List[Dict[str, Any]]:
+        """Score semantic categories based on keyword matching"""
         semantic_matches = []
-        capabilities = []
-        use_cases = []
 
-        # Check against semantic categories
         for sem_category, category_data in self.semantic_categories.items():
-            score = 0
-
-            # Keyword matching
-            for keyword in category_data["keywords"]:
-                if keyword in combined_text:
-                    score += 2
-
-            # Category name matching
-            if sem_category.replace("_", " ") in combined_text:
-                score += 3
+            score = self._calculate_category_score(sem_category, category_data, combined_text)
 
             if score >= 2:
                 semantic_matches.append(
@@ -228,22 +228,45 @@ class SemanticToolAnalyzer:
                     }
                 )
 
-        # Sort by score and select top matches
-        semantic_matches.sort(key=lambda x: x["score"], reverse=True)
+        return semantic_matches
 
-        primary_category = (
-            semantic_matches[0]["category"] if semantic_matches else "utility"
-        )
+    def _calculate_category_score(self, sem_category: str, category_data: Dict[str, Any], combined_text: str) -> int:
+        """Calculate score for a semantic category"""
+        score = 0
 
-        # Collect capabilities and use cases from top matches
-        for match in semantic_matches[:3]:  # Top 3 matches
+        # Keyword matching
+        for keyword in category_data["keywords"]:
+            if keyword in combined_text:
+                score += 2
+
+        # Category name matching
+        if sem_category.replace("_", " ") in combined_text:
+            score += 3
+
+        return score
+
+    def _determine_primary_category(self, semantic_matches: List[Dict[str, Any]]) -> str:
+        """Determine the primary semantic category"""
+        return semantic_matches[0]["category"] if semantic_matches else "utility"
+
+    def _collect_capabilities_and_use_cases(self, semantic_matches: List[Dict[str, Any]]) -> tuple:
+        """Collect capabilities and use cases from top semantic matches"""
+        capabilities = []
+        use_cases = []
+
+        # Collect from top 3 matches
+        for match in semantic_matches[:3]:
             capabilities.extend(match["capabilities"])
             use_cases.extend(match["use_cases"])
 
         # Remove duplicates
-        capabilities = list(set(capabilities))
-        use_cases = list(set(use_cases))
+        return list(set(capabilities)), list(set(use_cases))
 
+    def _build_semantic_analysis_result(
+        self, tool: Dict[str, Any], semantic_matches: List[Dict[str, Any]],
+        primary_category: str, capabilities: List[str], use_cases: List[str]
+    ) -> Dict[str, Any]:
+        """Build the final semantic analysis result"""
         return {
             "semantic_categories": [match["category"] for match in semantic_matches],
             "primary_category": primary_category,

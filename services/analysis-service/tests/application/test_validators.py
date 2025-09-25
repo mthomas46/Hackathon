@@ -34,12 +34,12 @@ from ...domain.value_objects.confidence import Confidence
 class TestBaseValidator:
     """Test cases for BaseValidator."""
 
-    def test_base_validator_creation(self):
+    def test_base_validator_with_valid_data_succeeds(self):
         """Test creating base validator."""
         validator = BaseValidator()
         assert validator is not None
 
-    def test_validation_result_creation(self):
+    def test_validation_result_with_valid_data_succeeds(self):
         """Test validation result creation."""
         result = ValidationResult()
 
@@ -72,7 +72,7 @@ class TestBaseValidator:
 
         assert len(result.warnings) == 1
 
-    def test_validation_error_creation(self):
+    def test_validation_error_with_valid_data_succeeds(self):
         """Test validation error creation."""
         error = ValidationError(
             message="Test error message",
@@ -105,7 +105,7 @@ class TestDocumentBusinessValidator:
         """Mock document repository."""
         return Mock()
 
-    def test_validator_creation(self, mock_document_repository):
+    def test_validator_with_valid_data_succeeds(self, mock_document_repository):
         """Test creating document business validator."""
         validator = DocumentBusinessValidator(
             document_repository=mock_document_repository
@@ -193,7 +193,7 @@ class TestDocumentBusinessValidator:
 class TestAnalysisBusinessValidator:
     """Test cases for AnalysisBusinessValidator."""
 
-    def test_validator_creation(self):
+    def test_validator_with_valid_data_succeeds(self):
         """Test creating analysis business validator."""
         validator = AnalysisBusinessValidator()
         assert validator is not None
@@ -258,7 +258,7 @@ class TestAnalysisBusinessValidator:
 class TestFindingBusinessValidator:
     """Test cases for FindingBusinessValidator."""
 
-    def test_validator_creation(self):
+    def test_validator_with_valid_data_succeeds(self):
         """Test creating finding business validator."""
         validator = FindingBusinessValidator()
         assert validator is not None
@@ -397,7 +397,7 @@ class TestQueryValidators:
 class TestValidationPipeline:
     """Test cases for ValidationPipeline."""
 
-    def test_pipeline_creation(self):
+    def test_pipeline_with_valid_data_succeeds(self):
         """Test creating validation pipeline."""
         pipeline = ValidationPipeline()
         assert pipeline is not None
@@ -501,7 +501,7 @@ class TestValidatorIntegration:
     """Test integration between validators."""
 
     @pytest.mark.asyncio
-    async def test_complete_validation_workflow(self):
+    async def test_complete_with_invalid_data_raises_validation_error_workflow(self):
         """Test complete validation workflow."""
         # Create pipeline with multiple validators
         pipeline = ValidationPipeline()

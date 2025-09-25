@@ -38,7 +38,7 @@ from ...domain.entities.finding import FindingSeverity
 class TestCommandBus:
     """Test cases for CommandBus."""
 
-    def test_command_bus_creation(self):
+    def test_command_bus_with_valid_data_succeeds(self):
         """Test creating command bus."""
         bus = CommandBus()
         assert bus is not None
@@ -98,7 +98,7 @@ class TestCommandBus:
 class TestQueryBus:
     """Test cases for QueryBus."""
 
-    def test_query_bus_creation(self):
+    def test_query_bus_with_valid_data_succeeds(self):
         """Test creating query bus."""
         bus = QueryBus()
         assert bus is not None
@@ -165,7 +165,7 @@ class TestCommandHandlers:
         """Mock event bus for testing."""
         return Mock()
 
-    def test_create_document_command_handler_creation(
+    def test_create_document_command_handler_with_valid_data_succeeds(
         self, mock_repositories, mock_services, mock_event_bus
     ):
         """Test creating create document command handler."""
@@ -217,7 +217,7 @@ class TestCommandHandlers:
         mock_repositories["document_repository"].save.assert_called_once()
         mock_event_bus.publish.assert_called()
 
-    def test_perform_analysis_command_handler_creation(
+    def test_perform_analysis_command_handler_with_valid_data_succeeds(
         self, mock_repositories, mock_services, mock_event_bus
     ):
         """Test creating perform analysis command handler."""
@@ -293,7 +293,9 @@ class TestQueryHandlers:
             "finding_repository": Mock(),
         }
 
-    def test_get_document_query_handler_creation(self, mock_repositories):
+    def test_get_document_query_handler_with_valid_data_succeeds(
+        self, mock_repositories
+    ):
         """Test creating get document query handler."""
         handler = GetDocumentQueryHandler(
             document_repository=mock_repositories["document_repository"]
@@ -329,7 +331,9 @@ class TestQueryHandlers:
             "doc-123"
         )
 
-    def test_get_documents_query_handler_creation(self, mock_repositories):
+    def test_get_documents_query_handler_with_valid_data_succeeds(
+        self, mock_repositories
+    ):
         """Test creating get documents query handler."""
         handler = GetDocumentsQueryHandler(
             document_repository=mock_repositories["document_repository"]
@@ -365,7 +369,9 @@ class TestQueryHandlers:
         assert result["total_count"] == 3
         mock_repositories["document_repository"].get_all.assert_called_once()
 
-    def test_get_analysis_query_handler_creation(self, mock_repositories):
+    def test_get_analysis_query_handler_with_valid_data_succeeds(
+        self, mock_repositories
+    ):
         """Test creating get analysis query handler."""
         handler = GetAnalysisQueryHandler(
             analysis_repository=mock_repositories["analysis_repository"]
@@ -401,7 +407,9 @@ class TestQueryHandlers:
             "analysis-123"
         )
 
-    def test_get_findings_query_handler_creation(self, mock_repositories):
+    def test_get_findings_query_handler_with_valid_data_succeeds(
+        self, mock_repositories
+    ):
         """Test creating get findings query handler."""
         handler = GetFindingsQueryHandler(
             finding_repository=mock_repositories["finding_repository"]
@@ -443,7 +451,7 @@ class TestQueryHandlers:
 class TestCQRSCommands:
     """Test cases for CQRS Commands."""
 
-    def test_create_document_command_creation(self):
+    def test_create_document_command_with_valid_data_succeeds(self):
         """Test creating create document command."""
         command = CreateDocumentCommand(
             title="Test Document",
@@ -459,7 +467,7 @@ class TestCQRSCommands:
         assert command.author == "test-author"
         assert command.metadata == {"tags": ["test"]}
 
-    def test_update_document_command_creation(self):
+    def test_update_document_command_with_valid_data_succeeds(self):
         """Test creating update document command."""
         command = UpdateDocumentCommand(
             document_id="doc-123",
@@ -472,7 +480,7 @@ class TestCQRSCommands:
         assert command.title == "Updated Title"
         assert command.content == "Updated content"
 
-    def test_delete_document_command_creation(self):
+    def test_delete_document_command_with_valid_data_succeeds(self):
         """Test creating delete document command."""
         command = DeleteDocumentCommand(
             document_id="doc-123", reason="No longer needed"
@@ -481,7 +489,7 @@ class TestCQRSCommands:
         assert command.document_id == "doc-123"
         assert command.reason == "No longer needed"
 
-    def test_perform_analysis_command_creation(self):
+    def test_perform_analysis_command_with_valid_data_succeeds(self):
         """Test creating perform analysis command."""
         command = PerformAnalysisCommand(
             document_id="doc-123",
@@ -497,7 +505,7 @@ class TestCQRSCommands:
         assert command.priority == "high"
         assert command.timeout_seconds == 300
 
-    def test_cancel_analysis_command_creation(self):
+    def test_cancel_analysis_command_with_valid_data_succeeds(self):
         """Test creating cancel analysis command."""
         command = CancelAnalysisCommand(
             analysis_id="analysis-123", reason="User requested cancellation"
@@ -510,14 +518,14 @@ class TestCQRSCommands:
 class TestCQRSQueries:
     """Test cases for CQRS Queries."""
 
-    def test_get_document_query_creation(self):
+    def test_get_document_query_with_valid_data_succeeds(self):
         """Test creating get document query."""
         query = GetDocumentQuery(document_id="doc-123", include_metadata=True)
 
         assert query.document_id == "doc-123"
         assert query.include_metadata is True
 
-    def test_get_documents_query_creation(self):
+    def test_get_documents_query_with_valid_data_succeeds(self):
         """Test creating get documents query."""
         query = GetDocumentsQuery(
             repository_id="repo-123",
@@ -533,14 +541,14 @@ class TestCQRSQueries:
         assert query.limit == 50
         assert query.offset == 0
 
-    def test_get_analysis_query_creation(self):
+    def test_get_analysis_query_with_valid_data_succeeds(self):
         """Test creating get analysis query."""
         query = GetAnalysisQuery(analysis_id="analysis-123", include_details=True)
 
         assert query.analysis_id == "analysis-123"
         assert query.include_details is True
 
-    def test_get_findings_query_creation(self):
+    def test_get_findings_query_with_valid_data_succeeds(self):
         """Test creating get findings query."""
         query = GetFindingsQuery(
             analysis_id="analysis-123",
@@ -555,7 +563,7 @@ class TestCQRSQueries:
         assert query.category == "security"
         assert query.limit == 100
 
-    def test_get_document_history_query_creation(self):
+    def test_get_document_history_query_with_valid_data_succeeds(self):
         """Test creating get document history query."""
         query = GetDocumentHistoryQuery(
             document_id="doc-123", since=datetime.now(timezone.utc), limit=20

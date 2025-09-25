@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from services.shared.utilities import CommandHandler, CommandResult
+from services.shared.utilities import CommandHandler
 
 from ...domain.entities import Document
 from ...domain.factories import DocumentFactory, FindingFactory

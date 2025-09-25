@@ -117,25 +117,73 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-from fastapi import FastAPI, HTTPException
-
-from services.shared.presentation.responses import (
-    create_error_response,
-    create_success_response,
-)
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import JSONResponse, Response
+from services.shared.infrastructure.config import load_service_config
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
 # ============================================================================
 from services.shared.monitoring.health import register_health_endpoints
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import install_error_handlers
-from services.shared.infrastructure.config import load_service_config
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
 from services.shared.utilities.utilities import (
     attach_self_register,
     get_service_client,
     setup_common_middleware,
 )
+
+# Local imports - extracted modules
+try:
+    from application.services.report_services import (
+        calculate_pr_health_score,
+        determine_pr_risk_level,
+        format_timestamp,
+        generate_analysis_markdown_report,
+        generate_document_section,
+        generate_pr_recommendations,
+        get_type_icon,
+    )
+    from infrastructure.analysis_services.file_analyzers import (
+        analyze_java_file,
+        analyze_js_file,
+        analyze_python_file,
+    )
+    from infrastructure.utilities.analysis_utils import (
+        extract_content_from_patch,
+        get_file_type,
+        is_conventional_commit,
+        is_good_commit_message,
+    )
+except ImportError:
+    # Fallback for when running from different contexts
+    import os
+    import sys
+
+    sys.path.append(os.path.dirname(__file__))
+    from application.services.report_services import (
+        calculate_pr_health_score,
+        determine_pr_risk_level,
+        format_timestamp,
+        generate_analysis_markdown_report,
+        generate_document_section,
+        generate_pr_recommendations,
+        get_type_icon,
+    )
+    from infrastructure.analysis_services.file_analyzers import (
+        analyze_java_file,
+        analyze_js_file,
+        analyze_python_file,
+    )
+    from infrastructure.utilities.analysis_utils import (
+        extract_content_from_patch,
+        get_file_type,
+        is_conventional_commit,
+        is_good_commit_message,
+    )
 
 try:
     import redis.asyncio as aioredis
@@ -250,19 +298,22 @@ except ImportError:
 # ROUTER REGISTRATION
 # ============================================================================
 
+
 def register_api_routers(app):
     """Register all API routers with proper OpenAPI documentation."""
 
     # Import controllers
     from .presentation.controllers.analysis_controller import AnalysisController
-    from .presentation.controllers.workflow_controller import WorkflowController
-    from .presentation.controllers.findings_controller import FindingsController
     from .presentation.controllers.distributed_controller import DistributedController
+    from .presentation.controllers.findings_controller import FindingsController
     from .presentation.controllers.integration_controller import IntegrationController
+    from .presentation.controllers.pr_confidence_controller import (
+        PRConfidenceController,
+    )
     from .presentation.controllers.remediation_controller import RemediationController
     from .presentation.controllers.reports_controller import ReportsController
     from .presentation.controllers.repository_controller import RepositoryController
-    from .presentation.controllers.pr_confidence_controller import PRConfidenceController
+    from .presentation.controllers.workflow_controller import WorkflowController
 
     # Initialize controllers
     analysis_controller = AnalysisController()
@@ -279,7 +330,7 @@ def register_api_routers(app):
             404: {"description": "Not Found - Document or analysis not found"},
             408: {"description": "Request Timeout - Analysis took too long"},
             500: {"description": "Internal Server Error - Analysis failed"},
-        }
+        },
     )
 
     app.include_router(
@@ -290,7 +341,7 @@ def register_api_routers(app):
             400: {"description": "Bad Request - Invalid workflow parameters"},
             404: {"description": "Not Found - Workflow not found"},
             500: {"description": "Internal Server Error - Workflow processing failed"},
-        }
+        },
     )
 
     app.include_router(
@@ -300,7 +351,7 @@ def register_api_routers(app):
         responses={
             400: {"description": "Bad Request - Invalid filter parameters"},
             500: {"description": "Internal Server Error - Findings retrieval failed"},
-        }
+        },
     )
 
     # Note: Other controllers need proper dependency injection setup
@@ -311,141 +362,15 @@ def register_api_routers(app):
 # GLOBAL ERROR HANDLERS
 # ============================================================================
 
+
 def install_error_handlers(app):
     """Install global exception handlers for the FastAPI application."""
 
-    from fastapi import HTTPException, Request
-    from fastapi.responses import JSONResponse
+    """Install global exception handlers for the FastAPI application."""
+    from .presentation.handlers.exception_handlers import register_exception_handlers
 
-    from services.shared.presentation.responses import create_error_response
+    register_exception_handlers(app)
 
-    from .domain.exceptions import (
-        DomainException,
-        ValidationException,
-        AnalysisException,
-        AnalysisExecutionException,
-        AnalysisTimeoutException,
-        DocumentException,
-        DocumentNotFoundException,
-        FindingException,
-        RepositoryException,
-        ExternalServiceException,
-        AuthorizationException,
-        ResourceLimitExceededException,
-    )
-
-    @app.exception_handler(DomainException)
-    async def domain_exception_handler(request: Request, exc: DomainException):
-        """Handle domain-specific exceptions."""
-        return JSONResponse(
-            status_code=400,
-            content=create_error_response(
-                message=f"Domain error: {exc.message}",
-                error_code="DOMAIN_ERROR",
-                details=exc.details
-            )
-        )
-
-    @app.exception_handler(ValidationException)
-    async def validation_exception_handler(request: Request, exc: ValidationException):
-        """Handle validation exceptions."""
-        return JSONResponse(
-            status_code=400,
-            content=create_error_response(
-                message=f"Validation error: {exc.message}",
-                error_code="VALIDATION_ERROR",
-                details={"validation_errors": exc.validation_errors}
-            )
-        )
-
-    @app.exception_handler(DocumentNotFoundException)
-    async def document_not_found_handler(request: Request, exc: DocumentNotFoundException):
-        """Handle document not found exceptions."""
-        return JSONResponse(
-            status_code=404,
-            content=create_error_response(
-                message=f"Document not found: {exc.message}",
-                error_code="DOCUMENT_NOT_FOUND",
-                details=exc.details
-            )
-        )
-
-    @app.exception_handler(AnalysisTimeoutException)
-    async def analysis_timeout_handler(request: Request, exc: AnalysisTimeoutException):
-        """Handle analysis timeout exceptions."""
-        return JSONResponse(
-            status_code=408,
-            content=create_error_response(
-                message=f"Analysis timeout: {exc.message}",
-                error_code="ANALYSIS_TIMEOUT",
-                details=exc.details
-            )
-        )
-
-    @app.exception_handler(AnalysisExecutionException)
-    async def analysis_execution_handler(request: Request, exc: AnalysisExecutionException):
-        """Handle analysis execution exceptions."""
-        return JSONResponse(
-            status_code=500,
-            content=create_error_response(
-                message=f"Analysis execution failed: {exc.message}",
-                error_code="ANALYSIS_EXECUTION_ERROR",
-                details=exc.details
-            )
-        )
-
-    @app.exception_handler(ExternalServiceException)
-    async def external_service_handler(request: Request, exc: ExternalServiceException):
-        """Handle external service exceptions."""
-        return JSONResponse(
-            status_code=502,
-            content=create_error_response(
-                message=f"External service error: {exc.message}",
-                error_code="EXTERNAL_SERVICE_ERROR",
-                details=exc.details
-            )
-        )
-
-    @app.exception_handler(AuthorizationException)
-    async def authorization_handler(request: Request, exc: AuthorizationException):
-        """Handle authorization exceptions."""
-        return JSONResponse(
-            status_code=403,
-            content=create_error_response(
-                message=f"Authorization error: {exc.message}",
-                error_code="AUTHORIZATION_ERROR",
-                details=exc.details
-            )
-        )
-
-    @app.exception_handler(ResourceLimitExceededException)
-    async def resource_limit_handler(request: Request, exc: ResourceLimitExceededException):
-        """Handle resource limit exceeded exceptions."""
-        return JSONResponse(
-            status_code=429,
-            content=create_error_response(
-                message=f"Resource limit exceeded: {exc.message}",
-                error_code="RESOURCE_LIMIT_EXCEEDED",
-                details=exc.details
-            )
-        )
-
-    @app.exception_handler(Exception)
-    async def general_exception_handler(request: Request, exc: Exception):
-        """Handle any unhandled exceptions."""
-        # Log the error for debugging
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Unhandled exception in {request.url.path}: {str(exc)}", exc_info=True)
-
-        return JSONResponse(
-            status_code=500,
-            content=create_error_response(
-                message="An unexpected error occurred. Please try again later.",
-                error_code="INTERNAL_SERVER_ERROR",
-                details={"path": str(request.url.path)}
-            )
-        )
 
 # Create FastAPI app using standardized configuration
 app = FastAPI(
@@ -524,78 +449,39 @@ app = FastAPI(
     contact={
         "name": "Analysis Service Team",
         "email": "analysis@company.com",
-        "url": "https://analysis.company.com/support"
+        "url": "https://analysis.company.com/support",
     },
-    license_info={
-        "name": "Proprietary",
-        "url": "https://analysis.company.com/license"
-    },
+    license_info={"name": "Proprietary", "url": "https://analysis.company.com/license"},
     tags_metadata=[
-        {
-            "name": "analysis",
-            "description": "Core document analysis operations"
-        },
+        {"name": "analysis", "description": "Core document analysis operations"},
         {
             "name": "semantic",
-            "description": "Semantic similarity and embedding analysis"
+            "description": "Semantic similarity and embedding analysis",
         },
-        {
-            "name": "sentiment",
-            "description": "Sentiment, tone, and clarity analysis"
-        },
-        {
-            "name": "quality",
-            "description": "Content quality assessment and scoring"
-        },
-        {
-            "name": "trends",
-            "description": "Trend analysis and predictions"
-        },
-        {
-            "name": "risk",
-            "description": "Risk assessment and mitigation"
-        },
+        {"name": "sentiment", "description": "Sentiment, tone, and clarity analysis"},
+        {"name": "quality", "description": "Content quality assessment and scoring"},
+        {"name": "trends", "description": "Trend analysis and predictions"},
+        {"name": "risk", "description": "Risk assessment and mitigation"},
         {
             "name": "maintenance",
-            "description": "Maintenance forecasting and scheduling"
+            "description": "Maintenance forecasting and scheduling",
         },
         {
             "name": "change-impact",
-            "description": "Change impact and dependency analysis"
+            "description": "Change impact and dependency analysis",
         },
-        {
-            "name": "remediation",
-            "description": "Automated issue remediation"
-        },
+        {"name": "remediation", "description": "Automated issue remediation"},
         {
             "name": "workflows",
-            "description": "Workflow integration and event processing"
+            "description": "Workflow integration and event processing",
         },
-        {
-            "name": "repositories",
-            "description": "Cross-repository analysis"
-        },
-        {
-            "name": "distributed",
-            "description": "Distributed processing management"
-        },
-        {
-            "name": "findings",
-            "description": "Analysis findings and results"
-        },
-        {
-            "name": "reports",
-            "description": "Report generation and notifications"
-        },
-        {
-            "name": "integration",
-            "description": "External service integrations"
-        },
-        {
-            "name": "health",
-            "description": "Service health and monitoring"
-        }
-    ]
+        {"name": "repositories", "description": "Cross-repository analysis"},
+        {"name": "distributed", "description": "Distributed processing management"},
+        {"name": "findings", "description": "Analysis findings and results"},
+        {"name": "reports", "description": "Report generation and notifications"},
+        {"name": "integration", "description": "External service integrations"},
+        {"name": "health", "description": "Service health and monitoring"},
+    ],
 )
 
 # Setup standardized middleware and utilities
@@ -621,18 +507,87 @@ from .modules.shared_utils import (
 # API Endpoints
 
 
-@app.post("/analyze", tags=["analysis"])
-async def analyze_documents(req: AnalysisRequest):
-    """Analyze documents for consistency and issues with configurable detectors.
-
-    Performs comprehensive document analysis using various detectors to identify
+@app.post(
+    "/analyze",
+    tags=["analysis"],
+    summary="Analyze documents for consistency and quality issues",
+    description="""Performs comprehensive document analysis using various detectors to identify
     consistency issues, quality problems, and maintenance concerns across
     multiple document sources and types.
-    """
+
+    Supports analysis of code files, documentation, and other text-based content
+    with configurable detector pipelines and analysis scopes.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Analysis completed successfully",
+                        "analysis_id": "analysis-123",
+                        "document_id": "doc-456",
+                        "findings": [
+                            {
+                                "severity": "medium",
+                                "category": "consistency",
+                                "message": "Inconsistent terminology detected",
+                            }
+                        ],
+                        "processing_time": 2.5,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        422: {"description": "Validation error", "model": ErrorResponse},
+        500: {
+            "description": "Analysis failed due to server error",
+            "model": ErrorResponse,
+        },
+    },
+)
+async def analyze_documents(req: AnalysisRequest):
     return await analysis_handlers.handle_analyze_documents(req)
 
 
-@app.post("/analyze/semantic-similarity", tags=["semantic"])
+@app.post(
+    "/analyze/semantic-similarity",
+    tags=["semantic"],
+    summary="Analyze semantic similarity between documents",
+    description="""Calculates semantic similarity scores between documents using advanced
+    natural language processing techniques. Identifies related content, detects
+    duplication, and provides similarity rankings for content organization.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Semantic similarity analysis completed",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Semantic similarity analysis completed successfully",
+                        "similarity_pairs": [
+                            {
+                                "document1_id": "doc-1",
+                                "document2_id": "doc-2",
+                                "similarity_score": 0.85,
+                                "confidence": "high",
+                            }
+                        ],
+                        "total_documents": 10,
+                        "processing_time": 3.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
     """Analyze semantic similarity between documents using embeddings.
 
@@ -674,11 +629,14 @@ async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Semantic similarity analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "request": req.model_dump()},
+        logger.error(
+            f"Semantic similarity analysis failed: {str(e)}",
+            extra={
+                "service": SERVICE_NAME,
+                "request": req.model_dump(),
+                "error_type": type(e).__name__,
+            },
+            exc_info=True,
         )
 
         return create_error_response(
@@ -687,7 +645,42 @@ async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
         )
 
 
-@app.post("/analyze/sentiment", tags=["sentiment"])
+@app.post(
+    "/analyze/sentiment",
+    tags=["sentiment"],
+    summary="Analyze sentiment and emotional tone in documents",
+    description="""Performs sentiment analysis to determine the emotional tone and attitude
+    expressed in documents. Identifies positive, negative, and neutral sentiment
+    with confidence scores and provides detailed sentiment breakdowns.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Sentiment analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Sentiment analysis completed successfully",
+                        "document_id": "doc-123",
+                        "sentiment_analysis": {
+                            "sentiment": "positive",
+                            "confidence": 0.89,
+                            "scores": {
+                                "positive": 0.75,
+                                "negative": 0.15,
+                                "neutral": 0.10,
+                            },
+                        },
+                        "processing_time": 1.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Sentiment analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
     """Analyze sentiment, tone, and clarity of a document.
 
@@ -730,11 +723,14 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Sentiment analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id},
+        logger.error(
+            f"Sentiment analysis failed for document {req.document_id}: {str(e)}",
+            extra={
+                "service": SERVICE_NAME,
+                "document_id": req.document_id,
+                "error_type": type(e).__name__,
+            },
+            exc_info=True,
         )
 
         return create_error_response(
@@ -785,11 +781,14 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Tone analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id},
+        logger.error(
+            f"Tone analysis failed for document {req.document_id}: {str(e)}",
+            extra={
+                "service": SERVICE_NAME,
+                "document_id": req.document_id,
+                "error_type": type(e).__name__,
+            },
+            exc_info=True,
         )
 
         return create_error_response(
@@ -839,11 +838,14 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Content quality analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id},
+        logger.error(
+            f"Content quality analysis failed for document {req.document_id}: {str(e)}",
+            extra={
+                "service": SERVICE_NAME,
+                "document_id": req.document_id,
+                "error_type": type(e).__name__,
+            },
+            exc_info=True,
         )
 
         return create_error_response(
@@ -903,11 +905,14 @@ async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Trend analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "document_id": req.document_id},
+        logger.error(
+            f"Trend analysis failed for document {req.document_id}: {str(e)}",
+            extra={
+                "service": SERVICE_NAME,
+                "document_id": req.document_id,
+                "error_type": type(e).__name__,
+            },
+            exc_info=True,
         )
 
         return create_error_response(
@@ -959,11 +964,14 @@ async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error",
-            "Portfolio trend analysis failed",
-            SERVICE_NAME,
-            {"error": str(e), "total_results": len(req.analysis_results)},
+        logger.error(
+            f"Portfolio trend analysis failed for {len(req.analysis_results)} results: {str(e)}",
+            extra={
+                "service": SERVICE_NAME,
+                "total_results": len(req.analysis_results),
+                "error_type": type(e).__name__,
+            },
+            exc_info=True,
         )
 
         return create_error_response(
@@ -1865,7 +1873,7 @@ def analyze_commit_messages(commits: list) -> dict:
         if len(message) < 10:
             analysis["message_quality"]["poor_messages"] += 1
             analysis["issues"].append(f"Commit message too short: '{message[:50]}...'")
-        elif len(message) > 100:
+        elif len(message) > config.limits.max_message_length:
             analysis["message_quality"]["needs_improvement"] += 1
             analysis["issues"].append(f"Commit message too long: '{message[:50]}...'")
         elif is_good_commit_message(message):
@@ -2245,7 +2253,7 @@ def is_good_commit_message(message: str) -> bool:
         return False
 
     # Should be descriptive but not too long
-    if len(message) > 100:
+    if len(message) > config.limits.max_message_length:
         return False
 
     return True
@@ -2404,7 +2412,7 @@ def calculate_pr_health_score(
 
 def determine_pr_risk_level(health_score: float) -> str:
     """Determine risk level based on health score."""
-    if health_score >= 0.8:
+    if health_score >= config.limits.health_score_threshold:
         return "low"
     elif health_score >= 0.6:
         return "medium"
@@ -2434,7 +2442,10 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     # Specific recommendations based on analysis
     code_analysis = pr_report.get("code_analysis", {})
 
-    if code_analysis.get("change_metrics", {}).get("lines_added", 0) > config.limits.max_lines_added_threshold:
+    if (
+        code_analysis.get("change_metrics", {}).get("lines_added", 0)
+        > config.limits.max_lines_added_threshold
+    ):
         recommendations.append(
             "📊 Large PR detected - consider splitting into smaller, focused changes"
         )
@@ -2485,7 +2496,7 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
 
     # Overall quality indicator
     avg_score = summary["average_quality_score"]
-    if avg_score >= 0.8:
+    if avg_score >= config.limits.analysis_confidence_threshold:
         quality_indicator = (
             "🟢 **High Quality** - Documents are well-structured and clear"
         )
@@ -2508,7 +2519,7 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
         issues_found = result.get("issues_found", 0)
 
         # Quality score emoji
-        if quality_score >= 0.8:
+        if quality_score >= config.limits.analysis_confidence_threshold:
             quality_emoji = "🟢"
         elif quality_score >= 0.6:
             quality_emoji = "🟡"
@@ -2857,7 +2868,7 @@ async def get_workflow_queue_status_endpoint():
         )
 
 
-@app.post("/workflows/webhook/config")
+@app.put("/workflows/webhook/config")
 async def configure_webhook_endpoint(req: WebhookConfigRequest):
     """Configure webhook settings for workflow integration.
 
@@ -3027,7 +3038,7 @@ async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRe
         )
 
 
-@app.post("/repositories/connectors/config")
+@app.put("/repositories/connectors/config")
 async def configure_repository_connector_endpoint(
     req: RepositoryConnectorConfigRequest,
 ):
@@ -3188,19 +3199,20 @@ async def submit_distributed_task_endpoint(req: DistributedTaskRequest):
             },
         )
 
-        return create_success_response(
-            f"Distributed task {task_type} submitted successfully",
-            {
-                "task_id": task_id,
-                "task_type": task_type,
-                "status": result.status,
-                "priority": result.priority,
-                "submitted_at": result.submitted_at,
-                "estimated_completion": result.estimated_completion,
-            },
-            task_id=task_id,
-            task_type=task_type,
-            priority=result.priority,
+        return JSONResponse(
+            status_code=201,
+            content=create_success_response(
+                f"Distributed task {task_type} submitted successfully",
+                {
+                    "task_id": task_id,
+                    "task_type": task_type,
+                    "status": result.status,
+                    "priority": result.priority,
+                    "submitted_at": result.submitted_at,
+                    "estimated_completion": result.estimated_completion,
+                },
+                task_id=task_id,
+            ),
         )
 
     except Exception as e:
@@ -3237,14 +3249,17 @@ async def submit_batch_tasks_endpoint(req: BatchTasksRequest):
             {"total_tasks": total_tasks, "submitted_at": result.submitted_at},
         )
 
-        return create_success_response(
-            f"Batch of {total_tasks} tasks submitted successfully",
-            {
-                "task_ids": result.task_ids,
-                "total_tasks": total_tasks,
-                "submitted_at": result.submitted_at,
-            },
-            total_tasks=total_tasks,
+        return JSONResponse(
+            status_code=201,
+            content=create_success_response(
+                f"Batch of {total_tasks} tasks submitted successfully",
+                {
+                    "task_ids": result.task_ids,
+                    "total_tasks": total_tasks,
+                    "submitted_at": result.submitted_at,
+                },
+                total_tasks=total_tasks,
+            ),
         )
 
     except Exception as e:
@@ -3339,11 +3354,7 @@ async def cancel_task_endpoint(task_id: str):
             {"task_id": task_id, "cancelled": cancelled, "message": result["message"]},
         )
 
-        return create_success_response(
-            result["message"],
-            {"task_id": task_id, "cancelled": cancelled, "message": result["message"]},
-            cancelled=cancelled,
-        )
+        return Response(status_code=204)
 
     except Exception as e:
         # Log the error
@@ -4072,18 +4083,62 @@ def format_generic_content(content: str) -> List[str]:
     return lines
 
 
-@app.get("/findings")
-async def get_findings(
-    limit: int = 100,
-    severity: Optional[str] = None,
-    finding_type_filter: Optional[str] = None,
-):
-    """Get analysis findings with optional filtering by severity and type.
-
-    Retrieves findings from document analysis operations with support for
+@app.get(
+    "/findings",
+    tags=["findings"],
+    summary="Retrieve analysis findings with filtering",
+    description="""Retrieves findings from document analysis operations with support for
     pagination and filtering by severity levels and finding types for
     targeted issue management and reporting.
-    """
+
+    Findings represent issues, recommendations, or insights discovered
+    during document analysis across various categories like quality,
+    consistency, security, and maintainability.""",
+    response_model=FindingsListResponse,
+    responses={
+        200: {
+            "description": "Findings retrieved successfully",
+            "model": FindingsListResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "findings": [
+                            {
+                                "id": "finding-123",
+                                "document_id": "doc-456",
+                                "severity": "high",
+                                "category": "security",
+                                "message": "Potential security vulnerability detected",
+                                "line_number": 42,
+                                "confidence": 0.95,
+                            }
+                        ],
+                        "total_count": 25,
+                        "limit": 100,
+                        "offset": 0,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid query parameters", "model": ErrorResponse},
+        500: {"description": "Failed to retrieve findings", "model": ErrorResponse},
+    },
+)
+async def get_findings(
+    limit: int = Query(
+        config.limits.default_findings_limit,
+        description="Maximum number of findings to return",
+        ge=1,
+        le=config.limits.max_findings_limit,
+    ),
+    severity: Optional[str] = Query(
+        None, description="Filter by severity level (low, medium, high, critical)"
+    ),
+    finding_type_filter: Optional[str] = Query(
+        None, description="Filter by finding category or type"
+    ),
+):
     return await analysis_handlers.handle_get_findings(
         limit, severity, finding_type_filter
     )
@@ -4646,7 +4701,46 @@ async def get_analysis_statistics():
 
 
 # Custom health endpoint registered LAST to override shared health endpoint
-@app.get("/api/v1/analysis/status")
+@app.get(
+    "/api/v1/analysis/status",
+    tags=["status"],
+    summary="Get comprehensive analysis service status",
+    description="""Retrieves detailed status information about the analysis service including
+    health metrics, available analysis capabilities, system resources, and
+    operational statistics. Used for monitoring and operational visibility.""",
+    response_model=SuccessResponse,
+    responses={
+        200: {
+            "description": "Service status retrieved successfully",
+            "model": SuccessResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Analysis service status",
+                        "service_name": "analysis-service",
+                        "version": "1.2.3",
+                        "uptime": 3600.5,
+                        "capabilities": {
+                            "sentiment_analysis": True,
+                            "semantic_similarity": True,
+                            "quality_analysis": True,
+                            "tone_analysis": True,
+                        },
+                        "active_analyses": 5,
+                        "completed_analyses": 150,
+                        "system_resources": {
+                            "cpu_usage": 45.2,
+                            "memory_usage": 67.8,
+                            "disk_usage": 23.1,
+                        },
+                    }
+                }
+            },
+        },
+        503: {"description": "Service status unavailable", "model": ErrorResponse},
+    },
+)
 async def get_analysis_status():
     """Get comprehensive status of analysis service capabilities and current state."""
     from services.shared.monitoring.health import HealthManager
@@ -4716,9 +4810,57 @@ async def get_analysis_status():
     return analysis_status
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    tags=["health"],
+    summary="Check service health and readiness",
+    description="""Performs comprehensive health checks on the analysis service including
+    database connectivity, external service dependencies, and internal component
+    status. Used by load balancers and monitoring systems to determine service
+    availability.""",
+    response_model=SuccessResponse,
+    responses={
+        200: {
+            "description": "Service is healthy and operational",
+            "model": SuccessResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Analysis service is healthy",
+                        "timestamp": "2024-01-15T10:30:00Z",
+                        "uptime": 3600.5,
+                        "version": "1.2.3",
+                        "database_status": "connected",
+                        "external_services": {
+                            "doc_store": "healthy",
+                            "discovery_agent": "healthy",
+                        },
+                    }
+                }
+            },
+        },
+        503: {
+            "description": "Service is unhealthy or unavailable",
+            "model": ErrorResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": False,
+                        "message": "Service is currently unhealthy",
+                        "error_code": "SERVICE_UNHEALTHY",
+                        "details": {
+                            "database_status": "disconnected",
+                            "external_services": {"doc_store": "unreachable"},
+                        },
+                    }
+                }
+            },
+        },
+    },
+)
 async def custom_analysis_health():
-    """Custom analysis-service health endpoint with models_loaded field."""
+    """Custom analysis-service health endpoint with comprehensive status checks."""
 
     from services.shared.monitoring.health import healthy_response
 

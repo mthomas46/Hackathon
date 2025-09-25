@@ -10,6 +10,7 @@ import pytest
 
 # Simple test fixtures using mock objects
 
+
 @pytest.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for the test session."""
@@ -70,6 +71,7 @@ def sample_finding_data() -> Dict[str, Any]:
 def mock_document_repository():
     """Mock document repository."""
     from unittest.mock import AsyncMock, MagicMock
+
     repo = MagicMock()
     repo.save = AsyncMock()
     repo.find_by_id = AsyncMock(return_value=None)
@@ -82,6 +84,7 @@ def mock_document_repository():
 def mock_analysis_repository():
     """Mock analysis repository."""
     from unittest.mock import AsyncMock, MagicMock
+
     repo = MagicMock()
     repo.save = AsyncMock()
     repo.find_by_id = AsyncMock(return_value=None)
@@ -94,6 +97,7 @@ def mock_analysis_repository():
 def mock_finding_repository():
     """Mock finding repository."""
     from unittest.mock import AsyncMock, MagicMock
+
     repo = MagicMock()
     repo.save = AsyncMock()
     repo.find_by_id = AsyncMock(return_value=None)
@@ -107,6 +111,7 @@ def mock_finding_repository():
 def mock_document_service(mock_document_repository):
     """Mock document service."""
     from unittest.mock import MagicMock
+
     service = MagicMock()
     service.repository = mock_document_repository
     service.create_document = AsyncMock()
@@ -120,6 +125,7 @@ def mock_document_service(mock_document_repository):
 def mock_analysis_service(mock_analysis_repository, mock_document_repository):
     """Mock analysis service."""
     from unittest.mock import MagicMock
+
     service = MagicMock()
     service.analysis_repository = mock_analysis_repository
     service.document_repository = mock_document_repository

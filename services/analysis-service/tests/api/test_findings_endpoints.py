@@ -559,7 +559,9 @@ class TestFindingsEndpoints:
         )
         assert cors_present, "CORS headers should be present"
 
-    def test_findings_endpoint_content_type_validation(self, client):
+    def test_findings_endpoint_content_type_with_invalid_data_raises_validation_error(
+        self, client
+    ):
         """Test content type validation on findings endpoint."""
         # Test with correct content type
         response = client.get("/findings", headers={"Accept": "application/json"})

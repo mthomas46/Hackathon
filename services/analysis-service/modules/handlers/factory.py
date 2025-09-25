@@ -2,10 +2,11 @@
 
 from typing import Dict, List, Optional, Type
 
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.intelligent_caching import get_service_cache
+
 # Using standardized shared services
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.intelligent_caching import get_service_cache
-from services.shared.integrations.clients.clients import ServiceClients
 
 from .base_handler import BaseAnalysisHandler
 from .cross_repository_handler import CrossRepositoryAnalysisHandler

@@ -7,10 +7,10 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import numpy as np
+from services.shared.intelligent_caching import get_service_cache
 
 # Using standardized shared services
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.intelligent_caching import get_service_cache
 
 
 @dataclass

@@ -23,7 +23,7 @@ from ...infrastructure.repositories.in_memory.finding_repository import (
 class TestDocumentRepository:
     """Test cases for DocumentRepository."""
 
-    def test_repository_creation(self):
+    def test_repository_with_valid_data_succeeds(self):
         """Test creating document repository."""
         repo = InMemoryDocumentRepository()
         assert isinstance(repo, DocumentRepository)
@@ -135,7 +135,7 @@ class TestDocumentRepository:
 class TestAnalysisRepository:
     """Test cases for AnalysisRepository."""
 
-    def test_repository_creation(self):
+    def test_repository_with_valid_data_succeeds(self):
         """Test creating analysis repository."""
         repo = InMemoryAnalysisRepository()
         assert isinstance(repo, AnalysisRepository)
@@ -231,7 +231,7 @@ class TestAnalysisRepository:
 class TestFindingRepository:
     """Test cases for FindingRepository."""
 
-    def test_repository_creation(self):
+    def test_repository_with_valid_data_succeeds(self):
         """Test creating finding repository."""
         repo = InMemoryFindingRepository()
         assert isinstance(repo, FindingRepository)

@@ -4,19 +4,17 @@ import os
 import sys
 from datetime import datetime, timezone
 
-
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from domain.entities.finding import Finding
 from domain.value_objects import Confidence, Location
-
 from tests.conftest import assert_validation_error
 
 
 class TestFindingEntity:
     """Test cases for Finding entity."""
 
-    def test_finding_creation_valid_data(self, sample_finding_data):
+    def test_finding_creation_with_valid_data_succeeds(self, sample_finding_data):
         """Test creating a finding with valid data."""
         finding = Finding(**sample_finding_data)
 
@@ -31,7 +29,7 @@ class TestFindingEntity:
         assert isinstance(finding.confidence, Confidence)
         assert finding.created_at is not None
 
-    def test_finding_creation_missing_required_fields(self):
+    def test_finding_creation_with_missing_required_fields_raises_error(self):
         """Test creating a finding with missing required fields."""
         # Missing document_id
         assert_validation_error(
@@ -63,7 +61,7 @@ class TestFindingEntity:
             category="consistency",
         )
 
-    def test_finding_creation_invalid_severity(self):
+    def test_finding_creation_with_invalid_severity_raises_error(self):
         """Test creating a finding with invalid severity."""
         assert_validation_error(
             Finding,
@@ -75,7 +73,7 @@ class TestFindingEntity:
             description="Test finding",
         )
 
-    def test_finding_creation_invalid_category(self):
+    def test_finding_creation_with_invalid_category_raises_error(self):
         """Test creating a finding with invalid category."""
         assert_validation_error(
             Finding,
@@ -295,7 +293,7 @@ class TestFindingEntity:
         assert finding_entity.id in repr_str
         assert finding_entity.severity in repr_str
 
-    def test_finding_validation_confidence_range(self):
+    def test_finding_with_invalid_data_raises_validation_error_confidence_range(self):
         """Test validation for confidence range."""
         # Valid confidence
         finding = Finding(
@@ -321,7 +319,9 @@ class TestFindingEntity:
             confidence=Confidence(value=1.5),
         )
 
-    def test_finding_validation_location_positive_values(self):
+    def test_finding_with_invalid_data_raises_validation_error_location_positive_values(
+        self,
+    ):
         """Test validation for location with positive values."""
         # Valid location
         finding = Finding(

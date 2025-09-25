@@ -35,8 +35,8 @@ from ...domain.value_objects.confidence import Confidence
 class TestRequestDTOs:
     """Test cases for Request DTOs."""
 
-    def test_create_document_request_creation(self):
-        """Test creating create document request."""
+    def test_create_document_request_with_valid_data_succeeds(self):
+        """Test creating create document request with valid data succeeds."""
         request = CreateDocumentRequest(
             title="Test Document",
             content="Test content",
@@ -53,7 +53,7 @@ class TestRequestDTOs:
         assert request.metadata == {"tags": ["test", "documentation"]}
         assert request.version == "1.0.0"
 
-    def test_create_document_request_validation(self):
+    def test_create_document_request_with_invalid_data_raises_validation_error(self):
         """Test create document request validation."""
         # Valid request
         request = CreateDocumentRequest(
@@ -76,7 +76,7 @@ class TestRequestDTOs:
 
         assert not request.is_valid()
 
-    def test_update_document_request_creation(self):
+    def test_update_document_request_with_valid_data_succeeds(self):
         """Test creating update document request."""
         request = UpdateDocumentRequest(
             document_id="doc-123",
@@ -90,7 +90,7 @@ class TestRequestDTOs:
         assert request.content == "Updated content"
         assert request.metadata == {"updated": True}
 
-    def test_delete_document_request_creation(self):
+    def test_delete_document_request_with_valid_data_succeeds(self):
         """Test creating delete document request."""
         request = DeleteDocumentRequest(
             document_id="doc-123", reason="No longer needed", force=False
@@ -100,7 +100,7 @@ class TestRequestDTOs:
         assert request.reason == "No longer needed"
         assert request.force is False
 
-    def test_perform_analysis_request_creation(self):
+    def test_perform_analysis_request_with_valid_data_succeeds(self):
         """Test creating perform analysis request."""
         request = PerformAnalysisRequest(
             document_id="doc-123",
@@ -118,7 +118,7 @@ class TestRequestDTOs:
         assert request.timeout_seconds == 300
         assert request.webhook_url == "https://example.com/webhook"
 
-    def test_cancel_analysis_request_creation(self):
+    def test_cancel_analysis_request_with_valid_data_succeeds(self):
         """Test creating cancel analysis request."""
         request = CancelAnalysisRequest(
             analysis_id="analysis-123", reason="User requested cancellation", force=True
@@ -128,7 +128,7 @@ class TestRequestDTOs:
         assert request.reason == "User requested cancellation"
         assert request.force is True
 
-    def test_get_document_request_creation(self):
+    def test_get_document_request_with_valid_data_succeeds(self):
         """Test creating get document request."""
         request = GetDocumentRequest(
             document_id="doc-123", include_metadata=True, include_history=False
@@ -138,7 +138,7 @@ class TestRequestDTOs:
         assert request.include_metadata is True
         assert request.include_history is False
 
-    def test_get_documents_request_creation(self):
+    def test_get_documents_request_with_valid_data_succeeds(self):
         """Test creating get documents request."""
         request = GetDocumentsRequest(
             repository_id="repo-123",
@@ -160,7 +160,7 @@ class TestRequestDTOs:
         assert request.sort_by == "created_at"
         assert request.sort_order == "desc"
 
-    def test_get_analysis_request_creation(self):
+    def test_get_analysis_request_with_valid_data_succeeds(self):
         """Test creating get analysis request."""
         request = GetAnalysisRequest(
             analysis_id="analysis-123", include_details=True, include_findings=True
@@ -170,7 +170,7 @@ class TestRequestDTOs:
         assert request.include_details is True
         assert request.include_findings is True
 
-    def test_get_findings_request_creation(self):
+    def test_get_findings_request_with_valid_data_succeeds(self):
         """Test creating get findings request."""
         request = GetFindingsRequest(
             analysis_id="analysis-123",
@@ -194,7 +194,7 @@ class TestRequestDTOs:
 class TestResponseDTOs:
     """Test cases for Response DTOs."""
 
-    def test_document_response_creation(self):
+    def test_document_response_with_valid_data_succeeds(self):
         """Test creating document response."""
         response = DocumentResponse(
             id="doc-123",
@@ -238,7 +238,7 @@ class TestResponseDTOs:
         assert response.title == "Test Document"
         assert response.status == "active"
 
-    def test_analysis_response_creation(self):
+    def test_analysis_response_with_valid_data_succeeds(self):
         """Test creating analysis response."""
         response = AnalysisResponse(
             id="analysis-123",
@@ -260,7 +260,7 @@ class TestResponseDTOs:
         assert response.confidence == 0.85
         assert response.execution_time_seconds == 2.5
 
-    def test_finding_response_creation(self):
+    def test_finding_response_with_valid_data_succeeds(self):
         """Test creating finding response."""
         response = FindingResponse(
             id="finding-123",
@@ -283,7 +283,7 @@ class TestResponseDTOs:
         assert response.severity == "medium"
         assert response.confidence == 0.75
 
-    def test_findings_list_response_creation(self):
+    def test_findings_list_response_with_valid_data_succeeds(self):
         """Test creating findings list response."""
         findings = [
             FindingResponse(
@@ -317,7 +317,7 @@ class TestResponseDTOs:
         assert response.limit == 10
         assert response.offset == 0
 
-    def test_analysis_result_response_creation(self):
+    def test_analysis_result_response_with_valid_data_succeeds(self):
         """Test creating analysis result response."""
         document = DocumentResponse(
             id="doc-123",
@@ -355,7 +355,7 @@ class TestResponseDTOs:
         assert response.execution_time_seconds == 2.5
         assert response.error_message is None
 
-    def test_error_response_creation(self):
+    def test_error_response_with_valid_data_succeeds(self):
         """Test creating error response."""
         response = ErrorResponse(
             error_code="VALIDATION_ERROR",
@@ -371,7 +371,7 @@ class TestResponseDTOs:
         assert response.request_id == "req-123"
         assert response.timestamp is not None
 
-    def test_success_response_creation(self):
+    def test_success_response_with_valid_data_succeeds(self):
         """Test creating success response."""
         response = SuccessResponse(
             message="Operation completed successfully",
@@ -385,7 +385,7 @@ class TestResponseDTOs:
         assert response.request_id == "req-123"
         assert response.timestamp is not None
 
-    def test_paginated_response_creation(self):
+    def test_paginated_response_with_valid_data_succeeds(self):
         """Test creating paginated response."""
         items = [{"id": "item-1"}, {"id": "item-2"}, {"id": "item-3"}]
 
@@ -403,7 +403,7 @@ class TestResponseDTOs:
 class TestDTOValidation:
     """Test validation functionality in DTOs."""
 
-    def test_request_dto_validation(self):
+    def test_request_dto_with_invalid_data_raises_validation_error(self):
         """Test request DTO validation."""
         # Test valid request
         request = CreateDocumentRequest(
@@ -525,7 +525,7 @@ class TestDTOConversion:
 class TestDTOErrorHandling:
     """Test error handling in DTOs."""
 
-    def test_dto_creation_with_invalid_data(self):
+    def test_dto_with_valid_data_succeeds_with_invalid_data(self):
         """Test DTO creation with invalid data."""
         # Test with missing required fields
         with pytest.raises(ValueError):
@@ -533,7 +533,7 @@ class TestDTOErrorHandling:
                 title=None, content="Valid content", repository_id="repo-123"
             )  # Invalid
 
-    def test_dto_validation_error_messages(self):
+    def test_dto_with_invalid_data_raises_validation_error_error_messages(self):
         """Test validation error messages in DTOs."""
         request = CreateDocumentRequest(
             title="", content="Valid content", repository_id="repo-123"
@@ -608,7 +608,7 @@ class TestDTOPagination:
         assert response.has_more is False  # 25 total, 20 offset + 1 item = 21
         assert response.current_page == 3  # offset 20 / limit 10 + 1
 
-    def test_pagination_validation(self):
+    def test_pagination_with_invalid_data_raises_validation_error(self):
         """Test pagination parameter validation."""
         # Valid pagination
         response = PaginatedResponse(items=[], total_count=100, limit=50, offset=0)

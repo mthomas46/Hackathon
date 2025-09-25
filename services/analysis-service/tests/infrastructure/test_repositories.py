@@ -86,7 +86,7 @@ class TestInMemoryDocumentRepository:
             status=DocumentStatus.ACTIVE,
         )
 
-    def test_repository_creation(self, repository):
+    def test_repository_with_valid_data_succeeds(self, repository):
         """Test creating an in-memory document repository."""
         assert repository is not None
         assert isinstance(repository, DocumentRepository)
@@ -277,7 +277,7 @@ class TestInMemoryAnalysisRepository:
             status=AnalysisStatus.COMPLETED,
         )
 
-    def test_repository_creation(self, repository):
+    def test_repository_with_valid_data_succeeds(self, repository):
         """Test creating an in-memory analysis repository."""
         assert repository is not None
         assert isinstance(repository, AnalysisRepository)
@@ -391,7 +391,7 @@ class TestInMemoryFindingRepository:
             category="code_quality",
         )
 
-    def test_repository_creation(self, repository):
+    def test_repository_with_valid_data_succeeds(self, repository):
         """Test creating an in-memory finding repository."""
         assert repository is not None
         assert isinstance(repository, FindingRepository)
@@ -516,7 +516,7 @@ class TestSQLiteDocumentRepository:
         )
 
     @pytest.mark.asyncio
-    async def test_repository_creation(self, repository):
+    async def test_repository_with_valid_data_succeeds(self, repository):
         """Test creating a SQLite document repository."""
         assert repository is not None
         assert isinstance(repository, DocumentRepository)

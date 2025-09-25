@@ -70,9 +70,7 @@ class RelationshipAnalyzer:
         }
 
     def analyze_relationships(
-        self,
-        documents: List[Dict[str, Any]],
-        changed_document_id: str
+        self, documents: List[Dict[str, Any]], changed_document_id: str
     ) -> Dict[str, Any]:
         """Analyze relationships between documents."""
         if not self.initialized:
@@ -91,23 +89,29 @@ class RelationshipAnalyzer:
             )
 
             if relationship:
-                relationships.append({
-                    "source_id": changed_document_id,
-                    "target_id": doc["id"],
-                    "relationship_type": relationship["type"],
-                    "confidence": relationship["confidence"],
-                    "impact_weight": relationship["impact_weight"],
-                    "description": relationship["description"],
-                })
+                relationships.append(
+                    {
+                        "source_id": changed_document_id,
+                        "target_id": doc["id"],
+                        "relationship_type": relationship["type"],
+                        "confidence": relationship["confidence"],
+                        "impact_weight": relationship["impact_weight"],
+                        "description": relationship["description"],
+                    }
+                )
 
         return {
             "relationships": relationships,
             "relationship_graph": relationship_graph,
             "total_relationships": len(relationships),
-            "relationship_types": list(set(r["relationship_type"] for r in relationships)),
+            "relationship_types": list(
+                set(r["relationship_type"] for r in relationships)
+            ),
         }
 
-    def _build_relationship_graph(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _build_relationship_graph(
+        self, documents: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Build a graph of document relationships."""
         if not self.initialized or not nx:
             return {"nodes": [], "edges": []}
@@ -126,21 +130,28 @@ class RelationshipAnalyzer:
                         # Simple relationship detection based on content overlap
                         similarity = self._calculate_simple_similarity(doc1, doc2)
                         if similarity > 0.3:  # Threshold for relationship
-                            G.add_edge(doc1["id"], doc2["id"],
-                                     weight=similarity,
-                                     type="similar")
+                            G.add_edge(
+                                doc1["id"],
+                                doc2["id"],
+                                weight=similarity,
+                                type="similar",
+                            )
 
             return {
                 "nodes": list(G.nodes(data=True)),
                 "edges": list(G.edges(data=True)),
                 "density": nx.density(G),
-                "connected_components": nx.number_connected_components(G.to_undirected()),
+                "connected_components": nx.number_connected_components(
+                    G.to_undirected()
+                ),
             }
         except Exception as e:
             logger.error(f"Error building relationship graph: {e}")
             return {"nodes": [], "edges": []}
 
-    def _calculate_simple_similarity(self, doc1: Dict[str, Any], doc2: Dict[str, Any]) -> float:
+    def _calculate_simple_similarity(
+        self, doc1: Dict[str, Any], doc2: Dict[str, Any]
+    ) -> float:
         """Calculate simple similarity between two documents."""
         if not self.initialized:
             return 0.0
@@ -161,10 +172,7 @@ class RelationshipAnalyzer:
         return len(intersection) / len(union) if union else 0.0
 
     def _determine_relationship_type(
-        self,
-        documents: List[Dict[str, Any]],
-        source_id: str,
-        target_id: str
+        self, documents: List[Dict[str, Any]], source_id: str, target_id: str
     ) -> Optional[Dict[str, Any]]:
         """Determine the relationship type between two documents."""
         source_doc = next((d for d in documents if d["id"] == source_id), None)
@@ -203,7 +211,9 @@ class RelationshipAnalyzer:
 
         return None
 
-    def _check_reference_links(self, source_doc: Dict[str, Any], target_doc: Dict[str, Any]) -> bool:
+    def _check_reference_links(
+        self, source_doc: Dict[str, Any], target_doc: Dict[str, Any]
+    ) -> bool:
         """Check if source document references target document."""
         source_content = source_doc.get("content", "").lower()
         target_title = target_doc.get("title", "").lower()
@@ -211,7 +221,9 @@ class RelationshipAnalyzer:
 
         return target_title in source_content or target_id in source_content
 
-    def _find_shared_terms(self, doc1: Dict[str, Any], doc2: Dict[str, Any]) -> List[str]:
+    def _find_shared_terms(
+        self, doc1: Dict[str, Any], doc2: Dict[str, Any]
+    ) -> List[str]:
         """Find shared technical terms between documents."""
         # This is a simplified implementation
         content1 = doc1.get("content", "").lower()
@@ -222,12 +234,12 @@ class RelationshipAnalyzer:
         words2 = set(content2.split())
 
         shared = words1.intersection(words2)
-        return [word for word in shared if len(word) > 3][:10]  # Technical terms likely > 3 chars
+        return [word for word in shared if len(word) > 3][
+            :10
+        ]  # Technical terms likely > 3 chars
 
     def _get_fallback_relationships(
-        self,
-        documents: List[Dict[str, Any]],
-        changed_document_id: str
+        self, documents: List[Dict[str, Any]], changed_document_id: str
     ) -> Dict[str, Any]:
         """Get basic relationship analysis when advanced analysis is not available."""
         relationships = []
@@ -235,14 +247,16 @@ class RelationshipAnalyzer:
         # Simple fallback: assume all documents are somewhat related
         for doc in documents:
             if doc["id"] != changed_document_id:
-                relationships.append({
-                    "source_id": changed_document_id,
-                    "target_id": doc["id"],
-                    "relationship_type": "potential",
-                    "confidence": 0.5,
-                    "impact_weight": 0.5,
-                    "description": "Basic relationship (advanced analysis not available)",
-                })
+                relationships.append(
+                    {
+                        "source_id": changed_document_id,
+                        "target_id": doc["id"],
+                        "relationship_type": "potential",
+                        "confidence": 0.5,
+                        "impact_weight": 0.5,
+                        "description": "Basic relationship (advanced analysis not available)",
+                    }
+                )
 
         return {
             "relationships": relationships,

@@ -64,7 +64,7 @@ class TestInMemoryFindingRepository:
             location=FileLocation("/src/main.py", 42),
         )
 
-    def test_repository_creation(self, repository):
+    def test_repository_with_valid_data_succeeds(self, repository):
         """Test creating an in-memory finding repository."""
         assert repository is not None
         assert isinstance(repository, FindingRepository)
@@ -354,7 +354,7 @@ class TestSQLiteFindingRepository:
         )
 
     @pytest.mark.asyncio
-    async def test_repository_creation(self, repository):
+    async def test_repository_with_valid_data_succeeds(self, repository):
         """Test creating a SQLite finding repository."""
         assert repository is not None
         assert isinstance(repository, FindingRepository)

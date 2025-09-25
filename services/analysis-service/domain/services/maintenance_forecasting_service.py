@@ -255,7 +255,9 @@ class MaintenanceForecaster:
         # Calculate forecasts for each factor
         for factor_name, factor_config in self.maintenance_factors.items():
             value = factor_values.get(factor_name)
-            forecast = self._calculate_maintenance_urgency(factor_name, value, factor_config)
+            forecast = self._calculate_maintenance_urgency(
+                factor_name, value, factor_config
+            )
 
             factor_forecasts[factor_name] = {
                 "value": value,
@@ -270,7 +272,7 @@ class MaintenanceForecaster:
     def _extract_factor_values(
         self,
         document_data: Dict[str, Any],
-        analysis_history: Optional[List[Dict[str, Any]]]
+        analysis_history: Optional[List[Dict[str, Any]]],
     ) -> Dict[str, Any]:
         """Extract or estimate values for all maintenance factors."""
         factor_values = {}
@@ -294,9 +296,7 @@ class MaintenanceForecaster:
         return factor_values
 
     def _extract_risk_score(
-        self,
-        value: Any,
-        analysis_history: Optional[List[Dict[str, Any]]]
+        self, value: Any, analysis_history: Optional[List[Dict[str, Any]]]
     ) -> float:
         """Extract or estimate risk score."""
         if not value and analysis_history:
@@ -319,7 +319,9 @@ class MaintenanceForecaster:
 
         return 180  # Default to 6 months
 
-    def _extract_usage_frequency(self, value: Any, document_data: Dict[str, Any]) -> int:
+    def _extract_usage_frequency(
+        self, value: Any, document_data: Dict[str, Any]
+    ) -> int:
         """Extract or estimate usage frequency."""
         if value:
             return value
@@ -335,9 +337,7 @@ class MaintenanceForecaster:
         return 20  # Default
 
     def _extract_quality_trend(
-        self,
-        value: Any,
-        analysis_history: Optional[List[Dict[str, Any]]]
+        self, value: Any, analysis_history: Optional[List[Dict[str, Any]]]
     ) -> float:
         """Extract or calculate quality trend slope."""
         if value or not analysis_history or len(analysis_history) < 3:
@@ -358,7 +358,9 @@ class MaintenanceForecaster:
 
         return 0.0
 
-    def _extract_business_criticality(self, value: Any, document_data: Dict[str, Any]) -> str:
+    def _extract_business_criticality(
+        self, value: Any, document_data: Dict[str, Any]
+    ) -> str:
         """Extract or estimate business criticality."""
         if value:
             return value
@@ -374,7 +376,9 @@ class MaintenanceForecaster:
 
         return "medium"
 
-    def _aggregate_maintenance_forecast(self, factor_forecasts: Dict[str, Any]) -> Dict[str, Any]:
+    def _aggregate_maintenance_forecast(
+        self, factor_forecasts: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Aggregate factor forecasts into overall maintenance schedule."""
         total_weight = 0
         weighted_days = 0

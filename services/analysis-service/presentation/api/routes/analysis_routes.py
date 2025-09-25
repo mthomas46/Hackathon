@@ -3,33 +3,35 @@
 This module contains the API routes for document analysis functionality.
 """
 
-from fastapi import APIRouter, HTTPException
 from typing import List
+
+from fastapi import APIRouter, HTTPException
+
+from ....application.handlers import analysis_handlers
 
 # Import request/response models and handlers
 from ....application.schemas.requests import (
     AnalysisRequest,
+    ChangeImpactAnalysisRequest,
+    ContentQualityRequest,
+    MaintenanceForecastRequest,
+    PortfolioChangeImpactRequest,
+    PortfolioMaintenanceForecastRequest,
+    PortfolioQualityDegradationRequest,
+    PortfolioRiskAssessmentRequest,
+    PortfolioTrendAnalysisRequest,
+    QualityDegradationRequest,
+    RiskAssessmentRequest,
     SemanticSimilarityRequest,
     SentimentAnalysisRequest,
     ToneAnalysisRequest,
-    ContentQualityRequest,
     TrendAnalysisRequest,
-    PortfolioTrendAnalysisRequest,
-    RiskAssessmentRequest,
-    PortfolioRiskAssessmentRequest,
-    MaintenanceForecastRequest,
-    PortfolioMaintenanceForecastRequest,
-    QualityDegradationRequest,
-    PortfolioQualityDegradationRequest,
-    ChangeImpactAnalysisRequest,
-    PortfolioChangeImpactRequest,
 )
 from ....application.schemas.responses import (
     AnalysisResponse,
     SemanticSimilarityResponse,
     SentimentAnalysisResponse,
 )
-from ....application.handlers import analysis_handlers
 from ....infrastructure.logging import get_logger
 
 logger = get_logger(__name__)

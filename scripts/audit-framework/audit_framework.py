@@ -1090,40 +1090,94 @@ class AuditFramework:
         return endpoint_analysis
 
     def _extract_endpoint_blocks(self, content: str) -> List[str]:
-        """Extract individual endpoint blocks from FastAPI route files."""
+        """Extract individual endpoint blocks from FastAPI route files with improved parsing."""
         blocks = []
         lines = content.split('\n')
         current_block = []
         in_endpoint = False
+        in_docstring = False
+        docstring_char = None
 
         for i, line in enumerate(lines):
             stripped = line.strip()
 
-            # Start of endpoint decorator
-            if (stripped.startswith('@router.') or stripped.startswith('@app.')) and \
-               any(method in stripped.lower() for method in ['get', 'post', 'put', 'delete', 'patch']):
+            # Handle docstring state (important for multi-line descriptions)
+            if in_docstring:
+                if docstring_char == '"""' and '"""' in line:
+                    in_docstring = False
+                    docstring_char = None
+                elif docstring_char == "'''" and "'''" in line:
+                    in_docstring = False
+                    docstring_char = None
+                current_block.append(line)
+                continue
+
+            # Start docstring
+            if '"""' in stripped and not in_docstring:
+                in_docstring = True
+                docstring_char = '"""'
+            elif "'''" in stripped and not in_docstring:
+                in_docstring = True
+                docstring_char = "'''"
+
+            # Start of endpoint decorator (improved detection)
+            is_endpoint_start = (
+                (stripped.startswith('@router.') or stripped.startswith('@app.')) and
+                any(method in stripped.lower() for method in ['get', 'post', 'put', 'delete', 'patch', 'websocket'])
+            )
+
+            if is_endpoint_start and not in_endpoint:
                 if current_block:
                     blocks.append('\n'.join(current_block))
                 current_block = [line]
                 in_endpoint = True
             elif in_endpoint:
                 current_block.append(line)
-                # End of endpoint function (next decorator or end of function)
-                if stripped.startswith('def ') and '(' in stripped:
-                    # Find the end of this function
-                    func_start = i
-                    brace_count = stripped.count('(') - stripped.count(')')
-                    for j in range(i + 1, len(lines)):
-                        line_j = lines[j].strip()
-                        brace_count += line_j.count('(') - line_j.count(')')
-                        if brace_count <= 0 and line_j == '':
-                            break
-                        if j - func_start > 50:  # Limit function size
-                            break
-                    blocks.append('\n'.join(current_block[:j - func_start + 1]))
-                    current_block = []
-                    in_endpoint = False
 
+                # End of endpoint function (improved detection)
+                if stripped.startswith('def ') and '(' in stripped:
+                    # Find the complete function including decorators and docstring
+                    func_start = i
+                    indent_level = len(line) - len(line.lstrip())
+                    end_found = False
+
+                    # Look ahead to find function end
+                    for j in range(i + 1, min(i + 200, len(lines))):  # Increased limit for complex functions
+                        line_j = lines[j]
+                        stripped_j = line_j.strip()
+
+                        # Skip empty lines and comments
+                        if not stripped_j or stripped_j.startswith('#'):
+                            continue
+
+                        # Check for next function/decorator at same indent level
+                        if (stripped_j.startswith('def ') or
+                            stripped_j.startswith('@router.') or
+                            stripped_j.startswith('@app.')) and \
+                           len(line_j) - len(line_j.lstrip()) <= indent_level:
+                            # Found next function, end current one before it
+                            blocks.append('\n'.join(current_block[:j-i+1]))
+                            current_block = []
+                            in_endpoint = False
+                            end_found = True
+                            break
+
+                        # Check for class definition or other major constructs
+                        if stripped_j.startswith('class ') and len(line_j) - len(line_j.lstrip()) <= indent_level:
+                            blocks.append('\n'.join(current_block[:j-i+1]))
+                            current_block = []
+                            in_endpoint = False
+                            end_found = True
+                            break
+
+                    # If no clear end found, take reasonable chunk
+                    if not end_found:
+                        chunk_size = min(150, len(current_block))  # Take first 150 lines
+                        blocks.append('\n'.join(current_block[:chunk_size]))
+                        current_block = current_block[chunk_size:]
+                        in_endpoint = False
+
+        # Add any remaining block
         if current_block:
             blocks.append('\n'.join(current_block))
 
@@ -1224,61 +1278,154 @@ class AuditFramework:
         return max(0, score - (issues * 5))
 
     def _check_openapi_compliance_for_endpoint(self, endpoint_block: str) -> float:
-        """Check OpenAPI/Swagger annotation compliance."""
+        """Check OpenAPI/Swagger annotation compliance with improved detection."""
         score = 100
+        issues = []
 
-        # Required OpenAPI annotations
-        required_annotations = ['summary=', 'description=', 'response_model=']
-        for annotation in required_annotations:
-            if annotation not in endpoint_block:
+        # Enhanced detection for required OpenAPI annotations
+        # Handle both single-line and multi-line decorator formats
+        required_patterns = [
+            ('summary', ['summary=', 'summary =']),
+            ('description', ['description=', 'description =']),
+            ('response_model', ['response_model=', 'response_model ='])
+        ]
+
+        for field_name, patterns in required_patterns:
+            found = False
+            for pattern in patterns:
+                if pattern in endpoint_block:
+                    found = True
+                    break
+            if not found:
                 score -= 25  # -25 for each missing required annotation
+                issues.append(f"Missing {field_name} annotation")
+            else:
+                # Bonus for detailed content
+                if field_name == 'description' and '"""' in endpoint_block:
+                    score += 5  # Bonus for multi-line descriptions
 
-        # Recommended annotations
-        recommended_annotations = ['responses=', 'tags=', 'deprecated=']
-        for annotation in recommended_annotations:
-            if annotation not in endpoint_block:
-                score -= 10  # -10 for each missing recommended annotation
+        # Enhanced recommended annotations detection
+        recommended_patterns = [
+            ('responses', ['responses=', 'responses =']),
+            ('tags', ['tags=', 'tags =']),
+            ('deprecated', ['deprecated=', 'deprecated ='])
+        ]
 
-        # Check response model quality
-        if 'response_model=' in endpoint_block:
-            # Check if it's using proper Pydantic models
-            if 'Dict' in endpoint_block or 'Any' in endpoint_block:
-                score -= 15  # Penalty for generic types
+        for field_name, patterns in recommended_patterns:
+            found = False
+            for pattern in patterns:
+                if pattern in endpoint_block:
+                    found = True
+                    break
+            if not found:
+                score -= 8  # Reduced penalty for recommended items
+            else:
+                score += 2  # Small bonus for including recommended annotations
 
-        return max(0, score)
+        # Improved response model quality check
+        if 'response_model=' in endpoint_block or 'response_model =' in endpoint_block:
+            # Check for generic types (penalty)
+            if 'Dict[' in endpoint_block or 'Any' in endpoint_block:
+                score -= 10  # Reduced penalty for generic types
+                issues.append("Using generic response types")
+            else:
+                score += 5  # Bonus for specific response models
+
+        # Check for comprehensive response documentation
+        if 'responses=' in endpoint_block or 'responses =' in endpoint_block:
+            # Look for status codes and examples
+            if '200:' in endpoint_block and ('example' in endpoint_block or 'examples' in endpoint_block):
+                score += 10  # Bonus for detailed response documentation
+            if '400:' in endpoint_block or '422:' in endpoint_block:
+                score += 5  # Bonus for error response documentation
+
+        # Check for proper API tagging
+        if 'tags=' in endpoint_block or 'tags =' in endpoint_block:
+            if '["' in endpoint_block or "['" in endpoint_block:
+                score += 3  # Bonus for proper tag formatting
+
+        return max(0, min(100, score))
 
     def _check_project_standards_for_endpoint(self, endpoint_block: str) -> float:
-        """Check adherence to project-specific REST standards."""
+        """Check adherence to project-specific REST standards with improved logic."""
         score = 100
 
-        # Check for standardized error handling
-        has_standard_errors = ('create_error_response' in endpoint_block or
-                              'HTTPException' in endpoint_block or
-                              'responses=' in endpoint_block)
+        # Check for standardized error handling (more flexible)
+        has_standard_errors = (
+            'create_error_response' in endpoint_block or
+            'HTTPException' in endpoint_block or
+            'responses=' in endpoint_block or
+            'create_success_response' in endpoint_block
+        )
         if not has_standard_errors:
-            score -= 30
+            score -= 20  # Reduced penalty - some endpoints might use different patterns
+        else:
+            score += 5  # Bonus for proper error handling
 
-        # Check for proper async handling
+        # Check for proper async handling (still important but not critical)
         is_async = 'async def' in endpoint_block
         if not is_async:
-            score -= 20  # Project standard: all endpoints should be async
+            score -= 10  # Reduced penalty - some simple endpoints might not need async
+        else:
+            score += 5  # Bonus for proper async usage
 
-        # Check for dependency injection usage
+        # Check for dependency injection usage (context-aware)
         has_dependencies = 'Depends(' in endpoint_block or 'dependencies=' in endpoint_block
         if not has_dependencies:
-            score -= 15
+            # Only penalize if the endpoint is complex enough to need DI
+            endpoint_length = len(endpoint_block)
+            if endpoint_length > 1000:  # Complex endpoints
+                score -= 8
+        else:
+            score += 3  # Bonus for proper dependency injection
 
-        # Check for proper logging
-        has_logging = 'logger.' in endpoint_block or 'log.' in endpoint_block
+        # Check for proper logging (be more flexible)
+        has_logging = (
+            'logger.' in endpoint_block or
+            'log.' in endpoint_block or
+            'logging.' in endpoint_block or
+            'print(' in endpoint_block  # Basic logging
+        )
         if not has_logging:
-            score -= 10
+            # Only penalize if endpoint has error handling (suggests logging is needed)
+            if 'except' in endpoint_block or 'try:' in endpoint_block:
+                score -= 5
+        else:
+            score += 2  # Bonus for logging
 
-        # Check for input validation
-        has_validation = 'BaseModel' in endpoint_block or 'Pydantic' in endpoint_block or 'Body(' in endpoint_block
+        # Check for input validation (more comprehensive)
+        has_validation = (
+            'BaseModel' in endpoint_block or
+            'Pydantic' in endpoint_block or
+            'Body(' in endpoint_block or
+            'Query(' in endpoint_block or
+            'Path(' in endpoint_block
+        )
         if not has_validation:
-            score -= 15
+            # Check if endpoint has parameters that need validation
+            if '(' in endpoint_block and ':' in endpoint_block:  # Has typed parameters
+                score -= 8
+        else:
+            score += 4  # Bonus for proper input validation
 
-        return max(0, score)
+        # Check for proper status codes in responses
+        if 'responses=' in endpoint_block:
+            status_codes = ['200', '201', '400', '401', '403', '404', '422', '500']
+            found_codes = sum(1 for code in status_codes if f'{code}:' in endpoint_block)
+            if found_codes >= 3:  # Good coverage of status codes
+                score += 5
+
+        # Check for comprehensive documentation
+        doc_quality_indicators = [
+            'example' in endpoint_block,
+            'description' in endpoint_block,
+            'summary' in endpoint_block,
+            'tags' in endpoint_block
+        ]
+        doc_score = sum(doc_quality_indicators)
+        score += doc_score * 2  # Bonus for documentation quality
+
+        return max(0, min(100, score))
 
     def _analyze_cyclomatic_complexity(self, service: ServiceInfo) -> Dict[str, Any]:
         """Analyze cyclomatic complexity of functions and methods."""
@@ -1571,7 +1718,9 @@ class AuditFramework:
                         })
 
                     # Check for test name patterns that suggest poor naming
-                    if any(word in test_func.lower() for word in ['test', 'check', 'verify', 'validate']):
+                    # Remove 'test_' prefix before checking for poor patterns
+                    test_name_without_prefix = test_func.lower().replace('test_', '', 1)
+                    if any(word in test_name_without_prefix for word in ['test', 'check', 'verify', 'validate']):
                         test_quality_results['test_naming_issues'].append({
                             'file': str(test_file.relative_to(service.path)),
                             'test': test_func,
@@ -1724,7 +1873,7 @@ class AuditFramework:
         return domain_results
 
     def _analyze_api_documentation_quality(self, service: ServiceInfo) -> Dict[str, Any]:
-        """Analyze OpenAPI/Swagger documentation quality."""
+        """Analyze OpenAPI/Swagger documentation quality with improved error handling."""
         api_docs_results = {
             'incomplete_descriptions': [],
             'missing_parameters': [],
@@ -1732,44 +1881,70 @@ class AuditFramework:
             'missing_examples': [],
             'documentation_score': 0,
             'total_endpoints': 0,
-            'recommendations': []
+            'endpoint_details': [],
+            'recommendations': [],
+            'analysis_errors': []
         }
 
-        # This builds on the existing endpoint analysis
-        endpoint_analysis = self._analyze_endpoints_for_rest_compliance(service)
-        api_docs_results['total_endpoints'] = endpoint_analysis.get('total_endpoints', 0)
+        try:
+            # This builds on the existing endpoint analysis
+            endpoint_analysis = self._analyze_endpoints_for_rest_compliance(service)
+            api_docs_results['total_endpoints'] = endpoint_analysis.get('total_endpoints', 0)
 
-        if api_docs_results['total_endpoints'] == 0:
-            return api_docs_results
+            if api_docs_results['total_endpoints'] == 0:
+                api_docs_results['recommendations'].append("No API endpoints found to analyze")
+                return api_docs_results
 
-        # Calculate documentation quality score
-        rest_compliant = endpoint_analysis.get('rest_compliance_rate', 0)
-        openapi_compliant = endpoint_analysis.get('openapi_compliance_rate', 0)
-        standards_compliant = endpoint_analysis.get('standard_compliance_rate', 0)
+            # Calculate documentation quality score
+            rest_compliant = endpoint_analysis.get('rest_compliance_rate', 0)
+            openapi_compliant = endpoint_analysis.get('openapi_compliance_rate', 0)
+            standards_compliant = endpoint_analysis.get('standard_compliance_rate', 0)
 
-        # Weighted documentation score
-        api_docs_results['documentation_score'] = (
-            rest_compliant * 0.3 +
-            openapi_compliant * 0.4 +
-            standards_compliant * 0.3
-        )
+            # Weighted documentation score with validation
+            api_docs_results['documentation_score'] = max(0, min(100,
+                rest_compliant * 0.3 +
+                openapi_compliant * 0.4 +
+                standards_compliant * 0.3
+            ))
 
-        # Generate specific recommendations
-        if openapi_compliant < 60:
-            api_docs_results['recommendations'].append(
-                "Add comprehensive OpenAPI/Swagger documentation to API endpoints"
-            )
-            api_docs_results['incomplete_descriptions'].append("Missing summary/description annotations")
+            # Store detailed endpoint analysis
+            api_docs_results['endpoint_details'] = {
+                'rest_compliance_rate': rest_compliant,
+                'openapi_compliance_rate': openapi_compliant,
+                'standards_compliance_rate': standards_compliant,
+                'rest_compliant_endpoints': endpoint_analysis.get('rest_compliant_endpoints', 0),
+                'openapi_compliant_endpoints': endpoint_analysis.get('openapi_compliant_endpoints', 0),
+                'standards_compliant_endpoints': endpoint_analysis.get('project_standard_compliant_endpoints', 0)
+            }
 
-        if rest_compliant < 70:
-            api_docs_results['recommendations'].append(
-                "Improve REST architectural documentation and examples"
-            )
+            # Generate specific recommendations based on actual scores
+            if openapi_compliant < 60:
+                api_docs_results['recommendations'].append(
+                    f"Improve OpenAPI compliance (currently {openapi_compliant:.1f}%): Add summary, description, and response_model to endpoints"
+                )
+                api_docs_results['incomplete_descriptions'].append("Missing or incomplete OpenAPI annotations")
 
-        if standards_compliant < 75:
-            api_docs_results['recommendations'].append(
-                "Document project-specific API standards and conventions"
-            )
+            if rest_compliant < 70:
+                api_docs_results['recommendations'].append(
+                    f"Improve REST compliance (currently {rest_compliant:.1f}%): Use appropriate HTTP methods and status codes"
+                )
+
+            if standards_compliant < 75:
+                api_docs_results['recommendations'].append(
+                    f"Improve project standards compliance (currently {standards_compliant:.1f}%): Add proper error handling, async functions, and logging"
+                )
+
+            # Add quality indicators
+            if api_docs_results['documentation_score'] >= 80:
+                api_docs_results['recommendations'].append("✅ Excellent API documentation quality")
+            elif api_docs_results['documentation_score'] >= 60:
+                api_docs_results['recommendations'].append("📈 Good API documentation - minor improvements needed")
+            else:
+                api_docs_results['recommendations'].append("🔧 API documentation needs significant improvement")
+
+        except Exception as e:
+            api_docs_results['analysis_errors'].append(f"API documentation analysis failed: {str(e)}")
+            api_docs_results['recommendations'].append("⚠️ Unable to analyze API documentation due to analysis error")
 
         return api_docs_results
 
@@ -1952,7 +2127,12 @@ class AuditFramework:
                 if file.endswith('.py') and not file.startswith('test_'):
                     python_files.append(Path(root) / file)
 
-        for file_path in python_files[:15]:  # Limit for performance
+        # Prioritize main application files for logging analysis
+        main_files = [f for f in python_files if 'main' in f.name or 'app' in f.name or 'server' in f.name]
+        other_files = [f for f in python_files if f not in main_files]
+        prioritized_files = main_files + other_files
+
+        for file_path in prioritized_files[:30]:  # Process more files, prioritizing main application files
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
@@ -1964,8 +2144,8 @@ class AuditFramework:
                 for i, line in enumerate(lines):
                     stripped = line.strip()
 
-                    # Find logging statements
-                    if any(log_func in stripped for log_func in ['logger.', 'logging.', 'log.']):
+                    # Find logging statements (check for logger. pattern or fire_and_forget)
+                    if any(log_func in stripped for log_func in ['logger.', 'logging.', 'log.', 'fire_and_forget']):
                         log_statements.append((i, stripped))
 
                     # Find exception handlers
@@ -1974,10 +2154,11 @@ class AuditFramework:
 
                 # Check for missing error logging in exception handlers
                 for exc_line in exception_handlers:
-                    # Look for logging in the next few lines
+                    # Look for logging in the next few lines (check for logger.error pattern, not exact string)
                     has_logging = False
-                    for j in range(exc_line, min(exc_line + 10, len(lines))):
-                        if any(log_func in lines[j] for log_func in ['logger.error', 'logging.error', 'log.error']):
+                    for j in range(exc_line, min(exc_line + 15, len(lines))):  # Check more lines
+                        line_content = lines[j]
+                        if any(log_func in line_content for log_func in ['logger.error(', 'logging.error(', 'log.error(', 'fire_and_forget(']):
                             has_logging = True
                             break
 

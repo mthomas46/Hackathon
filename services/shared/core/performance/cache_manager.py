@@ -182,21 +182,35 @@ class MemoryCache(CacheBackend):
         if not self._cache:
             return
 
-        # Find entry with oldest access time
+        oldest_key = self._find_oldest_entry_key()
+        if oldest_key:
+            self._remove_entry(oldest_key)
+
+    def _find_oldest_entry_key(self) -> Optional[str]:
+        """Find the key of the oldest entry based on access time."""
         oldest_key = None
         oldest_time = datetime.now(timezone.utc)
 
         for key, entry in self._cache.items():
-            if entry.last_accessed and entry.last_accessed < oldest_time:
-                oldest_time = entry.last_accessed
-                oldest_key = key
-            elif entry.last_accessed is None and entry.created_at < oldest_time:
-                oldest_time = entry.created_at
+            entry_time = self._get_entry_comparison_time(entry)
+            if entry_time and entry_time < oldest_time:
+                oldest_time = entry_time
                 oldest_key = key
 
-        if oldest_key:
-            del self._cache[oldest_key]
-            self._evictions += 1
+        return oldest_key
+
+    def _get_entry_comparison_time(self, entry) -> Optional[datetime]:
+        """Get the time to use for comparing entry age."""
+        if entry.last_accessed:
+            return entry.last_accessed
+        elif entry.created_at:
+            return entry.created_at
+        return None
+
+    def _remove_entry(self, key: str) -> None:
+        """Remove an entry from the cache and update eviction count."""
+        del self._cache[key]
+        self._evictions += 1
 
     async def get_stats(self) -> Dict[str, Any]:
         """Get memory cache statistics."""

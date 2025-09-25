@@ -6,10 +6,11 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, TypeVar
 
+from services.shared.integrations.clients.clients import ServiceClients
+from services.shared.intelligent_caching import get_service_cache
+
 # Using standardized shared services
 from services.shared.monitoring.logging import fire_and_forget
-from services.shared.intelligent_caching import get_service_cache
-from services.shared.integrations.clients.clients import ServiceClients
 
 # Type variables for generic handlers
 TRequest = TypeVar("TRequest")
