@@ -3435,7 +3435,69 @@ async def preview_remediation_endpoint(req: RemediationPreviewRequest):
         )
 
 
-@app.post("/workflows/events")
+@app.post(
+    "/workflows/events",
+    tags=["workflows"],
+    summary="Process workflow events and trigger appropriate analyses",
+    description="""Receives workflow events (PRs, commits, releases, etc.) and automatically
+    triggers relevant documentation analysis based on the event type and content.
+    Supports GitHub, GitLab, and other webhook integrations for automated analysis.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Workflow event processed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Workflow event processed - 3 analysis types triggered",
+                        "data": {
+                            "workflow_id": "wf_001",
+                            "status": "processing",
+                            "priority": "high",
+                            "analysis_types": [
+                                "pull_request_analysis",
+                                "code_quality_check",
+                                "documentation_coverage"
+                            ],
+                            "estimated_processing_time": 120,
+                            "processing_time": 2.3,
+                            "event_type": "pull_request",
+                            "event_action": "opened",
+                            "triggered_analyses": [
+                                {
+                                    "analysis_type": "pull_request_analysis",
+                                    "task_id": "task_001",
+                                    "estimated_duration": 60,
+                                },
+                                {
+                                    "analysis_type": "code_quality_check",
+                                    "task_id": "task_002",
+                                    "estimated_duration": 30,
+                                },
+                                {
+                                    "analysis_type": "documentation_coverage",
+                                    "task_id": "task_003",
+                                    "estimated_duration": 30,
+                                },
+                            ],
+                            "repository": "my-org/my-repo",
+                            "branch": "feature/new-api",
+                            "commit_sha": "a1b2c3d4...",
+                        },
+                        "workflow_id": "wf_001",
+                        "priority": "high",
+                        "analysis_types_count": 3,
+                        "processing_time": 2.3,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid workflow event", "model": ErrorResponse},
+        500: {"description": "Workflow event processing failed", "model": ErrorResponse},
+    },
+)
 async def process_workflow_event_endpoint(req: WorkflowEventRequest):
     """Process workflow events and trigger appropriate analyses.
 
@@ -3740,7 +3802,45 @@ async def get_workflow_queue_status_endpoint():
         )
 
 
-@app.put("/workflows/webhook/config")
+@app.put(
+    "/workflows/webhook/config",
+    tags=["workflows"],
+    summary="Configure webhook settings for workflow integration",
+    description="""Sets up webhook configuration for receiving workflow events from external
+    systems like GitHub, GitLab, or CI/CD pipelines. Enables secure event processing
+    with signature validation and configurable event filtering.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Webhook configuration updated successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Webhook configuration updated",
+                        "data": {
+                            "configured": True,
+                            "enabled_events": [
+                                "push",
+                                "pull_request",
+                                "workflow_run",
+                                "release"
+                            ],
+                            "webhook_url": "https://api.example.com/webhooks/analysis",
+                            "secret_configured": True,
+                            "last_updated": "2025-09-25T10:30:00Z",
+                        },
+                        "configured": True,
+                        "enabled_events_count": 4,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid webhook configuration", "model": ErrorResponse},
+        500: {"description": "Webhook configuration failed", "model": ErrorResponse},
+    },
+)
 async def configure_webhook_endpoint(req: WebhookConfigRequest):
     """Configure webhook settings for workflow integration.
 
@@ -3786,7 +3886,96 @@ async def configure_webhook_endpoint(req: WebhookConfigRequest):
         )
 
 
-@app.post("/repositories/analyze")
+@app.post(
+    "/repositories/analyze",
+    tags=["repositories"],
+    summary="Analyze documentation across multiple repositories",
+    description="""Performs comprehensive cross-repository analysis to identify patterns,
+    inconsistencies, redundancies, and opportunities for documentation improvement
+    across an organization's entire repository ecosystem. Provides insights into
+    documentation quality, consistency, and coverage across multiple codebases.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Cross-repository analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Cross-repository analysis completed for 12 repositories",
+                        "data": {
+                            "repository_count": 12,
+                            "repositories_analyzed": [
+                                "api-service",
+                                "web-frontend",
+                                "data-pipeline",
+                                "auth-service",
+                                "notification-service"
+                            ],
+                            "analysis_types": ["consistency", "coverage", "quality", "redundancy"],
+                            "consistency_analysis": {
+                                "overall_consistency_score": 0.78,
+                                "terminology_consistency": 0.85,
+                                "structure_consistency": 0.72,
+                                "formatting_consistency": 0.81,
+                                "inconsistencies_found": 23,
+                            },
+                            "coverage_analysis": {
+                                "overall_coverage": 0.65,
+                                "api_coverage": 0.82,
+                                "feature_coverage": 0.58,
+                                "error_handling_coverage": 0.71,
+                                "gaps_identified": 15,
+                            },
+                            "quality_analysis": {
+                                "average_quality_score": 0.73,
+                                "best_repository": "api-service",
+                                "worst_repository": "web-frontend",
+                                "quality_variance": 0.18,
+                            },
+                            "redundancy_analysis": {
+                                "redundant_sections": 8,
+                                "duplicate_content_score": 0.34,
+                                "consolidation_opportunities": 5,
+                            },
+                            "dependency_analysis": {
+                                "cross_references": 45,
+                                "broken_links": 3,
+                                "dependency_complexity": 0.62,
+                            },
+                            "overall_score": 0.71,
+                            "recommendations": [
+                                {
+                                    "category": "consistency",
+                                    "priority": "high",
+                                    "description": "Standardize API documentation format across all repositories",
+                                    "impact": "Improved developer experience",
+                                    "effort_estimate": "2-3 weeks",
+                                },
+                                {
+                                    "category": "coverage",
+                                    "priority": "medium",
+                                    "description": "Add missing feature documentation in web-frontend repository",
+                                    "impact": "Reduced support tickets",
+                                    "effort_estimate": "1 week",
+                                },
+                            ],
+                            "processing_time": 45.2,
+                            "analysis_timestamp": "2025-09-25T10:30:00Z",
+                        },
+                        "repository_count": 12,
+                        "overall_score": 0.71,
+                        "recommendations_count": 8,
+                        "processing_time": 45.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid repository analysis request", "model": ErrorResponse},
+        500: {"description": "Cross-repository analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_cross_repository_endpoint(req: CrossRepositoryAnalysisRequest):
     """Analyze documentation across multiple repositories.
 
