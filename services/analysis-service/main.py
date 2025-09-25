@@ -119,7 +119,14 @@ logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse, Response
+
 from services.shared.infrastructure.config import load_service_config
+
+# Load standardized configuration early
+config = load_service_config(
+    service_type="analysis-service",
+    config_file="./config.yaml",  # Optional config file override
+)
 
 # ============================================================================
 # SHARED MODULES - Optimized import consolidation for consistency
@@ -130,6 +137,7 @@ from services.shared.presentation.responses import (
     create_error_response,
     create_success_response,
 )
+from services.shared.core.constants_new import ErrorCodes
 from services.shared.utilities.utilities import (
     attach_self_register,
     get_service_client,
@@ -137,6 +145,11 @@ from services.shared.utilities.utilities import (
 )
 
 # Local imports - extracted modules
+from .application.dto.response_dtos import (
+    AnalysisResultResponse,
+    ErrorResponse,
+)
+
 try:
     from application.services.report_services import (
         calculate_pr_health_score,
@@ -147,11 +160,6 @@ try:
         generate_pr_recommendations,
         get_type_icon,
     )
-    from infrastructure.analysis_services.file_analyzers import (
-        analyze_java_file,
-        analyze_js_file,
-        analyze_python_file,
-    )
     from infrastructure.utilities.analysis_utils import (
         extract_content_from_patch,
         get_file_type,
@@ -160,7 +168,6 @@ try:
     )
 except ImportError:
     # Fallback for when running from different contexts
-    import os
     import sys
 
     sys.path.append(os.path.dirname(__file__))
@@ -172,11 +179,6 @@ except ImportError:
         generate_document_section,
         generate_pr_recommendations,
         get_type_icon,
-    )
-    from infrastructure.analysis_services.file_analyzers import (
-        analyze_java_file,
-        analyze_js_file,
-        analyze_python_file,
     )
     from infrastructure.utilities.analysis_utils import (
         extract_content_from_patch,
@@ -193,12 +195,6 @@ except Exception:
 
 # Create shared client instance for all analysis operations
 service_client = get_service_client(timeout=config.timeouts.service_client)
-
-# Load standardized configuration
-config = load_service_config(
-    service_type="analysis-service",
-    config_file="./config.yaml",  # Optional config file override
-)
 
 # Service configuration from standardized config
 SERVICE_NAME = config.service_name
@@ -615,9 +611,7 @@ async def analyze_semantic_similarity_endpoint(req: SemanticSimilarityRequest):
             "Semantic similarity analysis completed successfully",
             {
                 "total_documents": result.total_documents,
-                "similarity_pairs": [
-                    pair.model_dump() for pair in result.similarity_pairs
-                ],
+                "similarity_pairs": [pair.model_dump() for pair in result.similarity_pairs],
                 "analysis_summary": result.analysis_summary,
                 "processing_time": result.processing_time,
                 "model_used": result.model_used,
@@ -791,9 +785,7 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
             exc_info=True,
         )
 
-        return create_error_response(
-            f"Tone analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Tone analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/quality")
@@ -915,9 +907,7 @@ async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):
             exc_info=True,
         )
 
-        return create_error_response(
-            f"Trend analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Trend analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/trends/portfolio")
@@ -941,9 +931,7 @@ async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
                 "total_documents": portfolio_summary.get("total_documents", 0),
                 "analyzed_documents": portfolio_summary.get("analyzed_documents", 0),
                 "overall_trend": portfolio_summary.get("overall_trend", "unknown"),
-                "high_risk_documents": len(
-                    portfolio_summary.get("high_risk_documents", [])
-                ),
+                "high_risk_documents": len(portfolio_summary.get("high_risk_documents", [])),
                 "processing_time": result.processing_time,
             },
         )
@@ -1033,9 +1021,7 @@ async def assess_document_risk_endpoint(req: RiskAssessmentRequest):
             {"error": str(e), "document_id": req.document_id},
         )
 
-        return create_error_response(
-            f"Risk assessment failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED
-        )
+        return create_error_response(f"Risk assessment failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
 @app.post("/analyze/risk/portfolio")
@@ -1176,9 +1162,7 @@ async def forecast_portfolio_maintenance_endpoint(
             SERVICE_NAME,
             {
                 "total_documents": portfolio_summary.get("total_documents", 0),
-                "forecasted_documents": portfolio_summary.get(
-                    "forecasted_documents", 0
-                ),
+                "forecasted_documents": portfolio_summary.get("forecasted_documents", 0),
                 "average_urgency": portfolio_summary.get("average_urgency", 0.0),
                 "maintenance_dates": portfolio_summary.get("maintenance_dates", 0),
                 "processing_time": result.processing_time,
@@ -1313,9 +1297,7 @@ async def monitor_portfolio_quality_degradation_endpoint(
                 "analyzed_documents": portfolio_summary.get("analyzed_documents", 0),
                 "degradation_detected": degradation_detected,
                 "degradation_rate": degradation_rate,
-                "high_risk_documents": len(
-                    portfolio_summary.get("high_risk_documents", [])
-                ),
+                "high_risk_documents": len(portfolio_summary.get("high_risk_documents", [])),
                 "processing_time": result.processing_time,
             },
         )
@@ -1363,12 +1345,8 @@ async def analyze_document_change_impact_endpoint(req: ChangeImpactAnalysisReque
         result = await analysis_handlers.handle_change_impact_analysis(req)
 
         # Log successful analysis
-        impact_level = result.impact_analysis.get("overall_impact", {}).get(
-            "impact_level", "unknown"
-        )
-        affected_docs = result.impact_analysis.get("overall_impact", {}).get(
-            "affected_documents_count", 0
-        )
+        impact_level = result.impact_analysis.get("overall_impact", {}).get("impact_level", "unknown")
+        affected_docs = result.impact_analysis.get("overall_impact", {}).get("affected_documents_count", 0)
         fire_and_forget(
             "info",
             "Change impact analysis completed",
@@ -1440,9 +1418,7 @@ async def analyze_portfolio_change_impact_endpoint(req: PortfolioChangeImpactReq
                 "total_changes": total_changes,
                 "analyzed_changes": analyzed_changes,
                 "average_impact_score": avg_impact,
-                "high_impact_changes": len(
-                    portfolio_summary.get("high_impact_changes", [])
-                ),
+                "high_impact_changes": len(portfolio_summary.get("high_impact_changes", [])),
                 "processing_time": result.processing_time,
             },
         )
@@ -1494,14 +1470,10 @@ async def generate_analysis_report_endpoint(req: dict):
         include_json = req.get("include_json", True)
 
         if not simulation_id:
-            return create_error_response(
-                "simulation_id is required", error_code=ErrorCodes.VALIDATION_ERROR
-            )
+            return create_error_response("simulation_id is required", error_code=ErrorCodes.VALIDATION_ERROR)
 
         if not documents:
-            return create_error_response(
-                "documents list cannot be empty", error_code=ErrorCodes.VALIDATION_ERROR
-            )
+            return create_error_response("documents list cannot be empty", error_code=ErrorCodes.VALIDATION_ERROR)
 
         # Perform comprehensive analysis on all documents
         analysis_results = []
@@ -1522,9 +1494,7 @@ async def generate_analysis_report_endpoint(req: dict):
                     title=doc.get("title", ""),
                 )
 
-                quality_result = (
-                    await analysis_handlers.handle_content_quality_analysis(quality_req)
-                )
+                quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
 
                 if quality_result:
                     doc_analysis = {
@@ -1532,31 +1502,17 @@ async def generate_analysis_report_endpoint(req: dict):
                         "analysis_type": "comprehensive_document_analysis",
                         "quality_score": quality_result.quality_score,
                         "readability_score": quality_result.readability_score,
-                        "issues_found": (
-                            len(quality_result.issues) if quality_result.issues else 0
-                        ),
-                        "issues": (
-                            [str(issue) for issue in quality_result.issues]
-                            if quality_result.issues
-                            else []
-                        ),
-                        "insights": (
-                            [str(insight) for insight in quality_result.insights]
-                            if quality_result.insights
-                            else []
-                        ),
+                        "issues_found": (len(quality_result.issues) if quality_result.issues else 0),
+                        "issues": ([str(issue) for issue in quality_result.issues] if quality_result.issues else []),
+                        "insights": ([str(insight) for insight in quality_result.insights] if quality_result.insights else []),
                         "timestamp": (
-                            quality_result.analysis_timestamp.isoformat()
-                            if quality_result.analysis_timestamp
-                            else None
+                            quality_result.analysis_timestamp.isoformat() if quality_result.analysis_timestamp else None
                         ),
                     }
 
                     analysis_results.append(doc_analysis)
                     total_quality_score += quality_result.quality_score
-                    total_issues += (
-                        len(quality_result.issues) if quality_result.issues else 0
-                    )
+                    total_issues += len(quality_result.issues) if quality_result.issues else 0
 
             except Exception as e:
                 # Log individual document analysis errors but continue with others
@@ -1569,21 +1525,15 @@ async def generate_analysis_report_endpoint(req: dict):
                 continue
 
         if not analysis_results:
-            return create_error_response(
-                "No documents could be analyzed", error_code=ErrorCodes.ANALYSIS_FAILED
-            )
+            return create_error_response("No documents could be analyzed", error_code=ErrorCodes.ANALYSIS_FAILED)
 
         # Calculate summary statistics
-        avg_quality_score = (
-            total_quality_score / len(analysis_results) if analysis_results else 0
-        )
+        avg_quality_score = total_quality_score / len(analysis_results) if analysis_results else 0
 
         summary = {
             "total_analyses": len(analysis_results),
             "analysis_types": ["comprehensive_document_analysis"],
-            "documents_with_issues": len(
-                [r for r in analysis_results if r["issues_found"] > 0]
-            ),
+            "documents_with_issues": len([r for r in analysis_results if r["issues_found"] > 0]),
             "average_quality_score": avg_quality_score,
             "total_issues_found": total_issues,
         }
@@ -1672,9 +1622,7 @@ async def analyze_pull_request_endpoint(req: dict):
         simulation_id = req.get("simulation_id", "")
 
         if not pr_data:
-            return create_error_response(
-                "Pull request data is required", error_code=ErrorCodes.VALIDATION_ERROR
-            )
+            return create_error_response("Pull request data is required", error_code=ErrorCodes.VALIDATION_ERROR)
 
         # Use the PR analysis handler
         analysis_result = await analyze_pull_request_handler(pr_data, simulation_id)
@@ -1685,9 +1633,7 @@ async def analyze_pull_request_endpoint(req: dict):
         )
 
     except Exception as e:
-        fire_and_forget(
-            "error", "Pull request analysis failed", SERVICE_NAME, {"error": str(e)}
-        )
+        fire_and_forget("error", "Pull request analysis failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
             f"Pull request analysis failed: {str(e)}",
@@ -1734,9 +1680,7 @@ async def test_pr_analysis_endpoint():
     }
 
     result = await analyze_pull_request_handler(test_pr_data, "test_sim_123")
-    return create_success_response(
-        data=result, message="PR analysis test completed successfully"
-    )
+    return create_success_response(data=result, message="PR analysis test completed successfully")
 
 
 async def analyze_pull_request_handler(pr_data: dict, simulation_id: str = "") -> dict:
@@ -1757,14 +1701,10 @@ async def analyze_pull_request_handler(pr_data: dict, simulation_id: str = "") -
     quality_analysis = await analyze_code_quality(changed_files)
 
     # Generate refactoring suggestions
-    refactoring_suggestions = generate_refactoring_suggestions(
-        code_analysis, structural_analysis, quality_analysis
-    )
+    refactoring_suggestions = generate_refactoring_suggestions(code_analysis, structural_analysis, quality_analysis)
 
     # Calculate PR health score
-    pr_health_score = calculate_pr_health_score(
-        code_analysis, commit_analysis, structural_analysis, quality_analysis
-    )
+    pr_health_score = calculate_pr_health_score(code_analysis, commit_analysis, structural_analysis, quality_analysis)
 
     # Generate comprehensive report
     pr_report = {
@@ -1907,21 +1847,13 @@ def analyze_code_structure(changed_files: list) -> dict:
         file_path = file_data.get("filename", "").lower()
 
         # Categorize files by type and impact
-        if any(
-            pattern in file_path for pattern in ["architecture", "design", "structure"]
-        ):
+        if any(pattern in file_path for pattern in ["architecture", "design", "structure"]):
             analysis["architecture_changes"].append(file_path)
 
-        elif any(
-            pattern in file_path
-            for pattern in ["requirements", "setup.py", "package.json", "pom.xml"]
-        ):
+        elif any(pattern in file_path for pattern in ["requirements", "setup.py", "package.json", "pom.xml"]):
             analysis["dependency_changes"].append(file_path)
 
-        elif any(
-            pattern in file_path
-            for pattern in ["config", ".env", ".yaml", ".yml", ".json"]
-        ):
+        elif any(pattern in file_path for pattern in ["config", ".env", ".yaml", ".yml", ".json"]):
             analysis["configuration_changes"].append(file_path)
 
         elif any(pattern in file_path for pattern in ["test", "spec", "_test"]):
@@ -1932,17 +1864,10 @@ def analyze_code_structure(changed_files: list) -> dict:
 
     # Identify structural risks
     if len(analysis["architecture_changes"]) > 3:
-        analysis["structural_risks"].append(
-            "Multiple architecture files changed - high risk"
-        )
+        analysis["structural_risks"].append("Multiple architecture files changed - high risk")
 
-    if (
-        len(analysis["dependency_changes"]) > 0
-        and len(analysis["test_coverage_changes"]) == 0
-    ):
-        analysis["structural_risks"].append(
-            "Dependencies changed without corresponding tests"
-        )
+    if len(analysis["dependency_changes"]) > 0 and len(analysis["test_coverage_changes"]) == 0:
+        analysis["structural_risks"].append("Dependencies changed without corresponding tests")
 
     return analysis
 
@@ -1954,9 +1879,7 @@ async def analyze_code_quality(changed_files: list) -> dict:
         code_files = []
         for file_data in changed_files:
             if file_data.get("patch") or file_data.get("content"):
-                content = file_data.get("content") or extract_content_from_patch(
-                    file_data.get("patch", "")
-                )
+                content = file_data.get("content") or extract_content_from_patch(file_data.get("patch", ""))
                 if content:
                     code_files.append(
                         {
@@ -1982,26 +1905,19 @@ async def analyze_code_quality(changed_files: list) -> dict:
                 title=file_info["filename"],
             )
 
-            quality_result = await analysis_handlers.handle_content_quality_analysis(
-                quality_req
-            )
+            quality_result = await analysis_handlers.handle_content_quality_analysis(quality_req)
             if quality_result:
                 quality_results.append(quality_result)
 
         if quality_results:
-            avg_quality = sum(r.quality_score for r in quality_results) / len(
-                quality_results
-            )
+            avg_quality = sum(r.quality_score for r in quality_results) / len(quality_results)
             total_issues = sum(len(getattr(r, "issues", [])) for r in quality_results)
 
             return {
                 "quality_score": avg_quality,
                 "issues_found": total_issues,
                 "files_analyzed": len(code_files),
-                "detailed_results": [
-                    {"file": f, "result": str(r)}
-                    for f, r in zip(code_files, quality_results)
-                ],
+                "detailed_results": [{"file": f, "result": str(r)} for f, r in zip(code_files, quality_results)],
             }
 
         return {
@@ -2026,9 +1942,7 @@ def analyze_file_content(file_data: dict, file_type: str) -> dict:
     }
 
     try:
-        content = file_data.get("content") or extract_content_from_patch(
-            file_data.get("patch", "")
-        )
+        content = file_data.get("content") or extract_content_from_patch(file_data.get("patch", ""))
 
         if not content:
             return issues
@@ -2060,9 +1974,7 @@ def analyze_python_file(lines: list) -> dict:
         # Track function definitions
         if line.strip().startswith("def "):
             if current_function and function_lines > 50:
-                issues["long_methods"].append(
-                    f"{current_function} ({function_lines} lines)"
-                )
+                issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
 
             current_function = line.split("def ")[1].split("(")[0]
             function_lines = 0
@@ -2071,10 +1983,7 @@ def analyze_python_file(lines: list) -> dict:
 
             # Check for complexity indicators
             if (
-                any(
-                    keyword in line.lower()
-                    for keyword in ["if", "elif", "for", "while"]
-                )
+                any(keyword in line.lower() for keyword in ["if", "elif", "for", "while"])
                 and line.count("and") + line.count("or") > 2
             ):
                 issues["complex_functions"].append(f"{current_function} (line {i+1})")
@@ -2098,9 +2007,7 @@ def analyze_js_file(lines: list) -> dict:
         # Track function definitions
         if "function " in line or "=> " in line or "const " in line and " = (" in line:
             if current_function and function_lines > 40:
-                issues["long_methods"].append(
-                    f"{current_function} ({function_lines} lines)"
-                )
+                issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
 
             # Extract function name
             if "function " in line:
@@ -2114,18 +2021,13 @@ def analyze_js_file(lines: list) -> dict:
             brace_count += line.count("{") - line.count("}")
 
             # Check for complexity
-            if (
-                any(keyword in line for keyword in ["if", "for", "while"])
-                and line.count("&&") + line.count("||") > 2
-            ):
+            if any(keyword in line for keyword in ["if", "for", "while"]) and line.count("&&") + line.count("||") > 2:
                 issues["complex_functions"].append(f"{current_function} (line {i+1})")
 
             # End of function
             if brace_count == 0 and function_lines > 5:
                 if function_lines > 40:
-                    issues["long_methods"].append(
-                        f"{current_function} ({function_lines} lines)"
-                    )
+                    issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
                 current_function = None
                 function_lines = 0
 
@@ -2142,15 +2044,9 @@ def analyze_java_file(lines: list) -> dict:
 
     for i, line in enumerate(lines):
         # Track method definitions
-        if (
-            any(modifier in line for modifier in ["public ", "private ", "protected "])
-            and "(" in line
-            and ")" in line
-        ):
+        if any(modifier in line for modifier in ["public ", "private ", "protected "]) and "(" in line and ")" in line:
             if current_method and method_lines > 50:
-                issues["long_methods"].append(
-                    f"{current_method} ({method_lines} lines)"
-                )
+                issues["long_methods"].append(f"{current_method} ({method_lines} lines)")
 
             # Extract method name
             method_start = line.find("(")
@@ -2167,18 +2063,13 @@ def analyze_java_file(lines: list) -> dict:
             brace_count += line.count("{") - line.count("}")
 
             # Check for complexity
-            if (
-                any(keyword in line for keyword in ["if", "for", "while", "switch"])
-                and line.count("&&") + line.count("||") > 2
-            ):
+            if any(keyword in line for keyword in ["if", "for", "while", "switch"]) and line.count("&&") + line.count("||") > 2:
                 issues["complex_functions"].append(f"{current_method} (line {i+1})")
 
             # End of method
             if brace_count == 0 and method_lines > 5:
                 if method_lines > 50:
-                    issues["long_methods"].append(
-                        f"{current_method} ({method_lines} lines)"
-                    )
+                    issues["long_methods"].append(f"{current_method} ({method_lines} lines)")
                 current_method = None
                 method_lines = 0
 
@@ -2278,9 +2169,7 @@ def is_conventional_commit(message: str) -> bool:
     return first_word in conventional_types
 
 
-def generate_refactoring_suggestions(
-    code_analysis: dict, structural_analysis: dict, quality_analysis: dict
-) -> list:
+def generate_refactoring_suggestions(code_analysis: dict, structural_analysis: dict, quality_analysis: dict) -> list:
     """Generate refactoring suggestions based on analysis."""
     suggestions = []
 
@@ -2329,9 +2218,7 @@ def generate_refactoring_suggestions(
                 "type": "quality_improvement",
                 "priority": "high",
                 "description": f"Improve code quality (current score: {quality_analysis.get('quality_score', 0):.2f})",
-                "affected_items": [
-                    f"{quality_analysis.get('issues_found', 0)} quality issues found"
-                ],
+                "affected_items": [f"{quality_analysis.get('issues_found', 0)} quality issues found"],
                 "estimated_effort": "medium",
             }
         )
@@ -2370,10 +2257,7 @@ def calculate_pr_health_score(
 
         # Prefer balanced changes over large additions/deletions
         if total_changes > 0:
-            balance_ratio = (
-                min(metrics.get("lines_added", 0), metrics.get("lines_removed", 0))
-                / total_changes
-            )
+            balance_ratio = min(metrics.get("lines_added", 0), metrics.get("lines_removed", 0)) / total_changes
             code_score = min(1.0, balance_ratio * 2)  # Reward balanced changes
             scores.append((code_score, 0.4))
 
@@ -2393,9 +2277,7 @@ def calculate_pr_health_score(
     # Structural risk penalty (10% weight)
     structural_score = 1.0
     if structural_analysis.get("structural_risks"):
-        structural_score = max(
-            0.0, 1.0 - (len(structural_analysis["structural_risks"]) * 0.2)
-        )
+        structural_score = max(0.0, 1.0 - (len(structural_analysis["structural_risks"]) * 0.2))
     scores.append((structural_score, 0.1))
 
     # Calculate weighted average
@@ -2428,12 +2310,8 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     risk_level = pr_report.get("risk_level", "medium")
 
     if risk_level == "high":
-        recommendations.append(
-            "🚨 High-risk changes detected - consider breaking into smaller PRs"
-        )
-        recommendations.append(
-            "📋 Schedule thorough code review with senior developers"
-        )
+        recommendations.append("🚨 High-risk changes detected - consider breaking into smaller PRs")
+        recommendations.append("📋 Schedule thorough code review with senior developers")
 
     elif risk_level == "medium":
         recommendations.append("⚠️ Medium-risk changes - ensure adequate test coverage")
@@ -2442,13 +2320,8 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     # Specific recommendations based on analysis
     code_analysis = pr_report.get("code_analysis", {})
 
-    if (
-        code_analysis.get("change_metrics", {}).get("lines_added", 0)
-        > config.limits.max_lines_added_threshold
-    ):
-        recommendations.append(
-            "📊 Large PR detected - consider splitting into smaller, focused changes"
-        )
+    if code_analysis.get("change_metrics", {}).get("lines_added", 0) > config.limits.max_lines_added_threshold:
+        recommendations.append("📊 Large PR detected - consider splitting into smaller, focused changes")
 
     if code_analysis.get("file_types", {}).get("test", 0) == 0:
         recommendations.append("🧪 Consider adding tests for the changes introduced")
@@ -2456,9 +2329,7 @@ def generate_pr_recommendations(pr_report: dict) -> list:
     # Commit analysis recommendations
     commit_analysis = pr_report.get("commit_analysis", {})
     if commit_analysis.get("message_quality", {}).get("poor_messages", 0) > 0:
-        recommendations.append(
-            "✍️ Improve commit message quality for better project history"
-        )
+        recommendations.append("✍️ Improve commit message quality for better project history")
 
     # Quality recommendations
     quality_analysis = pr_report.get("quality_analysis", {})
@@ -2488,24 +2359,18 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
     md_lines.append(f"- **Total Analyses:** {summary['total_analyses']}")
     md_lines.append(f"- **Analysis Types:** {', '.join(summary['analysis_types'])}")
     md_lines.append(f"- **Documents with Issues:** {summary['documents_with_issues']}")
-    md_lines.append(
-        f"- **Average Quality Score:** {summary['average_quality_score']:.2f}"
-    )
+    md_lines.append(f"- **Average Quality Score:** {summary['average_quality_score']:.2f}")
     md_lines.append(f"- **Total Issues Found:** {summary['total_issues_found']}")
     md_lines.append("")
 
     # Overall quality indicator
     avg_score = summary["average_quality_score"]
     if avg_score >= config.limits.analysis_confidence_threshold:
-        quality_indicator = (
-            "🟢 **High Quality** - Documents are well-structured and clear"
-        )
+        quality_indicator = "🟢 **High Quality** - Documents are well-structured and clear"
     elif avg_score >= 0.6:
         quality_indicator = "🟡 **Medium Quality** - Documents need some improvements"
     else:
-        quality_indicator = (
-            "🔴 **Low Quality** - Documents require significant attention"
-        )
+        quality_indicator = "🔴 **Low Quality** - Documents require significant attention"
 
     md_lines.append(f"### Quality Assessment: {quality_indicator}")
     md_lines.append("")
@@ -2526,14 +2391,10 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
         else:
             quality_emoji = "🔴"
 
-        md_lines.append(
-            f"### {i}. {quality_emoji} Document: {result.get('document_id', 'Unknown')}"
-        )
+        md_lines.append(f"### {i}. {quality_emoji} Document: {result.get('document_id', 'Unknown')}")
         md_lines.append("")
         md_lines.append(f"**Quality Score:** {quality_score:.2f}")
-        md_lines.append(
-            f"**Readability Score:** {result.get('readability_score', 0):.2f}"
-        )
+        md_lines.append(f"**Readability Score:** {result.get('readability_score', 0):.2f}")
         md_lines.append(f"**Issues Found:** {issues_found}")
         md_lines.append("")
 
@@ -2557,20 +2418,14 @@ def generate_analysis_markdown_report(report_data: dict) -> str:
     md_lines.append("")
 
     if summary["documents_with_issues"] > 0:
-        md_lines.append(
-            f"Found {summary['documents_with_issues']} documents with issues that need attention:"
-        )
+        md_lines.append(f"Found {summary['documents_with_issues']} documents with issues that need attention:")
         md_lines.append("")
         md_lines.append("- Review documents with low quality scores (< 0.6)")
         md_lines.append("- Address readability issues in documents with poor scores")
         md_lines.append("- Consider consolidating similar content across documents")
-        md_lines.append(
-            "- Implement automated quality checks in documentation workflow"
-        )
+        md_lines.append("- Implement automated quality checks in documentation workflow")
     else:
-        md_lines.append(
-            "✅ **Excellent!** All documents passed quality analysis with no major issues found."
-        )
+        md_lines.append("✅ **Excellent!** All documents passed quality analysis with no major issues found.")
         md_lines.append("")
         md_lines.append("- Continue maintaining high documentation standards")
         md_lines.append("- Consider implementing proactive quality monitoring")
@@ -2629,9 +2484,7 @@ async def remediate_document_endpoint(req: AutomatedRemediationRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error", "Automated remediation failed", SERVICE_NAME, {"error": str(e)}
-        )
+        fire_and_forget("error", "Automated remediation failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
             f"Automated remediation failed: {str(e)}",
@@ -2679,9 +2532,7 @@ async def preview_remediation_endpoint(req: RemediationPreviewRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error", "Remediation preview failed", SERVICE_NAME, {"error": str(e)}
-        )
+        fire_and_forget("error", "Remediation preview failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
             f"Remediation preview failed: {str(e)}",
@@ -2768,9 +2619,7 @@ async def get_workflow_status_endpoint(workflow_id: str):
         result = await analysis_handlers.handle_workflow_status(req)
 
         if result.status == "not_found":
-            return create_error_response(
-                "Workflow not found", error_code=ErrorCodes.RESOURCE_NOT_FOUND
-            )
+            return create_error_response("Workflow not found", error_code=ErrorCodes.RESOURCE_NOT_FOUND)
 
         # Log status check
         fire_and_forget(
@@ -2906,9 +2755,7 @@ async def configure_webhook_endpoint(req: WebhookConfigRequest):
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error", "Webhook configuration failed", SERVICE_NAME, {"error": str(e)}
-        )
+        fire_and_forget("error", "Webhook configuration failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
             f"Webhook configuration failed: {str(e)}",
@@ -3411,9 +3258,7 @@ async def get_workers_status_endpoint():
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error", "Workers status retrieval failed", SERVICE_NAME, {"error": str(e)}
-        )
+        fire_and_forget("error", "Workers status retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
             f"Workers status retrieval failed: {str(e)}",
@@ -3521,9 +3366,7 @@ async def scale_workers_endpoint(req: ScaleWorkersRequest):
             {"target_count": req.target_count, "error": str(e)},
         )
 
-        return create_error_response(
-            f"Worker scaling failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED
-        )
+        return create_error_response(f"Worker scaling failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED)
 
 
 @app.post("/distributed/start")
@@ -3651,9 +3494,7 @@ async def get_queue_status_endpoint():
 
     except Exception as e:
         # Log the error
-        fire_and_forget(
-            "error", "Queue status retrieval failed", SERVICE_NAME, {"error": str(e)}
-        )
+        fire_and_forget("error", "Queue status retrieval failed", SERVICE_NAME, {"error": str(e)})
 
         return create_error_response(
             f"Queue status retrieval failed: {str(e)}",
@@ -3779,27 +3620,16 @@ async def generate_document_dump_report(req: DocumentDumpRequest):
         # Filter documents if requested
         documents = req.documents
         if req.filter_by_type:
-            documents = [
-                d
-                for d in documents
-                if d.get("type", "").lower() in [t.lower() for t in req.filter_by_type]
-            ]
+            documents = [d for d in documents if d.get("type", "").lower() in [t.lower() for t in req.filter_by_type]]
         if req.filter_by_category:
-            documents = [
-                d
-                for d in documents
-                if d.get("category", "").lower()
-                in [c.lower() for c in req.filter_by_category]
-            ]
+            documents = [d for d in documents if d.get("category", "").lower() in [c.lower() for c in req.filter_by_category]]
 
         # Sort documents
         reverse_sort = req.sort_order.lower() == "desc"
         if req.sort_by in ["dateCreated", "dateUpdated"]:
             documents.sort(key=lambda x: x.get(req.sort_by, ""), reverse=reverse_sort)
         elif req.sort_by == "title":
-            documents.sort(
-                key=lambda x: x.get("title", "").lower(), reverse=reverse_sort
-            )
+            documents.sort(key=lambda x: x.get("title", "").lower(), reverse=reverse_sort)
 
         # Generate the formatted report
         report_content = await generate_document_dump_markdown(documents, req)
@@ -3847,23 +3677,17 @@ async def generate_document_dump_report(req: DocumentDumpRequest):
 
     except Exception as e:
         logger.error(f"Document dump report generation failed: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Document dump report generation failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Document dump report generation failed: {str(e)}")
 
 
-async def generate_document_dump_markdown(
-    documents: List[Dict[str, Any]], req: DocumentDumpRequest
-) -> str:
+async def generate_document_dump_markdown(documents: List[Dict[str, Any]], req: DocumentDumpRequest) -> str:
     """Generate beautified markdown report for document dump."""
     report_lines = []
 
     # Header
     report_lines.append("# 📋 Document Analysis Dump Report")
     report_lines.append("")
-    report_lines.append(
-        f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}"
-    )
+    report_lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
     report_lines.append(f"**Total Documents:** {len(documents)}")
     report_lines.append("")
 
@@ -3878,9 +3702,7 @@ async def generate_document_dump_markdown(
 
         # Process each type
         for doc_type, docs in grouped_docs.items():
-            report_lines.append(
-                f"## {get_type_icon(doc_type)} {doc_type.title()} Documents ({len(docs)})"
-            )
+            report_lines.append(f"## {get_type_icon(doc_type)} {doc_type.title()} Documents ({len(docs)})")
             report_lines.append("")
 
             for doc in docs:
@@ -3900,9 +3722,7 @@ async def generate_document_dump_markdown(
     return "\n".join(report_lines)
 
 
-def generate_document_section(
-    doc: Dict[str, Any], req: DocumentDumpRequest
-) -> List[str]:
+def generate_document_section(doc: Dict[str, Any], req: DocumentDumpRequest) -> List[str]:
     """Generate a formatted section for a single document."""
     lines = []
 
@@ -4132,16 +3952,10 @@ async def get_findings(
         ge=1,
         le=config.limits.max_findings_limit,
     ),
-    severity: Optional[str] = Query(
-        None, description="Filter by severity level (low, medium, high, critical)"
-    ),
-    finding_type_filter: Optional[str] = Query(
-        None, description="Filter by finding category or type"
-    ),
+    severity: Optional[str] = Query(None, description="Filter by severity level (low, medium, high, critical)"),
+    finding_type_filter: Optional[str] = Query(None, description="Filter by finding category or type"),
 ):
-    return await analysis_handlers.handle_get_findings(
-        limit, severity, finding_type_filter
-    )
+    return await analysis_handlers.handle_get_findings(limit, severity, finding_type_filter)
 
 
 @app.get("/detectors")
@@ -4165,19 +3979,11 @@ async def get_confluence_consolidation_report(min_confidence: float = 0.0):
     """
     # Validate query parameters
     if min_confidence < 0.0 or min_confidence > 1.0:
-        raise HTTPException(
-            status_code=400, detail="Min confidence must be between 0.0 and 1.0"
-        )
+        raise HTTPException(status_code=400, detail="Min confidence must be between 0.0 and 1.0")
     try:
         # Get all confluence documents
-        docs_response = await service_client.get_json(
-            f"{service_client.doc_store_url()}/documents/_list"
-        )
-        confluence_docs = [
-            doc
-            for doc in docs_response.get("items", [])
-            if doc.get("source_type") == "confluence"
-        ]
+        docs_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/_list")
+        confluence_docs = [doc for doc in docs_response.get("items", []) if doc.get("source_type") == "confluence"]
 
         # Group by content similarity (simple hash-based for demo)
         content_groups = {}
@@ -4241,19 +4047,11 @@ async def get_jira_staleness_report(min_confidence: float = 0.0):
     """
     # Validate query parameters
     if min_confidence < 0.0 or min_confidence > 1.0:
-        raise HTTPException(
-            status_code=400, detail="Min confidence must be between 0.0 and 1.0"
-        )
+        raise HTTPException(status_code=400, detail="Min confidence must be between 0.0 and 1.0")
     try:
         # Get all Jira documents
-        docs_response = await service_client.get_json(
-            f"{service_client.doc_store_url()}/documents/_list"
-        )
-        jira_docs = [
-            doc
-            for doc in docs_response.get("items", [])
-            if doc.get("source_type") == "jira"
-        ]
+        docs_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/_list")
+        jira_docs = [doc for doc in docs_response.get("items", []) if doc.get("source_type") == "jira"]
 
         # Analyze staleness based on metadata
         items = []
@@ -4364,9 +4162,7 @@ async def integration_health():
 
 
 @app.post("/integration/analyze-with-prompt")
-async def analyze_with_prompt(
-    target_id: str, prompt_category: str, prompt_name: str, **variables
-):
+async def analyze_with_prompt(target_id: str, prompt_category: str, prompt_name: str, **variables):
     """Analyze documents using customizable prompts from Prompt Store.
 
     Leverages the Prompt Store service to retrieve and execute tailored
@@ -4375,15 +4171,11 @@ async def analyze_with_prompt(
     """
     try:
         # Get prompt from Prompt Store
-        prompt_data = await service_client.get_prompt(
-            prompt_category, prompt_name, **variables
-        )
+        prompt_data = await service_client.get_prompt(prompt_category, prompt_name, **variables)
 
         # Get target document
         if target_id.startswith("doc:"):
-            doc_response = await service_client.get_json(
-                f"{service_client.doc_store_url()}/documents/{target_id}"
-            )
+            doc_response = await service_client.get_json(f"{service_client.doc_store_url()}/documents/{target_id}")
             content = doc_response.get("content", "")
         else:
             return _create_analysis_error_response(
@@ -4469,9 +4261,7 @@ async def natural_language_analysis(request_data: dict = None):
 async def get_available_prompt_categories():
     """Get available prompt categories for analysis."""
     try:
-        categories = await service_client.get_json(
-            f"{service_client.prompt_store_url()}/prompts/categories"
-        )
+        categories = await service_client.get_json(f"{service_client.prompt_store_url()}/prompts/categories")
         return categories
     except Exception as e:
         return _create_analysis_error_response(
@@ -4544,9 +4334,7 @@ async def analyze_architecture(req: ArchitectureAnalysisRequest):
             )
 
         # Perform the analysis
-        results = await analyzer.analyze_architecture(
-            req.components, req.connections, req.options or {}
-        )
+        results = await analyzer.analyze_architecture(req.components, req.connections, req.options or {})
 
         # Log the analysis
         fire_and_forget(
@@ -4607,9 +4395,7 @@ async def analyze_pr_confidence(req: Dict[str, Any]):
         )
 
         # Perform the analysis
-        result = await pr_confidence_analysis_service.analyze_pr_confidence(
-            analysis_request
-        )
+        result = await pr_confidence_analysis_service.analyze_pr_confidence(analysis_request)
 
         # Log the analysis
         fire_and_forget(
@@ -4651,7 +4437,7 @@ async def analyze_pr_confidence(req: Dict[str, Any]):
         # Log the error
         fire_and_forget(
             "error",
-            f"PR confidence analysis failed",
+            "PR confidence analysis failed",
             SERVICE_NAME,
             {"error": str(e), "request": str(req)},
         )

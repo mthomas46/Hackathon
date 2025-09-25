@@ -57,6 +57,7 @@ def analyze_js_file(lines: list) -> dict:
             if current_function and function_lines > 40:
                 issues["long_methods"].append(
                     f"{current_function} ({function_lines} lines)"
+                )
 def analyze_js_file(lines: list) -> dict:
     """Analyze JavaScript/TypeScript file for common issues."""
     issues = {"complex_functions": [], "long_methods": []}
