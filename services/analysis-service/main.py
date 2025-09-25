@@ -149,43 +149,36 @@ from .application.dto.response_dtos import (
     AnalysisResultResponse,
     ErrorResponse,
 )
-
-try:
-    from application.services.report_services import (
-        calculate_pr_health_score,
-        determine_pr_risk_level,
-        format_timestamp,
-        generate_analysis_markdown_report,
-        generate_document_section,
-        generate_pr_recommendations,
-        get_type_icon,
-    )
-    from infrastructure.utilities.analysis_utils import (
-        extract_content_from_patch,
-        get_file_type,
-        is_conventional_commit,
-        is_good_commit_message,
-    )
-except ImportError:
-    # Fallback for when running from different contexts
-    import sys
-
-    sys.path.append(os.path.dirname(__file__))
-    from application.services.report_services import (
-        calculate_pr_health_score,
-        determine_pr_risk_level,
-        format_timestamp,
-        generate_analysis_markdown_report,
-        generate_document_section,
-        generate_pr_recommendations,
-        get_type_icon,
-    )
-    from infrastructure.utilities.analysis_utils import (
-        extract_content_from_patch,
-        get_file_type,
-        is_conventional_commit,
-        is_good_commit_message,
-    )
+from .application.services.reporting.reporting_service import (
+    calculate_pr_health_score,
+    determine_pr_risk_level,
+    format_confluence_content,
+    format_generic_content,
+    format_jira_content,
+    format_pr_content,
+    format_timestamp,
+    generate_analysis_markdown_report,
+    generate_document_section,
+    generate_pr_recommendations,
+    get_type_icon,
+)
+from .infrastructure.analysis_services.analysis_core import (
+    analyze_code_structure,
+    analyze_commit_messages,
+    analyze_file_content,
+    generate_refactoring_suggestions,
+)
+from .infrastructure.analysis_services.file_analyzers import (
+    analyze_java_file,
+    analyze_js_file,
+    analyze_python_file,
+)
+from .infrastructure.utilities.analysis_utils import (
+    extract_content_from_patch,
+    get_file_type,
+    is_conventional_commit,
+    is_good_commit_message,
+)
 
 try:
     import redis.asyncio as aioredis
@@ -733,7 +726,44 @@ async def analyze_sentiment_endpoint(req: SentimentAnalysisRequest):
         )
 
 
-@app.post("/analyze/tone")
+@app.post(
+    "/analyze/tone",
+    tags=["tone"],
+    summary="Analyze tone patterns and writing style in documents",
+    description="""Performs comprehensive tone analysis to identify writing patterns, communication
+    style, and emotional expression in documents. Provides detailed breakdowns of
+    formal/informal tone, technical complexity, and readability metrics.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Tone analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Tone analysis completed successfully",
+                        "data": {
+                            "tone_metrics": {
+                                "formality_score": 0.75,
+                                "technical_complexity": 0.82,
+                                "readability_score": 0.68
+                            },
+                            "writing_patterns": {
+                                "sentence_complexity": "moderate",
+                                "vocabulary_richness": 0.71,
+                                "emotional_expression": "neutral"
+                            }
+                        },
+                        "processing_time": 1.8,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Tone analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_tone_endpoint(req: ToneAnalysisRequest):
     """Analyze tone patterns and writing style in a document.
 
@@ -788,7 +818,49 @@ async def analyze_tone_endpoint(req: ToneAnalysisRequest):
         return create_error_response(f"Tone analysis failed: {str(e)}", error_code=ErrorCodes.ANALYSIS_FAILED)
 
 
-@app.post("/analyze/quality")
+@app.post(
+    "/analyze/quality",
+    tags=["quality"],
+    summary="Analyze content quality with comprehensive assessment",
+    description="""Performs automated evaluation of documentation quality including readability,
+    structure, completeness, and technical accuracy with detailed recommendations
+    for improvement.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Content quality analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Content quality analysis completed successfully",
+                        "data": {
+                            "quality_score": 0.85,
+                            "readability_metrics": {
+                                "flesch_reading_ease": 65.2,
+                                "grade_level": 8.5,
+                                "sentence_complexity": 0.72
+                            },
+                            "structure_analysis": {
+                                "has_table_of_contents": True,
+                                "section_depth": 3,
+                                "formatting_consistency": 0.91
+                            },
+                            "recommendations": [
+                                "Consider simplifying technical terminology",
+                                "Add more examples for complex concepts"
+                            ]
+                        },
+                        "processing_time": 2.1,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Content quality analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_content_quality_endpoint(req: ContentQualityRequest):
     """Analyze content quality and provide comprehensive assessment.
 
@@ -846,7 +918,52 @@ async def analyze_content_quality_endpoint(req: ContentQualityRequest):
         )
 
 
-@app.post("/analyze/trends")
+@app.post(
+    "/analyze/trends",
+    tags=["trends"],
+    summary="Analyze trends and predict future issues for documents",
+    description="""Performs comprehensive trend analysis on historical analysis results to identify
+    patterns, predict future documentation issues, and provide proactive recommendations
+    for maintaining documentation quality.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Trend analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Trend analysis completed successfully",
+                        "data": {
+                            "trend_patterns": {
+                                "quality_decline": 0.15,
+                                "issue_frequency": 0.23,
+                                "maintenance_effort": 0.31
+                            },
+                            "predictions": {
+                                "next_review_date": "2025-02-15",
+                                "risk_level": "medium",
+                                "recommended_actions": [
+                                    "Schedule content review",
+                                    "Update outdated examples"
+                                ]
+                            },
+                            "historical_analysis": {
+                                "total_analyses": 12,
+                                "average_quality_score": 0.78,
+                                "trend_direction": "improving"
+                            }
+                        },
+                        "processing_time": 3.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Trend analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_document_trends_endpoint(req: TrendAnalysisRequest):
     """Analyze trends and predict future issues for a document.
 
@@ -968,7 +1085,50 @@ async def analyze_portfolio_trends_endpoint(req: PortfolioTrendAnalysisRequest):
         )
 
 
-@app.post("/analyze/risk")
+@app.post(
+    "/analyze/risk",
+    tags=["risk"],
+    summary="Assess risk factors for documentation drift and quality degradation",
+    description="""Performs comprehensive risk assessment to identify documents most at risk
+    for quality issues, staleness, and maintenance problems. Provides actionable
+    recommendations for risk mitigation and resource prioritization.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Risk assessment completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Risk assessment completed successfully",
+                        "data": {
+                            "overall_risk_score": 0.67,
+                            "risk_factors": {
+                                "staleness_risk": 0.82,
+                                "quality_decline_risk": 0.45,
+                                "maintenance_burden": 0.71
+                            },
+                            "risk_level": "high",
+                            "critical_issues": [
+                                "Document not updated in 18 months",
+                                "Quality score declined 25% over last year"
+                            ],
+                            "recommendations": [
+                                "Schedule immediate content review",
+                                "Update outdated technical information",
+                                "Consider document retirement if no longer relevant"
+                            ]
+                        },
+                        "processing_time": 2.8,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Risk assessment failed", "model": ErrorResponse},
+    },
+)
 async def assess_document_risk_endpoint(req: RiskAssessmentRequest):
     """Assess risk factors for documentation drift and quality degradation.
 
@@ -1082,7 +1242,50 @@ async def assess_portfolio_risk_endpoint(req: PortfolioRiskAssessmentRequest):
         )
 
 
-@app.post("/analyze/maintenance/forecast")
+@app.post(
+    "/analyze/maintenance/forecast",
+    tags=["maintenance"],
+    summary="Forecast maintenance needs and schedule for documentation",
+    description="""Predicts when documentation will require updates based on risk assessment,
+    usage patterns, quality trends, and business requirements. Provides actionable
+    maintenance schedules and resource planning recommendations.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Maintenance forecast completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Maintenance forecast completed successfully",
+                        "data": {
+                            "maintenance_schedule": {
+                                "next_review_date": "2025-03-15",
+                                "maintenance_priority": "medium",
+                                "estimated_effort_days": 2.5
+                            },
+                            "forecast_factors": {
+                                "quality_trend": "stable",
+                                "usage_frequency": "high",
+                                "business_impact": "medium",
+                                "technical_debt": 0.35
+                            },
+                            "recommendations": [
+                                "Schedule quarterly review",
+                                "Monitor for breaking changes in referenced APIs",
+                                "Consider automation for routine updates"
+                            ]
+                        },
+                        "processing_time": 3.1,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid request parameters", "model": ErrorResponse},
+        500: {"description": "Maintenance forecast failed", "model": ErrorResponse},
+    },
+)
 async def forecast_document_maintenance_endpoint(req: MaintenanceForecastRequest):
     """Forecast maintenance needs and schedule for documentation.
 
