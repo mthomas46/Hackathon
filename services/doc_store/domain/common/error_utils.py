@@ -15,7 +15,7 @@ from services.shared.infrastructure.utilities.error_handling import (
     ExternalServiceException,
     DatabaseException,
 )
-from services.shared.presentation.responses import create_error_response
+from services.shared.core.responses.responses import create_error_response
 
 
 def handle_document_not_found(document_id: str, operation: str = "find") -> None:
