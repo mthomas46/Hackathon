@@ -351,8 +351,26 @@ class CreateFindingCommandValidator(BaseValidator):
         """Validate CreateFindingCommand."""
         errors = []
 
-        # Validate document_id
-        if not command.document_id or not isinstance(command.document_id, str):
+        # Validate each field
+        errors.extend(self._validate_document_id(command.document_id))
+        errors.extend(self._validate_analysis_id(command.analysis_id))
+        errors.extend(self._validate_severity(command.severity))
+        errors.extend(self._validate_category(command.category))
+        errors.extend(self._validate_description(command.description))
+        errors.extend(self._validate_confidence(command.confidence))
+        errors.extend(self._validate_location(command.location))
+        errors.extend(self._validate_suggestion(command.suggestion))
+
+        if errors:
+            return ValidationResult.failure(errors)
+
+        return ValidationResult.success()
+
+    def _validate_document_id(self, document_id) -> list:
+        """Validate document ID."""
+        errors = []
+
+        if not document_id or not isinstance(document_id, str):
             errors.append(
                 self.create_error(
                     "Document ID is required and must be a string",
@@ -361,8 +379,13 @@ class CreateFindingCommandValidator(BaseValidator):
                 )
             )
 
-        # Validate analysis_id
-        if not command.analysis_id or not isinstance(command.analysis_id, str):
+        return errors
+
+    def _validate_analysis_id(self, analysis_id) -> list:
+        """Validate analysis ID."""
+        errors = []
+
+        if not analysis_id or not isinstance(analysis_id, str):
             errors.append(
                 self.create_error(
                     "Analysis ID is required and must be a string",
@@ -371,8 +394,13 @@ class CreateFindingCommandValidator(BaseValidator):
                 )
             )
 
-        # Validate severity
-        if not command.severity or not isinstance(command.severity, str):
+        return errors
+
+    def _validate_severity(self, severity) -> list:
+        """Validate finding severity."""
+        errors = []
+
+        if not severity or not isinstance(severity, str):
             errors.append(
                 self.create_error(
                     "Finding severity is required and must be a string",
@@ -380,17 +408,22 @@ class CreateFindingCommandValidator(BaseValidator):
                     "severity",
                 )
             )
-        elif command.severity not in ["critical", "high", "medium", "low", "info"]:
+        elif severity not in ["critical", "high", "medium", "low", "info"]:
             errors.append(
                 self.create_error(
-                    f"Invalid severity: {command.severity}",
+                    f"Invalid severity: {severity}",
                     "UNSUPPORTED_SEVERITY",
                     "severity",
                 )
             )
 
-        # Validate category
-        if not command.category or not isinstance(command.category, str):
+        return errors
+
+    def _validate_category(self, category) -> list:
+        """Validate finding category."""
+        errors = []
+
+        if not category or not isinstance(category, str):
             errors.append(
                 self.create_error(
                     "Finding category is required and must be a string",
@@ -398,7 +431,7 @@ class CreateFindingCommandValidator(BaseValidator):
                     "category",
                 )
             )
-        elif len(command.category) > 50:
+        elif len(category) > 50:
             errors.append(
                 self.create_error(
                     "Finding category cannot exceed 50 characters",
@@ -407,8 +440,13 @@ class CreateFindingCommandValidator(BaseValidator):
                 )
             )
 
-        # Validate description
-        if not command.description or not isinstance(command.description, str):
+        return errors
+
+    def _validate_description(self, description) -> list:
+        """Validate finding description."""
+        errors = []
+
+        if not description or not isinstance(description, str):
             errors.append(
                 self.create_error(
                     "Finding description is required and must be a string",
@@ -416,7 +454,7 @@ class CreateFindingCommandValidator(BaseValidator):
                     "description",
                 )
             )
-        elif len(command.description) > 1000:
+        elif len(description) > 1000:
             errors.append(
                 self.create_error(
                     "Finding description cannot exceed 1000 characters",
@@ -425,9 +463,14 @@ class CreateFindingCommandValidator(BaseValidator):
                 )
             )
 
-        # Validate confidence
-        if command.confidence is not None:
-            if not isinstance(command.confidence, (int, float)):
+        return errors
+
+    def _validate_confidence(self, confidence) -> list:
+        """Validate finding confidence."""
+        errors = []
+
+        if confidence is not None:
+            if not isinstance(confidence, (int, float)):
                 errors.append(
                     self.create_error(
                         "Finding confidence must be a number",
@@ -435,7 +478,7 @@ class CreateFindingCommandValidator(BaseValidator):
                         "confidence",
                     )
                 )
-            elif command.confidence < 0.0 or command.confidence > 1.0:
+            elif confidence < 0.0 or confidence > 1.0:
                 errors.append(
                     self.create_error(
                         "Finding confidence must be between 0.0 and 1.0",
@@ -444,9 +487,14 @@ class CreateFindingCommandValidator(BaseValidator):
                     )
                 )
 
-        # Validate location if provided
-        if command.location:
-            if not isinstance(command.location, dict):
+        return errors
+
+    def _validate_location(self, location) -> list:
+        """Validate finding location."""
+        errors = []
+
+        if location:
+            if not isinstance(location, dict):
                 errors.append(
                     self.create_error(
                         "Finding location must be a dictionary",
@@ -455,8 +503,13 @@ class CreateFindingCommandValidator(BaseValidator):
                     )
                 )
 
-        # Validate suggestion if provided
-        if command.suggestion and len(command.suggestion) > 500:
+        return errors
+
+    def _validate_suggestion(self, suggestion) -> list:
+        """Validate finding suggestion."""
+        errors = []
+
+        if suggestion and len(suggestion) > 500:
             errors.append(
                 self.create_error(
                     "Finding suggestion cannot exceed 500 characters",
@@ -465,7 +518,4 @@ class CreateFindingCommandValidator(BaseValidator):
                 )
             )
 
-        if errors:
-            return ValidationResult.failure(errors)
-
-        return ValidationResult.success()
+        return errors
