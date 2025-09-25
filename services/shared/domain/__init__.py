@@ -20,33 +20,33 @@ Usage:
 """
 
 # Base classes
-from .base_repository import (
+from .repositories.base_repository import (
     BaseRepository, SqlRepository, InMemoryRepository,
     BaseEntity, RepositoryError, EntityNotFoundError, DuplicateEntityError
 )
-from .base_service import (
+from .services.base_service import (
     BaseService, CrudService,
     ServiceError, ValidationError, BusinessRuleViolationError
 )
 
 # Value objects
-from .value_objects import (
+from .entities.value_objects import (
     ValueObject, EmailAddress, Money, Address, PhoneNumber, URL, Coordinates, DateRange
 )
 
 # Domain services
-from .domain_services import (
+from .services.domain_services import (
     DomainService, NotificationService, PricingService, ValidationService, AuditService, SearchService
 )
 
 # CQRS classes
-from .cqrs_base import (
+from .services.cqrs_base import (
     CommandHandler, QueryHandler, CommandBus, QueryBus,
     CommandResult, QueryResult, LoggerProtocol
 )
 
 # Exception hierarchy
-from .exceptions import (
+from .exceptions.exceptions import (
     # Base exceptions
     DomainError,
 

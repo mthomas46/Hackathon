@@ -205,3 +205,6 @@ def get_file_type(filename: str) -> str:
     elif filename.endswith((".json",)):
         return "json"
     elif filename.endswith((".xml", ".yml", ".yaml")):
+        return "config"
+    else:
+        return "other"

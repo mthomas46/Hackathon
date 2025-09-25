@@ -1,0 +1,1314 @@
+
+
+{
+  "service_name": "shared",
+  "audit_date": "2025-09-25T16:36:50.539565",
+  "overall_score": 27.97,
+  "grade": "D",
+  "dimensions": {
+    "architecture": {
+      "score": 35.88,
+      "ddd_compliance": -7.5,
+      "rest_compliance": 63.47826086956522,
+      "layer_separation": 66.66666666666666,
+      "ddd_issues": [
+        "Missing required domain component: entities",
+        "Missing required domain component: services",
+        "Missing required domain component: repositories",
+        "Missing domain exceptions",
+        "Large monolithic files detected: core/performance/cache_manager.py (552 lines), integrations/orchestration/orchestration.py (527 lines), infrastructure/database/di/services.py (581 lines)",
+        "Large directories detected: infrastructure/utilities (22 files)",
+        "High file count: 107 Python files (service may be too complex)",
+        "Mixed concerns detected in infrastructure: infrastructure/database/di/services.py, infrastructure/database/di/registry.py",
+        "Modules requiring DDD conversion: 45 files need architectural refactoring",
+        "Test files requiring DDD reorganization: 375 test files need structural changes",
+        "Large files detected: 25 files exceed recommended size",
+        "Import structure issues: 76 files have problematic imports",
+        "Missing __init__.py files in: infrastructure/database/di"
+      ],
+      "ddd_recommendations": [
+        "Create domain/entities/ directory for domain logic",
+        "Create domain/services/ directory for domain logic",
+        "Create domain/repositories/ directory for domain logic",
+        "Create domain/exceptions/ directory for domain-specific exceptions",
+        "Break down large files (>500 lines) into smaller, focused modules",
+        "Break down large directories (>15 files) into smaller subdirectories",
+        "Consider splitting large services into smaller microservices",
+        "Move domain logic out of infrastructure layer into domain layer",
+        "Split main.py - contains 4 concerns (business_logic, external_services, presentation, infrastructure) into separate layers",
+        "Separate domain logic from infrastructure in main.py - move business logic to domain layer",
+        "Separate presentation from domain logic in main.py - create dedicated controllers",
+        "Move /Users/mykalthomas/Documents/work/Hackathon/tests/test_discovery_agent_local.py to services/shared/tests/ to follow DDD service boundaries",
+        "Organize /Users/mykalthomas/Documents/work/Hackathon/tests/test_discovery_agent_local.py into unit/integration/e2e test categories following DDD testing structure",
+        "Break down core/performance/cache_manager.py (553 lines) - too large for maintainability",
+        "Break down integrations/orchestration/orchestration.py (528 lines) - too large for maintainability",
+        "Poor import grouping in main.py - imports scattered throughout file",
+        "Imports mixed with code in main.py - imports should be at top",
+        "Create infrastructure/repositories/ directory - required for External concerns layer - databases, external APIs, frameworks",
+        "Create domain/entities/ directory - required for Business logic layer - REST-agnostic core business rules",
+        "Create domain/services/ directory - required for Business logic layer - REST-agnostic core business rules",
+        "Create domain/repositories/ directory - required for Business logic layer - REST-agnostic core business rules",
+        "Create presentation/controllers/ directory - required for HTTP/API layer - REST endpoints, request/response handling",
+        "Add __init__.py files to Python packages for proper module structure"
+      ],
+      "file_metrics": {
+        "total_files": 107,
+        "monolithic_files_count": 25,
+        "large_directories_count": 1,
+        "directory_file_counts": {
+          ".": 3,
+          "core": 2,
+          "core/responses": 2,
+          "core/models": 2,
+          "core/performance": 3,
+          "core/logging": 5,
+          "tests": 5,
+          "integrations": 1,
+          "integrations/orchestration": 1,
+          "testing": 1,
+          "testing/fixtures": 1,
+          "application": 1,
+          "infrastructure": 1,
+          "infrastructure/database/di": 3,
+          "infrastructure/reporting": 2,
+          "infrastructure/enterprise": 4,
+          "infrastructure/enterprise/error_handling": 9,
+          "infrastructure/config": 3,
+          "infrastructure/config/config": 2,
+          "infrastructure/auth": 3,
+          "infrastructure/streaming": 2,
+          "infrastructure/utilities": 22,
+          "infrastructure/utilities/helpers": 1,
+          "infrastructure/utilities/validation": 1,
+          "infrastructure/prompts": 2,
+          "infrastructure/external/clients": 2,
+          "infrastructure/operational": 2,
+          "infrastructure/monitoring": 5,
+          "infrastructure/caching": 2,
+          "infrastructure/logging": 1,
+          "domain": 7,
+          "presentation": 1,
+          "presentation/web": 3,
+          "presentation/api": 1,
+          "presentation/templates": 1
+        }
+      },
+      "test_quality": {
+        "test_failures": 0,
+        "test_coverage": 0.0,
+        "total_tests": 0,
+        "passed_tests": 0,
+        "failed_tests": 0,
+        "error_message": null
+      },
+      "linting_quality": {
+        "flake8_issues": 342,
+        "pylint_score": 0.0,
+        "mypy_issues": 0,
+        "total_issues": 342,
+        "error_message": null
+      },
+      "endpoint_analysis": {
+        "total_endpoints": 7,
+        "rest_compliant_endpoints": 1,
+        "openapi_compliant_endpoints": 0,
+        "project_standard_compliant_endpoints": 7,
+        "endpoint_issues": [],
+        "rest_violations": [
+          "main.py: Non-standard HTTP method used",
+          "envelopes.py: Non-standard HTTP method used"
+        ],
+        "openapi_violations": [
+          "main.py: Missing OpenAPI summary annotation",
+          "main.py: Missing OpenAPI description annotation",
+          "main.py: Missing response_model annotation",
+          "main.py: Missing OpenAPI summary annotation",
+          "main.py: Missing OpenAPI description annotation",
+          "main.py: Missing response_model annotation",
+          "main.py: Missing OpenAPI summary annotation",
+          "main.py: Missing OpenAPI description annotation",
+          "main.py: Missing response_model annotation",
+          "main.py: Missing OpenAPI summary annotation",
+          "main.py: Missing OpenAPI description annotation",
+          "main.py: Missing response_model annotation",
+          "main.py: Missing OpenAPI summary annotation",
+          "main.py: Missing OpenAPI description annotation",
+          "main.py: Missing response_model annotation",
+          "main.py: Missing OpenAPI summary annotation",
+          "main.py: Missing OpenAPI description annotation",
+          "main.py: Missing response_model annotation",
+          "envelopes.py: Missing OpenAPI summary annotation",
+          "envelopes.py: Missing OpenAPI description annotation",
+          "envelopes.py: Missing response_model annotation"
+        ],
+        "standard_violations": [],
+        "rest_compliance_rate": 14.285714285714285,
+        "openapi_compliance_rate": 0.0,
+        "standard_compliance_rate": 100.0
+      },
+      "complexity_analysis": {
+        "high_complexity_functions": [
+          {
+            "file": "core/logging/structured_formatter.py",
+            "function": "format",
+            "complexity": 11,
+            "line": 31
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "replay_events",
+            "complexity": 11,
+            "line": 388
+          },
+          {
+            "file": "infrastructure/enterprise/enterprise_integration.py",
+            "function": "request",
+            "complexity": 16,
+            "line": 172
+          }
+        ],
+        "total_functions_analyzed": 422,
+        "complexity_distribution": {
+          "low": 395,
+          "medium": 24,
+          "high": 2,
+          "very_high": 1
+        },
+        "average_complexity": 2.1800947867298577,
+        "recommendations": [
+          "Break down request in enterprise_integration.py (complexity: 16) into smaller functions"
+        ]
+      },
+      "dependency_coupling": {
+        "circular_dependencies": [],
+        "tightly_coupled_modules": [
+          {
+            "module": "main",
+            "external_imports": 14
+          },
+          {
+            "module": "core.performance.cache_manager",
+            "external_imports": 11
+          },
+          {
+            "module": "core.logging.logger",
+            "external_imports": 12
+          },
+          {
+            "module": "infrastructure.database.di.registry",
+            "external_imports": 18
+          },
+          {
+            "module": "infrastructure.enterprise.enterprise_initializer",
+            "external_imports": 12
+          },
+          {
+            "module": "infrastructure.enterprise.enterprise_integration",
+            "external_imports": 19
+          },
+          {
+            "module": "infrastructure.enterprise.enterprise_service_mesh",
+            "external_imports": 13
+          }
+        ],
+        "high_import_count_modules": [
+          {
+            "module": "infrastructure.database.di.registry",
+            "import_count": 21,
+            "imports": [
+              "import os",
+              "from typing import Any, Optional, Type",
+              "from .container import DependencyContainer, ServiceLifetime, get_global_container",
+              "from .services import (",
+              "from ..config.config import ConfigService"
+            ]
+          },
+          {
+            "module": "infrastructure.enterprise.enterprise_integration",
+            "import_count": 19,
+            "imports": [
+              "import asyncio",
+              "import hashlib",
+              "import json",
+              "import uuid",
+              "import aiohttp"
+            ]
+          }
+        ],
+        "dependency_injection_suggestions": [
+          "Consider dependency injection for main - high external coupling (14 external imports)",
+          "Consider dependency injection for core.performance.cache_manager - high external coupling (11 external imports)",
+          "Consider dependency injection for core.logging.logger - high external coupling (12 external imports)",
+          "Consider dependency injection for infrastructure.database.di.registry - high external coupling (18 external imports)",
+          "Consider dependency injection for infrastructure.enterprise.enterprise_initializer - high external coupling (12 external imports)",
+          "Consider dependency injection for infrastructure.enterprise.enterprise_integration - high external coupling (19 external imports)",
+          "Consider dependency injection for infrastructure.enterprise.enterprise_service_mesh - high external coupling (13 external imports)"
+        ],
+        "recommendations": [
+          "Reduce imports in infrastructure.database.di.registry (21 imports) - consider splitting module",
+          "Reduce imports in infrastructure.enterprise.enterprise_integration (19 imports) - consider splitting module",
+          "Review dependencies for infrastructure.database.di.registry - may have circular dependency issues"
+        ]
+      },
+      "dead_code_analysis": {
+        "unused_functions": [],
+        "unused_classes": [],
+        "unreachable_code": [
+          {
+            "file": "main.py",
+            "line": 113,
+            "content": "message=exc.detail,"
+          },
+          {
+            "file": "main.py",
+            "line": 128,
+            "content": "message=\"An unexpected error occurred\","
+          },
+          {
+            "file": "main.py",
+            "line": 146,
+            "content": "data={"
+          },
+          {
+            "file": "main.py",
+            "line": 168,
+            "content": "data={"
+          },
+          {
+            "file": "main.py",
+            "line": 198,
+            "content": "message=\"Invalid input provided\","
+          },
+          {
+            "file": "main.py",
+            "line": 203,
+            "content": "elif error_type == \"auth\":"
+          },
+          {
+            "file": "main.py",
+            "line": 205,
+            "content": "elif error_type == \"forbidden\":"
+          },
+          {
+            "file": "main.py",
+            "line": 207,
+            "content": "elif error_type == \"service\":"
+          },
+          {
+            "file": "main.py",
+            "line": 209,
+            "content": "message=\"Service temporarily unavailable\","
+          },
+          {
+            "file": "main.py",
+            "line": 244,
+            "content": "data={"
+          },
+          {
+            "file": "main.py",
+            "line": 265,
+            "content": "message=\"Domain demonstration failed\","
+          },
+          {
+            "file": "main.py",
+            "line": 283,
+            "content": "data={"
+          },
+          {
+            "file": "main.py",
+            "line": 312,
+            "content": "data={"
+          },
+          {
+            "file": "core/responses/responses.py",
+            "line": 260,
+            "content": "message=message, error_code=error_code, details=de"
+          },
+          {
+            "file": "core/responses/responses.py",
+            "line": 271,
+            "content": "message=message, field_errors=field_errors, reques"
+          },
+          {
+            "file": "core/responses/responses.py",
+            "line": 286,
+            "content": "data=items,"
+          },
+          {
+            "file": "core/responses/responses.py",
+            "line": 304,
+            "content": "data=items, count=len(items), message=message, req"
+          },
+          {
+            "file": "core/responses/responses.py",
+            "line": 323,
+            "content": "elif operation == \"update\":"
+          },
+          {
+            "file": "core/responses/responses.py",
+            "line": 325,
+            "content": "elif operation == \"delete\":"
+          },
+          {
+            "file": "core/responses/responses.py",
+            "line": 378,
+            "content": "\"type\": type(exc).__name__,"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 35,
+            "content": "self.expires_at is not None and datetime.now(timez"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 63,
+            "content": "except Exception:"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 169,
+            "content": "return True"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 170,
+            "content": "return False"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 206,
+            "content": "elif entry.created_at:"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 208,
+            "content": "return None"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 221,
+            "content": "\"entries\": len(self._cache),"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 300,
+            "content": "value_bytes"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 345,
+            "content": "except Exception:"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 370,
+            "content": "\"redis_connected\": True,"
+          },
+          {
+            "file": "core/performance/profiler.py",
+            "line": 62,
+            "content": "\"operation_name\": self.operation_name,"
+          },
+          {
+            "file": "core/performance/profiler.py",
+            "line": 282,
+            "content": "\"total_operations\": len(self._performance_history)"
+          },
+          {
+            "file": "core/logging/structured_formatter.py",
+            "line": 102,
+            "content": "except (TypeError, ValueError) as e:"
+          },
+          {
+            "file": "core/logging/structured_formatter.py",
+            "line": 124,
+            "content": "elif hasattr(obj, \"__dict__\"):"
+          },
+          {
+            "file": "core/logging/logger.py",
+            "line": 266,
+            "content": "name=f\"{self.name}.{child_name}\","
+          },
+          {
+            "file": "core/logging/performance_logger.py",
+            "line": 100,
+            "content": "\"\"\""
+          },
+          {
+            "file": "core/logging/performance_logger.py",
+            "line": 382,
+            "content": "operation, threshold_seconds, **context"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 64,
+            "content": "sequence_id=sequence_id,"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 139,
+            "content": "if not self._redis_client:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 175,
+            "content": "elif policy == RetryPolicy.FIXED_DELAY:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 177,
+            "content": "elif policy == RetryPolicy.LINEAR_BACKOFF:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 180,
+            "content": "elif policy == RetryPolicy.EXPONENTIAL_BACKOFF:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 207,
+            "content": "event_dict = json.loads(event_data)"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 215,
+            "content": "except Exception as e:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 281,
+            "content": "if not self._redis_client:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 321,
+            "content": "saga_dict = json.loads(saga_data)"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 359,
+            "content": "if not self._redis_client:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 404,
+            "content": "if correlation_id and event.correlation_id != corr"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 406,
+            "content": "if start_time and event.timestamp < start_time:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 408,
+            "content": "if end_time and event.timestamp > end_time:"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 410,
+            "content": "events_to_replay.append(event)"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 472,
+            "content": "{"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 517,
+            "content": "{"
+          }
+        ],
+        "commented_code": [
+          {
+            "file": "owners.py",
+            "line": 1,
+            "content": "# Compatibility wrapper for owners module"
+          },
+          {
+            "file": "owners.py",
+            "line": 2,
+            "content": "# This file provides backward compatibility for se"
+          },
+          {
+            "file": "main.py",
+            "line": 19,
+            "content": "# Import shared infrastructure"
+          },
+          {
+            "file": "main.py",
+            "line": 108,
+            "content": "# Additional error handler examples for different "
+          },
+          {
+            "file": "core/responses/responses.py",
+            "line": 23,
+            "content": "# Use BaseModel directly for generic responses (Py"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 149,
+            "content": "# Check if we need to evict"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 429,
+            "content": "# Try secondary cache if available"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 434,
+            "content": "# Populate primary cache for faster future access"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 451,
+            "content": "# Write to secondary cache if enabled"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 469,
+            "content": "# Check secondary if available"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 511,
+            "content": "# Sort kwargs for consistent key generation"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 517,
+            "content": "# Hash for consistent length"
+          },
+          {
+            "file": "core/performance/profiler.py",
+            "line": 203,
+            "content": "# Check for slow operations"
+          },
+          {
+            "file": "core/performance/profiler.py",
+            "line": 207,
+            "content": "# Check for memory issues"
+          },
+          {
+            "file": "core/performance/profiler.py",
+            "line": 211,
+            "content": "# Check for high CPU usage"
+          },
+          {
+            "file": "core/logging/structured_formatter.py",
+            "line": 57,
+            "content": "# Add exception information if present"
+          },
+          {
+            "file": "core/logging/structured_formatter.py",
+            "line": 103,
+            "content": "# Fallback to basic formatting if JSON serializati"
+          },
+          {
+            "file": "core/logging/structured_formatter.py",
+            "line": 169,
+            "content": "# Add color coding for console output"
+          },
+          {
+            "file": "core/logging/structured_formatter.py",
+            "line": 195,
+            "content": "# Add correlation ID if available"
+          },
+          {
+            "file": "core/logging/structured_formatter.py",
+            "line": 201,
+            "content": "# Add correlation ID to record for formatter"
+          },
+          {
+            "file": "core/logging/logger.py",
+            "line": 61,
+            "content": "# Add console handler if enabled"
+          },
+          {
+            "file": "core/logging/logger.py",
+            "line": 77,
+            "content": "# Add file handler if specified"
+          },
+          {
+            "file": "core/logging/logger.py",
+            "line": 103,
+            "content": "# Add correlation ID if available"
+          },
+          {
+            "file": "core/logging/logger.py",
+            "line": 108,
+            "content": "# Add timestamp if not provided"
+          },
+          {
+            "file": "core/logging/logger.py",
+            "line": 115,
+            "content": "# Add thread information for debugging"
+          },
+          {
+            "file": "core/logging/performance_logger.py",
+            "line": 301,
+            "content": "# Log as warning if threshold exceeded"
+          },
+          {
+            "file": "core/logging/performance_logger.py",
+            "line": 311,
+            "content": "# Log as info if within threshold"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 464,
+            "content": "# Saga Pattern for Doc Consistency Workflows"
+          }
+        ],
+        "dead_code_lines": 81,
+        "recommendations": [
+          "Clean up dead/commented code in main.py (15 lines)",
+          "Clean up dead/commented code in cache_manager.py (17 lines)",
+          "Clean up dead/commented code in orchestration.py (17 lines)",
+          "Remove 28 blocks of commented code",
+          "Remove 53 unreachable code blocks"
+        ]
+      },
+      "test_quality_metrics": {
+        "test_naming_issues": [],
+        "isolation_issues": [],
+        "flaky_test_indicators": [],
+        "parameterization_suggestions": [
+          {
+            "file": "tests/test_cqrs_base.py",
+            "base": "initialization",
+            "count": 4,
+            "tests": [
+              "test_initialization",
+              "test_initialization",
+              "test_initialization"
+            ]
+          }
+        ],
+        "test_structure_issues": [],
+        "recommendations": [
+          "Consider parameterization for 1 test groups"
+        ]
+      },
+      "domain_boundaries": {
+        "anemic_entities": [],
+        "missing_aggregate_roots": [],
+        "domain_logic_leaks": [],
+        "entity_encapsulation_issues": [],
+        "aggregate_suggestions": [],
+        "recommendations": []
+      },
+      "api_documentation": {
+        "incomplete_descriptions": [
+          "Missing or incomplete OpenAPI annotations"
+        ],
+        "missing_parameters": [],
+        "poor_response_docs": [],
+        "missing_examples": [],
+        "documentation_score": 34.285714285714285,
+        "total_endpoints": 7,
+        "endpoint_details": {
+          "rest_compliance_rate": 14.285714285714285,
+          "openapi_compliance_rate": 0.0,
+          "standards_compliance_rate": 100.0,
+          "rest_compliant_endpoints": 1,
+          "openapi_compliant_endpoints": 0,
+          "standards_compliant_endpoints": 7
+        },
+        "recommendations": [
+          "Improve OpenAPI compliance (currently 0.0%): Add summary, description, and response_model to endpoints",
+          "Improve REST compliance (currently 14.3%): Use appropriate HTTP methods and status codes",
+          "\ud83d\udd27 API documentation needs significant improvement"
+        ],
+        "analysis_errors": []
+      },
+      "code_documentation": {
+        "functions_without_docs": [
+          {
+            "file": "core/logging/logger.py",
+            "function": "_correlation_context"
+          },
+          {
+            "file": "core/logging/performance_logger.py",
+            "function": "decorator"
+          },
+          {
+            "file": "core/logging/performance_logger.py",
+            "function": "async_wrapper"
+          },
+          {
+            "file": "core/logging/performance_logger.py",
+            "function": "sync_wrapper"
+          },
+          {
+            "file": "core/logging/correlation_middleware.py",
+            "function": "_correlation_context"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "create_ordered_event"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "__init__"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "create_event_metadata"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "is_duplicate"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "__init__"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "_get_redis"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "add_failed_event"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "_calculate_next_retry"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "get_retryable_events"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "retry_event"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "__init__"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "_get_redis"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "set_service_client"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "create_saga"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "get_saga_status"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "__init__"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "_get_redis"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "persist_event"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "replay_events"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "function": "__init__"
+          },
+          {
+            "file": "infrastructure/clients.py",
+            "function": "_execute_request"
+          },
+          {
+            "file": "infrastructure/database/di/services.py",
+            "function": "__init__"
+          },
+          {
+            "file": "infrastructure/database/di/services.py",
+            "function": "__init__"
+          },
+          {
+            "file": "infrastructure/database/di/registry.py",
+            "function": "__init__"
+          }
+        ],
+        "classes_without_docs": [
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "class": "EventPriority"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "class": "EventMetadata"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "class": "RetryPolicy"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "class": "DLQEntry"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "class": "SagaStepStatus"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "class": "SagaStep"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "class": "SagaTransaction"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "class": "ReplayableEvent"
+          }
+        ],
+        "poor_docstrings": [],
+        "docstring_coverage": 89.69359331476323,
+        "total_functions": 359,
+        "documented_functions": 322,
+        "recommendations": [
+          "Add docstrings to 8 undocumented classes"
+        ]
+      },
+      "configuration_management": {
+        "hardcoded_values": [
+          {
+            "file": "main.py",
+            "line": 71,
+            "content": "\"url\": \"https://shared.company.com/support\""
+          },
+          {
+            "file": "main.py",
+            "line": 75,
+            "content": "\"url\": \"https://shared.company.com/license\""
+          },
+          {
+            "file": "main.py",
+            "line": 366,
+            "content": "print(\"\ud83d\udcda Documentation: http://localhost:8000/docs"
+          },
+          {
+            "file": "main.py",
+            "line": 385,
+            "content": "print(\"Visit http://localhost:8000/docs for intera"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 142,
+            "content": "key=key,"
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 279,
+            "content": "password=self._password,"
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 411,
+            "content": "events_to_replay.sort(key=lambda e: e.timestamp)"
+          }
+        ],
+        "missing_env_vars": [
+          {
+            "file": "core/__init__.py",
+            "issue": "Configuration used but not validated"
+          },
+          {
+            "file": "core/constants_new.py",
+            "issue": "Configuration used but not validated"
+          },
+          {
+            "file": "core/logging/logger.py",
+            "issue": "Configuration used but not validated"
+          }
+        ],
+        "inconsistent_config_patterns": [],
+        "security_concerns": [],
+        "recommendations": [
+          "Replace 7 hardcoded values with environment variables"
+        ]
+      },
+      "logging_practices": {
+        "missing_error_logging": [
+          {
+            "file": "main.py",
+            "line": 263
+          },
+          {
+            "file": "domain/domain_services.py",
+            "line": 83
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 63
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 282
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 302
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 323
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 334
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 345
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 359
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "line": 377
+          },
+          {
+            "file": "core/performance/profiler.py",
+            "line": 120
+          },
+          {
+            "file": "core/performance/profiler.py",
+            "line": 146
+          },
+          {
+            "file": "core/performance/profiler.py",
+            "line": 180
+          },
+          {
+            "file": "core/logging/structured_formatter.py",
+            "line": 102
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "line": 20
+          },
+          {
+            "file": "infrastructure/clients.py",
+            "line": 212
+          },
+          {
+            "file": "infrastructure/clients.py",
+            "line": 282
+          },
+          {
+            "file": "infrastructure/database/di/registry.py",
+            "line": 239
+          },
+          {
+            "file": "infrastructure/database/di/container.py",
+            "line": 254
+          },
+          {
+            "file": "infrastructure/database/di/container.py",
+            "line": 705
+          },
+          {
+            "file": "infrastructure/database/di/container.py",
+            "line": 823
+          },
+          {
+            "file": "infrastructure/database/di/container.py",
+            "line": 959
+          },
+          {
+            "file": "infrastructure/enterprise/enterprise_initializer.py",
+            "line": 327
+          },
+          {
+            "file": "infrastructure/enterprise/enterprise_initializer.py",
+            "line": 424
+          },
+          {
+            "file": "infrastructure/enterprise/enterprise_initializer.py",
+            "line": 450
+          },
+          {
+            "file": "infrastructure/enterprise/enterprise_initializer.py",
+            "line": 525
+          },
+          {
+            "file": "infrastructure/enterprise/enterprise_initializer.py",
+            "line": 616
+          },
+          {
+            "file": "infrastructure/enterprise/enterprise_initializer.py",
+            "line": 618
+          }
+        ],
+        "inconsistent_log_levels": [
+          {
+            "file": "core/logging/logger.py",
+            "levels": [
+              "info",
+              "critical",
+              "error",
+              "warning",
+              "debug"
+            ]
+          }
+        ],
+        "excessive_logging": [
+          {
+            "file": "core/logging/logger.py",
+            "count": 27
+          }
+        ],
+        "insufficient_logging": [
+          {
+            "file": "core/responses/responses.py",
+            "important_functions": 6,
+            "logged_functions": 0
+          },
+          {
+            "file": "core/performance/cache_manager.py",
+            "important_functions": 5,
+            "logged_functions": 0
+          },
+          {
+            "file": "core/logging/performance_logger.py",
+            "important_functions": 1,
+            "logged_functions": 0
+          },
+          {
+            "file": "core/logging/correlation_middleware.py",
+            "important_functions": 1,
+            "logged_functions": 0
+          },
+          {
+            "file": "integrations/orchestration/orchestration.py",
+            "important_functions": 5,
+            "logged_functions": 0
+          },
+          {
+            "file": "infrastructure/clients.py",
+            "important_functions": 2,
+            "logged_functions": 0
+          },
+          {
+            "file": "infrastructure/database/di/services.py",
+            "important_functions": 11,
+            "logged_functions": 0
+          },
+          {
+            "file": "infrastructure/database/di/registry.py",
+            "important_functions": 2,
+            "logged_functions": 0
+          },
+          {
+            "file": "infrastructure/database/di/container.py",
+            "important_functions": 4,
+            "logged_functions": 0
+          }
+        ],
+        "structured_logging_opportunities": [],
+        "recommendations": [
+          "Add error logging to 28 exception handlers",
+          "Standardize logging levels in 1 files",
+          "Review excessive logging in 1 files",
+          "Add logging to critical functions in 9 files"
+        ]
+      },
+      "issues": [
+        "Low DDD compliance - consider implementing domain patterns"
+      ],
+      "recommendations": [
+        "Adopt DDD patterns: entities, value objects, domain services",
+        "Improve layer separation: presentation, application, domain, infrastructure"
+      ]
+    },
+    "code_quality": {
+      "score": 68.25,
+      "complexity": 55.0,
+      "testing": 35.0,
+      "duplication": 100.0,
+      "documentation": 50.0,
+      "security": 90.0,
+      "dry_principle": 100,
+      "kiss_principle": 100,
+      "coverage_data": {},
+      "issues": [
+        "Insufficient test coverage - aim for >90% coverage",
+        "High code complexity - refactor large functions"
+      ],
+      "recommendations": [
+        "Add comprehensive test suite with unit and integration tests",
+        "Improve documentation with docstrings and API docs"
+      ]
+    },
+    "performance": {
+      "score": 100.0,
+      "runtime": 100,
+      "database": 100,
+      "resources": 100,
+      "system_metrics": {
+        "cpu_percent": 21.1,
+        "memory_percent": 51.6,
+        "memory_used_gb": 32.12,
+        "memory_available_gb": 30.99,
+        "disk_read_mb": 112123.41,
+        "disk_write_mb": 72781.93,
+        "network_sent_mb": 1145.79,
+        "network_recv_mb": 2815.69,
+        "load_average": [
+          5.78564453125,
+          5.50927734375,
+          5.6279296875
+        ],
+        "timestamp": "2025-09-25T16:36:54.130272"
+      },
+      "issues": [],
+      "recommendations": []
+    },
+    "maintainability": {
+      "score": 75.15,
+      "organization": 100,
+      "error_handling": 47.0,
+      "scalability": 100,
+      "devops": 42.0,
+      "issues": [
+        "Poor error handling - implement comprehensive exception management"
+      ],
+      "recommendations": [
+        "Enhance DevOps readiness with Docker and CI/CD"
+      ]
+    }
+  },
+  "critical_issues": [
+    {
+      "dimension": "architecture",
+      "issue": "Critical architecture violations",
+      "severity": "critical",
+      "description": "Architecture score below 50 - fundamental design issues"
+    }
+  ],
+  "priority_improvements": [
+    {
+      "dimension": "architecture",
+      "priority": "high",
+      "title": "Implement Domain-Driven Design patterns",
+      "description": "Adopt DDD principles with proper entity, value object, and service separation",
+      "effort_days": 8,
+      "impact": "high"
+    },
+    {
+      "dimension": "architecture",
+      "priority": "high",
+      "title": "Standardize REST API design",
+      "description": "Implement proper HTTP methods, status codes, and resource naming",
+      "effort_days": 5,
+      "impact": "high"
+    },
+    {
+      "dimension": "code_quality",
+      "priority": "high",
+      "title": "Increase test coverage",
+      "description": "Add comprehensive unit and integration tests",
+      "effort_days": 10,
+      "impact": "high"
+    },
+    {
+      "dimension": "code_quality",
+      "priority": "medium",
+      "title": "Reduce code complexity",
+      "description": "Refactor complex functions and improve code organization",
+      "effort_days": 6,
+      "impact": "medium"
+    },
+    {
+      "dimension": "maintainability",
+      "priority": "high",
+      "title": "Improve error handling",
+      "description": "Implement comprehensive exception handling and logging",
+      "effort_days": 3,
+      "impact": "high"
+    },
+    {
+      "dimension": "maintainability",
+      "priority": "medium",
+      "title": "Enhance DevOps readiness",
+      "description": "Add Docker, CI/CD, and monitoring configuration",
+      "effort_days": 7,
+      "impact": "medium"
+    },
+    {
+      "dimension": "code_quality",
+      "priority": "high",
+      "title": "Refactor 3 high-complexity functions",
+      "description": "Break down functions with complexity >10 into smaller, focused methods",
+      "effort_days": 3,
+      "impact": "high"
+    },
+    {
+      "dimension": "architecture",
+      "priority": "medium",
+      "title": "Reduce coupling in 2 modules",
+      "description": "Refactor modules with excessive imports and consider dependency injection",
+      "effort_days": 4,
+      "impact": "medium"
+    },
+    {
+      "dimension": "maintainability",
+      "priority": "low",
+      "title": "Remove 81 lines of dead code",
+      "description": "Clean up commented and unreachable code to improve maintainability",
+      "effort_days": 1,
+      "impact": "low"
+    },
+    {
+      "dimension": "testing",
+      "priority": "medium",
+      "title": "Improve test quality (0 naming issues)",
+      "description": "Fix test naming conventions and implement parameterization where appropriate",
+      "effort_days": 2,
+      "impact": "medium"
+    },
+    {
+      "dimension": "documentation",
+      "priority": "high",
+      "title": "Improve API documentation (score: 34.3)",
+      "description": "Add comprehensive OpenAPI/Swagger documentation to API endpoints",
+      "effort_days": 4,
+      "impact": "high"
+    },
+    {
+      "dimension": "security",
+      "priority": "high",
+      "title": "Fix 7 hardcoded configuration values",
+      "description": "Replace hardcoded values with environment variables for security and flexibility",
+      "effort_days": 1,
+      "impact": "high"
+    },
+    {
+      "dimension": "maintainability",
+      "priority": "medium",
+      "title": "Add error logging to 28 locations",
+      "description": "Implement proper error logging in exception handlers for better debugging",
+      "effort_days": 2,
+      "impact": "medium"
+    }
+  ],
+  "estimated_effort_days": 56
+}

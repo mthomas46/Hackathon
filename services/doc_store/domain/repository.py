@@ -5,7 +5,7 @@ Demonstrates 70% code reduction through base class inheritance.
 
 from typing import Any, Dict, Optional
 
-from services.shared.domain.base_repository import SqlRepository
+from services.shared.domain.repositories.base_repository import SqlRepository
 
 from .entities import Document
 

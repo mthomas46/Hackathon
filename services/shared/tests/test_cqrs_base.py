@@ -12,7 +12,7 @@ import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from typing import Any, Dict, Optional
 
-from services.shared.domain.cqrs_base import (
+from services.shared.domain.services.cqrs_base import (
     CommandHandler,
     QueryHandler,
     CommandBus,
