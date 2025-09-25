@@ -6,7 +6,7 @@ LLM Processing Metadata:
 - content_focus: "enterprise_architecture_showcase"
 - key_concepts: ["microservices", "ddd", "ai_orchestration", "documentation_platform"]
 - processing_hints: "Complete service catalog with ports and capabilities"
-- cross_references: ["ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "docs/README.md", "docs/deployment/DEPLOYMENT_GUIDE.md"]
+- cross_references: ["docs/ecosystem/ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "docs/README.md", "infrastructure/docker-compose.yml"]
 -->
 
 ## 🎯 **MISSION ACCOMPLISHED: Enterprise-Grade DDD Architecture Transformation**
@@ -14,11 +14,11 @@ LLM Processing Metadata:
 A **production-ready, enterprise-grade** documentation analysis platform built with **Domain-Driven Design (DDD)**, **Clean Architecture**, and **CQRS patterns**. This project represents a complete architectural transformation from monolithic complexity to scalable, maintainable microservices.
 
 ### 📋 **Quick Navigation & Key Documents**
-- 📖 **[Master Living Document](ECOSYSTEM_MASTER_LIVING_DOCUMENT.md)** - Complete technical documentation with function summaries
-- 🗺️ **[Documentation Hierarchy](DOCUMENTATION_HIERARCHY.md)** - **NEW**: Complete documentation map and navigation guide
-- 🏗️ **[Architecture Overview](docs/architecture/ECOSYSTEM_ARCHITECTURE.md)** - System design and patterns
-- 📚 **[Documentation Index](docs/README.md)** - Complete documentation catalog
-- 🚀 **[Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md)** - Production deployment instructions
+- 📖 **[Master Living Document](docs/ecosystem/ECOSYSTEM_MASTER_LIVING_DOCUMENT.md)** - Complete technical documentation with function summaries
+- 🏗️ **[Architecture Overview](docs/ecosystem/ECOSYSTEM_BUILD_GUIDE.md)** - System design and patterns
+- 📚 **[Documentation Index](docs/README.md)** - Complete documentation catalog organized by category
+- 🚀 **[Deployment Guide](infrastructure/docker-compose.yml)** - Production deployment instructions
+- 🔧 **[Service Standardization](docs/service-standardization/SERVICE_STANDARDIZATION_IMPLEMENTATION_PLAN.md)** - Service architecture plans
 
 ## 🌟 **Ecosystem Overview: 21+ Intelligent Services**
 

@@ -2463,7 +2463,55 @@ async def analyze_pull_request_endpoint(req: dict):
 
 
 # Test endpoint for PR analysis
-@app.post("/analyze/test-pr-analysis")
+@app.post(
+    "/analyze/test-pr-analysis",
+    tags=["analysis"],
+    summary="Test endpoint to demonstrate PR analysis capabilities",
+    description="""Demonstrates comprehensive pull request analysis capabilities using
+    sample data. Performs code analysis, commit message evaluation, structural
+    assessment, and quality analysis to showcase the full PR evaluation pipeline.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "PR analysis demonstration completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "PR analysis demonstration completed",
+                        "data": {
+                            "pr_health_score": 78.5,
+                            "risk_level": "medium",
+                            "code_analysis": {
+                                "complexity_score": 4.2,
+                                "maintainability_index": 72.1,
+                                "test_coverage": 85.3,
+                            },
+                            "commit_analysis": {
+                                "conventional_commits": True,
+                                "commit_quality_score": 8.5,
+                            },
+                            "structural_analysis": {
+                                "architecture_changes": True,
+                                "breaking_changes": False,
+                            },
+                            "quality_analysis": {
+                                "linting_issues": 3,
+                                "security_concerns": 0,
+                            },
+                            "recommendations": [
+                                "Consider adding more unit tests",
+                                "Review complexity in auth_service.py"
+                            ],
+                        },
+                    }
+                }
+            },
+        },
+        500: {"description": "PR analysis demonstration failed", "model": ErrorResponse},
+    },
+)
 async def test_pr_analysis_endpoint():
     """Test endpoint to demonstrate PR analysis capabilities."""
     # Sample PR data for testing
@@ -3387,7 +3435,58 @@ async def remediate_document_endpoint(req: AutomatedRemediationRequest):
         )
 
 
-@app.post("/remediate/preview")
+@app.post(
+    "/remediate/preview",
+    tags=["remediation"],
+    summary="Preview automated remediation changes without applying them",
+    description="""Shows what fixes would be applied to documentation without making any actual
+    changes, allowing users to review and approve modifications before execution.
+    Provides detailed preview of proposed changes, fix categorization, and impact assessment.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Remediation preview completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Remediation preview completed - 12 fixes proposed",
+                        "data": {
+                            "preview_available": True,
+                            "proposed_fixes": [
+                                {
+                                    "type": "grammar_correction",
+                                    "description": "Fix grammatical error in README.md",
+                                    "line_number": 15,
+                                    "original_text": "The API provide comprehensive analysis",
+                                    "proposed_text": "The API provides comprehensive analysis",
+                                    "confidence": 0.95,
+                                },
+                                {
+                                    "type": "formatting_fix",
+                                    "description": "Fix inconsistent indentation in code blocks",
+                                    "line_number": 42,
+                                    "original_text": "  def analyze(self):",
+                                    "proposed_text": "    def analyze(self):",
+                                    "confidence": 0.88,
+                                },
+                            ],
+                            "fix_count": 12,
+                            "estimated_processing_time": 45.2,
+                            "preview_timestamp": "2025-09-25T11:07:56.000000",
+                        },
+                        "preview_available": True,
+                        "fix_count": 12,
+                        "estimated_processing_time": 45.2,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid remediation preview request", "model": ErrorResponse},
+        500: {"description": "Remediation preview failed", "model": ErrorResponse},
+    },
+)
 async def preview_remediation_endpoint(req: RemediationPreviewRequest):
     """Preview automated remediation changes without applying them.
 
@@ -4039,7 +4138,63 @@ async def analyze_cross_repository_endpoint(req: CrossRepositoryAnalysisRequest)
         )
 
 
-@app.post("/repositories/connectivity")
+@app.post(
+    "/repositories/connectivity",
+    tags=["repositories"],
+    summary="Analyze connectivity and dependencies between repositories",
+    description="""Examines how repositories are connected through documentation references,
+    shared dependencies, and integration points to understand the organizational
+    documentation ecosystem. Identifies cross-repository relationships and
+    potential integration challenges.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Repository connectivity analysis completed successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Repository connectivity analysis completed for 8 repositories",
+                        "data": {
+                            "repository_count": 8,
+                            "cross_references": [
+                                {
+                                    "source_repo": "api-service",
+                                    "target_repo": "auth-service",
+                                    "reference_type": "api_call",
+                                    "strength": 0.85,
+                                    "documents": ["api/v1/auth.md", "integration/auth.md"],
+                                }
+                            ],
+                            "shared_dependencies": {
+                                "common_libraries": ["requests", "pydantic"],
+                                "shared_services": ["user-service", "notification-service"],
+                                "dependency_conflicts": [],
+                            },
+                            "integration_points": [
+                                {
+                                    "type": "api_integration",
+                                    "repositories": ["web-frontend", "api-service"],
+                                    "complexity": "medium",
+                                    "documentation_status": "well_documented",
+                                }
+                            ],
+                            "connectivity_score": 0.72,
+                            "processing_time": 12.3,
+                        },
+                        "repository_count": 8,
+                        "connectivity_score": 0.72,
+                        "cross_references_count": 15,
+                        "processing_time": 12.3,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid repository connectivity request", "model": ErrorResponse},
+        500: {"description": "Repository connectivity analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRequest):
     """Analyze connectivity and dependencies between repositories.
 
@@ -4097,7 +4252,54 @@ async def analyze_repository_connectivity_endpoint(req: RepositoryConnectivityRe
         )
 
 
-@app.put("/repositories/connectors/config")
+@app.put(
+    "/repositories/connectors/config",
+    tags=["repositories"],
+    summary="Configure repository connectors for external systems",
+    description="""Sets up and configures connectors for GitHub, GitLab, Bitbucket,
+    Azure DevOps, and other repository hosting platforms to enable seamless
+    integration with external documentation sources. Supports authentication,
+    rate limiting, and feature configuration.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Repository connector configuration updated successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Repository connector github configured",
+                        "data": {
+                            "connector_type": "github",
+                            "configured": True,
+                            "supported_features": [
+                                "issues",
+                                "pull_requests",
+                                "commits",
+                                "releases",
+                                "webhooks",
+                                "repository_metadata"
+                            ],
+                            "rate_limits": {
+                                "requests_per_hour": 5000,
+                                "concurrent_requests": 10,
+                                "burst_limit": 100,
+                            },
+                        },
+                        "connector_type": "github",
+                        "configured": True,
+                        "supported_features_count": 6,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid connector configuration", "model": ErrorResponse},
+        401: {"description": "Authentication failed for external repository platform", "model": ErrorResponse},
+        429: {"description": "Rate limit exceeded for external repository platform", "model": ErrorResponse},
+        500: {"description": "Repository connector configuration failed", "model": ErrorResponse},
+    },
+)
 async def configure_repository_connector_endpoint(
     req: RepositoryConnectorConfigRequest,
 ):
@@ -4153,7 +4355,94 @@ async def configure_repository_connector_endpoint(
         )
 
 
-@app.get("/repositories/connectors")
+@app.get(
+    "/repositories/connectors",
+    tags=["repositories"],
+    summary="Get list of supported repository connectors",
+    description="""Returns information about all supported repository hosting platforms
+    and their capabilities for cross-repository analysis integration. Provides
+    details on authentication methods, supported features, and rate limits
+    for each connector type.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Supported connectors retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Retrieved 6 supported repository connectors",
+                        "data": {
+                            "connectors": [
+                                {
+                                    "type": "github",
+                                    "name": "GitHub",
+                                    "description": "GitHub repository hosting platform",
+                                    "authentication_methods": ["oauth", "personal_access_token", "github_app"],
+                                    "supported_features": [
+                                        "issues",
+                                        "pull_requests",
+                                        "commits",
+                                        "releases",
+                                        "webhooks",
+                                        "repository_metadata",
+                                        "branch_protection"
+                                    ],
+                                    "rate_limit": {
+                                        "requests_per_hour": 5000,
+                                        "concurrent_requests": 10,
+                                    },
+                                    "status": "active",
+                                },
+                                {
+                                    "type": "gitlab",
+                                    "name": "GitLab",
+                                    "description": "GitLab repository hosting platform",
+                                    "authentication_methods": ["oauth", "personal_access_token"],
+                                    "supported_features": [
+                                        "issues",
+                                        "merge_requests",
+                                        "commits",
+                                        "pipelines",
+                                        "webhooks",
+                                        "repository_metadata"
+                                    ],
+                                    "rate_limit": {
+                                        "requests_per_hour": 2000,
+                                        "concurrent_requests": 5,
+                                    },
+                                    "status": "active",
+                                },
+                                {
+                                    "type": "bitbucket",
+                                    "name": "Bitbucket",
+                                    "description": "Atlassian Bitbucket repository hosting",
+                                    "authentication_methods": ["oauth", "app_password"],
+                                    "supported_features": [
+                                        "issues",
+                                        "pull_requests",
+                                        "commits",
+                                        "pipelines",
+                                        "webhooks"
+                                    ],
+                                    "rate_limit": {
+                                        "requests_per_hour": 1000,
+                                        "concurrent_requests": 3,
+                                    },
+                                    "status": "active",
+                                }
+                            ],
+                            "total_supported": 6,
+                        },
+                        "total_supported": 6,
+                    }
+                }
+            },
+        },
+        500: {"description": "Supported connectors retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_supported_connectors_endpoint():
     """Get list of supported repository connectors.
 
@@ -4193,7 +4482,93 @@ async def get_supported_connectors_endpoint():
         )
 
 
-@app.get("/repositories/frameworks")
+@app.get(
+    "/repositories/frameworks",
+    tags=["repositories"],
+    summary="Get available cross-repository analysis frameworks",
+    description="""Returns information about all available analysis frameworks for
+    cross-repository documentation analysis and their capabilities. Includes
+    framework-specific analysis types, supported languages, and integration
+    patterns for multi-repository ecosystems.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Analysis frameworks retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Retrieved 4 analysis frameworks",
+                        "data": {
+                            "frameworks": [
+                                {
+                                    "name": "monorepo_analyzer",
+                                    "description": "Analysis framework for monolithic repositories",
+                                    "supported_languages": ["python", "javascript", "typescript", "java"],
+                                    "analysis_types": [
+                                        "dependency_analysis",
+                                        "code_quality",
+                                        "documentation_coverage",
+                                        "architectural_patterns"
+                                    ],
+                                    "integration_patterns": [
+                                        "shared_libraries",
+                                        "internal_apis",
+                                        "cross_package_references"
+                                    ],
+                                    "complexity_score": 0.8,
+                                    "status": "active",
+                                },
+                                {
+                                    "name": "microservices_analyzer",
+                                    "description": "Analysis framework for microservices architectures",
+                                    "supported_languages": ["python", "go", "nodejs", "java"],
+                                    "analysis_types": [
+                                        "service_mesh_analysis",
+                                        "api_contracts",
+                                        "data_flow_tracking",
+                                        "service_dependencies"
+                                    ],
+                                    "integration_patterns": [
+                                        "api_gateway",
+                                        "service_discovery",
+                                        "event_driven",
+                                        "message_queues"
+                                    ],
+                                    "complexity_score": 0.9,
+                                    "status": "active",
+                                },
+                                {
+                                    "name": "polyglot_analyzer",
+                                    "description": "Analysis framework for multi-language codebases",
+                                    "supported_languages": ["python", "javascript", "java", "csharp", "go", "rust"],
+                                    "analysis_types": [
+                                        "language_interoperability",
+                                        "interface_analysis",
+                                        "cross_language_dependencies",
+                                        "deployment_patterns"
+                                    ],
+                                    "integration_patterns": [
+                                        "grpc_protocols",
+                                        "rest_apis",
+                                        "shared_databases",
+                                        "container_orchestration"
+                                    ],
+                                    "complexity_score": 0.7,
+                                    "status": "active",
+                                }
+                            ],
+                            "total_frameworks": 4,
+                        },
+                        "total_frameworks": 4,
+                    }
+                }
+            },
+        },
+        500: {"description": "Analysis frameworks retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_analysis_frameworks_endpoint():
     """Get available cross-repository analysis frameworks.
 
@@ -4322,7 +4697,42 @@ async def submit_distributed_task_endpoint(req: DistributedTaskRequest):
         )
 
 
-@app.post("/distributed/tasks/batch")
+@app.post(
+    "/distributed/tasks/batch",
+    tags=["distributed"],
+    summary="Submit multiple tasks for batch distributed processing",
+    description="""Submits a batch of analysis tasks to be processed in parallel across multiple workers,
+    optimizing throughput for large-scale document analysis operations. Supports priority queuing,
+    resource allocation, and progress tracking for complex analysis workflows.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        201: {
+            "description": "Batch tasks submitted successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Batch of 25 tasks submitted successfully",
+                        "data": {
+                            "task_ids": [
+                                "task_001_abc123",
+                                "task_002_def456",
+                                "task_003_ghi789"
+                            ],
+                            "total_tasks": 25,
+                            "submitted_at": "2025-09-25T10:50:46.530000",
+                        },
+                        "total_tasks": 25,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid batch request or task configuration", "model": ErrorResponse},
+        429: {"description": "Too many concurrent batch requests", "model": ErrorResponse},
+        503: {"description": "No workers available for batch processing", "model": ErrorResponse},
+    },
+)
 async def submit_batch_tasks_endpoint(req: BatchTasksRequest):
     """Submit multiple tasks for batch distributed processing.
 
@@ -4637,7 +5047,42 @@ async def get_workers_status_endpoint():
         )
 
 
-@app.get("/distributed/stats")
+@app.get(
+    "/distributed/stats",
+    tags=["distributed"],
+    summary="Get distributed processing statistics",
+    description="""Provides comprehensive metrics about task processing performance,
+    throughput, completion rates, and system utilization. Includes real-time
+    statistics about worker performance, task queues, and system health.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Processing statistics retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Retrieved processing stats for 1247 total tasks",
+                        "data": {
+                            "total_tasks": 1247,
+                            "completed_tasks": 1189,
+                            "failed_tasks": 15,
+                            "active_workers": 8,
+                            "avg_processing_time": 45.2,
+                            "throughput_per_minute": 12.5,
+                            "completion_rate": 95.3,
+                        },
+                        "total_tasks": 1247,
+                        "completion_rate": 95.3,
+                        "throughput_per_minute": 12.5,
+                    }
+                }
+            },
+        },
+        500: {"description": "Processing statistics retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_processing_stats_endpoint():
     """Get distributed processing statistics.
 
@@ -4693,7 +5138,39 @@ async def get_processing_stats_endpoint():
         )
 
 
-@app.post("/distributed/workers/scale")
+@app.post(
+    "/distributed/workers/scale",
+    tags=["distributed"],
+    summary="Scale the number of distributed processing workers",
+    description="""Dynamically adjusts the worker pool size based on workload demands,
+    enabling automatic scaling for optimal performance and resource utilization.
+    Supports horizontal scaling to handle varying analysis loads efficiently.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Workers scaled successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Workers scaled from 4 to 8",
+                        "data": {
+                            "previous_count": 4,
+                            "new_count": 8,
+                            "scaled_at": "2025-09-25T10:50:46.530000",
+                        },
+                        "previous_count": 4,
+                        "new_count": 8,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid scaling request or parameters", "model": ErrorResponse},
+        429: {"description": "Scaling rate limit exceeded", "model": ErrorResponse},
+        503: {"description": "Unable to scale workers due to resource constraints", "model": ErrorResponse},
+    },
+)
 async def scale_workers_endpoint(req: ScaleWorkersRequest):
     """Scale the number of distributed processing workers.
 
@@ -4740,7 +5217,36 @@ async def scale_workers_endpoint(req: ScaleWorkersRequest):
         return create_error_response(f"Worker scaling failed: {str(e)}", error_code=ErrorCodes.PROCESSING_FAILED)
 
 
-@app.post("/distributed/start")
+@app.post(
+    "/distributed/start",
+    tags=["distributed"],
+    summary="Start the distributed processing system",
+    description="""Initializes the distributed task processing loop and begins accepting
+    tasks for parallel processing across the worker pool. Starts the background
+    task scheduler and enables the distributed analysis capabilities.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Distributed processing started successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Distributed processing system started successfully",
+                        "data": {
+                            "started": True,
+                            "message": "Distributed processing system started successfully",
+                        },
+                        "started": True,
+                    }
+                }
+            },
+        },
+        409: {"description": "Distributed processing system already running", "model": ErrorResponse},
+        503: {"description": "Unable to start distributed processing due to system constraints", "model": ErrorResponse},
+    },
+)
 async def start_distributed_processing_endpoint():
     """Start the distributed processing system.
 
@@ -4780,7 +5286,43 @@ async def start_distributed_processing_endpoint():
         )
 
 
-@app.put("/distributed/load-balancing/strategy")
+@app.put(
+    "/distributed/load-balancing/strategy",
+    tags=["distributed"],
+    summary="Configure load balancing strategy for distributed processing",
+    description="""Changes the algorithm used to distribute tasks across available workers,
+    optimizing for different workload patterns and performance requirements. Supports
+    strategies like round-robin, least-loaded, weighted, and priority-based balancing.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Load balancing strategy updated successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Load balancing strategy changed to least_loaded",
+                        "data": {
+                            "current_strategy": "least_loaded",
+                            "available_strategies": [
+                                "round_robin",
+                                "least_loaded",
+                                "weighted",
+                                "priority_based",
+                                "adaptive"
+                            ],
+                            "changed_at": "2025-09-25T11:04:06.000000",
+                        },
+                        "current_strategy": "least_loaded",
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid load balancing strategy", "model": ErrorResponse},
+        500: {"description": "Load balancing strategy update failed", "model": ErrorResponse},
+    },
+)
 async def set_load_balancing_strategy_endpoint(req: LoadBalancingStrategyRequest):
     """Configure load balancing strategy for distributed processing.
 
@@ -4824,7 +5366,44 @@ async def set_load_balancing_strategy_endpoint(req: LoadBalancingStrategyRequest
         )
 
 
-@app.get("/distributed/queue/status")
+@app.get(
+    "/distributed/queue/status",
+    tags=["distributed"],
+    summary="Get detailed status of the distributed processing queue",
+    description="""Provides comprehensive information about queue length, priority distribution,
+    processing efficiency, and task aging for performance monitoring. Includes real-time
+    metrics about queue health, throughput, and backlog management.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Queue status retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Retrieved queue status with 47 tasks",
+                        "data": {
+                            "queue_length": 47,
+                            "priority_distribution": {
+                                "high": 12,
+                                "medium": 23,
+                                "low": 12,
+                            },
+                            "oldest_task_age": 1847.5,
+                            "queue_efficiency": 89.2,
+                            "processing_rate": 3.2,
+                        },
+                        "queue_length": 47,
+                        "queue_efficiency": 89.2,
+                        "processing_rate": 3.2,
+                    }
+                }
+            },
+        },
+        500: {"description": "Queue status retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_queue_status_endpoint():
     """Get detailed status of the distributed processing queue.
 
@@ -4873,7 +5452,40 @@ async def get_queue_status_endpoint():
         )
 
 
-@app.put("/distributed/load-balancing/config")
+@app.put(
+    "/distributed/load-balancing/config",
+    tags=["distributed"],
+    summary="Configure comprehensive load balancing settings",
+    description="""Sets up advanced load balancing parameters including strategy,
+    worker scaling, queue management, and auto-scaling policies. Configures
+    thresholds, timeouts, and resource allocation for optimal distributed processing.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Load balancing configuration updated successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Load balancing configured with strategy 'weighted' and 12 workers",
+                        "data": {
+                            "strategy": "weighted",
+                            "worker_count": 12,
+                            "max_queue_size": 1000,
+                            "enable_auto_scaling": True,
+                            "configured_at": "2025-09-25T11:07:56.000000",
+                        },
+                        "strategy": "weighted",
+                        "worker_count": 12,
+                    }
+                }
+            },
+        },
+        400: {"description": "Invalid load balancing configuration", "model": ErrorResponse},
+        500: {"description": "Load balancing configuration failed", "model": ErrorResponse},
+    },
+)
 async def configure_load_balancing_endpoint(req: LoadBalancingConfigRequest):
     """Configure comprehensive load balancing settings.
 
@@ -4925,7 +5537,39 @@ async def configure_load_balancing_endpoint(req: LoadBalancingConfigRequest):
         )
 
 
-@app.get("/distributed/load-balancing/config")
+@app.get(
+    "/distributed/load-balancing/config",
+    tags=["distributed"],
+    summary="Get current load balancing configuration",
+    description="""Retrieves the current load balancing strategy, worker count,
+    and configuration settings for monitoring and management. Provides detailed
+    information about active load balancing parameters and auto-scaling policies.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {
+            "description": "Load balancing configuration retrieved successfully",
+            "model": AnalysisResultResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "success": True,
+                        "message": "Retrieved load balancing configuration: adaptive strategy with 16 workers",
+                        "data": {
+                            "strategy": "adaptive",
+                            "worker_count": 16,
+                            "max_queue_size": 2000,
+                            "enable_auto_scaling": True,
+                            "configured_at": "2025-09-25T11:07:56.000000",
+                        },
+                        "strategy": "adaptive",
+                        "worker_count": 16,
+                    }
+                }
+            },
+        },
+        500: {"description": "Load balancing configuration retrieval failed", "model": ErrorResponse},
+    },
+)
 async def get_load_balancing_config_endpoint():
     """Get current load balancing configuration.
 
@@ -4973,13 +5617,39 @@ async def get_load_balancing_config_endpoint():
         )
 
 
-@app.post("/reports/generate")
+@app.post(
+    "/reports/generate",
+    tags=["reports"],
+    summary="Generate various types of analysis reports",
+    description="""Generates comprehensive reports based on analysis results, including
+    trend analysis, quality metrics, and actionable insights. Supports multiple
+    report formats and customization options.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Report generated successfully", "model": AnalysisResultResponse},
+        400: {"description": "Invalid report request parameters", "model": ErrorResponse},
+        500: {"description": "Report generation failed", "model": ErrorResponse},
+    },
+)
 async def generate_report(req: ReportRequest):
     """Generate various types of reports."""
     return await report_handlers.handle_generate_report(req)
 
 
-@app.post("/reports/document-dump")
+@app.post(
+    "/reports/document-dump",
+    tags=["reports"],
+    summary="Generate comprehensive document dump report",
+    description="""Creates a formatted report of all documents used in analysis,
+    properly categorized by type (Confluence, Jira, Pull Request) with appropriate
+    metadata and formatting for each document type.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Document dump report generated successfully", "model": AnalysisResultResponse},
+        400: {"description": "Invalid document dump request", "model": ErrorResponse},
+        500: {"description": "Document dump report generation failed", "model": ErrorResponse},
+    },
+)
 async def generate_document_dump_report(req: DocumentDumpRequest):
     """Generate a comprehensive document dump report with beautified formatting.
 
@@ -5329,7 +5999,19 @@ async def get_findings(
     return await analysis_handlers.handle_get_findings(limit, severity, finding_type_filter)
 
 
-@app.get("/detectors")
+@app.get(
+    "/detectors",
+    tags=["analysis"],
+    summary="List available analysis detectors and their capabilities",
+    description="""Returns a comprehensive list of all available analysis detectors,
+    their capabilities, supported file types, and configuration options. Useful
+    for understanding what analysis features are available.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Detectors list retrieved successfully", "model": AnalysisResultResponse},
+        500: {"description": "Failed to retrieve detectors list", "model": ErrorResponse},
+    },
+)
 async def list_detectors():
     """List available analysis detectors and their capabilities.
 
@@ -5340,7 +6022,20 @@ async def list_detectors():
     return analysis_handlers.handle_list_detectors()
 
 
-@app.get("/reports/confluence/consolidation")
+@app.get(
+    "/reports/confluence/consolidation",
+    tags=["reports"],
+    summary="Get Confluence consolidation report for duplicate detection",
+    description="""Analyzes Confluence pages to identify duplicate content, consolidation opportunities,
+    and provides recommendations for merging similar pages to reduce maintenance overhead
+    and improve content organization.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Confluence consolidation report retrieved successfully", "model": AnalysisResultResponse},
+        400: {"description": "Invalid confidence threshold parameter", "model": ErrorResponse},
+        500: {"description": "Confluence consolidation analysis failed", "model": ErrorResponse},
+    },
+)
 async def get_confluence_consolidation_report(min_confidence: float = 0.0):
     """Get Confluence consolidation report for duplicate detection and content optimization.
 
@@ -5409,7 +6104,19 @@ async def get_confluence_consolidation_report(min_confidence: float = 0.0):
         }
 
 
-@app.get("/reports/jira/staleness")
+@app.get(
+    "/reports/jira/staleness",
+    tags=["reports"],
+    summary="Get Jira staleness report for ticket lifecycle management",
+    description="""Analyzes Jira tickets to identify stale items that may require attention,
+    closure, or reassignment based on activity patterns and metadata flags.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Jira staleness report retrieved successfully", "model": AnalysisResultResponse},
+        400: {"description": "Invalid confidence threshold parameter", "model": ErrorResponse},
+        500: {"description": "Jira staleness analysis failed", "model": ErrorResponse},
+    },
+)
 async def get_jira_staleness_report(min_confidence: float = 0.0):
     """Get Jira staleness report for ticket lifecycle management.
 
@@ -5460,7 +6167,20 @@ async def get_jira_staleness_report(min_confidence: float = 0.0):
         }
 
 
-@app.post("/reports/findings/notify-owners")
+@app.post(
+    "/reports/findings/notify-owners",
+    tags=["reports"],
+    summary="Send notifications for analysis findings to document owners",
+    description="""Processes findings and sends targeted notifications to responsible parties
+    via configured communication channels for timely issue resolution and
+    collaborative document maintenance.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Notifications sent successfully", "model": AnalysisResultResponse},
+        400: {"description": "Invalid notification request", "model": ErrorResponse},
+        500: {"description": "Notification sending failed", "model": ErrorResponse},
+    },
+)
 async def notify_owners(req: NotifyOwnersRequest):
     """Send notifications for analysis findings to document owners.
 
@@ -5532,7 +6252,20 @@ async def integration_health():
         }
 
 
-@app.post("/integration/analyze-with-prompt")
+@app.post(
+    "/integration/analyze-with-prompt",
+    tags=["integration"],
+    summary="Analyze documents using customizable prompts from Prompt Store",
+    description="""Performs document analysis using customizable prompts retrieved from
+    the Prompt Store service. Supports dynamic prompt selection and variable substitution
+    for flexible analysis workflows.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Analysis with prompt completed successfully", "model": AnalysisResultResponse},
+        404: {"description": "Prompt or target not found", "model": ErrorResponse},
+        500: {"description": "Analysis with prompt failed", "model": ErrorResponse},
+    },
+)
 async def analyze_with_prompt(target_id: str, prompt_category: str, prompt_name: str, **variables):
     """Analyze documents using customizable prompts from Prompt Store.
 
@@ -5581,7 +6314,19 @@ async def analyze_with_prompt(target_id: str, prompt_category: str, prompt_name:
         )  # FURTHER OPTIMIZED: Using shared error utility
 
 
-@app.post("/integration/natural-language-analysis")
+@app.post(
+    "/integration/natural-language-analysis",
+    tags=["integration"],
+    summary="Analyze documents using natural language queries via Interpreter service",
+    description="""Processes natural language queries about documents using the Interpreter
+    service for advanced semantic analysis and question-answering capabilities.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Natural language analysis completed successfully", "model": AnalysisResultResponse},
+        400: {"description": "Invalid natural language query", "model": ErrorResponse},
+        500: {"description": "Natural language analysis failed", "model": ErrorResponse},
+    },
+)
 async def natural_language_analysis(request_data: dict = None):
     """Analyze documents using natural language queries via Interpreter service.
 
@@ -5628,7 +6373,18 @@ async def natural_language_analysis(request_data: dict = None):
         )  # FURTHER OPTIMIZED: Using shared error utility
 
 
-@app.get("/integration/prompts/categories")
+@app.get(
+    "/integration/prompts/categories",
+    tags=["integration"],
+    summary="Get available prompt categories for analysis",
+    description="""Retrieves the list of available prompt categories from the Prompt Store
+    service, enabling users to discover and select appropriate analysis templates.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Prompt categories retrieved successfully", "model": AnalysisResultResponse},
+        500: {"description": "Failed to retrieve prompt categories", "model": ErrorResponse},
+    },
+)
 async def get_available_prompt_categories():
     """Get available prompt categories for analysis."""
     try:
@@ -5642,7 +6398,18 @@ async def get_available_prompt_categories():
         )  # FURTHER OPTIMIZED: Using shared error utility
 
 
-@app.post("/integration/log-analysis")
+@app.post(
+    "/integration/log-analysis",
+    tags=["integration"],
+    summary="Log analysis usage for analytics",
+    description="""Records analysis usage patterns and provides analytics
+    about system utilization and feature adoption.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Analysis usage logged successfully", "model": AnalysisResultResponse},
+        500: {"description": "Failed to log analysis usage", "model": ErrorResponse},
+    },
+)
 async def log_analysis_usage(request_data: dict = None):
     """Log analysis usage for analytics."""
     try:
@@ -5687,7 +6454,20 @@ async def log_analysis_usage(request_data: dict = None):
         return {"error": f"Failed to log usage: {e}"}
 
 
-@app.post("/architecture/analyze")
+@app.post(
+    "/architecture/analyze",
+    tags=["architecture"],
+    summary="Analyze architectural diagrams for consistency and best practices",
+    description="""Performs specialized analysis on normalized architecture data from the
+    Architecture service, evaluating design patterns, consistency, and adherence
+    to architectural best practices.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Architecture analysis completed successfully", "model": AnalysisResultResponse},
+        400: {"description": "Invalid architecture analysis request", "model": ErrorResponse},
+        500: {"description": "Architecture analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_architecture(req: ArchitectureAnalysisRequest):
     """Analyze architectural diagrams for consistency, completeness, and best practices.
 
@@ -5742,7 +6522,19 @@ async def analyze_architecture(req: ArchitectureAnalysisRequest):
         )
 
 
-@app.post("/pr-confidence/analyze")
+@app.post(
+    "/pr-confidence/analyze",
+    tags=["pr-confidence"],
+    summary="Analyze PR confidence with comprehensive cross-reference analysis",
+    description="""Performs detailed analysis of a pull request against its requirements,
+    codebase, and historical patterns to provide confidence scoring.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "PR confidence analysis completed successfully", "model": AnalysisResultResponse},
+        400: {"description": "Invalid PR confidence analysis request", "model": ErrorResponse},
+        500: {"description": "PR confidence analysis failed", "model": ErrorResponse},
+    },
+)
 async def analyze_pr_confidence(req: Dict[str, Any]):
     """Analyze PR confidence with comprehensive cross-reference analysis.
 
@@ -5819,7 +6611,19 @@ async def analyze_pr_confidence(req: Dict[str, Any]):
         )
 
 
-@app.get("/pr-confidence/history/{pr_id}")
+@app.get(
+    "/pr-confidence/history/{pr_id}",
+    tags=["pr-confidence"],
+    summary="Get analysis history for a specific PR",
+    description="""Retrieves the complete analysis history and confidence scores
+    for a specific pull request over time.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "PR analysis history retrieved successfully", "model": AnalysisResultResponse},
+        404: {"description": "PR analysis history not found", "model": ErrorResponse},
+        500: {"description": "Failed to retrieve PR analysis history", "model": ErrorResponse},
+    },
+)
 async def get_pr_analysis_history(pr_id: str):
     """Get analysis history for a specific PR."""
     try:
@@ -5840,7 +6644,18 @@ async def get_pr_analysis_history(pr_id: str):
         )
 
 
-@app.get("/pr-confidence/statistics")
+@app.get(
+    "/pr-confidence/statistics",
+    tags=["pr-confidence"],
+    summary="Get analysis statistics and metrics",
+    description="""Retrieves comprehensive statistics and metrics about PR confidence
+    analysis performance, trends, and system health.""",
+    response_model=AnalysisResultResponse,
+    responses={
+        200: {"description": "Analysis statistics retrieved successfully", "model": AnalysisResultResponse},
+        500: {"description": "Failed to retrieve analysis statistics", "model": ErrorResponse},
+    },
+)
 async def get_analysis_statistics():
     """Get analysis statistics and metrics."""
     try:

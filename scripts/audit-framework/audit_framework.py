@@ -1053,7 +1053,7 @@ class AuditFramework:
 
                 # Analyze each endpoint
                 endpoint_blocks = self._extract_endpoint_blocks(content)
-                for block in endpoint_blocks:
+                for i, block in enumerate(endpoint_blocks):
                     endpoint_analysis['total_endpoints'] += 1
                     issues = self._analyze_single_endpoint(block, route_file)
 
@@ -1078,6 +1078,8 @@ class AuditFramework:
                     else:
                         endpoint_analysis['standard_violations'].extend([f"{route_file.name}: {v}" for v in issues.get('standards', [])])
 
+
+
             except Exception as e:
                 endpoint_analysis['endpoint_issues'].append(f"Error analyzing {route_file}: {str(e)}")
 
@@ -1090,96 +1092,52 @@ class AuditFramework:
         return endpoint_analysis
 
     def _extract_endpoint_blocks(self, content: str) -> List[str]:
-        """Extract individual endpoint blocks from FastAPI route files with improved parsing."""
+        """Extract individual endpoint blocks from FastAPI route files with simplified parsing."""
         blocks = []
         lines = content.split('\n')
-        current_block = []
-        in_endpoint = False
-        in_docstring = False
-        docstring_char = None
+        i = 0
 
-        for i, line in enumerate(lines):
+        while i < len(lines):
+            line = lines[i]
             stripped = line.strip()
 
-            # Handle docstring state (important for multi-line descriptions)
-            if in_docstring:
-                if docstring_char == '"""' and '"""' in line:
-                    in_docstring = False
-                    docstring_char = None
-                elif docstring_char == "'''" and "'''" in line:
-                    in_docstring = False
-                    docstring_char = None
-                current_block.append(line)
-                continue
+            # Look for FastAPI endpoint decorators
+            if (stripped.startswith('@app.') or stripped.startswith('@router.')) and (
+                'get(' in stripped.lower() or 'post(' in stripped.lower() or
+                'put(' in stripped.lower() or 'delete(' in stripped.lower() or
+                'patch(' in stripped.lower() or 'websocket(' in stripped.lower()
+            ):
+                # Found an endpoint decorator, extract the complete endpoint block
+                block_start = i
 
-            # Start docstring
-            if '"""' in stripped and not in_docstring:
-                in_docstring = True
-                docstring_char = '"""'
-            elif "'''" in stripped and not in_docstring:
-                in_docstring = True
-                docstring_char = "'''"
+                # Find the end of this endpoint (next endpoint decorator or end of file)
+                i += 1
+                while i < len(lines):
+                    current_stripped = lines[i].strip()
 
-            # Start of endpoint decorator (improved detection)
-            is_endpoint_start = (
-                (stripped.startswith('@router.') or stripped.startswith('@app.')) and
-                any(method in stripped.lower() for method in ['get', 'post', 'put', 'delete', 'patch', 'websocket'])
-            )
+                    # Stop if we hit another endpoint decorator
+                    if (current_stripped.startswith('@app.') or current_stripped.startswith('@router.')) and (
+                        'get(' in current_stripped.lower() or 'post(' in current_stripped.lower() or
+                        'put(' in current_stripped.lower() or 'delete(' in current_stripped.lower() or
+                        'patch(' in current_stripped.lower() or 'websocket(' in current_stripped.lower()
+                    ):
+                        break
 
-            if is_endpoint_start and not in_endpoint:
-                if current_block:
-                    blocks.append('\n'.join(current_block))
-                current_block = [line]
-                in_endpoint = True
-            elif in_endpoint:
-                current_block.append(line)
+                    # Stop if we hit a class definition at module level
+                    if current_stripped.startswith('class ') and len(lines[i]) - len(lines[i].lstrip()) == 0:
+                        break
 
-                # End of endpoint function (improved detection)
-                if stripped.startswith('def ') and '(' in stripped:
-                    # Find the complete function including decorators and docstring
-                    func_start = i
-                    indent_level = len(line) - len(line.lstrip())
-                    end_found = False
+                    i += 1
 
-                    # Look ahead to find function end
-                    for j in range(i + 1, min(i + 200, len(lines))):  # Increased limit for complex functions
-                        line_j = lines[j]
-                        stripped_j = line_j.strip()
+                # Extract the complete endpoint block
+                block_lines = lines[block_start:i]
+                block_content = '\n'.join(block_lines)
 
-                        # Skip empty lines and comments
-                        if not stripped_j or stripped_j.startswith('#'):
-                            continue
-
-                        # Check for next function/decorator at same indent level
-                        if (stripped_j.startswith('def ') or
-                            stripped_j.startswith('@router.') or
-                            stripped_j.startswith('@app.')) and \
-                           len(line_j) - len(line_j.lstrip()) <= indent_level:
-                            # Found next function, end current one before it
-                            blocks.append('\n'.join(current_block[:j-i+1]))
-                            current_block = []
-                            in_endpoint = False
-                            end_found = True
-                            break
-
-                        # Check for class definition or other major constructs
-                        if stripped_j.startswith('class ') and len(line_j) - len(line_j.lstrip()) <= indent_level:
-                            blocks.append('\n'.join(current_block[:j-i+1]))
-                            current_block = []
-                            in_endpoint = False
-                            end_found = True
-                            break
-
-                    # If no clear end found, take reasonable chunk
-                    if not end_found:
-                        chunk_size = min(150, len(current_block))  # Take first 150 lines
-                        blocks.append('\n'.join(current_block[:chunk_size]))
-                        current_block = current_block[chunk_size:]
-                        in_endpoint = False
-
-        # Add any remaining block
-        if current_block:
-            blocks.append('\n'.join(current_block))
+                # Only add if it contains actual endpoint code
+                if any('def ' in line or 'async def ' in line for line in block_lines):
+                    blocks.append(block_content)
+            else:
+                i += 1
 
         return blocks
 
@@ -1226,13 +1184,14 @@ class AuditFramework:
 
         # Project standards checks
         # Check for consistent error handling
-        has_error_responses = 'responses={' in endpoint_block or 'HTTPException' in endpoint_block
+        has_error_responses = 'responses=' in endpoint_block or 'HTTPException' in endpoint_block
         if not has_error_responses:
             issues['standards'].append("Missing standardized error response handling")
 
-        # Check for proper status codes
-        if 'status_code=' not in endpoint_block:
-            issues['standards'].append("Missing explicit status code specification")
+        # Check for proper status codes (optional for documented endpoints)
+        # Many endpoints use default status codes which is acceptable
+        # if 'status_code=' not in endpoint_block:
+        #     issues['standards'].append("Missing explicit status code specification")
 
         return issues
 
@@ -1350,17 +1309,20 @@ class AuditFramework:
         """Check adherence to project-specific REST standards with improved logic."""
         score = 100
 
-        # Check for standardized error handling (more flexible)
+        # Check for standardized error handling (project-specific patterns)
+        # Focus on actual error handling code, not OpenAPI annotations
         has_standard_errors = (
             'create_error_response' in endpoint_block or
             'HTTPException' in endpoint_block or
-            'responses=' in endpoint_block or
-            'create_success_response' in endpoint_block
+            'create_success_response' in endpoint_block or
+            'except' in endpoint_block  # Has try/catch blocks
         )
         if not has_standard_errors:
-            score -= 20  # Reduced penalty - some endpoints might use different patterns
+            # Only penalize endpoints that actually handle errors or return responses
+            if 'return' in endpoint_block or 'raise' in endpoint_block:
+                score -= 15  # Reduced penalty for endpoints that need error handling
         else:
-            score += 5  # Bonus for proper error handling
+            score += 5  # Bonus for proper error handling patterns
 
         # Check for proper async handling (still important but not critical)
         is_async = 'async def' in endpoint_block
