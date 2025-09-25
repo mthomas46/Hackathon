@@ -1,0 +1,1077 @@
+{
+  "service_name": "doc_store",
+  "overall_score": 79.67,
+  "grade": "C",
+  "critical_issues": [],
+  "estimated_effort_days": 10.5,
+  "dimensions": {
+    "architecture": 93.0,
+    "code_quality": 69.71,
+    "performance": 89.75,
+    "maintainability": 65.55
+  },
+  "recommendations": [
+    "Reduce code duplication through refactoring",
+    "Optimize system resource usage - monitor CPU, memory, and I/O",
+    "Increase test coverage to at least 85.0%",
+    "Implement proper error handling with specific exception types",
+    "Increase docstring coverage to at least 80.0%"
+  ],
+  "architecture": {
+    "score": 93.0,
+    "ddd_compliance": 100,
+    "rest_compliance": 80.0,
+    "layer_separation": 100.0,
+    "ddd_issues": [],
+    "ddd_recommendations": [],
+    "file_metrics": {
+      "total_files": 59,
+      "monolithic_files": 2,
+      "large_directories": 0,
+      "directory_file_counts": {
+        ".": 2,
+        "tests": 1,
+        "tests/unit": 4,
+        "tests/integration": 1,
+        "db": 4,
+        "api": 2,
+        "application/handlers": 3,
+        "infrastructure": 5,
+        "infrastructure/di": 1,
+        "domain": 3,
+        "domain/bulk": 3,
+        "domain/lifecycle": 3,
+        "domain/exceptions": 3,
+        "domain/tagging": 3,
+        "domain/search": 1,
+        "domain/documents": 4,
+        "domain/versioning": 3,
+        "domain/relationships": 3,
+        "domain/notifications": 3,
+        "domain/services": 1,
+        "domain/analytics": 3,
+        "presentation/dto": 2,
+        "presentation/api": 1
+      }
+    },
+    "test_quality": {
+      "coverage_score": 0,
+      "quality_score": 0,
+      "structure_score": 0,
+      "total_score": 0,
+      "recommendations": []
+    },
+    "linting_quality": {
+      "pylint_score": 0,
+      "flake8_issues": 0,
+      "total_issues": 0,
+      "issues_by_type": {},
+      "recommendations": []
+    },
+    "endpoint_analysis": {
+      "total_endpoints": 33,
+      "rest_compliant_endpoints": 26,
+      "openapi_compliant_endpoints": 0,
+      "project_standard_compliant_endpoints": 2,
+      "endpoint_issues": [],
+      "rest_violations": [
+        "Low REST compliance score",
+        "Low REST compliance score",
+        "Low REST compliance score",
+        "Low REST compliance score",
+        "Low REST compliance score",
+        "Low REST compliance score",
+        "Low REST compliance score"
+      ],
+      "openapi_violations": [
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score",
+        "Low OpenAPI compliance score"
+      ],
+      "standard_violations": [
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance",
+        "Low project standards compliance"
+      ],
+      "endpoint_details": [
+        {
+          "method": "ON_EVENT",
+          "path": "startup",
+          "function": "startup_event",
+          "file": "services/doc_store/main.py",
+          "line_number": 327
+        },
+        {
+          "method": "GET",
+          "path": "/health",
+          "function": "health_check",
+          "file": "services/doc_store/main.py",
+          "line_number": 342
+        },
+        {
+          "method": "ON_EVENT",
+          "path": "startup",
+          "function": "startup_event",
+          "file": "services/doc_store/main.py",
+          "line_number": 327
+        },
+        {
+          "method": "ON_EVENT",
+          "path": "shutdown",
+          "function": "shutdown_event",
+          "file": "services/doc_store/main.py",
+          "line_number": 386
+        },
+        {
+          "method": "GET",
+          "path": "/metrics",
+          "function": "metrics",
+          "file": "services/doc_store/main.py",
+          "line_number": 419
+        },
+        {
+          "method": "POST",
+          "path": "/relationships",
+          "function": "add_relationship",
+          "file": "doc_store/api/routes.py",
+          "line_number": 512
+        },
+        {
+          "method": "GET",
+          "path": "/documents/{document_id}/relationships",
+          "function": "get_document_relationships",
+          "file": "doc_store/api/routes.py",
+          "line_number": 524
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/paths",
+          "function": "find_relationship_paths",
+          "file": "doc_store/api/routes.py",
+          "line_number": 532
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/stats",
+          "function": "get_relationship_statistics",
+          "file": "doc_store/api/routes.py",
+          "line_number": 542
+        },
+        {
+          "method": "POST",
+          "path": "/webhooks",
+          "function": "register_webhook",
+          "file": "doc_store/api/routes.py",
+          "line_number": 714
+        },
+        {
+          "method": "GET",
+          "path": "/webhooks",
+          "function": "list_webhooks",
+          "file": "doc_store/api/routes.py",
+          "line_number": 728
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/stats",
+          "function": "get_notification_stats",
+          "file": "doc_store/api/routes.py",
+          "line_number": 734
+        },
+        {
+          "method": "GET",
+          "path": "/bulk/operations",
+          "function": "list_bulk_operations",
+          "file": "doc_store/api/routes.py",
+          "line_number": 776
+        },
+        {
+          "method": "GET",
+          "path": "/bulk/operations/{operation_id}",
+          "function": "get_bulk_operation_status",
+          "file": "doc_store/api/routes.py",
+          "line_number": 784
+        },
+        {
+          "method": "DELETE",
+          "path": "/bulk/operations/{operation_id}",
+          "function": "cancel_bulk_operation",
+          "file": "doc_store/api/routes.py",
+          "line_number": 790
+        },
+        {
+          "method": "GET",
+          "path": "/cache/stats",
+          "function": "get_cache_stats",
+          "file": "doc_store/api/routes.py",
+          "line_number": 797
+        },
+        {
+          "method": "POST",
+          "path": "/cache/invalidate",
+          "function": "invalidate_cache",
+          "file": "doc_store/api/routes.py",
+          "line_number": 804
+        },
+        {
+          "method": "POST",
+          "path": "/cache/warmup",
+          "function": "warmup_cache",
+          "file": "doc_store/api/routes.py",
+          "line_number": 811
+        },
+        {
+          "method": "POST",
+          "path": "/cache/optimize",
+          "function": "optimize_cache",
+          "file": "doc_store/api/routes.py",
+          "line_number": 818
+        },
+        {
+          "method": "POST",
+          "path": "/relationships",
+          "function": "add_relationship",
+          "file": "presentation/api/routes.py",
+          "line_number": 512
+        },
+        {
+          "method": "GET",
+          "path": "/documents/{document_id}/relationships",
+          "function": "get_document_relationships",
+          "file": "presentation/api/routes.py",
+          "line_number": 524
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/paths",
+          "function": "find_relationship_paths",
+          "file": "presentation/api/routes.py",
+          "line_number": 532
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/stats",
+          "function": "get_relationship_statistics",
+          "file": "presentation/api/routes.py",
+          "line_number": 542
+        },
+        {
+          "method": "POST",
+          "path": "/webhooks",
+          "function": "register_webhook",
+          "file": "presentation/api/routes.py",
+          "line_number": 714
+        },
+        {
+          "method": "GET",
+          "path": "/webhooks",
+          "function": "list_webhooks",
+          "file": "presentation/api/routes.py",
+          "line_number": 728
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/stats",
+          "function": "get_notification_stats",
+          "file": "presentation/api/routes.py",
+          "line_number": 734
+        },
+        {
+          "method": "GET",
+          "path": "/bulk/operations",
+          "function": "list_bulk_operations",
+          "file": "presentation/api/routes.py",
+          "line_number": 776
+        },
+        {
+          "method": "GET",
+          "path": "/bulk/operations/{operation_id}",
+          "function": "get_bulk_operation_status",
+          "file": "presentation/api/routes.py",
+          "line_number": 784
+        },
+        {
+          "method": "DELETE",
+          "path": "/bulk/operations/{operation_id}",
+          "function": "cancel_bulk_operation",
+          "file": "presentation/api/routes.py",
+          "line_number": 790
+        },
+        {
+          "method": "GET",
+          "path": "/cache/stats",
+          "function": "get_cache_stats",
+          "file": "presentation/api/routes.py",
+          "line_number": 797
+        },
+        {
+          "method": "POST",
+          "path": "/cache/invalidate",
+          "function": "invalidate_cache",
+          "file": "presentation/api/routes.py",
+          "line_number": 804
+        },
+        {
+          "method": "POST",
+          "path": "/cache/warmup",
+          "function": "warmup_cache",
+          "file": "presentation/api/routes.py",
+          "line_number": 811
+        },
+        {
+          "method": "POST",
+          "path": "/cache/optimize",
+          "function": "optimize_cache",
+          "file": "presentation/api/routes.py",
+          "line_number": 818
+        }
+      ],
+      "compliant_endpoints": [],
+      "non_compliant_endpoints": [
+        {
+          "method": "ON_EVENT",
+          "path": "startup",
+          "function": "startup_event",
+          "file": "services/doc_store/main.py",
+          "line_number": 327,
+          "issues": [
+            "REST compliance issues",
+            "OpenAPI documentation issues"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/health",
+          "function": "health_check",
+          "file": "services/doc_store/main.py",
+          "line_number": 342,
+          "issues": [
+            "REST compliance issues",
+            "OpenAPI documentation issues"
+          ]
+        },
+        {
+          "method": "ON_EVENT",
+          "path": "startup",
+          "function": "startup_event",
+          "file": "services/doc_store/main.py",
+          "line_number": 327,
+          "issues": [
+            "REST compliance issues",
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "ON_EVENT",
+          "path": "shutdown",
+          "function": "shutdown_event",
+          "file": "services/doc_store/main.py",
+          "line_number": 386,
+          "issues": [
+            "REST compliance issues",
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/metrics",
+          "function": "metrics",
+          "file": "services/doc_store/main.py",
+          "line_number": 419,
+          "issues": [
+            "REST compliance issues",
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/relationships",
+          "function": "add_relationship",
+          "file": "doc_store/api/routes.py",
+          "line_number": 512,
+          "issues": [
+            "REST compliance issues",
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/documents/{document_id}/relationships",
+          "function": "get_document_relationships",
+          "file": "doc_store/api/routes.py",
+          "line_number": 524,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/paths",
+          "function": "find_relationship_paths",
+          "file": "doc_store/api/routes.py",
+          "line_number": 532,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/stats",
+          "function": "get_relationship_statistics",
+          "file": "doc_store/api/routes.py",
+          "line_number": 542,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/webhooks",
+          "function": "register_webhook",
+          "file": "doc_store/api/routes.py",
+          "line_number": 714,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/webhooks",
+          "function": "list_webhooks",
+          "file": "doc_store/api/routes.py",
+          "line_number": 728,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/stats",
+          "function": "get_notification_stats",
+          "file": "doc_store/api/routes.py",
+          "line_number": 734,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/bulk/operations",
+          "function": "list_bulk_operations",
+          "file": "doc_store/api/routes.py",
+          "line_number": 776,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/bulk/operations/{operation_id}",
+          "function": "get_bulk_operation_status",
+          "file": "doc_store/api/routes.py",
+          "line_number": 784,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "DELETE",
+          "path": "/bulk/operations/{operation_id}",
+          "function": "cancel_bulk_operation",
+          "file": "doc_store/api/routes.py",
+          "line_number": 790,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/cache/stats",
+          "function": "get_cache_stats",
+          "file": "doc_store/api/routes.py",
+          "line_number": 797,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/cache/invalidate",
+          "function": "invalidate_cache",
+          "file": "doc_store/api/routes.py",
+          "line_number": 804,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/cache/warmup",
+          "function": "warmup_cache",
+          "file": "doc_store/api/routes.py",
+          "line_number": 811,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/cache/optimize",
+          "function": "optimize_cache",
+          "file": "doc_store/api/routes.py",
+          "line_number": 818,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/relationships",
+          "function": "add_relationship",
+          "file": "presentation/api/routes.py",
+          "line_number": 512,
+          "issues": [
+            "REST compliance issues",
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/documents/{document_id}/relationships",
+          "function": "get_document_relationships",
+          "file": "presentation/api/routes.py",
+          "line_number": 524,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/paths",
+          "function": "find_relationship_paths",
+          "file": "presentation/api/routes.py",
+          "line_number": 532,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/relationships/stats",
+          "function": "get_relationship_statistics",
+          "file": "presentation/api/routes.py",
+          "line_number": 542,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/webhooks",
+          "function": "register_webhook",
+          "file": "presentation/api/routes.py",
+          "line_number": 714,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/webhooks",
+          "function": "list_webhooks",
+          "file": "presentation/api/routes.py",
+          "line_number": 728,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/notifications/stats",
+          "function": "get_notification_stats",
+          "file": "presentation/api/routes.py",
+          "line_number": 734,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/bulk/operations",
+          "function": "list_bulk_operations",
+          "file": "presentation/api/routes.py",
+          "line_number": 776,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/bulk/operations/{operation_id}",
+          "function": "get_bulk_operation_status",
+          "file": "presentation/api/routes.py",
+          "line_number": 784,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "DELETE",
+          "path": "/bulk/operations/{operation_id}",
+          "function": "cancel_bulk_operation",
+          "file": "presentation/api/routes.py",
+          "line_number": 790,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "GET",
+          "path": "/cache/stats",
+          "function": "get_cache_stats",
+          "file": "presentation/api/routes.py",
+          "line_number": 797,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/cache/invalidate",
+          "function": "invalidate_cache",
+          "file": "presentation/api/routes.py",
+          "line_number": 804,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/cache/warmup",
+          "function": "warmup_cache",
+          "file": "presentation/api/routes.py",
+          "line_number": 811,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        },
+        {
+          "method": "POST",
+          "path": "/cache/optimize",
+          "function": "optimize_cache",
+          "file": "presentation/api/routes.py",
+          "line_number": 818,
+          "issues": [
+            "OpenAPI documentation issues",
+            "Project standard violations"
+          ]
+        }
+      ],
+      "rest_compliance_score": 78.79,
+      "openapi_compliance_score": 0.0,
+      "project_standards_compliance_score": 6.06,
+      "endpoint_detection_validation": {
+        "total_fastapi_files_found": 7,
+        "detection_gaps": [],
+        "recommendations": []
+      }
+    },
+    "complexity_analysis": {
+      "high_complexity_functions": [],
+      "total_functions_analyzed": 0,
+      "complexity_distribution": {
+        "low": 0,
+        "medium": 0,
+        "high": 0,
+        "very_high": 0
+      },
+      "average_complexity": 0.0,
+      "recommendations": []
+    },
+    "dependency_coupling": {
+      "import_dependencies": {},
+      "coupling_score": 0,
+      "recommendations": []
+    },
+    "dead_code_analysis": {
+      "dead_code_lines": 0,
+      "unused_functions": [],
+      "recommendations": []
+    },
+    "test_quality_metrics": {
+      "total_test_files": 0,
+      "test_naming_issues": 0,
+      "recommendations": []
+    },
+    "domain_boundaries": {
+      "leaks_detected": 0,
+      "boundary_violations": [],
+      "layer_integrity": true,
+      "recommendations": []
+    },
+    "api_documentation": {
+      "endpoints_documented": 0,
+      "documentation_score": 0,
+      "recommendations": []
+    },
+    "code_documentation": {
+      "docstring_coverage": 0.0,
+      "undocumented_functions": 0,
+      "recommendations": []
+    },
+    "configuration_management": {
+      "hardcoded_values": 0,
+      "security_issues": 0,
+      "recommendations": []
+    },
+    "logging_practices": {
+      "logging_usage": 0,
+      "error_logging": 0,
+      "recommendations": []
+    },
+    "directory_analysis": {
+      "routes_score": -8,
+      "total_files": 59,
+      "monolithic_files": 2,
+      "large_directories": 0,
+      "issues": [
+        "Missing routes directory - required for DDD+REST architecture"
+      ],
+      "recommendations": [
+        "Create presentation/routes/ directory with domain-organized route files"
+      ]
+    },
+    "issues": [],
+    "recommendations": []
+  },
+  "code_quality": {
+    "score": 69.71,
+    "complexity_score": 87.5,
+    "testing_score": 15.2,
+    "linting_score": 100,
+    "duplication_score": 60.0,
+    "security_score": 100,
+    "dry_principle_score": 67.0,
+    "kiss_principle_score": 100,
+    "test_coverage": 0,
+    "cyclomatic_complexity": {
+      "high_complexity_functions": [],
+      "total_functions_analyzed": 497,
+      "complexity_distribution": {
+        "low": 461,
+        "medium": 32,
+        "high": 4,
+        "very_high": 0
+      },
+      "average_complexity": 2.2032193158953723,
+      "recommendations": []
+    },
+    "test_quality_metrics": {
+      "total_test_files": 5,
+      "test_naming_issues": 36,
+      "isolation_issues": 0,
+      "parametrization_usage": 0,
+      "fixture_usage": 2,
+      "mock_usage": 2,
+      "recommendations": [
+        "Fix 36 poorly named test functions"
+      ]
+    },
+    "linting_quality": {
+      "pylint_score": 0,
+      "flake8_issues": 156,
+      "total_issues": 156,
+      "issues_by_type": {},
+      "recommendations": []
+    },
+    "duplication_analysis": {
+      "total_duplicate_blocks": 1876,
+      "duplicate_lines": 7504,
+      "total_lines_analyzed": 10430,
+      "duplication_rate": 71.94630872483222,
+      "recommendations": [
+        "High duplication rate (71.9%) - consider refactoring"
+      ]
+    },
+    "issues": [
+      "Insufficient test coverage",
+      "Code duplication detected"
+    ],
+    "recommendations": [
+      "Increase test coverage to at least 85.0%",
+      "Reduce code duplication through refactoring"
+    ]
+  },
+  "performance": {
+    "score": 89.75,
+    "system_metrics_score": 75.0,
+    "database_score": 100,
+    "resource_usage_score": 94.0,
+    "system_metrics": {
+      "cpu_percent": 18.0,
+      "memory_percent": 47.6,
+      "memory_used_gb": 29.447952270507812,
+      "disk_read_mb": 121102.71484375,
+      "disk_write_mb": 81789.8125,
+      "network_sent_mb": 1287.0830078125,
+      "network_recv_mb": 3731.5283203125,
+      "process_memory_percent": 0.057768821716308594,
+      "process_cpu_percent": 0.1,
+      "timestamp": 1758826423.934274
+    },
+    "database_performance": {
+      "has_database_layer": true,
+      "connection_pooling": true,
+      "query_optimization": true,
+      "caching_strategy": true,
+      "migration_scripts": false,
+      "performance_issues": [],
+      "recommendations": []
+    },
+    "resource_usage": {
+      "file_handle_leaks": 0,
+      "memory_leaks_potential": 15,
+      "resource_management_issues": 0,
+      "context_manager_usage": 104,
+      "exception_handling_resources": 0,
+      "large_objects": [
+        "api/routes.py",
+        "presentation/api/routes.py"
+      ],
+      "resource_intensive_operations": [
+        "langgraph_integration.py:422",
+        "langgraph_integration.py:441",
+        "events.py:194",
+        "cache.py:265",
+        "cache.py:374",
+        "caching.py:220",
+        "caching.py:307",
+        "service.py:83",
+        "service.py:168",
+        "repository.py:81",
+        "service.py:122",
+        "repository.py:147",
+        "repository.py:148",
+        "quality_service.py:26",
+        "quality_service.py:73",
+        "quality_service.py:111",
+        "quality_service.py:202",
+        "repository.py:105",
+        "repository.py:106",
+        "repository.py:107",
+        "repository.py:108",
+        "repository.py:114",
+        "repository.py:117"
+      ],
+      "recommendations": [
+        "Review 15 potential memory leaks with global variables",
+        "Consider splitting 2 large files for better resource management"
+      ]
+    },
+    "performance_indicators": {
+      "cpu_health": "good",
+      "memory_health": "good",
+      "disk_health": "high",
+      "network_health": "high",
+      "overall_performance": "moderate"
+    },
+    "issues": [],
+    "recommendations": [
+      "Optimize system resource usage - monitor CPU, memory, and I/O"
+    ]
+  },
+  "maintainability": {
+    "score": 65.55,
+    "documentation_score": 20.0,
+    "organization_score": 100,
+    "error_handling_score": 57.0,
+    "devops_readiness_score": 100,
+    "scalability_score": 100,
+    "linting_quality": {
+      "pylint_score": 0,
+      "flake8_issues": 156,
+      "total_issues": 156,
+      "issues_by_type": {},
+      "recommendations": []
+    },
+    "test_quality": {
+      "coverage_score": 0,
+      "quality_score": 10,
+      "structure_score": 0,
+      "total_score": 10,
+      "recommendations": []
+    },
+    "test_quality_metrics": {
+      "total_test_files": 5,
+      "test_naming_issues": 36,
+      "isolation_issues": 0,
+      "parametrization_usage": 0,
+      "fixture_usage": 2,
+      "mock_usage": 2,
+      "recommendations": [
+        "Fix 36 poorly named test functions"
+      ]
+    },
+    "domain_boundaries": {
+      "leaks_detected": 2,
+      "boundary_violations": [
+        "infrastructure/di/container.py",
+        "presentation/api/routes.py"
+      ],
+      "layer_integrity": false,
+      "recommendations": [
+        "Fix 2 domain boundary violations"
+      ]
+    },
+    "api_documentation": {
+      "endpoints_documented": 0,
+      "total_endpoints": 0,
+      "documentation_score": 0,
+      "missing_summaries": 0,
+      "missing_descriptions": 0,
+      "recommendations": []
+    },
+    "code_documentation": {
+      "docstring_coverage": 97.42268041237114,
+      "undocumented_functions": 5,
+      "undocumented_classes": 2,
+      "total_functions": 194,
+      "total_classes": 141,
+      "recommendations": [
+        "Add docstrings to 5 undocumented functions"
+      ]
+    },
+    "configuration_management": {
+      "hardcoded_values": 173,
+      "environment_variables": 1,
+      "config_files": 1,
+      "security_issues": 173,
+      "recommendations": [
+        "Replace 173 hardcoded values with environment variables"
+      ]
+    },
+    "logging_practices": {
+      "logging_usage": 3,
+      "error_logging": 0,
+      "structured_logging": 0,
+      "missing_error_logs": 91,
+      "logging_levels_used": "{'ERROR'}",
+      "recommendations": [
+        "Add error logging to 91 exception handlers"
+      ]
+    },
+    "issues": [
+      "Insufficient documentation coverage",
+      "Inadequate error handling patterns"
+    ],
+    "recommendations": [
+      "Increase docstring coverage to at least 80.0%",
+      "Implement proper error handling with specific exception types"
+    ]
+  },
+  "metadata": {
+    "audit_time_seconds": 4.12,
+    "profile_used": "ci_comprehensive",
+    "service_info": {
+      "python_files": 59,
+      "has_main": true,
+      "has_tests": true,
+      "has_config": false,
+      "has_docker": true,
+      "has_requirements": false,
+      "total_files": 146
+    },
+    "thresholds_applied": {
+      "min_passing_score": 70.0,
+      "critical_issues_threshold": 1
+    }
+  }
+}
