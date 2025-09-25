@@ -53,7 +53,7 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
 
             # Import here to avoid circular dependency
             try:
-                from ..monitoring.logging import fire_and_forget
+                from ...monitoring.logging import fire_and_forget
 
                 fire_and_forget(
                     "info",
@@ -118,3 +118,25 @@ class ServiceMiddleware:
             middlewares.append(lambda app: RateLimitMiddleware(app, self.rate_limits))
 
         return middlewares
+
+
+# Convenience function for setting up common middleware
+def setup_common_middleware(app, service_name: str, **kwargs):
+    """Setup common middleware for a FastAPI application.
+
+    Args:
+        app: FastAPI application instance
+        service_name: Name of the service for metrics
+        **kwargs: Additional configuration options
+    """
+    manager = MiddlewareManager(service_name=service_name, **kwargs)
+    for middleware_factory in manager.get_middlewares():
+        app.add_middleware(middleware_factory)
+
+
+# Convenience function for getting request ID
+def get_request_id():
+    """Get current request ID from context."""
+    # This would typically get the request ID from asyncio context
+    # For now, return a placeholder
+    return "request-id-placeholder"
