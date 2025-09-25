@@ -109,9 +109,7 @@ class RiskAssessor:
             },
         }
 
-    def _calculate_risk_factor_score(
-        self, factor_name: str, value: Any, factor_config: Dict[str, Any]
-    ) -> float:
+    def _calculate_risk_factor_score(self, factor_name: str, value: Any, factor_config: Dict[str, Any]) -> float:
         """Calculate risk score for a specific factor."""
         if value is None:
             return 0.5  # Neutral score for missing data
@@ -173,9 +171,7 @@ class RiskAssessor:
 
         return risk_scores
 
-    def _extract_risk_factor_values(
-        self, document_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _extract_risk_factor_values(self, document_data: Dict[str, Any]) -> Dict[str, Any]:
         """Extract or estimate values for all risk factors."""
         factor_values = {}
 
@@ -203,9 +199,7 @@ class RiskAssessor:
 
         return factor_values
 
-    def _extract_finding_density(
-        self, value: Any, document_data: Dict[str, Any]
-    ) -> float:
+    def _extract_finding_density(self, value: Any, document_data: Dict[str, Any]) -> float:
         """Extract or estimate finding density."""
         if value:
             return value
@@ -223,9 +217,7 @@ class RiskAssessor:
 
         return 0.5
 
-    def _extract_stakeholder_impact(
-        self, value: Any, document_data: Dict[str, Any]
-    ) -> str:
+    def _extract_stakeholder_impact(self, value: Any, document_data: Dict[str, Any]) -> str:
         """Extract or estimate stakeholder impact."""
         if value:
             return value
@@ -241,9 +233,7 @@ class RiskAssessor:
 
         return "low"
 
-    def _extract_usage_frequency(
-        self, value: Any, document_data: Dict[str, Any]
-    ) -> int:
+    def _extract_usage_frequency(self, value: Any, document_data: Dict[str, Any]) -> int:
         """Extract or estimate usage frequency."""
         if value:
             return value
@@ -257,9 +247,7 @@ class RiskAssessor:
 
         return 5  # Lower usage
 
-    def _calculate_overall_risk_score(
-        self, risk_scores: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _calculate_overall_risk_score(self, risk_scores: Dict[str, Any]) -> Dict[str, Any]:
         """Calculate overall risk score and risk level."""
         weighted_sum = 0
         total_weight = 0
@@ -294,73 +282,59 @@ class RiskAssessor:
             "total_weight": round(total_weight, 3),
         }
 
-    def _generate_risk_recommendations(
-        self, risk_scores: Dict[str, Any], overall_risk: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_risk_recommendations(self, risk_scores: Dict[str, Any], overall_risk: Dict[str, Any]) -> List[str]:
         """Generate risk mitigation recommendations."""
         recommendations = []
-
         risk_level = overall_risk["risk_level"]
 
+        # Critical/high risk alert
         if risk_level in ["critical", "high"]:
-            recommendations.append(
-                "Immediate review and update required - high risk of documentation drift"
-            )
+            recommendations.append("Immediate review and update required - high risk of documentation drift")
 
-        # Factor-specific recommendations
-        for factor_name, factor_data in risk_scores.items():
-            risk_score = factor_data["risk_score"]
-            factor_data["value"]
+        # Factor-specific recommendations using lookup table
+        factor_recommendations = {
+            "document_age": "Document is {:.1f} months old - schedule content review and update",
+            "quality_score": "Quality score is {:.2f} - implement quality improvement measures",
+            "complexity_score": "High complexity detected - consider breaking into smaller, focused documents",
+            "change_frequency": "High change frequency - implement automated quality checks for updates",
+            "trend_decline": "Quality declining at {:.3f} per month - investigate root causes",
+            "finding_density": "High issue density - prioritize fixing existing problems before adding new content",
+            "stakeholder_impact": "High stakeholder impact - establish stricter review processes and quality gates"
+        }
 
-            if factor_name == "document_age" and risk_score > 0.7:
-                recommendations.append(".1f")
-
-            elif factor_name == "quality_score" and risk_score > 0.7:
-                recommendations.append(".2f")
-
-            elif factor_name == "complexity_score" and risk_score > 0.7:
-                recommendations.append(
-                    "High complexity detected - consider breaking into smaller, focused documents"
-                )
-
-            elif factor_name == "change_frequency" and risk_score > 0.7:
-                recommendations.append(
-                    "High change frequency - implement automated quality checks for updates"
-                )
-
-            elif factor_name == "trend_decline" and risk_score > 0.7:
-                recommendations.append(".3f")
-
-            elif factor_name == "finding_density" and risk_score > 0.7:
-                recommendations.append(
-                    "High issue density - prioritize fixing existing problems before adding new content"
-                )
-
-            elif factor_name == "stakeholder_impact" and risk_score > 0.7:
-                recommendations.append(
-                    "High stakeholder impact - establish stricter review processes and quality gates"
-                )
+        # Generate factor-specific recommendations
+        recommendations.extend(self._get_factor_recommendations(risk_scores, factor_recommendations))
 
         # General recommendations based on overall risk
-        if len(recommendations) == 0:
-            if risk_level == "low":
-                recommendations.append(
-                    "Risk level is low - maintain regular monitoring schedule"
-                )
-            elif risk_level == "medium":
-                recommendations.append(
-                    "Medium risk - consider quarterly reviews and quality checks"
-                )
-            else:
-                recommendations.append(
-                    "Perform comprehensive risk assessment and mitigation planning"
-                )
+        if not recommendations:
+            recommendations.extend(self._get_general_recommendations(risk_level))
 
         return recommendations[:5]  # Limit to top 5 recommendations
 
-    def _identify_risk_drivers(
-        self, risk_scores: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    def _get_factor_recommendations(self, risk_scores: Dict[str, Any], factor_templates: Dict[str, str]) -> List[str]:
+        """Get factor-specific recommendations."""
+        recommendations = []
+
+        for factor_name, factor_data in risk_scores.items():
+            if factor_data["risk_score"] > 0.7 and factor_name in factor_templates:
+                template = factor_templates[factor_name]
+                if "{}" in template:
+                    recommendations.append(template.format(factor_data["value"]))
+                else:
+                    recommendations.append(template)
+
+        return recommendations
+
+    def _get_general_recommendations(self, risk_level: str) -> List[str]:
+        """Get general recommendations based on risk level."""
+        general_recs = {
+            "low": ["Risk level is low - maintain regular monitoring schedule"],
+            "medium": ["Medium risk - consider quarterly reviews and quality checks"],
+        }
+
+        return general_recs.get(risk_level, ["Perform comprehensive risk assessment and mitigation planning"])
+
+    def _identify_risk_drivers(self, risk_scores: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Identify the primary drivers of risk."""
         # Sort factors by their weighted risk contribution
         factor_contributions = []
@@ -402,9 +376,7 @@ class RiskAssessor:
             assessment_data = document_data.copy()
             if analysis_history:
                 assessment_data["analysis_history"] = analysis_history
-                assessment_data["recent_analysis"] = (
-                    analysis_history[-5:] if analysis_history else []
-                )
+                assessment_data["recent_analysis"] = analysis_history[-5:] if analysis_history else []
 
             # Assess individual risk factors
             risk_scores = self._assess_individual_risks(assessment_data)
@@ -413,9 +385,7 @@ class RiskAssessor:
             overall_risk = self._calculate_overall_risk_score(risk_scores)
 
             # Generate recommendations
-            recommendations = self._generate_risk_recommendations(
-                risk_scores, overall_risk
-            )
+            recommendations = self._generate_risk_recommendations(risk_scores, overall_risk)
 
             # Identify risk drivers
             risk_drivers = self._identify_risk_drivers(risk_scores)
@@ -441,9 +411,7 @@ class RiskAssessor:
                 "processing_time": time.time() - start_time,
             }
 
-    async def assess_portfolio_risks(
-        self, documents: List[Dict[str, Any]], group_by: str = "document_type"
-    ) -> Dict[str, Any]:
+    async def assess_portfolio_risks(self, documents: List[Dict[str, Any]], group_by: str = "document_type") -> Dict[str, Any]:
         """Assess risks across a portfolio of documents."""
 
         start_time = time.time()
@@ -467,9 +435,7 @@ class RiskAssessor:
             document_assessments = []
             for doc in documents:
                 doc_id = doc.get("document_id", f"doc_{len(document_assessments)}")
-                assessment = await self.assess_document_risk(
-                    doc_id, doc, doc.get("analysis_history")
-                )
+                assessment = await self.assess_document_risk(doc_id, doc, doc.get("analysis_history"))
                 if "error" not in assessment:
                     document_assessments.append(assessment)
 
@@ -485,14 +451,10 @@ class RiskAssessor:
                 }
 
             # Calculate portfolio summary
-            risk_levels = [
-                doc["overall_risk"]["risk_level"] for doc in document_assessments
-            ]
+            risk_levels = [doc["overall_risk"]["risk_level"] for doc in document_assessments]
             risk_distribution = dict(Counter(risk_levels))
 
-            overall_scores = [
-                doc["overall_risk"]["overall_score"] for doc in document_assessments
-            ]
+            overall_scores = [doc["overall_risk"]["overall_score"] for doc in document_assessments]
             avg_risk_score = sum(overall_scores) / len(overall_scores)
 
             # Group by specified field
@@ -507,9 +469,7 @@ class RiskAssessor:
 
             # Identify high-risk documents
             high_risk_docs = [
-                doc["document_id"]
-                for doc in document_assessments
-                if doc["overall_risk"]["risk_level"] in ["critical", "high"]
+                doc["document_id"] for doc in document_assessments if doc["overall_risk"]["risk_level"] in ["critical", "high"]
             ]
 
             # Calculate risk trends by group
@@ -564,15 +524,11 @@ class RiskAssessor:
                     if all(key in config for key in required_keys):
                         self.risk_factors[factor_name] = config
                     else:
-                        logger.warning(
-                            f"Invalid configuration for risk factor {factor_name}"
-                        )
+                        logger.warning(f"Invalid configuration for risk factor {factor_name}")
                         continue
 
             # Re-normalize weights to ensure they sum to 1.0
-            total_weight = sum(
-                factor["weight"] for factor in self.risk_factors.values()
-            )
+            total_weight = sum(factor["weight"] for factor in self.risk_factors.values())
             if total_weight > 0:
                 for factor in self.risk_factors.values():
                     factor["weight"] = factor["weight"] / total_weight
@@ -603,14 +559,10 @@ async def assess_document_risk(
     Returns:
         Risk assessment results
     """
-    return await risk_assessor.assess_document_risk(
-        document_id, document_data, analysis_history
-    )
+    return await risk_assessor.assess_document_risk(document_id, document_data, analysis_history)
 
 
-async def assess_portfolio_risks(
-    documents: List[Dict[str, Any]], group_by: str = "document_type"
-) -> Dict[str, Any]:
+async def assess_portfolio_risks(documents: List[Dict[str, Any]], group_by: str = "document_type") -> Dict[str, Any]:
     """Convenience function for portfolio risk assessment.
 
     Args:
