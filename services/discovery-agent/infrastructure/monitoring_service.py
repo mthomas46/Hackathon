@@ -30,8 +30,21 @@ class DiscoveryAgentMonitoring:
     async def log_discovery_event(
         self, event_type: str, data: Dict[str, Any], level: str = "INFO"
     ) -> bool:
-        """Log a discovery-related event to the log-collector service"""
+        """Log a discovery-related event to the centralized log collector.
 
+        Records structured events for monitoring discovery operations, tool findings,
+        security scans, and error conditions.
+
+        Args:
+            event_type: Type of event (e.g., "tool_discovered", "scan_completed")
+            data: Structured event data and metadata
+            level: Log level (INFO, WARNING, ERROR)
+
+        Returns:
+            True if logging succeeded, False otherwise
+        """
+
+        # Monitor and log security scanning operations
         log_entry = {
             "timestamp": "2025-01-17T21:30:00Z",  # Would use datetime.now() in real implementation
             "session_id": self.monitoring_session_id,
@@ -66,7 +79,16 @@ class DiscoveryAgentMonitoring:
     async def monitor_service_discovery(
         self, service_name: str, discovery_result: Dict[str, Any]
     ):
-        """Monitor and log service discovery operations"""
+        """Monitor and log comprehensive service discovery operations.
+
+        Tracks discovery performance, tool counts, health status, and timing
+        metrics for service discovery operations. Updates internal metrics and
+        logs structured events.
+
+        Args:
+            service_name: Name of the service being discovered
+            discovery_result: Complete discovery result with tools, health, timing
+        """
 
         # Extract key metrics
         tools_count = len(discovery_result.get("tools", []))
@@ -104,7 +126,15 @@ class DiscoveryAgentMonitoring:
         print(f"📊 Logged discovery for {service_name}: {tools_count} tools")
 
     async def monitor_security_scan(self, tool_name: str, scan_result: Dict[str, Any]):
-        """Monitor and log security scanning operations"""
+        """Monitor and log security scan results for discovered tools.
+
+        Tracks security scan outcomes, vulnerability findings, and risk assessments
+        for tools discovered by the agent. Updates security metrics and logs events.
+
+        Args:
+            tool_name: Name of the tool that was scanned
+            scan_result: Complete security scan results and findings
+        """
 
         # Extract security metrics
         risk_level = scan_result.get("risk_level", "unknown")

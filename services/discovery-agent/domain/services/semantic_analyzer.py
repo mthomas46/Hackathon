@@ -62,7 +62,26 @@ class SemanticToolAnalyzer:
         }
 
     async def analyze_tool_semantics(self, tool: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform semantic analysis of a tool using LLM understanding"""
+        """Perform comprehensive semantic analysis of a tool using LLM understanding.
+
+        Analyzes tool characteristics using both LLM-powered semantic understanding
+        and rule-based categorization to provide detailed insights about tool purpose,
+        capabilities, and relationships.
+
+        Args:
+            tool: Tool definition containing name, description, method, path, etc.
+
+        Returns:
+            Dict containing:
+            - tool_name: Original tool name
+            - semantic_categories: List of applicable semantic categories
+            - primary_category: Most relevant category
+            - confidence_score: Analysis confidence (0.0-1.0)
+            - capabilities_identified: Tool capabilities
+            - use_cases_identified: Typical use cases
+            - relationships: Related tools/concepts
+            - llm_analysis: Raw LLM response (if successful)
+        """
 
         semantic_analysis = {
             "tool_name": tool["name"],
@@ -104,7 +123,17 @@ class SemanticToolAnalyzer:
     async def _perform_llm_semantic_analysis(
         self, tool: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Use LLM to perform semantic analysis of the tool"""
+        """Perform semantic analysis using LLM interpretation service.
+
+        Sends a structured prompt to the LLM service to analyze tool characteristics
+        and extract semantic meaning, capabilities, and relationships.
+
+        Args:
+            tool: Tool definition dictionary with metadata
+
+        Returns:
+            Dict with 'success' boolean and 'analysis' string containing LLM response
+        """
 
         analysis_prompt = f"""
         Analyze the following API tool and provide semantic understanding:
@@ -156,7 +185,18 @@ class SemanticToolAnalyzer:
             return {"success": False, "error": str(e)}
 
     def _parse_llm_semantic_response(self, llm_response: str) -> Dict[str, Any]:
-        """Parse LLM semantic analysis response"""
+        """Parse and extract structured data from LLM semantic analysis response.
+
+        Attempts to extract JSON from the LLM response and map it to standardized
+        semantic analysis fields. Falls back to empty defaults if parsing fails.
+
+        Args:
+            llm_response: Raw text response from LLM analysis
+
+        Returns:
+            Dict with parsed semantic fields: categories, primary_category,
+            capabilities, use_cases, description, relationships
+        """
 
         try:
             # Try to extract JSON from response

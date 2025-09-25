@@ -110,7 +110,18 @@ class ToolDiscoveryService:
             raise Exception(f"Failed to fetch OpenAPI spec from {spec_url}: {str(e)}")
 
     def _extract_endpoints(self, spec: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Extract endpoints from OpenAPI specification."""
+        """Extract and normalize endpoint definitions from OpenAPI specification.
+
+        Parses the OpenAPI paths object and converts each endpoint into a standardized
+        format with consistent field names and data types.
+
+        Args:
+            spec: OpenAPI specification dictionary
+
+        Returns:
+            List of endpoint dictionaries with standardized fields:
+            path, method, summary, description, operation_id, tags, parameters, etc.
+        """
         endpoints = []
         paths = spec.get("paths", {})
 
@@ -144,7 +155,21 @@ class ToolDiscoveryService:
         endpoints: List[Dict[str, Any]],
         tool_categories: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
-        """Analyze endpoints and generate LangGraph tool definitions."""
+        """Analyze endpoints and generate standardized LangGraph tool definitions.
+
+        Processes each endpoint to create tool definitions suitable for LangGraph workflows,
+        including categorization, parameter extraction, and metadata enrichment.
+
+        Args:
+            service_name: Name of the service being analyzed
+            service_url: Base URL for API calls
+            endpoints: List of normalized endpoint definitions
+            tool_categories: Optional filter to only include specific categories
+
+        Returns:
+            List of tool definitions with standardized fields:
+            name, description, categories, parameters, operation_id, etc.
+        """
         tools = []
 
         for endpoint in endpoints:
@@ -209,7 +234,18 @@ class ToolDiscoveryService:
         return categories or ["general"]
 
     def _categorize_crud_operations(self, operation_id: str, method: str) -> List[str]:
-        """Categorize CRUD (Create, Read, Update, Delete) operations."""
+        """Categorize CRUD (Create, Read, Update, Delete) operations based on HTTP method and operation naming.
+
+        Uses both HTTP method semantics and operation ID patterns to determine
+        CRUD operation types.
+
+        Args:
+            operation_id: OpenAPI operationId (e.g., "createUser", "getUsers")
+            method: HTTP method (GET, POST, PUT, DELETE)
+
+        Returns:
+            List of applicable CRUD categories: ["create"], ["read"], ["update"], ["delete"]
+        """
         categories = []
 
         if operation_id.startswith("create") or method == "post":
@@ -228,7 +264,18 @@ class ToolDiscoveryService:
         return categories
 
     def _categorize_business_operations(self, operation_id: str) -> List[str]:
-        """Categorize business logic operations."""
+        """Categorize business logic operations based on operation semantics.
+
+        Identifies business operation types such as analysis, search, notification,
+        storage, and processing operations based on operation naming patterns.
+
+        Args:
+            operation_id: OpenAPI operationId to analyze
+
+        Returns:
+            List of applicable business categories:
+            ["analysis"], ["search"], ["notification"], ["storage"], ["processing"]
+        """
         categories = []
 
         # Analysis operations
@@ -254,7 +301,18 @@ class ToolDiscoveryService:
         return categories
 
     def _categorize_service_specific_operations(self, operation_id: str) -> List[str]:
-        """Categorize service-specific operations based on domain context."""
+        """Categorize service-specific operations based on domain context and naming patterns.
+
+        Identifies operations specific to certain domains like document management,
+        prompt engineering, code repositories, and workflow orchestration.
+
+        Args:
+            operation_id: OpenAPI operationId to analyze for domain-specific patterns
+
+        Returns:
+            List of applicable domain categories:
+            ["document"], ["prompt"], ["code"], ["workflow"]
+        """
         categories = []
 
         # Document operations
@@ -276,7 +334,18 @@ class ToolDiscoveryService:
         return categories
 
     def _generate_tool_name(self, service_name: str, operation_id: str) -> str:
-        """Generate a standardized tool name."""
+        """Generate a standardized tool name following naming conventions.
+
+        Converts camelCase/PascalCase operation IDs to snake_case and combines
+        with service name for consistent tool naming across the ecosystem.
+
+        Args:
+            service_name: Name of the service (e.g., "doc_store")
+            operation_id: OpenAPI operationId (e.g., "getUsersById")
+
+        Returns:
+            Standardized tool name (e.g., "doc_store_get_users_by_id")
+        """
         # Convert camelCase/PascalCase to snake_case
         name = re.sub(r"(?<!^)(?=[A-Z])", "_", operation_id).lower()
         return f"{service_name}_{name}"
@@ -284,7 +353,18 @@ class ToolDiscoveryService:
     def _generate_tool_description(
         self, endpoint: Dict[str, Any], categories: List[str]
     ) -> str:
-        """Generate a descriptive tool description."""
+        """Generate a comprehensive tool description with context and categorization.
+
+        Creates a human-readable description that includes HTTP method, operation details,
+        summary information, and applicable categories for better tool understanding.
+
+        Args:
+            endpoint: Endpoint definition with method, operation_id, summary, etc.
+            categories: List of semantic categories this tool belongs to
+
+        Returns:
+            Formatted description string suitable for tool documentation
+        """
         summary = endpoint.get("summary", "")
         operation_id = endpoint.get("operation_id", "")
         method = endpoint.get("method", "")
@@ -299,7 +379,17 @@ class ToolDiscoveryService:
         return description
 
     def _extract_tool_parameters(self, endpoint: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract parameter schema for tool definition."""
+        """Extract and normalize parameter schema for tool definition.
+
+        Processes OpenAPI parameter definitions and requestBody schemas to create
+        a standardized JSON Schema format suitable for LangGraph tool parameters.
+
+        Args:
+            endpoint: Endpoint definition containing parameters and requestBody
+
+        Returns:
+            JSON Schema object with properties, required fields, and type information
+        """
         parameters = {"type": "object", "properties": {}, "required": []}
 
         # Extract path parameters
