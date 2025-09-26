@@ -77,6 +77,7 @@ class ArchitectureAnalysisResult:
     """Results from architecture analysis"""
     score: float
     ddd_compliance: float
+    ddd_migration_status: float
     rest_compliance: float
     layer_separation: float
     ddd_issues: List[str]
@@ -203,6 +204,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
 
         scores = {
             'ddd_compliance': await self._check_ddd_compliance(service),
+            'ddd_migration_status': await self._check_ddd_migration_status(service),
             'rest_compliance': await self._check_rest_compliance(service),
             'layer_separation': await self._check_layer_separation(service),
             'empty_directories': await self._check_empty_directories(service),
@@ -219,7 +221,8 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         # Get weights from profile settings, fallback to defaults
         arch_settings = getattr(self.profile, 'architecture', {}) if self.profile else {}
 
-        ddd_weight = arch_settings.get('ddd_compliance_weight', 0.23)
+        ddd_weight = arch_settings.get('ddd_compliance_weight', 0.21)
+        ddd_migration_weight = arch_settings.get('ddd_migration_status_weight', 0.08)
         rest_weight = arch_settings.get('rest_compliance_weight', 0.18)
         layer_weight = arch_settings.get('layer_separation_weight', 0.09)
         empty_dirs_weight = arch_settings.get('empty_directories_weight', 0.04)
@@ -232,13 +235,14 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         docs_weight = arch_settings.get('documentation_quality_weight', 0.13)
 
         # Ensure weights sum to 1.0 (normalize if needed)
-        total_weight = (ddd_weight + rest_weight + layer_weight + empty_dirs_weight +
+        total_weight = (ddd_weight + ddd_migration_weight + rest_weight + layer_weight + empty_dirs_weight +
                        req_file_weight + docker_weight + dry_weight + kiss_weight +
                        ddd_patterns_weight + rest_bp_weight + docs_weight)
 
         if total_weight > 0:
             # Normalize weights to sum to 1.0
             ddd_weight /= total_weight
+            ddd_migration_weight /= total_weight
             rest_weight /= total_weight
             layer_weight /= total_weight
             empty_dirs_weight /= total_weight
@@ -252,6 +256,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
 
         architecture_score = (
             scores['ddd_compliance'] * ddd_weight +
+            scores['ddd_migration_status'] * ddd_migration_weight +
             scores['rest_compliance'] * rest_weight +
             scores['layer_separation'] * layer_weight +
             scores['empty_directories'] * empty_dirs_weight +
@@ -267,6 +272,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         return ArchitectureAnalysisResult(
             score=round(architecture_score, 2),
             ddd_compliance=scores['ddd_compliance'],
+            ddd_migration_status=scores['ddd_migration_status'],
             rest_compliance=scores['rest_compliance'],
             layer_separation=scores['layer_separation'],
             empty_directories=scores['empty_directories'],
@@ -383,6 +389,154 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         logger.info(f"🎯 DDD compliance analysis completed for {service.name}: {final_score:.1f}/100 final score")
 
         return final_score
+
+    async def _check_ddd_migration_status(self, service: ServiceInfo) -> float:
+        """Check DDD migration status and penalize for files outside desired structure.
+
+        This grading vector encourages migration to DDD+REST directory structure by:
+        - Rewarding completeness of DDD layer migration
+        - Penalizing excessive files in non-DDD locations
+        - Providing clear migration guidance
+
+        Returns:
+            Score from 0-100 indicating migration completeness
+        """
+        logger.info(f"🔄 Checking DDD migration status for {service.name}")
+
+        score = 100.0
+        migration_issues = []
+        migration_recommendations = []
+
+        # Define ideal DDD+REST directory structure
+        ideal_structure = {
+            'domain': {
+                'entities': 'Core business entities',
+                'services': 'Domain services and business logic',
+                'repositories': 'Repository interfaces',
+                'value_objects': 'Value objects and immutable types',
+                'exceptions': 'Domain-specific exceptions',
+                'events': 'Domain events'
+            },
+            'application': {
+                'commands': 'Command objects for write operations',
+                'queries': 'Query objects for read operations',
+                'handlers': 'Command and query handlers',
+                'dto': 'Data Transfer Objects',
+                'events': 'Application events'
+            },
+            'infrastructure': {
+                'config': 'Configuration management',
+                'database': 'Database connections and schemas',
+                'cache': 'Caching implementations',
+                'logging_utils': 'Logging utilities',
+                'validation_utils': 'Validation utilities',
+                'resource_optimizer': 'Resource optimization',
+                'langgraph_integration': 'External integrations'
+            },
+            'presentation': {
+                'api': 'API routes and controllers',
+                'dto': 'Presentation DTOs',
+                'controllers': 'HTTP controllers'
+            }
+        }
+
+        # Define legacy/problematic locations that should be migrated
+        legacy_locations = [
+            'modules/',      # Should be split into domain/application/infrastructure
+            'api/',          # Should be presentation/api/
+            'db/',           # Should be infrastructure/database/
+            'config/',       # Should be infrastructure/config/
+            'presentation/controllers/',  # Should be presentation/api/
+        ]
+
+        # Check completeness of ideal structure
+        total_layers = len(ideal_structure)
+        completed_layers = 0
+
+        for layer_name, subdirs in ideal_structure.items():
+            layer_path = service.path / layer_name
+            if layer_path.exists():
+                # Count how many required subdirs exist
+                existing_subdirs = 0
+                for subdir in subdirs.keys():
+                    if (layer_path / subdir).exists():
+                        existing_subdirs += 1
+
+                # Layer gets points based on subdirectory completeness
+                layer_completeness = (existing_subdirs / len(subdirs)) * 100
+                if layer_completeness >= 80:  # Consider layer complete if 80%+ subdirs exist
+                    completed_layers += 1
+                    migration_recommendations.append(f"✅ {layer_name}/ layer: {existing_subdirs}/{len(subdirs)} subdirs ({layer_completeness:.0f}% complete)")
+                else:
+                    migration_recommendations.append(f"🔄 {layer_name}/ layer: {existing_subdirs}/{len(subdirs)} subdirs - needs completion")
+            else:
+                migration_issues.append(f"🚨 MISSING: {layer_name}/ layer - critical for DDD architecture")
+                score -= 15  # Major penalty for missing layer
+
+        # Calculate structure completeness score
+        structure_completeness = (completed_layers / total_layers) * 100
+        score = min(score, structure_completeness)
+
+        # Penalize for excessive files in legacy/problematic locations
+        legacy_penalty = 0
+        for legacy_path in legacy_locations:
+            full_legacy_path = service.path / legacy_path.rstrip('/')
+            if full_legacy_path.exists():
+                # Count files in legacy location
+                legacy_files = list(full_legacy_path.rglob('*.py'))
+                if legacy_files:
+                    file_count = len(legacy_files)
+                    legacy_penalty += min(file_count * 2, 10)  # Max 10 points penalty per legacy location
+
+                    migration_issues.append(f"⚠️ LEGACY: {legacy_path} contains {file_count} Python files - migrate to DDD structure")
+                    migration_recommendations.append(f"🔄 MIGRATE: Move {legacy_path} files to appropriate DDD layers (domain/application/infrastructure/presentation)")
+
+        score -= legacy_penalty
+
+        # Check for files in service root that should be in specific layers
+        root_files_to_migrate = []
+        root_py_files = list(service.path.glob('*.py'))
+        root_py_files = [f for f in root_py_files if not f.name.startswith('__') and f.name not in ['main.py', 'conftest.py']]
+
+        for py_file in root_py_files:
+            if 'config' in py_file.name.lower():
+                root_files_to_migrate.append(f"{py_file.name} → infrastructure/config/")
+            elif 'validation' in py_file.name.lower() or 'utils' in py_file.name.lower():
+                root_files_to_migrate.append(f"{py_file.name} → infrastructure/")
+            elif 'model' in py_file.name.lower() or 'schema' in py_file.name.lower():
+                root_files_to_migrate.append(f"{py_file.name} → domain/entities/ or domain/value_objects/")
+            else:
+                root_files_to_migrate.append(f"{py_file.name} → determine appropriate DDD layer")
+
+        if root_files_to_migrate:
+            migration_issues.append(f"⚠️ ROOT FILES: {len(root_files_to_migrate)} Python files in service root should be migrated")
+            migration_recommendations.extend([f"🔄 MIGRATE: {migration}" for migration in root_files_to_migrate])
+            score -= min(len(root_files_to_migrate) * 1, 5)  # Small penalty for root files
+
+        # Check for oversized directories (indicates poor organization)
+        oversized_penalty = 0
+        for root_dir in service.path.rglob('*/'):
+            if root_dir.is_dir() and not any(part.startswith('.') for part in root_dir.parts):
+                try:
+                    py_files_in_dir = list(root_dir.glob('*.py'))
+                    if len(py_files_in_dir) > 15:  # More than 15 files in one directory
+                        oversized_penalty += 3
+                        migration_issues.append(f"⚠️ OVERSIZED: {root_dir.relative_to(service.path)} has {len(py_files_in_dir)} Python files - consider splitting")
+                        migration_recommendations.append(f"🔄 REFACTOR: Split {root_dir.relative_to(service.path)} into smaller, focused modules")
+                except (OSError, ValueError):
+                    continue
+
+        score -= min(oversized_penalty, 15)  # Max 15 points for oversized directories
+
+        # Ensure score doesn't go below 0
+        score = max(0, score)
+
+        # Add issues and recommendations to the main lists
+        self._ddd_issues.extend(migration_issues)
+        self._ddd_recommendations.extend(migration_recommendations)
+
+        logger.info(f"🔄 DDD migration status for {service.name}: {score:.1f}/100 ({completed_layers}/{total_layers} layers complete)")
+        return score
 
     async def _analyze_directory_structure(self, service: ServiceInfo) -> float:
         """Analyze directory structure for DDD compliance and identify refactoring needs."""
