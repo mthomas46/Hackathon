@@ -8,12 +8,13 @@ from typing import Any, Dict, List, Optional
 
 from fastapi.responses import HTMLResponse
 
-from services.shared.presentation.responses import create_error_response
+from services.shared.presentation.api.responses import create_error_response
 
 # Import shared utilities
-from services.shared.integrations.clients.clients import ServiceClients
-from services.shared.monitoring.logging import fire_and_forget
-from services.shared.utilities.error_handling import ServiceException
+from services.shared.infrastructure.external.clients.clients import ServiceClients
+from services.shared.infrastructure.monitoring.logging import fire_and_forget
+from services.shared.infrastructure.utilities.error_handling import ServiceException
+from services.shared.core.constants_new import EnvVars
 
 # Global configuration for frontend service
 _DEFAULT_TIMEOUT = 30
