@@ -213,46 +213,68 @@ class SourceAgentMonitor:
     def _calculate_operation_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached operations."""
         if not self._fetches and not self._normalizations and not self._analyses:
-            return {
-                "total_operations": 0,
-                "fetch_operations": 0,
-                "normalization_operations": 0,
-                "analysis_operations": 0,
-                "success_rate": 0,
-            }
+            return self._create_empty_stats()
 
+        # Calculate operation counts
+        operation_counts = self._count_operations()
+
+        # Calculate success rate
+        success_rate = self._calculate_success_rate(operation_counts)
+
+        # Calculate source distribution
+        source_distribution = self._calculate_source_distribution()
+
+        return {
+            **operation_counts,
+            "success_rate": success_rate,
+            "source_distribution": source_distribution,
+        }
+
+    def _create_empty_stats(self) -> Dict[str, Any]:
+        """Create empty statistics when no operations exist."""
+        return {
+            "total_operations": 0,
+            "fetch_operations": 0,
+            "normalization_operations": 0,
+            "analysis_operations": 0,
+            "success_rate": 0,
+        }
+
+    def _count_operations(self) -> Dict[str, int]:
+        """Count operations by type."""
         total_fetches = len(self._fetches)
         total_normalizations = len(self._normalizations)
         total_analyses = len(self._analyses)
-        total_operations = total_fetches + total_normalizations + total_analyses
 
-        # Calculate success rates
+        return {
+            "total_operations": total_fetches + total_normalizations + total_analyses,
+            "fetch_operations": total_fetches,
+            "normalization_operations": total_normalizations,
+            "analysis_operations": total_analyses,
+        }
+
+    def _calculate_success_rate(self, operation_counts: Dict[str, int]) -> float:
+        """Calculate overall success rate across all operations."""
+        total_operations = operation_counts["total_operations"]
+
+        if total_operations == 0:
+            return 0.0
+
         successful_operations = (
-            sum(1 for f in self._fetches if f.get("success"))
-            + sum(1 for n in self._normalizations if n.get("success"))
-            + sum(1 for a in self._analyses if a.get("success"))
+            sum(1 for f in self._fetches if f.get("success")) +
+            sum(1 for n in self._normalizations if n.get("success")) +
+            sum(1 for a in self._analyses if a.get("success"))
         )
 
-        success_rate = (
-            round((successful_operations / total_operations) * 100, 1)
-            if total_operations > 0
-            else 0
-        )
+        return round((successful_operations / total_operations) * 100, 1)
 
-        # Source distribution
+    def _calculate_source_distribution(self) -> Dict[str, int]:
+        """Calculate distribution of sources from fetch operations."""
         source_counts = {}
         for fetch in self._fetches:
             source = fetch.get("source", "unknown")
             source_counts[source] = source_counts.get(source, 0) + 1
-
-        return {
-            "total_operations": total_operations,
-            "fetch_operations": total_fetches,
-            "normalization_operations": total_normalizations,
-            "analysis_operations": total_analyses,
-            "success_rate": success_rate,
-            "source_distribution": source_counts,
-        }
+        return source_counts
 
     def get_fetch_history(self, limit: int = 20) -> List[Dict[str, Any]]:
         """Get recent document fetch history."""
