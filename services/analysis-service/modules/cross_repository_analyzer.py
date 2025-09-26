@@ -749,6 +749,110 @@ class CrossRepositoryAnalyzer:
 
         return recommendations
 
+    def _validate_analysis_input(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Validate input parameters for analysis."""
+        if not repositories:
+            return {
+                "error": "No repositories provided for analysis",
+                "message": "At least one repository is required",
+            }
+        return {}
+
+    def _get_default_analysis_types(self) -> List[str]:
+        """Get default analysis types if none specified."""
+        return [
+            "consistency_analysis",
+            "coverage_analysis",
+            "quality_analysis",
+            "redundancy_analysis",
+        ]
+
+    def _initialize_analysis_results(
+        self,
+        repositories: List[Dict[str, Any]],
+        analysis_types: List[str],
+        start_time: float
+    ) -> Dict[str, Any]:
+        """Initialize the analysis results structure."""
+        return {
+            "repository_count": len(repositories),
+            "repositories_analyzed": [],
+            "analysis_types": analysis_types,
+            "consistency_analysis": {},
+            "coverage_analysis": {},
+            "quality_analysis": {},
+            "redundancy_analysis": {},
+            "dependency_analysis": {},
+            "overall_score": 0.0,
+            "recommendations": [],
+            "processing_time": 0.0,
+            "analysis_timestamp": start_time,
+        }
+
+    async def _analyze_individual_repositories(self, repositories: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Analyze each repository individually."""
+        repository_analyses = []
+        for repo_data in repositories:
+            repo_analysis = self._analyze_repository_structure(repo_data)
+            repository_analyses.append(repo_analysis)
+        return repository_analyses
+
+    def _process_repository_analyses(self, repository_analyses: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Process individual repository analyses into summary format."""
+        repositories_analyzed = []
+        for repo_analysis in repository_analyses:
+            repositories_analyzed.append({
+                "repository_id": repo_analysis["repository_id"],
+                "repository_name": repo_analysis["repository_name"],
+                "documentation_files": len(repo_analysis["documentation_files"]),
+                "documentation_ratio": repo_analysis["documentation_ratio"],
+            })
+
+        return {
+            "repositories_analyzed": repositories_analyzed,
+            "repository_analyses": repository_analyses
+        }
+
+    async def _perform_cross_repository_analyses(
+        self,
+        analysis_results: Dict[str, Any],
+        analysis_types: List[str]
+    ) -> None:
+        """Perform cross-repository analyses based on types requested."""
+        repository_analyses = analysis_results["repository_analyses"]
+
+        if "consistency_analysis" in analysis_types:
+            analysis_results["consistency_analysis"] = self._calculate_consistency_metrics(repository_analyses)
+
+        if "coverage_analysis" in analysis_types:
+            analysis_results["coverage_analysis"] = self._analyze_coverage_gaps(repository_analyses)
+
+        if "redundancy_analysis" in analysis_types:
+            analysis_results["redundancy_analysis"] = self._identify_redundancies(repository_analyses)
+
+    async def _finalize_analysis_results(self, analysis_results: Dict[str, Any], start_time: float) -> Dict[str, Any]:
+        """Finalize analysis results with scores and recommendations."""
+        # Calculate overall score
+        analysis_results["overall_score"] = self._calculate_overall_score(analysis_results)
+
+        # Generate recommendations
+        analysis_results["recommendations"] = self._generate_recommendations(analysis_results)
+
+        # Calculate processing time
+        analysis_results["processing_time"] = time.time() - start_time
+
+        return analysis_results
+
+    def _handle_analysis_error(self, error: Exception, repositories: List[Dict[str, Any]], start_time: float) -> Dict[str, Any]:
+        """Handle analysis errors with appropriate error response."""
+        logger.error(f"Cross-repository analysis failed: {error}")
+        return {
+            "error": "Cross-repository analysis failed",
+            "message": str(error),
+            "repository_count": len(repositories),
+            "processing_time": time.time() - start_time,
+        }
+
     async def analyze_repositories(
         self,
         repositories: List[Dict[str, Any]],
@@ -759,79 +863,26 @@ class CrossRepositoryAnalyzer:
         start_time = time.time()
 
         try:
-            if not repositories:
-                return {
-                    "error": "No repositories provided for analysis",
-                    "message": "At least one repository is required",
-                }
+            # Validate input and setup analysis
+            validation_result = self._validate_analysis_input(repositories)
+            if "error" in validation_result:
+                return validation_result
 
-            # Default analysis types
-            if not analysis_types:
-                analysis_types = [
-                    "consistency_analysis",
-                    "coverage_analysis",
-                    "quality_analysis",
-                    "redundancy_analysis",
-                ]
-
-            analysis_results = {
-                "repository_count": len(repositories),
-                "repositories_analyzed": [],
-                "analysis_types": analysis_types,
-                "consistency_analysis": {},
-                "coverage_analysis": {},
-                "quality_analysis": {},
-                "redundancy_analysis": {},
-                "dependency_analysis": {},
-                "overall_score": 0.0,
-                "recommendations": [],
-                "processing_time": 0.0,
-                "analysis_timestamp": time.time(),
-            }
+            analysis_types = analysis_types or self._get_default_analysis_types()
+            analysis_results = self._initialize_analysis_results(repositories, analysis_types, start_time)
 
             # Analyze each repository
-            repository_analyses = []
-            for repo_data in repositories:
-                repo_analysis = self._analyze_repository_structure(repo_data)
-                repository_analyses.append(repo_analysis)
-                analysis_results["repositories_analyzed"].append(
-                    {
-                        "repository_id": repo_analysis["repository_id"],
-                        "repository_name": repo_analysis["repository_name"],
-                        "documentation_files": len(repo_analysis["documentation_files"]),
-                        "documentation_ratio": repo_analysis["documentation_ratio"],
-                    }
-                )
+            repository_analyses = await self._analyze_individual_repositories(repositories)
+            analysis_results.update(self._process_repository_analyses(repository_analyses))
 
             # Perform cross-repository analyses
-            if "consistency_analysis" in analysis_types:
-                analysis_results["consistency_analysis"] = self._calculate_consistency_metrics(repository_analyses)
+            await self._perform_cross_repository_analyses(analysis_results, analysis_types)
 
-            if "coverage_analysis" in analysis_types:
-                analysis_results["coverage_analysis"] = self._analyze_coverage_gaps(repository_analyses)
-
-            if "redundancy_analysis" in analysis_types:
-                analysis_results["redundancy_analysis"] = self._identify_redundancies(repository_analyses)
-
-            # Calculate overall score
-            analysis_results["overall_score"] = self._calculate_overall_score(analysis_results)
-
-            # Generate recommendations
-            analysis_results["recommendations"] = self._generate_recommendations(analysis_results)
-
-            processing_time = time.time() - start_time
-            analysis_results["processing_time"] = processing_time
-
-            return analysis_results
+            # Finalize results
+            return await self._finalize_analysis_results(analysis_results, start_time)
 
         except Exception as e:
-            logger.error(f"Cross-repository analysis failed: {e}")
-            return {
-                "error": "Cross-repository analysis failed",
-                "message": str(e),
-                "repository_count": len(repositories),
-                "processing_time": time.time() - start_time,
-            }
+            return self._handle_analysis_error(e, repositories, start_time)
 
     def _calculate_overall_score(self, analysis_results: Dict[str, Any]) -> float:
         """Calculate overall cross-repository analysis score."""

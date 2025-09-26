@@ -1,28 +1,25 @@
 {
   "service_name": "bedrock-proxy",
-  "overall_score": 64.08,
+  "overall_score": 64.0,
   "grade": "D",
   "dimensions": {
-    "architecture": 82.92,
-    "code_quality": 78.73,
+    "architecture": 84.29,
+    "code_quality": 76.37,
     "performance": 83.75,
-    "maintainability": 67.7,
+    "maintainability": 68.2,
     "documentation_quality": 80.0,
     "dry_principles": 60.0,
     "kiss_principles": 82.0
   },
-  "architecture": "ArchitectureAnalysisResult(score=82.92, ddd_compliance=100, rest_compliance=80.0, layer_separation=100.0, ddd_issues=[], ddd_recommendations=[], file_metrics={}, test_quality={'coverage_score': 0, 'quality_score': 0, 'structure_score': 0, 'total_score': 0, 'recommendations': []}, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, endpoint_analysis={'total_endpoints': 2, 'rest_compliant_endpoints': 0, 'openapi_compliant_endpoints': 0, 'project_standard_compliant_endpoints': 1, 'endpoint_issues': [], 'rest_violations': ['Low REST compliance score', 'Low REST compliance score'], 'openapi_violations': ['Low OpenAPI compliance score', 'Low OpenAPI compliance score'], 'standard_violations': ['Low project standards compliance'], 'endpoint_details': [{'method': 'GET', 'path': '/health', 'function': 'health', 'file': 'services/bedrock-proxy/main.py', 'line_number': 67}, {'method': 'POST', 'path': '/invoke', 'function': 'invoke', 'file': 'services/bedrock-proxy/main.py', 'line_number': 187}], 'compliant_endpoints': [], 'non_compliant_endpoints': [{'method': 'GET', 'path': '/health', 'function': 'health', 'file': 'services/bedrock-proxy/main.py', 'line_number': 67, 'issues': ['REST compliance issues', 'OpenAPI documentation issues']}, {'method': 'POST', 'path': '/invoke', 'function': 'invoke', 'file': 'services/bedrock-proxy/main.py', 'line_number': 187, 'issues': ['REST compliance issues', 'OpenAPI documentation issues', 'Project standard violations']}], 'rest_compliance_score': 0.0, 'openapi_compliance_score': 0.0, 'project_standards_compliance_score': 50.0, 'endpoint_detection_validation': {'total_fastapi_files_found': 2, 'detection_gaps': [], 'recommendations': []}}, complexity_analysis={'high_complexity_functions': [], 'total_functions_analyzed': 0, 'complexity_distribution': {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}, 'average_complexity': 0.0, 'recommendations': []}, dependency_coupling={'import_dependencies': {}, 'coupling_score': 0, 'recommendations': []}, dead_code_analysis={'dead_code_lines': 0, 'unused_functions': [], 'recommendations': []}, test_quality_metrics={'total_test_files': 0, 'test_naming_issues': 0, 'recommendations': []}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'documentation_score': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 0.0, 'undocumented_functions': 0, 'recommendations': []}, configuration_management={'hardcoded_values': 0, 'security_issues': 0, 'recommendations': []}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'recommendations': []}, directory_analysis={}, issues=['Requirements/dependency files need review or updates'], recommendations=['📦 DEPENDENCIES: Add/update requirements.txt and consider pyproject.toml', '🔒 LOCK FILES: Use poetry.lock or requirements-lock.txt for reproducible builds'], detailed_issues=[], empty_directories=95.0, requirements_file=70.0, docker_infrastructure=95.0, dry_principles=60.0, kiss_principles=82.0, ddd_patterns=30.0, rest_best_practices=50.0, documentation_quality=80.0)",
-  "code_quality": "CodeQualityAnalysisResult(score=78.73, complexity_score=99.0, testing_score=40.0, linting_score=100, duplication_score=71.09170305676857, security_score=100, dry_principle_score=60.0, kiss_principle_score=100, test_coverage=0, cyclomatic_complexity={'high_complexity_functions': [], 'total_functions_analyzed': 22, 'complexity_distribution': {'low': 19, 'medium': 2, 'high': 1, 'very_high': 0}, 'average_complexity': 3.8636363636363638, 'recommendations': []}, test_quality_metrics={'total_test_files': 4, 'test_naming_issues': 92, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 0, 'mock_usage': 1, 'recommendations': ['Fix 92 poorly named test functions']}, linting_quality={'pylint_score': 0, 'flake8_issues': 12, 'total_issues': 12, 'issues_by_type': {}, 'recommendations': []}, duplication_analysis={'total_duplicate_blocks': 31, 'duplicate_lines': 124, 'total_lines_analyzed': 687, 'duplication_rate': 18.049490538573508, 'recommendations': ['High duplication rate (18.0%) - consider refactoring']}, issues=['Insufficient test coverage', 'Code duplication detected'], recommendations=['Increase test coverage to at least 70.0%', 'Reduce code duplication through refactoring'])",
-  "performance": "PerformanceAnalysisResult(score=83.75, system_metrics_score=75.0, database_score=70.0, resource_usage_score=100, system_metrics={'cpu_percent': 19.1, 'memory_percent': 54.5, 'memory_used_gb': 31.249008178710938, 'disk_read_mb': 299388.26953125, 'disk_write_mb': 201506.28125, 'network_sent_mb': 2163.9580078125, 'network_recv_mb': 1652.0576171875, 'process_memory_percent': 0.08449554443359375, 'process_cpu_percent': 1.3, 'timestamp': 1758877093.769055}, database_performance={'has_database_layer': False, 'connection_pooling': False, 'query_optimization': False, 'caching_strategy': False, 'migration_scripts': False, 'performance_issues': [], 'recommendations': []}, resource_usage={'file_handle_leaks': 0, 'memory_leaks_potential': 0, 'resource_management_issues': 0, 'context_manager_usage': 12, 'exception_handling_resources': 0, 'large_objects': [], 'resource_intensive_operations': [], 'recommendations': []}, performance_indicators={'cpu_health': 'good', 'memory_health': 'good', 'disk_health': 'high', 'network_health': 'high', 'overall_performance': 'moderate'}, issues=[], recommendations=['Optimize system resource usage - monitor CPU, memory, and I/O', 'Improve database performance - add connection pooling and query optimization'])",
-  "maintainability": "MaintainabilityAnalysisResult(score=67.7, documentation_score=20.0, organization_score=100, error_handling_score=98.0, devops_readiness_score=100, scalability_score=100, linting_quality={'pylint_score': 0, 'flake8_issues': 12, 'total_issues': 12, 'issues_by_type': {}, 'recommendations': []}, test_quality={'coverage_score': 0, 'quality_score': 8, 'structure_score': 20, 'total_score': 28, 'recommendations': []}, test_quality_metrics={'total_test_files': 4, 'test_naming_issues': 92, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 0, 'mock_usage': 1, 'recommendations': ['Fix 92 poorly named test functions']}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'total_endpoints': 0, 'documentation_score': 0, 'missing_summaries': 0, 'missing_descriptions': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 100.0, 'undocumented_functions': 0, 'undocumented_classes': 0, 'total_functions': 20, 'total_classes': 2, 'recommendations': []}, configuration_management={'hardcoded_values': 5, 'environment_variables': 0, 'config_files': 1, 'security_issues': 5, 'recommendations': ['Replace 5 hardcoded values with environment variables']}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'structured_logging': 0, 'missing_error_logs': 2, 'logging_levels_used': set(), 'recommendations': ['Add error logging to 2 exception handlers']}, issues=['Insufficient documentation coverage'], recommendations=['Increase docstring coverage to at least 80.0%'], architecture_quality_score=20.0)",
+  "architecture": "ArchitectureAnalysisResult(score=84.29, ddd_compliance=100, rest_compliance=80.0, layer_separation=100.0, ddd_issues=[\"🚨 MISSING DDD LAYERS: ['presentation'] - all four layers required\", '🚨 MISSING ROUTES: presentation/routes/ directory required for DDD+REST', '🚨 CRITICAL: domain/ layer is empty - no domain entities, services, or repositories', '🐳 DOCKER/INFRA: Service not referenced in Makefile', '🔄 DRY: Found 113 code duplication patterns', '🎯 KISS: Found 4 overly complex methods (>15 cyclomatic complexity)', 'DDD patterns implementation could be improved', 'REST API could follow more best practices'], ddd_recommendations=['📁 CREATE: Missing DDD layers: presentation', '📁 CREATE: presentation/routes/ directory with domain-organized route files', '📝 CREATE: domain entities, services, and repositories in domain/ layer', '🔄 Extract common code into shared utilities or base classes', '🧩 Refactor complex methods into smaller, focused functions', '🎯 Implement proper DDD patterns: entities, value objects, aggregates, domain events', '📡 Implement REST best practices: proper HTTP methods, status codes, HATEOAS, content negotiation'], file_metrics={}, test_quality={'coverage_score': 0, 'quality_score': 0, 'structure_score': 0, 'total_score': 0, 'recommendations': []}, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, endpoint_analysis={'total_endpoints': 2, 'rest_compliant_endpoints': 2, 'openapi_compliant_endpoints': 2, 'project_standard_compliant_endpoints': 1, 'endpoint_issues': [], 'rest_violations': [], 'openapi_violations': [], 'standard_violations': ['Low project standards compliance'], 'endpoint_details': [{'method': 'GET', 'path': '/health', 'function': 'health', 'file': 'services/bedrock-proxy/main.py', 'line_number': 68}, {'method': 'POST', 'path': '/invoke', 'function': 'invoke', 'file': 'services/bedrock-proxy/main.py', 'line_number': 188}], 'compliant_endpoints': [{'method': 'GET', 'path': '/health', 'function': 'health', 'file': 'services/bedrock-proxy/main.py', 'line_number': 68}], 'non_compliant_endpoints': [{'method': 'POST', 'path': '/invoke', 'function': 'invoke', 'file': 'services/bedrock-proxy/main.py', 'line_number': 188, 'issues': ['Project standard violations']}], 'rest_compliance_score': 100.0, 'openapi_compliance_score': 100.0, 'project_standards_compliance_score': 50.0, 'endpoint_detection_validation': {'total_fastapi_files_found': 3, 'detection_gaps': [], 'recommendations': []}}, complexity_analysis={'high_complexity_functions': [], 'total_functions_analyzed': 0, 'complexity_distribution': {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}, 'average_complexity': 0.0, 'recommendations': []}, dependency_coupling={'import_dependencies': {}, 'coupling_score': 0, 'recommendations': []}, dead_code_analysis={'dead_code_lines': 0, 'unused_functions': [], 'recommendations': []}, test_quality_metrics={'total_test_files': 0, 'test_naming_issues': 0, 'recommendations': []}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'documentation_score': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 0.0, 'undocumented_functions': 0, 'recommendations': []}, configuration_management={'hardcoded_values': 0, 'security_issues': 0, 'recommendations': []}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'recommendations': []}, directory_analysis={}, issues=[], recommendations=[], detailed_issues=[{'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/bedrock-proxy/modules/templates.py', 'description': \"Function 'detect_template_from_prompt' has cyclomatic complexity 22 (threshold: 10)\", 'severity': 'critical', 'dimension': 'code_quality', 'line_number': 93}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/bedrock-proxy/modules/templates.py', 'description': \"Function 'build_template_sections' has cyclomatic complexity 14 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 146}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/bedrock-proxy/modules/utils.py', 'description': \"Function 'sanitize_for_response' has cyclomatic complexity 10 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 9}, {'issue_type': 'high_cyclomatic_complexity', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/bedrock-proxy/modules/utils.py', 'description': \"Function 'bullets_from_text' has cyclomatic complexity 14 (threshold: 10)\", 'severity': 'warning', 'dimension': 'code_quality', 'line_number': 62}], empty_directories=100.0, requirements_file=100.0, docker_infrastructure=95.0, dry_principles=60.0, kiss_principles=82.0, ddd_patterns=30.0, rest_best_practices=50.0, documentation_quality=80.0)",
+  "code_quality": "CodeQualityAnalysisResult(score=76.37, complexity_score=99.0, testing_score=30.0, linting_score=100, duplication_score=71.40607424071992, security_score=100, dry_principle_score=60.0, kiss_principle_score=100, test_coverage=0, cyclomatic_complexity={'high_complexity_functions': [], 'total_functions_analyzed': 28, 'complexity_distribution': {'low': 25, 'medium': 2, 'high': 1, 'very_high': 0}, 'average_complexity': 3.25, 'recommendations': []}, test_quality_metrics={'total_test_files': 5, 'test_naming_issues': 102, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 0, 'mock_usage': 2, 'recommendations': ['Fix 102 poorly named test functions']}, linting_quality={'pylint_score': 0, 'flake8_issues': 64, 'total_issues': 64, 'issues_by_type': {}, 'recommendations': []}, duplication_analysis={'total_duplicate_blocks': 40, 'duplicate_lines': 160, 'total_lines_analyzed': 889, 'duplication_rate': 17.99775028121485, 'recommendations': ['High duplication rate (18.0%) - consider refactoring']}, issues=['Insufficient test coverage', 'Code duplication detected'], recommendations=['Increase test coverage to at least 70.0%', 'Reduce code duplication through refactoring'])",
+  "performance": "PerformanceAnalysisResult(score=83.75, system_metrics_score=75.0, database_score=70.0, resource_usage_score=100, system_metrics={'cpu_percent': 20.6, 'memory_percent': 53.4, 'memory_used_gb': 30.218002319335938, 'disk_read_mb': 447715.67578125, 'disk_write_mb': 276091.453125, 'network_sent_mb': 2394.88671875, 'network_recv_mb': 2171.5458984375, 'process_memory_percent': 0.05695819854736328, 'process_cpu_percent': 0.1, 'timestamp': 1758902846.1098702}, database_performance={'has_database_layer': False, 'connection_pooling': False, 'query_optimization': False, 'caching_strategy': False, 'migration_scripts': False, 'performance_issues': [], 'recommendations': []}, resource_usage={'file_handle_leaks': 0, 'memory_leaks_potential': 0, 'resource_management_issues': 0, 'context_manager_usage': 14, 'exception_handling_resources': 0, 'large_objects': [], 'resource_intensive_operations': [], 'recommendations': []}, performance_indicators={'cpu_health': 'good', 'memory_health': 'good', 'disk_health': 'high', 'network_health': 'high', 'overall_performance': 'moderate'}, issues=[], recommendations=['Optimize system resource usage - monitor CPU, memory, and I/O', 'Improve database performance - add connection pooling and query optimization'])",
+  "maintainability": "MaintainabilityAnalysisResult(score=68.2, documentation_score=20.0, organization_score=100, error_handling_score=98.0, devops_readiness_score=100, scalability_score=100, linting_quality={'pylint_score': 0, 'flake8_issues': 64, 'total_issues': 64, 'issues_by_type': {}, 'recommendations': []}, test_quality={'coverage_score': 0, 'quality_score': 10, 'structure_score': 10, 'total_score': 20, 'recommendations': []}, test_quality_metrics={'total_test_files': 5, 'test_naming_issues': 102, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 0, 'mock_usage': 2, 'recommendations': ['Fix 102 poorly named test functions']}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'total_endpoints': 0, 'documentation_score': 0, 'missing_summaries': 0, 'missing_descriptions': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 100.0, 'undocumented_functions': 0, 'undocumented_classes': 0, 'total_functions': 20, 'total_classes': 18, 'recommendations': []}, configuration_management={'hardcoded_values': 10, 'environment_variables': 0, 'config_files': 1, 'security_issues': 10, 'recommendations': ['Replace 10 hardcoded values with environment variables']}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'structured_logging': 0, 'missing_error_logs': 2, 'logging_levels_used': set(), 'recommendations': ['Add error logging to 2 exception handlers']}, issues=['Insufficient documentation coverage'], recommendations=['Increase docstring coverage to at least 80.0%'], architecture_quality_score=25.0)",
   "documentation_quality": {},
   "dry_principles": {},
   "kiss_principles": {},
   "recommendations": [
     "⚠️ HIGH PRIORITY: Service needs improvement - score below 70",
-    "📦 DEPENDENCIES: Add/update requirements.txt and consider pyproject.toml",
-    "🔒 LOCK FILES: Use poetry.lock or requirements-lock.txt for reproducible builds",
-    "Address: Requirements/dependency files need review or updates",
     "Increase test coverage to at least 70.0%",
     "Reduce code duplication through refactoring",
     "Address: Insufficient test coverage",
@@ -33,10 +30,43 @@
     "Address: Insufficient documentation coverage"
   ],
   "critical_issues": [],
-  "detailed_issues": [],
+  "detailed_issues": [
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/bedrock-proxy/modules/templates.py",
+      "description": "Function 'detect_template_from_prompt' has cyclomatic complexity 22 (threshold: 10)",
+      "severity": "critical",
+      "dimension": "code_quality",
+      "line_number": 93
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/bedrock-proxy/modules/templates.py",
+      "description": "Function 'build_template_sections' has cyclomatic complexity 14 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 146
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/bedrock-proxy/modules/utils.py",
+      "description": "Function 'sanitize_for_response' has cyclomatic complexity 10 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 9
+    },
+    {
+      "issue_type": "high_cyclomatic_complexity",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/bedrock-proxy/modules/utils.py",
+      "description": "Function 'bullets_from_text' has cyclomatic complexity 14 (threshold: 10)",
+      "severity": "warning",
+      "dimension": "code_quality",
+      "line_number": 62
+    }
+  ],
   "critical_issues_count": 0,
   "estimated_effort_days": 3.0,
-  "analysis_timestamp": "2025-09-26T03:58:14.198573",
+  "analysis_timestamp": "2025-09-26T11:07:26.653029",
   "metadata": {
     "service_info": {
       "name": "bedrock-proxy",
@@ -44,7 +74,7 @@
       "type": "python",
       "status": "unknown",
       "metadata": {},
-      "discovered_at": "2025-09-26T03:58:08.147217",
+      "discovered_at": "2025-09-26T11:07:23.257123",
       "last_audited_at": null
     },
     "profile_used": "strict",
@@ -100,7 +130,7 @@
     },
     "audit_timestamp": null,
     "use_case": "audit_service",
-    "service_discovered_at": "2025-09-26T03:58:08.147217",
-    "audit_duration_seconds": 6.051852703094482
+    "service_discovered_at": "2025-09-26T11:07:23.257123",
+    "audit_duration_seconds": -2.7e-05
   }
 }
