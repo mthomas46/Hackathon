@@ -51,7 +51,8 @@ from application.use_cases.audit_service_use_case import AuditServiceUseCase
 from application.commands.audit_service_command import AuditServiceCommand
 from infrastructure.analyzers import (
     ArchitectureAnalyzer, CodeQualityAnalyzer,
-    PerformanceAnalyzer, MaintainabilityAnalyzer
+    PerformanceAnalyzer, MaintainabilityAnalyzer,
+    DRYPrinciplesAnalyzer, KISSPrinciplesAnalyzer, DocumentationAnalyzer
 )
 from infrastructure.file_system import FileSystemService
 from config.profiles import profile_manager
@@ -110,6 +111,9 @@ class AuditOrchestrator:
             'code_quality': CodeQualityAnalyzer(self.profile),
             'performance': PerformanceAnalyzer(self.profile),
             'maintainability': MaintainabilityAnalyzer(self.profile),
+            'dry_principles': DRYPrinciplesAnalyzer(self.file_system),
+            'kiss_principles': KISSPrinciplesAnalyzer(self.file_system),
+            'documentation_quality': DocumentationAnalyzer(self.file_system),
         }
 
         # Initialize application use case

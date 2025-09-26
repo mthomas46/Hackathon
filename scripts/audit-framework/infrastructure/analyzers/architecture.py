@@ -210,11 +210,8 @@ class ArchitectureAnalyzer(BaseAnalyzer):
             'empty_directories': await self._check_empty_directories(service),
             'requirements_file': await self._check_requirements_file(service),
             'docker_infrastructure': await self._check_docker_infrastructure_config(service),
-            'dry_principles': await self._check_dry_principles(service),
-            'kiss_principles': await self._check_kiss_principles(service),
             'ddd_patterns': await self._check_ddd_patterns(service),
-            'rest_best_practices': await self._check_rest_best_practices(service),
-            'documentation_quality': await self._check_documentation_quality(service)
+            'rest_best_practices': await self._check_rest_best_practices(service)
         }
 
         # Calculate weighted architecture score using profile-specific weights
@@ -228,16 +225,12 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         empty_dirs_weight = arch_settings.get('empty_directories_weight', 0.04)
         req_file_weight = arch_settings.get('requirements_file_weight', 0.04)
         docker_weight = arch_settings.get('docker_infrastructure_weight', 0.04)
-        dry_weight = arch_settings.get('dry_principles_weight', 0.14)
-        kiss_weight = arch_settings.get('kiss_principles_weight', 0.09)
         ddd_patterns_weight = arch_settings.get('ddd_patterns_weight', 0.02)
         rest_bp_weight = arch_settings.get('rest_best_practices_weight', 0.02)
-        docs_weight = arch_settings.get('documentation_quality_weight', 0.13)
 
         # Ensure weights sum to 1.0 (normalize if needed)
         total_weight = (ddd_weight + ddd_migration_weight + rest_weight + layer_weight + empty_dirs_weight +
-                       req_file_weight + docker_weight + dry_weight + kiss_weight +
-                       ddd_patterns_weight + rest_bp_weight + docs_weight)
+                       req_file_weight + docker_weight + ddd_patterns_weight + rest_bp_weight)
 
         if total_weight > 0:
             # Normalize weights to sum to 1.0
@@ -248,11 +241,8 @@ class ArchitectureAnalyzer(BaseAnalyzer):
             empty_dirs_weight /= total_weight
             req_file_weight /= total_weight
             docker_weight /= total_weight
-            dry_weight /= total_weight
-            kiss_weight /= total_weight
             ddd_patterns_weight /= total_weight
             rest_bp_weight /= total_weight
-            docs_weight /= total_weight
 
         architecture_score = (
             scores['ddd_compliance'] * ddd_weight +
@@ -262,11 +252,8 @@ class ArchitectureAnalyzer(BaseAnalyzer):
             scores['empty_directories'] * empty_dirs_weight +
             scores['requirements_file'] * req_file_weight +
             scores['docker_infrastructure'] * docker_weight +
-            scores['dry_principles'] * dry_weight +
-            scores['kiss_principles'] * kiss_weight +
             scores['ddd_patterns'] * ddd_patterns_weight +
-            scores['rest_best_practices'] * rest_bp_weight +
-            scores['documentation_quality'] * docs_weight
+            scores['rest_best_practices'] * rest_bp_weight
         )
 
         return ArchitectureAnalysisResult(
@@ -278,11 +265,11 @@ class ArchitectureAnalyzer(BaseAnalyzer):
             empty_directories=scores['empty_directories'],
             requirements_file=scores['requirements_file'],
             docker_infrastructure=scores['docker_infrastructure'],
-            dry_principles=scores['dry_principles'],
-            kiss_principles=scores['kiss_principles'],
+            dry_principles=0.0,  # Calculated by separate analyzer
+            kiss_principles=0.0,  # Calculated by separate analyzer
             ddd_patterns=scores['ddd_patterns'],
             rest_best_practices=scores['rest_best_practices'],
-            documentation_quality=scores['documentation_quality'],
+            documentation_quality=0.0,  # Calculated by separate analyzer
             ddd_issues=self._ddd_issues,
             ddd_recommendations=self._ddd_recommendations,
             file_metrics=self._file_metrics,
