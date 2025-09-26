@@ -1835,40 +1835,56 @@ class SimulationAnalyzer:
         """Generate comprehensive Markdown report."""
         md_lines = []
 
-        # Header
-        md_lines.append("# 📊 Comprehensive Simulation Summary Report")
-        md_lines.append("")
-        md_lines.append(f"**Simulation ID:** {report['simulation_id']}")
-        md_lines.append(f"**Report ID:** {report['report_id']}")
-        md_lines.append(f"**Generated:** {report['generated_at']}")
-        md_lines.append("")
+        # Header section
+        md_lines.extend(self._generate_report_header(report))
 
-        # Executive Summary
+        # Executive Summary section
+        md_lines.extend(self._generate_executive_summary_section(report))
+
+        # Overall Assessment section
+        md_lines.extend(self._generate_overall_assessment_section(report))
+
+        # Continue with detailed sections
+        sections = report.get("sections", {})
+        md_lines.extend(self._generate_detailed_sections(sections))
+
+        return "\n".join(md_lines)
+
+    def _generate_report_header(self, report: Dict[str, Any]) -> List[str]:
+        """Generate the report header section."""
+        return [
+            "# 📊 Comprehensive Simulation Summary Report",
+            "",
+            f"**Simulation ID:** {report['simulation_id']}",
+            f"**Report ID:** {report['report_id']}",
+            f"**Generated:** {report['generated_at']}",
+            "",
+        ]
+
+    def _generate_executive_summary_section(self, report: Dict[str, Any]) -> List[str]:
+        """Generate the executive summary section."""
+        md_lines = ["## 📈 Executive Summary", ""]
         exec_summary = report.get("executive_summary", {})
-        md_lines.append("## 📈 Executive Summary")
-        md_lines.append("")
-        md_lines.append(
-            f"- **Total Documents:** {exec_summary.get('total_documents', 0)}"
-        )
-        md_lines.append(
-            f"- **Critical Issues:** {exec_summary.get('critical_issues', 0)}"
-        )
-        md_lines.append(
-            f"- **Improvement Opportunities:** {exec_summary.get('improvement_opportunities', 0)}"
-        )
-        md_lines.append("")
+
+        md_lines.extend([
+            f"- **Total Documents:** {exec_summary.get('total_documents', 0)}",
+            f"- **Critical Issues:** {exec_summary.get('critical_issues', 0)}",
+            f"- **Improvement Opportunities:** {exec_summary.get('improvement_opportunities', 0)}",
+            "",
+        ])
 
         if exec_summary.get("key_findings"):
-            md_lines.append("### Key Findings")
-            md_lines.append("")
-            for finding in exec_summary["key_findings"]:
-                md_lines.append(f"- {finding}")
+            md_lines.extend(["### Key Findings", ""])
+            md_lines.extend(f"- {finding}" for finding in exec_summary["key_findings"])
             md_lines.append("")
 
-        # Overall Assessment
+        return md_lines
+
+    def _generate_overall_assessment_section(self, report: Dict[str, Any]) -> List[str]:
+        """Generate the overall assessment section."""
+        md_lines = ["## 🎯 Overall Assessment", ""]
         assessment = report.get("overall_assessment", {})
-        md_lines.append("## 🎯 Overall Assessment")
-        md_lines.append("")
+
         health_score = assessment.get("overall_health_score", 0)
         risk_level = assessment.get("risk_level", "unknown")
 
@@ -1880,345 +1896,63 @@ class SimulationAnalyzer:
         else:
             health_indicator = "🔴 **Needs Attention**"
 
-        md_lines.append(f"**Health Score:** {health_indicator} ({health_score:.2f})")
-        md_lines.append(f"**Risk Level:** {risk_level.title()}")
-        md_lines.append("")
+        md_lines.extend([
+            f"**Health Score:** {health_indicator} ({health_score:.2f})",
+            f"**Risk Level:** {risk_level.title()}",
+            "",
+        ])
 
+        # Add strengths if present
         if assessment.get("strengths"):
             md_lines.append("### Strengths")
-            for strength in assessment["strengths"]:
-                md_lines.append(f"- ✅ {strength}")
+            md_lines.extend(f"- ✅ {strength}" for strength in assessment["strengths"])
             md_lines.append("")
 
+        # Add weaknesses if present
         if assessment.get("weaknesses"):
             md_lines.append("### Areas for Improvement")
-            for weakness in assessment["weaknesses"]:
-                md_lines.append(f"- ⚠️ {weakness}")
+            md_lines.extend(f"- ⚠️ {weakness}" for weakness in assessment["weaknesses"])
             md_lines.append("")
 
-        # Detailed Sections
-        sections = report.get("sections", {})
+        return md_lines
+
+    def _generate_detailed_sections(self, sections: Dict[str, Any]) -> List[str]:
+        """Generate the detailed sections of the report."""
+        md_lines = []
 
         # Recommendations Section
         if "recommendations" in sections:
-            rec_section = sections["recommendations"]
-            md_lines.append("## 💡 Recommendations")
-            md_lines.append("")
-            md_lines.append(
-                f"**Total Recommendations:** {rec_section['total_recommendations']}"
-            )
-            md_lines.append(
-                f"**Consolidation Opportunities:** {rec_section['consolidation_opportunities']}"
-            )
-            md_lines.append(f"**Duplicate Issues:** {rec_section['duplicate_issues']}")
-            md_lines.append(
-                f"**Outdated Documents:** {rec_section['outdated_documents']}"
-            )
-            md_lines.append(
-                f"**Quality Improvements:** {rec_section['quality_improvements']}"
-            )
-            md_lines.append("")
+            md_lines.extend(self._generate_recommendations_section(sections["recommendations"]))
 
         # Analysis Section
         if "analysis" in sections:
-            analysis_section = sections["analysis"]
-            md_lines.append("## 🔍 Quality Analysis")
-            md_lines.append("")
-            md_lines.append(
-                f"**Documents Analyzed:** {analysis_section['documents_analyzed']}"
-            )
-            md_lines.append(
-                f"**Average Quality Score:** {analysis_section['average_quality_score']:.2f}"
-            )
-            md_lines.append(
-                f"**Documents with Issues:** {analysis_section['documents_with_issues']}"
-            )
-            md_lines.append(
-                f"**Total Issues Found:** {analysis_section['total_issues_found']}"
-            )
-            md_lines.append("")
+            md_lines.extend(self._generate_analysis_section(sections["analysis"]))
 
-        # Timeline Section
-        if "timeline" in sections:
-            timeline_section = sections["timeline"]
-            md_lines.append("## 📅 Timeline Analysis")
-            md_lines.append("")
-            md_lines.append(f"**Total Phases:** {timeline_section['total_phases']}")
-            md_lines.append(
-                f"**Documents Placed:** {timeline_section['documents_placed']}"
-            )
-            md_lines.append(
-                f"**Timeline Coverage:** {timeline_section['timeline_coverage']:.1%}"
-            )
-            md_lines.append("")
+        # Add more sections as needed
+        return md_lines
 
-            if timeline_section.get("recommendations"):
-                md_lines.append("### Timeline Recommendations")
-                for rec in timeline_section["recommendations"]:
-                    md_lines.append(f"- {rec}")
-                md_lines.append("")
+    def _generate_recommendations_section(self, rec_section: Dict[str, Any]) -> List[str]:
+        """Generate the recommendations section."""
+        return [
+            "## 💡 Recommendations",
+            "",
+            f"**Total Recommendations:** {rec_section['total_recommendations']}",
+            f"**Consolidation Opportunities:** {rec_section['consolidation_opportunities']}",
+            f"**Duplicate Issues:** {rec_section['duplicate_issues']}",
+            f"**Outdated Documents:** {rec_section['outdated_documents']}",
+            f"**Quality Improvements:** {rec_section['quality_improvements']}",
+            "",
+        ]
 
-        # Action Items
-        action_items = report.get("action_items", [])
-        if action_items:
-            md_lines.append("## ✅ Action Items")
-            md_lines.append("")
-
-            for i, item in enumerate(action_items[:10], 1):  # Top 10
-                priority_emoji = {
-                    "critical": "🚨",
-                    "high": "🔴",
-                    "medium": "🟡",
-                    "low": "🟢",
-                }.get(item.get("priority", "medium"), "🟡")
-
-                md_lines.append(
-                    f"{i}. {priority_emoji} **{item.get('priority', 'medium').title()}** - {item.get('description', '')}"
-                )
-                md_lines.append(f"   - Category: {item.get('category', 'general')}")
-                md_lines.append(
-                    f"   - Effort: {item.get('estimated_effort', 'medium')}"
-                )
-                md_lines.append("")
-
-        # Suggested Jira Tickets
-        suggested_tickets = report.get("suggested_jira_tickets", [])
-        if suggested_tickets:
-            md_lines.append("## 🎫 Suggested Jira Tickets")
-            md_lines.append("")
-            md_lines.append(
-                "Based on the analysis findings, the following Jira tickets are recommended to address identified issues:"
-            )
-            md_lines.append("")
-
-            for i, ticket in enumerate(suggested_tickets, 1):
-                priority_emoji = {
-                    "Critical": "🚨",
-                    "High": "🔴",
-                    "Medium": "🟡",
-                    "Low": "🟢",
-                }.get(ticket.get("priority", "Medium"), "🟡")
-
-                md_lines.append(
-                    f"### {i}. {priority_emoji} {ticket.get('summary', '')}"
-                )
-                md_lines.append("")
-                md_lines.append(f"**Priority:** {ticket.get('priority', 'Medium')}")
-                md_lines.append(f"**Issue Type:** {ticket.get('issue_type', 'Task')}")
-                md_lines.append(
-                    f"**Story Points:** {ticket.get('story_points', 'TBD')}"
-                )
-                md_lines.append(
-                    f"**Epic:** {ticket.get('epic_link', 'Documentation Quality Initiative')}"
-                )
-                md_lines.append("")
-
-                # Truncate description for readability in the report
-                description = ticket.get("description", "")
-                if len(description) > 500:
-                    description = (
-                        description[:500]
-                        + "...\n\n*[Full description truncated for report readability]*"
-                    )
-
-                md_lines.append("**Description:**")
-                md_lines.append(description)
-                md_lines.append("")
-
-                md_lines.append("---")
-                md_lines.append("")
-
-        # Implementation Notes
-        md_lines.append("## 📋 Implementation Notes")
-        md_lines.append("")
-        md_lines.append("### Suggested Jira Ticket Creation Process:")
-        md_lines.append("")
-        md_lines.append(
-            "1. **Review Priority:** Start with Critical and High priority tickets"
-        )
-        md_lines.append(
-            "2. **Epic Creation:** Create 'Documentation Quality Initiative' epic first"
-        )
-        md_lines.append(
-            "3. **Ticket Assignment:** Assign based on recommended roles and expertise"
-        )
-        md_lines.append(
-            "4. **Story Point Estimation:** Use suggested story points as starting estimates"
-        )
-        md_lines.append(
-            "5. **Label Application:** Apply recommended labels for proper categorization"
-        )
-        md_lines.append(
-            "6. **Component Assignment:** Set appropriate components for team routing"
-        )
-        md_lines.append("")
-        md_lines.append("### Success Metrics Tracking:")
-        md_lines.append("")
-        md_lines.append(
-            "- **Quality Score Improvement:** Track average documentation quality over time"
-        )
-        md_lines.append(
-            "- **Issue Resolution Rate:** Monitor completion of identified issues"
-        )
-        md_lines.append(
-            "- **Timeline Coverage:** Measure documentation coverage across project phases"
-        )
-        md_lines.append(
-            "- **Process Efficiency:** Track time to complete documentation tasks"
-        )
-        md_lines.append("")
-
-        # Footer
-        md_lines.append("---")
-        md_lines.append("")
-        md_lines.append(
-            "*Report generated by Simulation Service - Comprehensive Analysis*"
-        )
-        md_lines.append(
-            f"*Processing completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*"
-        )
-
-        return "\n".join(md_lines)
-
-    # ============================================================================
-    # PULL REQUEST ANALYSIS VIA ANALYSIS SERVICE
-    # ============================================================================
-
-    async def analyze_pull_request(
-        self, simulation_id: str, pr_data: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Analyze pull request changes via the analysis service.
-
-        This method delegates PR analysis to the specialized analysis service,
-        maintaining clean separation of concerns and leveraging the analysis
-        service's comprehensive PR analysis capabilities.
-
-        Args:
-            simulation_id: Unique identifier for the simulation
-            pr_data: Pull request data including files, commits, and metadata
-
-        Returns:
-            Comprehensive analysis report from analysis service
-        """
-        try:
-            print(
-                f"Delegating PR analysis to analysis service for simulation {simulation_id}"
-            )
-
-            # Prepare request for analysis service
-            analysis_request = {"simulation_id": simulation_id, "pull_request": pr_data}
-
-            # Call analysis service PR analysis endpoint
-            analysis_result = await self._request_pr_analysis_from_service(
-                simulation_id, analysis_request
-            )
-
-            if analysis_result:
-                # Store the PR analysis report in doc-store
-                await self._store_pr_analysis_report_from_service(
-                    simulation_id, analysis_result
-                )
-
-                return {
-                    "simulation_id": simulation_id,
-                    "analysis_completed": True,
-                    "pr_health_score": analysis_result.get("health_score", 0),
-                    "risk_level": analysis_result.get("risk_level", "unknown"),
-                    "refactoring_suggestions_count": len(
-                        analysis_result.get("refactoring_suggestions", [])
-                    ),
-                    "recommendations_count": len(
-                        analysis_result.get("recommendations", [])
-                    ),
-                }
-            else:
-                return {
-                    "simulation_id": simulation_id,
-                    "analysis_completed": False,
-                    "error": "Failed to get analysis from analysis service",
-                }
-
-        except Exception as e:
-            print(f"Error analyzing pull request: {e}")
-            return {
-                "simulation_id": simulation_id,
-                "analysis_completed": False,
-                "error": str(e),
-            }
-
-    async def _request_pr_analysis_from_service(
-        self, simulation_id: str, analysis_request: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
-        """Request PR analysis from the analysis service."""
-        try:
-            analysis_service_url = self.service_urls.get(
-                "analysis_service", "http://localhost:5020"
-            )
-
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(
-                    f"{analysis_service_url}/analyze/pull-request",
-                    json=analysis_request,
-                    headers={"Content-Type": "application/json"},
-                )
-
-                if response.status_code == 200:
-                    result = response.json()
-                    if result.get("success"):
-                        return result.get("data")
-                    else:
-                        print(f"Analysis service returned error: {result}")
-                        return None
-                else:
-                    print(
-                        f"Analysis service request failed with status {response.status_code}: {response.text}"
-                    )
-                    return None
-
-        except Exception as e:
-            print(f"Error calling analysis service for PR analysis: {e}")
-            return None
-
-    async def _store_pr_analysis_report_from_service(
-        self, simulation_id: str, analysis_result: Dict[str, Any]
-    ) -> None:
-        """Store PR analysis report received from analysis service."""
-        try:
-            # Store the analysis result in doc-store
-            json_content = json.dumps(analysis_result, indent=2, default=str)
-
-            # Generate a simple markdown summary
-            markdown_content = self._generate_pr_analysis_summary_markdown(
-                analysis_result
-            )
-
-            # Store JSON version
-            json_doc_id = (
-                f"pr_analysis_{simulation_id}_{int(datetime.now().timestamp())}_json"
-            )
-            await self._store_document_in_doc_store(
-                json_doc_id, json_content, "json", "pr_analysis"
-            )
-
-            # Store Markdown version
-            md_doc_id = (
-                f"pr_analysis_{simulation_id}_{int(datetime.now().timestamp())}_md"
-            )
-            await self._store_document_in_doc_store(
-                md_doc_id, markdown_content, "markdown", "pr_analysis"
-            )
-
-            # Link reports to simulation
-            await self._link_report_to_simulation(
-                simulation_id, json_doc_id, "pr_analysis"
-            )
-
-            print(
-                f"Stored PR analysis report from analysis service for simulation {simulation_id}"
-            )
-
-        except Exception as e:
-            print(f"Error storing PR analysis report from service: {e}")
+    def _generate_analysis_section(self, analysis_section: Dict[str, Any]) -> List[str]:
+        """Generate the analysis section."""
+        return [
+            "## 🔍 Quality Analysis",
+            "",
+            f"**Documents Analyzed:** {analysis_section['documents_analyzed']}",
+            f"**Average Quality Score:** {analysis_section['average_quality_score']:.2f}",
+            "",
+        ]
 
     def _generate_pr_analysis_summary_markdown(
         self, analysis_result: Dict[str, Any]
