@@ -126,7 +126,8 @@ class ToolSecurityScanner:
                 })
         return vulnerabilities
     def _analyze_injection_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Analyze tool parameters and paths for injection vulnerabilities.
+        """Analyze tool parameters and paths for injection vulnerabilities."""
+        vulnerabilities = []
         vulnerabilities = []
 
         # Check path for injection-prone patterns
@@ -137,46 +138,6 @@ class ToolSecurityScanner:
         vulnerabilities.extend(self._check_sql_injection_risks(path, tool_path))
         vulnerabilities.extend(self._check_command_injection_risks(path, tool_path))
         vulnerabilities.extend(self._check_parameter_injection_risks(tool))
-
-        return vulnerabilities        if any(word in path for word in ["query", "search", "filter", "where"]):
-            vulnerabilities.append(
-                {
-                    "type": "sql_injection_risk",
-                    "severity": "medium",
-                    "description": f"Path '{tool['path']}' may be vulnerable to SQL injection",
-                    "location": "path",
-                    "mitigation": "Use parameterized queries and input validation",
-                }
-            )
-
-        # Command injection risks
-        if any(word in path for word in ["execute", "run", "command", "script"]):
-            vulnerabilities.append(
-                {
-                    "type": "command_injection_risk",
-                    "severity": "high",
-                    "description": f"Path '{tool['path']}' may allow command injection",
-                    "location": "path",
-                    "mitigation": "Sanitize inputs and use allowlisted commands only",
-                }
-            )
-
-        # Check parameters for injection risks
-        for param in tool.get("parameters", {}).get("properties", {}):
-            param_name = param.lower()
-
-            if any(
-                word in param_name for word in ["query", "command", "script", "code"]
-            ):
-                vulnerabilities.append(
-                    {
-                        "type": "parameter_injection_risk",
-                        "severity": "medium",
-                        "description": f"Parameter '{param}' may be vulnerable to injection",
-                        "location": f"parameter:{param}",
-                        "mitigation": "Implement strict input validation and sanitization",
-                    }
-                )
 
         return vulnerabilities
 
