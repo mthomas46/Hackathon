@@ -107,19 +107,19 @@ def detect_template_from_prompt(prompt: str) -> str:
 
     text_lower = prompt.lower()
 
-    # Check for template-specific keywords in order of specificity
-    if "summary" in text_lower:
-        return "summary"
-    elif "risk" in text_lower:
-        return "risks"
-    elif "decision" in text_lower:
-        return "decisions"
-    elif (
-        "pr" in text_lower or "pull request" in text_lower
-    ) and "confidence" in text_lower:
-        return "pr_confidence"
-    elif ("life" in text_lower or "track" in text_lower) and "ticket" in text_lower:
-        return "life_of_ticket"
+    # Template detection rules in order of specificity
+    template_rules = [
+        ("summary", lambda t: "summary" in t),
+        ("risks", lambda t: "risk" in t),
+        ("decisions", lambda t: "decision" in t),
+        ("pr_confidence", lambda t: ("pr" in t or "pull request" in t) and "confidence" in t),
+        ("life_of_ticket", lambda t: ("life" in t or "track" in t) and "ticket" in t),
+    ]
+
+    # Check each rule in order
+    for template_name, condition_func in template_rules:
+        if condition_func(text_lower):
+            return template_name
 
     return ""
 
