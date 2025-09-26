@@ -44,6 +44,7 @@ except ImportError:
 from services.shared.infrastructure.config import load_service_config
 from services.shared.utilities import setup_common_middleware
 from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.presentation.api.responses import APIResponse
 from services.shared.monitoring.health import register_health_endpoints
 
 # Load standardized configuration
@@ -119,7 +120,7 @@ class LogItem(BaseModel):
     """Additional structured context data (request_id, user_id, etc.)."""
 
 
-@app.get("/health")
+@app.get("/health", summary="Service Health Check", description="Returns service health status including current log count and operational metrics.", response_model=APIResponse, tags=["health"], responses={200: {"description": "Service is healthy with log statistics"}, 500: {"description": "Service health check failed"}})
 async def health(request: Request):
     """Health check endpoint returning service status and current log count.
 
@@ -186,7 +187,7 @@ async def health(request: Request):
         )
 
 
-@app.post("/logs")
+@app.post("/logs", summary="Ingest Single Log Entry", description="Accepts and stores a single log entry with metadata for monitoring and debugging.", response_model=APIResponse, tags=["logs", "ingestion"], responses={201: {"description": "Log entry stored successfully"}, 400: {"description": "Invalid log data"}, 500: {"description": "Log storage failed"}})
 async def put_log(item: LogItem, request: Request, response: Response):
     """Store a single log entry in the collection.
 
@@ -254,7 +255,7 @@ class LogBatch(BaseModel):
     """List of log entries to store."""
 
 
-@app.post("/logs/batch")
+@app.post("/logs/batch", summary="Batch Log Ingestion", description="Accepts and stores multiple log entries in a single request for high-volume logging scenarios.", response_model=APIResponse, tags=["logs", "ingestion", "batch"], responses={201: {"description": "Log batch stored successfully"}, 400: {"description": "Invalid batch data"}, 500: {"description": "Batch storage failed"}})
 async def put_logs(batch: LogBatch, request: Request, response: Response):
     """Store multiple log entries in a single batch operation.
 
@@ -304,7 +305,7 @@ async def put_logs(batch: LogBatch, request: Request, response: Response):
         return {"status": "error", "message": "Failed to store log batch"}
 
 
-@app.get("/logs")
+@app.get("/logs", summary="Query Log Entries", description="Retrieves log entries with optional filtering by service, level, time range, and pagination.", response_model=APIResponse, tags=["logs", "query"], responses={200: {"description": "Log entries retrieved successfully"}, 400: {"description": "Invalid query parameters"}})
 async def list_logs(
     request: Request,
     service: Optional[str] = None,
@@ -350,7 +351,7 @@ async def list_logs(
         return {"error": "Failed to retrieve logs", "message": str(e)}
 
 
-@app.get("/stats")
+@app.get("/stats", summary="Log Statistics", description="Returns aggregated statistics and analytics about stored log entries for monitoring and insights.", response_model=APIResponse, tags=["logs", "statistics", "analytics"], responses={200: {"description": "Statistics retrieved successfully"}, 500: {"description": "Statistics calculation failed"}})
 async def stats(request: Request):
     """Get comprehensive log statistics and aggregations.
 

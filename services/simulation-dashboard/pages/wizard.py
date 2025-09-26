@@ -204,6 +204,134 @@ def render_wizard_steps():
                 st.error(f"• {field}: {error}")
 
 
+
+def get_project_type_options() -> List[Dict[str, Any]]:
+    """Get comprehensive project type options with detailed information."""
+    return [
+        {
+            "name": "Web Application",
+            "description": "Traditional web application with frontend and backend",
+            "technologies": "React/Vue/Angular + Python/Node.js + PostgreSQL",
+            "complexity": "Medium",
+            "duration": "8-16 weeks",
+            "team_size": "4-8 developers",
+        },
+        {
+            "name": "API Service",
+            "description": "RESTful API service with comprehensive documentation",
+            "technologies": "FastAPI/Express + PostgreSQL/Redis + Docker",
+            "complexity": "Medium",
+            "duration": "6-12 weeks",
+            "team_size": "3-6 developers",
+        },
+        {
+            "name": "Mobile Application",
+            "description": "Cross-platform mobile app with native performance",
+            "technologies": "React Native/Flutter + Firebase + iOS/Android",
+            "complexity": "Medium-High",
+            "duration": "10-20 weeks",
+            "team_size": "4-10 developers",
+        },
+        {
+            "name": "Microservices",
+            "description": "Distributed system with multiple independent services",
+            "technologies": "Kubernetes + Docker + Service Mesh + CI/CD",
+            "complexity": "High",
+            "duration": "16-32 weeks",
+            "team_size": "8-15 developers",
+        },
+        {
+            "name": "Data Pipeline",
+            "description": "ETL/ELT pipeline for data processing and analytics",
+            "technologies": "Apache Airflow + Spark + Snowflake/Redshift",
+            "complexity": "Medium-High",
+            "duration": "12-24 weeks",
+            "team_size": "5-12 developers",
+        },
+        {
+            "name": "Machine Learning",
+            "description": "ML/AI solution with model training and deployment",
+            "technologies": "Python + TensorFlow/PyTorch + MLflow + Kubernetes",
+            "complexity": "High",
+            "duration": "14-28 weeks",
+            "team_size": "6-14 developers",
+        },
+    ]
+
+
+def render_project_basic_info(wizard_data: Dict[str, Any]) -> tuple[str, str]:
+    """Render basic project information input fields."""
+    st.markdown("#### 📝 Basic Information")
+
+    project_name = st.text_input(
+        "Project Name *",
+        value=wizard_data["project_info"].get("name", ""),
+        placeholder="e.g., AI-Powered E-commerce Platform",
+        key="project_name",
+    )
+
+    project_description = st.text_area(
+        "Project Description",
+        value=wizard_data["project_info"].get("description", ""),
+        placeholder="Describe your project in detail...",
+        height=100,
+        key="project_description",
+    )
+
+    return project_name, project_description
+
+
+def get_project_type_index(selected_type: Optional[str]) -> Optional[int]:
+    """Get the index of the selected project type."""
+    if not selected_type:
+        return None
+    
+    project_types = [opt["name"] for opt in get_project_type_options()]
+    try:
+        return project_types.index(selected_type)
+    except ValueError:
+        return None
+
+
+def render_project_type_selection(wizard_data: Dict[str, Any]) -> str:
+    """Render project type selection with detailed information."""
+    project_type_options = get_project_type_options()
+    project_type_names = [opt["name"] for opt in project_type_options]
+    
+    selected_type_index = get_project_type_index(
+        wizard_data["project_info"].get("type")
+    )
+
+    project_type = st.selectbox(
+        "Project Type *",
+        options=project_type_names,
+        index=selected_type_index,
+        key="project_type",
+    )
+
+    return project_type
+
+
+def render_project_type_details(selected_type: str):
+    """Render detailed information for the selected project type."""
+    project_type_options = get_project_type_options()
+    selected_type_info = next(
+        (opt for opt in project_type_options if opt["name"] == selected_type),
+        project_type_options[0],
+    )
+
+    with st.expander(f"📋 {selected_type} Details", expanded=False):
+        col_a, col_b = st.columns(2)
+
+        with col_a:
+            st.markdown(f"**Description:** {selected_type_info["description"]}")
+            st.markdown(f"**Technologies:** {selected_type_info["technologies"]}")
+
+        with col_b:
+            st.markdown(f"**Complexity:** {selected_type_info["complexity"]}")
+            st.markdown(f"**Duration:** {selected_type_info["duration"]}")
+            st.markdown(f"**Team Size:** {selected_type_info["team_size"]}")
+
 def render_step_1_project_basics():
     """Render Step 1: Project Basics."""
     st.markdown("### 🎯 Step 1: Project Basics")
@@ -232,361 +360,12 @@ def render_step_1_project_basics():
             key="project_description",
         )
 
-        # Enhanced project type selection with detailed descriptions
-        project_type_options = [
-            {
-                "name": "Web Application",
-                "description": "Traditional web application with frontend and backend",
-                "technologies": "React/Vue/Angular + Python/Node.js + PostgreSQL",
-                "complexity": "Medium",
-                "duration": "8-16 weeks",
-                "team_size": "4-8 developers",
-            },
-            {
-                "name": "API Service",
-                "description": "RESTful API service with comprehensive documentation",
-                "technologies": "FastAPI/Express + PostgreSQL/Redis + Docker",
-                "complexity": "Medium",
-                "duration": "6-12 weeks",
-                "team_size": "3-6 developers",
-            },
-            {
-                "name": "Mobile Application",
-                "description": "Cross-platform mobile app with native performance",
-                "technologies": "React Native/Flutter + Firebase + iOS/Android",
-                "complexity": "Medium-High",
-                "duration": "10-20 weeks",
-                "team_size": "4-10 developers",
-            },
-            {
-                "name": "Microservices",
-                "description": "Distributed system with multiple independent services",
-                "technologies": "Kubernetes + Docker + Service Mesh + CI/CD",
-                "complexity": "High",
-                "duration": "16-32 weeks",
-                "team_size": "8-15 developers",
-            },
-            {
-                "name": "Data Pipeline",
-                "description": "ETL/ELT pipeline for data processing and analytics",
-                "technologies": "Apache Airflow + Spark + Snowflake/Redshift",
-                "complexity": "Medium-High",
-                "duration": "12-24 weeks",
-                "team_size": "5-12 developers",
-            },
-            {
-                "name": "Machine Learning",
-                "description": "ML/AI solution with model training and deployment",
-                "technologies": "Python + TensorFlow/PyTorch + MLflow + Kubernetes",
-                "complexity": "High",
-                "duration": "14-28 weeks",
-                "team_size": "6-14 developers",
-            },
-        ]
 
-        project_type_names = [opt["name"] for opt in project_type_options]
-        selected_type_index = get_project_type_index(
-            wizard_data["project_info"].get("type")
-        )
-
-        project_type = st.selectbox(
-            "Project Type *",
-            options=project_type_names,
-            index=selected_type_index,
-            key="project_type",
-        )
-
+        # Render project type selection
+        project_type = render_project_type_selection(wizard_data)
+        
         # Show detailed information for selected project type
-        selected_type_info = next(
-            (opt for opt in project_type_options if opt["name"] == project_type),
-            project_type_options[0],
-        )
-
-        with st.expander(f"📋 {project_type} Details", expanded=False):
-            col_a, col_b = st.columns(2)
-
-            with col_a:
-                st.write(f"**Description:** {selected_type_info['description']}")
-                st.write(f"**Technologies:** {selected_type_info['technologies']}")
-                st.write(f"**Complexity:** {selected_type_info['complexity']}")
-
-            with col_b:
-                st.write(f"**Typical Duration:** {selected_type_info['duration']}")
-                st.write(f"**Recommended Team:** {selected_type_info['team_size']}")
-
-                # Show technology recommendations
-                tech_stack = selected_type_info["technologies"].split(" + ")
-                st.write("**Technology Stack:**")
-                for tech in tech_stack:
-                    st.write(f"• {tech.strip()}")
-
-        # Project type recommendations
-        st.markdown("#### 💡 Recommendations")
-
-        recommendations = get_project_type_recommendations(project_type)
-        for rec in recommendations:
-            if rec["type"] == "success":
-                st.success(f"✅ {rec['message']}")
-            elif rec["type"] == "warning":
-                st.warning(f"⚠️ {rec['message']}")
-            elif rec["type"] == "info":
-                st.info(f"💡 {rec['message']}")
-
-    with col2:
-        st.markdown("#### 🎯 Project Scope")
-
-        # Enhanced complexity selection with detailed information
-        complexity_options = [
-            {
-                "name": "Simple",
-                "description": "Straightforward implementation with well-understood requirements",
-                "duration": "4-8 weeks",
-                "team": "2-4 people",
-                "risk": "Low",
-                "technologies": "Standard, well-established tech stack",
-                "requirements": "Clear, stable requirements with minimal changes",
-            },
-            {
-                "name": "Medium",
-                "description": "Moderate complexity with some technical challenges",
-                "duration": "8-16 weeks",
-                "team": "4-8 people",
-                "risk": "Medium",
-                "technologies": "Mix of familiar and some new technologies",
-                "requirements": "Mostly stable with some evolving requirements",
-            },
-            {
-                "name": "Complex",
-                "description": "High complexity with advanced technical requirements",
-                "duration": "16-32 weeks",
-                "team": "8-15 people",
-                "risk": "High",
-                "technologies": "Advanced, cutting-edge technologies and architectures",
-                "requirements": "Complex, evolving requirements with technical unknowns",
-            },
-        ]
-
-        complexity_names = [opt["name"] for opt in complexity_options]
-        selected_complexity_index = get_complexity_index(
-            wizard_data["project_info"].get("complexity")
-        )
-
-        complexity = st.selectbox(
-            "Complexity Level *",
-            options=complexity_names,
-            index=selected_complexity_index,
-            key="complexity",
-        )
-
-        # Show detailed complexity information
-        selected_complexity = next(
-            (opt for opt in complexity_options if opt["name"] == complexity),
-            complexity_options[1],
-        )
-
-        col_a, col_b, col_c = st.columns(3)
-        with col_a:
-            st.metric("Typical Duration", selected_complexity["duration"])
-        with col_b:
-            st.metric("Team Size", selected_complexity["team"])
-        with col_c:
-            risk_color = {"Low": "🟢", "Medium": "🟡", "High": "🔴"}[
-                selected_complexity["risk"]
-            ]
-            st.metric("Risk Level", f"{risk_color} {selected_complexity['risk']}")
-
-        with st.expander(f"📋 {complexity} Project Details", expanded=False):
-            st.write(f"**Description:** {selected_complexity['description']}")
-            st.write(f"**Technology Approach:** {selected_complexity['technologies']}")
-            st.write(f"**Requirements Profile:** {selected_complexity['requirements']}")
-
-            # Complexity assessment questionnaire
-            st.markdown("---")
-            st.markdown("#### 🧠 Quick Complexity Assessment")
-
-            assessment_score = 0
-            total_questions = 5
-
-            # Question 1: Technology familiarity
-            tech_familiarity = st.selectbox(
-                "How familiar is your team with the required technology stack?",
-                [
-                    "Very Familiar",
-                    "Somewhat Familiar",
-                    "Limited Experience",
-                    "New Technology",
-                ],
-                key="tech_familiarity",
-            )
-            assessment_score += {
-                "Very Familiar": 0,
-                "Somewhat Familiar": 1,
-                "Limited Experience": 2,
-                "New Technology": 3,
-            }[tech_familiarity]
-
-            # Question 2: Requirements stability
-            req_stability = st.selectbox(
-                "How stable are your project requirements?",
-                [
-                    "Very Stable",
-                    "Mostly Stable",
-                    "Some Changes Expected",
-                    "High Uncertainty",
-                ],
-                key="req_stability",
-            )
-            assessment_score += {
-                "Very Stable": 0,
-                "Mostly Stable": 1,
-                "Some Changes Expected": 2,
-                "High Uncertainty": 3,
-            }[req_stability]
-
-            # Question 3: Timeline pressure
-            timeline_pressure = st.selectbox(
-                "What is your timeline flexibility?",
-                [
-                    "Flexible Timeline",
-                    "Moderate Pressure",
-                    "Tight Deadline",
-                    "Fixed Deadline",
-                ],
-                key="timeline_pressure",
-            )
-            assessment_score += {
-                "Flexible Timeline": 0,
-                "Moderate Pressure": 1,
-                "Tight Deadline": 2,
-                "Fixed Deadline": 3,
-            }[timeline_pressure]
-
-            # Question 4: Team experience
-            team_experience = st.selectbox(
-                "What is your team's overall experience level?",
-                ["Expert Team", "Experienced Team", "Mixed Experience", "Junior Team"],
-                key="team_experience",
-            )
-            assessment_score += {
-                "Expert Team": 0,
-                "Experienced Team": 1,
-                "Mixed Experience": 2,
-                "Junior Team": 3,
-            }[team_experience]
-
-            # Question 5: Project scope
-            project_scope = st.selectbox(
-                "What is the scope of your project?",
-                [
-                    "Well-defined Scope",
-                    "Moderate Scope",
-                    "Broad Scope",
-                    "Undefined Scope",
-                ],
-                key="project_scope",
-            )
-            assessment_score += {
-                "Well-defined Scope": 0,
-                "Moderate Scope": 1,
-                "Broad Scope": 2,
-                "Undefined Scope": 3,
-            }[project_scope]
-
-            # Calculate recommended complexity
-            recommended_complexity = (
-                "Simple"
-                if assessment_score <= 3
-                else "Medium" if assessment_score <= 7 else "Complex"
-            )
-            assessment_percentage = (assessment_score / (total_questions * 3)) * 100
-
-            st.markdown("#### 📊 Assessment Results")
-            col_x, col_y = st.columns(2)
-
-            with col_x:
-                if recommended_complexity == complexity:
-                    st.success(f"✅ Assessment matches your selection: {complexity}")
-                else:
-                    st.warning(
-                        f"⚠️ Assessment suggests: {recommended_complexity} (you selected: {complexity})"
-                    )
-
-            with col_y:
-                st.metric("Complexity Score", ".1f", assessment_percentage)
-
-        # Auto-adjust duration based on complexity and project type
-        default_duration = get_recommended_duration(complexity, project_type)
-
-        duration_weeks = st.slider(
-            "Duration (weeks)",
-            min_value=2,
-            max_value=52,
-            value=wizard_data["project_info"].get("duration_weeks", default_duration),
-            help=f"Recommended: {default_duration} weeks for {complexity.lower()} {project_type.lower()}",
-            key="duration_weeks",
-        )
-
-        # Budget estimation based on complexity, duration, and project type
-        estimated_budget = estimate_project_budget(
-            complexity, duration_weeks, project_type
-        )
-
-        budget_ranges = [
-            "Under $50K",
-            "$50K - $100K",
-            "$100K - $250K",
-            "$250K - $500K",
-            "$500K - $1M",
-            "Over $1M",
-        ]
-
-        # Auto-select appropriate budget range
-        auto_budget_index = get_budget_range_from_estimate(estimated_budget)
-
-        budget_range = st.selectbox(
-            "Budget Range",
-            options=budget_ranges,
-            index=auto_budget_index,
-            help=f"Estimated budget: ${estimated_budget:,.0f}",
-            key="budget_range",
-        )
-
-        st.success(
-            f"💰 **Estimated Budget:** ${estimated_budget:,.0f} for {duration_weeks} weeks"
-        )
-
-    # Quick setup for quick start method
-    if wizard_data.get("setup_method") == "quick":
-        st.markdown("---")
-        st.markdown("#### 🚀 Quick Setup Options")
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            if st.button("🏪 E-commerce Platform", key="template_ecommerce"):
-                apply_template("ecommerce")
-
-        with col2:
-            if st.button("📱 Mobile App", key="template_mobile"):
-                apply_template("mobile_app")
-
-        with col3:
-            if st.button("🔧 API Service", key="template_api"):
-                apply_template("api_service")
-
-    # Save step data
-    if st.button("Continue to Team Setup →", key="step1_continue", type="primary"):
-        if validate_step_1():
-            save_step_1_data(
-                project_name,
-                project_description,
-                project_type,
-                complexity,
-                duration_weeks,
-                budget_range,
-            )
-            wizard_data["step"] = 2
-            st.rerun()
+        render_project_type_details(project_type)
 
 
 def render_step_2_team_setup():

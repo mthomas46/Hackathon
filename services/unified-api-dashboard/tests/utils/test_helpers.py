@@ -463,29 +463,49 @@ class TestDataGenerator:
         return data
 
     @staticmethod
+
+    def _generate_random_string() -> str:
+        """Generate a random string value."""
+        return "".join(
+            random.choices(
+                string.ascii_letters + string.digits, k=random.randint(5, 20)
+            )
+        )
+
+    def _generate_random_int() -> int:
+        """Generate a random integer value."""
+        return random.randint(1, 1000)
+
+    def _generate_random_float() -> float:
+        """Generate a random float value."""
+        return round(random.uniform(0, 100), 2)
+
+    def _generate_random_bool() -> bool:
+        """Generate a random boolean value."""
+        return random.choice([True, False])
+
+    def _generate_random_list() -> List[Any]:
+        """Generate a random list value."""
+        return [
+            TestDataGenerator.generate_random_value()
+            for _ in range(random.randint(1, 5))
+        ]
+
     def generate_random_value() -> Any:
         """Generate a random value of various types."""
         value_types = [str, int, float, bool, list]
-
         value_type = random.choice(value_types)
 
         if value_type == str:
-            return "".join(
-                random.choices(
-                    string.ascii_letters + string.digits, k=random.randint(5, 20)
-                )
-            )
+            return TestDataGenerator._generate_random_string()
         elif value_type == int:
-            return random.randint(1, 1000)
+            return TestDataGenerator._generate_random_int()
         elif value_type == float:
-            return round(random.uniform(0, 100), 2)
+            return TestDataGenerator._generate_random_float()
         elif value_type == bool:
-            return random.choice([True, False])
+            return TestDataGenerator._generate_random_bool()
         elif value_type == list:
-            return [
-                TestDataGenerator.generate_random_value()
-                for _ in range(random.randint(1, 5))
-            ]
+            return TestDataGenerator._generate_random_list()
 
 
 # ============================================================================

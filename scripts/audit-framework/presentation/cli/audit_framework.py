@@ -344,8 +344,28 @@ def main():
     # Resources/optimization command
     resources_parser = subparsers.add_parser('resources', help='Display system resources and optimization recommendations')
     resources_parser.add_argument('--service', help='Analyze a specific service for workload optimization')
-    resources_parser.add_argument('--full', action='store_true', help='Consider full audit mode for optimization')
 
+    # Report display command
+    report_parser = subparsers.add_parser('report', help='Display audit reports from JSON files')
+    report_parser.add_argument('service', help='Service name to display report for')
+    report_parser.add_argument('--profile', default='strict', 
+                              choices=['relaxed', 'standard', 'strict', 'ci_fast', 'ci_comprehensive', 'strict_ddd'],
+                              help='Audit profile to display (default: strict')
+    report_parser.add_argument('--output', choices=['rich', 'json', 'summary'], default='rich',
+                              help='Output format (default: rich')
+    report_parser.add_argument('--verbose', action='store_true',
+                              help='Show detailed issues and recommendations')    resources_parser.add_argument('--full', action='store_true', help='Consider full audit mode for optimization')
+
+    # Report display command
+    report_parser = subparsers.add_parser('report', help='Display audit reports from JSON files')
+    report_parser.add_argument('service', help='Service name to display report for')
+    report_parser.add_argument('--profile', default='strict', 
+                              choices=['relaxed', 'standard', 'strict', 'ci_fast', 'ci_comprehensive', 'strict_ddd'],
+                              help='Audit profile to display (default: strict')
+    report_parser.add_argument('--output', choices=['rich', 'json', 'summary'], default='rich',
+                              help='Output format (default: rich')
+    report_parser.add_argument('--verbose', action='store_true',
+                              help='Show detailed issues and recommendations')
     args = parser.parse_args()
 
     if not args.command:
@@ -455,6 +475,9 @@ def main():
             asyncio.run(_handle_bulk_audit(args, orchestrator))
 
         elif args.command == 'resources':
+        elif args.command == 'report':
+            # Display audit reports from JSON files
+            _handle_report_command(args)
             # Display system resources and optimization recommendations
             _handle_resources_command(args)
 
@@ -1470,6 +1493,111 @@ def _handle_resources_command(args):
         logger.error(f"Failed to display resource information: {e}")
         print(f"❌ Failed to analyze system resources: {e}")
 
+
+def _handle_report_command(args):
+    """Handle the report command to display audit reports from JSON files."""
+    try:
+        service_name = args.service
+        profile_name = getattr(args, 'profile', 'strict')
+        output_format = getattr(args, 'output', 'rich')
+        verbose = getattr(args, 'verbose', False)
+        
+        # Construct the report file path
+        report_file = Path("audit-results") / profile_name / f"audit_{service_name}.json"
+        
+        if not report_file.exists():
+            print(f"❌ Report file not found: {report_file}")
+            print(f"Available profiles: relaxed, standard, strict, ci_fast, ci_comprehensive")
+            print(f"Available services: check audit-results/{profile_name}/ directory")
+            return
+        
+        # Load and parse the report
+        with open(report_file, 'r') as f:
+            report_data = json.load(f)
+        
+        print(f"📊 Audit Report for {service_name} ({profile_name} profile)")
+        print("=" * 60)
+        print(f"Overall Score: {report_data.get('overall_score', 'N/A'):.1f}")
+        print(f"Grade: {report_data.get('grade', 'N/A')}")
+        print(f"Analysis Timestamp: {report_data.get('analysis_timestamp', 'N/A')}")
+        print()
+        
+        # Display dimensions
+        dimensions = report_data.get('dimensions', {})
+        if dimensions:
+            print("📈 Dimension Scores:")
+            for dim, score in dimensions.items():
+                print(f"  {dim.replace('_', ' ' ).title()}: {score:.1f}")
+            print()
+        
+        # Display recommendations
+        recommendations = report_data.get('recommendations', [])
+        if recommendations:
+            print("💡 Key Recommendations:")
+            for rec in recommendations[:10]:  # Show first 10 recommendations
+                print(f"  • {rec}")
+            if len(recommendations) > 10:
+                print(f"  ... and {len(recommendations) - 10} more")
+            print()
+        
+        # Display critical issues
+        critical_issues = report_data.get('critical_issues', [])
+        if critical_issues:
+            print("🚨 Critical Issues:")
+            for issue in critical_issues[:5]:  # Show first 5 critical issues
+                print(f"  • {issue}")
+            if len(critical_issues) > 5:
+                print(f"  ... and {len(critical_issues) - 5} more critical issues")
+            print()
+        
+        # Display detailed issues if verbose
+        if verbose:
+            detailed_issues = report_data.get('detailed_issues', [])
+            if detailed_issues:
+                print("🔍 Detailed Issues:")
+                for issue in detailed_issues[:10]:  # Show first 10 detailed issues
+                    severity = issue.get('severity', 'unknown')
+                    severity_icon = {'critical': '🚨', 'warning': '⚠️', 'info': 'ℹ️'}.get(severity, '❓')
+                    print(f"  {severity_icon} {issue.get('description', 'No description')}")
+                    if issue.get('file_path'):
+                        print(f"      📁 {issue['file_path']}")
+                    if issue.get('line_number'):
+                        print(f"      📍 Line {issue['line_number']}")
+                if len(detailed_issues) > 10:
+                    print(f"  ... and {len(detailed_issues) - 10} more detailed issues")
+                print()
+        
+        # Show metadata
+        metadata = report_data.get('metadata', {})
+        if metadata:
+            service_info = metadata.get('service_info', {})
+            if service_info:
+                print("ℹ️  Service Information:")
+                print(f"  Name: {service_info.get('name', 'N/A')}")
+                print(f"  Path: {service_info.get('path', 'N/A')}")
+                print(f"  Type: {service_info.get('type', 'N/A')}")
+                print()
+        
+        if output_format == 'json':
+            print(json.dumps(report_data, indent=2, default=str))
+        elif output_format == 'summary':
+            _display_report_summary(report_data)
+            
+    except Exception as e:
+        logger.error(f"Failed to display report: {e}")
+        print(f"❌ Failed to load audit report: {e}")
+
+
+def _display_report_summary(report_data):
+    """Display a concise summary of the audit report."""
+    print("📋 AUDIT SUMMARY")
+    print("-" * 30)
+    print(f"Service: {report_data.get('service_name', 'Unknown')}")
+    print(f"Score: {report_data.get('overall_score', 0):.1f}/100")
+    print(f"Grade: {report_data.get('grade', 'F')}")
+    print(f"Critical Issues: {len(report_data.get('critical_issues', []))}")
+    print(f"Detailed Issues: {len(report_data.get('detailed_issues', []))}")
+    print(f"Estimated Effort: {report_data.get('estimated_effort_days', 'Unknown')} days")
 
 if __name__ == "__main__":
     main()

@@ -2625,7 +2625,26 @@ async def analyze_pr_code_changes(changed_files: list) -> dict:
         },
     }
 
+    # Categorize files by type
     for file_data in changed_files:
+        file_path = file_data.get("filename", "")
+        file_type = _categorize_file_by_type(file_path)
+        
+        if file_type == "architecture":
+            analysis["architecture_changes"].append(file_path)
+        elif file_type == "dependency":
+            analysis["dependency_changes"].append(file_path)
+        elif file_type == "configuration":
+            analysis["configuration_changes"].append(file_path)
+        elif file_type == "test":
+            analysis["test_coverage_changes"].append(file_path)
+        elif file_type == "documentation":
+            analysis["documentation_changes"].append(file_path)
+
+    # Identify structural risks
+    analysis["structural_risks"] = _identify_structural_risks(analysis)
+
+    return analysis
         file_path = file_data.get("filename", "")
         file_type = get_file_type(file_path)
 
@@ -2701,6 +2720,37 @@ def analyze_commit_messages(commits: list) -> dict:
     return analysis
 
 
+def _categorize_file_by_type(file_path: str) -> str:
+    """Categorize a file by its type and purpose."""
+    file_path_lower = file_path.lower()
+    
+    if any(pattern in file_path_lower for pattern in ["architecture", "design", "structure"]):
+        return "architecture"
+    elif any(pattern in file_path_lower for pattern in ["requirements", "setup.py", "package.json", "pom.xml"]):
+        return "dependency"
+    elif any(pattern in file_path_lower for pattern in ["config", ".env", ".yaml", ".yml", ".json"]):
+        return "configuration"
+    elif any(pattern in file_path_lower for pattern in ["test", "spec", "_test"]):
+        return "test"
+    elif any(pattern in file_path_lower for pattern in ["readme", "docs", ".md", ".rst"]):
+        return "documentation"
+    else:
+        return "other"
+
+
+def _identify_structural_risks(changes: dict) -> list:
+    """Identify structural risks based on file changes."""
+    risks = []
+    
+    if len(changes.get("architecture_changes", [])) > 3:
+        risks.append("Multiple architecture files changed - high risk")
+    
+    if len(changes.get("dependency_changes", [])) > 0 and len(changes.get("test_coverage_changes", [])) == 0:
+        risks.append("Dependencies changed without corresponding tests")
+    
+    return risks
+
+
 def analyze_code_structure(changed_files: list) -> dict:
     """Analyze the structural changes in the codebase."""
     analysis = {
@@ -2712,33 +2762,27 @@ def analyze_code_structure(changed_files: list) -> dict:
         "structural_risks": [],
     }
 
+    # Categorize files by type
     for file_data in changed_files:
-        file_path = file_data.get("filename", "").lower()
-
-        # Categorize files by type and impact
-        if any(pattern in file_path for pattern in ["architecture", "design", "structure"]):
+        file_path = file_data.get("filename", "")
+        file_type = _categorize_file_by_type(file_path)
+        
+        if file_type == "architecture":
             analysis["architecture_changes"].append(file_path)
-
-        elif any(pattern in file_path for pattern in ["requirements", "setup.py", "package.json", "pom.xml"]):
+        elif file_type == "dependency":
             analysis["dependency_changes"].append(file_path)
-
-        elif any(pattern in file_path for pattern in ["config", ".env", ".yaml", ".yml", ".json"]):
+        elif file_type == "configuration":
             analysis["configuration_changes"].append(file_path)
-
-        elif any(pattern in file_path for pattern in ["test", "spec", "_test"]):
+        elif file_type == "test":
             analysis["test_coverage_changes"].append(file_path)
-
-        elif any(pattern in file_path for pattern in ["readme", "docs", ".md", ".rst"]):
+        elif file_type == "documentation":
             analysis["documentation_changes"].append(file_path)
 
     # Identify structural risks
-    if len(analysis["architecture_changes"]) > 3:
-        analysis["structural_risks"].append("Multiple architecture files changed - high risk")
-
-    if len(analysis["dependency_changes"]) > 0 and len(analysis["test_coverage_changes"]) == 0:
-        analysis["structural_risks"].append("Dependencies changed without corresponding tests")
+    analysis["structural_risks"] = _identify_structural_risks(analysis)
 
     return analysis
+
 
 
 async def analyze_code_quality(changed_files: list) -> dict:
@@ -2746,7 +2790,26 @@ async def analyze_code_quality(changed_files: list) -> dict:
     try:
         # Prepare code content for analysis
         code_files = []
-        for file_data in changed_files:
+    # Categorize files by type
+    for file_data in changed_files:
+        file_path = file_data.get("filename", "")
+        file_type = _categorize_file_by_type(file_path)
+        
+        if file_type == "architecture":
+            analysis["architecture_changes"].append(file_path)
+        elif file_type == "dependency":
+            analysis["dependency_changes"].append(file_path)
+        elif file_type == "configuration":
+            analysis["configuration_changes"].append(file_path)
+        elif file_type == "test":
+            analysis["test_coverage_changes"].append(file_path)
+        elif file_type == "documentation":
+            analysis["documentation_changes"].append(file_path)
+
+    # Identify structural risks
+    analysis["structural_risks"] = _identify_structural_risks(analysis)
+
+    return analysis
             if file_data.get("patch") or file_data.get("content"):
                 content = file_data.get("content") or extract_content_from_patch(file_data.get("patch", ""))
                 if content:

@@ -412,20 +412,39 @@ class AccessControlManager:
 
         return True, "Policy matched"
 
+
+    def _check_wildcard_principal(self, principal: str) -> bool:
+        """Check if principal is a wildcard match."""
+        return principal == "*"
+
+    def _check_role_principal(self, principal: str, user: User) -> bool:
+        """Check if principal matches user role."""
+        if principal.startswith("role:"):
+            role_name = principal[5:]
+            return user.role.value == role_name
+        return False
+
+    def _check_user_principal(self, principal: str, user: User) -> bool:
+        """Check if principal matches user ID or username."""
+        if principal.startswith("user:"):
+            user_id = principal[5:]
+            return user.user_id == user_id
+        return False
+
+    def _check_direct_principal(self, principal: str, user: User) -> bool:
+        """Check for direct user ID or username match."""
+        return user.user_id == principal or user.username == principal
+
     def _matches_principal(self, principals: List[str], user: User) -> bool:
         """Check if user matches any principal pattern."""
         for principal in principals:
-            if principal == "*":
+            if self._check_wildcard_principal(principal):
                 return True
-            elif principal.startswith("role:"):
-                role_name = principal[5:]
-                if user.role.value == role_name:
-                    return True
-            elif principal.startswith("user:"):
-                user_id = principal[5:]
-                if user.user_id == user_id:
-                    return True
-            elif user.user_id == principal or user.username == principal:
+            elif self._check_role_principal(principal, user):
+                return True
+            elif self._check_user_principal(principal, user):
+                return True
+            elif self._check_direct_principal(principal, user):
                 return True
 
         return False
