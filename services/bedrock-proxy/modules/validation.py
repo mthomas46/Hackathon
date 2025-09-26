@@ -39,28 +39,31 @@ def validate_format(fmt: Optional[str]) -> str:
     return (fmt or "md").lower()
 
 
+def _validate_string_field(
+    value: Optional[str],
+    field_name: str,
+    max_length: int,
+    sanitize: bool = False
+) -> Optional[str]:
+    """Generic string field validation with common patterns."""
+    if value is not None:
+        if len(value) > max_length:
+            raise ValidationError(f"{field_name} too long (max {max_length} characters)")
+        if sanitize:
+            value = sanitize_for_response(value)
+    return value
+
+
 def validate_model(model: Optional[str]) -> Optional[str]:
     """Validate and sanitize model field."""
-    if model is not None:
-        if len(model) > 100:
-            raise ValidationError("Model name too long (max 100 characters)")
-        # Sanitize dangerous content
-        model = sanitize_for_response(model)
-    return model
+    return _validate_string_field(model, "Model name", 100, sanitize=True)
 
 
 def validate_region(region: Optional[str]) -> Optional[str]:
     """Validate and sanitize region field."""
-    if region is not None:
-        if len(region) > 50:
-            raise ValidationError("Region name too long (max 50 characters)")
-        # Sanitize dangerous content
-        region = sanitize_for_response(region)
-    return region
+    return _validate_string_field(region, "Region name", 50, sanitize=True)
 
 
 def validate_title(title: Optional[str]) -> Optional[str]:
     """Validate title field."""
-    if title is not None and len(title) > 200:
-        raise ValidationError("Title too long (max 200 characters)")
-    return title
+    return _validate_string_field(title, "Title", 200, sanitize=False)
