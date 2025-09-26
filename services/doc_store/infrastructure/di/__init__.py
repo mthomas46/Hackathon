@@ -1,0 +1,1 @@
+"""Doc Store dependency injection."""

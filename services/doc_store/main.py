@@ -527,7 +527,17 @@ resource_monitor = DocStoreResourceMonitor()
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize service on startup."""
+    """Initialize Doc Store service on startup.
+
+    Performs comprehensive service initialization including:
+    - Database connection establishment and validation
+    - Resource monitoring system startup
+    - Logging system configuration
+    - Background service coordination setup
+
+    This function ensures all critical components are properly initialized
+    before the service begins accepting requests.
+    """
     init_database()
 
     # Start comprehensive resource monitoring
@@ -537,7 +547,13 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Clean up resources on shutdown."""
+    """Clean up resources and connections on service shutdown.
+
+    Performs graceful shutdown by:
+    - Stopping resource monitoring
+    - Closing cache connections
+    - Logging shutdown completion
+    """
     # Stop resource monitoring
     await resource_monitor.stop_monitoring()
 
@@ -558,13 +574,35 @@ try:
 except ImportError:
     # Fallback for when running as script
     def healthy_response(data=None, message="Service is healthy", **kwargs):
+        """Create a standardized healthy response for health check endpoints.
+
+        Args:
+            data: Optional additional data to include in response
+            message: Health status message (default: "Service is healthy")
+            **kwargs: Additional key-value pairs to include in response
+
+        Returns:
+            dict: Standardized health response with status, message, and data
+        """
         return {"status": "healthy", "message": message, "data": data, **kwargs}
 
 original_healthy_response = healthy_response
 
 
 def custom_healthy_response(service_name: str, version: str = "1.0.0", **kwargs):
-    """Custom healthy response that includes database_connected for doc_store."""
+    """Create custom healthy response with service-specific health indicators.
+
+    Extends the standard healthy response to include service-specific
+    health checks like database connectivity for the Doc Store service.
+
+    Args:
+        service_name: Name of the service for health check customization
+        version: Service version string
+        **kwargs: Additional health check data
+
+    Returns:
+        dict: Enhanced health response with service-specific indicators
+    """
     if service_name == ServiceNames.DOC_STORE:
         kwargs["database_connected"] = check_database_connection()
     return original_healthy_response(service_name, version, **kwargs)
@@ -618,7 +656,15 @@ async def get_performance_recommendations():
 
 @app.post("/api/v1/resources/gc")
 async def trigger_garbage_collection():
-    """Manually trigger garbage collection and return cleanup results."""
+    """Manually trigger garbage collection and return cleanup results.
+
+    Forces Python garbage collection to run and provides detailed
+    statistics about memory cleanup operations, including objects
+    collected by generation and memory freed.
+
+    Returns:
+        dict: Garbage collection results with collection statistics
+    """
     try:
         gc_result = await resource_monitor.force_garbage_collection()
         return create_success_response(
@@ -635,7 +681,15 @@ async def trigger_garbage_collection():
 
 @app.post("/api/v1/resources/reset-insights")
 async def reset_resource_insights():
-    """Reset resource usage insights and trends."""
+    """Reset resource usage insights and baseline trends.
+
+    Clears all accumulated resource monitoring data, trends, and
+    baseline measurements. Useful for establishing new performance
+    baselines after system optimizations or configuration changes.
+
+    Returns:
+        dict: Reset operation confirmation
+    """
     try:
         resource_monitor.reset_insights()
         return create_success_response(
@@ -655,7 +709,15 @@ async def reset_resource_insights():
 
 @app.get("/metrics")
 async def metrics():
-    """Prometheus metrics endpoint for monitoring."""
+    """Prometheus metrics endpoint for comprehensive service monitoring.
+
+    Provides standardized Prometheus metrics for service monitoring,
+    including service information, availability status, request metrics,
+    and performance indicators.
+
+    Returns:
+        str: Prometheus-formatted metrics output
+    """
     # This would integrate with a proper metrics collection system
     # For now, return basic service health metrics
     return f"""# HELP doc_store_info Service information
