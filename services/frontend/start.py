@@ -21,11 +21,15 @@ os.environ.setdefault("SERVICE_PORT", "3000")
 sys.path.insert(0, app_root)
 sys.path.insert(0, str(service_dir))
 
-print(f"Frontend Service Startup:")
-print(f"- App root: {app_root}")
-print(f"- Service dir: {service_dir}")
-print(f"- Working dir: {os.getcwd()}")
-print(f"- Python path: {sys.path[:3]}...")
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+logger.info("Frontend Service Startup:")
+logger.info(f"- App root: {app_root}")
+logger.info(f"- Service dir: {service_dir}")
+logger.info(f"- Working dir: {os.getcwd()}")
+logger.info(f"- Python path: {sys.path[:3]}...")
 
 # Import uvicorn first
 import uvicorn

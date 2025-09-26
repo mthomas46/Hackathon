@@ -38,28 +38,32 @@ def fire_and_forget(event_type, message, service, metadata=None):
     print(f"[{service}] {event_type}: {message}")
 
 
+# Set up logging for the interpreter service
+import logging
+logger = logging.getLogger(__name__)
+
 # Import sample documents repository
-print("🔍 DEBUG: Starting sample documents import...")
+logger.info("Starting sample documents import...")
 try:
-    print("🔍 DEBUG: Attempting to import sample_documents module...")
+    logger.debug("Attempting to import sample_documents module...")
     from .modules.sample_documents import sample_documents
 
-    print(f"🔍 DEBUG: Import successful! sample_documents = {sample_documents}")
+    logger.info(f"Import successful! sample_documents = {sample_documents}")
     if sample_documents is not None:
-        print(
-            f"🔍 DEBUG: Sample documents repository has {len(sample_documents.get_all_documents())} documents"
+        logger.info(
+            f"Sample documents repository has {len(sample_documents.get_all_documents())} documents"
         )
     else:
-        print("🔍 DEBUG: Sample documents repository is None")
+        logger.warning("Sample documents repository is None")
 except ImportError as e:
-    print(f"🔍 DEBUG: Import failed with ImportError: {e}")
+    logger.warning(f"Import failed with ImportError: {e}")
     # Fallback if import fails - will use mock data
     sample_documents = None
 except Exception as e:
-    print(f"🔍 DEBUG: Import failed with unexpected error: {e}")
+    logger.error(f"Import failed with unexpected error: {e}")
     sample_documents = None
 
-print(f"🔍 DEBUG: Final sample_documents value: {sample_documents}")
+logger.info(f"Final sample_documents value: {sample_documents}")
 
 # Create FastAPI app
 app = FastAPI(
