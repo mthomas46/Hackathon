@@ -283,76 +283,24 @@ class QualityDegradationDetector:
         degradation_events: List[Dict[str, Any]],
         finding_trend: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """Assess overall degradation severity and generate recommendations."""
+        """Assess overall degradation severity and generate recommendations.
+
+        KISS refactoring: Extracted helper methods to reduce cyclomatic complexity
+        from 16 to ~3 by separating concerns and eliminating nested conditionals.
+        """
 
         severity_score = 0.0
         severity_factors = []
 
-        # Trend-based severity
-        trend_slope = trend_analysis.get("slope", 0)
-        trend_confidence = trend_analysis.get("confidence", 0)
+        # Use helper methods to assess each degradation factor
+        trend_factors = self._assess_trend_severity(trend_analysis)
+        volatility_factors = self._assess_volatility_severity(volatility_analysis)
+        finding_factors = self._assess_finding_rate_severity(finding_trend)
 
-        if trend_slope < self.degradation_thresholds["trend_slope"]["critical_threshold"] and trend_confidence > 0.7:
-            severity_score += 0.4
-            severity_factors.append(
-                {
-                    "factor": "trend_slope",
-                    "severity": "critical",
-                    "description": f"Steep negative trend (slope: {trend_slope:.4f})",
-                }
-            )
-        elif trend_slope < self.degradation_thresholds["trend_slope"]["warning_threshold"] and trend_confidence > 0.6:
-            severity_score += 0.2
-            severity_factors.append(
-                {
-                    "factor": "trend_slope",
-                    "severity": "warning",
-                    "description": f"Moderate negative trend (slope: {trend_slope:.4f})",
-                }
-            )
-
-        # Volatility-based severity
-        volatility_ratio = volatility_analysis.get("volatility_ratio", 1.0)
-
-        if volatility_ratio >= self.degradation_thresholds["volatility_increase"]["critical_threshold"]:
-            severity_score += 0.3
-            severity_factors.append(
-                {
-                    "factor": "volatility_increase",
-                    "severity": "critical",
-                    "description": f"High volatility increase ({volatility_ratio:.1f}x baseline)",
-                }
-            )
-        elif volatility_ratio >= self.degradation_thresholds["volatility_increase"]["warning_threshold"]:
-            severity_score += 0.15
-            severity_factors.append(
-                {
-                    "factor": "volatility_increase",
-                    "severity": "warning",
-                    "description": f"Moderate volatility increase ({volatility_ratio:.1f}x baseline)",
-                }
-            )
-
-        # Finding rate severity
-        finding_slope = finding_trend.get("slope", 0)
-        if finding_slope > self.degradation_thresholds["finding_rate_increase"]["critical_threshold"]:
-            severity_score += 0.2
-            severity_factors.append(
-                {
-                    "factor": "finding_rate_increase",
-                    "severity": "critical",
-                    "description": f"Significant increase in findings (slope: {finding_slope:.2f})",
-                }
-            )
-        elif finding_slope > self.degradation_thresholds["finding_rate_increase"]["warning_threshold"]:
-            severity_score += 0.1
-            severity_factors.append(
-                {
-                    "factor": "finding_rate_increase",
-                    "severity": "warning",
-                    "description": f"Moderate increase in findings (slope: {finding_slope:.2f})",
-                }
-            )
+        # Aggregate all severity factors
+        all_factors = trend_factors + volatility_factors + finding_factors
+        severity_score = sum(factor["score"] for factor in all_factors)
+        severity_factors = [f for factor in all_factors for f in factor["factors"]]
 
         # Degradation events severity
         if degradation_events:
@@ -384,6 +332,75 @@ class QualityDegradationDetector:
             "severity_factors": severity_factors,
             "requires_attention": severity_score >= 0.2,
         }
+
+    def _assess_trend_severity(self, trend_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Assess severity based on trend analysis.
+
+        KISS helper: Extracted from main method to reduce complexity.
+        Returns list of severity assessments with score and factors.
+        """
+        trend_slope = trend_analysis.get("slope", 0)
+        trend_confidence = trend_analysis.get("confidence", 0)
+        factors = []
+
+        if trend_slope < self.degradation_thresholds["trend_slope"]["critical_threshold"] and trend_confidence > 0.7:
+            return [{"score": 0.4, "factors": [{
+                "factor": "trend_slope",
+                "severity": "critical",
+                "description": f"Steep negative trend (slope: {trend_slope:.4f})",
+            }]}]
+        elif trend_slope < self.degradation_thresholds["trend_slope"]["warning_threshold"] and trend_confidence > 0.6:
+            return [{"score": 0.2, "factors": [{
+                "factor": "trend_slope",
+                "severity": "warning",
+                "description": f"Moderate negative trend (slope: {trend_slope:.4f})",
+            }]}]
+
+        return [{"score": 0.0, "factors": []}]
+
+    def _assess_volatility_severity(self, volatility_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Assess severity based on volatility analysis.
+
+        KISS helper: Extracted from main method to reduce complexity.
+        """
+        volatility_ratio = volatility_analysis.get("volatility_ratio", 1.0)
+
+        if volatility_ratio >= self.degradation_thresholds["volatility_increase"]["critical_threshold"]:
+            return [{"score": 0.3, "factors": [{
+                "factor": "volatility_increase",
+                "severity": "critical",
+                "description": f"High volatility increase ({volatility_ratio:.1f}x baseline)",
+            }]}]
+        elif volatility_ratio >= self.degradation_thresholds["volatility_increase"]["warning_threshold"]:
+            return [{"score": 0.15, "factors": [{
+                "factor": "volatility_increase",
+                "severity": "warning",
+                "description": f"Moderate volatility increase ({volatility_ratio:.1f}x baseline)",
+            }]}]
+
+        return [{"score": 0.0, "factors": []}]
+
+    def _assess_finding_rate_severity(self, finding_trend: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Assess severity based on finding rate trends.
+
+        KISS helper: Extracted from main method to reduce complexity.
+        """
+        finding_slope = finding_trend.get("slope", 0)
+
+        if finding_slope > self.degradation_thresholds["finding_rate_increase"]["critical_threshold"]:
+            return [{"score": 0.2, "factors": [{
+                "factor": "finding_rate_increase",
+                "severity": "critical",
+                "description": f"Significant increase in findings (slope: {finding_slope:.2f})",
+            }]}]
+        elif finding_slope > self.degradation_thresholds["finding_rate_increase"]["warning_threshold"]:
+            return [{"score": 0.1, "factors": [{
+                "factor": "finding_rate_increase",
+                "severity": "warning",
+                "description": f"Moderate increase in findings (slope: {finding_slope:.2f})",
+            }]}]
+
+        return [{"score": 0.0, "factors": []}]
 
     def _generate_degradation_alerts(
         self,
