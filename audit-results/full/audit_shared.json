@@ -1,0 +1,117 @@
+{
+  "service_name": "shared",
+  "overall_score": 12.179999999999993,
+  "grade": "F",
+  "dimensions": {
+    "architecture": 71.68,
+    "code_quality": 65.3,
+    "performance": 82.5,
+    "maintainability": 72.8,
+    "documentation_quality": 35.0,
+    "dry_principles": 60.0,
+    "kiss_principles": 44.0
+  },
+  "architecture": "ArchitectureAnalysisResult(score=71.68, ddd_compliance=100, rest_compliance=80.0, layer_separation=100.0, ddd_issues=['📚 DOC: Missing or broken links to related documentation'], ddd_recommendations=['🔗 Add proper cross-references and links to related docs'], file_metrics={}, test_quality={'coverage_score': 0, 'quality_score': 0, 'structure_score': 0, 'total_score': 0, 'recommendations': []}, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, endpoint_analysis={'total_endpoints': 7, 'rest_compliant_endpoints': 1, 'openapi_compliant_endpoints': 0, 'project_standard_compliant_endpoints': 1, 'endpoint_issues': [], 'rest_violations': ['Low REST compliance score', 'Low REST compliance score', 'Low REST compliance score', 'Low REST compliance score', 'Low REST compliance score', 'Low REST compliance score'], 'openapi_violations': ['Low OpenAPI compliance score', 'Low OpenAPI compliance score', 'Low OpenAPI compliance score', 'Low OpenAPI compliance score', 'Low OpenAPI compliance score', 'Low OpenAPI compliance score', 'Low OpenAPI compliance score'], 'standard_violations': ['Low project standards compliance', 'Low project standards compliance', 'Low project standards compliance', 'Low project standards compliance', 'Low project standards compliance', 'Low project standards compliance'], 'endpoint_details': [{'method': 'GET', 'path': '/', 'function': 'root', 'file': 'services/shared/main.py', 'line_number': 142}, {'method': 'GET', 'path': '/health', 'function': 'health', 'file': 'services/shared/main.py', 'line_number': 164}, {'method': 'GET', 'path': '/error-demo/{error_type}', 'function': 'error_demo', 'file': 'services/shared/main.py', 'line_number': 184}, {'method': 'GET', 'path': '/domain-demo', 'function': 'domain_demo', 'file': 'services/shared/main.py', 'line_number': 218}, {'method': 'GET', 'path': '/resilience-demo', 'function': 'resilience_demo', 'file': 'services/shared/main.py', 'line_number': 271}, {'method': 'GET', 'path': '/architecture-info', 'function': 'architecture_info', 'file': 'services/shared/main.py', 'line_number': 304}, {'method': 'POST', 'path': '/ingest', 'function': 'ingest', 'file': 'presentation/web/envelopes.py', 'line_number': 34}], 'compliant_endpoints': [], 'non_compliant_endpoints': [{'method': 'GET', 'path': '/', 'function': 'root', 'file': 'services/shared/main.py', 'line_number': 142, 'issues': ['REST compliance issues', 'OpenAPI documentation issues', 'Project standard violations']}, {'method': 'GET', 'path': '/health', 'function': 'health', 'file': 'services/shared/main.py', 'line_number': 164, 'issues': ['REST compliance issues', 'OpenAPI documentation issues', 'Project standard violations']}, {'method': 'GET', 'path': '/error-demo/{error_type}', 'function': 'error_demo', 'file': 'services/shared/main.py', 'line_number': 184, 'issues': ['OpenAPI documentation issues', 'Project standard violations']}, {'method': 'GET', 'path': '/domain-demo', 'function': 'domain_demo', 'file': 'services/shared/main.py', 'line_number': 218, 'issues': ['REST compliance issues', 'OpenAPI documentation issues']}, {'method': 'GET', 'path': '/resilience-demo', 'function': 'resilience_demo', 'file': 'services/shared/main.py', 'line_number': 271, 'issues': ['REST compliance issues', 'OpenAPI documentation issues', 'Project standard violations']}, {'method': 'GET', 'path': '/architecture-info', 'function': 'architecture_info', 'file': 'services/shared/main.py', 'line_number': 304, 'issues': ['REST compliance issues', 'OpenAPI documentation issues', 'Project standard violations']}, {'method': 'POST', 'path': '/ingest', 'function': 'ingest', 'file': 'presentation/web/envelopes.py', 'line_number': 34, 'issues': ['REST compliance issues', 'OpenAPI documentation issues', 'Project standard violations']}], 'rest_compliance_score': 14.29, 'openapi_compliance_score': 0.0, 'project_standards_compliance_score': 14.29, 'endpoint_detection_validation': {'total_fastapi_files_found': 12, 'detection_gaps': [], 'recommendations': []}}, complexity_analysis={'high_complexity_functions': [], 'total_functions_analyzed': 0, 'complexity_distribution': {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}, 'average_complexity': 0.0, 'recommendations': []}, dependency_coupling={'import_dependencies': {}, 'coupling_score': 0, 'recommendations': []}, dead_code_analysis={'dead_code_lines': 0, 'unused_functions': [], 'recommendations': []}, test_quality_metrics={'total_test_files': 0, 'test_naming_issues': 0, 'recommendations': []}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'documentation_score': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 0.0, 'undocumented_functions': 0, 'recommendations': []}, configuration_management={'hardcoded_values': 0, 'security_issues': 0, 'recommendations': []}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'recommendations': []}, directory_analysis={}, issues=['Empty directories detected - clean up unnecessary directories', 'Docker/infrastructure configuration issues detected'], recommendations=['🗂️ CLEANUP: Remove empty directories or add necessary files', '🐳 DOCKER: Ensure Dockerfile exists with FROM, EXPOSE, and HEALTHCHECK', '🔌 PORTS: Check for port conflicts using port validation script', '📋 MAKEFILE: Ensure service is integrated in CI/CD Makefile targets', '📚 DOCUMENTATION: Create comprehensive README.md with required sections', '📖 SECTIONS: Add title, description, requirements, config, infrastructure, ecosystem, features', '🔗 LINKS: Add cross-references to related documentation and services', '📝 FORMATTING: Use proper markdown formatting with headers, lists, and code blocks', '🤖 LLM: Structure content for AI consumption with clear sections and semantic markup'], detailed_issues=[], empty_directories=55.0, requirements_file=100.0, docker_infrastructure=50.0, dry_principles=60.0, kiss_principles=44.0, ddd_patterns=30.0, rest_best_practices=50.0, documentation_quality=35.0)",
+  "code_quality": "CodeQualityAnalysisResult(score=65.3, complexity_score=62.5, testing_score=20.0, linting_score=100, duplication_score=60.0, security_score=100, dry_principle_score=60.0, kiss_principle_score=100, test_coverage=0, cyclomatic_complexity={'high_complexity_functions': [{'function': '_estimate_layer_size', 'file': 'infrastructure/utilities/build_cache_optimizer.py', 'complexity': 22}], 'total_functions_analyzed': 1538, 'complexity_distribution': {'low': 1376, 'medium': 141, 'high': 20, 'very_high': 1}, 'average_complexity': 2.6482444733420025, 'recommendations': ['Refactor 1 high-complexity functions']}, test_quality_metrics={'total_test_files': 9, 'test_naming_issues': 76, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 3, 'mock_usage': 9, 'recommendations': ['Fix 76 poorly named test functions']}, linting_quality={'pylint_score': 0, 'flake8_issues': 503, 'total_issues': 503, 'issues_by_type': {}, 'recommendations': []}, duplication_analysis={'total_duplicate_blocks': 2094, 'duplicate_lines': 8376, 'total_lines_analyzed': 31781, 'duplication_rate': 26.35536956042919, 'recommendations': ['High duplication rate (26.4%) - consider refactoring']}, issues=['High code complexity detected', 'Insufficient test coverage', 'Code duplication detected'], recommendations=['Refactor high-complexity functions (>10 cyclomatic complexity)', 'Increase test coverage to at least 70.0%', 'Reduce code duplication through refactoring'])",
+  "performance": "PerformanceAnalysisResult(score=82.5, system_metrics_score=75.0, database_score=100, resource_usage_score=65.0, system_metrics={'cpu_percent': 19.2, 'memory_percent': 54.5, 'memory_used_gb': 31.278793334960938, 'disk_read_mb': 299540.21484375, 'disk_write_mb': 201529.41015625, 'network_sent_mb': 2165.2080078125, 'network_recv_mb': 1652.4638671875, 'process_memory_percent': 0.2407550811767578, 'process_cpu_percent': 1.1, 'timestamp': 1758877160.9923809}, database_performance={'has_database_layer': True, 'connection_pooling': True, 'query_optimization': True, 'caching_strategy': True, 'migration_scripts': False, 'performance_issues': [], 'recommendations': []}, resource_usage={'file_handle_leaks': 12, 'memory_leaks_potential': 105, 'resource_management_issues': 0, 'context_manager_usage': 468, 'exception_handling_resources': 0, 'large_objects': ['integrations/orchestration/orchestration.py', 'infrastructure/database/di/services.py', 'infrastructure/database/di/container.py', 'infrastructure/enterprise/enterprise_initializer.py', 'infrastructure/enterprise/enterprise_integration.py', 'infrastructure/enterprise/enterprise_service_mesh.py', 'infrastructure/streaming/event_streaming.py', 'infrastructure/utilities/build_cache_optimizer.py', 'infrastructure/utilities/process_monitor_service.py', 'infrastructure/utilities/self_healing_service.py', 'infrastructure/utilities/service_mesh_service.py', 'infrastructure/utilities/centralized_logging_service.py', 'infrastructure/utilities/error_handling.py', 'infrastructure/utilities/health_check_service.py', 'infrastructure/utilities/connection_pool_service.py', 'infrastructure/utilities/kubernetes_probes_service.py', 'infrastructure/utilities/build_preflight_checks.py', 'infrastructure/utilities/utilities.py', 'infrastructure/utilities/fallback_service.py', 'infrastructure/utilities/logging_utils.py', 'infrastructure/external/clients/clients.py', 'infrastructure/operational/operational_excellence.py', 'infrastructure/monitoring/monitoring_system.py', 'infrastructure/caching/intelligent_caching.py', 'infrastructure/logging/standardized_logger.py'], 'resource_intensive_operations': ['profiler.py:284', 'profiler.py:285', 'profiler.py:286', 'profiler.py:292', 'profiler.py:293', 'profiler.py:295', 'memory_cache.py:124', 'cache_manager_core.py:152', 'orchestration.py:209', 'orchestration.py:212', 'orchestration.py:441', 'enterprise_initializer.py:340', 'enterprise_service_mesh.py:419', 'event_streaming.py:357', 'event_streaming.py:407', 'event_streaming.py:421', 'event_streaming.py:722', 'event_streaming.py:723', 'build_cache_optimizer.py:82', 'build_cache_optimizer.py:197', 'build_cache_optimizer.py:375', 'build_cache_optimizer.py:515', 'build_cache_optimizer.py:516', 'build_cache_optimizer.py:545', 'process_monitor_service.py:87', 'process_monitor_service.py:88', 'process_monitor_service.py:89', 'process_monitor_service.py:90', 'process_monitor_service.py:101', 'process_monitor_service.py:236', 'process_monitor_service.py:340', 'process_monitor_service.py:341', 'shutdown_service.py:74', 'shutdown_service.py:242', 'logging_service.py:205', 'logging_service.py:337', 'logging_service.py:353', 'logging_service.py:354', 'logging_service.py:355', 'logging_service.py:356', 'service_mesh_service.py:227', 'service_mesh_service.py:239', 'service_mesh_service.py:317', 'service_mesh_service.py:323', 'service_mesh_service.py:357', 'service_mesh_service.py:738', 'centralized_logging_service.py:261', 'centralized_logging_service.py:264', 'centralized_logging_service.py:786', 'centralized_logging_service.py:795', 'health_check_service.py:503', 'health_check_service.py:508', 'health_check_service.py:513', 'health_check_service.py:527', 'connection_pool_service.py:311', 'kubernetes_probes_service.py:417', 'retry_service.py:245', 'retry_service.py:259', 'build_preflight_checks.py:194', 'build_preflight_checks.py:619', 'build_preflight_checks.py:621', 'build_preflight_checks.py:622', 'build_preflight_checks.py:631', 'build_preflight_checks.py:700', 'build_preflight_checks.py:701', 'build_preflight_checks.py:707', 'build_preflight_checks.py:708', 'utilities.py:316', 'utilities.py:512', 'resilience.py:65', 'resilience.py:130', 'fallback_service.py:127', 'fallback_service.py:130', 'fallback_service.py:138', 'fallback_service.py:151', 'clients.py:415', 'clients.py:673', 'clients.py:797', 'operational_excellence.py:284', 'operational_excellence.py:287', 'operational_excellence.py:292', 'operational_excellence.py:299', 'operational_excellence.py:300', 'operational_excellence.py:307', 'operational_excellence.py:487', 'monitoring_system.py:296', 'monitoring_system.py:310', 'monitoring_system.py:326', 'monitoring_system.py:530', 'monitoring_system.py:531', 'intelligent_caching.py:346', 'intelligent_caching.py:355', 'intelligent_caching.py:530', 'standardized_logger.py:325', 'standardized_logger.py:326', 'standardized_logger.py:345', 'standardized_logger.py:346', 'standardized_logger.py:347', 'standardized_logger.py:348', 'standardized_logger.py:355', 'standardized_logger.py:377', 'standardized_logger.py:378', 'standardized_logger.py:379', 'domain_services.py:110', 'domain_services.py:115', 'value_objects.py:41', 'value_objects.py:325'], 'recommendations': ['Fix 12 potential file handle leaks - use context managers', 'Review 105 potential memory leaks with global variables', 'Consider splitting 25 large files for better resource management']}, performance_indicators={'cpu_health': 'good', 'memory_health': 'good', 'disk_health': 'high', 'network_health': 'high', 'overall_performance': 'moderate'}, issues=['Resource management issues in code'], recommendations=['Optimize system resource usage - monitor CPU, memory, and I/O', 'Fix resource management issues - use context managers and proper cleanup'])",
+  "maintainability": "MaintainabilityAnalysisResult(score=72.8, documentation_score=20.0, organization_score=100, error_handling_score=100, devops_readiness_score=93.0, scalability_score=100, linting_quality={'pylint_score': 0, 'flake8_issues': 503, 'total_issues': 503, 'issues_by_type': {}, 'recommendations': []}, test_quality={'coverage_score': 0, 'quality_score': 18, 'structure_score': 0, 'total_score': 18, 'recommendations': []}, test_quality_metrics={'total_test_files': 9, 'test_naming_issues': 76, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 3, 'mock_usage': 9, 'recommendations': ['Fix 76 poorly named test functions']}, domain_boundaries={'leaks_detected': 4, 'boundary_violations': ['infrastructure/database/di/registry.py', 'infrastructure/database/di/container.py', 'infrastructure/utilities/__init__.py', 'infrastructure/utilities/middleware.py'], 'layer_integrity': False, 'recommendations': ['Fix 4 domain boundary violations']}, api_documentation={'endpoints_documented': 0, 'total_endpoints': 0, 'documentation_score': 0, 'missing_summaries': 0, 'missing_descriptions': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 94.75920679886686, 'undocumented_functions': 37, 'undocumented_classes': 15, 'total_functions': 706, 'total_classes': 387, 'recommendations': ['Add docstrings to 37 undocumented functions']}, configuration_management={'hardcoded_values': 615, 'environment_variables': 16, 'config_files': 2, 'security_issues': 615, 'recommendations': ['Replace 615 hardcoded values with environment variables']}, logging_practices={'logging_usage': 39, 'error_logging': 136, 'structured_logging': 0, 'missing_error_logs': 189, 'logging_levels_used': {'CRITICAL', 'ERROR', 'INFO', 'DEBUG', 'WARNING'}, 'recommendations': ['Add error logging to 189 exception handlers']}, issues=['Insufficient documentation coverage'], recommendations=['Increase docstring coverage to at least 80.0%'], architecture_quality_score=75.0)",
+  "documentation_quality": {},
+  "dry_principles": {},
+  "kiss_principles": {},
+  "recommendations": [
+    "🚨 CRITICAL: Service requires immediate attention - score below 60",
+    "🗂️ CLEANUP: Remove empty directories or add necessary files",
+    "🐳 DOCKER: Ensure Dockerfile exists with FROM, EXPOSE, and HEALTHCHECK",
+    "🔌 PORTS: Check for port conflicts using port validation script",
+    "📋 MAKEFILE: Ensure service is integrated in CI/CD Makefile targets",
+    "📚 DOCUMENTATION: Create comprehensive README.md with required sections",
+    "📖 SECTIONS: Add title, description, requirements, config, infrastructure, ecosystem, features",
+    "🔗 LINKS: Add cross-references to related documentation and services",
+    "📝 FORMATTING: Use proper markdown formatting with headers, lists, and code blocks",
+    "🤖 LLM: Structure content for AI consumption with clear sections and semantic markup",
+    "Address: Empty directories detected - clean up unnecessary directories",
+    "Address: Docker/infrastructure configuration issues detected",
+    "Refactor high-complexity functions (>10 cyclomatic complexity)",
+    "Increase test coverage to at least 70.0%",
+    "Reduce code duplication through refactoring",
+    "Address: High code complexity detected",
+    "Address: Insufficient test coverage",
+    "Address: Code duplication detected",
+    "Optimize system resource usage - monitor CPU, memory, and I/O",
+    "Fix resource management issues - use context managers and proper cleanup",
+    "Address: Resource management issues in code",
+    "Increase docstring coverage to at least 80.0%",
+    "Address: Insufficient documentation coverage"
+  ],
+  "critical_issues": [],
+  "detailed_issues": [],
+  "critical_issues_count": 0,
+  "estimated_effort_days": 6.0,
+  "analysis_timestamp": "2025-09-26T03:59:22.131413",
+  "metadata": {
+    "service_info": {
+      "name": "shared",
+      "path": "/Users/mykalthomas/Documents/work/Hackathon/services/shared",
+      "type": "python",
+      "status": "unknown",
+      "metadata": {},
+      "discovered_at": "2025-09-26T03:59:05.556873",
+      "last_audited_at": null
+    },
+    "profile_used": "strict",
+    "profile_intensity": "strict",
+    "thresholds_applied": {
+      "excellent_score": 90.0,
+      "good_score": 80.0,
+      "passing_score": 70.0,
+      "critical_score": 50.0,
+      "dimensions": {
+        "architecture": {
+          "min_score": 60.0,
+          "target_score": 80.0,
+          "ddd_compliance_required": 70.0,
+          "rest_compliance_required": 75.0,
+          "layer_separation_required": 70.0,
+          "routes_score_required": 8.0
+        },
+        "code_quality": {
+          "min_score": 65.0,
+          "target_score": 85.0,
+          "complexity_max": 10,
+          "test_coverage_required": 70.0,
+          "linting_score_required": 7.0
+        },
+        "performance": {
+          "min_score": 70.0,
+          "target_score": 85.0,
+          "memory_threshold_mb": 500,
+          "cpu_threshold_percent": 80,
+          "response_time_max_ms": 1000
+        },
+        "maintainability": {
+          "min_score": 65.0,
+          "target_score": 80.0,
+          "docstring_coverage_required": 80.0,
+          "max_file_size_lines": 1000,
+          "dead_code_tolerance_percent": 5.0
+        }
+      },
+      "critical_issues": {
+        "max_critical_issues": 2,
+        "max_high_priority_issues": 5,
+        "max_medium_priority_issues": 10
+      },
+      "file_limits": {
+        "max_lines_per_file": 1000,
+        "max_functions_per_file": 20,
+        "max_classes_per_file": 10,
+        "max_imports_per_file": 20
+      },
+      "analysis_limits": {}
+    },
+    "audit_timestamp": null,
+    "use_case": "audit_service",
+    "service_discovered_at": "2025-09-26T03:59:05.556873",
+    "audit_duration_seconds": 16.57541298866272
+  }
+}
