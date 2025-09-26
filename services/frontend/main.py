@@ -277,7 +277,12 @@ except ImportError:
         return {}
 
     def create_frontend_success_response(data):
-        return {"success": True, "data": data}
+        """Create success response using shared utilities.
+
+        DRY refactoring: Uses shared create_success_response instead of
+        duplicating response creation logic.
+        """
+        return create_success_response(data)
 
     def get_consistency_engine_url():
         return "http://localhost:5001"
@@ -298,7 +303,12 @@ except ImportError:
         return "http://localhost:5009"
 
     def handle_frontend_error(error):
-        return {"success": False, "error": str(error)}
+        """Handle errors using shared utilities.
+
+        DRY refactoring: Uses shared create_error_response instead of
+        duplicating error response creation logic.
+        """
+        return create_error_response(str(error))
 
     def get_cached_summarizer_data():
         return []
