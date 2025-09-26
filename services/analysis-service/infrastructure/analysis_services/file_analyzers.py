@@ -5,6 +5,9 @@ Provides specialized analysis functions for Python, JavaScript, and Java files.
 
 from typing import Dict, List
 
+# Import centralized utilities
+from ..utilities.analysis_utils import get_file_type
+
 
 def analyze_python_file(lines: list) -> dict:
     """Analyze Python file for common issues."""
@@ -174,37 +177,4 @@ def extract_content_from_patch(patch: str) -> str:
     return "\n".join(content_lines)
 
 
-def get_file_type(filename: str) -> str:
-    """Determine file type from filename."""
-    if filename.endswith((".py", ".pyc")):
-        return "python"
-    elif filename.endswith((".js", ".jsx")):
-        return "javascript"
-    elif filename.endswith((".ts", ".tsx")):
-        return "typescript"
-    elif filename.endswith((".java",)):
-        return "java"
-    elif filename.endswith((".cpp", ".c++", ".cc", ".cxx", ".hpp", ".h")):
-        return "cpp"
-    elif filename.endswith((".cs",)):
-        return "csharp"
-    elif filename.endswith((".php",)):
-        return "php"
-    elif filename.endswith((".rb",)):
-        return "ruby"
-    elif filename.endswith((".go",)):
-        return "go"
-    elif filename.endswith((".rs",)):
-        return "rust"
-    elif filename.endswith((".html", ".htm")):
-        return "html"
-    elif filename.endswith((".css",)):
-        return "css"
-    elif filename.endswith((".md", ".markdown")):
-        return "markdown"
-    elif filename.endswith((".json",)):
-        return "json"
-    elif filename.endswith((".xml", ".yml", ".yaml")):
-        return "config"
-    else:
-        return "other"
+# get_file_type is now imported from analysis_utils

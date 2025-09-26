@@ -23,8 +23,19 @@ def extract_content_from_patch(patch: str) -> str:
 
 
 def get_file_type(filename: str) -> str:
-    """Determine file type from filename."""
-    # File extension to type mapping
+    """
+    Determine file type from filename using comprehensive extension mapping.
+
+    This is the centralized file type detection utility used across the analysis service.
+    It provides consistent file type classification for all analysis operations.
+
+    Args:
+        filename: The filename or path to analyze
+
+    Returns:
+        String representing the file type (e.g., 'python', 'javascript', 'other')
+    """
+    # File extension to type mapping - comprehensive coverage
     extension_map = {
         # Programming languages
         (".py", ".pyc"): "python",
@@ -37,21 +48,55 @@ def get_file_type(filename: str) -> str:
         (".rb",): "ruby",
         (".go",): "go",
         (".rs",): "rust",
+        (".swift",): "swift",
+        (".kt", ".kotlin"): "kotlin",
+        (".scala",): "scala",
+        (".pl", ".pm"): "perl",
+        (".sh", ".bash"): "shell",
+        (".ps1",): "powershell",
         # Web/markup
         (".html", ".htm"): "html",
         (".css",): "css",
-        (".md", ".markdown"): "markdown",
-        # Data/config
+        (".scss", ".sass"): "scss",
+        (".less",): "less",
+        # Data formats
         (".json",): "json",
-        (".xml", ".yml", ".yaml"): "config",
+        (".xml", ".xsd"): "xml",
+        (".yml", ".yaml"): "yaml",
+        # Documents
+        (".md", ".markdown"): "markdown",
+        (".txt",): "text",
+        (".pdf",): "pdf",
+        # Config files
+        (".ini", ".cfg", ".conf", ".config"): "config",
+        (".toml",): "toml",
+        (".env",): "env",
+        # Data science
+        (".ipynb",): "jupyter",
+        (".r", ".rmd"): "r",
+        # Database
+        (".sql",): "sql",
+        # Docker
+        ("Dockerfile", ".dockerfile"): "dockerfile",
+        # Other
+        (".gitignore", ".gitattributes"): "git",
+        (".lock",): "lockfile",
     }
+
+    # Extract filename if full path provided
+    filename = filename.split("/")[-1].split("\\")[-1]
 
     # Check each extension group
     for extensions, file_type in extension_map.items():
-        if filename.endswith(extensions):
+        if isinstance(extensions, str):
+            # Handle single extensions like "Dockerfile"
+            if filename == extensions or filename.endswith(extensions):
+                return file_type
+        elif filename.lower().endswith(tuple(ext.lower() for ext in extensions)):
             return file_type
 
-    return "unknown"
+    # Default fallback
+    return "other"
 
 
 def is_good_commit_message(message: str) -> bool:
