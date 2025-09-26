@@ -10,8 +10,8 @@ import logging
 from typing import Any, Dict, Optional, Union
 import httpx
 
-from ..utilities.retry_service import RetryService
-from ..utilities.circuit_breaker_service import CircuitBreakerService
+from .utilities.retry_service import RetryService
+from .utilities.circuit_breaker_service import CircuitBreakerService
 
 logger = logging.getLogger(__name__)
 
