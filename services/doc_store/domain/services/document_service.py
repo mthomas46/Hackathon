@@ -3,6 +3,11 @@
 from typing import List, Optional, Dict, Any
 from ..entities.document import Document
 from ..repositories.document_repository import DocumentRepository
+from services.shared.infrastructure.utilities.logging_utils import (
+    log_operation_start,
+    log_operation_success,
+    log_operation_error,
+)
 
 
 class DocumentService:
@@ -14,15 +19,40 @@ class DocumentService:
     async def create_document(self, document_id: str, content: str,
                             metadata: Optional[Dict[str, Any]] = None,
                             tags: Optional[List[str]] = None) -> Document:
-        """Create a new document."""
-        document = Document(
-            id=document_id,
-            content=content,
-            metadata=metadata or {},
-            tags=tags or []
-        )
-        await self._repository.save(document)
-        return document
+        """Create a new document with standardized logging.
+
+        Error handling standardization: Uses consistent logging patterns
+        with structured context across all services.
+        """
+        operation_name = "create_document"
+        log_operation_start(operation_name, {
+            "document_id": document_id,
+            "content_length": len(content),
+            "metadata_keys": list(metadata.keys()) if metadata else [],
+            "tags_count": len(tags) if tags else 0
+        })
+
+        try:
+            document = Document(
+                id=document_id,
+                content=content,
+                metadata=metadata or {},
+                tags=tags or []
+            )
+            await self._repository.save(document)
+
+            log_operation_success(operation_name, {
+                "document_id": document_id,
+                "final_tags_count": len(document.tags)
+            })
+            return document
+
+        except Exception as e:
+            log_operation_error(operation_name, e, {
+                "document_id": document_id,
+                "error_type": type(e).__name__
+            })
+            raise
 
     async def update_document(self, document_id: str, content: Optional[str] = None,
                             metadata: Optional[Dict[str, Any]] = None,
