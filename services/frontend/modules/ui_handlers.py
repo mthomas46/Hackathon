@@ -60,60 +60,91 @@ class UIHandlers:
             )
 
     @staticmethod
-    def handle_topics() -> HTMLResponse:
-        """Render topics overview page with document freshness analysis."""
+    def _get_item_title(item: dict) -> str:
+        """Extract title from item metadata."""
+        meta = item.get("metadata") or {}
+        return (meta.get("title") or meta.get("name") or "").lower()
+
+    def _calculate_freshness(stale_days: int) -> str:
+        """Calculate document freshness based on stale days."""
+        if stale_days < 60:
+            return "fresh"
+        elif stale_days > 180:
+            return "stale"
+        else:
+            return "aging"
+
+    def _categorize_topic_item(item: dict) -> tuple:
+        """Categorize item by topic and freshness."""
+        title = _get_item_title(item)
+        stale_days = item.get("stale_days", 0)
+        freshness = _calculate_freshness(stale_days)
+        return item.get("id"), freshness
+
+    def _build_topics_structure() -> dict:
+        """Build initial topics structure."""
+        return {
+            "kubernetes": [],
+            "openapi": [],
+            "redis": [],
+            "postgres": [],
+            "fastapi": [],
+        }
+
+    def _categorize_items_by_topics(items: list) -> dict:
+        """Categorize items into topic buckets."""
+        topics = _build_topics_structure()
+
+        for item in items:
+            title = _get_item_title(item)
+            for topic in topics.keys():
+                if topic in title:
+                    item_data = _categorize_topic_item(item)
+                    topics[topic].append(item_data)
+
+        return topics
+
+    def _fetch_and_render_service_data(
+        service_name: str,
+        endpoint: str,
+        render_function: callable,
+        title: str,
+        context_name: str
+    ) -> HTMLResponse:
+        """Common pattern for fetching service data and rendering response."""
         try:
             clients = get_frontend_clients()
-            data = fetch_service_data(
-                "doc_store", "/documents/quality", clients=clients
-            )
-            items = data.get("items", [])
-
-            topics = {
-                "kubernetes": [],
-                "openapi": [],
-                "redis": [],
-                "postgres": [],
-                "fastapi": [],
-            }
-
-            for item in items:
-                meta = item.get("metadata") or {}
-                title = (meta.get("title") or meta.get("name") or "").lower()
-                for topic in topics.keys():
-                    if topic in title:
-                        stale_days = item.get("stale_days", 0)
-                        freshness = (
-                            "fresh"
-                            if stale_days < 60
-                            else ("stale" if stale_days > 180 else "aging")
-                        )
-                        topics[topic].append((item.get("id"), freshness))
-
-            html = render_topics_html(topics)
-            return create_html_response(html, "Topics Overview")
+            data = fetch_service_data(service_name, endpoint, clients=clients)
+            html = render_function(data)
+            return create_html_response(html, title)
         except Exception as e:
             return handle_frontend_error(
-                "fetch topics data", e, **build_frontend_context("topics")
+                f"fetch {context_name} data", e, **build_frontend_context(context_name)
             )
+
+    def handle_topics() -> HTMLResponse:
+        """Render topics overview page with document freshness analysis."""
+        def render_topics_data(data):
+            items = data.get("items", [])
+            topics = _categorize_items_by_topics(items)
+            return render_topics_html(topics)
+
+        return _fetch_and_render_service_data(
+            "doc_store", "/documents/quality", render_topics_data,
+            "Topics Overview", "topics"
+        )
 
     @staticmethod
     def handle_confluence_consolidation() -> HTMLResponse:
         """Render Confluence consolidation report page."""
-        try:
-            clients = get_frontend_clients()
-            data = fetch_service_data(
-                "orchestrator", "/reports/confluence/consolidation", clients=clients
-            )
+        def render_confluence_data(data):
             items = data.get("items", [])
-            html = render_consolidation_list(items)
-            return create_html_response(html, "Confluence Consolidation Report")
-        except Exception as e:
-            return handle_frontend_error(
-                "fetch confluence consolidation",
-                e,
-                **build_frontend_context("confluence_consolidation"),
-            )
+            return render_consolidation_list(items)
+
+        return _fetch_and_render_service_data(
+            "orchestrator", "/reports/confluence/consolidation", render_confluence_data,
+            "Confluence Consolidation Report", "confluence_consolidation"
+        )
 
     @staticmethod
     def handle_jira_staleness(
