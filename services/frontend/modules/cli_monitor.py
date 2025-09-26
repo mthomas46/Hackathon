@@ -7,7 +7,7 @@ enabling full CLI functionality through web interface.
 import asyncio
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 
 class CLIMonitor:

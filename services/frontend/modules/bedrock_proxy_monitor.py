@@ -6,7 +6,7 @@ service AI invocations and template-based responses.
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import get_bedrock_proxy_url, get_frontend_clients
 

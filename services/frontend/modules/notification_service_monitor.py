@@ -6,7 +6,7 @@ owner resolution, notification delivery, and dead letter queue management.
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import get_frontend_clients, get_notification_service_url
 

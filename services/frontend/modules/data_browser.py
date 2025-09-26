@@ -6,7 +6,7 @@ with caching, filtering, and pagination support.
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import get_doc_store_url, get_frontend_clients, get_prompt_store_url
 

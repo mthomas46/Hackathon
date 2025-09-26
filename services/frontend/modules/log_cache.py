@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import get_frontend_clients, get_log_collector_url
 
