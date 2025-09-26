@@ -11,8 +11,9 @@ from dataclasses import dataclass
 
 # Handle imports for both module and script execution
 try:
-    from ..config import AuditProfile, get_thresholds_for_profile
+    from config import AuditProfile, get_thresholds_for_profile
     from domain.entities.service_info import ServiceInfo
+    from .base_analyzer import BaseAnalyzer
 except ImportError:
     import sys
     from pathlib import Path
@@ -21,6 +22,7 @@ except ImportError:
 
     from config import AuditProfile
     from config.thresholds import get_thresholds_for_profile
+    from infrastructure.analyzers.base_analyzer import BaseAnalyzer
 
     # Create a simple ServiceInfo if models doesn't exist
     from dataclasses import dataclass
@@ -60,15 +62,17 @@ class CodeQualityAnalysisResult:
     recommendations: List[str]
 
 
-class CodeQualityAnalyzer:
+class CodeQualityAnalyzer(BaseAnalyzer):
     """Analyzer for code quality metrics and standards"""
 
     def __init__(self, profile: AuditProfile):
-        self.profile = profile
-        self.thresholds = get_thresholds_for_profile(profile)
+        super().__init__(profile)
 
-    async def analyze(self, service: ServiceInfo) -> CodeQualityAnalysisResult:
+    async def analyze(self, service: ServiceInfo, full_audit: bool = False) -> CodeQualityAnalysisResult:
         """Perform complete code quality analysis"""
+        # Set full audit mode
+        self.set_full_audit_mode(full_audit)
+
         # Get testing details including coverage data
         testing_score, testing_details = await self._check_testing_with_details(service)
 
