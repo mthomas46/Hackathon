@@ -13,39 +13,21 @@ Key Components:
 - DiscoveryService: Core domain service for discovery operations
 """
 
+# Direct imports from .py files
 # Import entities
-from . import entities as entities_module
-from . import value_objects as value_objects_module
-from . import repositories as repositories_module
-from . import services as services_module
-from . import exceptions as exceptions_module
+from .entities import Endpoint, Service, DiscoveryResult
 
-# Re-export for convenience
-Service = entities_module.Service
-Endpoint = entities_module.Endpoint
-DiscoveryResult = entities_module.DiscoveryResult
+# Import value objects
+from .value_objects import DiscoverySpec, EndpointMetadata, ServiceMetadata
+from .repositories import ServiceRepository, InMemoryServiceRepository
+from .services import DiscoveryService, EndpointAnalyzer
+from .exceptions import (
+    DiscoveryError, ServiceDiscoveryError, InvalidOpenApiSpecError,
+    ServiceNotFoundError, EndpointDiscoveryError, DuplicateServiceError,
+    NetworkTimeoutError, AuthenticationRequiredError, UnsupportedApiVersionError,
+    MalformedUrlError, DiscoveryConfigurationError
+)
 
-DiscoverySpec = value_objects_module.DiscoverySpec
-EndpointMetadata = value_objects_module.EndpointMetadata
-ServiceMetadata = value_objects_module.ServiceMetadata
-
-ServiceRepository = repositories_module.ServiceRepository
-InMemoryServiceRepository = repositories_module.InMemoryServiceRepository
-
-DiscoveryService = services_module.DiscoveryService
-EndpointAnalyzer = services_module.EndpointAnalyzer
-
-DiscoveryError = exceptions_module.DiscoveryError
-ServiceDiscoveryError = exceptions_module.ServiceDiscoveryError
-InvalidOpenApiSpecError = exceptions_module.InvalidOpenApiSpecError
-ServiceNotFoundError = exceptions_module.ServiceNotFoundError
-EndpointDiscoveryError = exceptions_module.EndpointDiscoveryError
-DuplicateServiceError = exceptions_module.DuplicateServiceError
-NetworkTimeoutError = exceptions_module.NetworkTimeoutError
-AuthenticationRequiredError = exceptions_module.AuthenticationRequiredError
-UnsupportedApiVersionError = exceptions_module.UnsupportedApiVersionError
-MalformedUrlError = exceptions_module.MalformedUrlError
-DiscoveryConfigurationError = exceptions_module.DiscoveryConfigurationError
 
 __all__ = [
     # Entities

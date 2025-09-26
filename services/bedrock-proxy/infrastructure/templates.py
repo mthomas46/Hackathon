@@ -21,69 +21,90 @@ SUPPORTED_TEMPLATES = [
 SUPPORTED_FORMATS = ["md", "txt", "json"]
 
 
-# Template configurations
-TEMPLATES = {
-    "summary": {
-        "sections": {
-            "Summary": lambda text: bullets_from_text(text, 5),
-            "Key Points": ["Decision captured", "Risks identified", "Actions listed"],
-        }
-    },
-    "risks": {
-        "sections": {
-            "Risks": [
-                "Ambiguous requirements may delay delivery",
-                "Insufficient test coverage could miss regressions",
-                "Integration dependencies might slip schedules",
-            ],
-            "Mitigations": [
-                "Clarify acceptance criteria with PO",
-                "Add unit/integration tests",
-                "Decouple feature flags to reduce risk",
-            ],
-        }
-    },
-    "decisions": {
-        "sections": {
-            "Decisions": [
-                "Use FastAPI for microservices",
-                "Adopt Redis Pub/Sub for events",
-                "Store short-term context in memory-agent",
-            ],
-            "Rationale": [
-                "Fast API iteration and testability",
-                "Simple, reliable eventing",
-                "Lightweight context persistence",
-            ],
-        }
-    },
-    "pr_confidence": {
-        "sections": {
-            "Inputs": [
-                "Jira: TICKET-123",
-                "GitHub PR: org/repo#42",
-                "Confluence: Design v1",
-            ],
-            "Extracted Endpoints": ["/hello", "/health"],
-            "Confidence": [
-                "Score: 82",
-                "Implements 2/2 endpoints",
-                "No extra endpoints detected",
-            ],
-            "Suggestions": ["Add negative tests", "Document error codes in OpenAPI"],
-        }
-    },
-    "life_of_ticket": {
-        "sections": {
-            "Timeline": [
-                "2025-01-01T09:00Z — jira — To Do -> In Progress",
-                "2025-01-02T10:00Z — github — PR opened (#42)",
-                "2025-01-03T16:00Z — jira — In Review -> Done",
-            ],
-            "Summary": ["Work completed", "Docs updated", "Tests passing"],
-        }
-    },
+# Template builder functions to reduce duplication
+def _build_summary_sections(text: str) -> dict:
+    """Build sections for summary template."""
+    return {
+        "Summary": lambda t: bullets_from_text(t, 5),
+        "Key Points": ["Decision captured", "Risks identified", "Actions listed"],
+    }
+
+
+def _build_risks_sections() -> dict:
+    """Build sections for risks template."""
+    return {
+        "Risks": [
+            "Ambiguous requirements may delay delivery",
+            "Insufficient test coverage could miss regressions",
+            "Integration dependencies might slip schedules",
+        ],
+        "Mitigations": [
+            "Clarify acceptance criteria with PO",
+            "Add unit/integration tests",
+            "Decouple feature flags to reduce risk",
+        ],
+    }
+
+
+def _build_decisions_sections() -> dict:
+    """Build sections for decisions template."""
+    return {
+        "Decisions": [
+            "Use FastAPI for microservices",
+            "Adopt Redis Pub/Sub for events",
+            "Store short-term context in memory-agent",
+        ],
+        "Rationale": [
+            "Fast API iteration and testability",
+            "Simple, reliable eventing",
+            "Lightweight context persistence",
+        ],
+    }
+
+
+def _build_pr_confidence_sections() -> dict:
+    """Build sections for PR confidence template."""
+    return {
+        "Inputs": [
+            "Jira: TICKET-123",
+            "GitHub PR: org/repo#42",
+            "Confluence: Design v1",
+        ],
+        "Extracted Endpoints": ["/hello", "/health"],
+        "Confidence": [
+            "Score: 82",
+            "Implements 2/2 endpoints",
+            "No extra endpoints detected",
+        ],
+        "Suggestions": ["Add negative tests", "Document error codes in OpenAPI"],
+    }
+
+
+def _build_life_of_ticket_sections() -> dict:
+    """Build sections for life of ticket template."""
+    return {
+        "Timeline": [
+            "2025-01-01T09:00Z — jira — To Do -> In Progress",
+            "2025-01-02T10:00Z — github — PR opened (#42)",
+            "2025-01-03T16:00Z — jira — In Review -> Done",
+        ],
+        "Summary": ["Work completed", "Docs updated", "Tests passing"],
+    }
+
+
+# Template configurations using builder functions
+TEMPLATE_BUILDERS = {
+    "summary": _build_summary_sections,
+    "risks": _build_risks_sections,
+    "decisions": _build_decisions_sections,
+    "pr_confidence": _build_pr_confidence_sections,
+    "life_of_ticket": _build_life_of_ticket_sections,
 }
+
+# Build templates dynamically to reduce duplication
+TEMPLATES = {}
+for template_name, builder_func in TEMPLATE_BUILDERS.items():
+    TEMPLATES[template_name] = {"sections": builder_func}
 
 # Extract valid values for validation (maintaining backward compatibility)
 VALID_TEMPLATES = list(TEMPLATES.keys())
@@ -164,8 +185,12 @@ def build_template_sections(template: str, prompt: str) -> Dict[str, List[str]]:
         # Fallback to a simple structured summary when template not found
         return {"Echo": bullets_from_text(prompt, 5)}
 
+    # Call the builder function to get the actual sections
+    builder_func = template_config["sections"]
+    template_sections = builder_func(prompt) if template == "summary" else builder_func()
+
     sections = {}
-    for section_name, content in template_config["sections"].items():
+    for section_name, content in template_sections.items():
         if callable(content):
             # Dynamic content generation (e.g., bullet points from text)
             sections[section_name] = content(prompt)
