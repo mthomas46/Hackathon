@@ -351,41 +351,55 @@ class CrossRepositoryAnalyzer:
 
         for file_info in documentation_files:
             file_path = file_info.get("path", "")
-            file_name = file_path.split("/")[-1].lower()
 
             # Count file types
-            if file_path.endswith(".md"):
-                structure_analysis["file_types"]["markdown"] += 1
-            elif file_path.endswith(".rst"):
-                structure_analysis["file_types"]["rst"] += 1
-            elif file_path.endswith(".txt"):
-                structure_analysis["file_types"]["text"] += 1
+            self._analyze_file_types(file_path, structure_analysis)
 
             # Analyze directory structure
-            directory = "/".join(file_path.split("/")[:-1])
-            structure_analysis["directory_structure"][directory].append(file_path)
+            self._analyze_directory_structure(file_path, structure_analysis)
 
             # Classify content types
-            if "readme" in file_name:
-                structure_analysis["readme_files"] += 1
-                structure_analysis["content_types"]["readme"] += 1
-            elif "api" in file_name or "endpoint" in file_name:
-                structure_analysis["api_docs"] += 1
-                structure_analysis["content_types"]["api"] += 1
-            elif "guide" in file_name or "manual" in file_name:
-                structure_analysis["user_guides"] += 1
-                structure_analysis["content_types"]["guide"] += 1
-            elif "tutorial" in file_name or "getting-started" in file_name:
-                structure_analysis["tutorials"] += 1
-                structure_analysis["content_types"]["tutorial"] += 1
-            elif "architecture" in file_name or "design" in file_name:
-                structure_analysis["architecture_docs"] += 1
-                structure_analysis["content_types"]["architecture"] += 1
-            elif "troubleshoot" in file_name or "faq" in file_name:
-                structure_analysis["troubleshooting_docs"] += 1
-                structure_analysis["content_types"]["troubleshooting"] += 1
+            self._classify_content_types(file_path, structure_analysis)
 
         return structure_analysis
+
+    def _analyze_file_types(self, file_path: str, structure_analysis: Dict[str, Any]) -> None:
+        """Analyze file types based on extensions."""
+        if file_path.endswith(".md"):
+            structure_analysis["file_types"]["markdown"] += 1
+        elif file_path.endswith(".rst"):
+            structure_analysis["file_types"]["rst"] += 1
+        elif file_path.endswith(".txt"):
+            structure_analysis["file_types"]["text"] += 1
+
+    def _analyze_directory_structure(self, file_path: str, structure_analysis: Dict[str, Any]) -> None:
+        """Analyze directory structure of files."""
+        directory = "/".join(file_path.split("/")[:-1])
+        structure_analysis["directory_structure"][directory].append(file_path)
+
+    def _classify_content_types(self, file_path: str, structure_analysis: Dict[str, Any]) -> None:
+        """Classify content types based on file names."""
+        file_name = file_path.split("/")[-1].lower()
+
+        content_mappings = {
+            "readme_files": ["readme"],
+            "api_docs": ["api", "endpoint"],
+            "user_guides": ["guide", "manual"],
+            "tutorials": ["tutorial", "getting-started"],
+            "architecture_docs": ["architecture", "design"],
+            "troubleshooting_docs": ["troubleshoot", "faq"]
+        }
+
+        for category, keywords in content_mappings.items():
+            if any(keyword in file_name for keyword in keywords):
+                if category.endswith("_files"):
+                    structure_analysis[category] += 1
+                    content_type = category.replace("_files", "")
+                    structure_analysis["content_types"][content_type] += 1
+                else:
+                    structure_analysis[category] += 1
+                    structure_analysis["content_types"][category.replace("_docs", "")] += 1
+                break
 
     def _calculate_consistency_metrics(self, repositories: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate consistency metrics across repositories."""
