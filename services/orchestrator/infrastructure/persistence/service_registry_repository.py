@@ -43,3 +43,13 @@ class InMemoryServiceRepository(ServiceRepositoryInterface):
         with self._lock:
             self._services[service.service_id.value] = service
             return True
+
+    def find_services_by_category(self, category: str) -> List[Service]:
+        """Find services by category."""
+        with self._lock:
+            return [service for service in self._services.values() if service.category == category]
+
+    def service_exists(self, service_id: ServiceId) -> bool:
+        """Check if service exists."""
+        with self._lock:
+            return service_id.value in self._services

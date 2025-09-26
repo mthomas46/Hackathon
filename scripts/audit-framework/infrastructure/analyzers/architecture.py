@@ -15,7 +15,7 @@ from dataclasses import dataclass
 # Handle imports for both module and script execution
 try:
     from ..config import AuditProfile, get_thresholds_for_profile
-    from ..models import ServiceInfo
+    from domain.entities.service_info import ServiceInfo
 except ImportError:
     import sys
     from pathlib import Path

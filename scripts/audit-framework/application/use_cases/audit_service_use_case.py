@@ -65,7 +65,7 @@ class AuditServiceUseCase:
             self._validate_inputs(service_info, audit_profile)
 
             # Execute the audit through domain service
-            result = self.audit_service.audit_service(
+            result = await self.audit_service.audit_service(
                 service=service_info,
                 profile=audit_profile,
                 analyzer_providers=self.analyzer_providers
