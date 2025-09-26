@@ -10,6 +10,7 @@ from services.shared.presentation.responses import (
     create_error_response,
     create_success_response,
 )
+from services.shared.infrastructure.utilities.validation_utils import validate_required_fields
 from services.shared.utilities.error_handling import ServiceException
 
 
@@ -75,10 +76,12 @@ class BaseHandler(ABC):
     def _validate_request_data(
         self, data: Dict[str, Any], required_fields: list
     ) -> None:
-        """Validate request data has required fields."""
-        missing = [field for field in required_fields if field not in data]
-        if missing:
-            raise ValueError(f"Missing required fields: {', '.join(missing)}")
+        """Validate request data has required fields.
+
+        DRY refactoring: Uses shared validation utility instead of duplicating
+        validation logic. Reduces code duplication across services.
+        """
+        validate_required_fields(data, required_fields)
 
     def _sanitize_input(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Sanitize input data."""
