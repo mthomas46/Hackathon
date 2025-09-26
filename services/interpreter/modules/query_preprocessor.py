@@ -511,8 +511,25 @@ class QueryPreprocessor:
     async def _extract_query_metadata(
         self, processed_query: str, conversation_context: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Extract metadata about the query."""
-        metadata = {
+        """Extract metadata about the query using focused helper methods."""
+        metadata = self._initialize_metadata()
+
+        metadata["query_type"] = self._determine_query_type(processed_query)
+        metadata["complexity_indicators"] = self._extract_complexity_indicators(processed_query)
+        metadata["domain_hints"] = self._extract_domain_hints(conversation_context)
+        metadata["requires_clarification"] = self._check_requires_clarification(processed_query)
+        metadata["user_intent_confidence"] = self._calculate_intent_confidence(
+            metadata["query_type"],
+            metadata["requires_clarification"],
+            metadata["complexity_indicators"],
+            processed_query
+        )
+
+        return metadata
+
+    def _initialize_metadata(self) -> Dict[str, Any]:
+        """Initialize metadata dictionary with default values."""
+        return {
             "query_type": "unknown",
             "complexity_indicators": [],
             "domain_hints": [],
@@ -521,88 +538,95 @@ class QueryPreprocessor:
             "suggested_follow_ups": [],
         }
 
-        # Determine query type
-        if any(
-            word in processed_query.lower()
-            for word in ["analyze", "check", "review", "examine"]
-        ):
-            metadata["query_type"] = "analysis_request"
-        elif any(
-            word in processed_query.lower()
-            for word in ["find", "search", "locate", "discover"]
-        ):
-            metadata["query_type"] = "search_request"
-        elif any(
-            word in processed_query.lower()
-            for word in ["create", "generate", "make", "build"]
-        ):
-            metadata["query_type"] = "creation_request"
-        elif any(
-            word in processed_query.lower()
-            for word in ["help", "how", "what", "explain"]
-        ):
-            metadata["query_type"] = "help_request"
-        elif any(
-            word in processed_query.lower()
-            for word in ["optimize", "improve", "enhance", "refine"]
-        ):
-            metadata["query_type"] = "optimization_request"
+    def _determine_query_type(self, processed_query: str) -> str:
+        """Determine the type of query based on keywords."""
+        query_patterns = {
+            "analysis_request": ["analyze", "check", "review", "examine"],
+            "search_request": ["find", "search", "locate", "discover"],
+            "creation_request": ["create", "generate", "make", "build"],
+            "help_request": ["help", "how", "what", "explain"],
+            "optimization_request": ["optimize", "improve", "enhance", "refine"],
+        }
 
-        # Complexity indicators
+        query_lower = processed_query.lower()
+        for query_type, keywords in query_patterns.items():
+            if any(word in query_lower for word in keywords):
+                return query_type
+
+        return "unknown"
+
+    def _extract_complexity_indicators(self, processed_query: str) -> list:
+        """Extract indicators of query complexity."""
+        indicators = []
+
+        # Check query length
         if len(processed_query.split()) > 20:
-            metadata["complexity_indicators"].append("long_query")
-        if (
-            len(
-                re.findall(
-                    r"\band\b|\bor\b|\bthen\b|\balso\b", processed_query, re.IGNORECASE
-                )
-            )
-            > 2
-        ):
-            metadata["complexity_indicators"].append("multiple_requirements")
+            indicators.append("long_query")
+
+        # Check for multiple requirements (and/or/then/also)
+        connector_count = len(re.findall(
+            r"\band\b|\bor\b|\bthen\b|\balso\b",
+            processed_query,
+            re.IGNORECASE
+        ))
+        if connector_count > 2:
+            indicators.append("multiple_requirements")
+
+        # Check for multiple questions
         if len(re.findall(r"[?.]", processed_query)) > 1:
-            metadata["complexity_indicators"].append("multiple_questions")
+            indicators.append("multiple_questions")
 
-        # Domain hints from conversation context
-        if conversation_context:
-            domain_context = conversation_context.get("domain_context", {})
-            primary_domain = domain_context.get("primary_domain", "")
-            if primary_domain:
-                metadata["domain_hints"].append(primary_domain)
+        return indicators
 
-        # Check if clarification needed
+    def _extract_domain_hints(self, conversation_context: Dict[str, Any]) -> list:
+        """Extract domain hints from conversation context."""
+        if not conversation_context:
+            return []
+
+        domain_context = conversation_context.get("domain_context", {})
+        primary_domain = domain_context.get("primary_domain", "")
+        return [primary_domain] if primary_domain else []
+
+    def _check_requires_clarification(self, processed_query: str) -> bool:
+        """Check if the query requires clarification."""
+        # Check for ambiguous terms
         ambiguous_terms = [
-            "this",
-            "that",
-            "it",
-            "them",
-            "something",
-            "anything",
-            "stuff",
+            "this", "that", "it", "them", "something",
+            "anything", "stuff"
         ]
-        if any(term in processed_query.lower().split() for term in ambiguous_terms):
-            metadata["requires_clarification"] = True
+        has_ambiguous = any(term in processed_query.lower().split()
+                           for term in ambiguous_terms)
 
-        if len(processed_query.split()) < 3:
-            metadata["requires_clarification"] = True
+        # Check query length
+        too_short = len(processed_query.split()) < 3
 
-        # Calculate user intent confidence
+        return has_ambiguous or too_short
+
+    def _calculate_intent_confidence(
+        self,
+        query_type: str,
+        requires_clarification: bool,
+        complexity_indicators: list,
+        processed_query: str
+    ) -> float:
+        """Calculate confidence score for user intent understanding."""
         confidence_factors = []
-        if metadata["query_type"] != "unknown":
+
+        if query_type != "unknown":
             confidence_factors.append(0.3)
-        if not metadata["requires_clarification"]:
+
+        if not requires_clarification:
             confidence_factors.append(0.3)
-        if len(metadata["complexity_indicators"]) <= 1:
-            confidence_factors.append(0.2)
-        if any(
-            word in processed_query.lower()
-            for word in ["please", "can you", "i need", "i want"]
-        ):
+
+        if len(complexity_indicators) <= 1:
             confidence_factors.append(0.2)
 
-        metadata["user_intent_confidence"] = sum(confidence_factors)
+        # Check for politeness indicators
+        polite_words = ["please", "can you", "i need", "i want"]
+        if any(word in processed_query.lower() for word in polite_words):
+            confidence_factors.append(0.2)
 
-        return metadata
+        return sum(confidence_factors)
 
     async def _calculate_query_complexity(
         self, processed_query: str, enhanced_entities: Dict[str, Any]
