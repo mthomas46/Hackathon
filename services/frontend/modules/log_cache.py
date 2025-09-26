@@ -271,8 +271,25 @@ def analyze_log_patterns(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
     if not logs:
         return {"patterns": {}, "insights": []}
 
-    # Count patterns
-    patterns = {
+    # Initialize analysis data structure
+    analysis_data = _initialize_analysis_data()
+
+    # Process each log entry
+    for log in logs:
+        _process_log_entry(log, analysis_data)
+
+    # Finalize patterns and calculate derived metrics
+    _finalize_patterns(analysis_data, logs)
+
+    # Generate insights based on patterns
+    insights = _generate_insights(analysis_data)
+
+    return {"patterns": analysis_data, "insights": insights}
+
+
+def _initialize_analysis_data() -> Dict[str, Any]:
+    """Initialize the data structure for log analysis."""
+    return {
         "error_rate": 0,
         "services_active": set(),
         "levels_distribution": defaultdict(int),
@@ -280,63 +297,86 @@ def analyze_log_patterns(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
         "frequent_messages": defaultdict(int),
     }
 
+
+def _process_log_entry(log: Dict[str, Any], analysis_data: Dict[str, Any]) -> None:
+    """Process a single log entry for pattern analysis."""
+    level = log.get("level", "").lower()
+    service = log.get("service", "unknown")
+    message = log.get("message", "")
+    timestamp = log.get("timestamp")
+
+    # Update basic counts
+    analysis_data["services_active"].add(service)
+    analysis_data["levels_distribution"][level] += 1
+
+    # Check for recent errors
+    _check_recent_errors(log, analysis_data, level, service, message, timestamp)
+
+    # Track frequent messages
+    _track_message_frequency(message, analysis_data)
+
+
+def _check_recent_errors(log: Dict[str, Any], analysis_data: Dict[str, Any],
+                        level: str, service: str, message: str, timestamp: str) -> None:
+    """Check if this is a recent error and add to analysis."""
+    if level not in ("error", "fatal") or not timestamp:
+        return
+
     recent_cutoff = utc_now() - timedelta(minutes=5)
+    try:
+        log_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        if log_time > recent_cutoff:
+            analysis_data["recent_errors"].append({
+                "service": service,
+                "message": message[:100],
+                "timestamp": timestamp,
+            })
+    except (ValueError, AttributeError):
+        pass
 
-    for log in logs:
-        level = log.get("level", "").lower()
-        service = log.get("service", "unknown")
-        message = log.get("message", "")
-        timestamp = log.get("timestamp")
 
-        patterns["services_active"].add(service)
-        patterns["levels_distribution"][level] += 1
+def _track_message_frequency(message: str, analysis_data: Dict[str, Any]) -> None:
+    """Track frequency of log messages."""
+    if message:
+        msg_key = message[:50]
+        analysis_data["frequent_messages"][msg_key] += 1
 
-        # Check for recent errors
-        if level in ("error", "fatal") and timestamp:
-            try:
-                log_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
-                if log_time > recent_cutoff:
-                    patterns["recent_errors"].append(
-                        {
-                            "service": service,
-                            "message": message[:100],
-                            "timestamp": timestamp,
-                        }
-                    )
-            except (ValueError, AttributeError):
-                pass
 
-        # Track frequent messages (first 50 chars as key)
-        if message:
-            msg_key = message[:50]
-            patterns["frequent_messages"][msg_key] += 1
-
+def _finalize_patterns(analysis_data: Dict[str, Any], logs: List[Dict[str, Any]]) -> None:
+    """Finalize patterns and calculate derived metrics."""
     # Calculate error rate
     total_logs = len(logs)
-    error_count = patterns["levels_distribution"].get("error", 0) + patterns[
-        "levels_distribution"
-    ].get("fatal", 0)
-    patterns["error_rate"] = (error_count / total_logs) * 100 if total_logs > 0 else 0
+    error_count = (analysis_data["levels_distribution"].get("error", 0) +
+                  analysis_data["levels_distribution"].get("fatal", 0))
+    analysis_data["error_rate"] = (error_count / total_logs) * 100 if total_logs > 0 else 0
 
-    patterns["services_active"] = list(patterns["services_active"])
+    # Convert services set to list
+    analysis_data["services_active"] = list(analysis_data["services_active"])
 
     # Get top frequent messages
     top_messages = sorted(
-        patterns["frequent_messages"].items(), key=lambda x: x[1], reverse=True
+        analysis_data["frequent_messages"].items(),
+        key=lambda x: x[1],
+        reverse=True
     )[:5]
-    patterns["frequent_messages"] = [
+    analysis_data["frequent_messages"] = [
         {"message": msg, "count": count} for msg, count in top_messages
     ]
 
-    # Generate insights
+
+def _generate_insights(analysis_data: Dict[str, Any]) -> List[str]:
+    """Generate insights based on analyzed patterns."""
     insights = []
-    if patterns["error_rate"] > 10:
+
+    if analysis_data["error_rate"] > 10:
         insights.append("High error rate detected (>10%)")
-    if len(patterns["recent_errors"]) > 5:
+
+    if len(analysis_data["recent_errors"]) > 5:
         insights.append(
-            f"Multiple recent errors: {len(patterns['recent_errors'])} in last 5 minutes"
+            f"Multiple recent errors: {len(analysis_data['recent_errors'])} in last 5 minutes"
         )
-    if len(patterns["services_active"]) < 3:
+
+    if len(analysis_data["services_active"]) < 3:
         insights.append("Limited service activity detected")
 
-    return {"patterns": patterns, "insights": insights}
+    return insights

@@ -141,40 +141,66 @@ class SummarizerCache:
     def get_performance_summary(self) -> Dict[str, Any]:
         """Get performance summary."""
         if not self.job_history:
-            return {
-                "total_jobs": 0,
-                "average_execution_time": 0.0,
-                "total_providers_used": 0,
-                "most_used_provider": None,
-            }
+            return self._create_empty_performance_summary()
 
-        total_execution_time = sum(
-            job.execution_time for job in self.job_history if job.execution_time
-        )
-        avg_execution_time = (
-            total_execution_time
-            / len([j for j in self.job_history if j.execution_time])
-            if total_execution_time > 0
-            else 0
-        )
+        # Calculate execution time metrics
+        execution_metrics = self._calculate_execution_metrics()
 
+        # Calculate provider usage metrics
+        provider_metrics = self._calculate_provider_metrics()
+
+        return {
+            "total_jobs": len(self.job_history),
+            **execution_metrics,
+            **provider_metrics,
+        }
+
+    def _create_empty_performance_summary(self) -> Dict[str, Any]:
+        """Create empty performance summary when no jobs exist."""
+        return {
+            "total_jobs": 0,
+            "average_execution_time": 0.0,
+            "total_providers_used": 0,
+            "most_used_provider": None,
+        }
+
+    def _calculate_execution_metrics(self) -> Dict[str, float]:
+        """Calculate execution time metrics."""
+        jobs_with_time = [job for job in self.job_history if job.execution_time]
+
+        if not jobs_with_time:
+            return {"average_execution_time": 0.0}
+
+        total_execution_time = sum(job.execution_time for job in jobs_with_time)
+        avg_execution_time = total_execution_time / len(jobs_with_time)
+
+        return {"average_execution_time": round(avg_execution_time, 2)}
+
+    def _calculate_provider_metrics(self) -> Dict[str, Any]:
+        """Calculate provider usage metrics."""
+        provider_counts = self._count_providers()
+        most_used_provider = self._find_most_used_provider(provider_counts)
+
+        return {
+            "total_providers_used": len(provider_counts),
+            "most_used_provider": most_used_provider,
+        }
+
+    def _count_providers(self) -> Dict[str, int]:
+        """Count provider usage across all jobs."""
         provider_counts = {}
         for job in self.job_history:
             for provider in job.providers:
                 provider_counts[provider] = provider_counts.get(provider, 0) + 1
+        return provider_counts
 
-        most_used_provider = (
-            max(provider_counts.items(), key=lambda x: x[1])
-            if provider_counts
-            else None
-        )
+    def _find_most_used_provider(self, provider_counts: Dict[str, int]) -> Optional[str]:
+        """Find the most used provider."""
+        if not provider_counts:
+            return None
 
-        return {
-            "total_jobs": len(self.job_history),
-            "average_execution_time": round(avg_execution_time, 2),
-            "total_providers_used": len(provider_counts),
-            "most_used_provider": most_used_provider[0] if most_used_provider else None,
-        }
+        most_used = max(provider_counts.items(), key=lambda x: x[1])
+        return most_used[0]
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert cache to dictionary for serialization."""
