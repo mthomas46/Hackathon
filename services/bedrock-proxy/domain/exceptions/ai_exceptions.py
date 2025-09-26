@@ -1,14 +1,14 @@
 """AI domain exceptions."""
 
-from ..common.error_utils import DomainException
+from services.shared.domain.exceptions.exceptions import DomainError
 
 
-class AIRequestException(DomainException):
+class AIRequestException(DomainError):
     """Exception related to AI requests."""
     pass
 
 
-class AIModelException(DomainException):
+class AIModelException(DomainError):
     """Exception related to AI models."""
     pass
 
