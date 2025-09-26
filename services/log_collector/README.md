@@ -4,7 +4,7 @@
 
 The **Log Collector Service** is a comprehensive logging and monitoring solution that provides centralized log aggregation, analysis, and alerting capabilities across the LLM Documentation Ecosystem. Built following **Domain-Driven Design (DDD)** principles, it serves as the **central nervous system** for operational visibility and system health monitoring.
 
-### Key Features & Capabilities
+## Features
 
 #### Functionality
 
@@ -109,6 +109,95 @@ alerting:
   warning_threshold: 5
 ```
 
+## Infrastructure
+
+### Docker Configuration
+```yaml
+# docker-compose.yml
+services:
+  log-collector:
+    image: llm-docs-ecosystem/log-collector:latest
+    ports:
+      - "5006:5006"
+    environment:
+      - LOG_COLLECTOR_DB_URL=${DATABASE_URL}
+      - LOG_COLLECTOR_REDIS_URL=${REDIS_URL}
+      - LOG_COLLECTOR_SLACK_WEBHOOK=${SLACK_WEBHOOK}
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: log_collector
+      POSTGRES_USER: log_collector
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+### Kubernetes Deployment
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-collector
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: log-collector
+  template:
+    metadata:
+      labels:
+        app: log-collector
+    spec:
+      containers:
+      - name: log-collector
+        image: llm-docs-ecosystem/log-collector:latest
+        ports:
+        - containerPort: 5006
+        env:
+        - name: LOG_COLLECTOR_DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: log-collector-secrets
+              key: database-url
+        - name: LOG_COLLECTOR_REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: log-collector-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+```
+
+### Production Readiness
+- **Health Checks**: Automatic service health monitoring
+- **Logging**: Structured JSON logging with correlation IDs
+- **Metrics**: Prometheus metrics endpoint for monitoring
+- **Security**: TLS encryption and authentication
+- **Backup**: Automated database backups and log archiving
+
 ## API Endpoints
 
 ### Core Endpoints
@@ -145,28 +234,28 @@ GET /health
 - Queue processing status
 ```
 
-## Ecosystem Integration
+## Ecosystem
 
 ### Service Dependencies
 
 #### Required Services
-- **shared**: Common utilities and base classes
+- [**shared**](../../services/shared/): Common utilities and base classes
 - **Redis**: Real-time log buffering and caching
 - **PostgreSQL**: Primary log storage
 
 #### Optional Integrations
-- **notification-service**: Alert delivery
-- **monitoring**: Metrics and dashboards
+- [**notification-service**](../notification-service/): Alert delivery and notifications
+- [**monitoring**](../monitoring/): Metrics collection and dashboards
 - **Elasticsearch**: Advanced search capabilities
 
 ### Data Flow
 
 ```
-Services → Log Collector → Redis Buffer → PostgreSQL Storage
+Services → [Log Collector](./) → Redis Buffer → PostgreSQL Storage
                               ↓
-                         Alert Engine → Notifications
+                         Alert Engine → [Notification Service](../notification-service/)
                               ↓
-                         Monitoring → Dashboards
+                         [Monitoring](../monitoring/) → Dashboards
 ```
 
 ## Architecture
@@ -335,6 +424,15 @@ Solutions:
 - Use conventional commit format
 - Include issue references when applicable
 - Write clear, descriptive commit messages
+
+## Related Documentation
+
+- [Main Project README](../../README.md) - Project overview and setup instructions
+- [Architecture Documentation](../../docs/architecture/) - System architecture and design patterns
+- [Testing Guide](../../docs/guides/TESTING_GUIDE.md) - Comprehensive testing procedures
+- [Services Overview](../README_SERVICES.md) - Complete ecosystem services catalog
+- [Shared Infrastructure](../../services/shared/README.md) - Common utilities and shared patterns
+- [API Documentation](./api/) - REST API endpoints and OpenAPI specifications
 
 ## License
 
