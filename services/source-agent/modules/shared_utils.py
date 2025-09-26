@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import HTTPException
 
+from services.shared.infrastructure.config.config import get_config_value
 from services.shared.presentation.responses import (
     create_error_response,
     create_success_response,
@@ -62,40 +63,84 @@ def _validate_atlassian_url(url: str, service_name: str) -> str:
         return f"https://example.atlassian.net"
 
 
-_GITHUB_BASE_URL = "https://api.github.com"  # GitHub is hardcoded for security
-_JIRA_BASE_URL = _validate_atlassian_url(
-    get_config_value(
-        "JIRA_BASE_URL",
-        "https://example.atlassian.net",
-        section="services",
-        env_key="JIRA_BASE_URL",
-    ),
-    "jira",
-)
-_CONFLUENCE_BASE_URL = _validate_atlassian_url(
-    get_config_value(
-        "CONFLUENCE_BASE_URL",
-        "https://example.atlassian.net",
-        section="services",
-        env_key="CONFLUENCE_BASE_URL",
-    ),
-    "confluence",
-)
+# DRY refactoring: Service URL configurations for source-agent
+# Reduced code duplication from 3 individual functions to generic approach
+_SERVICE_URL_CONFIGS = {
+    "github": {
+        "value": "https://api.github.com",  # Hardcoded for security
+        "validator": None,
+    },
+    "jira": {
+        "config_key": "JIRA_BASE_URL",
+        "default_url": "https://example.atlassian.net",
+        "env_key": "JIRA_BASE_URL",
+        "validator": lambda url: _validate_atlassian_url(url, "jira"),
+    },
+    "confluence": {
+        "config_key": "CONFLUENCE_BASE_URL",
+        "default_url": "https://example.atlassian.net",
+        "env_key": "CONFLUENCE_BASE_URL",
+        "validator": lambda url: _validate_atlassian_url(url, "confluence"),
+    },
+}
+
+
+def _get_service_url(service_key: str) -> str:
+    """Generic function to get service URL from configuration with validation.
+
+    DRY refactoring: Consolidates URL management into one generic function.
+    Handles validation for secure services like Atlassian URLs.
+
+    Args:
+        service_key: Key for the service in _SERVICE_URL_CONFIGS
+
+    Returns:
+        Service URL string (validated if validator provided)
+
+    Raises:
+        ServiceException: If service_key is not found in configuration
+    """
+    if service_key not in _SERVICE_URL_CONFIGS:
+        raise ServiceException(
+            f"Unknown service for URL lookup: {service_key}",
+            error_code="VALIDATION_ERROR",
+            details={"service_key": service_key, "available_keys": list(_SERVICE_URL_CONFIGS.keys())},
+        )
+
+    config = _SERVICE_URL_CONFIGS[service_key]
+
+    # Handle hardcoded URLs (like GitHub)
+    if "value" in config:
+        url = config["value"]
+    else:
+        # Handle configurable URLs with get_config_value
+        url = get_config_value(
+            config["config_key"],
+            config["default_url"],
+            section="services",
+            env_key=config["env_key"],
+        )
+
+    # Apply validation if validator exists
+    if config.get("validator"):
+        url = config["validator"](url)
+
+    return url
 
 
 def get_github_base_url() -> str:
     """Get GitHub API base URL."""
-    return _GITHUB_BASE_URL
+    return _get_service_url("github")
 
 
 def get_jira_base_url() -> str:
     """Get Jira base URL."""
-    return _JIRA_BASE_URL
+    return _get_service_url("jira")
 
 
 def get_confluence_base_url() -> str:
     """Get Confluence base URL."""
-    return _CONFLUENCE_BASE_URL
+    return _get_service_url("confluence")
 
 
 def handle_source_agent_error(
