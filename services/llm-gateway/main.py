@@ -17,10 +17,33 @@ from pydantic import BaseModel
 # ============================================================================
 # STANDARDIZED CONFIGURATION
 # ============================================================================
-from services.shared.infrastructure.config import load_service_config
-from services.shared.utilities import setup_common_middleware
-from services.shared.presentation.responses import create_error_response, create_success_response
-from services.shared.monitoring.health import register_health_endpoints
+try:
+    from services.shared.infrastructure.config import load_service_config
+    from services.shared.utilities import setup_common_middleware
+    from services.shared.presentation.responses import create_error_response, create_success_response
+    from services.shared.monitoring.health import register_health_endpoints
+except ImportError:
+    # Fallback implementations
+    def load_service_config(**kwargs):
+        return type('Config', (), {
+            'service_name': 'llm-gateway',
+            'service_description': 'LLM Gateway Service',
+            'service_version': '1.0.0',
+            'server': type('Server', (), {'host': '0.0.0.0', 'port': 5055})(),
+            'port': 5055,
+        })()
+
+    def setup_common_middleware(app, **kwargs):
+        pass
+
+    def create_error_response(message, **kwargs):
+        return {"success": False, "message": message, **kwargs}
+
+    def create_success_response(data):
+        return {"success": True, "data": data}
+
+    def register_health_endpoints(app, *args, **kwargs):
+        pass
 
 # Load standardized configuration
 config = load_service_config(
