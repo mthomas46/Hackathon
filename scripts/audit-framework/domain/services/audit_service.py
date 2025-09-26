@@ -176,13 +176,8 @@ class AuditService:
             else:
                 scores[dimension] = 0.0
 
-        # Extract sub-dimensions from architecture analyzer
-        if 'architecture' in results and hasattr(results['architecture'], '__dict__'):
-            arch_result = results['architecture']
-            # Extract the detailed scores from architecture analysis
-            scores['documentation_quality'] = getattr(arch_result, 'documentation_quality', 100.0)
-            scores['dry_principles'] = getattr(arch_result, 'dry_principles', 100.0)
-            scores['kiss_principles'] = getattr(arch_result, 'kiss_principles', 100.0)
+        # Scores are now extracted from dedicated analyzers
+        # No need to extract sub-dimensions from architecture anymore
 
         return scores
 

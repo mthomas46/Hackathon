@@ -47,24 +47,19 @@ class AuditProfile:
     # Module-specific settings
     architecture: Dict[str, Any] = field(default_factory=lambda: {
         'ddd_compliance_weight': 0.23,
+        'ddd_migration_status_weight': 0.08,
         'rest_compliance_weight': 0.18,
         'layer_separation_weight': 0.09,
         'empty_directories_weight': 0.04,
         'requirements_file_weight': 0.04,
         'docker_infrastructure_weight': 0.04,
-        'dry_principles_weight': 0.14,
-        'kiss_principles_weight': 0.09,
         'ddd_patterns_weight': 0.02,
         'rest_best_practices_weight': 0.02,
-        'documentation_quality_weight': 0.13,
         'enable_routes_validation': True,
         'enable_endpoint_detection': True,
         'max_files_to_analyze': 50,
-        'enable_dry_analysis': True,
-        'enable_kiss_analysis': True,
         'enable_ddd_patterns_analysis': True,
-        'enable_rest_best_practices_analysis': True,
-        'enable_documentation_analysis': True
+        'enable_rest_best_practices_analysis': True
     })
 
     code_quality: Dict[str, Any] = field(default_factory=lambda: {
