@@ -240,61 +240,84 @@ class MetricsCollector:
     def get_metrics_summary(self) -> Dict[str, Any]:
         """Get comprehensive metrics summary."""
         try:
-            total_requests = sum(
-                pm.total_requests for pm in self.provider_metrics.values()
-            )
-            total_tokens = sum(pm.total_tokens for pm in self.provider_metrics.values())
-            total_cost = sum(pm.total_cost for pm in self.provider_metrics.values())
+            # Aggregate basic metrics
+            basic_metrics = self._calculate_basic_metrics()
 
-            # Provider breakdown
-            requests_by_provider = {
-                provider: pm.total_requests
-                for provider, pm in self.provider_metrics.items()
-            }
+            # Calculate performance metrics
+            performance_metrics = self._calculate_performance_metrics()
 
-            # Performance metrics
-            if self.request_history:
-                response_times = [req.response_time for req in self.request_history]
-                average_response_time = sum(response_times) / len(response_times)
-                cache_hit_rate = 0.0  # Would need cache integration
-
-                # Error rate
-                error_count = sum(1 for req in self.request_history if not req.success)
-                error_rate = (
-                    (error_count / len(self.request_history)) * 100
-                    if self.request_history
-                    else 0
-                )
-            else:
-                average_response_time = 0.0
-                cache_hit_rate = 0.0
-                error_rate = 0.0
-
-            # Uptime calculation
-            uptime_seconds = time.time() - self.start_time
-            uptime_percentage = (
-                99.9  # Placeholder - would need actual downtime tracking
-            )
+            # Calculate uptime
+            uptime_info = self._calculate_uptime_info()
 
             return {
-                "total_requests": total_requests,
-                "requests_by_provider": requests_by_provider,
-                "total_tokens_used": total_tokens,
-                "total_cost": round(total_cost, 4),
-                "average_response_time": round(average_response_time, 3),
-                "cache_hit_rate": round(cache_hit_rate, 3),
-                "error_rate": round(error_rate, 2),
-                "uptime_percentage": uptime_percentage,
-                "collection_period_seconds": uptime_seconds,
+                **basic_metrics,
+                **performance_metrics,
+                **uptime_info,
             }
 
         except Exception as e:
+            return self._create_error_summary(str(e))
+
+    def _calculate_basic_metrics(self) -> Dict[str, Any]:
+        """Calculate basic aggregated metrics."""
+        total_requests = sum(pm.total_requests for pm in self.provider_metrics.values())
+        total_tokens = sum(pm.total_tokens for pm in self.provider_metrics.values())
+        total_cost = sum(pm.total_cost for pm in self.provider_metrics.values())
+
+        requests_by_provider = {
+            provider: pm.total_requests
+            for provider, pm in self.provider_metrics.items()
+        }
+
+        return {
+            "total_requests": total_requests,
+            "requests_by_provider": requests_by_provider,
+            "total_tokens_used": total_tokens,
+            "total_cost": round(total_cost, 4),
+        }
+
+    def _calculate_performance_metrics(self) -> Dict[str, Any]:
+        """Calculate performance-related metrics."""
+        if not self.request_history:
             return {
-                "error": f"Failed to generate metrics summary: {str(e)}",
-                "total_requests": 0,
-                "total_cost": 0.0,
                 "average_response_time": 0.0,
+                "cache_hit_rate": 0.0,
+                "error_rate": 0.0,
             }
+
+        # Calculate response time metrics
+        response_times = [req.response_time for req in self.request_history]
+        average_response_time = sum(response_times) / len(response_times)
+        cache_hit_rate = 0.0  # Would need cache integration
+
+        # Calculate error rate
+        error_count = sum(1 for req in self.request_history if not req.success)
+        error_rate = (error_count / len(self.request_history)) * 100
+
+        return {
+            "average_response_time": round(average_response_time, 3),
+            "cache_hit_rate": round(cache_hit_rate, 3),
+            "error_rate": round(error_rate, 2),
+        }
+
+    def _calculate_uptime_info(self) -> Dict[str, Any]:
+        """Calculate uptime information."""
+        uptime_seconds = time.time() - self.start_time
+        uptime_percentage = 99.9  # Placeholder - would need actual downtime tracking
+
+        return {
+            "uptime_percentage": uptime_percentage,
+            "collection_period_seconds": uptime_seconds,
+        }
+
+    def _create_error_summary(self, error_message: str) -> Dict[str, Any]:
+        """Create error response for metrics summary."""
+        return {
+            "error": f"Failed to generate metrics summary: {error_message}",
+            "total_requests": 0,
+            "total_cost": 0.0,
+            "average_response_time": 0.0,
+        }
 
     def get_provider_metrics(self, provider: Optional[str] = None) -> Dict[str, Any]:
         """Get detailed metrics for a specific provider or all providers."""

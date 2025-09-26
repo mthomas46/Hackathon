@@ -340,24 +340,37 @@ class RateLimiter:
     def get_user_status(self, user_id: str) -> Dict[str, Any]:
         """Get rate limit status for a user."""
         if user_id not in self.user_limits:
-            return {
-                "user_id": user_id,
-                "status": "no_activity",
-                "requests_this_minute": 0,
-                "requests_this_hour": 0,
-                "tokens_this_minute": 0,
-                "burst_count": 0,
-                "cooldown_remaining": 0,
-            }
+            return self._create_inactive_user_status(user_id)
 
         user_limit = self.user_limits[user_id]
         current_time = time.time()
 
-        # Calculate current usage
+        # Calculate usage metrics
+        usage_metrics = self._calculate_user_usage_metrics(user_limit, current_time)
+
+        # Determine status based on limits
+        status = self._determine_user_status(user_limit, usage_metrics)
+
+        return self._build_user_status_response(user_id, user_limit, usage_metrics, status)
+
+    def _create_inactive_user_status(self, user_id: str) -> Dict[str, Any]:
+        """Create status response for inactive user."""
+        return {
+            "user_id": user_id,
+            "status": "no_activity",
+            "requests_this_minute": 0,
+            "requests_this_hour": 0,
+            "tokens_this_minute": 0,
+            "burst_count": 0,
+            "cooldown_remaining": 0,
+        }
+
+    def _calculate_user_usage_metrics(self, user_limit, current_time: float) -> Dict[str, Any]:
+        """Calculate current usage metrics for a user."""
         requests_this_minute = sum(
             1 for t in user_limit.request_times if current_time - t < 60
         )
-        requests_this_hour = len(user_limit.request_times)  # Already limited to 1 hour
+        requests_this_hour = len(user_limit.request_times)
 
         tokens_this_minute = sum(
             tokens for _, tokens in user_limit.token_usage if current_time - _ < 60
@@ -365,18 +378,33 @@ class RateLimiter:
 
         cooldown_remaining = max(0, int(user_limit.cooldown_until - current_time))
 
-        # Determine status
-        rule = user_limit.rule
-        status = "normal"
+        return {
+            "requests_this_minute": requests_this_minute,
+            "requests_this_hour": requests_this_hour,
+            "tokens_this_minute": tokens_this_minute,
+            "cooldown_remaining": cooldown_remaining,
+        }
 
-        if cooldown_remaining > 0:
-            status = "cooldown"
-        elif requests_this_minute >= rule.requests_per_minute * 0.9:  # 90% of limit
-            status = "approaching_limit"
-        elif requests_this_hour >= rule.requests_per_hour * 0.9:
-            status = "approaching_hourly_limit"
-        elif tokens_this_minute >= rule.tokens_per_minute * 0.9:
-            status = "approaching_token_limit"
+    def _determine_user_status(self, user_limit, usage_metrics: Dict[str, Any]) -> str:
+        """Determine the status of a user based on their usage and limits."""
+        if usage_metrics["cooldown_remaining"] > 0:
+            return "cooldown"
+
+        rule = user_limit.rule
+
+        # Check various limit thresholds
+        if usage_metrics["requests_this_minute"] >= rule.requests_per_minute * 0.9:
+            return "approaching_limit"
+        if usage_metrics["requests_this_hour"] >= rule.requests_per_hour * 0.9:
+            return "approaching_hourly_limit"
+        if usage_metrics["tokens_this_minute"] >= rule.tokens_per_minute * 0.9:
+            return "approaching_token_limit"
+
+        return "normal"
+
+    def _build_user_status_response(self, user_id: str, user_limit, usage_metrics: Dict[str, Any], status: str) -> Dict[str, Any]:
+        """Build the complete user status response."""
+        rule = user_limit.rule
 
         return {
             "user_id": user_id,
@@ -388,15 +416,15 @@ class RateLimiter:
                 "burst_limit": rule.burst_limit,
             },
             "current_usage": {
-                "requests_this_minute": requests_this_minute,
-                "requests_this_hour": requests_this_hour,
-                "tokens_this_minute": tokens_this_minute,
+                "requests_this_minute": usage_metrics["requests_this_minute"],
+                "requests_this_hour": usage_metrics["requests_this_hour"],
+                "tokens_this_minute": usage_metrics["tokens_this_minute"],
                 "burst_count": user_limit.burst_count,
             },
             "limits": {
-                "cooldown_remaining": cooldown_remaining,
+                "cooldown_remaining": usage_metrics["cooldown_remaining"],
                 "next_request_allowed": (
-                    user_limit.cooldown_until if cooldown_remaining > 0 else 0
+                    user_limit.cooldown_until if usage_metrics["cooldown_remaining"] > 0 else 0
                 ),
             },
         }
