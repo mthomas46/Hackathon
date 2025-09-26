@@ -100,6 +100,37 @@ Content-Type: application/json
 }
 ```
 
+## 📋 **Requirements**
+
+### **Environment Variables**
+
+#### **Core Configuration**
+```bash
+# Service
+DISCOVERY_AGENT_PORT=5045
+DISCOVERY_AGENT_HOST=0.0.0.0
+
+# External Services
+DISCOVERY_AGENT_ORCHESTRATOR_URL=http://localhost:5099
+DISCOVERY_AGENT_LOG_COLLECTOR_URL=http://localhost:5040
+
+# Discovery Settings
+DISCOVERY_AGENT_AUTO_DISCOVER=true
+DISCOVERY_AGENT_DRY_RUN=false
+DISCOVERY_AGENT_SCAN_INTERVAL=300
+```
+
+#### **Dependencies**
+- **Orchestrator Service** for service registration and coordination
+- **Log Collector** (optional) for structured logging and monitoring
+- **Target Services** with OpenAPI specifications for discovery
+- **Redis** (optional) for caching discovered services
+
+### **🔧 System Requirements**
+- **Python** 3.9+ with async support
+- **Network access** to target services for discovery
+- **OpenAPI compliant** services for automatic registration
+
 ## ⚙️ **Configuration**
 
 ### **🔧 Environment Variables**
@@ -251,6 +282,72 @@ POST /tools/discover
   - Validation: 422 for malformed JSON (FastAPI default)
   - Self-register and OpenAPI fetch paths with mock HTTP errors handled gracefully
   - **🆕 Tool discovery**: OpenAPI parsing, tool categorization, parameter extraction, orchestrator registration
+
+## 🏗️ **Infrastructure**
+
+### **🐳 Docker Configuration**
+```yaml
+# docker-compose.yml
+services:
+  discovery-agent:
+    image: llm-docs-ecosystem/discovery-agent:latest
+    ports:
+      - "5045:5045"
+    environment:
+      - DISCOVERY_AGENT_ORCHESTRATOR_URL=${ORCHESTRATOR_URL}
+      - DISCOVERY_AGENT_LOG_COLLECTOR_URL=${LOG_COLLECTOR_URL}
+      - DISCOVERY_AGENT_AUTO_DISCOVER=true
+    depends_on:
+      - orchestrator
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5045/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+```
+
+### **☸️ Kubernetes Deployment**
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discovery-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discovery-agent
+  template:
+    metadata:
+      labels:
+        app: discovery-agent
+    spec:
+      containers:
+      - name: discovery-agent
+        image: llm-docs-ecosystem/discovery-agent:latest
+        ports:
+        - containerPort: 5045
+        env:
+        - name: DISCOVERY_AGENT_ORCHESTRATOR_URL
+          value: "http://orchestrator:5099"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+```
+
+### **🏭 Production Readiness**
+- **Health Checks**: Automatic service health monitoring with Kubernetes probes
+- **Logging**: Structured JSON logging with correlation IDs
+- **Metrics**: Prometheus metrics endpoint for monitoring
+- **Security**: Service-to-service authentication and authorization
+- **Caching**: Redis integration for discovered service caching
+- **Circuit Breaking**: Fault tolerance for external service discovery
 
 ## 🧪 **Testing**
 
