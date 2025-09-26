@@ -30,22 +30,14 @@ except ImportError:
         ORCHESTRATOR = "orchestrator"
 
 
-try:
-    from services.shared.monitoring.logging import fire_and_forget
-    from services.shared.presentation.responses import (
-        create_error_response,
-        create_success_response,
-    )
-    from services.shared.utilities.error_handling import ValidationException
-except ImportError:
-    # Fallback for testing or when shared services are not available
-    # Response handlers consolidated - use services.shared.presentation.responses
-
-    def fire_and_forget(level, message, service, data):
-        pass
-
-    class ValidationException(Exception):
-        pass
+# DRY refactoring: Removed local fallbacks - all services now use shared utilities
+# This eliminates ~20 lines of duplicated utility code across the ecosystem
+from services.shared.monitoring.logging import fire_and_forget
+from services.shared.presentation.responses import (
+    create_error_response,
+    create_success_response,
+)
+from services.shared.utilities.error_handling import ValidationException
 
 
 # Configuration constants for analysis service with secure validation
