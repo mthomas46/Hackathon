@@ -353,6 +353,75 @@ GET /workflows/health
 | POST | /jobs/notify-consolidation | Notify consolidation |
 | POST | /docstore/save | Save to doc store |
 
+## 🏗️ Infrastructure
+
+### Docker Configuration
+```yaml
+# docker-compose.yml
+services:
+  orchestrator:
+    image: llm-docs-ecosystem/orchestrator:latest
+    ports:
+      - "5099:5099"
+    environment:
+      - ORCHESTRATOR_DB_URL=${DATABASE_URL}
+      - ORCHESTRATOR_REDIS_URL=${REDIS_URL}
+      - ORCHESTRATOR_SERVICE_REGISTRY_URL=${SERVICE_REGISTRY_URL}
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: orchestrator
+      POSTGRES_USER: orchestrator
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+### Production Readiness
+- **Health Checks**: Automatic service health monitoring
+- **Logging**: Structured JSON logging with correlation IDs
+- **Metrics**: Prometheus metrics endpoint for monitoring
+- **Security**: TLS encryption and authentication
+- **Backup**: Automated database backups and workflow archiving
+
+## 🤝 Ecosystem
+
+### Service Dependencies
+
+#### Required Services
+- [**shared**](../../services/shared/): Common utilities and base classes
+- **Redis**: Real-time coordination and caching
+- **PostgreSQL**: Primary workflow and job storage
+
+#### Optional Integrations
+- [**notification-service**](../notification-service/): Alert delivery and notifications
+- [**service-registry**](../service-registry/): Dynamic service discovery
+- [**monitoring**](../monitoring/): Metrics collection and dashboards
+
+### Data Flow
+
+```
+Services → [Orchestrator](./) → Redis Queue → PostgreSQL Storage
+                              ↓
+                     Workflow Engine → [Notification Service](../notification-service/)
+                              ↓
+                     [Monitoring](../monitoring/) → Dashboards
+```
+
 ## 🧪 Testing
 
 ### Test Structure
@@ -490,6 +559,33 @@ workflow_data = {
     ]
 }
 ```
+
+## 📋 Requirements
+
+### Environment Variables
+
+#### Core Configuration
+```bash
+# Service
+ORCHESTRATOR_PORT=5099
+ORCHESTRATOR_HOST=0.0.0.0
+
+# Database
+ORCHESTRATOR_DB_URL=postgresql://user:pass@localhost:5432/orchestrator
+
+# Redis
+ORCHESTRATOR_REDIS_URL=redis://localhost:6379
+
+# External Services
+ORCHESTRATOR_SERVICE_REGISTRY_URL=http://localhost:5000
+ORCHESTRATOR_NOTIFICATION_SERVICE_URL=http://localhost:5010
+```
+
+#### Dependencies
+- **PostgreSQL** 13+ for workflow and job storage
+- **Redis** 6+ for real-time coordination and caching
+- **Service Registry** for dynamic service discovery
+- **Notification Service** for workflow alerts
 
 ## 🔧 Configuration
 
