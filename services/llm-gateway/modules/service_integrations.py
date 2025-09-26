@@ -16,12 +16,84 @@ Handles comprehensive integration with all ecosystem services including:
 from typing import Any, Dict
 
 from services.shared.clients import ServiceClients
-from services.shared.config import get_config_value
+from services.shared.infrastructure.config.config import get_config_value
 from services.shared.constants_new import ServiceNames
 from services.shared.logging import fire_and_forget
 from services.shared.utilities import utc_now
 
 from .models import GatewayResponse, LLMQuery
+
+
+# DRY refactoring: Service URL configurations for llm-gateway
+# Reduced code duplication from 10+ individual get_config_value calls to generic approach
+_SERVICE_URL_CONFIGS = {
+    ServiceNames.DOC_STORE: {
+        "config_key": "DOC_STORE_URL",
+        "default_url": "http://doc_store:5087",
+    },
+    ServiceNames.PROMPT_STORE: {
+        "config_key": "PROMPT_STORE_URL",
+        "default_url": "http://prompt-store:5110",
+    },
+    ServiceNames.MEMORY_AGENT: {
+        "config_key": "MEMORY_AGENT_URL",
+        "default_url": "http://memory-agent:5040",
+    },
+    ServiceNames.INTERPRETER: {
+        "config_key": "INTERPRETER_URL",
+        "default_url": "http://interpreter:5120",
+    },
+    ServiceNames.ORCHESTRATOR: {
+        "config_key": "ORCHESTRATOR_URL",
+        "default_url": "http://orchestrator:5099",
+    },
+    ServiceNames.SUMMARIZER_HUB: {
+        "config_key": "SUMMARIZER_HUB_URL",
+        "default_url": "http://summarizer-hub:5060",
+    },
+    ServiceNames.SECURE_ANALYZER: {
+        "config_key": "SECURE_ANALYZER_URL",
+        "default_url": "http://secure-analyzer:5070",
+    },
+    ServiceNames.CODE_ANALYZER: {
+        "config_key": "CODE_ANALYZER_URL",
+        "default_url": "http://code-analyzer:5085",
+    },
+    ServiceNames.ARCHITECTURE_DIGITIZER: {
+        "config_key": "ARCHITECTURE_DIGITIZER_URL",
+        "default_url": "http://architecture-digitizer:5105",
+    },
+    ServiceNames.ANALYSIS_SERVICE: {
+        "config_key": "ANALYSIS_SERVICE_URL",
+        "default_url": "http://analysis-service:5020",
+    },
+}
+
+
+def _get_service_url(service_name: str) -> str:
+    """Generic function to get service URL from configuration.
+
+    DRY refactoring: Consolidates 10+ individual URL lookups into one generic function.
+    Eliminates code duplication in service endpoint initialization.
+
+    Args:
+        service_name: Service name constant from ServiceNames
+
+    Returns:
+        Service URL string
+
+    Raises:
+        KeyError: If service_name is not found in configuration
+    """
+    if service_name not in _SERVICE_URL_CONFIGS:
+        raise KeyError(f"Unknown service for URL lookup: {service_name}")
+
+    config = _SERVICE_URL_CONFIGS[service_name]
+    return get_config_value(
+        config["config_key"],
+        config["default_url"],
+        section="services",
+    )
 
 
 class ServiceIntegrations:
@@ -33,42 +105,11 @@ class ServiceIntegrations:
         self.integration_cache = {}  # Cache for service capabilities and metadata
 
     def _initialize_service_endpoints(self) -> Dict[str, str]:
-        """Initialize service endpoint mappings."""
+        """Initialize service endpoint mappings using DRY configuration approach."""
+        # DRY refactoring: Use generic function instead of 10+ individual get_config_value calls
         return {
-            ServiceNames.DOC_STORE: get_config_value(
-                "DOC_STORE_URL", "http://doc_store:5087", section="services"
-            ),
-            ServiceNames.PROMPT_STORE: get_config_value(
-                "PROMPT_STORE_URL", "http://prompt-store:5110", section="services"
-            ),
-            ServiceNames.MEMORY_AGENT: get_config_value(
-                "MEMORY_AGENT_URL", "http://memory-agent:5040", section="services"
-            ),
-            ServiceNames.INTERPRETER: get_config_value(
-                "INTERPRETER_URL", "http://interpreter:5120", section="services"
-            ),
-            ServiceNames.ORCHESTRATOR: get_config_value(
-                "ORCHESTRATOR_URL", "http://orchestrator:5099", section="services"
-            ),
-            ServiceNames.SUMMARIZER_HUB: get_config_value(
-                "SUMMARIZER_HUB_URL", "http://summarizer-hub:5060", section="services"
-            ),
-            ServiceNames.SECURE_ANALYZER: get_config_value(
-                "SECURE_ANALYZER_URL", "http://secure-analyzer:5070", section="services"
-            ),
-            ServiceNames.CODE_ANALYZER: get_config_value(
-                "CODE_ANALYZER_URL", "http://code-analyzer:5085", section="services"
-            ),
-            ServiceNames.ARCHITECTURE_DIGITIZER: get_config_value(
-                "ARCHITECTURE_DIGITIZER_URL",
-                "http://architecture-digitizer:5105",
-                section="services",
-            ),
-            ServiceNames.ANALYSIS_SERVICE: get_config_value(
-                "ANALYSIS_SERVICE_URL",
-                "http://analysis-service:5020",
-                section="services",
-            ),
+            service_name: _get_service_url(service_name)
+            for service_name in _SERVICE_URL_CONFIGS.keys()
         }
 
     async def initialize_integrations(self):
