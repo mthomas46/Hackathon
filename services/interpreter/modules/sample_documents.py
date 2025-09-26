@@ -301,53 +301,100 @@ class SampleDocumentRepository:
         """Get relevant documents based on query content analysis."""
         query_lower = query.lower()
 
+        # Use structured matching rules instead of nested conditionals
+        matching_rules = self._get_query_matching_rules()
+        relevant_docs = self._apply_matching_rules(query_lower, matching_rules)
+
+        # Deduplicate and limit results
+        unique_docs = self._deduplicate_documents(relevant_docs)
+        return self._limit_results(unique_docs)
+
+    def _get_query_matching_rules(self) -> List[Dict[str, Any]]:
+        """Get structured rules for query-to-document matching."""
+        return [
+            {
+                "keywords": ["financial", "banking"],
+                "actions": [
+                    ("category", "architecture"),
+                    ("category", "security"),
+                ],
+            },
+            {
+                "keywords": ["api", "documentation"],
+                "actions": [
+                    ("category", "api"),
+                    ("method", "get_similar_documents"),
+                ],
+            },
+            {
+                "keywords": ["jira", "ticket", "bug"],
+                "actions": [("type", "jira")],
+            },
+            {
+                "keywords": ["pull request", "pr", "code review"],
+                "actions": [("type", "pull_request")],
+            },
+            {
+                "keywords": ["confluence", "wiki", "page"],
+                "actions": [("type", "confluence")],
+            },
+            {
+                "keywords": ["conflict", "contradiction"],
+                "actions": [("method", "get_contradictory_documents")],
+            },
+            {
+                "keywords": ["gap", "missing"],
+                "actions": [("method", "get_gap_documents")],
+            },
+        ]
+
+    def _apply_matching_rules(self, query_lower: str, rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Apply matching rules to find relevant documents."""
         relevant_docs = []
 
-        # Check for specific keywords that map to document types
-        if "financial" in query_lower or "banking" in query_lower:
-            relevant_docs.extend(self.get_documents_by_category("architecture"))
-            relevant_docs.extend(self.get_documents_by_category("security"))
+        for rule in rules:
+            if self._matches_keywords(query_lower, rule["keywords"]):
+                relevant_docs.extend(self._execute_actions(rule["actions"]))
 
-        if "api" in query_lower or "documentation" in query_lower:
-            relevant_docs.extend(self.get_documents_by_category("api"))
-            relevant_docs.extend(self.get_similar_documents())
+        return relevant_docs
 
-        if "jira" in query_lower or "ticket" in query_lower or "bug" in query_lower:
-            relevant_docs.extend(self.get_documents_by_type("jira"))
+    def _matches_keywords(self, query_lower: str, keywords: List[str]) -> bool:
+        """Check if query matches any of the keywords."""
+        return any(keyword in query_lower for keyword in keywords)
 
-        if (
-            "pull request" in query_lower
-            or "pr" in query_lower
-            or "code review" in query_lower
-        ):
-            relevant_docs.extend(self.get_documents_by_type("pull_request"))
+    def _execute_actions(self, actions: List[tuple]) -> List[Dict[str, Any]]:
+        """Execute the specified actions to get documents."""
+        results = []
 
-        if (
-            "confluence" in query_lower
-            or "wiki" in query_lower
-            or "page" in query_lower
-        ):
-            relevant_docs.extend(self.get_documents_by_type("confluence"))
+        for action_type, action_value in actions:
+            if action_type == "category":
+                results.extend(self.get_documents_by_category(action_value))
+            elif action_type == "type":
+                results.extend(self.get_documents_by_type(action_value))
+            elif action_type == "method":
+                method = getattr(self, action_value)
+                results.extend(method())
 
-        if "conflict" in query_lower or "contradiction" in query_lower:
-            relevant_docs.extend(self.get_contradictory_documents())
+        return results
 
-        if "gap" in query_lower or "missing" in query_lower:
-            relevant_docs.extend(self.get_gap_documents())
-
-        # Remove duplicates while preserving order
+    def _deduplicate_documents(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Remove duplicate documents while preserving order."""
         seen_ids = set()
         unique_docs = []
-        for doc in relevant_docs:
+
+        for doc in documents:
             if doc["id"] not in seen_ids:
                 seen_ids.add(doc["id"])
                 unique_docs.append(doc)
 
-        # If no specific matches, return a subset of diverse documents
-        if not unique_docs:
-            return self.documents[:5]  # Return first 5 documents
+        return unique_docs
 
-        return unique_docs[:10]  # Limit to 10 most relevant documents
+    def _limit_results(self, documents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Limit results, returning defaults if no matches found."""
+        if not documents:
+            return self.documents[:5]  # Return first 5 documents as fallback
+
+        return documents[:10]  # Limit to 10 most relevant documents
 
 
 # Global instance for easy access
