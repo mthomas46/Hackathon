@@ -5,7 +5,11 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Request
 
-from services.shared.presentation.responses import create_success_response
+try:
+    from services.shared.presentation.responses import create_success_response
+except ImportError:
+    def create_success_response(data):
+        return {"success": True, "data": data}
 
 router = APIRouter(prefix="/health", tags=["health"])
 
