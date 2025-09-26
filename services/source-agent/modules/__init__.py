@@ -4,7 +4,7 @@ This package contains all the modularized functionality for the Source Agent ser
 Provides shared utilities and client instances for all source agent modules.
 """
 
-from services.shared.utilities import get_service_client
+from services.shared.infrastructure.client.service_client import get_service_client
 
 # Shared service client for all source agent modules - lazy initialization
 _service_client = None

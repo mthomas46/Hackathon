@@ -39,7 +39,9 @@ class Endpoint(BaseEntity):
     @property
     def operation_id(self) -> str:
         """Generate a unique operation ID."""
-        return f"{self.method.upper()}_{self.path.replace('/', '_').strip('_')}"
+        # Replace URL special characters with underscores for operation ID
+        safe_path = self.path.replace('/', '_').replace('{', '_').replace('}', '_').replace('-', '_')
+        return f"{self.method.upper()}{safe_path}"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert endpoint to dictionary representation."""

@@ -17,7 +17,7 @@
     "maintainability": 0.0
   },
   "metadata": {
-    "audit_duration_seconds": 0.0004909038543701172,
+    "audit_duration_seconds": 0.0002510547637939453,
     "error": "Service 'redis' not found"
   }
 }

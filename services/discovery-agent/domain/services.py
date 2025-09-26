@@ -22,27 +22,19 @@ from .exceptions import (
     MalformedUrlError,
 )
 from . import entities
+from .entities import DiscoveryResult, Endpoint
 from .value_objects import DiscoverySpec, EndpointMetadata, ServiceMetadata, HttpMethod, ApiPath
-# TODO: Import repositories when needed
+# TODO: Import repositories when needed - commented out due to import conflicts
 # from .repositories import ServiceRepository, EndpointRepository
-# Temporary workaround for import issues
-import sys
-from pathlib import Path
-current_file = Path(__file__)
-domain_dir = current_file.parent
-repos_file = domain_dir / "repositories.py"
-if repos_file.exists():
-    spec = importlib.util.spec_from_file_location("repositories", repos_file)
-    if spec and spec.loader:
-        repos_module = importlib.util.module_from_spec(spec)
-        sys.modules["repositories"] = repos_module
-        spec.loader.exec_module(repos_module)
-        ServiceRepository = repos_module.ServiceRepository
-        EndpointRepository = repos_module.EndpointRepository
-else:
-    # Fallback
-    ServiceRepository = object
-    EndpointRepository = object
+
+# Temporary workaround - define placeholder classes to avoid import errors
+class ServiceRepository:
+    """Placeholder ServiceRepository class."""
+    pass
+
+class EndpointRepository:
+    """Placeholder EndpointRepository class."""
+    pass
 
 
 logger = logging.getLogger(__name__)

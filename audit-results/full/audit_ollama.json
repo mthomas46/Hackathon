@@ -17,7 +17,7 @@
     "maintainability": 0.0
   },
   "metadata": {
-    "audit_duration_seconds": 0.0008940696716308594,
+    "audit_duration_seconds": 0.0002751350402832031,
     "error": "Service 'ollama' not found"
   }
 }
