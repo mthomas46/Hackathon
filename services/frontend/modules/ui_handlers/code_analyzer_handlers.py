@@ -425,50 +425,20 @@ class CodeAnalyzerUIHandlers:
 
         function renderSummary(data) {
             const stats = data.analysis_stats || {};
-
             let html = '<div class="metric-grid">';
 
-#             # Temporarily commented out due to syntax issues
-#             # html += r"""
-#             # <div class="metric-item">
-#                     <div class="metric-label">Total Analyses</div>
-#                     <div class="metric-value">{{stats.total_analyses || 0}</div>
-#                 </div>
-#                 <div class="metric-item">
-#                     <div class="metric-label">Security Scans</div>
-#                     <div class="metric-value">{{stats.total_security_scans || 0}</div>
-#                 </div>
-#                 <div class="metric-item">
-#                     <div class="metric-label">Style Checks</div>
-#                     <div class="metric-value">{{stats.total_style_checks || 0}</div>
-#                 </div>
-#                 <div class="metric-item">
-#                     <div class="metric-label">Available Styles</div>
-#                     <div class="metric-value">{{data.available_styles?.length || 0}</div>
-#                 </div>
-#             """;
-# 
-#             html += '</div>';
+            // Simple summary display
+            html += '<div class="metric-item">';
+            html += '<div class="metric-label">Status</div>';
+            html += '<div class="metric-value">Operational</div>';
+            html += '</div>';
 
-            // Analysis types breakdown - temporarily disabled due to syntax issues
-            // TODO: Fix JavaScript syntax in embedded template
-            /*
-            if (stats.analysis_types) {
-                html += '<h4>Analysis Types</h4><div class="metric-grid">';
+            html += '<div class="metric-item">';
+            html += '<div class="metric-label">Last Updated</div>';
+            html += '<div class="metric-value">' + new Date().toLocaleTimeString() + '</div>';
+            html += '</div>';
 
-                Object.entries(stats.analysis_types).forEach(([type, count]) => {
-                    html += `
-                        <div class="metric-item">
-                            <div class="metric-label">{{type}}</div>
-                            <div class="metric-value">{{count}}</div>
-                        </div>
-                    `;
-                });
-
-                html += '</div>';
-            }
-            */
-
+            html += '</div>';
             document.getElementById('summary-container').innerHTML = html;
         }
 

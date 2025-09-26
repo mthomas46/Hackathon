@@ -299,30 +299,28 @@ class WorkflowUIHandlers:
             let html = '<div class="status-grid">';
 
             // Overall statistics
-            html += r"""
+            html += '''
                 <div class="status-card">
                     <div class="status-label">Active Workflows</div>
-                    <div class="status-value">{{workflowData.active_jobs?.length || 0}</div>
+                    <div class="status-value">{{workflowData.active_jobs?.length || 0}}</div>
                     <div>Currently Running</div>
                 </div>
                 <div class="status-card completed">
                     <div class="status-label">Total Completed</div>
-                    <div class="status-value">{{stats.total_completed || 0}</div>
+                    <div class="status-value">{{stats.total_completed || 0}}</div>
                     <div>This Session</div>
                 </div>
                 <div class="status-card">
                     <div class="status-label">Success Rate</div>
-                    <div class="status-value">{{stats.success_rate ? stats.success_rate.toFixed(1) + '%' : 'N/A'}</div>
+                    <div class="status-value">{{stats.success_rate ? stats.success_rate.toFixed(1) + '%' : 'N/A'}}</div>
                     <div>Completion Rate</div>
                 </div>
                 <div class="status-card failed">
                     <div class="status-label">Failed Jobs</div>
-                    <div class="status-value">{{stats.total_failed || 0}</div>
+                    <div class="status-value">{{stats.total_failed || 0}}</div>
                     <div>Error Count</div>
                 </div>
-            """;
-
-            html += '</div>';
+            '''
 
             // Detailed metrics
             if (Object.keys(stats).length > 0) {
