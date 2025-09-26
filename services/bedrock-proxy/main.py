@@ -35,6 +35,7 @@ except ImportError:
 from services.shared.infrastructure.config import load_service_config
 from services.shared.utilities import setup_common_middleware
 from services.shared.presentation.responses import create_error_response, create_success_response
+from services.shared.presentation.api.responses import APIResponse
 from services.shared.monitoring.health import register_health_endpoints
 
 # Load standardized configuration
@@ -64,7 +65,7 @@ setup_common_middleware(app, service_name=SERVICE_NAME)
 register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
 
-@app.get("/health")
+@app.get("/health", summary="Service Health Check", description="Returns the current health status of the Bedrock Proxy service including operational metrics and feature availability.", response_model=APIResponse, tags=["health"], responses={200: {"description": "Service is healthy and operational"}, 500: {"description": "Service health check failed"}})
 async def health():
     """Enhanced health check endpoint with standardized response."""
     try:
@@ -184,7 +185,7 @@ class InvokeRequest(BaseModel):
         return v
 
 
-@app.post("/invoke")
+@app.post("/invoke", summary="AI Model Invocation", description="Process AI invoke requests with template-based response generation. Supports multiple output formats and template types for structured AI responses.", response_model=Dict[str, Any], tags=["ai", "invoke"], responses={200: {"description": "AI response generated successfully"}, 400: {"description": "Invalid request parameters"}, 500: {"description": "AI processing failed"}})
 async def invoke(req: InvokeRequest):
     """Process AI invoke request with template-based response generation.
 

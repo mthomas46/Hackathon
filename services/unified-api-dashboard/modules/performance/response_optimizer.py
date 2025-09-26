@@ -16,7 +16,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
 import brotli
 
@@ -282,12 +282,9 @@ class ContentNegotiator:
             content_type=content_type, language=language, charset=charset
         )
 
-    def _negotiate_content_type(self, accept_header: str) -> str:
-        """Negotiate content type based on Accept header."""
-        if not accept_header:
-            return "application/json"
 
-        # Parse accept header with quality values
+    def _parse_accept_header(self, accept_header: str) -> List[Tuple[str, float]]:
+        """Parse Accept header into media types with quality values."""
         accept_types = []
         for item in accept_header.split(","):
             parts = item.strip().split(";")
@@ -301,24 +298,35 @@ class ContentNegotiator:
                     quality = 1.0
 
             accept_types.append((media_type, quality))
+        return accept_types
 
+    def _find_content_type_match(self, accept_types: List[Tuple[str, float]]) -> str:
+        """Find best matching content type from sorted accept types."""
         # Sort by quality value (highest first)
-        accept_types.sort(key=lambda x: x[1], reverse=True)
+        sorted_types = sorted(accept_types, key=lambda x: x[1], reverse=True)
 
-        # Find best match
-        for media_type, _ in accept_types:
+        for media_type, _ in sorted_types:
             if media_type in self.supported_content_types:
                 return media_type
             if media_type == "*/*":
                 return "application/json"
             if media_type.endswith("/*"):
-                # Check for type/*
+                # Check for type/* patterns
                 main_type = media_type.split("/")[0]
                 for supported_type in self.supported_content_types:
                     if supported_type.startswith(f"{main_type}/"):
                         return supported_type
 
         return "application/json"
+
+    def _negotiate_content_type(self, accept_header: str) -> str:
+        """Negotiate content type based on Accept header."""
+        if not accept_header:
+            return "application/json"
+
+        # Parse and find best match using helper functions
+        accept_types = self._parse_accept_header(accept_header)
+        return self._find_content_type_match(accept_types)
 
     def _negotiate_language(self, accept_language: str) -> Optional[str]:
         """Negotiate language based on Accept-Language header."""

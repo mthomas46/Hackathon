@@ -21,6 +21,8 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import FastAPI
+from typing import Dict, Any
+from services.shared.presentation.api.responses import APIResponse
 from pydantic import BaseModel
 
 from services.shared.infrastructure.config import load_service_config
@@ -122,7 +124,7 @@ attach_self_register(app, config.service_name)
 
 
 # Custom memory-specific health endpoint
-@app.get("/health")
+@app.get("/health", summary="Memory Agent Health Check", description="Returns service health status including memory statistics and operational metrics.", response_model=APIResponse, tags=["health"], responses={200: {"description": "Service is healthy with memory statistics"}, 500: {"description": "Service health check failed"}})
 async def memory_health():
     """Memory agent health check with comprehensive memory statistics."""
     try:
@@ -162,7 +164,7 @@ class PutMemoryRequest(BaseModel):
     """The memory item to store, containing type, key, value, and metadata."""
 
 
-@app.post("/memory/put")
+@app.post("/memory/put", summary="Store Memory Item", description="Stores a memory item with optional TTL for operational context and event summaries.", response_model=APIResponse, tags=["memory", "storage"], responses={201: {"description": "Memory item stored successfully"}, 400: {"description": "Invalid memory data"}, 500: {"description": "Memory storage failed"}})
 async def put_memory(req: PutMemoryRequest):
     """Store a memory item with validation and error handling."""
     try:
@@ -180,7 +182,7 @@ async def put_memory(req: PutMemoryRequest):
         return handle_memory_agent_error("store memory item", e, **context)
 
 
-@app.get("/memory/list")
+@app.get("/memory/list", summary="List Memory Items", description="Retrieves stored memory items with optional filtering by type, key, and pagination.", response_model=APIResponse, tags=["memory", "query"], responses={200: {"description": "Memory items retrieved successfully"}, 400: {"description": "Invalid query parameters"}})
 async def list_memory(
     type: Optional[str] = None, key: Optional[str] = None, limit: int = 100
 ):
