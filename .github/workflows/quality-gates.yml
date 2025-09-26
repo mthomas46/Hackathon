@@ -13,6 +13,148 @@ env:
   PYTHON_VERSION: '3.13'
 
 jobs:
+  test-and-lint:
+    name: Test Coverage & Linting
+    runs-on: ubuntu-latest
+    outputs:
+      test-coverage: ${{ steps.coverage.outputs.coverage }}
+      lint-status: ${{ steps.lint.outputs.status }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        # Install testing and linting tools
+        pip install pytest pytest-cov pytest-asyncio pytest-mock
+        pip install black isort flake8 pylint mypy bandit safety
+
+    - name: Run tests with coverage
+      id: test
+      run: |
+        # Run tests for all services
+        mkdir -p test-results
+
+        # Run shared service tests
+        cd services/shared
+        python -m pytest tests/ --cov=. --cov-report=xml --cov-report=term-missing -x
+        mv coverage.xml ../../test-results/shared-coverage.xml
+        cd ../..
+
+        # Run analysis service tests
+        cd services/analysis-service
+        python -m pytest tests/ --cov=. --cov-report=xml --cov-report=term-missing -x
+        mv coverage.xml ../../test-results/analysis-coverage.xml
+        cd ../..
+
+        # Run CLI service tests
+        cd services/cli
+        python -m pytest tests/ --cov=. --cov-report=xml --cov-report=term-missing -x || true  # Allow partial failures
+        mv coverage.xml ../../test-results/cli-coverage.xml 2>/dev/null || true
+        cd ../..
+
+        # Run orchestrator tests
+        cd services/orchestrator
+        python -m pytest tests/ --cov=. --cov-report=xml --cov-report=term-missing -x || true
+        mv coverage.xml ../../test-results/orchestrator-coverage.xml 2>/dev/null || true
+        cd ../..
+
+        # Calculate overall coverage
+        OVERALL_COVERAGE=$(python3 -c "
+        import xml.etree.ElementTree as ET
+        import glob
+        import os
+
+        coverage_files = glob.glob('test-results/*-coverage.xml')
+        total_lines = 0
+        total_covered = 0
+
+        for xml_file in coverage_files:
+            if os.path.exists(xml_file):
+                try:
+                    tree = ET.parse(xml_file)
+                    root = tree.getroot()
+                    lines = int(root.attrib.get('lines-valid', '0'))
+                    covered = int(root.attrib.get('lines-covered', '0'))
+                    total_lines += lines
+                    total_covered += covered
+                except:
+                    pass
+
+        if total_lines > 0:
+            coverage_pct = (total_covered / total_lines) * 100
+            print(f'{coverage_pct:.1f}')
+        else:
+            print('0.0')
+        ")
+
+        echo "test-coverage=$OVERALL_COVERAGE" >> $GITHUB_OUTPUT
+        echo "Test coverage: $OVERALL_COVERAGE%"
+
+    - name: Run linting checks
+      id: lint
+      run: |
+        LINT_STATUS="passed"
+
+        echo "Running code quality checks..."
+
+        # Run black (formatting check)
+        echo "Checking code formatting with black..."
+        black --check --diff . || LINT_STATUS="failed"
+
+        # Run isort (import sorting check)
+        echo "Checking import sorting with isort..."
+        isort --check-only --diff . || LINT_STATUS="failed"
+
+        # Run flake8 (basic linting)
+        echo "Running flake8 linting..."
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=.git,__pycache__,build,dist,.venv || LINT_STATUS="failed"
+
+        # Run pylint on key services (lighter check)
+        echo "Running pylint on critical services..."
+        pylint services/shared/domain/ services/analysis-service/domain/ --errors-only || true  # Don't fail on warnings
+
+        # Run mypy type checking on key files
+        echo "Running mypy type checking..."
+        mypy services/shared/domain/entities/ --ignore-missing-imports || true
+
+        # Run bandit security check
+        echo "Running bandit security analysis..."
+        bandit -r services/ -f json -o security-report.json || true
+
+        echo "lint-status=$LINT_STATUS" >> $GITHUB_OUTPUT
+        echo "Lint status: $LINT_STATUS"
+
+        if [ "$LINT_STATUS" = "failed" ]; then
+          echo "❌ Linting failed - please fix code quality issues"
+          exit 1
+        else
+          echo "✅ All linting checks passed"
+        fi
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: test-results/
+        retention-days: 30
+
   audit-services:
     name: Service Quality Audit
     runs-on: ubuntu-latest
@@ -217,10 +359,12 @@ EOF
     - name: Quality gate check
       id: quality-gate
       run: |
-        # Quality thresholds
-        MIN_SCORE=60.0  # Minimum acceptable score (grade C)
-        MAX_CRITICAL=5  # Maximum acceptable critical issues
-        MIN_SERVICES_PASSING=3  # Minimum services that must pass
+        # Quality thresholds - Enterprise Grade Standards
+        MIN_SCORE=75.0  # Enterprise-grade minimum score (grade B+)
+        MAX_CRITICAL=0  # Zero critical issues allowed
+        MIN_SERVICES_PASSING=5  # All 5 audited services must pass
+        MIN_TEST_COVERAGE=70.0  # Minimum test coverage required
+        LINT_REQUIRED=true  # Linting must pass
 
         SHARED_SCORE=${{ steps.audit.outputs.shared-score }}
         DOC_STORE_SCORE=${{ steps.audit.outputs.doc-store-score }}
@@ -228,6 +372,8 @@ EOF
         ANALYSIS_SERVICE_SCORE=${{ steps.audit.outputs.analysis-service-score }}
         ORCHESTRATOR_SCORE=${{ steps.audit.outputs.orchestrator-score }}
         TOTAL_CRITICAL=${{ steps.audit.outputs.critical-issues }}
+        TEST_COVERAGE=${{ needs.test-and-lint.outputs.test-coverage }}
+        LINT_STATUS=${{ needs.test-and-lint.outputs.lint-status }}
 
         # Count services meeting minimum score
         PASSING_SERVICES=0
@@ -237,23 +383,33 @@ EOF
           fi
         done
 
-        # Check quality gates
-        if (( $(echo "$SHARED_SCORE >= $MIN_SCORE" | bc -l) )) && \
-           (( $(echo "$DOC_STORE_SCORE >= $MIN_SCORE" | bc -l) )) && \
-           (( $(echo "$DISCOVERY_AGENT_SCORE >= $MIN_SCORE" | bc -l) )) && \
-           (( $(echo "$ANALYSIS_SERVICE_SCORE >= $MIN_SCORE" | bc -l) )) && \
-           (( $(echo "$ORCHESTRATOR_SCORE >= $MIN_SCORE" | bc -l) )) && \
-           (( TOTAL_CRITICAL <= MAX_CRITICAL )) && \
-           (( PASSING_SERVICES >= MIN_SERVICES_PASSING )); then
+        # Check all quality gates
+        AUDIT_PASSED=$(( $(echo "$SHARED_SCORE >= $MIN_SCORE" | bc -l) && \
+                        $(echo "$DOC_STORE_SCORE >= $MIN_SCORE" | bc -l) && \
+                        $(echo "$DISCOVERY_AGENT_SCORE >= $MIN_SCORE" | bc -l) && \
+                        $(echo "$ANALYSIS_SERVICE_SCORE >= $MIN_SCORE" | bc -l) && \
+                        $(echo "$ORCHESTRATOR_SCORE >= $MIN_SCORE" | bc -l) && \
+                        TOTAL_CRITICAL <= MAX_CRITICAL && \
+                        PASSING_SERVICES >= MIN_SERVICES_PASSING ))
+
+        COVERAGE_PASSED=$(( $(echo "$TEST_COVERAGE >= $MIN_TEST_COVERAGE" | bc -l 2>/dev/null || echo "0") ))
+        LINT_PASSED=$([ "$LINT_STATUS" = "passed" ] && echo 1 || echo 0)
+
+        if (( AUDIT_PASSED )) && (( COVERAGE_PASSED )) && (( LINT_PASSED )); then
           echo "result=passed" >> $GITHUB_OUTPUT
           echo "✅ All quality gates passed!"
+          echo "  📊 Audit: ✓ (All services ≥$MIN_SCORE)"
+          echo "  🧪 Coverage: ✓ ($TEST_COVERAGE% ≥$MIN_TEST_COVERAGE%)"
+          echo "  🔍 Linting: ✓ ($LINT_STATUS)"
         else
           echo "result=failed" >> $GITHUB_OUTPUT
           echo "❌ Quality gates failed!"
           echo "Requirements:"
-          echo "  - Minimum score: $MIN_SCORE (all services)"
+          echo "  - Minimum audit score: $MIN_SCORE (all services)"
           echo "  - Maximum critical issues: $MAX_CRITICAL (total)"
-          echo "  - Services passing: $MIN_SERVICES_PASSING+"
+          echo "  - Services passing audit: $MIN_SERVICES_PASSING+"
+          echo "  - Minimum test coverage: $MIN_TEST_COVERAGE%"
+          echo "  - Linting status: must pass"
           echo ""
           echo "Current status:"
           echo "  - Services at or above $MIN_SCORE: $PASSING_SERVICES/5"
@@ -264,7 +420,7 @@ EOF
   quality-report:
     name: Generate Quality Report
     runs-on: ubuntu-latest
-    needs: audit-services
+    needs: [test-and-lint, audit-services]
     if: always()
 
     steps:
@@ -283,11 +439,28 @@ EOF
         echo "Generated: $(date -u)" >> quality-report.md
         echo "" >> quality-report.md
 
-        # Add quality gate status
+        # Add comprehensive quality gate status
+        TEST_COVERAGE=${{ needs.test-and-lint.outputs.test-coverage }}
+        LINT_STATUS=${{ needs.test-and-lint.outputs.lint-status }}
+
+        echo "## 📈 Quality Metrics Overview" >> quality-report.md
+        echo "" >> quality-report.md
+        echo "### Audit Results" >> quality-report.md
         if [ "${{ needs.audit-services.outputs.quality-gate-passed }}" = "passed" ]; then
-          echo "🎉 **Quality Gates: PASSED**" >> quality-report.md
+          echo "✅ **Audit Gates: PASSED** - All services meet enterprise standards" >> quality-report.md
         else
-          echo "⚠️ **Quality Gates: FAILED**" >> quality-report.md
+          echo "❌ **Audit Gates: FAILED** - Services below quality thresholds" >> quality-report.md
+        fi
+        echo "" >> quality-report.md
+
+        echo "### Testing & Code Quality" >> quality-report.md
+        echo "- **Test Coverage**: ${TEST_COVERAGE}% (Required: 70.0%)" >> quality-report.md
+        echo "- **Linting Status**: ${LINT_STATUS^} (Required: Passed)" >> quality-report.md
+
+        if (( $(echo "$TEST_COVERAGE >= 70.0" | bc -l 2>/dev/null || echo "0") )) && [ "$LINT_STATUS" = "passed" ]; then
+          echo "✅ **Testing Gates: PASSED** - Code quality standards met" >> quality-report.md
+        else
+          echo "❌ **Testing Gates: FAILED** - Code quality issues detected" >> quality-report.md
         fi
         echo "" >> quality-report.md
 
