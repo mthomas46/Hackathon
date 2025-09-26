@@ -109,41 +109,14 @@ setup_common_middleware(app, service_name=SERVICE_NAME)
 # Register standardized health endpoints
 register_health_endpoints(app, SERVICE_NAME, SERVICE_VERSION)
 
-
-@app.get("/health", summary="Service Health Check", description="Returns the current health status of the Bedrock Proxy service including operational metrics and feature availability.", response_model=APIResponse, tags=["health"], responses={200: {"description": "Service is healthy and operational"}, 500: {"description": "Service health check failed"}})
-async def health():
-    """Enhanced health check endpoint with standardized response."""
-    try:
-        return create_success_response(
-            data={
-                "status": "healthy",
-                "service": SERVICE_NAME,
-                "version": SERVICE_VERSION,
-                "features": {
-                    "ai_proxy": True,
-                    "structured_responses": True,
-                    "template_processing": True,
-                    "stub_mode": True,
-                }
-            }
-        )
-    except Exception as e:
-        return create_error_response(
-            message=f"Health check failed: {str(e)}",
-            error_code="HEALTH_CHECK_FAILED",
-            details={"error": str(e)}
-        )
-
-
-class InvokeRequest(BaseModel):
-    """Request model for AI invoke endpoint with structured response generation.
-
-    Supports template-based response formatting for consistent AI outputs.
-    All fields are optional to allow flexible usage patterns.
-    """
-
-    model: Optional[str] = None
-    """AI model identifier (e.g., 'claude-3-sonnet', 'gpt-4')."""
+# Include presentation layer routes
+try:
+    from .presentation import api_router
+    app.include_router(api_router)
+except ImportError:
+    # Fallback: include routes directly if presentation layer not available
+    from .presentation.api.routes import router as api_router
+    app.include_router(api_router)
 
     region: Optional[str] = None
     """AWS region for model deployment (e.g., 'us-east-1')."""
@@ -256,27 +229,8 @@ class InvokeRequest(BaseModel):
             return v
 
 
-@app.post("/invoke", summary="AI Model Invocation", description="Process AI invoke requests with template-based response generation. Supports multiple output formats and template types for structured AI responses.", response_model=Dict[str, Any], tags=["ai", "invoke"], responses={200: {"description": "AI response generated successfully"}, 400: {"description": "Invalid request parameters"}, 500: {"description": "AI processing failed"}})
-async def invoke(req: InvokeRequest):
-    """Process AI invoke request with template-based response generation.
-
-    Accepts a prompt and optional template/format parameters to generate
-    structured AI responses without external API calls. Supports multiple
-    output formats and template types for consistent testing scenarios.
-    """
-    return process_invoke_request(
-        prompt=req.prompt,
-        template=req.template,
-        format=req.format,
-        title=req.title,
-        model=req.model,
-        region=req.region,
-        **(req.params or {}),  # Unpack additional parameters
-    )
-
-
 if __name__ == "__main__":
     """Run the Bedrock Proxy service directly."""
     import uvicorn
 
-    uvicorn.run(app, host="127.0.0.1", port=DEFAULT_PORT, log_level="info")
+    uvicorn.run(app, host=config.server.host, port=config.server.port)

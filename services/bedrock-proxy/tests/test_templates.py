@@ -45,7 +45,8 @@ class TestTemplateConstants:
             assert template_name in TEMPLATES
             template_config = TEMPLATES[template_name]
             assert "sections" in template_config
-            assert isinstance(template_config["sections"], dict)
+            # Sections should now be callable builder functions
+            assert callable(template_config["sections"])
 
 
 class TestDetectTemplateFromPrompt:
