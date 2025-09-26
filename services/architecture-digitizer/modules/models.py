@@ -5,7 +5,26 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, field_validator
 
 # Using standardized response system from shared.presentation.responses
-from services.shared.presentation.responses import APIResponse
+try:
+    from services.shared.presentation.responses import APIResponse
+except ImportError:
+    # Fallback for testing or when shared services are not available
+    from pydantic import BaseModel, Field
+    from typing import Any, Dict, List, Optional
+    from datetime import datetime, timezone
+
+    class APIResponse(BaseModel):
+        """Fallback APIResponse for when shared services are not available."""
+        success: bool = Field(..., description="Whether the operation was successful")
+        data: Optional[Any] = Field(None, description="Response data payload")
+        message: Optional[str] = Field(None, description="Human-readable message")
+        errors: Optional[List[Dict[str, Any]]] = Field(None, description="Error details if applicable")
+        request_id: Optional[str] = Field(None, description="Request correlation ID")
+        timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(),
+                              description="Response timestamp in ISO format")
+
+        def dict(self):
+            return self.model_dump()
 
 
 class ArchitectureComponent(BaseModel):
