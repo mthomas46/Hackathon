@@ -368,7 +368,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-static_dir = os.path.join(os.path.dirname(__file__), "static")
+static_dir = os.path.join(os.path.dirname(__file__), "presentation")
 
 # Setup standardized middleware and utilities
 setup_common_middleware(app, service_name=config.service_name)
