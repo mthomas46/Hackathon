@@ -2676,6 +2676,32 @@ async def analyze_pr_code_changes(changed_files: list) -> dict:
     return analysis
 
 
+def _analyze_commit_message_quality(message: str) -> tuple:
+    """Analyze the quality of a single commit message."""
+    if len(message) < 10:
+        return "poor", f"Commit message too short: '{message[:50]}...'"
+    elif len(message) > config.limits.max_message_length:
+        return "needs_improvement", f"Commit message too long: '{message[:50]}...'"
+    elif is_good_commit_message(message):
+        return "good", None
+    else:
+        return "needs_improvement", None
+
+def _analyze_commit_patterns(message: str) -> dict:
+    """Analyze patterns in a commit message."""
+    patterns = {
+        "conventional_commits": 0,
+        "has_issue_references": 0,
+    }
+
+    if is_conventional_commit(message):
+        patterns["conventional_commits"] = 1
+
+    if "#" in message or "issue" in message.lower():
+        patterns["has_issue_references"] = 1
+
+    return patterns
+
 def analyze_commit_messages(commits: list) -> dict:
     """Analyze commit messages for quality and consistency."""
     analysis = {
@@ -2698,41 +2724,56 @@ def analyze_commit_messages(commits: list) -> dict:
         message = commit.get("message", "").strip()
 
         # Analyze message quality
-        if len(message) < 10:
-            analysis["message_quality"]["poor_messages"] += 1
-            analysis["issues"].append(f"Commit message too short: '{message[:50]}...'")
-        elif len(message) > config.limits.max_message_length:
-            analysis["message_quality"]["needs_improvement"] += 1
-            analysis["issues"].append(f"Commit message too long: '{message[:50]}...'")
-        elif is_good_commit_message(message):
-            analysis["message_quality"]["good_messages"] += 1
-        else:
-            analysis["message_quality"]["needs_improvement"] += 1
+        quality, issue = _analyze_commit_message_quality(message)
+        analysis["message_quality"][f"{quality}_messages"] += 1
+        if issue:
+            analysis["issues"].append(issue)
 
-        # Check for conventional commits
-        if is_conventional_commit(message):
-            analysis["patterns"]["conventional_commits"] += 1
-
-        # Check for issue references
-        if "#" in message or "issue" in message.lower():
-            analysis["patterns"]["has_issue_references"] += 1
+        # Analyze patterns
+        patterns = _analyze_commit_patterns(message)
+        for pattern, count in patterns.items():
+            analysis["patterns"][pattern] += count
 
     return analysis
 
 
+def _matches_patterns(text: str, patterns: list) -> bool:
+    """Check if text matches any of the given patterns."""
+    return any(pattern in text for pattern in patterns)
+
+def _is_architecture_file(file_path: str) -> bool:
+    """Check if file is architecture-related."""
+    return _matches_patterns(file_path, ["architecture", "design", "structure"])
+
+def _is_dependency_file(file_path: str) -> bool:
+    """Check if file is dependency-related."""
+    return _matches_patterns(file_path, ["requirements", "setup.py", "package.json", "pom.xml"])
+
+def _is_configuration_file(file_path: str) -> bool:
+    """Check if file is configuration-related."""
+    return _matches_patterns(file_path, ["config", ".env", ".yaml", ".yml", ".json"])
+
+def _is_test_file(file_path: str) -> bool:
+    """Check if file is test-related."""
+    return _matches_patterns(file_path, ["test", "spec", "_test"])
+
+def _is_documentation_file(file_path: str) -> bool:
+    """Check if file is documentation-related."""
+    return _matches_patterns(file_path, ["readme", "docs", ".md", ".rst"])
+
 def _categorize_file_by_type(file_path: str) -> str:
     """Categorize a file by its type and purpose."""
     file_path_lower = file_path.lower()
-    
-    if any(pattern in file_path_lower for pattern in ["architecture", "design", "structure"]):
+
+    if _is_architecture_file(file_path_lower):
         return "architecture"
-    elif any(pattern in file_path_lower for pattern in ["requirements", "setup.py", "package.json", "pom.xml"]):
+    elif _is_dependency_file(file_path_lower):
         return "dependency"
-    elif any(pattern in file_path_lower for pattern in ["config", ".env", ".yaml", ".yml", ".json"]):
+    elif _is_configuration_file(file_path_lower):
         return "configuration"
-    elif any(pattern in file_path_lower for pattern in ["test", "spec", "_test"]):
+    elif _is_test_file(file_path_lower):
         return "test"
-    elif any(pattern in file_path_lower for pattern in ["readme", "docs", ".md", ".rst"]):
+    elif _is_documentation_file(file_path_lower):
         return "documentation"
     else:
         return "other"
