@@ -485,6 +485,119 @@ class QualityDegradationDetector:
 
         return recommendations[:6]  # Limit to 6 recommendations
 
+    def _validate_detection_input(
+        self,
+        document_id: str,
+        analysis_history: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Validate input parameters for quality degradation detection."""
+        if not self._initialize_detector():
+            return {
+                "error": "Quality degradation detection not available",
+                "message": "Required dependencies not installed or initialization failed",
+            }
+        return {}
+
+    def _extract_and_validate_metrics(
+        self,
+        analysis_history: List[Dict[str, Any]],
+        document_id: str,
+        start_time: float,
+    ) -> Dict[str, Any]:
+        """Extract quality metrics and validate data sufficiency."""
+        # Extract quality metrics from history
+        metrics_df = self._extract_quality_metrics(analysis_history)
+
+        if metrics_df.empty or len(metrics_df) < 3:
+            return {
+                "document_id": document_id,
+                "degradation_detected": False,
+                "severity_assessment": {"overall_severity": "insufficient_data"},
+                "analysis_period_days": 0,
+                "data_points": len(metrics_df),
+                "alerts": [],
+                "processing_time": time.time() - start_time,
+            }
+        return {"metrics_df": metrics_df}
+
+    def _perform_degradation_analysis(
+        self,
+        metrics_df,
+        baseline_period_days: int,
+        alert_threshold: float,
+    ) -> Dict[str, Any]:
+        """Perform comprehensive degradation analysis on metrics data."""
+        quality_scores = metrics_df["quality_score"].dropna()
+
+        # Analyze quality score trends
+        trend_analysis = self._calculate_trend_analysis(quality_scores, baseline_period_days)
+
+        # Analyze volatility
+        volatility_analysis = self._calculate_volatility_analysis(quality_scores)
+
+        # Detect degradation events
+        degradation_events = self._detect_degradation_events(quality_scores, -alert_threshold)
+
+        # Analyze finding trends
+        finding_counts = metrics_df["total_findings"].dropna()
+        finding_trend = (
+            self._calculate_trend_analysis(finding_counts, baseline_period_days)
+            if len(finding_counts) >= 3
+            else {"slope": 0.0}
+        )
+
+        # Assess overall degradation severity
+        severity_assessment = self._assess_degradation_severity(
+            trend_analysis, volatility_analysis, degradation_events, finding_trend
+        )
+
+        # Generate alerts if degradation detected
+        alerts = []
+        if severity_assessment["requires_attention"]:
+            alerts = self._generate_degradation_alerts(severity_assessment, trend_analysis)
+
+        return {
+            "trend_analysis": trend_analysis,
+            "volatility_analysis": volatility_analysis,
+            "degradation_events": degradation_events,
+            "finding_trend": finding_trend,
+            "severity_assessment": severity_assessment,
+            "alerts": alerts,
+        }
+
+    def _format_detection_results(
+        self,
+        document_id: str,
+        metrics_df,
+        analysis_results: Dict[str, Any],
+        baseline_period_days: int,
+        alert_threshold: float,
+        start_time: float,
+    ) -> Dict[str, Any]:
+        """Format and return final detection results."""
+        # Calculate analysis period
+        if len(metrics_df) > 0:
+            analysis_period = (metrics_df.index.max() - metrics_df.index.min()).days
+        else:
+            analysis_period = 0
+
+        return {
+            "document_id": document_id,
+            "degradation_detected": analysis_results["severity_assessment"]["requires_attention"],
+            "severity_assessment": analysis_results["severity_assessment"],
+            "trend_analysis": analysis_results["trend_analysis"],
+            "volatility_analysis": analysis_results["volatility_analysis"],
+            "degradation_events": analysis_results["degradation_events"],
+            "finding_trend": analysis_results["finding_trend"],
+            "analysis_period_days": analysis_period,
+            "data_points": len(metrics_df),
+            "baseline_period_days": baseline_period_days,
+            "alert_threshold": alert_threshold,
+            "alerts": analysis_results["alerts"],
+            "processing_time": time.time() - start_time,
+            "detection_timestamp": time.time(),
+        }
+
     async def detect_quality_degradation(
         self,
         document_id: str,
@@ -496,79 +609,30 @@ class QualityDegradationDetector:
 
         start_time = time.time()
 
-        if not self._initialize_detector():
-            return {
-                "error": "Quality degradation detection not available",
-                "message": "Required dependencies not installed or initialization failed",
-            }
+        # Validate input parameters
+        validation_result = self._validate_detection_input(document_id, analysis_history)
+        if "error" in validation_result:
+            return validation_result
 
         try:
-            # Extract quality metrics from history
-            metrics_df = self._extract_quality_metrics(analysis_history)
+            # Extract and validate quality metrics
+            metrics_result = self._extract_and_validate_metrics(
+                analysis_history, document_id, start_time
+            )
+            if "degradation_detected" in metrics_result:
+                return metrics_result
 
-            if metrics_df.empty or len(metrics_df) < 3:
-                return {
-                    "document_id": document_id,
-                    "degradation_detected": False,
-                    "severity_assessment": {"overall_severity": "insufficient_data"},
-                    "analysis_period_days": 0,
-                    "data_points": len(metrics_df),
-                    "alerts": [],
-                    "processing_time": time.time() - start_time,
-                }
+            metrics_df = metrics_result["metrics_df"]
 
-            # Analyze quality score trends
-            quality_scores = metrics_df["quality_score"].dropna()
-            trend_analysis = self._calculate_trend_analysis(quality_scores, baseline_period_days)
-
-            # Analyze volatility
-            volatility_analysis = self._calculate_volatility_analysis(quality_scores)
-
-            # Detect degradation events
-            degradation_events = self._detect_degradation_events(quality_scores, -alert_threshold)
-
-            # Analyze finding trends
-            finding_counts = metrics_df["total_findings"].dropna()
-            finding_trend = (
-                self._calculate_trend_analysis(finding_counts, baseline_period_days)
-                if len(finding_counts) >= 3
-                else {"slope": 0.0}
+            # Perform comprehensive degradation analysis
+            analysis_results = self._perform_degradation_analysis(
+                metrics_df, baseline_period_days, alert_threshold
             )
 
-            # Assess overall degradation severity
-            severity_assessment = self._assess_degradation_severity(
-                trend_analysis, volatility_analysis, degradation_events, finding_trend
+            # Format and return final results
+            return self._format_detection_results(
+                document_id, metrics_df, analysis_results, baseline_period_days, alert_threshold, start_time
             )
-
-            # Generate alerts if degradation detected
-            alerts = []
-            if severity_assessment["requires_attention"]:
-                alerts = self._generate_degradation_alerts(severity_assessment, trend_analysis)
-
-            # Calculate analysis period
-            if len(metrics_df) > 0:
-                analysis_period = (metrics_df.index.max() - metrics_df.index.min()).days
-            else:
-                analysis_period = 0
-
-            processing_time = time.time() - start_time
-
-            return {
-                "document_id": document_id,
-                "degradation_detected": severity_assessment["requires_attention"],
-                "severity_assessment": severity_assessment,
-                "trend_analysis": trend_analysis,
-                "volatility_analysis": volatility_analysis,
-                "degradation_events": degradation_events,
-                "finding_trend": finding_trend,
-                "analysis_period_days": analysis_period,
-                "data_points": len(metrics_df),
-                "baseline_period_days": baseline_period_days,
-                "alert_threshold": alert_threshold,
-                "alerts": alerts,
-                "processing_time": processing_time,
-                "detection_timestamp": time.time(),
-            }
 
         except Exception as e:
             logger.error(f"Quality degradation detection failed for document {document_id}: {e}")
