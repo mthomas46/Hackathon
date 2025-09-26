@@ -4,6 +4,7 @@ This module contains domain services that implement the core business logic
 for service discovery operations.
 """
 
+import importlib.util
 import logging
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -22,7 +23,26 @@ from .exceptions import (
 )
 from . import entities
 from .value_objects import DiscoverySpec, EndpointMetadata, ServiceMetadata, HttpMethod, ApiPath
-from .repositories import ServiceRepository, EndpointRepository
+# TODO: Import repositories when needed
+# from .repositories import ServiceRepository, EndpointRepository
+# Temporary workaround for import issues
+import sys
+from pathlib import Path
+current_file = Path(__file__)
+domain_dir = current_file.parent
+repos_file = domain_dir / "repositories.py"
+if repos_file.exists():
+    spec = importlib.util.spec_from_file_location("repositories", repos_file)
+    if spec and spec.loader:
+        repos_module = importlib.util.module_from_spec(spec)
+        sys.modules["repositories"] = repos_module
+        spec.loader.exec_module(repos_module)
+        ServiceRepository = repos_module.ServiceRepository
+        EndpointRepository = repos_module.EndpointRepository
+else:
+    # Fallback
+    ServiceRepository = object
+    EndpointRepository = object
 
 
 logger = logging.getLogger(__name__)

@@ -105,6 +105,12 @@ class DRYPrinciplesAnalyzer(BaseAnalyzer):
         for i, file_path in enumerate(python_files[:20]):  # Limit to first 20 files for performance
             try:
                 logger.debug(f"📄 Processing file {i+1}/20: {file_path.name}")
+
+                # Skip files that are too large (>1MB)
+                if file_path.stat().st_size > 1024 * 1024:
+                    logger.debug(f"⏭️ Skipping large file: {file_path.name} ({file_path.stat().st_size} bytes)")
+                    continue
+
                 content = file_path.read_text()
                 lines = [line.strip() for line in content.split('\n') if line.strip() and not line.strip().startswith('#')]
 
@@ -141,19 +147,23 @@ class DRYPrinciplesAnalyzer(BaseAnalyzer):
 
         for file_path in python_files[:10]:  # Limit for performance
             try:
+                # Skip files that are too large (>1MB)
+                if file_path.stat().st_size > 1024 * 1024:
+                    continue
+
                 content = file_path.read_text()
 
-                # Check for repetitive patterns
-                patterns = [
-                    (r'if.*:\s*return', 'Early returns in conditionals'),
-                    (r'for.*in.*:\s*if.*continue', 'Loop with continue patterns'),
-                    (r'try:\s*.*\s*except.*:', 'Try-except blocks'),
+                # Check for repetitive patterns using simple string counts
+                pattern_checks = [
+                    ('if ', 'Conditional statements'),
+                    ('for ', 'Loop statements'),
+                    ('try:', 'Exception handling'),
+                    ('return ', 'Return statements'),
                 ]
 
-                for pattern, description in patterns:
-                    import re
-                    matches = len(re.findall(pattern, content, re.MULTILINE | re.DOTALL))
-                    if matches > 5:  # Too many similar patterns
+                for pattern, description in pattern_checks:
+                    count = content.count(pattern)
+                    if count > 20:  # Too many similar patterns
                         issues_found += 1
                         pattern_score -= 5
 
@@ -172,22 +182,25 @@ class DRYPrinciplesAnalyzer(BaseAnalyzer):
 
         for file_path in python_files[:15]:  # Limit for performance
             try:
+                # Skip files that are too large (>1MB)
+                if file_path.stat().st_size > 1024 * 1024:
+                    continue
+
                 content = file_path.read_text()
                 total_files += 1
 
-                # Look for utility function usage indicators
+                # Look for utility function usage indicators using simple string checks
                 indicators = [
-                    'from.*utils import',
-                    'from.*helpers import',
-                    'from.*common import',
-                    'import.*utils',
-                    'import.*helpers',
-                    'import.*common',
+                    'from utils import',
+                    'from helpers import',
+                    'from common import',
+                    'import utils',
+                    'import helpers',
+                    'import common',
                 ]
 
                 for indicator in indicators:
-                    import re
-                    if re.search(indicator, content):
+                    if indicator in content:
                         utility_indicators += 1
                         break
 

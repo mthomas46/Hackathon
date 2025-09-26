@@ -6,18 +6,11 @@ from datetime import datetime, timezone
 import sys
 from pathlib import Path
 
-# Add project root to path - navigate up from test file location
-# tests/unit/test_domain_entities.py -> discovery-agent -> services -> project root
-current_dir = Path(__file__).parent  # tests/unit
-tests_dir = current_dir.parent       # tests
-service_dir = tests_dir.parent       # discovery-agent
-services_dir = service_dir.parent    # services
-project_root = services_dir.parent   # project root
-
+# Add project root to path for imports
+project_root = Path(__file__).parent.parent.parent.parent  # Go up to project root
 sys.path.insert(0, str(project_root))
-sys.path.insert(0, str(services_dir))
 
-from domain.entities import Service, Endpoint, DiscoveryResult
+from domain import Service, Endpoint, DiscoveryResult
 
 
 class TestEndpoint:

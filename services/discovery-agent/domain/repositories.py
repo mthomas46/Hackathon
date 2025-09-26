@@ -8,7 +8,20 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from uuid import uuid4
 
-from services.shared.domain.base_repository import BaseRepository, InMemoryRepository
+try:
+    from services.shared.domain.repositories.base_repository import BaseRepository, InMemoryRepository
+except ImportError:
+    # Fallback for test environments or different working directories
+    import sys
+    from pathlib import Path
+    current_dir = Path(__file__).parent
+    while current_dir.parent != current_dir:
+        shared_path = current_dir.parent / "shared" / "domain" / "repositories" / "base_repository.py"
+        if shared_path.exists():
+            sys.path.insert(0, str(shared_path.parent.parent.parent.parent))
+            break
+        current_dir = current_dir.parent
+    from services.shared.domain.repositories.base_repository import BaseRepository, InMemoryRepository
 from .entities import Service, Endpoint
 
 

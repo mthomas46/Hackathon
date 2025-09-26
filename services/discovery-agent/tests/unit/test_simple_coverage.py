@@ -1,7 +1,7 @@
 """Simple tests to improve test coverage for discovery-agent."""
 
 import pytest
-from domain.entities import Endpoint
+from domain import Endpoint
 
 
 class TestEndpointCoverage:
