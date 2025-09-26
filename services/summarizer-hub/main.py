@@ -638,7 +638,7 @@ class SimpleSummarizer:
         # This is a simplified approach - in practice, you'd use more sophisticated NLP
 
         # Look for conflicting version information
-        version_patterns = ["version", "v\d+", "\d+\.\d+", "release"]
+        version_patterns = ["version", r"v\d+", r"\d+\.\d+", "release"]
         version_mentions = {}
 
         for doc in documents:
