@@ -1,28 +1,61 @@
 # LLM Gateway Service
 
-<!--
-LLM Processing Metadata:
-- document_type: "service_documentation"
-- service_name: "llm_gateway"
-- port: 5055
-- key_concepts: ["ai_routing", "provider_management", "security_aware", "cost_optimization"]
-- architecture: "intelligent_routing"
-- processing_hints: "AI provider routing with security analysis and intelligent selection"
-- cross_references: ["../../ECOSYSTEM_MASTER_LIVING_DOCUMENT.md", "../secure-analyzer/", "../ollama/"]
-- integration_points: ["ollama", "openai", "anthropic", "bedrock", "grok", "secure_analyzer"]
--->
-
-**Navigation**: [Home](../../README.md) · [Architecture](../../docs/architecture/) · [Testing](../../docs/guides/TESTING_GUIDE.md) · [Services](../README_SERVICES.md)  
-**Tests**: [tests/unit/llm_gateway](../../tests/unit/llm_gateway)
-
-**Status**: ✅ Production Ready  
-**Port**: `5055` (External) → `5055` (Internal)  
-**Version**: `3.0.0`  
-**Last Updated**: September 18, 2025
+## Description
 
 The **LLM Gateway** is the **centralized AI orchestration hub** that provides secure, intelligent access to multiple Large Language Model providers with advanced routing, security analysis, and cost optimization. It serves as the unified AI service mesh that intelligently coordinates all AI operations across the ecosystem.
 
 **Core Mission**: Deliver secure, cost-effective, and performance-optimized access to diverse AI providers while ensuring content security, intelligent routing, and comprehensive operational visibility for all ecosystem AI operations.
+
+### Key Features & Capabilities
+
+#### Functionality
+
+**🔮 Intelligent AI Orchestration**
+- Unified API interface for all LLM providers (Ollama, OpenAI, Anthropic, AWS Bedrock, Grok)
+- Advanced routing based on content sensitivity, cost optimization, and performance metrics
+- Security-aware processing with automatic provider selection for sensitive content
+- Real-time provider health monitoring and failover capabilities
+
+**🛡️ Security & Compliance**
+- PII detection and automatic secure provider routing
+- Content filtering and security analysis integration
+- Enterprise-grade authentication and authorization
+- Audit trails and compliance logging for all AI interactions
+
+**💰 Cost Optimization**
+- Intelligent provider selection based on cost-efficiency
+- Budget management and usage tracking
+- Cost prediction and optimization recommendations
+- Multi-provider load balancing and resource allocation
+
+**📊 Operational Visibility**
+- Comprehensive metrics collection and monitoring
+- Performance analytics and usage statistics
+- Real-time health checks and alerting
+- Detailed logging and troubleshooting capabilities
+
+## Features
+
+### Core Capabilities
+
+**🤖 Multi-Provider Support**
+- OpenAI GPT models with advanced features
+- Anthropic Claude with safety-first approach
+- AWS Bedrock with enterprise security
+- Ollama for local model deployment
+- Grok for specialized AI interactions
+
+**🔄 Dynamic Routing**
+- Content-based provider selection
+- Cost-aware routing decisions
+- Security-driven provider prioritization
+- Performance-optimized load balancing
+
+**📈 Analytics & Monitoring**
+- Usage tracking and cost analysis
+- Performance metrics and latency monitoring
+- Error rate analysis and alerting
+- Provider health and availability tracking
 
 ## Requirements
 
@@ -54,7 +87,93 @@ BUDGET_LIMIT_PER_DAY=100.0
 - **Redis**: Caching and rate limiting (optional)
 - **PostgreSQL**: Metrics and usage tracking (optional)
 
-## Features
+## Installation
+
+### Local Development
+```bash
+cd services/llm-gateway
+pip install -r requirements.txt
+python main.py
+```
+
+### Docker Deployment
+```yaml
+# docker-compose.yml
+services:
+  llm-gateway:
+    image: llm-docs-ecosystem/llm-gateway:latest
+    ports:
+      - "5055:5055"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    depends_on:
+      - redis
+      - postgres
+```
+
+## Config
+
+### Service Configuration
+```yaml
+# config.yaml
+service:
+  name: llm-gateway
+  version: "3.0.0"
+  description: "LLM Gateway Service"
+
+providers:
+  openai:
+    enabled: true
+    api_key: ${OPENAI_API_KEY}
+    models: ["gpt-4", "gpt-3.5-turbo"]
+  anthropic:
+    enabled: true
+    api_key: ${ANTHROPIC_API_KEY}
+    models: ["claude-3-opus", "claude-3-sonnet"]
+  bedrock:
+    enabled: true
+    region: ${AWS_BEDROCK_REGION}
+    models: ["anthropic.claude-3-sonnet"]
+
+routing:
+  security_aware: true
+  cost_optimization: true
+  performance_priority: false
+
+monitoring:
+  metrics_enabled: true
+  health_checks: true
+  cost_tracking: true
+```
+
+## Ecosystem
+
+### 🔗 Comprehensive Service Integrations
+
+The LLM Gateway is fully integrated with **10+ ecosystem services**:
+
+**🤖 AI Provider Services**
+- **Ollama** (`:11434`): Local LLM deployment and inference
+- **Secure Analyzer** (`:5008`): Content security analysis and PII detection
+- **Bedrock Proxy** (`:5002`): AWS Bedrock AI model access
+
+**📊 Data & Analytics Services**
+- **Doc Store** (`:5005`): Document storage and retrieval
+- **Analysis Service** (`:5001`): Advanced document analysis
+- **Log Collector** (`:5006`): Centralized logging and monitoring
+
+**🔧 Infrastructure Services**
+- **Redis** (`:6379`): Caching and session management
+- **PostgreSQL** (`:5432`): Metrics and usage data persistence
+
+**🔄 Integration Patterns**
+- **Event-Driven**: Real-time event streaming for AI operations
+- **REST APIs**: Standardized HTTP interfaces for service communication
+- **Health Checks**: Automated service health monitoring and failover
+- **Load Balancing**: Intelligent request distribution across providers
+
+## Infrastructure
 
 ### Functionality
 
