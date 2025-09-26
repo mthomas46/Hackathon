@@ -194,32 +194,86 @@ except ImportError:
     data_browser = MockDataBrowser()
 
     def get_doc_store_summary():
+        """Get summary statistics for the document store service.
+
+        Returns:
+            dict: Summary containing total document count and other metrics.
+                 Currently returns placeholder data.
+        """
         return {"total_docs": 0}
 
     def get_prompt_store_summary():
+        """Get summary statistics for the prompt store service.
+
+        Returns:
+            dict: Summary containing total prompt count and usage metrics.
+                 Currently returns placeholder data.
+        """
         return {"total_prompts": 0}
 
     def analyze_log_patterns():
+        """Analyze log patterns for anomalies and insights.
+
+        Returns:
+            list: List of identified log patterns and anomalies.
+                 Currently returns empty list as placeholder.
+        """
         return []
 
     def fetch_log_stats_from_collector():
+        """Fetch log statistics from the log collector service.
+
+        Returns:
+            dict: Statistics about collected logs including counts and metrics.
+                 Currently returns placeholder data.
+        """
         return {"total_logs": 0}
 
     def fetch_logs_from_collector():
+        """Fetch recent logs from the log collector service.
+
+        Returns:
+            list: List of recent log entries from the collector service.
+                 Currently returns empty list as placeholder.
+        """
         return []
 
     def get_cached_logs_data():
+        """Get cached logs data for faster dashboard loading.
+
+        Returns:
+            list: Cached log data for dashboard display.
+                 Currently returns empty list as placeholder.
+        """
         return []
 
     def stream_logs():
+        """Stream logs in real-time for monitoring dashboard.
+
+        Returns:
+            list: Stream of log entries for real-time display.
+                 Currently returns empty list as placeholder.
+        """
         return []
 
     def get_orchestrator_summary():
+        """Get summary statistics for the orchestrator service.
+
+        Returns:
+            dict: Summary containing workflow counts and orchestrator metrics.
+                 Currently returns placeholder data.
+        """
         return {"total_workflows": 0}
 
     orchestrator_monitor = MockMonitor("orchestrator")
 
     def build_frontend_context():
+        """Build context data for frontend templates and API responses.
+
+        Returns:
+            dict: Context dictionary containing data for frontend rendering.
+                 Currently returns empty dict as placeholder.
+        """
         return {}
 
     def create_frontend_success_response(data):
