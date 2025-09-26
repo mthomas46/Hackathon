@@ -44,7 +44,7 @@ except ImportError:
     import sys
 
     sys.path.insert(0, os.path.dirname(__file__))
-    from modules.processor import process_invoke_request
+    from infrastructure.processor import process_invoke_request
 
 # ============================================================================
 # STANDARDIZED CONFIGURATION

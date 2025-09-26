@@ -1,7 +1,7 @@
 """Unit tests for bedrock proxy utility functions."""
 
 import pytest
-from modules.utils import sanitize_for_response, bullets_from_text
+from infrastructure.utils import sanitize_for_response, bullets_from_text
 
 
 class TestSanitizeForResponse:

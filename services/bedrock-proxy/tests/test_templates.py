@@ -1,7 +1,7 @@
 """Unit tests for bedrock proxy template functionality."""
 
 import pytest
-from modules.templates import (
+from infrastructure.templates import (
     detect_template_from_prompt,
     build_template_sections,
     generate_default_title,
