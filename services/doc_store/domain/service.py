@@ -7,7 +7,8 @@ import uuid
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Optional, TypeVar
 
-from services.shared.infrastructure.utilities.error_handling import ServiceException
+# Import domain exceptions - no infrastructure dependencies
+from .common.error_utils import DomainException, DomainServiceException
 from ..exceptions.domain_exceptions import (
     DocStoreException,
     DocumentNotFoundException,
