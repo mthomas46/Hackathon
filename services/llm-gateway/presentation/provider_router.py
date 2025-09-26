@@ -21,6 +21,34 @@ except ImportError:
     service_integrations = None
 
 
+async def _make_provider_request(
+    provider_config: Dict[str, Any], payload: Dict[str, Any], headers: Optional[Dict[str, str]] = None
+) -> Dict[str, Any]:
+    """Make HTTP request to LLM provider with standardized error handling.
+
+    DRY refactoring: Eliminates duplication of httpx.AsyncClient usage pattern
+    across 3 different provider methods. Reduces code duplication by ~12 lines.
+
+    Args:
+        provider_config: Provider configuration with timeout and endpoint
+        payload: Request payload to send
+        headers: Optional HTTP headers
+
+    Returns:
+        Parsed JSON response from provider
+
+    Raises:
+        httpx.HTTPStatusError: If provider returns error status
+        httpx.TimeoutException: If request times out
+    """
+    async with httpx.AsyncClient(timeout=provider_config["timeout"]) as client:
+        response = await client.post(
+            provider_config["endpoint"], json=payload, headers=headers
+        )
+        response.raise_for_status()
+        return response.json()
+
+
 class ProviderResponse:
     """Response from an LLM provider."""
 
@@ -238,10 +266,7 @@ class ProviderRouter:
 
         start_time = time.time()
 
-        async with httpx.AsyncClient(timeout=provider_config["timeout"]) as client:
-            response = await client.post(url, json=payload)
-            response.raise_for_status()
-            data = response.json()
+        data = await _make_provider_request(provider_config, payload)
 
         time.time() - start_time
 
@@ -274,12 +299,7 @@ class ProviderRouter:
             "temperature": getattr(request, "temperature", 0.7),
         }
 
-        async with httpx.AsyncClient(timeout=provider_config["timeout"]) as client:
-            response = await client.post(
-                provider_config["endpoint"], json=payload, headers=headers
-            )
-            response.raise_for_status()
-            data = response.json()
+        data = await _make_provider_request(provider_config, payload, headers=headers)
 
         choice = data["choices"][0]
         response_text = choice["message"]["content"]
@@ -318,12 +338,7 @@ class ProviderRouter:
             "messages": [{"role": "user", "content": user_prompt}],
         }
 
-        async with httpx.AsyncClient(timeout=provider_config["timeout"]) as client:
-            response = await client.post(
-                provider_config["endpoint"], json=payload, headers=headers
-            )
-            response.raise_for_status()
-            data = response.json()
+        data = await _make_provider_request(provider_config, payload, headers=headers)
 
         response_text = data["content"][0]["text"] if data.get("content") else ""
 
