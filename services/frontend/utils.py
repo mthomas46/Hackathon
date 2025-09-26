@@ -1,7 +1,7 @@
 
 from typing import Any, Dict, List
 
-from services.shared.html import render_list, render_table  # type: ignore
+from services.shared.presentation.templates.html import render_list, render_table  # type: ignore
 
 
 def render_index() -> str:
