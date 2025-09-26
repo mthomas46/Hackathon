@@ -12,8 +12,9 @@ from dataclasses import dataclass
 
 # Handle imports for both module and script execution
 try:
-    from ..config import AuditProfile, get_thresholds_for_profile
+    from config import AuditProfile, get_thresholds_for_profile
     from domain.entities.service_info import ServiceInfo
+    from .base_analyzer import BaseAnalyzer
 except ImportError:
     import sys
     from pathlib import Path
@@ -22,6 +23,7 @@ except ImportError:
 
     from config import AuditProfile
     from config.thresholds import get_thresholds_for_profile
+    from infrastructure.analyzers.base_analyzer import BaseAnalyzer
 
     # Create a simple ServiceInfo if models doesn't exist
     from dataclasses import dataclass
@@ -56,15 +58,17 @@ class PerformanceAnalysisResult:
     recommendations: List[str]
 
 
-class PerformanceAnalyzer:
+class PerformanceAnalyzer(BaseAnalyzer):
     """Analyzer for performance metrics and system resource usage"""
 
     def __init__(self, profile: AuditProfile):
-        self.profile = profile
-        self.thresholds = get_thresholds_for_profile(profile)
+        super().__init__(profile)
 
-    async def analyze(self, service: ServiceInfo) -> PerformanceAnalysisResult:
+    async def analyze(self, service: ServiceInfo, full_audit: bool = False) -> PerformanceAnalysisResult:
         """Perform complete performance analysis"""
+        # Set full audit mode
+        self.set_full_audit_mode(full_audit)
+
         # Collect system metrics during analysis
         system_metrics = await self._collect_system_metrics()
 

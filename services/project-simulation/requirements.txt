@@ -36,7 +36,7 @@ python-dotenv>=1.0.0
 
 # Prometheus metrics and monitoring
 prometheus-client>=0.20.0
-psutil>=5.9.0
+psutil>=5.9.0  # System monitoring for audit framework
 
 # =============================================================================
 # CLI AND USER INTERFACE

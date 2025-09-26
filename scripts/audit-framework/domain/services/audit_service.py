@@ -33,7 +33,8 @@ class AuditService:
         self,
         service: ServiceInfo,
         profile: AuditProfile,
-        analyzer_providers: Dict[str, Any]
+        analyzer_providers: Dict[str, Any],
+        full_audit: bool = False
     ) -> AnalysisResult:
         """Execute a complete audit of a service.
 
@@ -58,13 +59,19 @@ class AuditService:
             results = {}
             for dimension, analyzer in analyzer_providers.items():
                 logger.debug(f"Analyzing {dimension} for service {service.name}")
-                results[dimension] = await analyzer.analyze(service)
+                results[dimension] = await analyzer.analyze(service, full_audit)
 
             # Calculate overall scores
             overall_score = self._calculate_overall_score(results, profile)
             dimensions = self._extract_dimension_scores(results)
+
+            # Apply strict mode penalties for low-scoring dimensions
+            if hasattr(profile, 'name') and profile.name == 'strict':
+                overall_score = self._apply_strict_mode_penalties(overall_score, dimensions)
+
             recommendations = self._aggregate_recommendations(results)
             critical_issues = self._aggregate_critical_issues(results)
+            detailed_issues = self._aggregate_detailed_issues(results)
 
             # Create analysis result
             result = AnalysisResult(
@@ -75,8 +82,12 @@ class AuditService:
                 code_quality=results.get('code_quality', {}),
                 performance=results.get('performance', {}),
                 maintainability=results.get('maintainability', {}),
+                documentation_quality=results.get('documentation_quality', {}),
+                dry_principles=results.get('dry_principles', {}),
+                kiss_principles=results.get('kiss_principles', {}),
                 recommendations=recommendations,
                 critical_issues=critical_issues,
+                detailed_issues=detailed_issues,
                 metadata=self._create_metadata(service, profile)
             )
 
@@ -131,14 +142,48 @@ class AuditService:
 
         return round(max(0.0, min(100.0, final_score)), 2)
 
+    def _apply_strict_mode_penalties(self, overall_score: float, dimensions: Dict[str, float]) -> float:
+        """Apply additional penalties in strict mode for low-scoring dimensions."""
+        penalty = 0.0
+
+        # Heavy penalties for poor performance in key quality areas
+        if 'dry_principles' in dimensions and dimensions['dry_principles'] < 70:
+            penalty += (70 - dimensions['dry_principles']) * 0.8  # Up to 24 point penalty
+
+        if 'documentation_quality' in dimensions and dimensions['documentation_quality'] < 75:
+            penalty += (75 - dimensions['documentation_quality']) * 0.6  # Up to 18 point penalty
+
+        if 'kiss_principles' in dimensions and dimensions['kiss_principles'] < 85:
+            penalty += (85 - dimensions['kiss_principles']) * 0.4  # Up to 12 point penalty
+
+        # Additional penalty for multiple failing dimensions
+        failing_dimensions = sum(1 for score in dimensions.values() if score < 70)
+        if failing_dimensions >= 2:
+            penalty += failing_dimensions * 3  # Additional 3 points per failing dimension
+
+        logger.debug(f"Strict mode penalties applied: {penalty:.1f} points")
+
+        return max(0.0, overall_score - penalty)
+
     def _extract_dimension_scores(self, results: Dict[str, Any]) -> Dict[str, float]:
         """Extract dimension scores from analysis results."""
         scores = {}
+
+        # Extract scores from main analyzers
         for dimension, result in results.items():
             if hasattr(result, 'score'):
                 scores[dimension] = result.score
             else:
                 scores[dimension] = 0.0
+
+        # Extract sub-dimensions from architecture analyzer
+        if 'architecture' in results and hasattr(results['architecture'], '__dict__'):
+            arch_result = results['architecture']
+            # Extract the detailed scores from architecture analysis
+            scores['documentation_quality'] = getattr(arch_result, 'documentation_quality', 100.0)
+            scores['dry_principles'] = getattr(arch_result, 'dry_principles', 100.0)
+            scores['kiss_principles'] = getattr(arch_result, 'kiss_principles', 100.0)
+
         return scores
 
     def _aggregate_recommendations(self, results: Dict[str, Any]) -> List[str]:
@@ -182,6 +227,20 @@ class AuditService:
                         })
 
         return critical_issues
+
+    def _aggregate_detailed_issues(self, results: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Aggregate detailed issues with location information from all dimensions."""
+        detailed_issues = []
+        for dimension, result in results.items():
+            if hasattr(result, 'detailed_issues') and result.detailed_issues:
+                for issue in result.detailed_issues:
+                    if isinstance(issue, dict):
+                        issue_copy = issue.copy()
+                        if 'dimension' not in issue_copy:
+                            issue_copy['dimension'] = dimension
+                        detailed_issues.append(issue_copy)
+
+        return detailed_issues
 
     def _create_metadata(self, service: ServiceInfo, profile: AuditProfile) -> Dict[str, Any]:
         """Create metadata for the audit result."""

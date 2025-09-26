@@ -111,13 +111,21 @@ def get_default_thresholds() -> Dict[str, Any]:
             'max_coupling_score': 20
         },
 
-        # Architecture thresholds
+        # Architecture thresholds - STRICT DDD ENFORCEMENT
         'architecture': {
             'require_ddd_layers': True,
-            'require_clean_architecture': False,
-            'max_architecture_violations': 5,
+            'require_clean_architecture': True,
+            'max_architecture_violations': 2,  # Reduced from 5 - more strict
             'require_routes_directory': True,
-            'require_domain_separation': True
+            'require_domain_separation': True,
+            'require_strict_layer_separation': True,  # NEW: Enforce strict layer boundaries
+            'forbid_modules_directory_business_logic': True,  # NEW: Penalize business logic in modules/
+            'require_ddd_directory_migration': True,  # NEW: Force migration from modules/ to DDD layers
+            'max_legacy_module_files': 0,  # NEW: No files allowed in legacy modules/ with business logic
+            'enforce_domain_layer_completeness': True,  # NEW: Must have entities, services, repositories
+            'enforce_application_layer_patterns': True,  # NEW: Must use CQRS/command patterns
+            'forbid_presentation_business_logic': True,  # NEW: No business logic in controllers/routes
+            'require_infrastructure_abstractions': True,  # NEW: Infrastructure must use domain interfaces
         },
 
         # CI/CD specific thresholds
@@ -146,15 +154,27 @@ def get_thresholds_for_profile(profile: AuditProfile) -> Dict[str, Any]:
         base_thresholds['file_limits']['max_lines_per_file'] = 1500
 
     elif profile.intensity.name == 'STRICT':
-        # Stricter thresholds for maximum quality
-        base_thresholds['dimensions']['architecture']['min_score'] = 75.0
-        base_thresholds['dimensions']['code_quality']['min_score'] = 80.0
-        base_thresholds['dimensions']['maintainability']['min_score'] = 75.0
+        # STRICT DDD ENFORCEMENT - Maximum quality with mandatory DDD compliance
+        base_thresholds['dimensions']['architecture']['min_score'] = 85.0  # Increased from 75.0
+        base_thresholds['dimensions']['code_quality']['min_score'] = 85.0  # Increased from 80.0
+        base_thresholds['dimensions']['maintainability']['min_score'] = 80.0
         base_thresholds['complexity']['max_cyclomatic_complexity'] = 8
-        base_thresholds['testing']['min_test_coverage'] = 85.0
-        base_thresholds['documentation']['min_docstring_coverage'] = 90.0
-        base_thresholds['file_limits']['max_lines_per_file'] = 800
-        base_thresholds['critical_issues']['max_critical_issues'] = 1
+        base_thresholds['testing']['min_test_coverage'] = 90.0  # Increased from 85.0
+        base_thresholds['documentation']['min_docstring_coverage'] = 95.0  # Increased from 90.0
+        base_thresholds['file_limits']['max_lines_per_file'] = 600  # Decreased from 800
+        base_thresholds['critical_issues']['max_critical_issues'] = 0  # Zero tolerance
+        # STRICT DDD REQUIREMENTS
+        base_thresholds['architecture']['require_ddd_layers'] = True
+        base_thresholds['architecture']['require_clean_architecture'] = True
+        base_thresholds['architecture']['require_strict_layer_separation'] = True
+        base_thresholds['architecture']['forbid_modules_directory_business_logic'] = True
+        base_thresholds['architecture']['require_ddd_directory_migration'] = True
+        base_thresholds['architecture']['max_legacy_module_files'] = 0
+        base_thresholds['architecture']['enforce_domain_layer_completeness'] = True
+        base_thresholds['architecture']['enforce_application_layer_patterns'] = True
+        base_thresholds['architecture']['forbid_presentation_business_logic'] = True
+        base_thresholds['architecture']['require_infrastructure_abstractions'] = True
+        base_thresholds['architecture']['max_architecture_violations'] = 0  # Zero violations allowed
 
     elif profile.intensity.name == 'CI_FAST':
         # Fast CI checks - focus on critical issues only

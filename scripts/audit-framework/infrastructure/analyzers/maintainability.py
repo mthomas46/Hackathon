@@ -12,8 +12,9 @@ from dataclasses import dataclass
 
 # Handle imports for both module and script execution
 try:
-    from ..config import AuditProfile, get_thresholds_for_profile
+    from config import AuditProfile, get_thresholds_for_profile
     from domain.entities.service_info import ServiceInfo
+    from .base_analyzer import BaseAnalyzer
 except ImportError:
     import sys
     from pathlib import Path
@@ -22,6 +23,7 @@ except ImportError:
 
     from config import AuditProfile
     from config.thresholds import get_thresholds_for_profile
+    from infrastructure.analyzers.base_analyzer import BaseAnalyzer
 
     # Create a simple ServiceInfo if models doesn't exist
     from dataclasses import dataclass
@@ -63,15 +65,16 @@ class MaintainabilityAnalysisResult:
     architecture_quality_score: float = 0.0
 
 
-class MaintainabilityAnalyzer:
+class MaintainabilityAnalyzer(BaseAnalyzer):
     """Analyzer for maintainability metrics and best practices"""
 
     def __init__(self, profile: AuditProfile):
-        self.profile = profile
-        self.thresholds = get_thresholds_for_profile(profile)
+        super().__init__(profile)
 
-    async def analyze(self, service: ServiceInfo) -> MaintainabilityAnalysisResult:
+    async def analyze(self, service: ServiceInfo, full_audit: bool = False) -> MaintainabilityAnalysisResult:
         """Perform complete maintainability analysis"""
+        # Set full audit mode
+        self.set_full_audit_mode(full_audit)
         scores = {
             'documentation': await self._check_documentation(service),
             'organization': await self._check_organization(service),

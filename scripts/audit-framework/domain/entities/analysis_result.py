@@ -37,8 +37,12 @@ class AnalysisResult:
     code_quality: Dict[str, Any]
     performance: Dict[str, Any]
     maintainability: Dict[str, Any]
+    documentation_quality: Dict[str, Any] = field(default_factory=dict)
+    dry_principles: Dict[str, Any] = field(default_factory=dict)
+    kiss_principles: Dict[str, Any] = field(default_factory=dict)
     recommendations: List[str] = field(default_factory=list)
     critical_issues: List[Dict[str, Any]] = field(default_factory=list)
+    detailed_issues: List[Dict[str, Any]] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     analysis_timestamp: datetime = field(default_factory=datetime.now)
 
@@ -145,8 +149,12 @@ class AnalysisResult:
             "code_quality": self.code_quality,
             "performance": self.performance,
             "maintainability": self.maintainability,
+            "documentation_quality": self.documentation_quality,
+            "dry_principles": self.dry_principles,
+            "kiss_principles": self.kiss_principles,
             "recommendations": self.recommendations,
             "critical_issues": self.critical_issues,
+            "detailed_issues": self.detailed_issues,
             "critical_issues_count": self.get_critical_issue_count(),
             "estimated_effort_days": self.get_estimated_effort_days(),
             "analysis_timestamp": self.analysis_timestamp.isoformat(),
@@ -167,8 +175,12 @@ class AnalysisResult:
             code_quality=data["code_quality"],
             performance=data["performance"],
             maintainability=data["maintainability"],
+            documentation_quality=data.get("documentation_quality", {}),
+            dry_principles=data.get("dry_principles", {}),
+            kiss_principles=data.get("kiss_principles", {}),
             recommendations=data.get("recommendations", []),
             critical_issues=data.get("critical_issues", []),
+            detailed_issues=data.get("detailed_issues", []),
             metadata=data.get("metadata", {}),
             analysis_timestamp=analysis_timestamp,
         )

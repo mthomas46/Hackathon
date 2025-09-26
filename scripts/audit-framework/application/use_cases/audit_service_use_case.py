@@ -43,7 +43,8 @@ class AuditServiceUseCase:
     async def execute(
         self,
         service_info: ServiceInfo,
-        audit_profile: AuditProfile
+        audit_profile: AuditProfile,
+        full_audit: bool = False
     ) -> AnalysisResult:
         """Execute the audit service use case.
 
@@ -68,7 +69,8 @@ class AuditServiceUseCase:
             result = await self.audit_service.audit_service(
                 service=service_info,
                 profile=audit_profile,
-                analyzer_providers=self.analyzer_providers
+                analyzer_providers=self.analyzer_providers,
+                full_audit=full_audit
             )
 
             # Post-processing
