@@ -8,58 +8,86 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import httpx
-
-# Import from shared infrastructure
+# DRY refactoring: Use shared ServiceClients instead of local HTTP client implementations
+# httpx import moved to fallback section only when ServiceClients unavailable
+# This eliminates HTTP client duplication and standardizes resilience patterns across the ecosystem
 sys.path.append(
     str(Path(__file__).parent.parent.parent.parent.parent / "services" / "shared")
 )
 try:
-    from integrations.clients import ServiceClients
+    from infrastructure.external.clients.clients import ServiceClients
 except ImportError:
-    # Create a mock ServiceClients for testing
-    class MockServiceClients:
-        pass
-
-    ServiceClients = MockServiceClients
+    # Fallback: try alternative import path
+    try:
+        from integrations.clients import ServiceClients
+    except ImportError:
+        # Create a mock ServiceClients for testing
+        class MockServiceClients:
+            pass
+        ServiceClients = MockServiceClients
 
 from ...domain.value_objects import ECOSYSTEM_SERVICES, ServiceEndpoint, ServiceHealth
 from ..logging import get_simulation_logger
 
 
 class EcosystemServiceClient:
-    """Base client for ecosystem service communication."""
+    """Base client for ecosystem service communication.
+
+    DRY refactoring: Uses shared ServiceClients for standardized HTTP communication
+    with enterprise-grade resilience patterns (circuit breaker, retries, correlation IDs).
+    """
 
     def __init__(self, service_name: str, endpoint: ServiceEndpoint):
-        """Initialize service client."""
+        """Initialize service client with shared ServiceClients."""
         self.service_name = service_name
         self.endpoint = endpoint
         self.logger = get_simulation_logger()
-        self._client = httpx.AsyncClient(
-            timeout=endpoint.timeout_seconds, base_url=endpoint.base_url
-        )
+
+        # DRY refactoring: Use shared ServiceClients instead of direct httpx.AsyncClient
+        # Eliminates HTTP client duplication and adds resilience patterns
+        if ServiceClients and not isinstance(ServiceClients, MockServiceClients):
+            self._client = ServiceClients(timeout=endpoint.timeout_seconds)
+            self._use_shared_client = True
+        else:
+            # Fallback for testing/development environments
+            import httpx
+            self._client = httpx.AsyncClient(
+                timeout=endpoint.timeout_seconds, base_url=endpoint.base_url
+            )
+            self._use_shared_client = False
 
     async def health_check(self) -> ServiceHealth:
-        """Check service health."""
+        """Check service health using standardized client."""
         try:
             health_url = (
                 f"{self.endpoint.base_url}{self.endpoint.health_check_endpoint}"
             )
-            response = await self._client.get(health_url)
 
-            if response.status_code == 200:
-                return ServiceHealth.HEALTHY
+            if self._use_shared_client:
+                # DRY refactoring: Use ServiceClients.get_json for standardized resilience
+                result = await self._client.get_json(health_url)
+                return ServiceHealth.HEALTHY  # If we get here, the request succeeded
             else:
-                return ServiceHealth.UNHEALTHY
+                # Fallback: direct httpx call
+                response = await self._client.get(health_url)
+                if response.status_code == 200:
+                    return ServiceHealth.HEALTHY
+                else:
+                    return ServiceHealth.UNHEALTHY
         except Exception:
             return ServiceHealth.UNKNOWN
 
     async def get_json(self, path: str) -> Dict[str, Any]:
-        """Make GET request and return JSON response."""
+        """Make GET request and return JSON response using standardized client."""
         try:
-            response = await self._client.get(path)
-            response.raise_for_status()
-            return response.json()
+            if self._use_shared_client:
+                # DRY refactoring: Use ServiceClients.get_json for standardized resilience
+                return await self._client.get_json(path)
+            else:
+                # Fallback: direct httpx call
+                response = await self._client.get(path)
+                response.raise_for_status()
+                return response.json()
         except httpx.HTTPStatusError as e:
             self.logger.error(
                 f"HTTP error from {self.service_name}",
@@ -74,11 +102,16 @@ class EcosystemServiceClient:
             raise
 
     async def post_json(self, path: str, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Make POST request with JSON data."""
+        """Make POST request with JSON data using standardized client."""
         try:
-            response = await self._client.post(path, json=data)
-            response.raise_for_status()
-            return response.json()
+            if self._use_shared_client:
+                # DRY refactoring: Use ServiceClients.post_json for standardized resilience
+                return await self._client.post_json(path, data)
+            else:
+                # Fallback: direct httpx call
+                response = await self._client.post(path, json=data)
+                response.raise_for_status()
+                return response.json()
         except httpx.HTTPStatusError as e:
             self.logger.error(
                 f"HTTP error from {self.service_name}",
