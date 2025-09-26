@@ -2,7 +2,7 @@
 
 import pytest
 from unittest.mock import patch
-from modules.processor import process_invoke_request
+from infrastructure.processor import process_invoke_request
 
 
 class TestProcessInvokeRequest:

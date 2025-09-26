@@ -1,7 +1,7 @@
 """Unit tests for bedrock proxy validation functions."""
 
 import pytest
-from modules.validation import (
+from infrastructure.validation_utils.validation import (
     ValidationError,
     validate_prompt,
     validate_template,

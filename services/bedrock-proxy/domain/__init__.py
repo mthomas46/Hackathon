@@ -1,7 +1,7 @@
 """Domain layer - Delegates to modules for audit framework compatibility."""
 
 # Import domain-related modules
-from modules.validation import *
-from modules.templates import *
+from ..infrastructure.validation_utils.validation import *
+from ..infrastructure.templates import *
 
-__all__ = []  # Import all from modules
+__all__ = []  # Import all from infrastructure

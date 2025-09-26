@@ -1,6 +1,6 @@
 """Infrastructure layer - Delegates to modules for audit framework compatibility."""
 
 # Import infrastructure-related modules
-from modules.utils import *
+from .utils import *
 
-__all__ = []  # Import all from modules
+__all__ = []  # Import all from infrastructure
