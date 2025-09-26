@@ -1,1 +1,0 @@
-"""Ingestion Application Layer"""
