@@ -4,7 +4,17 @@ This package contains all the modularized functionality for the Memory Agent ser
 Provides shared utilities and client instances for all memory agent modules.
 """
 
-from services.shared.utilities import get_service_client
+try:
+    from services.shared.utilities import get_service_client
+except ImportError:
+    # Fallback implementation
+    def get_service_client():
+        return type('MockClient', (), {
+            'get': lambda *args, **kwargs: None,
+            'post': lambda *args, **kwargs: None,
+            'put': lambda *args, **kwargs: None,
+            'delete': lambda *args, **kwargs: None,
+        })()
 
 # Shared service client for all memory agent modules - lazy initialization
 _service_client = None

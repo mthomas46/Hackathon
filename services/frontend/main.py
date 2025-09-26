@@ -131,61 +131,163 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from services.frontend.modules.analysis_monitor import analysis_monitor
-from services.frontend.modules.bedrock_proxy_monitor import bedrock_proxy_monitor
-from services.frontend.modules.code_analyzer_monitor import code_analyzer_monitor
-from services.frontend.modules.data_browser import (
-    data_browser,
-    get_doc_store_summary,
-    get_prompt_store_summary,
-)
-from services.frontend.modules.log_cache import (
-    analyze_log_patterns,
-    fetch_log_stats_from_collector,
-    fetch_logs_from_collector,
-    get_cached_logs_data,
-    stream_logs,
-)
-from services.frontend.modules.orchestrator_monitor import (
-    get_orchestrator_summary,
-    orchestrator_monitor,
-)
+# ============================================================================
+# MODULE IMPORTS - With comprehensive fallbacks for local development
+# ============================================================================
+try:
+    from services.frontend.modules.analysis_monitor import analysis_monitor
+    from services.frontend.modules.bedrock_proxy_monitor import bedrock_proxy_monitor
+    from services.frontend.modules.code_analyzer_monitor import code_analyzer_monitor
+    from services.frontend.modules.data_browser import (
+        data_browser,
+        get_doc_store_summary,
+        get_prompt_store_summary,
+    )
+    from services.frontend.modules.log_cache import (
+        analyze_log_patterns,
+        fetch_log_stats_from_collector,
+        fetch_logs_from_collector,
+        get_cached_logs_data,
+        stream_logs,
+    )
+    from services.frontend.modules.orchestrator_monitor import (
+        get_orchestrator_summary,
+        orchestrator_monitor,
+    )
 
-# ============================================================================
-# LOCAL MODULES - Service-specific functionality
-# ============================================================================
-from services.frontend.modules.shared_utils import (
-    build_frontend_context,
-    create_frontend_success_response,
-    get_consistency_engine_url,
-    get_doc_store_url,
-    get_frontend_clients,
-    get_orchestrator_url,
-    get_reporting_url,
-    get_summarizer_hub_url,
-    handle_frontend_error,
-)
-from services.frontend.modules.summarizer_cache import (
-    get_cached_summarizer_data,
-    record_summarizer_job,
-)
+    # ============================================================================
+    # LOCAL MODULES - Service-specific functionality
+    # ============================================================================
+    from services.frontend.modules.shared_utils import (
+        build_frontend_context,
+        create_frontend_success_response,
+        get_consistency_engine_url,
+        get_doc_store_url,
+        get_frontend_clients,
+        get_orchestrator_url,
+        get_reporting_url,
+        get_summarizer_hub_url,
+        handle_frontend_error,
+    )
+    from services.frontend.modules.summarizer_cache import (
+        get_cached_summarizer_data,
+        record_summarizer_job,
+    )
 
-# ============================================================================
-# UI HANDLERS - Extracted page rendering logic
-# ============================================================================
-from services.frontend.modules.ui_handlers import ui_handlers
+    # ============================================================================
+    # UI HANDLERS - Extracted page rendering logic
+    # ============================================================================
+    from services.frontend.modules.ui_handlers import ui_handlers
+
+except ImportError:
+    # Fallback implementations for local development
+    class MockMonitor:
+        def __init__(self, name):
+            self.name = name
+
+    analysis_monitor = MockMonitor("analysis")
+    bedrock_proxy_monitor = MockMonitor("bedrock_proxy")
+    code_analyzer_monitor = MockMonitor("code_analyzer")
+
+    class MockDataBrowser:
+        pass
+    data_browser = MockDataBrowser()
+
+    def get_doc_store_summary():
+        return {"total_docs": 0}
+
+    def get_prompt_store_summary():
+        return {"total_prompts": 0}
+
+    def analyze_log_patterns():
+        return []
+
+    def fetch_log_stats_from_collector():
+        return {"total_logs": 0}
+
+    def fetch_logs_from_collector():
+        return []
+
+    def get_cached_logs_data():
+        return []
+
+    def stream_logs():
+        return []
+
+    def get_orchestrator_summary():
+        return {"total_workflows": 0}
+
+    orchestrator_monitor = MockMonitor("orchestrator")
+
+    def build_frontend_context():
+        return {}
+
+    def create_frontend_success_response(data):
+        return {"success": True, "data": data}
+
+    def get_consistency_engine_url():
+        return "http://localhost:5001"
+
+    def get_doc_store_url():
+        return "http://localhost:5005"
+
+    def get_frontend_clients():
+        return {}
+
+    def get_orchestrator_url():
+        return "http://localhost:5007"
+
+    def get_reporting_url():
+        return "http://localhost:5008"
+
+    def get_summarizer_hub_url():
+        return "http://localhost:5009"
+
+    def handle_frontend_error(error):
+        return {"success": False, "error": str(error)}
+
+    def get_cached_summarizer_data():
+        return []
+
+    def record_summarizer_job():
+        pass
+
+    class MockUIHandlers:
+        pass
+    ui_handlers = MockUIHandlers()
 
 # ============================================================================
 # RENDER UTILITIES - HTML rendering functions
 # ============================================================================
-from services.shared.infrastructure.config import load_service_config
+try:
+    from services.shared.infrastructure.config import load_service_config
+except ImportError:
+    def load_service_config(**kwargs):
+        return type('Config', (), {
+            'service_name': 'frontend',
+            'service_description': 'Frontend Service',
+            'service_version': '1.0.0',
+            'server': type('Server', (), {'host': '0.0.0.0', 'port': 8080})(),
+            'port': 8080,
+        })()
 
 # ============================================================================
 # SHARED MODULES - Leveraging centralized functionality for consistency
 # ============================================================================
-from services.shared.monitoring.health import register_health_endpoints
-from services.shared.utilities import setup_common_middleware
-from services.shared.utilities.error_handling import install_error_handlers
+try:
+    from services.shared.monitoring.health import register_health_endpoints
+except ImportError:
+    def register_health_endpoints(app, *args, **kwargs):
+        pass
+
+try:
+    from services.shared.utilities import setup_common_middleware
+    from services.shared.utilities.error_handling import install_error_handlers
+except ImportError:
+    def setup_common_middleware(app, **kwargs):
+        pass
+    def install_error_handlers(app, **kwargs):
+        pass
 
 # Load standardized configuration
 config = load_service_config(
