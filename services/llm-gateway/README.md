@@ -20,15 +20,45 @@ LLM Processing Metadata:
 **Version**: `3.0.0`  
 **Last Updated**: September 18, 2025
 
-## Description
-
 The **LLM Gateway** is the **centralized AI orchestration hub** that provides secure, intelligent access to multiple Large Language Model providers with advanced routing, security analysis, and cost optimization. It serves as the unified AI service mesh that intelligently coordinates all AI operations across the ecosystem.
 
 **Core Mission**: Deliver secure, cost-effective, and performance-optimized access to diverse AI providers while ensuring content security, intelligent routing, and comprehensive operational visibility for all ecosystem AI operations.
 
+## Requirements
+
+### Environment Variables
+```bash
+# Core Configuration
+LLM_GATEWAY_PORT=5055
+LLM_GATEWAY_HOST=0.0.0.0
+
+# Provider API Keys
+OPENAI_API_KEY=your_openai_key
+ANTHROPIC_API_KEY=your_anthropic_key
+AWS_BEDROCK_REGION=us-east-1
+
+# Security & Routing
+SECURE_ANALYZER_URL=http://localhost:5008
+OLLAMA_BASE_URL=http://localhost:11434
+
+# Cost Management
+COST_OPTIMIZATION_ENABLED=true
+BUDGET_LIMIT_PER_DAY=100.0
+```
+
+### Dependencies
+- **Python 3.9+**: Core runtime environment
+- **FastAPI**: High-performance web framework
+- **httpx**: Async HTTP client for provider APIs
+- **pydantic**: Data validation and serialization
+- **Redis**: Caching and rate limiting (optional)
+- **PostgreSQL**: Metrics and usage tracking (optional)
+
 ## Features
 
-### **🔮 Intelligent AI Orchestration**
+### Functionality
+
+#### **🔮 Intelligent AI Orchestration**
 - **Unified API**: Single interface for all LLM providers (Ollama, OpenAI, Anthropic, AWS Bedrock, Grok)
 - **Intelligent Routing**: Advanced routing based on content sensitivity, cost optimization, and performance metrics
 - **Security-Aware Processing**: Automatic provider selection for sensitive content with PII and security analysis
@@ -169,6 +199,82 @@ def select_optimal_provider(content, requirements):
                        │  └─────────────┘ │
                        └──────────────────┘
 ```
+
+## Config
+
+### Service Configuration
+```yaml
+# config.yaml
+service:
+  name: llm-gateway
+  version: "3.0.0"
+  description: "LLM Gateway Service"
+
+server:
+  host: "0.0.0.0"
+  port: 5055
+
+providers:
+  openai:
+    enabled: true
+    api_key: ${OPENAI_API_KEY}
+    models: ["gpt-4", "gpt-3.5-turbo"]
+
+  anthropic:
+    enabled: true
+    api_key: ${ANTHROPIC_API_KEY}
+    models: ["claude-3-sonnet", "claude-3-haiku"]
+
+  bedrock:
+    enabled: true
+    region: ${AWS_BEDROCK_REGION}
+    models: ["anthropic.claude-3-sonnet-20240229-v1:0"]
+
+  ollama:
+    enabled: true
+    base_url: ${OLLAMA_BASE_URL}
+    models: ["llama2", "codellama"]
+
+routing:
+  security_first: true
+  cost_optimization: true
+  performance_priority: false
+
+caching:
+  enabled: true
+  ttl_seconds: 3600
+  redis_url: ${REDIS_URL}
+
+monitoring:
+  metrics_enabled: true
+  prometheus_port: 9090
+```
+
+## Infrastructure
+
+### Docker Configuration
+```yaml
+# docker-compose.yml
+services:
+  llm-gateway:
+    image: llm-docs-ecosystem/llm-gateway:latest
+    ports:
+      - "5055:5055"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - AWS_BEDROCK_REGION=${AWS_BEDROCK_REGION}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - REDIS_URL=${REDIS_URL}
+    depends_on:
+      - redis
+      - secure-analyzer
+```
+
+### Production Deployment
+- **Kubernetes**: Helm chart available in `/infrastructure/helm/llm-gateway/`
+- **Docker Swarm**: Stack configuration in `/infrastructure/docker-swarm/`
+- **AWS ECS**: Task definitions in `/infrastructure/aws/`
 
 ## API Endpoints
 

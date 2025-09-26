@@ -1,7 +1,7 @@
-"""Analysis Service - Streamlined FastAPI Application.
+"""Log Collector Service - Centralized Logging Solution.
 
-A comprehensive analysis service for documentation quality assessment,
-semantic analysis, trend detection, and automated remediation.
+A comprehensive logging and monitoring service for centralized log aggregation,
+analysis, alerting, and operational visibility across the LLM Documentation Ecosystem.
 """
 
 import os

@@ -61,79 +61,98 @@ def analyze_js_file(lines: list) -> dict:
                 issues["long_methods"].append(
                     f"{current_function} ({function_lines} lines)"
                 )
+def _extract_function_name_js(line: str, line_index: int) -> str:
+    """Extract function name from JavaScript function definition."""
+    if "function " in line:
+        return line.split("function ")[1].split("(")[0]
+    return f"anonymous_function_{line_index}"
+
+
+def _is_js_function_definition(line: str) -> bool:
+    """Check if line contains a JavaScript function definition."""
+    return ("function " in line or "=> " in line or
+            ("const " in line and " = (" in line))
+
+
+def _check_js_complexity(line: str, current_function: str, line_index: int, issues: dict):
+    """Check for complex JavaScript code patterns."""
+    if (any(keyword in line for keyword in ["if", "for", "while"]) and
+        line.count("&&") + line.count("||") > 2):
+        issues["complex_functions"].append(f"{current_function} (line {line_index+1})")
+
+
 def analyze_js_file(lines: list) -> dict:
     """Analyze JavaScript/TypeScript file for common issues."""
     issues = {"complex_functions": [], "long_methods": []}
-
     current_function = None
     function_lines = 0
     brace_count = 0
 
     for i, line in enumerate(lines):
         # Track function definitions
-        if "function " in line or "=> " in line or "const " in line and " = (" in line:
+        if _is_js_function_definition(line):
             if current_function and function_lines > 40:
-                issues["long_methods"].append(
-                    f"{current_function} ({function_lines} lines)"
-                )
+                issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
 
-            # Extract function name
-            if "function " in line:
-                current_function = line.split("function ")[1].split("(")[0]
-            else:
-                current_function = f"anonymous_function_{i}"
+            current_function = _extract_function_name_js(line, i)
             function_lines = 0
+            brace_count = 0
 
         if current_function:
             function_lines += 1
             brace_count += line.count("{") - line.count("}")
 
-            # Check for complexity
-            if (
-                any(keyword in line for keyword in ["if", "for", "while"])
-                and line.count("&&") + line.count("||") > 2
-            ):
-                issues["complex_functions"].append(f"{current_function} (line {i+1})")
+            _check_js_complexity(line, current_function, i, issues)
 
             # End of function
             if brace_count == 0 and function_lines > 5:
                 if function_lines > 40:
-                    issues["long_methods"].append(
-                        f"{current_function} ({function_lines} lines)"
-                    )
+                    issues["long_methods"].append(f"{current_function} ({function_lines} lines)")
                 current_function = None
                 function_lines = 0
 
     return issues
 
 
+def _extract_method_name_java(line: str, line_index: int) -> str:
+    """Extract method name from Java method definition."""
+    method_start = line.find("(")
+    if method_start == -1:
+        return f"method_{line_index}"
+
+    method_name_start = line.rfind(" ", 0, method_start)
+    if method_name_start != -1:
+        return line[method_name_start:method_start].strip()
+    return f"method_{line_index}"
+
+
+def _is_java_method_definition(line: str) -> bool:
+    """Check if line contains a Java method definition."""
+    return (any(modifier in line for modifier in ["public ", "private ", "protected "]) and
+            "(" in line and ")" in line)
+
+
+def _check_java_complexity(line: str, current_method: str, line_index: int, issues: dict):
+    """Check for complex Java code patterns."""
+    if (any(keyword in line for keyword in ["if", "for", "while", "switch"]) and
+        line.count("&&") + line.count("||") > 2):
+        issues["complex_functions"].append(f"{current_method} (line {line_index+1})")
+
+
 def analyze_java_file(lines: list) -> dict:
     """Analyze Java file for common issues."""
     issues = {"complex_functions": [], "long_methods": []}
-
     current_method = None
     method_lines = 0
     brace_count = 0
 
     for i, line in enumerate(lines):
         # Track method definitions
-        if (
-            any(modifier in line for modifier in ["public ", "private ", "protected "])
-            and "(" in line
-            and ")" in line
-        ):
+        if _is_java_method_definition(line):
             if current_method and method_lines > 50:
-                issues["long_methods"].append(
-                    f"{current_method} ({method_lines} lines)"
-                )
+                issues["long_methods"].append(f"{current_method} ({method_lines} lines)")
 
-            # Extract method name
-            method_start = line.find("(")
-            method_name_start = line.rfind(" ", 0, method_start)
-            if method_name_start != -1:
-                current_method = line[method_name_start:method_start].strip()
-            else:
-                current_method = f"method_{i}"
+            current_method = _extract_method_name_java(line, i)
             method_lines = 0
             brace_count = 0
 
@@ -141,19 +160,12 @@ def analyze_java_file(lines: list) -> dict:
             method_lines += 1
             brace_count += line.count("{") - line.count("}")
 
-            # Check for complexity
-            if (
-                any(keyword in line for keyword in ["if", "for", "while", "switch"])
-                and line.count("&&") + line.count("||") > 2
-            ):
-                issues["complex_functions"].append(f"{current_method} (line {i+1})")
+            _check_java_complexity(line, current_method, i, issues)
 
             # End of method
             if brace_count == 0 and method_lines > 5:
                 if method_lines > 50:
-                    issues["long_methods"].append(
-                        f"{current_method} ({method_lines} lines)"
-                    )
+                    issues["long_methods"].append(f"{current_method} ({method_lines} lines)")
                 current_method = None
                 method_lines = 0
 
