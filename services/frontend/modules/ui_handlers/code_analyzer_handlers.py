@@ -450,21 +450,24 @@ class CodeAnalyzerUIHandlers:
 # 
 #             html += '</div>';
 
-            // Analysis types breakdown
+            // Analysis types breakdown - temporarily disabled due to syntax issues
+            // TODO: Fix JavaScript syntax in embedded template
+            /*
             if (stats.analysis_types) {
                 html += '<h4>Analysis Types</h4><div class="metric-grid">';
 
                 Object.entries(stats.analysis_types).forEach(([type, count]) => {
                     html += `
                         <div class="metric-item">
-                            <div class="metric-label">{{type}</div>
-                            <div class="metric-value">{{count}</div>
+                            <div class="metric-label">{{type}}</div>
+                            <div class="metric-value">{{count}}</div>
                         </div>
                     `;
                 });
 
                 html += '</div>';
             }
+            */
 
             document.getElementById('summary-container').innerHTML = html;
         }
