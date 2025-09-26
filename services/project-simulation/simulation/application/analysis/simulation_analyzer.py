@@ -672,50 +672,69 @@ class SimulationAnalyzer:
         """Generate Markdown version of the recommendations report."""
         md_lines = []
 
-        md_lines.append("# 📋 Simulation Recommendations Report")
-        md_lines.append("")
-        md_lines.append(f"**Simulation ID:** {report_data['simulation_id']}")
-        md_lines.append(f"**Generated:** {report_data['timestamp']}")
-        md_lines.append(f"**Documents Analyzed:** {report_data['documents_analyzed']}")
-        md_lines.append("")
+        # Header section
+        md_lines.extend(self._generate_report_header_md(report_data))
 
         # Summary section
-        summary = report_data["summary"]
-        md_lines.append("## 📊 Summary")
-        md_lines.append("")
-        md_lines.append(
-            f"- **Total Recommendations:** {summary['total_recommendations']}"
-        )
-        md_lines.append(
-            f"- **Recommendation Types:** {', '.join(summary['recommendation_types'])}"
-        )
-        md_lines.append("")
-
-        # Priority breakdown
-        priority = summary["priority_breakdown"]
-        md_lines.append("### Priority Breakdown")
-        md_lines.append("")
-        md_lines.append(f"- 🔴 **High Priority:** {priority['high']}")
-        md_lines.append(f"- 🟡 **Medium Priority:** {priority['medium']}")
-        md_lines.append(f"- 🟢 **Low Priority:** {priority['low']}")
-        md_lines.append("")
+        md_lines.extend(self._generate_summary_section_md(report_data))
 
         # Recommendations section
-        md_lines.append("## 💡 Recommendations")
-        md_lines.append("")
+        md_lines.extend(self._generate_recommendations_section_md(report_data))
+
+        return "\n".join(md_lines)
+
+    def _generate_report_header_md(self, report_data: Dict[str, Any]) -> List[str]:
+        """Generate the markdown report header."""
+        return [
+            "# 📋 Simulation Recommendations Report",
+            "",
+            f"**Simulation ID:** {report_data['simulation_id']}",
+            f"**Generated:** {report_data['timestamp']}",
+            f"**Documents Analyzed:** {report_data['documents_analyzed']}",
+            "",
+        ]
+
+    def _generate_summary_section_md(self, report_data: Dict[str, Any]) -> List[str]:
+        """Generate the summary section of the markdown report."""
+        md_lines = ["## 📊 Summary", ""]
+        summary = report_data["summary"]
+
+        md_lines.extend([
+            f"- **Total Recommendations:** {summary['total_recommendations']}",
+            f"- **Recommendation Types:** {', '.join(summary['recommendation_types'])}",
+            "",
+            "### Priority Breakdown",
+            "",
+        ])
+
+        priority = summary["priority_breakdown"]
+        md_lines.extend([
+            f"- 🔴 **High Priority:** {priority['high']}",
+            f"- 🟡 **Medium Priority:** {priority['medium']}",
+            f"- 🟢 **Low Priority:** {priority['low']}",
+            "",
+        ])
+
+        return md_lines
+
+    def _generate_recommendations_section_md(self, report_data: Dict[str, Any]) -> List[str]:
+        """Generate the recommendations section of the markdown report."""
+        md_lines = ["## 💡 Recommendations", ""]
 
         for i, rec in enumerate(report_data["recommendations"], 1):
             priority_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(
                 rec.get("priority", "medium"), "🟡"
             )
-            md_lines.append(f"### {i}. {priority_emoji} {rec['description']}")
-            md_lines.append("")
-            md_lines.append(f"**Type:** {rec.get('type', 'unknown').title()}")
-            md_lines.append(f"**Priority:** {rec.get('priority', 'medium').title()}")
-            md_lines.append(f"**Rationale:** {rec.get('rationale', 'N/A')}")
-            md_lines.append(f"**Impact:** {rec.get('expected_impact', 'N/A')}")
-            md_lines.append(f"**Effort:** {rec.get('effort_level', 'medium').title()}")
-            md_lines.append("")
+            md_lines.extend([
+                f"### {i}. {priority_emoji} {rec['description']}",
+                "",
+                f"**Type:** {rec.get('type', 'unknown').title()}",
+                f"**Priority:** {rec.get('priority', 'medium').title()}",
+                f"**Rationale:** {rec.get('rationale', 'N/A')}",
+                f"**Impact:** {rec.get('expected_impact', 'N/A')}",
+                f"**Effort:** {rec.get('effort_level', 'medium').title()}",
+                "",
+            ])
 
             if rec.get("affected_documents"):
                 md_lines.append("**Affected Documents:**")
@@ -727,10 +746,9 @@ class SimulationAnalyzer:
                 md_lines.append(f"**Tags:** {', '.join(rec['tags'])}")
                 md_lines.append("")
 
-            md_lines.append("---")
-            md_lines.append("")
+            md_lines.extend(["---", ""])
 
-        return "\n".join(md_lines)
+        return md_lines
 
     async def _save_to_doc_store(self, document: Dict[str, Any]) -> None:
         """Save document to doc-store."""
@@ -1327,55 +1345,101 @@ class SimulationAnalyzer:
                 f"Generating comprehensive summary report for simulation {simulation_id}"
             )
 
-            # Step 1: Get recommendations from summarizer-hub
-            recommendations_report = (
-                await self._get_recommendations_report_from_summarizer_hub(
-                    simulation_id, documents
-                )
+            # Gather all required data sources
+            report_data = await self._gather_report_data_sources(
+                simulation_id, documents, timeline
             )
 
-            # Step 2: Get analysis report from analysis-service
-            analysis_report = await self._get_analysis_report_from_analysis_service(
-                simulation_id, documents
+            # Generate comprehensive report
+            comprehensive_report = await self._generate_comprehensive_report(
+                simulation_id, report_data, documents
             )
 
-            # Step 3: Generate timeline placement if timeline provided
-            timeline_placement = None
-            if timeline:
-                timeline_placement = await self.place_documents_on_timeline(
-                    simulation_id, documents, timeline
-                )
-
-            # Step 4: Combine all reports into comprehensive summary
-            comprehensive_report = await self._combine_reports_into_summary(
-                simulation_id,
-                recommendations_report,
-                analysis_report,
-                timeline_placement,
-                documents,
+            # Store and return result
+            return await self._finalize_comprehensive_report(
+                simulation_id, comprehensive_report, documents
             )
-
-            # Step 5: Store the comprehensive report
-            await self._store_comprehensive_summary_report(
-                simulation_id, comprehensive_report
-            )
-
-            return {
-                "simulation_id": simulation_id,
-                "report_generated": True,
-                "comprehensive_report_id": comprehensive_report.get("report_id"),
-                "sections_included": list(comprehensive_report.keys()),
-                "total_documents": len(documents),
-                "processing_timestamp": datetime.now().isoformat(),
-            }
 
         except Exception as e:
-            print(f"Error generating comprehensive summary report: {e}")
-            return {
-                "simulation_id": simulation_id,
-                "error": str(e),
-                "report_generated": False,
-            }
+            return self._handle_report_generation_error(simulation_id, e)
+
+    async def _gather_report_data_sources(
+        self,
+        simulation_id: str,
+        documents: List[Dict[str, Any]],
+        timeline: Dict[str, Any] = None,
+    ) -> Dict[str, Any]:
+        """Gather all data sources needed for report generation."""
+        return {
+            "recommendations": await self._get_recommendations_report_from_summarizer_hub(
+                simulation_id, documents
+            ),
+            "analysis": await self._get_analysis_report_from_analysis_service(
+                simulation_id, documents
+            ),
+            "timeline_placement": await self._get_timeline_placement_if_available(
+                simulation_id, documents, timeline
+            ),
+        }
+
+    async def _get_timeline_placement_if_available(
+        self,
+        simulation_id: str,
+        documents: List[Dict[str, Any]],
+        timeline: Dict[str, Any] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Get timeline placement data if timeline is provided."""
+        if timeline:
+            return await self.place_documents_on_timeline(
+                simulation_id, documents, timeline
+            )
+        return None
+
+    async def _generate_comprehensive_report(
+        self,
+        simulation_id: str,
+        report_data: Dict[str, Any],
+        documents: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Generate the comprehensive report from gathered data."""
+        return await self._combine_reports_into_summary(
+            simulation_id,
+            report_data["recommendations"],
+            report_data["analysis"],
+            report_data["timeline_placement"],
+            documents,
+        )
+
+    async def _finalize_comprehensive_report(
+        self,
+        simulation_id: str,
+        comprehensive_report: Dict[str, Any],
+        documents: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """Store report and return final result."""
+        await self._store_comprehensive_summary_report(
+            simulation_id, comprehensive_report
+        )
+
+        return {
+            "simulation_id": simulation_id,
+            "report_generated": True,
+            "comprehensive_report_id": comprehensive_report.get("report_id"),
+            "sections_included": list(comprehensive_report.keys()),
+            "total_documents": len(documents),
+            "processing_timestamp": datetime.now().isoformat(),
+        }
+
+    def _handle_report_generation_error(
+        self, simulation_id: str, error: Exception
+    ) -> Dict[str, Any]:
+        """Handle errors during report generation."""
+        print(f"Error generating comprehensive summary report: {error}")
+        return {
+            "simulation_id": simulation_id,
+            "error": str(error),
+            "report_generated": False,
+        }
 
     async def _get_recommendations_report_from_summarizer_hub(
         self, simulation_id: str, documents: List[Dict[str, Any]]
