@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 from ..value_objects.request_id import RequestId
+from .base_entity import BaseEntity
 
 
 @dataclass
@@ -16,17 +17,10 @@ class AIResponse:
     model_used: str
     tokens_used: Optional[int] = None
     finish_reason: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
     processing_time_ms: Optional[int] = None
     cost_estimate: Optional[float] = None
-    created_at: datetime = None
-
-    def __post_init__(self):
-        """Initialize defaults."""
-        if self.created_at is None:
-            self.created_at = datetime.now()
-        if self.metadata is None:
-            self.metadata = {}
+    metadata: Optional[Dict[str, Any]] = None
+    created_at: Optional[datetime] = None
 
     def validate(self) -> None:
         """Validate the AI response."""
@@ -50,10 +44,9 @@ class AIResponse:
             'model_used': self.model_used,
             'tokens_used': self.tokens_used,
             'finish_reason': self.finish_reason,
-            'metadata': self.metadata,
             'processing_time_ms': self.processing_time_ms,
             'cost_estimate': self.cost_estimate,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            **self.to_dict_common()
         }
 
     @classmethod
@@ -65,10 +58,9 @@ class AIResponse:
             model_used=data['model_used'],
             tokens_used=data.get('tokens_used'),
             finish_reason=data.get('finish_reason'),
-            metadata=data.get('metadata', {}),
             processing_time_ms=data.get('processing_time_ms'),
             cost_estimate=data.get('cost_estimate'),
-            created_at=datetime.fromisoformat(data['created_at']) if data.get('created_at') else None
+            **cls.from_dict_common(data)
         )
 
     def is_successful(self) -> bool:

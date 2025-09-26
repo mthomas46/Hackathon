@@ -18,11 +18,17 @@ class TestModelName:
 
     def test_model_name_validation(self):
         """Test model name validation."""
+        # Empty string should raise ValueError
         with pytest.raises(ValueError):
-            ModelName("")  # Empty name
+            ModelName("")
 
+        # Whitespace-only should raise ValueError
         with pytest.raises(ValueError):
-            ModelName("a" * 101)  # Too long
+            ModelName("   ")
+
+        # Valid model name should work
+        model = ModelName("gpt-4")
+        assert str(model) == "gpt-4"
 
 
 class TestRequestId:
@@ -50,18 +56,17 @@ class TestAIRequest:
             id=RequestId.generate(),
             model=ModelName("gpt-4"),
             prompt="Test prompt",
-            temperature=0.7
+            template="summary"
         )
         assert request.prompt == "Test prompt"
-        assert request.temperature == 0.7
+        assert request.template == "summary"
 
     def test_ai_request_validation(self):
         """Test AI request validation."""
         request = AIRequest(
             id=RequestId.generate(),
             model=ModelName("gpt-4"),
-            prompt="",
-            temperature=0.7
+            prompt=""
         )
         with pytest.raises(ValueError):
             request.validate()  # Empty prompt should fail
@@ -73,10 +78,9 @@ class TestAIResponse:
     def test_ai_response_creation(self):
         """Test creating AI response."""
         response = AIResponse(
-            id=RequestId.generate(),
             request_id=RequestId.generate(),
-            model=ModelName("gpt-4"),
             content="Test response",
+            model_used="gpt-4",
             tokens_used=10
         )
         assert response.content == "Test response"
@@ -89,7 +93,6 @@ class TestAIModel:
     def test_ai_model_creation(self):
         """Test creating AI model."""
         model = AIModel(
-            id=RequestId.generate(),
             name=ModelName("gpt-4"),
             provider="openai",
             max_tokens=8192
