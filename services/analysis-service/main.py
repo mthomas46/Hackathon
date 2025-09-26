@@ -43,6 +43,7 @@ except ImportError:
 
 # Import modular API routers
 from presentation.api import api_router
+from presentation.routes.health import router as health_router
 
 # Constants
 SERVICE_NAME = "analysis-service"
@@ -98,6 +99,7 @@ setup_common_middleware(app, service_name=SERVICE_NAME)
 
 # Include API routers
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(health_router)
 
 # Additional endpoints that might not fit into routers yet
 @app.get("/findings")
@@ -124,10 +126,6 @@ async def generate_reports(request: dict):
     """Generate various types of reports."""
     return create_success_response({"report_id": "report_123", "status": "generated"})
 
-@app.get("/integration/health")
-async def check_integration_health():
-    """Check integration health with other services."""
-    return create_success_response({"status": "healthy", "services": ["doc-store", "llm-gateway"]})
 
 
 @app.on_event("startup")

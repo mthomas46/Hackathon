@@ -19,7 +19,8 @@ from .entities import Endpoint, Service, DiscoveryResult
 
 # Import value objects
 from .value_objects import DiscoverySpec, EndpointMetadata, ServiceMetadata
-from .repositories import ServiceRepository, InMemoryServiceRepository
+# TODO: Import repositories when needed
+# from .repositories import ServiceRepository, InMemoryServiceRepository
 from .services import DiscoveryService, EndpointAnalyzer
 from .exceptions import (
     DiscoveryError, ServiceDiscoveryError, InvalidOpenApiSpecError,
@@ -35,9 +36,6 @@ __all__ = [
 
     # Value Objects
     "DiscoverySpec", "EndpointMetadata", "ServiceMetadata",
-
-    # Repositories
-    "ServiceRepository", "InMemoryServiceRepository",
 
     # Services
     "DiscoveryService", "EndpointAnalyzer",
