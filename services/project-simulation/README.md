@@ -4,6 +4,50 @@
 
 The **Project Simulation Service** is a comprehensive demo system that showcases the entire LLM Documentation Ecosystem through realistic software development project simulation. Built following **Domain Driven Design (DDD)** principles with **maximal ecosystem integration**, it demonstrates how AI-powered microservices can revolutionize software development workflows.
 
+## Key Features & Capabilities
+
+### 🎭 Comprehensive Project Simulation
+- **Realistic Scenarios**: End-to-end software development project simulation
+- **Team Dynamics**: Multi-role team simulation with realistic interactions
+- **Timeline Management**: Sophisticated project timeline and milestone tracking
+- **Risk Simulation**: Intelligent risk assessment and mitigation planning
+
+### 🤖 AI-Powered Content Generation
+- **Document Synthesis**: AI-generated project documentation and artifacts
+- **Code Generation**: Automated code structure and implementation generation
+- **Quality Assurance**: AI-driven testing and validation frameworks
+- **Progress Tracking**: Intelligent progress monitoring and reporting
+
+### 📊 Analytics & Reporting
+- **Performance Metrics**: Comprehensive project performance analytics
+- **Quality Assessment**: Automated code quality and documentation analysis
+- **Risk Analysis**: Real-time risk assessment and mitigation strategies
+- **Trend Analysis**: Project trend identification and forecasting
+
+### 🔗 Ecosystem Integration
+- **Service Orchestration**: Seamless integration with ecosystem services
+- **Real-time Synchronization**: Live data synchronization across services
+- **Event-driven Architecture**: Event-based communication and coordination
+- **API-first Design**: RESTful APIs with comprehensive documentation
+
+## Requirements
+
+### 🔧 System Requirements
+- **Python**: 3.9+ with comprehensive async support
+- **Memory**: 2GB+ RAM for simulation processing
+- **Storage**: 1GB+ disk space for generated content
+- **Network**: Stable connectivity for ecosystem integration
+
+### 🎯 Service Dependencies
+| Service | Purpose | Integration | Required |
+|---------|---------|-------------|----------|
+| **Doc Store** | Document storage and retrieval | Core data persistence | ✅ |
+| **Mock Data Generator** | AI-powered content generation | Document synthesis | ✅ |
+| **LLM Gateway** | AI model coordination | Content intelligence | ✅ |
+| **Orchestrator** | Workflow orchestration | Process coordination | ✅ |
+| **Analysis Service** | Quality assessment | Content analysis | Optional |
+| **Log Collector** | Event logging | Activity monitoring | Optional |
+
 ## Architecture
 
 ### DDD Bounded Contexts
@@ -39,50 +83,93 @@ The **Project Simulation Service** is a comprehensive demo system that showcases
     └── infrastructure/          # Test execution & reporting
 ```
 
-## Key Design Decisions
+## Infrastructure
 
-### 1. Document Generation via Mock Data Generator (DRY Principle)
+### 🐳 Docker Deployment
+- **Containerized Services**: Full Docker containerization with multi-stage builds
+- **Docker Compose**: Orchestrated multi-service deployment and testing
+- **Volume Management**: Persistent data storage and configuration management
+- **Network Configuration**: Service mesh networking with load balancing
 
-**Decision**: Instead of creating a separate content bounded context, leverage the existing `mock-data-generator` service for all document generation needs.
+### ☸️ Kubernetes Support
+- **Helm Charts**: Production-ready Helm deployment templates
+- **Horizontal Scaling**: Auto-scaling based on load and resource utilization
+- **ConfigMaps/Secrets**: Secure configuration and credential management
+- **Health Checks**: Comprehensive readiness and liveness probes
 
-**Rationale**:
-- **Existing Capability**: `mock-data-generator` already supports 20+ document types with LLM integration
-- **DRY Compliance**: Avoids duplicating document generation functionality
-- **Proven Architecture**: Production-ready service with comprehensive error handling
-- **Ecosystem Integration**: Seamless integration with `llm_gateway`, `doc_store`, `prompt_store`
+### 🔧 CI/CD Integration
+- **Automated Testing**: Comprehensive test suites with coverage reporting
+- **Build Pipelines**: Multi-stage build pipelines with artifact management
+- **Deployment Automation**: Blue-green and canary deployment strategies
+- **Monitoring Integration**: Real-time deployment monitoring and alerting
 
-**Enhanced Features Added**:
-- ✅ **10 New Document Types**: PROJECT_REQUIREMENTS, ARCHITECTURE_DIAGRAM, USER_STORY, etc.
-- ✅ **5 New Endpoints**: `/simulation/project-docs`, `/simulation/timeline-events`, etc.
-- ✅ **Context Awareness**: Project-aware generation with team member integration
-- ✅ **Timeline Support**: Phase-based and timeline-aware content generation
+## Ecosystem Integration
 
-### 2. Domain Driven Design (DDD)
+### 🎯 Core Ecosystem Services
+- **Doc Store**: Primary document repository and content management
+- **Mock Data Generator**: AI-powered content generation and synthesis
+- **LLM Gateway**: Foundation model access and coordination
+- **Orchestrator**: Complex workflow orchestration and coordination
+- **Analysis Service**: Intelligent content analysis and quality assessment
 
-**Applied Patterns**:
-- **Bounded Contexts**: Clear separation of simulation, integration, analytics, presentation
-- **Aggregates**: Project, Timeline, Team as consistency boundaries
-- **Domain Events**: Cross-bounded context communication
-- **Value Objects**: Immutable domain concepts
-- **Repository Pattern**: Abstract data access
-- **Application Services**: Use case orchestration
+### 🔗 Integration Patterns
+- **Event-Driven Communication**: Asynchronous event processing and handling
+- **RESTful APIs**: Comprehensive REST API interfaces with OpenAPI documentation
+- **Service Mesh**: Istio-based service mesh for advanced traffic management
+- **Monitoring Integration**: Prometheus metrics and ELK stack logging
 
-### 3. REST API with HATEOAS
+### 📊 Data Flow Architecture
+- **Content Generation**: Mock Data Generator → Doc Store → Analysis Service
+- **Quality Assessment**: Analysis Service → Orchestrator → Reporting
+- **Event Processing**: All services → Log Collector → Analytics
+- **User Interaction**: Frontend → Orchestrator → Individual services
 
-**API Design**:
-- **Resource-Based**: `/api/v1/simulations/{id}`, `/api/v1/simulations/{id}/events`
-- **HATEOAS**: Hypermedia links for discoverable navigation
-- **HTTP Semantics**: Proper methods, status codes, and headers
-- **Versioned**: `/api/v1/` prefix with backward compatibility
+## Configuration
 
-### 4. Maximal Ecosystem Integration
+### Project Configuration
+```yaml
+# config/project_template.yaml
+project:
+  name: "E-commerce Platform"
+  type: "web_application"
+  team_size: 5
+  duration_weeks: 8
+  complexity: "medium"
 
-**21+ Services Integrated**:
-- **Core Documentation**: `doc_store`, `prompt_store`, `analysis_service`, `llm_gateway`
-- **Development Tools**: `source_agent`, `code_analyzer`, `github_mcp`, `bedrock_proxy`
-- **Content & Communication**: `summarizer_hub`, `notification_service`, `frontend`
-- **Infrastructure**: `orchestrator`, `discovery_agent`, `log_collector`, `redis`
-- **Specialized**: `architecture_digitizer`, `interpreter`, `memory_agent`, `secure_analyzer`
+team:
+  - name: "Alice Johnson"
+    role: "technical_lead"
+    expertise: "backend"
+  - name: "Bob Smith"
+    role: "developer"
+    expertise: "frontend"
+
+timeline:
+  - name: "planning"
+    duration_days: 7
+    deliverables: ["requirements", "architecture"]
+  - name: "design"
+    duration_days: 10
+    deliverables: ["technical_design", "user_stories"]
+```
+
+### Service Integration
+```yaml
+# config/services.yaml
+services:
+  doc_store:
+    url: "http://doc_store:5010"
+    timeout: 30
+    retries: 3
+  llm_gateway:
+    url: "http://llm-gateway:5055"
+    timeout: 60
+    retries: 2
+  orchestrator:
+    url: "http://orchestrator:5000"
+    timeout: 30
+    retries: 3
+```
 
 ## Getting Started
 
@@ -149,138 +236,6 @@ POST   /simulation/timeline-events      # Generate timeline content
 POST   /simulation/team-activities      # Generate team activities
 POST   /simulation/phase-documents      # Generate phase documents
 POST   /simulation/ecosystem-scenario   # Generate ecosystem scenarios
-```
-
-## Configuration
-## 🚀 **Key Features & Capabilities**
-
-### **🎭 Comprehensive Project Simulation**
-- **Realistic Scenarios**: End-to-end software development project simulation
-- **Team Dynamics**: Multi-role team simulation with realistic interactions
-- **Timeline Management**: Sophisticated project timeline and milestone tracking
-- **Risk Simulation**: Intelligent risk assessment and mitigation planning
-
-### **🤖 AI-Powered Content Generation**
-- **Document Synthesis**: AI-generated project documentation and artifacts
-- **Code Generation**: Automated code structure and implementation generation
-- **Quality Assurance**: AI-driven testing and validation frameworks
-- **Progress Tracking**: Intelligent progress monitoring and reporting
-
-### **📊 Analytics & Reporting**
-- **Performance Metrics**: Comprehensive project performance analytics
-- **Quality Assessment**: Automated code quality and documentation analysis
-- **Risk Analysis**: Real-time risk assessment and mitigation strategies
-- **Trend Analysis**: Project trend identification and forecasting
-
-### **🔗 Ecosystem Integration**
-- **Service Orchestration**: Seamless integration with ecosystem services
-- **Real-time Synchronization**: Live data synchronization across services
-- **Event-driven Architecture**: Event-based communication and coordination
-- **API-first Design**: RESTful APIs with comprehensive documentation
-
-## 📋 **Requirements**
-
-### **🔧 System Requirements**
-- **Python**: 3.9+ with comprehensive async support
-- **Memory**: 2GB+ RAM for simulation processing
-- **Storage**: 1GB+ disk space for generated content
-- **Network**: Stable connectivity for ecosystem integration
-
-### **🎯 Service Dependencies**
-| Service | Purpose | Integration | Required |
-|---------|---------|-------------|----------|
-| **Doc Store** | Document storage and retrieval | Core data persistence | ✅ |
-| **Mock Data Generator** | AI-powered content generation | Document synthesis | ✅ |
-| **LLM Gateway** | AI model coordination | Content intelligence | ✅ |
-| **Orchestrator** | Workflow orchestration | Process coordination | ✅ |
-| **Analysis Service** | Quality assessment | Content analysis | Optional |
-| **Log Collector** | Event logging | Activity monitoring | Optional |
-
-## 🏗️ **Infrastructure**
-
-### **🐳 Docker Deployment**
-- **Containerized Services**: Full Docker containerization with multi-stage builds
-- **Docker Compose**: Orchestrated multi-service deployment and testing
-- **Volume Management**: Persistent data storage and configuration management
-- **Network Configuration**: Service mesh networking with load balancing
-
-### **☸️ Kubernetes Support**
-- **Helm Charts**: Production-ready Helm deployment templates
-- **Horizontal Scaling**: Auto-scaling based on load and resource utilization
-- **ConfigMaps/Secrets**: Secure configuration and credential management
-- **Health Checks**: Comprehensive readiness and liveness probes
-
-### **🔧 CI/CD Integration**
-- **Automated Testing**: Comprehensive test suites with coverage reporting
-- **Build Pipelines**: Multi-stage build pipelines with artifact management
-- **Deployment Automation**: Blue-green and canary deployment strategies
-- **Monitoring Integration**: Real-time deployment monitoring and alerting
-
-## 🌐 **Ecosystem Integration**
-
-### **🎯 Core Ecosystem Services**
-- **Doc Store**: Primary document repository and content management
-- **Mock Data Generator**: AI-powered content generation and synthesis
-- **LLM Gateway**: Foundation model access and coordination
-- **Orchestrator**: Complex workflow orchestration and coordination
-- **Analysis Service**: Intelligent content analysis and quality assessment
-
-### **🔗 Integration Patterns**
-- **Event-Driven Communication**: Asynchronous event processing and handling
-- **RESTful APIs**: Comprehensive REST API interfaces with OpenAPI documentation
-- **Service Mesh**: Istio-based service mesh for advanced traffic management
-- **Monitoring Integration**: Prometheus metrics and ELK stack logging
-
-### **📊 Data Flow Architecture**
-- **Content Generation**: Mock Data Generator → Doc Store → Analysis Service
-- **Quality Assessment**: Analysis Service → Orchestrator → Reporting
-- **Event Processing**: All services → Log Collector → Analytics
-- **User Interaction**: Frontend → Orchestrator → Individual services
-
-
-### Project Configuration
-```yaml
-# config/project_template.yaml
-project:
-  name: "E-commerce Platform"
-  type: "web_application"
-  team_size: 5
-  duration_weeks: 8
-  complexity: "medium"
-
-team:
-  - name: "Alice Johnson"
-    role: "technical_lead"
-    expertise: "backend"
-  - name: "Bob Smith"
-    role: "developer"
-    expertise: "frontend"
-
-timeline:
-  - name: "planning"
-    duration_days: 7
-    deliverables: ["requirements", "architecture"]
-  - name: "design"
-    duration_days: 10
-    deliverables: ["technical_design", "user_stories"]
-```
-
-### Service Integration
-```yaml
-# config/services.yaml
-services:
-  doc_store:
-    url: "http://doc_store:5010"
-    timeout: 30
-    retries: 3
-  llm_gateway:
-    url: "http://llm-gateway:5055"
-    timeout: 60
-    retries: 2
-  orchestrator:
-    url: "http://orchestrator:5000"
-    timeout: 30
-    retries: 3
 ```
 
 ## Demo Scenarios
@@ -351,153 +306,6 @@ services:
 - Service mesh communication validation
 - Failure scenario and fallback mechanism testing
 - Cross-service data synchronization validation
-
-## Performance & Scalability
-
-### Concurrent Simulations
-- Support for multiple parallel simulation executions
-- Resource isolation and management
-- Performance monitoring and optimization
-- Scalable architecture for high-volume scenarios
-
-### Ecosystem Performance
-- Efficient service-to-service communication
-- Optimized document generation pipelines
-- Caching strategies for frequently accessed data
-- Load balancing and horizontal scaling support
-
-## Monitoring & Observability
-
-### Application Metrics
-- Simulation execution times and success rates
-- Document generation performance
-- Service integration health and latency
-- Error rates and failure patterns
-
-### Ecosystem Integration
-- Cross-service communication monitoring
-- Service discovery and health checking
-- Event streaming and real-time updates
-- Comprehensive logging and correlation
-
-## Security Considerations
-
-### API Security
-- JWT-based authentication and authorization
-- Role-based access control (RBAC)
-- Input validation and sanitization
-- Rate limiting and abuse prevention
-
-### Service Communication
-- Secure inter-service communication
-- Certificate-based authentication
-- Encrypted data transmission
-- Service mesh security policies
-
-## Deployment & Production
-
-### Containerization
-- Multi-stage Docker builds for optimization
-- Environment-specific container configurations
-- Health checks and restart policies
-- Resource limits and monitoring
-
-### Orchestration
-- Kubernetes deployment manifests
-- Horizontal pod autoscaling
-- Rolling deployment strategies
-- Blue-green deployment support
-
-### Configuration Management
-## 🚀 **Key Features & Capabilities**
-
-### **🎭 Comprehensive Project Simulation**
-- **Realistic Scenarios**: End-to-end software development project simulation
-- **Team Dynamics**: Multi-role team simulation with realistic interactions
-- **Timeline Management**: Sophisticated project timeline and milestone tracking
-- **Risk Simulation**: Intelligent risk assessment and mitigation planning
-
-### **🤖 AI-Powered Content Generation**
-- **Document Synthesis**: AI-generated project documentation and artifacts
-- **Code Generation**: Automated code structure and implementation generation
-- **Quality Assurance**: AI-driven testing and validation frameworks
-- **Progress Tracking**: Intelligent progress monitoring and reporting
-
-### **📊 Analytics & Reporting**
-- **Performance Metrics**: Comprehensive project performance analytics
-- **Quality Assessment**: Automated code quality and documentation analysis
-- **Risk Analysis**: Real-time risk assessment and mitigation strategies
-- **Trend Analysis**: Project trend identification and forecasting
-
-### **🔗 Ecosystem Integration**
-- **Service Orchestration**: Seamless integration with ecosystem services
-- **Real-time Synchronization**: Live data synchronization across services
-- **Event-driven Architecture**: Event-based communication and coordination
-- **API-first Design**: RESTful APIs with comprehensive documentation
-
-## 📋 **Requirements**
-
-### **🔧 System Requirements**
-- **Python**: 3.9+ with comprehensive async support
-- **Memory**: 2GB+ RAM for simulation processing
-- **Storage**: 1GB+ disk space for generated content
-- **Network**: Stable connectivity for ecosystem integration
-
-### **🎯 Service Dependencies**
-| Service | Purpose | Integration | Required |
-|---------|---------|-------------|----------|
-| **Doc Store** | Document storage and retrieval | Core data persistence | ✅ |
-| **Mock Data Generator** | AI-powered content generation | Document synthesis | ✅ |
-| **LLM Gateway** | AI model coordination | Content intelligence | ✅ |
-| **Orchestrator** | Workflow orchestration | Process coordination | ✅ |
-| **Analysis Service** | Quality assessment | Content analysis | Optional |
-| **Log Collector** | Event logging | Activity monitoring | Optional |
-
-## 🏗️ **Infrastructure**
-
-### **🐳 Docker Deployment**
-- **Containerized Services**: Full Docker containerization with multi-stage builds
-- **Docker Compose**: Orchestrated multi-service deployment and testing
-- **Volume Management**: Persistent data storage and configuration management
-- **Network Configuration**: Service mesh networking with load balancing
-
-### **☸️ Kubernetes Support**
-- **Helm Charts**: Production-ready Helm deployment templates
-- **Horizontal Scaling**: Auto-scaling based on load and resource utilization
-- **ConfigMaps/Secrets**: Secure configuration and credential management
-- **Health Checks**: Comprehensive readiness and liveness probes
-
-### **🔧 CI/CD Integration**
-- **Automated Testing**: Comprehensive test suites with coverage reporting
-- **Build Pipelines**: Multi-stage build pipelines with artifact management
-- **Deployment Automation**: Blue-green and canary deployment strategies
-- **Monitoring Integration**: Real-time deployment monitoring and alerting
-
-## 🌐 **Ecosystem Integration**
-
-### **🎯 Core Ecosystem Services**
-- **Doc Store**: Primary document repository and content management
-- **Mock Data Generator**: AI-powered content generation and synthesis
-- **LLM Gateway**: Foundation model access and coordination
-- **Orchestrator**: Complex workflow orchestration and coordination
-- **Analysis Service**: Intelligent content analysis and quality assessment
-
-### **🔗 Integration Patterns**
-- **Event-Driven Communication**: Asynchronous event processing and handling
-- **RESTful APIs**: Comprehensive REST API interfaces with OpenAPI documentation
-- **Service Mesh**: Istio-based service mesh for advanced traffic management
-- **Monitoring Integration**: Prometheus metrics and ELK stack logging
-
-### **📊 Data Flow Architecture**
-- **Content Generation**: Mock Data Generator → Doc Store → Analysis Service
-- **Quality Assessment**: Analysis Service → Orchestrator → Reporting
-- **Event Processing**: All services → Log Collector → Analytics
-- **User Interaction**: Frontend → Orchestrator → Individual services
-
-- Environment-based configuration
-- Secret management and rotation
-- Configuration validation and drift detection
-- Centralized configuration management
 
 ## Contributing
 
