@@ -2,20 +2,40 @@
 
 Reduces code duplication by providing standardized error handling patterns
 across all domain services and API endpoints.
+
+NOTE: This module only contains domain-level utilities and does NOT depend on infrastructure.
+Infrastructure-specific error handling should be done at the application/presentation layer.
 """
 
 from typing import Any, Dict, Optional
-from fastapi import HTTPException
 
-from services.shared.infrastructure.utilities.error_handling import (
-    ServiceException,
-    ValidationException,
-    NotFoundException,
-    ConflictException,
-    ExternalServiceException,
-    DatabaseException,
-)
-from services.shared.core.responses.responses import create_error_response
+# Domain-level exceptions - no infrastructure dependencies
+class DomainException(Exception):
+    """Base exception for domain errors."""
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        super().__init__(message)
+        self.message = message
+        self.details = details or {}
+
+class DomainValidationException(DomainException):
+    """Exception raised when domain validation fails."""
+    pass
+
+class DomainNotFoundException(DomainException):
+    """Exception raised when a domain entity is not found."""
+    pass
+
+class DomainConflictException(DomainException):
+    """Exception raised when domain conflicts occur."""
+    pass
+
+class DomainExternalServiceException(DomainException):
+    """Exception raised when external service calls fail."""
+    pass
+
+class DomainDatabaseException(DomainException):
+    """Exception raised when database operations fail."""
+    pass
 
 
 def handle_document_not_found(document_id: str, operation: str = "find") -> None:
@@ -26,9 +46,9 @@ def handle_document_not_found(document_id: str, operation: str = "find") -> None
         operation: Operation being performed
 
     Raises:
-        NotFoundException: Always raised
+        DomainNotFoundException: Always raised
     """
-    raise NotFoundException("document", document_id)
+    raise DomainNotFoundException(f"Document not found during {operation}: {document_id}")
 
 
 def handle_validation_error(field: str, message: str) -> None:
@@ -39,9 +59,9 @@ def handle_validation_error(field: str, message: str) -> None:
         message: Validation error message
 
     Raises:
-        ValidationException: Always raised
+        DomainValidationException: Always raised
     """
-    raise ValidationException({field: [message]})
+    raise DomainValidationException(f"Validation failed for {field}: {message}")
 
 
 def handle_conflict_error(resource_type: str, resource_id: str, message: Optional[str] = None) -> None:
@@ -53,10 +73,10 @@ def handle_conflict_error(resource_type: str, resource_id: str, message: Optiona
         message: Optional custom message
 
     Raises:
-        ConflictException: Always raised
+        DomainConflictException: Always raised
     """
     default_message = f"{resource_type} with ID {resource_id} already exists"
-    raise ConflictException(message or default_message)
+    raise DomainConflictException(message or default_message)
 
 
 def handle_database_error(operation: str, original_error: Optional[str] = None) -> None:
@@ -67,9 +87,9 @@ def handle_database_error(operation: str, original_error: Optional[str] = None) 
         original_error: Optional original error message
 
     Raises:
-        DatabaseException: Always raised
+        DomainDatabaseException: Always raised
     """
-    raise DatabaseException(operation, original_error or "Unknown database error")
+    raise DomainDatabaseException(f"Database operation '{operation}' failed: {original_error or 'Unknown database error'}")
 
 
 def handle_external_service_error(
@@ -85,143 +105,122 @@ def handle_external_service_error(
         original_error: Optional original error message
 
     Raises:
-        ExternalServiceException: Always raised
+        DomainExternalServiceException: Always raised
     """
-    raise ExternalServiceException(service_name, operation, original_error)
+    raise DomainExternalServiceException(f"External service '{service_name}' operation '{operation}' failed: {original_error or 'Unknown error'}")
 
 
-def create_api_error_response(
-    exception: Exception,
-    status_code: Optional[int] = None,
-    message: Optional[str] = None
-) -> Dict[str, Any]:
-    """Create standardized API error response from exception.
-
-    Args:
-        exception: Exception to convert to API response
-        status_code: Optional custom status code
-        message: Optional custom message
-
-    Returns:
-        Standardized error response dictionary
-    """
-    if isinstance(exception, ServiceException):
-        return create_error_response(
-            message=message or exception.message,
-            error_code=exception.error_code,
-            details=exception.details
-        )
-
-    # Handle standard exceptions
-    if isinstance(exception, ValueError):
-        return create_error_response(
-            message=message or str(exception),
-            error_code="validation_error",
-            details={"original_error": str(exception)}
-        )
-
-    if isinstance(exception, KeyError):
-        return create_error_response(
-            message=message or "Required field missing",
-            error_code="missing_field",
-            details={"field": str(exception), "original_error": str(exception)}
-        )
-
-    if isinstance(exception, TypeError):
-        return create_error_response(
-            message=message or "Invalid data type",
-            error_code="type_error",
-            details={"original_error": str(exception)}
-        )
-
-    # Generic error handling
-    return create_error_response(
-        message=message or "An unexpected error occurred",
-        error_code="internal_error",
-        details={"original_error": str(exception)}
-    )
-
-
-def handle_and_log_error(
+def create_domain_error_details(
     exception: Exception,
     operation: str,
-    logger: Any,
     context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Handle exception with logging and return standardized error response.
+    """Create standardized domain error details from exception.
 
     Args:
-        exception: Exception to handle
+        exception: Exception to convert to error details
         operation: Operation that failed
-        logger: Logger instance to use
-        context: Optional additional context for logging
+        context: Optional additional context
 
     Returns:
-        Standardized error response dictionary
+        Standardized error details dictionary
     """
-    error_context = {
+    details = {
         "operation": operation,
         "exception_type": type(exception).__name__,
         "exception_message": str(exception)
     }
 
     if context:
-        error_context.update(context)
+        details.update(context)
 
-    logger.error(
-        f"Error during {operation}",
-        extra=error_context,
-        exc_info=True
-    )
+    # Add specific details based on exception type
+    if isinstance(exception, DomainValidationException):
+        details["error_type"] = "validation"
+    elif isinstance(exception, DomainNotFoundException):
+        details["error_type"] = "not_found"
+    elif isinstance(exception, DomainConflictException):
+        details["error_type"] = "conflict"
+    elif isinstance(exception, DomainDatabaseException):
+        details["error_type"] = "database"
+    elif isinstance(exception, DomainExternalServiceException):
+        details["error_type"] = "external_service"
+    else:
+        details["error_type"] = "general"
 
-    return create_api_error_response(exception)
+    return details
 
 
-def validate_and_handle_errors(func):
-    """Decorator to add standardized error handling to service methods.
+def handle_domain_error(
+    exception: Exception,
+    operation: str,
+    context: Optional[Dict[str, Any]] = None
+) -> DomainException:
+    """Handle domain exception by wrapping in appropriate domain exception type.
 
-    Catches common exceptions and converts them to standardized responses.
-    Should be used on service methods that are called by API endpoints.
+    Args:
+        exception: Exception to handle
+        operation: Operation that failed
+        context: Optional additional context
+
+    Returns:
+        Appropriate domain exception
+    """
+    error_details = create_domain_error_details(exception, operation, context)
+
+    # If it's already a domain exception, return it with enhanced details
+    if isinstance(exception, DomainException):
+        if not exception.details:
+            exception.details = error_details
+        return exception
+
+    # Wrap standard exceptions in domain exceptions
+    if isinstance(exception, ValueError):
+        return DomainValidationException(str(exception), error_details)
+    elif isinstance(exception, KeyError):
+        return DomainValidationException(f"Required field missing: {exception}", error_details)
+    elif isinstance(exception, TypeError):
+        return DomainValidationException(f"Invalid data type: {exception}", error_details)
+    else:
+        return DomainException(f"Domain operation '{operation}' failed: {exception}", error_details)
+
+
+def validate_domain_operation(func):
+    """Decorator to add standardized error handling to domain methods.
+
+    Catches common exceptions and converts them to domain exceptions.
+    Should be used on domain service methods.
     """
     async def wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
-        except ServiceException:
-            # Re-raise service exceptions as-is
+        except DomainException:
+            # Re-raise domain exceptions as-is
             raise
-        except ValueError as e:
-            raise ValidationException(str(e))
-        except KeyError as e:
-            raise ValidationException(f"Required field missing: {e}")
+        except (ValueError, KeyError, TypeError) as e:
+            # Wrap validation errors in domain exceptions
+            raise handle_domain_error(e, func.__name__, {
+                "function": func.__name__,
+                "args_count": len(args),
+                "kwargs_keys": list(kwargs.keys())
+            })
         except Exception as e:
-            # Log unexpected errors
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(
-                f"Unexpected error in {func.__name__}",
-                extra={
-                    "function": func.__name__,
-                    "args": str(args),
-                    "kwargs": str(kwargs),
-                    "error": str(e)
-                },
-                exc_info=True
-            )
-            raise ServiceException(f"Internal error: {e}")
+            # Wrap unexpected errors in domain exceptions
+            raise DomainException(f"Unexpected error in {func.__name__}: {e}", {
+                "function": func.__name__,
+                "error_type": "unexpected",
+                "original_error": str(e)
+            })
 
     return wrapper
 
 
-class ErrorHandler:
-    """Centralized error handling for Doc Store operations."""
+class DomainErrorHandler:
+    """Domain-level error handling for Doc Store operations.
 
-    def __init__(self, logger: Any):
-        """Initialize error handler with logger.
-
-        Args:
-            logger: Logger instance to use for error logging
-        """
-        self.logger = logger
+    This class provides domain-focused error handling without infrastructure dependencies.
+    Infrastructure-specific error handling should be done at the application layer.
+    """
 
     def handle_document_operation_error(
         self,
@@ -229,7 +228,7 @@ class ErrorHandler:
         operation: str,
         document_id: Optional[str] = None,
         context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    ) -> DomainException:
         """Handle errors from document operations.
 
         Args:
@@ -239,7 +238,7 @@ class ErrorHandler:
             context: Optional additional context
 
         Returns:
-            Standardized error response
+            Domain exception with standardized details
         """
         error_context = {"operation": operation}
         if document_id:
@@ -247,7 +246,7 @@ class ErrorHandler:
         if context:
             error_context.update(context)
 
-        return handle_and_log_error(exception, operation, self.logger, error_context)
+        return handle_domain_error(exception, operation, error_context)
 
     def handle_bulk_operation_error(
         self,
@@ -255,7 +254,7 @@ class ErrorHandler:
         operation_id: str,
         processed_count: int,
         context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    ) -> DomainException:
         """Handle errors from bulk operations.
 
         Args:
@@ -265,23 +264,24 @@ class ErrorHandler:
             context: Optional additional context
 
         Returns:
-            Standardized error response
+            Domain exception with standardized details
         """
         error_context = {
             "operation_id": operation_id,
-            "processed_count": processed_count
+            "processed_count": processed_count,
+            "operation_type": "bulk"
         }
         if context:
             error_context.update(context)
 
-        return handle_and_log_error(exception, "bulk_operation", self.logger, error_context)
+        return handle_domain_error(exception, "bulk_operation", error_context)
 
-    def handle_search_error(
+    def handle_search_operation_error(
         self,
         exception: Exception,
         query: str,
         context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    ) -> DomainException:
         """Handle errors from search operations.
 
         Args:
@@ -290,20 +290,20 @@ class ErrorHandler:
             context: Optional additional context
 
         Returns:
-            Standardized error response
+            Domain exception with standardized details
         """
-        error_context = {"query": query}
+        error_context = {"query": query, "operation_type": "search"}
         if context:
             error_context.update(context)
 
-        return handle_and_log_error(exception, "search", self.logger, error_context)
+        return handle_domain_error(exception, "search", error_context)
 
-    def handle_analytics_error(
+    def handle_analytics_operation_error(
         self,
         exception: Exception,
         time_range: Optional[str] = None,
         context: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    ) -> DomainException:
         """Handle errors from analytics operations.
 
         Args:
@@ -312,12 +312,12 @@ class ErrorHandler:
             context: Optional additional context
 
         Returns:
-            Standardized error response
+            Domain exception with standardized details
         """
-        error_context = {}
+        error_context = {"operation_type": "analytics"}
         if time_range:
             error_context["time_range"] = time_range
         if context:
             error_context.update(context)
 
-        return handle_and_log_error(exception, "analytics", self.logger, error_context)
+        return handle_domain_error(exception, "analytics", error_context)
