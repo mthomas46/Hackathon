@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 from ..value_objects.model_name import ModelName
+from .base_entity import BaseEntity
 
 
 @dataclass
@@ -18,16 +19,9 @@ class AIModel:
     context_window: int = 4096
     input_cost_per_token: float = 0.0
     output_cost_per_token: float = 0.0
-    metadata: Optional[Dict[str, Any]] = None
     is_active: bool = True
-    created_at: datetime = None
-
-    def __post_init__(self):
-        """Initialize defaults."""
-        if self.created_at is None:
-            self.created_at = datetime.now()
-        if self.metadata is None:
-            self.metadata = {}
+    metadata: Optional[Dict[str, Any]] = None
+    created_at: Optional[datetime] = None
 
     def validate(self) -> None:
         """Validate the AI model configuration."""
@@ -61,7 +55,6 @@ class AIModel:
             'context_window': self.context_window,
             'input_cost_per_token': self.input_cost_per_token,
             'output_cost_per_token': self.output_cost_per_token,
-            'metadata': self.metadata,
             'is_active': self.is_active,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            **self.to_dict_common()
         }

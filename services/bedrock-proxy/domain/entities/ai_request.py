@@ -18,16 +18,16 @@ class AIRequest:
     template: Optional[str] = None
     parameters: Optional[Dict[str, Any]] = None
     metadata: Optional[Dict[str, Any]] = None
-    created_at: datetime = None
+    created_at: Optional[datetime] = None
 
     def __post_init__(self):
-        """Initialize timestamps."""
+        """Initialize entity."""
         if self.created_at is None:
             self.created_at = datetime.now()
-        if self.parameters is None:
-            self.parameters = {}
         if self.metadata is None:
             self.metadata = {}
+        if self.parameters is None:
+            self.parameters = {}
 
     def validate(self) -> None:
         """Validate the AI request according to domain rules."""

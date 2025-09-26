@@ -67,7 +67,7 @@ class TestProcessInvokeRequest:
         result = process_invoke_request(prompt="Summarize this document")
         assert "Echo" in result["output"] or "echo" in result["output"].lower()
 
-    @patch('modules.processor.detect_template_from_prompt')
+    @patch('infrastructure.templates.detect_template_from_prompt')
     def test_template_parameter_override(self, mock_detect):
         """Test that explicit template parameter overrides auto-detection."""
         mock_detect.return_value = "risks"  # Mock would detect risks
