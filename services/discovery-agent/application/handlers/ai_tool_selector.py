@@ -105,6 +105,51 @@ class AIToolSelector:
             print(f"AI analysis failed, using rule-based: {e}")
             return self._rule_based_task_analysis(task_description)
 
+    def _determine_primary_action(self, task_lower: str) -> str:
+        """Determine the primary action from task description."""
+        if any(word in task_lower for word in ["create", "generate", "build", "make"]):
+            return "create"
+        elif any(word in task_lower for word in ["read", "get", "retrieve", "fetch"]):
+            return "read"
+        elif any(word in task_lower for word in ["update", "modify", "change", "edit"]):
+            return "update"
+        elif any(word in task_lower for word in ["delete", "remove", "destroy"]):
+            return "delete"
+        elif any(word in task_lower for word in ["analyze", "process", "review", "check"]):
+            return "analyze"
+        return "analyze"
+
+    def _determine_data_types(self, task_lower: str) -> List[str]:
+        """Determine required data types from task description."""
+        data_types = []
+        if any(word in task_lower for word in ["document", "file", "text", "content"]):
+            data_types.append("documents")
+        if any(word in task_lower for word in ["prompt", "instruction", "query"]):
+            data_types.append("prompts")
+        if any(word in task_lower for word in ["code", "script", "program"]):
+            data_types.append("code")
+        return data_types
+
+    def _determine_capabilities(self, task_lower: str) -> List[str]:
+        """Determine required capabilities from task description."""
+        capabilities = []
+        if any(word in task_lower for word in ["ai", "llm", "gpt", "generate", "intelligent"]):
+            capabilities.append("ai")
+        if any(word in task_lower for word in ["store", "save", "persist", "database"]):
+            capabilities.append("storage")
+        if any(word in task_lower for word in ["analyze", "review", "check", "validate"]):
+            capabilities.append("analysis")
+        return capabilities
+
+    def _get_basic_steps(self) -> List[str]:
+        """Get the basic workflow steps."""
+        return [
+            "analyze_requirements",
+            "select_tools",
+            "execute_workflow",
+            "validate_results",
+        ]
+
     def _rule_based_task_analysis(self, task_description: str) -> Dict[str, Any]:
         """Perform rule-based task analysis as fallback when AI analysis fails.
 
@@ -121,46 +166,14 @@ class AIToolSelector:
         task_lower = task_description.lower()
 
         analysis = {
-            "primary_action": "analyze",
-            "data_types": [],
-            "capabilities": [],
-            "steps": [],
+            "primary_action": self._determine_primary_action(task_lower),
+            "data_types": self._determine_data_types(task_lower),
+            "capabilities": self._determine_capabilities(task_lower),
+            "steps": self._get_basic_steps(),
             "success_criteria": [],
         }
 
-        # Determine primary action
-        if any(word in task_lower for word in ["create", "generate", "build", "make"]):
-            analysis["primary_action"] = "create"
-        elif any(word in task_lower for word in ["read", "get", "retrieve", "fetch"]):
-            analysis["primary_action"] = "read"
-        elif any(word in task_lower for word in ["update", "modify", "change", "edit"]):
-            analysis["primary_action"] = "update"
-        elif any(word in task_lower for word in ["delete", "remove", "destroy"]):
-            analysis["primary_action"] = "delete"
-        elif any(
-            word in task_lower for word in ["analyze", "process", "review", "check"]
-        ):
-            analysis["primary_action"] = "analyze"
-
-        # Determine data types
-        if any(word in task_lower for word in ["document", "file", "text", "content"]):
-            analysis["data_types"].append("documents")
-        if any(word in task_lower for word in ["prompt", "instruction", "query"]):
-            analysis["data_types"].append("prompts")
-        if any(word in task_lower for word in ["code", "script", "program"]):
-            analysis["data_types"].append("code")
-
-        # Determine capabilities
-        if any(
-            word in task_lower
-            for word in ["ai", "llm", "gpt", "generate", "intelligent"]
-        ):
-            analysis["capabilities"].append("ai")
-        if any(word in task_lower for word in ["store", "save", "persist", "database"]):
-            analysis["capabilities"].append("storage")
-        if any(
-            word in task_lower for word in ["analyze", "review", "check", "validate"]
-        ):
+        return analysis        ):
             analysis["capabilities"].append("analysis")
 
         # Basic steps

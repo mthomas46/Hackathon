@@ -84,25 +84,61 @@ class ToolSecurityScanner:
 
         return security_analysis
 
+
+    def _check_sql_injection_risks(self, path: str, tool_path: str) -> List[Dict[str, Any]]:
+        """Check for SQL injection vulnerabilities in path."""
+        vulnerabilities = []
+        if any(word in path for word in ["query", "search", "filter", "where"]):
+            vulnerabilities.append({
+                "type": "sql_injection_risk",
+                "severity": "medium",
+                "description": f"Path '{tool_path}' may be vulnerable to SQL injection",
+                "location": "path",
+                "mitigation": "Use parameterized queries and input validation",
+            })
+        return vulnerabilities
+
+    def _check_command_injection_risks(self, path: str, tool_path: str) -> List[Dict[str, Any]]:
+        """Check for command injection vulnerabilities in path."""
+        vulnerabilities = []
+        if any(word in path for word in ["execute", "run", "command", "script"]):
+            vulnerabilities.append({
+                "type": "command_injection_risk",
+                "severity": "high",
+                "description": f"Path '{tool_path}' may allow command injection",
+                "location": "path",
+                "mitigation": "Sanitize inputs and use allowlisted commands only",
+            })
+        return vulnerabilities
+
+    def _check_parameter_injection_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Check parameters for injection vulnerabilities."""
+        vulnerabilities = []
+        for param in tool.get("parameters", {}).get("properties", {}):
+            param_name = param.lower()
+            if any(word in param_name for word in ["query", "command", "script", "code"]):
+                vulnerabilities.append({
+                    "type": "parameter_injection_risk",
+                    "severity": "medium",
+                    "description": f"Parameter '{param}' may be vulnerable to injection",
+                    "location": f"parameter:{param}",
+                    "mitigation": "Implement strict input validation and sanitization",
+                })
+        return vulnerabilities
     def _analyze_injection_risks(self, tool: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Analyze tool parameters and paths for injection vulnerabilities.
-
-        Examines tool endpoints, parameters, and request bodies for patterns
-        that could indicate SQL injection, command injection, or script injection risks.
-
-        Args:
-            tool: Tool definition to analyze for injection risks
-
-        Returns:
-            List of identified injection vulnerabilities with severity and recommendations
-        """
         vulnerabilities = []
 
         # Check path for injection-prone patterns
         path = tool.get("path", "").lower()
+        tool_path = tool.get("path", "")
 
-        # SQL injection risks
-        if any(word in path for word in ["query", "search", "filter", "where"]):
+        # Check different types of injection risks
+        vulnerabilities.extend(self._check_sql_injection_risks(path, tool_path))
+        vulnerabilities.extend(self._check_command_injection_risks(path, tool_path))
+        vulnerabilities.extend(self._check_parameter_injection_risks(tool))
+
+        return vulnerabilities        if any(word in path for word in ["query", "search", "filter", "where"]):
             vulnerabilities.append(
                 {
                     "type": "sql_injection_risk",
