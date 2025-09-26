@@ -8,7 +8,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, List
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import get_frontend_clients, get_orchestrator_url
 

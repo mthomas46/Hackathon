@@ -7,7 +7,7 @@ linking findings with documents and enabling deep-dive exploration.
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import get_analysis_service_url, get_frontend_clients
 

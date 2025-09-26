@@ -281,8 +281,8 @@ except ImportError:
         pass
 
 try:
-    from services.shared.utilities import setup_common_middleware
-    from services.shared.utilities.error_handling import install_error_handlers
+    from services.shared.infrastructure.utilities import setup_common_middleware
+    from services.shared.infrastructure.utilities.error_handling import install_error_handlers
 except ImportError:
     def setup_common_middleware(app, **kwargs):
         pass

@@ -6,7 +6,7 @@ for all services in the LLM Documentation Ecosystem.
 
 from typing import Any, Dict
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import (
     get_analysis_service_url,

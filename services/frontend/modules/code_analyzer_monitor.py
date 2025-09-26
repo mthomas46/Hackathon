@@ -6,7 +6,7 @@ service analysis results, security scans, and style checking.
 
 from typing import Any, Dict, List
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import get_code_analyzer_url, get_frontend_clients
 

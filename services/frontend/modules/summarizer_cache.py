@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 
 @dataclass

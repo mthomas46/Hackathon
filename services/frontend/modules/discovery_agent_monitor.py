@@ -6,7 +6,7 @@ service endpoint registration and OpenAPI parsing operations.
 
 from typing import Any, Dict, List, Optional
 
-from services.shared.utilities import utc_now
+from services.shared.infrastructure.utilities import utc_now
 
 from .shared_utils import get_discovery_agent_url, get_frontend_clients
 
