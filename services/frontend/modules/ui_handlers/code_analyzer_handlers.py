@@ -428,26 +428,27 @@ class CodeAnalyzerUIHandlers:
 
             let html = '<div class="metric-grid">';
 
-            html += r"""
-                <div class="metric-item">
-                    <div class="metric-label">Total Analyses</div>
-                    <div class="metric-value">{{stats.total_analyses || 0}</div>
-                </div>
-                <div class="metric-item">
-                    <div class="metric-label">Security Scans</div>
-                    <div class="metric-value">{{stats.total_security_scans || 0}</div>
-                </div>
-                <div class="metric-item">
-                    <div class="metric-label">Style Checks</div>
-                    <div class="metric-value">{{stats.total_style_checks || 0}</div>
-                </div>
-                <div class="metric-item">
-                    <div class="metric-label">Available Styles</div>
-                    <div class="metric-value">{{data.available_styles?.length || 0}</div>
-                </div>
-            """;
-
-            html += '</div>';
+#             # Temporarily commented out due to syntax issues
+#             # html += r"""
+#             # <div class="metric-item">
+#                     <div class="metric-label">Total Analyses</div>
+#                     <div class="metric-value">{{stats.total_analyses || 0}</div>
+#                 </div>
+#                 <div class="metric-item">
+#                     <div class="metric-label">Security Scans</div>
+#                     <div class="metric-value">{{stats.total_security_scans || 0}</div>
+#                 </div>
+#                 <div class="metric-item">
+#                     <div class="metric-label">Style Checks</div>
+#                     <div class="metric-value">{{stats.total_style_checks || 0}</div>
+#                 </div>
+#                 <div class="metric-item">
+#                     <div class="metric-label">Available Styles</div>
+#                     <div class="metric-value">{{data.available_styles?.length || 0}</div>
+#                 </div>
+#             """;
+# 
+#             html += '</div>';
 
             // Analysis types breakdown
             if (stats.analysis_types) {

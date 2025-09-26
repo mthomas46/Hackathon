@@ -4,7 +4,7 @@ This package contains all the modularized functionality for the Frontend service
 Provides shared utilities and client instances for all frontend modules.
 """
 
-from services.shared.utilities import get_service_client
+from services.shared.infrastructure.utilities import get_service_client
 
 # Shared service client for all frontend modules - lazy initialization
 _service_client = None
