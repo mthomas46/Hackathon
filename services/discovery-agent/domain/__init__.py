@@ -13,41 +13,39 @@ Key Components:
 - DiscoveryService: Core domain service for discovery operations
 """
 
-from .entities import (
-    Service,
-    Endpoint,
-    DiscoveryResult,
-)
+# Import entities
+from . import entities as entities_module
+from . import value_objects as value_objects_module
+from . import repositories as repositories_module
+from . import services as services_module
+from . import exceptions as exceptions_module
 
-from .value_objects import (
-    DiscoverySpec,
-    EndpointMetadata,
-    ServiceMetadata,
-)
+# Re-export for convenience
+Service = entities_module.Service
+Endpoint = entities_module.Endpoint
+DiscoveryResult = entities_module.DiscoveryResult
 
-from .repositories import (
-    ServiceRepository,
-    InMemoryServiceRepository,
-)
+DiscoverySpec = value_objects_module.DiscoverySpec
+EndpointMetadata = value_objects_module.EndpointMetadata
+ServiceMetadata = value_objects_module.ServiceMetadata
 
-from .services import (
-    DiscoveryService,
-    EndpointAnalyzer,
-)
+ServiceRepository = repositories_module.ServiceRepository
+InMemoryServiceRepository = repositories_module.InMemoryServiceRepository
 
-from .exceptions import (
-    DiscoveryError,
-    ServiceDiscoveryError,
-    InvalidOpenApiSpecError,
-    ServiceNotFoundError,
-    EndpointDiscoveryError,
-    DuplicateServiceError,
-    NetworkTimeoutError,
-    AuthenticationRequiredError,
-    UnsupportedApiVersionError,
-    MalformedUrlError,
-    DiscoveryConfigurationError,
-)
+DiscoveryService = services_module.DiscoveryService
+EndpointAnalyzer = services_module.EndpointAnalyzer
+
+DiscoveryError = exceptions_module.DiscoveryError
+ServiceDiscoveryError = exceptions_module.ServiceDiscoveryError
+InvalidOpenApiSpecError = exceptions_module.InvalidOpenApiSpecError
+ServiceNotFoundError = exceptions_module.ServiceNotFoundError
+EndpointDiscoveryError = exceptions_module.EndpointDiscoveryError
+DuplicateServiceError = exceptions_module.DuplicateServiceError
+NetworkTimeoutError = exceptions_module.NetworkTimeoutError
+AuthenticationRequiredError = exceptions_module.AuthenticationRequiredError
+UnsupportedApiVersionError = exceptions_module.UnsupportedApiVersionError
+MalformedUrlError = exceptions_module.MalformedUrlError
+DiscoveryConfigurationError = exceptions_module.DiscoveryConfigurationError
 
 __all__ = [
     # Entities

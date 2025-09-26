@@ -20,7 +20,7 @@ from .exceptions import (
     UnsupportedApiVersionError,
     MalformedUrlError,
 )
-from .entities import Service, Endpoint, DiscoveryResult
+from . import entities
 from .value_objects import DiscoverySpec, EndpointMetadata, ServiceMetadata, HttpMethod, ApiPath
 from .repositories import ServiceRepository, EndpointRepository
 
@@ -115,7 +115,7 @@ class DiscoveryService:
                 service.base_url = base_url
             else:
                 # Create new service
-                service = Service(
+                service = entities.Service(
                     name=name,
                     base_url=base_url
                 )
@@ -138,12 +138,12 @@ class DiscoveryService:
         except Exception as e:
             self.logger.error(f"Service discovery failed for {name}: {e}")
             return DiscoveryResult(
-                service=Service(name=name, base_url=base_url, status="error"),
+                service=entities.Service(name=name, base_url=base_url, status="error"),
                 success=False,
                 error_message=str(e)
             )
 
-    async def _perform_discovery(self, service: Service, discovery_spec: DiscoverySpec) -> None:
+    async def _perform_discovery(self, service: entities.Service, discovery_spec: DiscoverySpec) -> None:
         """Perform discovery using the provided specification."""
         if discovery_spec.has_content:
             # Use inline content
@@ -177,7 +177,7 @@ class DiscoveryService:
 
         service.status = "active"
 
-    async def _perform_auto_discovery(self, service: Service) -> None:
+    async def _perform_auto_discovery(self, service: entities.Service) -> None:
         """Attempt automatic discovery of service endpoints."""
         # Try common OpenAPI endpoints
         openapi_urls = [
@@ -206,19 +206,19 @@ class DiscoveryService:
             response.raise_for_status()
             return response.json()
 
-    async def get_service(self, service_id: str) -> Optional[Service]:
+    async def get_service(self, service_id: str) -> Optional[entities.Service]:
         """Get service by ID."""
         return await self.service_repository.find_by_id(service_id)
 
-    async def get_service_by_name(self, name: str) -> Optional[Service]:
+    async def get_service_by_name(self, name: str) -> Optional[entities.Service]:
         """Get service by name."""
         return await self.service_repository.find_by_name(name)
 
-    async def list_services(self) -> List[Service]:
+    async def list_services(self) -> List[entities.Service]:
         """List all discovered services."""
         return await self.service_repository.find_all()
 
-    async def list_active_services(self) -> List[Service]:
+    async def list_active_services(self) -> List[entities.Service]:
         """List all active services."""
         return await self.service_repository.find_active_services()
 

@@ -17,7 +17,7 @@ project_root = services_dir.parent   # project root
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(services_dir))
 
-from services.discovery_agent.domain.entities import Service, Endpoint, DiscoveryResult
+from domain.entities import Service, Endpoint, DiscoveryResult
 
 
 class TestEndpoint:
