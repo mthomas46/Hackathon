@@ -168,12 +168,7 @@ def get_consistency_engine_url() -> str:
 
 def get_orchestrator_url() -> str:
     """Get orchestrator service URL from config/env with fallback."""
-    return get_config_value(
-        "ORCHESTRATOR_URL",
-        "http://orchestrator:5040",
-        section="services",
-        env_key=_ORCHESTRATOR_URL_ENV,
-    )
+    return _get_service_url("orchestrator")
 
 
 def get_summarizer_hub_url() -> str:
@@ -198,12 +193,7 @@ def get_log_collector_url() -> str:
 
 def get_prompt_store_url() -> str:
     """Get prompt store service URL from config/env with fallback."""
-    return get_config_value(
-        "PROMPT_STORE_URL",
-        "http://prompt-store:5110",
-        section="services",
-        env_key=_PROMPT_STORE_URL_ENV,
-    )
+    return _get_service_url("prompt_store")
 
 
 def get_analysis_service_url() -> str:
