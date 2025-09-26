@@ -126,6 +126,7 @@ from rich.table import Table
 try:
     from services.shared.infrastructure.config import load_service_config
     from services.shared.presentation.responses import create_error_response
+    from services.shared.infrastructure.external.clients.clients import ServiceClients
 
     # CLI service uses minimal configuration
     config = load_service_config(service_type="cli")
@@ -135,6 +136,7 @@ except ImportError:
     print("Warning: Some shared modules not available, using fallbacks")
     SERVICE_NAME = "cli"
     create_error_response = None
+    ServiceClients = None
 
     class ErrorCodes:
         PROMPT_RETRIEVAL_FAILED = "PROMPT_RETRIEVAL_FAILED"
@@ -1786,13 +1788,21 @@ async def _execute_e2e_query_async(query, format, download, user_id, filename_pr
                 "filename_prefix": filename_prefix,
             }
 
-            interpreter_url = "http://interpreter:5120"
-
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"{interpreter_url}/execute-query", json=request_data
-                ) as response:
-                    result = await response.json()
+            # DRY refactoring: Use shared ServiceClients instead of direct aiohttp
+            # Eliminates HTTP client duplication and adds resilience patterns
+            if ServiceClients:
+                clients = ServiceClients(timeout=30)  # 30 second timeout for complex queries
+                result = await clients.post_json(
+                    "http://interpreter:5120/execute-query",
+                    request_data
+                )
+            else:
+                # Fallback if ServiceClients not available
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        "http://interpreter:5120/execute-query", json=request_data
+                    ) as response:
+                        result = await response.json()
 
             if result.get("status") == "completed":
                 console.print(f"[green]✓[/green] Query executed successfully!")
@@ -1857,13 +1867,21 @@ async def _execute_direct_workflow_async(
                 "filename_prefix": filename_prefix,
             }
 
-            interpreter_url = "http://interpreter:5120"
-
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    f"{interpreter_url}/workflows/execute-direct", json=request_data
-                ) as response:
-                    result = await response.json()
+            # DRY refactoring: Use shared ServiceClients instead of direct aiohttp
+            # Eliminates HTTP client duplication and adds resilience patterns
+            if ServiceClients:
+                clients = ServiceClients(timeout=30)  # 30 second timeout for workflow execution
+                result = await clients.post_json(
+                    "http://interpreter:5120/workflows/execute-direct",
+                    request_data
+                )
+            else:
+                # Fallback if ServiceClients not available
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(
+                        "http://interpreter:5120/workflows/execute-direct", json=request_data
+                    ) as response:
+                        result = await response.json()
 
             if result.get("status") == "completed":
                 console.print(
@@ -1943,13 +1961,16 @@ async def _list_workflow_templates_async():
     console = Console()
 
     try:
-        interpreter_url = "http://interpreter:5000"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{interpreter_url}/workflows/templates"
-            ) as response:
-                result = await response.json()
+        # DRY refactoring: Use shared ServiceClients instead of direct aiohttp
+        # Eliminates HTTP client duplication and adds resilience patterns
+        if ServiceClients:
+            clients = ServiceClients(timeout=10)  # 10 second timeout for templates
+            result = await clients.get_json("http://interpreter:5000/workflows/templates")
+        else:
+            # Fallback if ServiceClients not available
+            async with aiohttp.ClientSession() as session:
+                async with session.get("http://interpreter:5000/workflows/templates") as response:
+                    result = await response.json()
 
         templates = result.get("templates", {})
 
@@ -1985,11 +2006,16 @@ async def _get_supported_formats_async():
     console = Console()
 
     try:
-        interpreter_url = "http://interpreter:5000"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"{interpreter_url}/outputs/formats") as response:
-                result = await response.json()
+        # DRY refactoring: Use shared ServiceClients instead of direct aiohttp
+        # Eliminates HTTP client duplication and adds resilience patterns
+        if ServiceClients:
+            clients = ServiceClients(timeout=10)  # 10 second timeout for formats
+            result = await clients.get_json("http://interpreter:5000/outputs/formats")
+        else:
+            # Fallback if ServiceClients not available
+            async with aiohttp.ClientSession() as session:
+                async with session.get("http://interpreter:5000/outputs/formats") as response:
+                    result = await response.json()
 
         formats = result.get("supported_formats", [])
         descriptions = result.get("format_descriptions", {})
@@ -2064,13 +2090,16 @@ async def _get_document_provenance_async(doc_id):
     console = Console()
 
     try:
-        interpreter_url = "http://interpreter:5120"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{interpreter_url}/documents/{doc_id}/provenance"
-            ) as response:
-                result = await response.json()
+        # DRY refactoring: Use shared ServiceClients instead of direct aiohttp
+        # Eliminates HTTP client duplication and adds resilience patterns
+        if ServiceClients:
+            clients = ServiceClients(timeout=15)  # 15 second timeout for provenance data
+            result = await clients.get_json(f"http://interpreter:5120/documents/{doc_id}/provenance")
+        else:
+            # Fallback if ServiceClients not available
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://interpreter:5120/documents/{doc_id}/provenance") as response:
+                    result = await response.json()
 
         if result.get("error"):
             console.print(f"[red]✗[/red] Error: {result['error']}")
@@ -2134,14 +2163,22 @@ async def _list_workflow_documents_async(workflow_name, limit):
     console = Console()
 
     try:
-        interpreter_url = "http://interpreter:5120"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{interpreter_url}/documents/by-workflow/{workflow_name}",
-                params={"limit": limit},
-            ) as response:
-                result = await response.json()
+        # DRY refactoring: Use shared ServiceClients instead of direct aiohttp
+        # Eliminates HTTP client duplication and adds resilience patterns
+        if ServiceClients:
+            clients = ServiceClients(timeout=15)  # 15 second timeout for document listing
+            result = await clients.get_json(
+                f"http://interpreter:5120/documents/by-workflow/{workflow_name}",
+                params={"limit": limit}
+            )
+        else:
+            # Fallback if ServiceClients not available
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"http://interpreter:5120/documents/by-workflow/{workflow_name}",
+                    params={"limit": limit},
+                ) as response:
+                    result = await response.json()
 
         documents = result.get("documents", [])
 
@@ -2192,13 +2229,16 @@ async def _get_execution_trace_async(execution_id):
     console = Console()
 
     try:
-        interpreter_url = "http://interpreter:5120"
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"{interpreter_url}/workflows/{execution_id}/trace"
-            ) as response:
-                result = await response.json()
+        # DRY refactoring: Use shared ServiceClients instead of direct aiohttp
+        # Eliminates HTTP client duplication and adds resilience patterns
+        if ServiceClients:
+            clients = ServiceClients(timeout=15)  # 15 second timeout for trace data
+            result = await clients.get_json(f"http://interpreter:5120/workflows/{execution_id}/trace")
+        else:
+            # Fallback if ServiceClients not available
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"http://interpreter:5120/workflows/{execution_id}/trace") as response:
+                    result = await response.json()
 
         if result.get("error"):
             console.print(f"[red]✗[/red] Error: {result['error']}")
