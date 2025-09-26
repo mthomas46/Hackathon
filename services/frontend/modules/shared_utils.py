@@ -198,22 +198,12 @@ def get_prompt_store_url() -> str:
 
 def get_analysis_service_url() -> str:
     """Get analysis service URL from config/env with fallback."""
-    return get_config_value(
-        "ANALYSIS_SERVICE_URL",
-        "http://analysis-service:5020",
-        section="services",
-        env_key=_ANALYSIS_SERVICE_URL_ENV,
-    )
+    return _get_service_url("analysis_service")
 
 
 def get_bedrock_proxy_url() -> str:
     """Get bedrock proxy service URL from config/env with fallback."""
-    return get_config_value(
-        "BEDROCK_PROXY_URL",
-        "http://bedrock-proxy:5000",
-        section="services",
-        env_key=_BEDROCK_PROXY_URL_ENV,
-    )
+    return _get_service_url("bedrock_proxy")
 
 
 def get_code_analyzer_url() -> str:
