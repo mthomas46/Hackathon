@@ -1,5 +1,8 @@
-"""Domain layer - Delegates to existing domain structure."""
+"""Domain layer for Orchestrator service."""
 
-from domain import *
+from .entities import *
+from .value_objects import *
+from .repositories import *
+from .services import *
 
 __all__ = []
