@@ -11,6 +11,11 @@ from services.shared.presentation.responses import (
     create_success_response,
 )
 from services.shared.infrastructure.utilities.validation_utils import validate_required_fields
+from services.shared.infrastructure.utilities.logging_utils import (
+    log_operation_start,
+    log_operation_success,
+    log_operation_error,
+)
 from services.shared.utilities.error_handling import ServiceException
 
 
@@ -23,7 +28,14 @@ class BaseHandler(ABC):
     async def _handle_request(
         self, operation: Callable, *args, **kwargs
     ) -> Dict[str, Any]:
-        """Handle request with common error handling."""
+        """Handle request with standardized error handling and logging.
+
+        Error handling standardization: Uses consistent exception handling patterns
+        and standardized logging across all services.
+        """
+        operation_name = f"{operation.__name__}"
+        log_operation_start(operation_name, {"args_count": len(args), "kwargs_keys": list(kwargs.keys())})
+
         try:
             result = operation(*args, **kwargs)
 
@@ -31,15 +43,19 @@ class BaseHandler(ABC):
             if hasattr(result, "__await__"):
                 result = await result
 
+            log_operation_success(operation_name, {"result_type": type(result).__name__})
             return create_success_response(
                 message="Operation completed successfully", data=result
             )
 
         except ServiceException as e:
+            log_operation_error(operation_name, e, {"error_code": e.error_code})
             return create_error_response(str(e), e.error_code)
         except ValueError as e:
+            log_operation_error(operation_name, e, {"error_type": "validation"})
             return create_error_response(str(e), "VALIDATION_ERROR")
         except Exception as e:
+            log_operation_error(operation_name, e, {"error_type": "internal"})
             return create_error_response(f"Internal error: {str(e)}", "INTERNAL_ERROR")
 
     async def handle_create(self, request_data: Dict[str, Any]) -> Dict[str, Any]:
