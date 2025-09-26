@@ -1,23 +1,23 @@
 {
   "service_name": "cli",
-  "overall_score": 20.200000000000003,
+  "overall_score": 0.0,
   "grade": "F",
   "dimensions": {
-    "architecture": 72.78,
-    "code_quality": 60.0,
-    "performance": 77.25,
+    "architecture": 72.97,
+    "code_quality": 55.2,
+    "performance": 80.75,
     "maintainability": 67.35,
-    "documentation_quality": 80.0,
-    "dry_principles": 46.0,
-    "kiss_principles": 40.0
+    "dry_principles": 11.46,
+    "kiss_principles": 49.0,
+    "documentation_quality": 75.53
   },
-  "architecture": "ArchitectureAnalysisResult(score=72.78, ddd_compliance=100, rest_compliance=50.0, layer_separation=100.0, ddd_issues=[], ddd_recommendations=[], file_metrics={}, test_quality={'coverage_score': 0, 'quality_score': 0, 'structure_score': 0, 'total_score': 0, 'recommendations': []}, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, endpoint_analysis={'total_endpoints': 0, 'rest_compliant_endpoints': 0, 'openapi_compliant_endpoints': 0, 'project_standard_compliant_endpoints': 0, 'endpoint_issues': [], 'rest_violations': [], 'openapi_violations': [], 'standard_violations': [], 'endpoint_details': [], 'compliant_endpoints': [], 'non_compliant_endpoints': [], 'rest_compliance_score': 0, 'openapi_compliance_score': 0, 'project_standards_compliance_score': 0, 'endpoint_detection_validation': {'total_fastapi_files_found': 1, 'detection_gaps': [], 'recommendations': []}}, complexity_analysis={'high_complexity_functions': [], 'total_functions_analyzed': 0, 'complexity_distribution': {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}, 'average_complexity': 0.0, 'recommendations': []}, dependency_coupling={'import_dependencies': {}, 'coupling_score': 0, 'recommendations': []}, dead_code_analysis={'dead_code_lines': 0, 'unused_functions': [], 'recommendations': []}, test_quality_metrics={'total_test_files': 0, 'test_naming_issues': 0, 'recommendations': []}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'documentation_score': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 0.0, 'undocumented_functions': 0, 'recommendations': []}, configuration_management={'hardcoded_values': 0, 'security_issues': 0, 'recommendations': []}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'recommendations': []}, directory_analysis={}, issues=['REST API design issues - review HTTP methods and status codes'], recommendations=[], detailed_issues=[], empty_directories=95.0, requirements_file=100.0, docker_infrastructure=85.0, dry_principles=46.0, kiss_principles=40.0, ddd_patterns=30.0, rest_best_practices=50.0, documentation_quality=80.0)",
-  "code_quality": "CodeQualityAnalysisResult(score=60.0, complexity_score=44.0, testing_score=20.0, linting_score=100, duplication_score=60.0, security_score=100, dry_principle_score=60.0, kiss_principle_score=80.0, test_coverage=0, cyclomatic_complexity={'high_complexity_functions': [{'function': '_source_agent_actions', 'file': 'modules/handlers/service_actions.py', 'complexity': 34}, {'function': 'build_actions', 'file': 'modules/handlers/actions/secure_analyzer.py', 'complexity': 51}, {'function': 'build_actions', 'file': 'modules/handlers/actions/source_agent.py', 'complexity': 56}, {'function': 'build_actions', 'file': 'modules/handlers/actions/doc_store.py', 'complexity': 36}, {'function': 'build_actions', 'file': 'modules/handlers/actions/interpreter.py', 'complexity': 32}, {'function': 'build_actions', 'file': 'modules/handlers/actions/code_analyzer.py', 'complexity': 53}, {'function': 'analyze_code', 'file': 'modules/handlers/actions/code_analyzer.py', 'complexity': 22}, {'function': 'build_actions', 'file': 'modules/handlers/actions/log_collector.py', 'complexity': 44}, {'function': 'validate_input', 'file': 'modules/base/base_handler.py', 'complexity': 29}], 'total_functions_analyzed': 1576, 'complexity_distribution': {'low': 1190, 'medium': 324, 'high': 53, 'very_high': 9}, 'average_complexity': 4.026015228426396, 'recommendations': ['Refactor 9 high-complexity functions']}, test_quality_metrics={'total_test_files': 2, 'test_naming_issues': 20, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 0, 'mock_usage': 1, 'recommendations': ['Fix 20 poorly named test functions']}, linting_quality={'pylint_score': 0, 'flake8_issues': 651, 'total_issues': 651, 'issues_by_type': {}, 'recommendations': []}, duplication_analysis={'total_duplicate_blocks': 4981, 'duplicate_lines': 19924, 'total_lines_analyzed': 40419, 'duplication_rate': 49.29364902644796, 'recommendations': ['High duplication rate (49.3%) - consider refactoring']}, issues=['High code complexity detected', 'Insufficient test coverage', 'Code duplication detected'], recommendations=['Refactor high-complexity functions (>10 cyclomatic complexity)', 'Increase test coverage to at least 70.0%', 'Reduce code duplication through refactoring'])",
-  "performance": "PerformanceAnalysisResult(score=77.25, system_metrics_score=75.0, database_score=70.0, resource_usage_score=74.0, system_metrics={'cpu_percent': 19.1, 'memory_percent': 54.6, 'memory_used_gb': 31.31597900390625, 'disk_read_mb': 299390.64453125, 'disk_write_mb': 201509.59765625, 'network_sent_mb': 2164.1787109375, 'network_recv_mb': 1652.0947265625, 'process_memory_percent': 0.1293659210205078, 'process_cpu_percent': 1.1, 'timestamp': 1758877104.030237}, database_performance={'has_database_layer': True, 'connection_pooling': False, 'query_optimization': False, 'caching_strategy': False, 'migration_scripts': False, 'performance_issues': ['Missing connection pooling', 'Limited query optimization', 'No caching strategy'], 'recommendations': ['Implement database connection pooling', 'Add database indexes and optimize queries', 'Implement caching layer for frequently accessed data']}, resource_usage={'file_handle_leaks': 31, 'memory_leaks_potential': 15, 'resource_management_issues': 0, 'context_manager_usage': 572, 'exception_handling_resources': 0, 'large_objects': ['main.py', 'modules/cli_commands.py', 'modules/interactive_overlay.py', 'modules/managers/workflow_manager.py', 'modules/managers/services/analysis_manager.py', 'modules/managers/services/infrastructure_manager.py', 'modules/managers/services/bedrock_proxy_manager.py', 'modules/managers/services/docstore_manager.py', 'modules/managers/services/memory_agent_manager.py', 'modules/managers/services/bulk_operations_manager.py', 'modules/managers/services/summarizer_hub_manager.py', 'modules/managers/services/source_agent_manager.py', 'modules/managers/services/deployment_manager.py', 'modules/managers/services/discovery_agent_manager.py', 'modules/managers/services/code_analyzer_manager.py', 'modules/managers/services/interpreter_manager.py', 'modules/managers/services/secure_analyzer_manager.py', 'modules/managers/services/log_collector_manager.py', 'modules/managers/services/orchestrator_manager.py', 'modules/managers/services/notification_service_manager.py', 'modules/handlers/service_actions.py', 'modules/handlers/actions/secure_analyzer.py', 'modules/handlers/actions/doc_store.py', 'modules/base/mixins.py'], 'resource_intensive_operations': ['cli_commands.py:393', 'interactive_overlay.py:281', 'document_analysis_manager.py:172', 'document_analysis_manager.py:273', 'analysis_service_manager.py:93', 'validation_manager.py:49', 'validation_manager.py:141', 'validation_manager.py:201', 'environment_manager.py:229', 'settings_manager.py:78', 'docker_manager.py:76', 'alerting_manager.py:92', 'alerting_manager.py:93', 'analysis_manager.py:260', 'infrastructure_manager.py:204', 'bedrock_proxy_manager.py:302', 'bedrock_proxy_manager.py:721', 'bedrock_proxy_manager.py:771', 'bedrock_proxy_manager.py:778', 'bedrock_proxy_manager.py:785', 'bedrock_proxy_manager.py:837', 'bedrock_proxy_manager.py:1092', 'bedrock_proxy_manager.py:1099', 'bedrock_proxy_manager.py:1106', 'bedrock_proxy_manager.py:1211', 'memory_agent_manager.py:711', 'memory_agent_manager.py:716', 'memory_agent_manager.py:717', 'memory_agent_manager.py:718', 'memory_agent_manager.py:756', 'deployment_manager.py:206', 'deployment_manager.py:226', 'deployment_manager.py:229', 'deployment_manager.py:238', 'deployment_manager.py:272', 'discovery_agent_manager.py:439', 'discovery_agent_manager.py:518', 'discovery_agent_manager.py:604', 'interpreter_manager.py:295', 'interpreter_manager.py:299', 'log_collector_manager.py:508', 'log_collector_manager.py:651', 'log_collector_manager.py:668', 'log_collector_manager.py:715', 'log_collector_manager.py:741', 'log_collector_manager.py:749', 'log_collector_manager.py:803', 'notification_service_manager.py:714', 'notification_service_manager.py:720', 'status_formatters.py:64', 'error_utils.py:109', 'secure_analyzer.py:361', 'secure_analyzer.py:464', 'secure_analyzer.py:465', 'secure_analyzer.py:466', 'secure_analyzer.py:509', 'interpreter.py:192', 'interpreter.py:255', 'interpreter.py:256', 'interpreter.py:257', 'code_analyzer.py:277', 'code_analyzer.py:371', 'code_analyzer.py:372', 'code_analyzer.py:373', 'code_analyzer.py:416', 'log_collector.py:428', 'log_collector.py:442', 'log_collector.py:451'], 'recommendations': ['Fix 31 potential file handle leaks - use context managers', 'Review 15 potential memory leaks with global variables', 'Consider splitting 24 large files for better resource management']}, performance_indicators={'cpu_health': 'good', 'memory_health': 'good', 'disk_health': 'high', 'network_health': 'high', 'overall_performance': 'moderate'}, issues=[], recommendations=['Optimize system resource usage - monitor CPU, memory, and I/O', 'Improve database performance - add connection pooling and query optimization', 'Fix resource management issues - use context managers and proper cleanup'])",
-  "maintainability": "MaintainabilityAnalysisResult(score=67.35, documentation_score=20.0, organization_score=100, error_handling_score=69.0, devops_readiness_score=100, scalability_score=100, linting_quality={'pylint_score': 0, 'flake8_issues': 651, 'total_issues': 651, 'issues_by_type': {}, 'recommendations': []}, test_quality={'coverage_score': 0, 'quality_score': 4, 'structure_score': 0, 'total_score': 4, 'recommendations': []}, test_quality_metrics={'total_test_files': 2, 'test_naming_issues': 20, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 0, 'mock_usage': 1, 'recommendations': ['Fix 20 poorly named test functions']}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'total_endpoints': 0, 'documentation_score': 0, 'missing_summaries': 0, 'missing_descriptions': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 91.70305676855895, 'undocumented_functions': 19, 'undocumented_classes': 2, 'total_functions': 229, 'total_classes': 77, 'recommendations': ['Add docstrings to 19 undocumented functions']}, configuration_management={'hardcoded_values': 502, 'environment_variables': 8, 'config_files': 1, 'security_issues': 502, 'recommendations': ['Replace 502 hardcoded values with environment variables']}, logging_practices={'logging_usage': 0, 'error_logging': 1, 'structured_logging': 0, 'missing_error_logs': 903, 'logging_levels_used': set(), 'recommendations': ['Add error logging to 903 exception handlers']}, issues=['Insufficient documentation coverage', 'Inadequate error handling patterns'], recommendations=['Increase docstring coverage to at least 80.0%', 'Implement proper error handling with specific exception types'], architecture_quality_score=60.0)",
-  "documentation_quality": {},
-  "dry_principles": {},
-  "kiss_principles": {},
+  "architecture": "ArchitectureAnalysisResult(score=72.97, ddd_compliance=100, ddd_migration_status=0, rest_compliance=50.0, layer_separation=100.0, ddd_issues=[\"🚨 MISSING DDD LAYERS: ['application', 'infrastructure', 'presentation'] - all four layers required\", '🚨 MISSING ROUTES: presentation/routes/ directory required for DDD+REST', '🚨 CRITICAL: Business logic in presentation layer: presentation/api/routers/analysis_router.py', '📏 OVERSIZED FILES: 16 files exceed 1000 lines', '🚨 CRITICAL: application/ layer missing - required for DDD use case orchestration', '🚨 MISSING: application/ layer - critical for DDD architecture', '🚨 MISSING: infrastructure/ layer - critical for DDD architecture', '🚨 MISSING: presentation/ layer - critical for DDD architecture', '⚠️ LEGACY: modules/ contains 83 Python files - migrate to DDD structure', '⚠️ OVERSIZED: modules/managers/services has 18 Python files - consider splitting', '🐳 DOCKER/INFRA: Dockerfile missing EXPOSE instruction', '🐳 DOCKER/INFRA: Service missing port configuration', '🐳 DOCKER/INFRA: Dockerfile missing HEALTHCHECK instruction', 'DDD patterns implementation could be improved', 'REST API could follow more best practices'], ddd_recommendations=['📁 CREATE: Missing DDD layers: application, infrastructure, presentation', '📁 CREATE: presentation/routes/ directory with domain-organized route files', '🔄 REFACTOR: Move business logic from presentation/api/routers/analysis_router.py to domain/ or application/ layers', '🔨 REFACTOR: Split oversized files: main.py (2242 lines), modules/managers/services/analysis_manager.py (1051 lines), modules/managers/services/infrastructure_manager.py (1330 lines)', '📁 CREATE: application/ layer with handlers, commands, queries', '🔄 domain/ layer: 0/6 subdirs - needs completion', '🔄 MIGRATE: Move modules/ files to appropriate DDD layers (domain/application/infrastructure/presentation)', '🔄 REFACTOR: Split modules/managers/services into smaller, focused modules', '🎯 Implement proper DDD patterns: entities, value objects, aggregates, domain events', '📡 Implement REST best practices: proper HTTP methods, status codes, HATEOAS, content negotiation'], file_metrics={}, test_quality={'coverage_score': 0, 'quality_score': 0, 'structure_score': 0, 'total_score': 0, 'recommendations': []}, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, endpoint_analysis={'total_endpoints': 0, 'rest_compliant_endpoints': 0, 'openapi_compliant_endpoints': 0, 'project_standard_compliant_endpoints': 0, 'endpoint_issues': [], 'rest_violations': [], 'openapi_violations': [], 'standard_violations': [], 'endpoint_details': [], 'compliant_endpoints': [], 'non_compliant_endpoints': [], 'rest_compliance_score': 0, 'openapi_compliance_score': 0, 'project_standards_compliance_score': 0, 'endpoint_detection_validation': {'total_fastapi_files_found': 1, 'detection_gaps': [], 'recommendations': []}}, complexity_analysis={'high_complexity_functions': [], 'total_functions_analyzed': 0, 'complexity_distribution': {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}, 'average_complexity': 0.0, 'recommendations': []}, dependency_coupling={'import_dependencies': {}, 'coupling_score': 0, 'recommendations': []}, dead_code_analysis={'dead_code_lines': 0, 'unused_functions': [], 'recommendations': []}, test_quality_metrics={'total_test_files': 0, 'test_naming_issues': 0, 'recommendations': []}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'documentation_score': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 0.0, 'undocumented_functions': 0, 'recommendations': []}, configuration_management={'hardcoded_values': 0, 'security_issues': 0, 'recommendations': []}, logging_practices={'logging_usage': 0, 'error_logging': 0, 'recommendations': []}, directory_analysis={}, issues=['REST API design issues - review HTTP methods and status codes'], recommendations=[], detailed_issues=[{'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py', 'description': 'File exceeds line limit: 2242 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/analysis_manager.py', 'description': 'File exceeds line limit: 1051 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/infrastructure_manager.py', 'description': 'File exceeds line limit: 1330 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/bedrock_proxy_manager.py', 'description': 'File exceeds line limit: 1494 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/docstore_manager.py', 'description': 'File exceeds line limit: 1330 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/memory_agent_manager.py', 'description': 'File exceeds line limit: 1177 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/bulk_operations_manager.py', 'description': 'File exceeds line limit: 1570 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/summarizer_hub_manager.py', 'description': 'File exceeds line limit: 1174 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/source_agent_manager.py', 'description': 'File exceeds line limit: 1141 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/deployment_manager.py', 'description': 'File exceeds line limit: 1577 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/discovery_agent_manager.py', 'description': 'File exceeds line limit: 1018 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/code_analyzer_manager.py', 'description': 'File exceeds line limit: 1401 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/interpreter_manager.py', 'description': 'File exceeds line limit: 1008 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/secure_analyzer_manager.py', 'description': 'File exceeds line limit: 1196 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/log_collector_manager.py', 'description': 'File exceeds line limit: 1375 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}, {'issue_type': 'oversized_file', 'file_path': '/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/notification_service_manager.py', 'description': 'File exceeds line limit: 1082 lines (threshold: 1000)', 'severity': 'warning', 'dimension': 'maintainability'}], empty_directories=100.0, requirements_file=100.0, docker_infrastructure=85.0, dry_principles=0.0, kiss_principles=0.0, ddd_patterns=30.0, rest_best_practices=50.0, documentation_quality=0.0)",
+  "code_quality": "CodeQualityAnalysisResult(score=55.2, complexity_score=20.0, testing_score=20.0, linting_score=100, duplication_score=60.0, security_score=100, dry_principle_score=60.0, kiss_principle_score=80.0, test_coverage=0, cyclomatic_complexity={'high_complexity_functions': [{'function': '_source_agent_actions', 'file': 'modules/handlers/service_actions.py', 'complexity': 34}, {'function': 'build_actions', 'file': 'modules/handlers/actions/secure_analyzer.py', 'complexity': 51}, {'function': 'build_actions', 'file': 'modules/handlers/actions/source_agent.py', 'complexity': 56}, {'function': 'build_actions', 'file': 'modules/handlers/actions/doc_store.py', 'complexity': 36}, {'function': 'build_actions', 'file': 'modules/handlers/actions/interpreter.py', 'complexity': 32}, {'function': 'build_actions', 'file': 'modules/handlers/actions/code_analyzer.py', 'complexity': 53}, {'function': 'analyze_code', 'file': 'modules/handlers/actions/code_analyzer.py', 'complexity': 22}, {'function': 'build_actions', 'file': 'modules/handlers/actions/log_collector.py', 'complexity': 44}, {'function': 'validate_input', 'file': 'modules/base/base_handler.py', 'complexity': 29}], 'total_functions_analyzed': 1576, 'complexity_distribution': {'low': 1190, 'medium': 324, 'high': 53, 'very_high': 9}, 'average_complexity': 4.026015228426396, 'recommendations': ['Refactor 9 high-complexity functions']}, test_quality_metrics={'total_test_files': 2, 'test_naming_issues': 20, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 0, 'mock_usage': 1, 'recommendations': ['Fix 20 poorly named test functions']}, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, duplication_analysis={'total_duplicate_blocks': 4981, 'duplicate_lines': 19924, 'total_lines_analyzed': 40419, 'duplication_rate': 49.29364902644796, 'recommendations': ['High duplication rate (49.3%) - consider refactoring']}, issues=['High code complexity detected', 'Insufficient test coverage', 'Code duplication detected'], recommendations=['Refactor high-complexity functions (>10 cyclomatic complexity)', 'Increase test coverage to at least 70.0%', 'Reduce code duplication through refactoring'])",
+  "performance": "PerformanceAnalysisResult(score=80.75, system_metrics_score=85.0, database_score=70.0, resource_usage_score=74.0, system_metrics={'cpu_percent': 21.2, 'memory_percent': 35.4, 'memory_used_gb': 21.774810791015625, 'disk_read_mb': 33178.171875, 'disk_write_mb': 8731.390625, 'network_sent_mb': 48.91015625, 'network_recv_mb': 156.212890625, 'process_memory_percent': 0.12264251708984375, 'process_cpu_percent': 1.5, 'timestamp': 1758923441.6785731}, database_performance={'has_database_layer': True, 'connection_pooling': False, 'query_optimization': False, 'caching_strategy': False, 'migration_scripts': False, 'performance_issues': ['Missing connection pooling', 'Limited query optimization', 'No caching strategy'], 'recommendations': ['Implement database connection pooling', 'Add database indexes and optimize queries', 'Implement caching layer for frequently accessed data']}, resource_usage={'file_handle_leaks': 31, 'memory_leaks_potential': 15, 'resource_management_issues': 0, 'context_manager_usage': 572, 'exception_handling_resources': 0, 'large_objects': ['main.py', 'modules/cli_commands.py', 'modules/interactive_overlay.py', 'modules/managers/workflow_manager.py', 'modules/managers/services/analysis_manager.py', 'modules/managers/services/infrastructure_manager.py', 'modules/managers/services/bedrock_proxy_manager.py', 'modules/managers/services/docstore_manager.py', 'modules/managers/services/memory_agent_manager.py', 'modules/managers/services/bulk_operations_manager.py', 'modules/managers/services/summarizer_hub_manager.py', 'modules/managers/services/source_agent_manager.py', 'modules/managers/services/deployment_manager.py', 'modules/managers/services/discovery_agent_manager.py', 'modules/managers/services/code_analyzer_manager.py', 'modules/managers/services/interpreter_manager.py', 'modules/managers/services/secure_analyzer_manager.py', 'modules/managers/services/log_collector_manager.py', 'modules/managers/services/orchestrator_manager.py', 'modules/managers/services/notification_service_manager.py', 'modules/handlers/service_actions.py', 'modules/handlers/actions/secure_analyzer.py', 'modules/handlers/actions/doc_store.py', 'modules/base/mixins.py'], 'resource_intensive_operations': ['cli_commands.py:393', 'interactive_overlay.py:281', 'document_analysis_manager.py:172', 'document_analysis_manager.py:273', 'analysis_service_manager.py:93', 'validation_manager.py:49', 'validation_manager.py:141', 'validation_manager.py:201', 'environment_manager.py:229', 'settings_manager.py:78', 'docker_manager.py:76', 'alerting_manager.py:92', 'alerting_manager.py:93', 'analysis_manager.py:260', 'infrastructure_manager.py:204', 'bedrock_proxy_manager.py:302', 'bedrock_proxy_manager.py:721', 'bedrock_proxy_manager.py:771', 'bedrock_proxy_manager.py:778', 'bedrock_proxy_manager.py:785', 'bedrock_proxy_manager.py:837', 'bedrock_proxy_manager.py:1092', 'bedrock_proxy_manager.py:1099', 'bedrock_proxy_manager.py:1106', 'bedrock_proxy_manager.py:1211', 'memory_agent_manager.py:711', 'memory_agent_manager.py:716', 'memory_agent_manager.py:717', 'memory_agent_manager.py:718', 'memory_agent_manager.py:756', 'deployment_manager.py:206', 'deployment_manager.py:226', 'deployment_manager.py:229', 'deployment_manager.py:238', 'deployment_manager.py:272', 'discovery_agent_manager.py:439', 'discovery_agent_manager.py:518', 'discovery_agent_manager.py:604', 'interpreter_manager.py:295', 'interpreter_manager.py:299', 'log_collector_manager.py:508', 'log_collector_manager.py:651', 'log_collector_manager.py:668', 'log_collector_manager.py:715', 'log_collector_manager.py:741', 'log_collector_manager.py:749', 'log_collector_manager.py:803', 'notification_service_manager.py:714', 'notification_service_manager.py:720', 'status_formatters.py:64', 'error_utils.py:109', 'secure_analyzer.py:361', 'secure_analyzer.py:464', 'secure_analyzer.py:465', 'secure_analyzer.py:466', 'secure_analyzer.py:509', 'interpreter.py:192', 'interpreter.py:255', 'interpreter.py:256', 'interpreter.py:257', 'code_analyzer.py:277', 'code_analyzer.py:371', 'code_analyzer.py:372', 'code_analyzer.py:373', 'code_analyzer.py:416', 'log_collector.py:428', 'log_collector.py:442', 'log_collector.py:451'], 'recommendations': ['Fix 31 potential file handle leaks - use context managers', 'Review 15 potential memory leaks with global variables', 'Consider splitting 24 large files for better resource management']}, performance_indicators={'cpu_health': 'good', 'memory_health': 'good', 'disk_health': 'high', 'network_health': 'high', 'overall_performance': 'moderate'}, issues=[], recommendations=['Improve database performance - add connection pooling and query optimization', 'Fix resource management issues - use context managers and proper cleanup'])",
+  "maintainability": "MaintainabilityAnalysisResult(score=67.35, documentation_score=20.0, organization_score=100, error_handling_score=69.0, devops_readiness_score=100, scalability_score=100, linting_quality={'pylint_score': 0, 'flake8_issues': 0, 'total_issues': 0, 'issues_by_type': {}, 'recommendations': []}, test_quality={'coverage_score': 0, 'quality_score': 4, 'structure_score': 0, 'total_score': 4, 'recommendations': []}, test_quality_metrics={'total_test_files': 2, 'test_naming_issues': 20, 'isolation_issues': 0, 'parametrization_usage': 0, 'fixture_usage': 0, 'mock_usage': 1, 'recommendations': ['Fix 20 poorly named test functions']}, domain_boundaries={'leaks_detected': 0, 'boundary_violations': [], 'layer_integrity': True, 'recommendations': []}, api_documentation={'endpoints_documented': 0, 'total_endpoints': 0, 'documentation_score': 0, 'missing_summaries': 0, 'missing_descriptions': 0, 'recommendations': []}, code_documentation={'docstring_coverage': 91.70305676855895, 'undocumented_functions': 19, 'undocumented_classes': 2, 'total_functions': 229, 'total_classes': 77, 'recommendations': ['Add docstrings to 19 undocumented functions']}, configuration_management={'hardcoded_values': 502, 'environment_variables': 8, 'config_files': 1, 'security_issues': 502, 'recommendations': ['Replace 502 hardcoded values with environment variables']}, logging_practices={'logging_usage': 0, 'error_logging': 1, 'structured_logging': 0, 'missing_error_logs': 903, 'logging_levels_used': set(), 'recommendations': ['Add error logging to 903 exception handlers']}, issues=['Insufficient documentation coverage', 'Inadequate error handling patterns'], recommendations=['Increase docstring coverage to at least 80.0%', 'Implement proper error handling with specific exception types'], architecture_quality_score=60.0)",
+  "documentation_quality": "DocumentationAnalysisResult(score=75.53, docstring_score=100, readme_score=66.66666666666666, comment_score=59.930795847750865, recommendations=['📖 Create or improve README.md with usage examples and API documentation', '💬 Add meaningful comments explaining complex logic and business rules'], issues=[])",
+  "dry_principles": "DRYPrinciplesAnalysisResult(score=11.46, duplication_score=34.392569054021024, pattern_score=0, utility_score=0.0, recommendations=['🔄 Extract duplicated code into shared utilities or base classes', '📋 Create helper functions for repetitive code patterns', '🛠️ Consolidate utility functions into dedicated modules'], issues=[])",
+  "kiss_principles": "KISSPrinciplesAnalysisResult(score=49.0, complexity_score=57.367149758454104, nesting_score=57.5, function_score=32.1256038647343, recommendations=['🔧 Simplify complex conditional logic and nested expressions', '📦 Reduce nesting levels by extracting methods or early returns', '✂️ Break down long functions into smaller, focused methods'], issues=[])",
   "recommendations": [
     "🚨 CRITICAL: Service requires immediate attention - score below 60",
     "Address: REST API design issues - review HTTP methods and status codes",
@@ -27,19 +27,139 @@
     "Address: High code complexity detected",
     "Address: Insufficient test coverage",
     "Address: Code duplication detected",
-    "Optimize system resource usage - monitor CPU, memory, and I/O",
     "Improve database performance - add connection pooling and query optimization",
     "Fix resource management issues - use context managers and proper cleanup",
     "Increase docstring coverage to at least 80.0%",
     "Implement proper error handling with specific exception types",
     "Address: Insufficient documentation coverage",
-    "Address: Inadequate error handling patterns"
+    "Address: Inadequate error handling patterns",
+    "🔄 Extract duplicated code into shared utilities or base classes",
+    "📋 Create helper functions for repetitive code patterns",
+    "🛠️ Consolidate utility functions into dedicated modules",
+    "🔧 Simplify complex conditional logic and nested expressions",
+    "📦 Reduce nesting levels by extracting methods or early returns",
+    "✂️ Break down long functions into smaller, focused methods",
+    "📖 Create or improve README.md with usage examples and API documentation",
+    "💬 Add meaningful comments explaining complex logic and business rules"
   ],
   "critical_issues": [],
-  "detailed_issues": [],
+  "detailed_issues": [
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/main.py",
+      "description": "File exceeds line limit: 2242 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/analysis_manager.py",
+      "description": "File exceeds line limit: 1051 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/infrastructure_manager.py",
+      "description": "File exceeds line limit: 1330 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/bedrock_proxy_manager.py",
+      "description": "File exceeds line limit: 1494 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/docstore_manager.py",
+      "description": "File exceeds line limit: 1330 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/memory_agent_manager.py",
+      "description": "File exceeds line limit: 1177 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/bulk_operations_manager.py",
+      "description": "File exceeds line limit: 1570 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/summarizer_hub_manager.py",
+      "description": "File exceeds line limit: 1174 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/source_agent_manager.py",
+      "description": "File exceeds line limit: 1141 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/deployment_manager.py",
+      "description": "File exceeds line limit: 1577 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/discovery_agent_manager.py",
+      "description": "File exceeds line limit: 1018 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/code_analyzer_manager.py",
+      "description": "File exceeds line limit: 1401 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/interpreter_manager.py",
+      "description": "File exceeds line limit: 1008 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/secure_analyzer_manager.py",
+      "description": "File exceeds line limit: 1196 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/log_collector_manager.py",
+      "description": "File exceeds line limit: 1375 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    },
+    {
+      "issue_type": "oversized_file",
+      "file_path": "/Users/mykalthomas/Documents/work/Hackathon/services/cli/modules/managers/services/notification_service_manager.py",
+      "description": "File exceeds line limit: 1082 lines (threshold: 1000)",
+      "severity": "warning",
+      "dimension": "maintainability"
+    }
+  ],
   "critical_issues_count": 0,
   "estimated_effort_days": 6.0,
-  "analysis_timestamp": "2025-09-26T03:58:25.352816",
+  "analysis_timestamp": "2025-09-26T16:50:42.346062",
   "metadata": {
     "service_info": {
       "name": "cli",
@@ -47,7 +167,7 @@
       "type": "python",
       "status": "unknown",
       "metadata": {},
-      "discovered_at": "2025-09-26T03:58:08.153317",
+      "discovered_at": "2025-09-26T16:50:36.004232",
       "last_audited_at": null
     },
     "profile_used": "strict",
@@ -103,7 +223,7 @@
     },
     "audit_timestamp": null,
     "use_case": "audit_service",
-    "service_discovered_at": "2025-09-26T03:58:08.153317",
-    "audit_duration_seconds": 17.200051069259644
+    "service_discovered_at": "2025-09-26T16:50:36.004232",
+    "audit_duration_seconds": 6.3420679569244385
   }
 }

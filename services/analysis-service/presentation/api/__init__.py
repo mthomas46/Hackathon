@@ -7,9 +7,6 @@ from .routers.distributed_router import router as distributed_router
 from .routers.repositories_router import router as repositories_router
 from .routers.workflows_router import router as workflows_router
 
-# Import health router from routes
-from ..routes.health import router as health_router
-
 # Create main API router
 api_router = APIRouter()
 
@@ -18,4 +15,3 @@ api_router.include_router(analysis_router)
 api_router.include_router(workflows_router)
 api_router.include_router(repositories_router)
 api_router.include_router(distributed_router)
-api_router.include_router(health_router)
