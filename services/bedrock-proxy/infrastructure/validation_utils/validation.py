@@ -2,8 +2,8 @@
 
 from typing import Optional
 
-from .templates import VALID_FORMATS, VALID_TEMPLATES
-from .utils import sanitize_for_response
+from ..templates import VALID_FORMATS, VALID_TEMPLATES
+from ..utils import sanitize_for_response
 
 
 class ValidationError(ValueError):
