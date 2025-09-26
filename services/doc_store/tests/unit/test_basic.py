@@ -119,7 +119,7 @@ class TestQualityService:
 class TestRepositoryOperations:
     """Test repository layer operations."""
 
-    @patch('services.doc_store.infrastructure.db.connection.get_db_connection')
+    @patch('doc_store.infrastructure.db.connection.get_db_connection')
     def test_database_connection(self, mock_connection):
         """Test database connection handling."""
         mock_conn = Mock()
@@ -216,6 +216,152 @@ class TestIntegrationCapabilities:
         assert len(events) >= 4
         assert "document_created" in events
         assert "quality_assessed" in events
+
+
+class TestDomainServices:
+    """Test domain service functionality."""
+
+    @pytest.mark.asyncio
+    async def test_document_service_create_document(self):
+        """Test document service create document functionality."""
+        from unittest.mock import AsyncMock
+        from doc_store.domain.services.document_service import DocumentService
+        from doc_store.domain.repositories.document_repository import DocumentRepository
+
+        # Mock repository
+        mock_repo = AsyncMock(spec=DocumentRepository)
+        service = DocumentService(mock_repo)
+
+        # Test data
+        document_id = "test-doc-123"
+        content = "Test document content"
+        metadata = {"author": "test_user"}
+        tags = ["test", "document"]
+
+        # Call the service
+        result = await service.create_document(
+            document_id=document_id,
+            content=content,
+            metadata=metadata,
+            tags=tags
+        )
+
+        # Verify repository was called
+        mock_repo.save.assert_called_once()
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_document_service_update_document(self):
+        """Test document service update document functionality."""
+        from unittest.mock import AsyncMock
+        from doc_store.domain.services.document_service import DocumentService
+        from doc_store.domain.repositories.document_repository import DocumentRepository
+
+        # Mock repository
+        mock_repo = AsyncMock(spec=DocumentRepository)
+        mock_document = AsyncMock()
+        mock_repo.find_by_id.return_value = mock_document
+        service = DocumentService(mock_repo)
+
+        # Test data
+        document_id = "test-doc-123"
+        new_content = "Updated content"
+
+        # Call the service
+        result = await service.update_document(
+            document_id=document_id,
+            content=new_content
+        )
+
+        # Verify repository was called
+        mock_repo.find_by_id.assert_called_once_with(document_id)
+        mock_repo.save.assert_called_once()
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_document_service_tag_document(self):
+        """Test document service tag document functionality."""
+        from unittest.mock import AsyncMock
+        from doc_store.domain.services.document_service import DocumentService
+        from doc_store.domain.repositories.document_repository import DocumentRepository
+
+        # Mock repository
+        mock_repo = AsyncMock(spec=DocumentRepository)
+        mock_document = AsyncMock()
+        mock_repo.find_by_id.return_value = mock_document
+        service = DocumentService(mock_repo)
+
+        # Test data
+        document_id = "test-doc-123"
+        tags = ["important", "review"]
+
+        # Call the service
+        result = await service.tag_document(document_id, tags)
+
+        # Verify repository was called and result
+        mock_repo.find_by_id.assert_called_once_with(document_id)
+        assert result is True
+
+
+class TestApplicationHandlers:
+    """Test application handler functionality."""
+
+    @pytest.mark.asyncio
+    async def test_base_handler_request_processing(self):
+        """Test base handler request processing."""
+        from unittest.mock import AsyncMock
+        from doc_store.application.handlers.handler import BaseHandler
+
+        # Mock service
+        mock_service = AsyncMock()
+        mock_service.create_entity.return_value = {"id": "test-123", "name": "test"}
+        handler = BaseHandler(mock_service)
+
+        # Test create operation
+        result = await handler.handle_create({"name": "test"})
+
+        # Verify result structure
+        assert result["data"]["id"] == "test-123"
+        assert result["data"]["name"] == "test"
+        assert result["message"] == "Operation completed successfully"
+
+    def test_base_handler_validation(self):
+        """Test base handler validation."""
+        from doc_store.application.handlers.handler import BaseHandler
+
+        # Mock service
+        mock_service = AsyncMock()
+        handler = BaseHandler(mock_service)
+
+        # Test validation with valid data
+        handler._validate_request_data({"name": "test", "value": "123"}, ["name"])
+        # Should not raise exception
+
+        # Test validation with missing required field
+        with pytest.raises(ValueError, match="Missing required fields"):
+            handler._validate_request_data({"name": "test"}, ["name", "value"])
+
+
+class TestInfrastructureComponents:
+    """Test infrastructure component functionality."""
+
+    def test_logging_utils_functionality(self):
+        """Test logging utilities work correctly."""
+        from doc_store.infrastructure.logging_utils import log_operation_start
+
+        # This should not raise an exception
+        log_operation_start("test_operation", {"test": "data"})
+
+    def test_validation_utils_functionality(self):
+        """Test validation utilities work correctly."""
+        from services.shared.infrastructure.utilities.validation_utils import validate_required_fields
+
+        # Test valid validation
+        validate_required_fields({"name": "test", "value": 123}, ["name"])
+
+        # Test invalid validation
+        with pytest.raises(ValueError):
+            validate_required_fields({"name": "test"}, ["name", "value"])
 
 
 if __name__ == "__main__":
