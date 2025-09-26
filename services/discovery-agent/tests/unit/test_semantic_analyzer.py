@@ -18,7 +18,7 @@ project_root = services_dir.parent   # project root
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(services_dir))
 
-from services.discovery_agent.domain.services.semantic_analyzer import SemanticToolAnalyzer  # type: ignore
+from domain.services.semantic_analyzer import SemanticToolAnalyzer
 
 
 class TestSemanticToolAnalyzer:
