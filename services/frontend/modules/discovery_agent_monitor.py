@@ -113,6 +113,34 @@ class DiscoveryAgentMonitor:
         except Exception as e:
             return {"success": False, "error": str(e), "response": None}
 
+    def _count_successful_discoveries(self) -> int:
+        """Count successful discoveries."""
+        return sum(1 for d in self._discovery_history if d.get("status") == "completed")
+
+    def _count_failed_discoveries(self, total: int, successful: int) -> int:
+        """Count failed discoveries."""
+        return total - successful
+
+    def _sum_endpoints_discovered(self) -> int:
+        """Sum total endpoints discovered."""
+        return sum(d.get("endpoints_discovered", 0) for d in self._discovery_history)
+
+    def _count_dry_runs(self) -> int:
+        """Count dry run discoveries."""
+        return sum(1 for d in self._discovery_history if d.get("dry_run"))
+
+    def _calculate_success_rate(self, successful: int, total: int) -> float:
+        """Calculate success rate percentage."""
+        return round((successful / total) * 100, 1) if total > 0 else 0
+
+    def _get_unique_services(self) -> set:
+        """Get unique service names."""
+        services = set()
+        for discovery in self._discovery_history:
+            if discovery.get("service_name") and discovery["service_name"] != "Unknown":
+                services.add(discovery["service_name"])
+        return services
+
     def _calculate_discovery_stats(self) -> Dict[str, Any]:
         """Calculate statistics from cached discoveries."""
         if not self._discovery_history:
@@ -126,26 +154,18 @@ class DiscoveryAgentMonitor:
             }
 
         total = len(self._discovery_history)
-        successful = sum(
-            1 for d in self._discovery_history if d.get("status") == "completed"
-        )
-        failed = total - successful
-        total_endpoints = sum(
-            d.get("endpoints_discovered", 0) for d in self._discovery_history
-        )
-        dry_runs = sum(1 for d in self._discovery_history if d.get("dry_run"))
-
-        # Unique services
-        services = set()
-        for discovery in self._discovery_history:
-            if discovery.get("service_name") and discovery["service_name"] != "Unknown":
-                services.add(discovery["service_name"])
+        successful = self._count_successful_discoveries()
+        failed = self._count_failed_discoveries(total, successful)
+        total_endpoints = self._sum_endpoints_discovered()
+        dry_runs = self._count_dry_runs()
+        services = self._get_unique_services()
+        success_rate = self._calculate_success_rate(successful, total)
 
         return {
             "total_discoveries": total,
             "successful_discoveries": successful,
             "failed_discoveries": failed,
-            "success_rate": round((successful / total) * 100, 1) if total > 0 else 0,
+            "success_rate": success_rate,
             "total_endpoints_discovered": total_endpoints,
             "unique_services": len(services),
             "dry_run_count": dry_runs,
