@@ -2,9 +2,13 @@
 
 ## Overview
 
+### Description
+
 The **Project Simulation Service** is a comprehensive demo system that showcases the entire LLM Documentation Ecosystem through realistic software development project simulation. Built following **Domain Driven Design (DDD)** principles with **maximal ecosystem integration**, it demonstrates how AI-powered microservices can revolutionize software development workflows.
 
 ## Key Features & Capabilities
+
+### Functionality
 
 ### 🎭 Comprehensive Project Simulation
 - **Realistic Scenarios**: End-to-end software development project simulation
@@ -31,6 +35,8 @@ The **Project Simulation Service** is a comprehensive demo system that showcases
 - **API-first Design**: RESTful APIs with comprehensive documentation
 
 ## Requirements
+
+### Install
 
 ### 🔧 System Requirements
 - **Python**: 3.9+ with comprehensive async support
@@ -201,6 +207,8 @@ docker-compose up project-simulation
 ```
 
 ## API Endpoints
+
+### Endpoints
 
 ### Simulation Management
 ```http
