@@ -125,8 +125,7 @@ async def health():
                     "template_processing": True,
                     "stub_mode": True,
                 }
-            },
-            message="Bedrock proxy service is operational"
+            }
         )
     except Exception as e:
         return create_error_response(
@@ -171,63 +170,90 @@ class InvokeRequest(BaseModel):
     @classmethod
     def validate_prompt(cls, v):
         """Validate that prompt is a string if provided."""
-        if v is not None and not isinstance(v, str):
-            raise ValueError("Prompt must be a string value")
-        return v
+        try:
+            from .modules.validation import validate_prompt
+            return validate_prompt(v)
+        except ImportError:
+            # Fallback validation
+            if v is not None and not isinstance(v, str):
+                raise ValueError("Prompt must be a string value")
+            return v
 
     @field_validator("template")
     @classmethod
     def validate_template(cls, v):
         """Validate template is one of the supported types."""
-        if v is not None:
-            valid_templates = [
-                "summary",
-                "risks",
-                "decisions",
-                "pr_confidence",
-                "life_of_ticket",
-            ]
-            if v.lower() not in valid_templates and v.strip():
-                raise ValueError(
-                    f'Invalid template "{v}". Supported templates: {", ".join(valid_templates)}'
-                )
-        return v
+        try:
+            from .modules.validation import validate_template
+            return validate_template(v)
+        except ImportError:
+            # Fallback validation
+            if v is not None:
+                valid_templates = [
+                    "summary", "risks", "decisions",
+                    "pr_confidence", "life_of_ticket",
+                ]
+                if v.lower() not in valid_templates and v.strip():
+                    raise ValueError(
+                        f'Invalid template "{v}". Supported templates: {", ".join(valid_templates)}'
+                    )
+            return v
 
     @field_validator("format")
     @classmethod
     def validate_format(cls, v):
         """Validate output format is supported."""
-        if v is not None:
-            valid_formats = ["md", "txt", "json"]
-            if v.lower() not in valid_formats:
-                raise ValueError(
-                    f'Invalid format "{v}". Supported formats: {", ".join(valid_formats)}'
-                )
-        return v
+        try:
+            from .modules.validation import validate_format
+            return validate_format(v)
+        except ImportError:
+            # Fallback validation
+            if v is not None:
+                valid_formats = ["md", "txt", "json"]
+                if v.lower() not in valid_formats:
+                    raise ValueError(
+                        f'Invalid format "{v}". Supported formats: {", ".join(valid_formats)}'
+                    )
+            return (v or "md").lower()
 
     @field_validator("model")
     @classmethod
     def validate_model(cls, v):
         """Validate model name length."""
-        if v is not None and len(v) > 100:
-            raise ValueError("Model name exceeds maximum length of 100 characters")
-        return v
+        try:
+            from .modules.validation import validate_model
+            return validate_model(v)
+        except ImportError:
+            # Fallback validation
+            if v is not None and len(v) > 100:
+                raise ValueError("Model name exceeds maximum length of 100 characters")
+            return v
 
     @field_validator("region")
     @classmethod
     def validate_region(cls, v):
         """Validate region name length."""
-        if v is not None and len(v) > 50:
-            raise ValueError("Region name exceeds maximum length of 50 characters")
-        return v
+        try:
+            from .modules.validation import validate_region
+            return validate_region(v)
+        except ImportError:
+            # Fallback validation
+            if v is not None and len(v) > 50:
+                raise ValueError("Region name exceeds maximum length of 50 characters")
+            return v
 
     @field_validator("title")
     @classmethod
     def validate_title(cls, v):
         """Validate title length."""
-        if v is not None and len(v) > 200:
-            raise ValueError("Title exceeds maximum length of 200 characters")
-        return v
+        try:
+            from .modules.validation import validate_title
+            return validate_title(v)
+        except ImportError:
+            # Fallback validation
+            if v is not None and len(v) > 200:
+                raise ValueError("Title exceeds maximum length of 200 characters")
+            return v
 
 
 @app.post("/invoke", summary="AI Model Invocation", description="Process AI invoke requests with template-based response generation. Supports multiple output formats and template types for structured AI responses.", response_model=Dict[str, Any], tags=["ai", "invoke"], responses={200: {"description": "AI response generated successfully"}, 400: {"description": "Invalid request parameters"}, 500: {"description": "AI processing failed"}})
