@@ -35,7 +35,7 @@ SERVICE_VERSION = config.service_version
 
 # Fallback logging function if shared modules aren't available
 def fire_and_forget(event_type, message, service, metadata=None):
-    print(f"[{service}] {event_type}: {message}")
+    logger.info(f"[{service}] {event_type}: {message}")
 
 
 # Set up logging for the interpreter service
@@ -163,7 +163,7 @@ class SimpleOutputGenerator:
             }
 
         except Exception as e:
-            print(f"Error generating output: {str(e)}")
+            logger.error(f"Error generating output: {str(e)}")
             return {"error": str(e)}
 
     async def _generate_content(
@@ -321,7 +321,7 @@ class SimpleOutputGenerator:
                     else:
                         # Fallback - create mock document ID
                         doc_id = f"doc_{uuid.uuid4().hex[:8]}"
-                        print(f"Doc store unavailable, using mock ID: {doc_id}")
+                        logger.warning(f"Doc store unavailable, using mock ID: {doc_id}")
                         return {
                             "document_id": doc_id,
                             "storage_url": f"{self.doc_store_url}/documents/{doc_id}",
@@ -332,7 +332,7 @@ class SimpleOutputGenerator:
         except Exception as e:
             # Fallback - create mock document ID
             doc_id = f"doc_{uuid.uuid4().hex[:8]}"
-            print(f"Doc store error: {str(e)}, using mock ID: {doc_id}")
+            logger.warning(f"Doc store error: {str(e)}, using mock ID: {doc_id}")
             return {
                 "document_id": doc_id,
                 "storage_url": f"{self.doc_store_url}/documents/{doc_id}",
@@ -1450,5 +1450,5 @@ async def get_sample_document_types():
 if __name__ == "__main__":
     import uvicorn
 
-    print("🚀 Starting Enhanced Interpreter Service with Document Persistence...")
+    logger.info("🚀 Starting Enhanced Interpreter Service with Document Persistence...")
     uvicorn.run(app, host="127.0.0.1", port=5120)
